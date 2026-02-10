@@ -4,12 +4,13 @@ A modern, industrial-grade boilerplate designed for high scalability, developer 
 
 ## 🚀 Key Features
 - **Backend:** NestJS with Prisma 7, PostgreSQL, and official PG adapters.
-- **Frontend:** React 19, Vite 7, Tailwind CSS, and Shadcn UI.
+- **Frontend:** React 19, Vite 7, TanStack Query, and Shadcn UI.
 - **Architecture:** **Feature-Sliced Design (FSD)** on the frontend for maintainable code.
 - **Authentication:** Secure JWT-based auth (Access + Refresh tokens) with **Argon2** hashing.
+- **Static Analysis:** Strict ESLint rules, Prettier, and automated checks via **Husky + lint-staged**.
 - **Automation:** 
   - Custom NestJS Schematics for "one-click" resource generation.
-  - **Orval + TanStack Query** for automatic API client generation from Swagger.
+  - **Orval** for automatic API client generation from Swagger.
   - Auto-generated Zod schemas from Prisma models.
 - **Documentation:** Integrated Swagger UI and a specialized `AI_GUIDE.md` for AI agents.
 
@@ -45,8 +46,12 @@ npm run dev
 ## ⚡ Essential Commands
 
 ### Automated Code Generation
-- `npm run gen:nest` — Create a new backend module (with Prisma & Auth injected).
+- `npm run gen:nest <name>` — Create a new backend module (with Prisma & Auth injected).
 - `npm run gen:api` — Sync frontend API hooks with backend (requires backend to be running).
+
+### Quality Control
+- `npm run lint` — Run static analysis for both client and server.
+- `npm run format` — Auto-format all files using Prettier.
 
 ### Database Management
 - `npm run prisma:generate` — Update Prisma Client and Zod types.

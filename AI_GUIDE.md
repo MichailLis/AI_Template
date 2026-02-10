@@ -7,6 +7,7 @@ Welcome! This project is a production-ready boilerplate built with **NestJS**, *
 - **Frontend:** React 19, Vite, TanStack Query, Orval (Auto-API), Zustand, Tailwind CSS, Shadcn UI.
 - **Infrastructure:** Docker Compose (Postgres + Adminer).
 - **Architecture:** Feature-Sliced Design (FSD) on Frontend.
+- **Static Analysis:** ESLint (Strict), Prettier, Husky, lint-staged.
 
 ---
 
@@ -47,6 +48,12 @@ Follow these steps exactly to maintain architectural integrity:
 7. **Assemble Pages:** Create pages in `client/src/pages` by composing features and entities.
 8. **Routing:** Register the new page in `client/src/app/App.tsx`.
 
+### Phase 4: Verification & Static Analysis (Quality Gate)
+1. **Linting:** Run `npm run lint` from root to ensure code quality.
+2. **Formatting:** Run `npm run format` from root to fix styling.
+3. **Commit:** `git commit` will automatically trigger `lint-staged` via Husky. 
+   - **Zero-Warning Policy:** Commits will fail if there are any linting errors or FSD architectural violations.
+
 ---
 
 ## 📂 Frontend FSD Structure
@@ -63,6 +70,8 @@ Follow these steps exactly to maintain architectural integrity:
 - **Backend Generation:** `npm run gen:nest <name>` (From root).
 - **API Sync:** `npm run gen:api` (Backend must be running).
 - **UI Components:** `npx shadcn@latest add <component-name>` (From `client` dir).
+- **Lint All:** `npm run lint` (From root).
+- **Format All:** `npm run format` (From root).
 - **Database Studio:** `npm run prisma:studio` (From root).
 
 ---
@@ -74,7 +83,7 @@ Follow these steps exactly to maintain architectural integrity:
    - **Success:** `{ "success": true, "data": { ... } }`
    - **Error:** `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
 4. **API Client**: The custom axios instance automatically extracts `.data`, so `useQuery` returns the payload directly.
-5. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`).
+5. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`). Relative paths between layers are forbidden.
 6. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
 
 ## 🚦 How to Start Development
