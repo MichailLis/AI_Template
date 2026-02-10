@@ -2,13 +2,13 @@ import { useProjectControllerFindAll } from '@/shared/api/generated/project/proj
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
 export const ProjectList = () => {
-  const { data, isLoading } = useProjectControllerFindAll();
+  const { data: projects, isLoading } = useProjectControllerFindAll();
 
   if (isLoading) return <div>Loading projects...</div>;
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {data?.map((project) => (
+      {projects?.map((project) => (
         <Card key={project.id}>
           <CardHeader>
             <CardTitle>{project.title}</CardTitle>
@@ -21,7 +21,7 @@ export const ProjectList = () => {
           </CardContent>
         </Card>
       ))}
-      {data?.length === 0 && (
+      {projects?.length === 0 && (
         <div className="col-span-full text-center py-10 border-2 border-dashed rounded-lg text-slate-400">
           No projects found. Create your first one!
         </div>

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/shared/ui/card';
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useTaskControllerFindAll();
+  const { data: tasks, isLoading } = useTaskControllerFindAll();
   const toggleMutation = useTaskControllerToggle();
 
   const handleToggle = (id: number) => {
@@ -26,7 +26,7 @@ export default function TasksPage() {
       
       <div className="space-y-2">
         {isLoading && <p>Loading tasks...</p>}
-        {data?.map((task) => (
+        {tasks?.map((task) => (
           <Card key={task.id} className={task.completed ? 'opacity-50' : ''}>
             <CardContent className="flex items-center justify-between p-4">
               <span className={task.completed ? 'line-through' : ''}>{task.title}</span>

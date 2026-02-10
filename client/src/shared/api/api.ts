@@ -14,9 +14,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    if (response.data && response.data.success === true) {
-      return response.data.data;
-    }
+    // Возвращаем данные как есть, так как бэкенд теперь не оборачивает успех
     return response.data;
   },
   async (error) => {
@@ -28,9 +26,13 @@ api.interceptors.response.use(
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, {
           headers: { Authorization: `Bearer ${refreshToken}` }
         });
-        const tokens = response.data.success ? response.data.data : response.data;
+        
+        // Бэкенд возвращает токены напрямую
+        const tokens = response.data;
+        
         localStorage.setItem('accessToken', tokens.accessToken);
         localStorage.setItem('refreshToken', tokens.refreshToken);
+        
         originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         return axios(originalRequest);
       } catch (refreshError) {
@@ -44,10 +46,6 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * Обертка для Orval. 
- * Orval вызывает её как: customInstance({ url, method, data, params, ... }, options)
- */
 export const customInstance = <T>(
   config: AxiosRequestConfig,
   options?: AxiosRequestConfig
@@ -55,7 +53,7 @@ export const customInstance = <T>(
   return api({
     ...config,
     ...options,
-  }) as unknown as Promise<T>;
+  }) as Promise<T>;
 };
 
 export default api;

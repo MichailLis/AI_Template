@@ -16,6 +16,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AuthResponseDto,
   SigninDto,
   SignupDto
 } from '../../model';
@@ -27,13 +28,16 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
+/**
+ * @summary Register a new user
+ */
 export const authControllerSignup = (
     signupDto: SignupDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<AuthResponseDto>(
       {url: `/auth/signup`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: signupDto, signal
@@ -74,7 +78,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AuthControllerSignupMutationBody = SignupDto
     export type AuthControllerSignupMutationError = unknown
 
-    export const useAuthControllerSignup = <TError = unknown,
+    /**
+ * @summary Register a new user
+ */
+export const useAuthControllerSignup = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerSignup>>, TError,{data: SignupDto}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerSignup>>,
@@ -84,13 +91,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getAuthControllerSignupMutationOptions(options), queryClient);
     }
-    export const authControllerSignin = (
+    /**
+ * @summary Login
+ */
+export const authControllerSignin = (
     signinDto: SigninDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<AuthResponseDto>(
       {url: `/auth/signin`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: signinDto, signal
@@ -131,7 +141,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AuthControllerSigninMutationBody = SigninDto
     export type AuthControllerSigninMutationError = unknown
 
-    export const useAuthControllerSignin = <TError = unknown,
+    /**
+ * @summary Login
+ */
+export const useAuthControllerSignin = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerSignin>>, TError,{data: SigninDto}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerSignin>>,
@@ -141,7 +154,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getAuthControllerSigninMutationOptions(options), queryClient);
     }
-    export const authControllerLogout = (
+    /**
+ * @summary Logout
+ */
+export const authControllerLogout = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -186,7 +202,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     
     export type AuthControllerLogoutMutationError = unknown
 
-    export const useAuthControllerLogout = <TError = unknown,
+    /**
+ * @summary Logout
+ */
+export const useAuthControllerLogout = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerLogout>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerLogout>>,
@@ -196,13 +215,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getAuthControllerLogoutMutationOptions(options), queryClient);
     }
-    export const authControllerRefreshTokens = (
+    /**
+ * @summary Refresh tokens
+ */
+export const authControllerRefreshTokens = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<AuthResponseDto>(
       {url: `/auth/refresh`, method: 'POST', signal
     },
       options);
@@ -241,7 +263,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     
     export type AuthControllerRefreshTokensMutationError = unknown
 
-    export const useAuthControllerRefreshTokens = <TError = unknown,
+    /**
+ * @summary Refresh tokens
+ */
+export const useAuthControllerRefreshTokens = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerRefreshTokens>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authControllerRefreshTokens>>,

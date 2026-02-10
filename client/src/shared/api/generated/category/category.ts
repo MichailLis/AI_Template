@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CategoryResponseDto,
   CreateCategoryDto
 } from '../../model';
 
@@ -44,7 +45,7 @@ export const categoryControllerCreate = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<CategoryResponseDto>(
       {url: `/categories`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createCategoryDto, signal
@@ -107,7 +108,7 @@ export const categoryControllerFindAll = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<CategoryResponseDto[]>(
       {url: `/categories`, method: 'GET', signal
     },
       options);

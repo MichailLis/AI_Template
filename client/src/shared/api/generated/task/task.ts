@@ -25,7 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateTaskDto
+  CreateTaskDto,
+  TaskResponseDto
 } from '../../model';
 
 import { customInstance } from '../../api';
@@ -44,7 +45,7 @@ export const taskControllerCreate = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<TaskResponseDto>(
       {url: `/tasks`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTaskDto, signal
@@ -107,7 +108,7 @@ export const taskControllerFindAll = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<TaskResponseDto[]>(
       {url: `/tasks`, method: 'GET', signal
     },
       options);
@@ -197,7 +198,7 @@ export const taskControllerToggle = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<TaskResponseDto>(
       {url: `/tasks/${id}/toggle`, method: 'PATCH', signal
     },
       options);

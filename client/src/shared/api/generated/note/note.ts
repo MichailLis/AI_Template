@@ -25,7 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateNoteDto
+  CreateNoteDto,
+  NoteResponseDto
 } from '../../model';
 
 import { customInstance } from '../../api';
@@ -44,7 +45,7 @@ export const noteControllerCreate = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<NoteResponseDto>(
       {url: `/notes`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createNoteDto, signal
@@ -107,7 +108,7 @@ export const noteControllerFindAll = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<NoteResponseDto[]>(
       {url: `/notes`, method: 'GET', signal
     },
       options);

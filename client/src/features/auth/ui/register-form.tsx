@@ -6,11 +6,10 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/entities/session';
 import { useAuthControllerSignup } from '@/shared/api/generated/auth/auth';
 import { signupSchema } from '@/shared/api/schemas';
+import type { SignupInput } from '@/shared/api/schemas';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
-
-import type { SignupInput } from '@/shared/api/schemas';
 
 interface SignupError {
   response?: {
@@ -20,16 +19,6 @@ interface SignupError {
       };
     };
   };
-}
-
-interface SignupSuccess {
-  user: {
-    id: number;
-    email: string;
-    name?: string;
-  };
-  accessToken: string;
-  refreshToken: string;
 }
 
 export const RegisterForm = () => {
@@ -48,8 +37,7 @@ export const RegisterForm = () => {
 
   async function onSubmit(values: SignupInput) {
     signupMutation.mutate({ data: values }, {
-      onSuccess: (response) => {
-        const data = response as unknown as SignupSuccess;
+      onSuccess: (data) => {
         setAuth(data.user, data.accessToken, data.refreshToken);
         toast.success('Account created successfully');
         navigate('/');
@@ -107,7 +95,7 @@ export const RegisterForm = () => {
           {signupMutation.isPending ? 'Loading...' : 'Register'}
         </Button>
         <div className="text-center text-sm">
-          Don&apos;t have an account?{' '}
+          Already have an account?{' '}
           <Link to="/login" className="underline">
             Sign in
           </Link>

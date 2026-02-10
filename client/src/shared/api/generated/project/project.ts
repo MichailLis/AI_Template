@@ -25,7 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateProjectDto
+  CreateProjectDto,
+  ProjectResponseDto
 } from '../../model';
 
 import { customInstance } from '../../api';
@@ -44,7 +45,7 @@ export const projectControllerCreate = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<ProjectResponseDto>(
       {url: `/projects`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createProjectDto, signal
@@ -107,7 +108,7 @@ export const projectControllerFindAll = (
 ) => {
       
       
-      return customInstance<void>(
+      return customInstance<ProjectResponseDto[]>(
       {url: `/projects`, method: 'GET', signal
     },
       options);

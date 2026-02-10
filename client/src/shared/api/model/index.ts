@@ -6,9 +6,15 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './authResponseDto';
+export * from './authResponseDtoUser';
+export * from './categoryResponseDto';
 export * from './createCategoryDto';
 export * from './createNoteDto';
 export * from './createProjectDto';
 export * from './createTaskDto';
+export * from './noteResponseDto';
+export * from './projectResponseDto';
 export * from './signinDto';
 export * from './signupDto';
+export * from './taskResponseDto';

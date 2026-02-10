@@ -3,7 +3,7 @@ import { useNoteControllerFindAll } from '@/shared/api/generated/note/note';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
 export default function NotesPage() {
-  const { data, isLoading } = useNoteControllerFindAll();
+  const { data: notes, isLoading } = useNoteControllerFindAll();
 
   return (
     <div className="container mx-auto p-6 grid gap-8 md:grid-cols-[300px_1fr]">
@@ -18,7 +18,7 @@ export default function NotesPage() {
         <h2 className="text-xl font-bold">My Notes</h2>
         {isLoading && <p>Loading notes...</p>}
         <div className="grid gap-4 sm:grid-cols-2">
-          {data?.map((note) => (
+          {notes?.map((note) => (
             <Card key={note.id}>
               <CardHeader>
                 <CardTitle>{note.title}</CardTitle>
