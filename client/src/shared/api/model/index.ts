@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './createCategoryDto';
 export * from './createNoteDto';
 export * from './createProjectDto';
 export * from './createTaskDto';

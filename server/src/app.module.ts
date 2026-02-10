@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
 import { NoteModule } from './note/note.module';
 import { TaskModule } from './task/task.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TaskModule } from './task/task.module';
     ProjectModule,
     NoteModule,
     TaskModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [

@@ -31,11 +31,23 @@ model User {
   projects           Project[]
   notes              Note[]
   tasks              Task[]
+  categories         Category[]
   
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
   @@map("users") // Хорошая практика - называть таблицы во множественном числе
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
 }
 
 model Task {

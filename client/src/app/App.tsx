@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
+import CategoriesPage from '@/pages/categories/categories-page';
 import Dashboard from '@/pages/dashboard';
 import LoginPage from '@/pages/login';
 import NotesPage from '@/pages/notes/notes-page';
@@ -33,6 +34,7 @@ function App() {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/notes" element={<NotesPage />} />
               <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
             </Route>
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<LoginPage />} />

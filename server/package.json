@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "build:schematics": "tsc -p schematics/tsconfig.json && powershell -Command \"Copy-Item -Path 'schematics/resource/files' -Destination 'dist/schematics/resource/' -Recurse -Force; Copy-Item -Path 'schematics/resource/schema.json' -Destination 'dist/schematics/resource/' -Force\"",
+    "gen:nest": "npx nest g -c ./schematics/collection.json resource",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
