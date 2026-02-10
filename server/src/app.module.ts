@@ -6,10 +6,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { ProjectModule } from './project/project.module';
-import { NoteModule } from './note/note.module';
-import { TaskModule } from './task/task.module';
-import { CategoryModule } from './category/category.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
+import { SnippetModule } from './snippet/snippet.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -18,10 +17,9 @@ import { CategoryModule } from './category/category.module';
     }),
     PrismaModule,
     AuthModule,
-    ProjectModule,
-    NoteModule,
-    TaskModule,
-    CategoryModule,
+    BookmarkModule,
+    SnippetModule,
+    NewsModule,
   ],
   controllers: [AppController],
   providers: [

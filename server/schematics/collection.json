@@ -3,7 +3,7 @@
   "schematics": {
     "resource": {
       "description": "Generate a custom resource with Prisma and Auth",
-      "factory": "../dist/schematics/resource/index#resource",
+      "factory": "./resource/index#resource",
       "schema": "./resource/schema.json"
     }
   }

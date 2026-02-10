@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 generator zod {
   provider = "zod-prisma-types"
-  output   = "../src/generated/zod" // Куда сохранять схемы
+  output   = "../src/generated/zod"
 }
 
 datasource db {
@@ -23,46 +20,33 @@ model User {
   id                 Int      @id @default(autoincrement())
   email              String   @unique
   name               String?
-  password           String   // Хэш пароля
-  hashedRefreshToken String?  // Хэш refresh токена для безопасности
+  password           String
+  hashedRefreshToken String?
   role               Role     @default(USER)
-  
-  posts              Post[]
-  projects           Project[]
-  notes              Note[]
-  tasks              Task[]
-  categories         Category[]
-  
+
+  bookmarks          Bookmark[]
+  news               News[]
+  snippets           Snippet[]
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  @@map("users") // Хорошая практика - называть таблицы во множественном числе
+  @@map("users")
 }
 
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("categories")
-}
-
-model Task {
+model Bookmark {
   id        Int      @id @default(autoincrement())
   title     String
-  completed Boolean  @default(false)
+  url       String
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("tasks")
+  @@map("bookmarks")
 }
 
-model Note {
+model Snippet {
   id        Int      @id @default(autoincrement())
   title     String
   content   String
@@ -71,32 +55,17 @@ model Note {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("notes")
+  @@map("snippets")
 }
 
-model Project {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("projects")
-}
-
-model Post {
+model News {
   id        Int      @id @default(autoincrement())
   title     String
-  content   String?
-  published Boolean  @default(false)
-  
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  
+  content   String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@map("posts")
+
+  @@map("news")
 }
