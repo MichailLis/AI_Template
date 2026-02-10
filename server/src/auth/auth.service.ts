@@ -15,7 +15,7 @@ export class AuthService {
 
   async signup(dto: SignupDto) {
     const hashedPassword = await argon2.hash(dto.password);
-    
+
     try {
       const user = await this.prisma.user.create({
         data: {
@@ -27,14 +27,14 @@ export class AuthService {
 
       const tokens = await this.getTokens(user.id, user.email);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
-      
+
       return {
         ...tokens,
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
-        }
+        },
       };
     } catch (e) {
       if (e.code === 'P2002') {
@@ -56,14 +56,14 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    
+
     return {
       ...tokens,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-      }
+      },
     };
   }
 
@@ -79,14 +79,18 @@ export class AuthService {
       where: { id: userId },
     });
 
-    if (!user || !user.hashedRefreshToken) throw new ForbiddenException('Access Denied');
+    if (!user || !user.hashedRefreshToken)
+      throw new ForbiddenException('Access Denied');
 
-    const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken, refreshToken);
+    const refreshTokenMatches = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    
+
     return tokens;
   }
 
@@ -103,11 +107,17 @@ export class AuthService {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         { sub: userId, email },
-        { secret: this.config.get<string>('JWT_ACCESS_SECRET'), expiresIn: '15m' },
+        {
+          secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+          expiresIn: '15m',
+        },
       ),
       this.jwtService.signAsync(
         { sub: userId, email },
-        { secret: this.config.get<string>('JWT_REFRESH_SECRET'), expiresIn: '7d' },
+        {
+          secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+          expiresIn: '7d',
+        },
       ),
     ]);
 

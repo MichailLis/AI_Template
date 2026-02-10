@@ -6,7 +6,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Регистрация глобального фильтра исключений
   // Мы оставляем унифицированный формат только для ошибок
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -17,7 +17,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   const cleanedDocument = cleanupOpenApiDoc(document);
   SwaggerModule.setup('api', app, cleanedDocument);

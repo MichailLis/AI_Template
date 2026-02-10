@@ -1,5 +1,5 @@
-import { useCategoryControllerFindAll } from '@/shared/api/generated/category/category';
 import { CreateCategoryForm } from '@/features/create-category/ui/create-category-form';
+import { useCategoryControllerFindAll } from '@/shared/api/generated/category/category';
 import { Card, CardContent } from '@/shared/ui/card';
 
 export default function CategoriesPage() {

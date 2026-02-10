@@ -43,7 +43,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 3. Обработка Prisma ошибок (например, Unique constraint)
     if (exception && typeof exception === 'object' && 'code' in exception) {
-      const prismaException = exception as { code: string; meta?: { target?: string[] } };
+      const prismaException = exception as {
+        code: string;
+        meta?: { target?: string[] };
+      };
       if (prismaException.code === 'P2002') {
         status = HttpStatus.CONFLICT;
         const target = prismaException.meta?.target;

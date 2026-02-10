@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/entities/session';
 import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 import { loginSchema } from '@/shared/api/schemas';
-import type { LoginInput } from '@/shared/api/schemas';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
+
+import type { LoginInput } from '@/shared/api/schemas';
 
 interface AuthError {
   response?: {

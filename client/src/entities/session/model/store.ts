@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 interface User {
   id: number;
   email: string;
-  name?: string;
+  name?: string | null; // Разрешаем null для соответствия Prisma/Swagger
 }
 
 interface AuthState {
@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: true }); // Исправлено на false для выхода
       },
     }),
     {
