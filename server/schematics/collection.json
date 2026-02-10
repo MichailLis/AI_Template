@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "resource": {
+      "description": "Generate a custom resource with Prisma and Auth",
+      "factory": "./resource/index",
+      "schema": "./resource/schema.json"
+    }
+  }
+}

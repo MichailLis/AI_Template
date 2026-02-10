@@ -1,0 +1,17 @@
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { <%= classify(name) %>Service } from './<%= dasherize(name) %>.service';
+import { AtGuard } from '../auth/guards';
+
+@ApiTags('<%= classify(name) %>')
+@ApiBearerAuth()
+@UseGuards(AtGuard)
+@Controller('<%= dasherize(name) %>')
+export class <%= classify(name) %>Controller {
+  constructor(private readonly <%= camelize(name) %>Service: <%= classify(name) %>Service) {}
+
+  @Get()
+  findAll() {
+    return this.<%= camelize(name) %>Service.findAll();
+  }
+}

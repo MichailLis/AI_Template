@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider = "zod-prisma-types"
+  output   = "../src/generated/zod" // Куда сохранять схемы
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  name               String?
+  password           String   // Хэш пароля
+  hashedRefreshToken String?  // Хэш refresh токена для безопасности
+  role               Role     @default(USER)
+  
+  posts              Post[]
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("users") // Хорошая практика - называть таблицы во множественном числе
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("posts")
+}
