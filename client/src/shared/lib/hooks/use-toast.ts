@@ -3,7 +3,7 @@ import * as React from "react"
 import type {
   ToastActionElement,
   ToastProps,
-} from "@/components/ui/toast"
+} from "@/shared/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -90,8 +90,7 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // ! Side effects ! - This should be removed from the reducer to keep it pure.
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -155,7 +154,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss()
       },
     },

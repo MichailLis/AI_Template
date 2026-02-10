@@ -8,6 +8,7 @@ export default defineConfig({
       target: 'src/shared/api/generated',
       schemas: 'src/shared/api/model',
       client: 'react-query',
+      httpClient: 'axios', // Явно указываем axios
       override: {
         mutator: {
           path: './src/shared/api/api.ts',

@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -14,7 +14,6 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    // Если ответ пришел в формате { success: true, data: ... }, возвращаем только data
     if (response.data && response.data.success === true) {
       return response.data.data;
     }
@@ -29,14 +28,9 @@ api.interceptors.response.use(
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, {
           headers: { Authorization: `Bearer ${refreshToken}` }
         });
-        
-        // ВНИМАНИЕ: Для рефреша мы используем голый axios, 
-        // поэтому ответ придет в формате { success: true, data: { accessToken, ... } }
         const tokens = response.data.success ? response.data.data : response.data;
-        
         localStorage.setItem('accessToken', tokens.accessToken);
         localStorage.setItem('refreshToken', tokens.refreshToken);
-        
         originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         return axios(originalRequest);
       } catch (refreshError) {
@@ -50,8 +44,18 @@ api.interceptors.response.use(
   }
 );
 
-export const customInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
-  return api(config) as unknown as Promise<T>;
+/**
+ * Обертка для Orval. 
+ * Orval вызывает её как: customInstance({ url, method, data, params, ... }, options)
+ */
+export const customInstance = <T>(
+  config: AxiosRequestConfig,
+  options?: AxiosRequestConfig
+): Promise<T> => {
+  return api({
+    ...config,
+    ...options,
+  }) as unknown as Promise<T>;
 };
 
 export default api;
