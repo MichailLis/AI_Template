@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/entities/session';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -17,9 +18,15 @@ export default function Dashboard() {
             <p><strong>ID:</strong> {user?.id}</p>
             <p><strong>Email:</strong> {user?.email}</p>
           </div>
-          <Button variant="destructive" className="w-full" onClick={logout}>
-            Logout
-          </Button>
+          
+          <div className="pt-4 space-y-2">
+            <Button asChild className="w-full">
+              <Link to="/projects">View My Projects</Link>
+            </Button>
+            <Button variant="destructive" className="w-full" onClick={logout}>
+              Logout
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

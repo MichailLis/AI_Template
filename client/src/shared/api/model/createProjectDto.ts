@@ -6,6 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export * from './createProjectDto';
-export * from './signinDto';
-export * from './signupDto';
+export interface CreateProjectDto {
+  title: string;
+  /** @nullable */
+  description: string | null;
+}

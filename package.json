@@ -6,9 +6,9 @@
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run start:dev --prefix server",
     "dev": "concurrently -n \"client,server\" -c \"blue,green\" \"npm run dev:client\" \"npm run dev:server\"",
-    "gen:nest": "npx nest g -c ./server/schematics/collection.json resource",
+    "gen:nest": "npx nest g -c ./schematics/collection.json resource",
     "gen:api": "npm run gen:api --prefix client",
-    "prisma:generate": "npx prisma generate --prefix server",
+    "prisma:generate": "npx prisma generate --schema=./server/prisma/schema.prisma",
     "prisma:studio": "npx prisma studio --prefix server"
   },
   "devDependencies": {
