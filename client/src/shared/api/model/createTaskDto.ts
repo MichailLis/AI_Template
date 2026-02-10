@@ -6,8 +6,6 @@
  * OpenAPI spec version: 1.0
  */
 
-export * from './createNoteDto';
-export * from './createProjectDto';
-export * from './createTaskDto';
-export * from './signinDto';
-export * from './signupDto';
+export interface CreateTaskDto {
+  title: string;
+}

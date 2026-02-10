@@ -26,6 +26,9 @@ export default function Dashboard() {
             <Button asChild variant="outline" className="w-full">
               <Link to="/notes">My Notes</Link>
             </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/tasks">My Tasks</Link>
+            </Button>
             <Button variant="destructive" className="w-full" onClick={logout}>
               Logout
             </Button>
