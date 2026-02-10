@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { useAuthStore } from '@/entities/session/model/store';
+import { useAuthStore } from '@/entities/session';
 import { useAuthControllerSignup } from '@/shared/api/generated/auth/auth';
 import { signupSchema } from '@/shared/api/schemas';
 import { Button } from '@/shared/ui/button';
@@ -12,7 +12,25 @@ import { Input } from '@/shared/ui/input';
 
 import type { SignupInput } from '@/shared/api/schemas';
 
+interface SignupError {
+  response?: {
+    data?: {
+      error?: {
+        message: string;
+      };
+    };
+  };
+}
 
+interface SignupSuccess {
+  user: {
+    id: number;
+    email: string;
+    name?: string;
+  };
+  accessToken: string;
+  refreshToken: string;
+}
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
@@ -30,13 +48,15 @@ export const RegisterForm = () => {
 
   async function onSubmit(values: SignupInput) {
     signupMutation.mutate({ data: values }, {
-      onSuccess: (response: any) => {
-        setAuth(response.user, response.accessToken, response.refreshToken);
+      onSuccess: (response) => {
+        const data = response as unknown as SignupSuccess;
+        setAuth(data.user, data.accessToken, data.refreshToken);
         toast.success('Account created successfully');
         navigate('/');
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.error?.message || 'Registration failed');
+      onError: (error: unknown) => {
+        const signupError = error as SignupError;
+        toast.error(signupError.response?.data?.error?.message || 'Registration failed');
       }
     });
   }
@@ -87,7 +107,7 @@ export const RegisterForm = () => {
           {signupMutation.isPending ? 'Loading...' : 'Register'}
         </Button>
         <div className="text-center text-sm">
-          Already have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link to="/login" className="underline">
             Sign in
           </Link>

@@ -16,6 +16,16 @@ const createNoteSchema = z.object({
 
 type CreateNoteInput = z.infer<typeof createNoteSchema>;
 
+interface ApiError {
+  response?: {
+    data?: {
+      error?: {
+        message: string;
+      };
+    };
+  };
+}
+
 export const CreateNoteForm = () => {
   const queryClient = useQueryClient();
   const createMutation = useNoteControllerCreate();
@@ -32,8 +42,9 @@ export const CreateNoteForm = () => {
         form.reset();
         queryClient.invalidateQueries({ queryKey: getNoteControllerFindAllQueryKey() });
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.error?.message || 'Failed to create note');
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        toast.error(apiError.response?.data?.error?.message || 'Failed to create note');
       }
     });
   }

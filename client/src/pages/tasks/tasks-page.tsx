@@ -1,8 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 
 import { CreateTaskForm } from '@/features/create-task/ui/create-task-form';
-import { useTaskControllerFindAll, useTaskControllerToggle } from '@/shared/api/generated/task/task';
-import { getTaskControllerFindAllQueryKey } from '@/shared/api/generated/task/task';
+import { useTaskControllerFindAll, useTaskControllerToggle, getTaskControllerFindAllQueryKey } from '@/shared/api/generated/task/task';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
@@ -27,7 +26,7 @@ export default function TasksPage() {
       
       <div className="space-y-2">
         {isLoading && <p>Loading tasks...</p>}
-        {data?.map((task: any) => (
+        {data?.map((task) => (
           <Card key={task.id} className={task.completed ? 'opacity-50' : ''}>
             <CardContent className="flex items-center justify-between p-4">
               <span className={task.completed ? 'line-through' : ''}>{task.title}</span>

@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/entities/session';
 import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 import { loginSchema } from '@/shared/api/schemas';
-import type { LoginInput } from '@/shared/api/schemas';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
+
+import type { LoginInput } from '@/shared/api/schemas';
 
 interface AuthError {
   response?: {
@@ -19,6 +20,16 @@ interface AuthError {
       };
     };
   };
+}
+
+interface SuccessResponse {
+  user: {
+    id: number;
+    email: string;
+    name?: string;
+  };
+  accessToken: string;
+  refreshToken: string;
 }
 
 export const LoginForm = () => {
@@ -36,8 +47,9 @@ export const LoginForm = () => {
 
   async function onSubmit(values: LoginInput) {
     loginMutation.mutate({ data: values }, {
-      onSuccess: (response: any) => {
-        setAuth(response.user, response.accessToken, response.refreshToken);
+      onSuccess: (response) => {
+        const data = response as unknown as SuccessResponse;
+        setAuth(data.user, data.accessToken, data.refreshToken);
         toast.success('Welcome back!');
         navigate('/');
       },

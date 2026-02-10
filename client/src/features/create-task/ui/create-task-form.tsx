@@ -15,6 +15,16 @@ const createTaskSchema = z.object({
 
 type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
+interface ApiError {
+  response?: {
+    data?: {
+      error?: {
+        message: string;
+      };
+    };
+  };
+}
+
 export const CreateTaskForm = () => {
   const queryClient = useQueryClient();
   const createMutation = useTaskControllerCreate();
@@ -31,8 +41,9 @@ export const CreateTaskForm = () => {
         form.reset();
         queryClient.invalidateQueries({ queryKey: getTaskControllerFindAllQueryKey() });
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.error?.message || 'Failed to add task');
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        toast.error(apiError.response?.data?.error?.message || 'Failed to add task');
       }
     });
   }

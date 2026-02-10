@@ -25,12 +25,13 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
-      // Снижаем строгость для прототипирования
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      
+      // СТРОГИЕ ПРАВИЛА ДЛЯ ПРОДАКШН-КОДА
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       
       'import/order': [
-        'warn', // Меняем на warn, чтобы не блокировать билд
+        'error',
         {
           groups: [
             'builtin',
@@ -46,7 +47,7 @@ export default tseslint.config(
           alphabetize: { order: 'asc', caseInsensitive: true },
         },
       ],
-      // Оставляем это правило строгим, так как оно защищает FSD
+      
       'no-restricted-imports': [
         'error',
         {

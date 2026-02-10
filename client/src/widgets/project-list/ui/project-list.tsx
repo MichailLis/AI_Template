@@ -8,7 +8,7 @@ export const ProjectList = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {data?.map((project: any) => (
+      {data?.map((project) => (
         <Card key={project.id}>
           <CardHeader>
             <CardTitle>{project.title}</CardTitle>

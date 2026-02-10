@@ -4,12 +4,10 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { useProjectControllerCreate } from '@/shared/api/generated/project/project';
-import { getProjectControllerFindAllQueryKey } from '@/shared/api/generated/project/project';
+import { useProjectControllerCreate, getProjectControllerFindAllQueryKey } from '@/shared/api/generated/project/project';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
-
 
 const createProjectSchema = z.object({
   title: z.string().min(3, 'Title is too short'),
@@ -17,6 +15,16 @@ const createProjectSchema = z.object({
 });
 
 type CreateProjectInput = z.infer<typeof createProjectSchema>;
+
+interface ApiError {
+  response?: {
+    data?: {
+      error?: {
+        message: string;
+      };
+    };
+  };
+}
 
 export const CreateProjectForm = () => {
   const queryClient = useQueryClient();
@@ -32,11 +40,11 @@ export const CreateProjectForm = () => {
       onSuccess: () => {
         toast.success('Project created!');
         form.reset();
-        // Инвалидируем кэш списка проектов
         queryClient.invalidateQueries({ queryKey: getProjectControllerFindAllQueryKey() });
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.error?.message || 'Failed to create project');
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        toast.error(apiError.response?.data?.error?.message || 'Failed to create project');
       }
     });
   }

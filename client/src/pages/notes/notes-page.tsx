@@ -18,7 +18,7 @@ export default function NotesPage() {
         <h2 className="text-xl font-bold">My Notes</h2>
         {isLoading && <p>Loading notes...</p>}
         <div className="grid gap-4 sm:grid-cols-2">
-          {data?.map((note: any) => (
+          {data?.map((note) => (
             <Card key={note.id}>
               <CardHeader>
                 <CardTitle>{note.title}</CardTitle>
