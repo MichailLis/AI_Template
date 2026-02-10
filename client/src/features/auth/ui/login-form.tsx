@@ -1,14 +1,25 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { useAuthStore } from '@/entities/session';
+import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 import { loginSchema } from '@/shared/api/schemas';
 import type { LoginInput } from '@/shared/api/schemas';
-import { useAuthStore } from '@/entities/session/model/store';
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
-import { toast } from 'sonner';
-import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
+import { Input } from '@/shared/ui/input';
+
+interface AuthError {
+  response?: {
+    data?: {
+      error?: {
+        message: string;
+      };
+    };
+  };
+}
 
 export const LoginForm = () => {
   const navigate = useNavigate();
@@ -30,8 +41,10 @@ export const LoginForm = () => {
         toast.success('Welcome back!');
         navigate('/');
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.error?.message || 'Invalid credentials');
+      onError: (error: unknown) => {
+        const authError = error as AuthError;
+        const message = authError.response?.data?.error?.message || 'Invalid credentials';
+        toast.error(message);
       }
     });
   }

@@ -1,9 +1,10 @@
-import { useTaskControllerFindAll, useTaskControllerToggle } from '@/shared/api/generated/task/task';
-import { CreateTaskForm } from '@/features/create-task/ui/create-task-form';
 import { useQueryClient } from '@tanstack/react-query';
+
+import { CreateTaskForm } from '@/features/create-task/ui/create-task-form';
+import { useTaskControllerFindAll, useTaskControllerToggle } from '@/shared/api/generated/task/task';
 import { getTaskControllerFindAllQueryKey } from '@/shared/api/generated/task/task';
-import { Card, CardContent } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
 
 export default function TasksPage() {
   const queryClient = useQueryClient();

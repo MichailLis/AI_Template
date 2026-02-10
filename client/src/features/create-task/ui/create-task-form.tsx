@@ -1,12 +1,13 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/shared/ui/form';
-import { toast } from 'sonner';
-import { useTaskControllerCreate, getTaskControllerFindAllQueryKey } from '@/shared/api/generated/task/task';
 import { useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { useTaskControllerCreate, getTaskControllerFindAllQueryKey } from '@/shared/api/generated/task/task';
+import { Button } from '@/shared/ui/button';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/shared/ui/form';
+import { Input } from '@/shared/ui/input';
 
 const createTaskSchema = z.object({
   title: z.string().min(1, 'Title is required'),

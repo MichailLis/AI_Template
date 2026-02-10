@@ -1,5 +1,5 @@
-import { ProjectList } from '@/widgets/project-list';
 import { CreateProjectForm } from '@/features/create-project';
+import { ProjectList } from '@/widgets/project-list';
 
 export default function ProjectsPage() {
   return (

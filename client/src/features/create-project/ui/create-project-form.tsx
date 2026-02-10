@@ -1,13 +1,15 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
-import { toast } from 'sonner';
-import { useProjectControllerCreate } from '@/shared/api/generated/project/project';
 import { useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { useProjectControllerCreate } from '@/shared/api/generated/project/project';
 import { getProjectControllerFindAllQueryKey } from '@/shared/api/generated/project/project';
+import { Button } from '@/shared/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
+import { Input } from '@/shared/ui/input';
+
 
 const createProjectSchema = z.object({
   title: z.string().min(3, 'Title is too short'),

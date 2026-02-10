@@ -1,5 +1,5 @@
-import { useNoteControllerFindAll } from '@/shared/api/generated/note/note';
 import { CreateNoteForm } from '@/features/create-note/ui/create-note-form';
+import { useNoteControllerFindAll } from '@/shared/api/generated/note/note';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
 export default function NotesPage() {

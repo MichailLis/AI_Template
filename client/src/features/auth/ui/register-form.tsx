@@ -1,14 +1,18 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
-import { signupSchema } from '@/shared/api/schemas';
-import type { SignupInput } from '@/shared/api/schemas';
-import { useAuthStore } from '@/entities/session/model/store';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { toast } from 'sonner';
+
+import { useAuthStore } from '@/entities/session/model/store';
 import { useAuthControllerSignup } from '@/shared/api/generated/auth/auth';
+import { signupSchema } from '@/shared/api/schemas';
+import { Button } from '@/shared/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
+import { Input } from '@/shared/ui/input';
+
+import type { SignupInput } from '@/shared/api/schemas';
+
+
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
