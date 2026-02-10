@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/entities/session/model/store';
+import { useAuthStore } from '@/entities/session';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
