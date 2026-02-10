@@ -30,46 +30,65 @@ Follow these steps exactly to maintain architectural integrity:
    npm run gen:nest <name>
    ```
 2. **Define DTOs:** Use `nestjs-zod`.
-   - **CRITICAL:** Swagger UI cannot represent the `Date` type in JSON Schema. 
-   - When using auto-generated Prisma schemas for **Response DTOs**, always override Date fields with strings:
+   - **CRITICAL (Date Handling):** Swagger UI cannot represent the `Date` type in JSON Schema. 
+   - When creating **Response DTOs**, always override Prisma's `Date` fields with `z.string()`:
      ```typescript
      export const MyResponseSchema = MySchema.extend({
        createdAt: z.string(),
        updatedAt: z.string(),
      });
      ```
-3. **Logic:** Implement business logic in `src/<name>/service.ts`.
-4. **Verify:** Use Swagger at `http://localhost:3000/api` to test.
+3. **Controller Documentation:** 
+   - **CRITICAL:** Always use `@ApiResponse({ type: MyResponseDto })` (or `[MyResponseDto]` for arrays) in your controllers. 
+   - Without this, Orval will not generate the corresponding TypeScript models on the frontend.
+4. **Logic:** Implement business logic in `src/<name>/service.ts`.
+5. **Verify:** Open `http://localhost:3000/api` to ensure Swagger is correctly typed.
 
 ### Phase 3: Frontend Integration (FSD Implementation)
-1. **Sync API Hooks:** Ensure backend is running, then run in root:
-   ```powershell
-   npm run gen:api
-   ```
-   *Result: Typed React Query hooks are generated in `client/src/shared/api/generated`.*
-2. **Define Entities:** If adding a new business object, create `client/src/entities/<name>`.
-3. **Implement Features:** For user actions (forms, buttons), create `client/src/features/<name>`.
-4. **Data Fetching:** Always use the generated TanStack Query hooks. Never use `useEffect` or raw `axios`.
-5. **UI Components:** Add via Shadcn to `client/src/shared/ui`.
-6. **Routing:** Register the new page in `client/src/app/App.tsx`.
+1. **Sync API Hooks:** 
+   - **CRITICAL:** The backend **must be running** and updated with new DTOs.
+   - Run in root: `npm run gen:api`.
+   - *Result: Typed React Query hooks and Models are generated in `client/src/shared/api/generated`.*
+2. **Implement Features:** Create interactive components in `client/src/features/<feature-name>`.
+3. **Data Fetching:** Always use the generated TanStack Query hooks. 
+   - Since our axios interceptor unwraps `{ success: true, data: ... }`, the hooks return the payload directly.
+   - If TypeScript inference fails, use explicit casting: `const items = data as unknown as MyResponseDto[]`.
+4. **Public API Rule:** Every FSD slice (`entities/*`, `features/*`) **must** have an `index.ts` file (Barrel) that exports only what's needed externally.
+5. **Routing:** Register pages in `client/src/app/App.tsx`.
 
 ### Phase 4: Verification & Static Analysis
 1. **Linting:** Run `npm run lint` from root.
 2. **Commit:** `git commit` triggers `lint-staged`.
-   - **Zero-Warning Policy:** Commits will fail if there are any linting errors.
+   - **Zero-Warning Policy:** Commits will fail if there are any linting errors or FSD violations.
+
+---
+
+## 📂 Frontend FSD Structure
+- `src/app`: Global initialization (providers, App.tsx, styles).
+- `src/pages`: Composition of widgets/features into full screens.
+- `src/widgets`: Large, independent self-contained blocks (e.g., Header).
+- `src/features`: Interactive business actions (e.g., `LoginForm`).
+- `src/entities`: Business domain logic, data models, and stores.
+- `src/shared`: Reusable infrastructure (UI kit, API client, utils).
+
+---
+
+## 🤖 AI Workflow & Commands
+- **Backend Generation:** `npm run gen:nest <name>` (From root).
+- **API Sync:** `npm run gen:api` (Backend must be running).
+- **UI Components:** `npx shadcn@latest add <component-name>` (From `client` dir).
+- **Format All:** `npm run format` (From root).
 
 ---
 
 ## 🛡 Best Practices & Constraints
 1. **No `any`**: Use inferred Zod types or generated API models.
-2. **Strict FSD**: Don't cross-import between features. Use the `shared` layer.
+2. **Strict FSD**: No cross-imports between features.
 3. **Response Format**: Always `{ "success": true, "data": { ... } }`.
-4. **Imports**: Always use `@/` path aliases. Relative paths between layers are forbidden.
-5. **Type Safety**: Use `import type` for all TypeScript types to ensure compatibility with Vite's build process (`verbatimModuleSyntax` is enabled).
+4. **Type Safety**: Use `import type` for all TypeScript types to ensure compatibility with Vite's build process.
 
 ## 🚦 How to Start Development
 ```powershell
 npm install
 npm run dev
 ```
-This starts both frontend and backend concurrently.
