@@ -1,19 +1,20 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginSchema } from '@/lib/schemas';
-import type { LoginInput } from '@/lib/schemas';
-import api from '@/lib/api';
-import { useAuthStore } from '@/lib/store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { loginSchema } from '@/shared/api/schemas';
+import type { LoginInput } from '@/shared/api/schemas';
+import { useAuthStore } from '@/entities/session/model/store';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/shared/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { toast } from 'sonner';
+import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const loginMutation = useAuthControllerSignin();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -24,18 +25,20 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: LoginInput) {
-    try {
-      const response = await api.post('/auth/signin', values);
-      setAuth(
-        response.data.user, 
-        response.data.accessToken, 
-        response.data.refreshToken
-      );
-      toast.success('Success');
-      navigate('/');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error');
-    }
+    loginMutation.mutate({ data: values }, {
+      onSuccess: (response: any) => {
+        setAuth(
+          response.user, 
+          response.accessToken, 
+          response.refreshToken
+        );
+        toast.success('Welcome back!');
+        navigate('/');
+      },
+      onError: (error: any) => {
+        toast.error(error.response?.data?.error?.message || 'Invalid credentials');
+      }
+    });
   }
 
   return (
@@ -76,8 +79,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Loading...' : 'Login'}
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? 'Loading...' : 'Login'}
               </Button>
             </form>
           </Form>

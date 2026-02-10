@@ -1,0 +1,19 @@
+import { defineConfig } from 'orval';
+
+export default defineConfig({
+  api: {
+    input: 'http://localhost:3000/api-json',
+    output: {
+      mode: 'tags-split',
+      target: 'src/shared/api/generated',
+      schemas: 'src/shared/api/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: './src/shared/api/api.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
+});
