@@ -51,7 +51,7 @@ Follow these steps exactly to maintain architectural integrity:
 ## 📂 Frontend FSD Structure
 - `src/app`: Global initialization (providers, App.tsx, styles).
 - `src/pages`: Composition of widgets/features into full screens.
-- `src/widgets`: Large, independent self-contained blocks (e.g., Navbar).
+- `src/widgets`: Large, independent self-contained blocks (e.g., Header).
 - `src/features`: Interactive business actions (e.g., `LoginForm`, `CreateTask`).
 - `src/entities`: Business domain logic, data models, and stores (e.g., `user`, `product`).
 - `src/shared`: Reusable infrastructure (UI kit, API client, utility functions).
@@ -69,7 +69,9 @@ Follow these steps exactly to maintain architectural integrity:
 ## 🛡 Best Practices & Constraints
 1. **No `any`**: Use inferred Zod types or generated API models.
 2. **Strict FSD**: Don't cross-import between features or entities. Use the `shared` layer for common code.
-3. **Standard Errors**: Server always returns `{ success: false, error: { code, message, details } }`.
+3. **Response Format**: All responses follow a unified structure:
+   - **Success:** `{ "success": true, "data": { ... } }`
+   - **Error:** `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
 4. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`).
 5. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
 

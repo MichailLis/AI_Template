@@ -13,7 +13,13 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Если ответ пришел в формате { success: true, data: ... }, возвращаем только data
+    if (response.data && response.data.success === true) {
+      return response.data.data;
+    }
+    return response.data;
+  },
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -23,11 +29,16 @@ api.interceptors.response.use(
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, {
           headers: { Authorization: `Bearer ${refreshToken}` }
         });
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
+        
+        // ВНИМАНИЕ: Для рефреша мы используем голый axios, 
+        // поэтому ответ придет в формате { success: true, data: { accessToken, ... } }
+        const tokens = response.data.success ? response.data.data : response.data;
+        
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+        
+        originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+        return axios(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
@@ -40,7 +51,7 @@ api.interceptors.response.use(
 );
 
 export const customInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
-  return api(config).then((res) => res.data);
+  return api(config) as unknown as Promise<T>;
 };
 
 export default api;

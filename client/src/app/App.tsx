@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import LoginPage from '@/pages/login';
 import RegisterPage from '@/pages/register';
 import Dashboard from '@/pages/dashboard';
+import { Header } from '@/widgets/header';
 import { ProtectedRoute, PublicRoute } from './providers/auth-guard';
 
 const queryClient = new QueryClient({
@@ -19,15 +20,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-          </Route>
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Route>
-        </Routes>
+        <Header />
+        <main>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Dashboard />} />
+            </Route>
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
+          </Routes>
+        </main>
         <Toaster position="top-right" richColors />
       </Router>
     </QueryClientProvider>
