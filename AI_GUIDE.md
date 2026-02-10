@@ -18,14 +18,15 @@ Follow these steps exactly to maintain architectural integrity:
 1. **Modify Schema:** Add new models to `server/prisma/schema.prisma`.
 2. **Sync & Generate:** 
    ```powershell
-   cd server; npx prisma generate; npx prisma db push
+   npm run prisma:generate # From root
+   cd server; npx prisma db push
    ```
    *Result: Prisma Client is updated and Zod schemas are auto-generated in `server/src/generated/zod`.*
 
 ### Phase 2: Backend API (Business Logic)
-1. **Scaffold Resource:** Use the custom schematic from the `server` directory:
+1. **Scaffold Resource:** Use the custom command from the root directory:
    ```powershell
-   npx nest g -c ./schematics/collection.json resource <name>
+   npm run gen:nest <name>
    ```
    *Note: This automatically creates the module, service, controller, and registers them in AppModule with Prisma & Auth injected.*
 2. **Define DTOs:** Create/Update DTOs in `src/<name>/dto` using `nestjs-zod`.
@@ -59,7 +60,7 @@ Follow these steps exactly to maintain architectural integrity:
 ---
 
 ## 🤖 AI Workflow & Commands
-- **Backend Generation:** `npx nest g -c ./server/schematics/collection.json resource <name>`
+- **Backend Generation:** `npm run gen:nest <name>` (From root).
 - **API Sync:** `npm run gen:api` (Backend must be running).
 - **UI Components:** `npx shadcn@latest add <component-name>` (From `client` dir).
 - **Database Studio:** `npm run prisma:studio` (From root).
@@ -72,8 +73,9 @@ Follow these steps exactly to maintain architectural integrity:
 3. **Response Format**: All responses follow a unified structure:
    - **Success:** `{ "success": true, "data": { ... } }`
    - **Error:** `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
-4. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`).
-5. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
+4. **API Client**: The custom axios instance automatically extracts `.data`, so `useQuery` returns the payload directly.
+5. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`).
+6. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
 
 ## 🚦 How to Start Development
 ```powershell
