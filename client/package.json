@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "gen:api": "orval",
+    "format": "npx prettier --write",
+    "gen:api": "node -e \"const fs=require('node:fs');fs.rmSync('src/shared/api/generated',{recursive:true,force:true});fs.rmSync('src/shared/api/model',{recursive:true,force:true});\" && orval",
     "preview": "vite preview"
   },
   "dependencies": {

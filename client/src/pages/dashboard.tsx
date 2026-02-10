@@ -16,19 +16,23 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm">
-            <p><strong>ID:</strong> {user?.id}</p>
-            <p><strong>Email:</strong> {user?.email}</p>
+            <p>
+              <strong>ID:</strong> {user?.id}
+            </p>
+            <p>
+              <strong>Email:</strong> {user?.email}
+            </p>
           </div>
-          
+
           <div className="pt-4 space-y-2">
             <Button asChild className="w-full">
-              <Link to="/projects">View My Projects</Link>
+              <Link to="/bookmarks">Open Bookmarks</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link to="/notes">My Notes</Link>
+              <Link to="/news">Open News</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link to="/tasks">My Tasks</Link>
+              <Link to="/snippets">Open Snippets</Link>
             </Button>
             <Button variant="destructive" className="w-full" onClick={logout}>
               Logout

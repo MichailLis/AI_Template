@@ -27,11 +27,11 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        set({ user: null, isAuthenticated: true }); // Исправлено на false для выхода
+        set({ user: null, isAuthenticated: false });
       },
     }),
     {
       name: 'auth-storage',
-    }
-  )
+    },
+  ),
 );

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "auth": {
+    "requiredRoutes": [
+      "/login",
+      "/register"
+    ],
+    "requiredBackendModule": "AuthModule"
+  },
+  "features": [
+    {
+      "name": "bookmark",
+      "route": "/bookmarks",
+      "backendModule": "BookmarkModule",
+      "schema": "bookmarkSchema",
+      "prismaModel": "Bookmark",
+      "backendFiles": [
+        "server/src/bookmark/bookmark.module.ts",
+        "server/src/bookmark/bookmark.controller.ts",
+        "server/src/bookmark/bookmark.service.ts",
+        "server/src/bookmark/dto/create-bookmark.dto.ts",
+        "server/src/bookmark/dto/bookmark-response.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/bookmarks/bookmarks-page.tsx",
+        "client/src/features/create-bookmark/ui/create-bookmark-form.tsx"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/bookmark/bookmark.ts"
+    },
+    {
+      "name": "news",
+      "route": "/news",
+      "backendModule": "NewsModule",
+      "schema": "newsSchema",
+      "prismaModel": "News",
+      "backendFiles": [
+        "server/src/news/news.module.ts",
+        "server/src/news/news.controller.ts",
+        "server/src/news/news.service.ts",
+        "server/src/news/dto/create-news.dto.ts",
+        "server/src/news/dto/news-response.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/news/news-page.tsx",
+        "client/src/features/create-news/ui/create-news-form.tsx"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/news/news.ts"
+    },
+    {
+      "name": "snippet",
+      "route": "/snippets",
+      "backendModule": "SnippetModule",
+      "schema": "snippetSchema",
+      "prismaModel": "Snippet",
+      "backendFiles": [
+        "server/src/snippet/snippet.module.ts",
+        "server/src/snippet/snippet.controller.ts",
+        "server/src/snippet/snippet.service.ts",
+        "server/src/snippet/dto/create-snippet.dto.ts",
+        "server/src/snippet/dto/snippet-response.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/snippets/snippets-page.tsx",
+        "client/src/features/create-snippet/ui/create-snippet-form.tsx"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/snippet/snippet.ts"
+    }
+  ]
+}
