@@ -36,8 +36,13 @@ export class AuthService {
           name: user.name,
         },
       };
-    } catch (e) {
-      if (e.code === 'P2002') {
+    } catch (e: unknown) {
+      if (
+        typeof e === 'object' &&
+        e !== null &&
+        'code' in e &&
+        e.code === 'P2002'
+      ) {
         throw new ForbiddenException('Email already exists');
       }
       throw e;

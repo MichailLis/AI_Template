@@ -9,6 +9,11 @@ import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
 
+interface HttpErrorResponse {
+  message?: string | string[];
+  error?: string;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -19,17 +24,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let code = 'INTERNAL_ERROR';
-    let details: any[] = [];
+    let details: unknown[] = [];
 
-    // 1. Обработка стандартных HttpException
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const res = exception.getResponse() as any;
-      message = typeof res === 'string' ? res : res.message || message;
+      const res = exception.getResponse() as HttpErrorResponse;
+      message =
+        typeof res === 'string'
+          ? res
+          : (Array.isArray(res.message) ? res.message[0] : res.message) ||
+            message;
       code = res.error || 'HTTP_ERROR';
     }
 
-    // 2. Обработка Zod Validation ошибок
     if (exception instanceof ZodValidationException) {
       status = HttpStatus.BAD_REQUEST;
       const zodError = exception.getZodError() as ZodError;
@@ -41,7 +48,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }));
     }
 
-    // 3. Обработка Prisma ошибок (например, Unique constraint)
     if (exception && typeof exception === 'object' && 'code' in exception) {
       const prismaException = exception as {
         code: string;
@@ -49,7 +55,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
       if (prismaException.code === 'P2002') {
         status = HttpStatus.CONFLICT;
-        const target = prismaException.meta?.target;
+        const target = Array.isArray(prismaException.meta?.target)
+          ? prismaException.meta?.target.join(', ')
+          : 'unknown';
         message = `Unique constraint failed on field: ${target}`;
         code = 'DB_UNIQUE_CONSTRAINT';
       }

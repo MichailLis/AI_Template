@@ -7,16 +7,14 @@ import {
   useFormContext,
   useFormState,
 } from "react-hook-form"
-
+import type {
+  ControllerProps,
+  FieldPath,
+  FieldValues,
+} from "react-hook-form"
 
 import { cn } from "@/shared/lib/utils"
 import { Label } from "@/shared/ui/label"
-
-import type {
-  FieldPath,
-  FieldValues,
-  ControllerProps,
-} from "react-hook-form"
 
 const Form = FormProvider
 
