@@ -10,42 +10,51 @@ Welcome! This project is a production-ready boilerplate built with **NestJS**, *
 
 ---
 
-## 🛠 Feature Implementation Pipeline (Workflow)
+## 🛠 Feature Implementation Pipeline (Full Workflow)
 
 Follow these steps exactly to maintain architectural integrity:
 
-### Phase 1: Data Modeling
+### Phase 1: Data Modeling (Source of Truth)
 1. **Modify Schema:** Add new models to `server/prisma/schema.prisma`.
 2. **Sync & Generate:** 
    ```powershell
    cd server; npx prisma generate; npx prisma db push
    ```
+   *Result: Prisma Client is updated and Zod schemas are auto-generated in `server/src/generated/zod`.*
 
-### Phase 2: Backend API
-1. **Scaffold Resource:** Use the custom schematic:
+### Phase 2: Backend API (Business Logic)
+1. **Scaffold Resource:** Use the custom schematic from the `server` directory:
    ```powershell
    npx nest g -c ./schematics/collection.json resource <name>
    ```
-2. **Define DTOs:** In `src/<name>/dto` using `nestjs-zod`.
-3. **Logic:** Implement in `src/<name>/service.ts`.
+   *Note: This automatically creates the module, service, controller, and registers them in AppModule with Prisma & Auth injected.*
+2. **Define DTOs:** Create/Update DTOs in `src/<name>/dto` using `nestjs-zod`.
+3. **Logic:** Implement business logic in `src/<name>/service.ts`.
+4. **Verify:** Use Swagger at `http://localhost:3000/api` to test.
 
-### Phase 3: Frontend Integration (FSD Style)
-1. **Sync API Hooks:** Run `npm run gen:api` to update `src/shared/api/generated`.
-2. **Create Feature:** If it's a user action, add logic to `src/features/<feature-name>`.
-3. **Create Entity:** If it's a business object (data + store), add to `src/entities/<entity-name>`.
-4. **Data Fetching:** Always use generated TanStack Query hooks.
-5. **UI Components:** Add via Shadcn to `src/shared/ui`.
-6. **Routing:** Add pages to `src/pages` and register in `src/app/App.tsx`.
+### Phase 3: Frontend Integration (FSD Implementation)
+1. **Sync API Hooks:** Ensure backend is running, then run in root:
+   ```powershell
+   npm run gen:api
+   ```
+   *Result: Typed React Query hooks are generated in `client/src/shared/api/generated`.*
+2. **Define Entities:** If adding a new business object, create `client/src/entities/<name>`.
+3. **Implement Features:** For user actions (forms, buttons), create `client/src/features/<name>`.
+4. **Public API Rule:** Every FSD slice (`entities/*`, `features/*`) **must** have an `index.ts` file that exports only what's needed externally.
+5. **Data Fetching:** Always use the generated TanStack Query hooks. Never use `useEffect` or raw `axios`.
+6. **UI Components:** Add via Shadcn to `client/src/shared/ui`.
+7. **Assemble Pages:** Create pages in `client/src/pages` by composing features and entities.
+8. **Routing:** Register the new page in `client/src/app/App.tsx`.
 
 ---
 
 ## 📂 Frontend FSD Structure
-- `src/app`: Initialization (providers, App.tsx, global styles).
-- `src/pages`: Entire screens.
-- `src/widgets`: Large independent UI blocks.
-- `src/features`: User actions (e.g., `LoginForm`, `CreateTask`).
-- `src/entities`: Business entities (e.g., `session`, `user`, `product`).
-- `src/shared`: Reusable tools (UI kit, API client, utils).
+- `src/app`: Global initialization (providers, App.tsx, styles).
+- `src/pages`: Composition of widgets/features into full screens.
+- `src/widgets`: Large, independent self-contained blocks (e.g., Navbar).
+- `src/features`: Interactive business actions (e.g., `LoginForm`, `CreateTask`).
+- `src/entities`: Business domain logic, data models, and stores (e.g., `user`, `product`).
+- `src/shared`: Reusable infrastructure (UI kit, API client, utility functions).
 
 ---
 
@@ -53,14 +62,16 @@ Follow these steps exactly to maintain architectural integrity:
 - **Backend Generation:** `npx nest g -c ./server/schematics/collection.json resource <name>`
 - **API Sync:** `npm run gen:api` (Backend must be running).
 - **UI Components:** `npx shadcn@latest add <component-name>` (From `client` dir).
+- **Database Studio:** `npm run prisma:studio` (From root).
 
 ---
 
-## 🛡 Best Practices
-1. **No `any`**: Use inferred Zod types.
-2. **No `useEffect` for Fetching**: Use TanStack Query hooks.
-3. **Standard Errors**: Server always returns `{ success: false, error: { message, code, details } }`.
-4. **Imports**: Use `@/` aliases (e.g., `@/shared/ui/button`).
+## 🛡 Best Practices & Constraints
+1. **No `any`**: Use inferred Zod types or generated API models.
+2. **Strict FSD**: Don't cross-import between features or entities. Use the `shared` layer for common code.
+3. **Standard Errors**: Server always returns `{ success: false, error: { code, message, details } }`.
+4. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`).
+5. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
 
 ## 🚦 How to Start Development
 ```powershell
