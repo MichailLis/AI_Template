@@ -3,12 +3,14 @@ import { Slot } from "@radix-ui/react-slot"
 import * as React from "react"
 import {
   Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
   FormProvider,
   useFormContext,
   useFormState,
+} from "react-hook-form"
+import type {
+  FieldPath,
+  FieldValues,
+  ControllerProps,
 } from "react-hook-form"
 
 import { cn } from "@/shared/lib/utils"
@@ -30,9 +32,9 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
->({
-  ...props
-}: ControllerProps<TFieldValues, TName>) => {
+>(
+  props: ControllerProps<TFieldValues, TName>
+) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
@@ -166,7 +168,7 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
- 
+// eslint-disable-next-line react-refresh/only-export-components
 export {
   useFormField,
   Form,

@@ -11,7 +11,7 @@ import { Input } from '@/shared/ui/input';
 
 const createProjectSchema = z.object({
   title: z.string().min(3, 'Title is too short'),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
 });
 
 type CreateProjectInput = z.infer<typeof createProjectSchema>;
@@ -36,7 +36,13 @@ export const CreateProjectForm = () => {
   });
 
   async function onSubmit(values: CreateProjectInput) {
-    createMutation.mutate({ data: values }, {
+    // Приводим undefined к null для соответствия типам Prisma/Swagger
+    const data = {
+      title: values.title,
+      description: values.description ?? null,
+    };
+
+    createMutation.mutate({ data }, {
       onSuccess: () => {
         toast.success('Project created!');
         form.reset();
@@ -70,7 +76,7 @@ export const CreateProjectForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
-              <FormControl><Input placeholder="A small description" {...field} /></FormControl>
+              <FormControl><Input placeholder="A small description" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}

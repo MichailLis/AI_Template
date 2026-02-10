@@ -29,8 +29,15 @@ Follow these steps exactly to maintain architectural integrity:
    ```powershell
    npm run gen:nest <name>
    ```
-   *Note: This automatically creates the module, service, controller, and registers them in AppModule with Prisma & Auth injected.*
-2. **Define DTOs:** Create/Update DTOs in `src/<name>/dto` using `nestjs-zod`.
+2. **Define DTOs:** Use `nestjs-zod`.
+   - **CRITICAL:** Swagger UI cannot represent the `Date` type in JSON Schema. 
+   - When using auto-generated Prisma schemas for **Response DTOs**, always override Date fields with strings:
+     ```typescript
+     export const MyResponseSchema = MySchema.extend({
+       createdAt: z.string(),
+       updatedAt: z.string(),
+     });
+     ```
 3. **Logic:** Implement business logic in `src/<name>/service.ts`.
 4. **Verify:** Use Swagger at `http://localhost:3000/api` to test.
 
@@ -42,49 +49,23 @@ Follow these steps exactly to maintain architectural integrity:
    *Result: Typed React Query hooks are generated in `client/src/shared/api/generated`.*
 2. **Define Entities:** If adding a new business object, create `client/src/entities/<name>`.
 3. **Implement Features:** For user actions (forms, buttons), create `client/src/features/<name>`.
-4. **Public API Rule:** Every FSD slice (`entities/*`, `features/*`) **must** have an `index.ts` file that exports only what's needed externally.
-5. **Data Fetching:** Always use the generated TanStack Query hooks. Never use `useEffect` or raw `axios`.
-6. **UI Components:** Add via Shadcn to `client/src/shared/ui`.
-7. **Assemble Pages:** Create pages in `client/src/pages` by composing features and entities.
-8. **Routing:** Register the new page in `client/src/app/App.tsx`.
+4. **Data Fetching:** Always use the generated TanStack Query hooks. Never use `useEffect` or raw `axios`.
+5. **UI Components:** Add via Shadcn to `client/src/shared/ui`.
+6. **Routing:** Register the new page in `client/src/app/App.tsx`.
 
-### Phase 4: Verification & Static Analysis (Quality Gate)
-1. **Linting:** Run `npm run lint` from root to ensure code quality.
-2. **Formatting:** Run `npm run format` from root to fix styling.
-3. **Commit:** `git commit` will automatically trigger `lint-staged` via Husky. 
-   - **Zero-Warning Policy:** Commits will fail if there are any linting errors or FSD architectural violations.
-
----
-
-## 📂 Frontend FSD Structure
-- `src/app`: Global initialization (providers, App.tsx, styles).
-- `src/pages`: Composition of widgets/features into full screens.
-- `src/widgets`: Large, independent self-contained blocks (e.g., Header).
-- `src/features`: Interactive business actions (e.g., `LoginForm`, `CreateTask`).
-- `src/entities`: Business domain logic, data models, and stores (e.g., `user`, `product`).
-- `src/shared`: Reusable infrastructure (UI kit, API client, utility functions).
-
----
-
-## 🤖 AI Workflow & Commands
-- **Backend Generation:** `npm run gen:nest <name>` (From root).
-- **API Sync:** `npm run gen:api` (Backend must be running).
-- **UI Components:** `npx shadcn@latest add <component-name>` (From `client` dir).
-- **Lint All:** `npm run lint` (From root).
-- **Format All:** `npm run format` (From root).
-- **Database Studio:** `npm run prisma:studio` (From root).
+### Phase 4: Verification & Static Analysis
+1. **Linting:** Run `npm run lint` from root.
+2. **Commit:** `git commit` triggers `lint-staged`.
+   - **Zero-Warning Policy:** Commits will fail if there are any linting errors.
 
 ---
 
 ## 🛡 Best Practices & Constraints
 1. **No `any`**: Use inferred Zod types or generated API models.
-2. **Strict FSD**: Don't cross-import between features or entities. Use the `shared` layer for common code.
-3. **Response Format**: All responses follow a unified structure:
-   - **Success:** `{ "success": true, "data": { ... } }`
-   - **Error:** `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
-4. **API Client**: The custom axios instance automatically extracts `.data`, so `useQuery` returns the payload directly.
-5. **Imports**: Always use `@/` path aliases (e.g., `@/shared/ui/button`). Relative paths between layers are forbidden.
-6. **Clean Code**: One FSD slice per folder, always with a public `index.ts`.
+2. **Strict FSD**: Don't cross-import between features. Use the `shared` layer.
+3. **Response Format**: Always `{ "success": true, "data": { ... } }`.
+4. **Imports**: Always use `@/` path aliases. Relative paths between layers are forbidden.
+5. **Type Safety**: Use `import type` for all TypeScript types to ensure compatibility with Vite's build process (`verbatimModuleSyntax` is enabled).
 
 ## 🚦 How to Start Development
 ```powershell
