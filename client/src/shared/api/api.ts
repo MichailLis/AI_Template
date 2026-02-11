@@ -44,7 +44,15 @@ api.interceptors.response.use(
       } catch (refreshError) {
         safeStorage.removeItem('accessToken');
         safeStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+
+        // Сбрасываем состояние авторизации в сторе, чтобы предотвратить петлю редиректов
+        // Импортируем динамически или используем getState, если возможно
+        const { useAuthStore } = await import('@/entities/session');
+        useAuthStore.getState().logout();
+
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
