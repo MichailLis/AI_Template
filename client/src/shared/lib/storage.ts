@@ -12,6 +12,7 @@ class SafeStorage implements Storage {
   }
 
   private checkAvailability(): boolean {
+    if (typeof window === 'undefined') return false;
     try {
       const testKey = '__storage_test__';
       window.localStorage.setItem(testKey, testKey);

@@ -1,16 +1,25 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 const port = '3105';
 const targetUrl = `http://127.0.0.1:${port}/api-json`;
-const requiredPaths = [
+const authApiPaths = [
   '/auth/signup',
   '/auth/signin',
   '/auth/logout',
   '/auth/refresh',
-  '/bookmarks',
-  '/snippets',
 ];
+
+const manifestRaw = await readFile(
+  join(process.cwd(), 'template', 'features.manifest.json'),
+  'utf-8',
+);
+const manifest = JSON.parse(manifestRaw);
+const featureApiPaths = (manifest.features ?? [])
+  .map((feature) => feature.route)
+  .filter((route) => typeof route === 'string');
+const requiredPaths = [...authApiPaths, ...featureApiPaths];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const npmExecutable =

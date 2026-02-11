@@ -26,6 +26,57 @@ model User {
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  calculations       Calculation[]
+  notes              Note[]
+  tasks              Task[]
+  bookmarks          Bookmark[]
 
   @@map("users")
+}
+
+model Calculation {
+  id         Int      @id @default(autoincrement())
+  expression String
+  result     String
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@map("calculations")
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notes")
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tasks")
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bookmarks")
 }

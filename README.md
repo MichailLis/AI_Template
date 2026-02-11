@@ -100,6 +100,19 @@ npm run verify:template
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json`.
 
+## PR-Ready Checklist
+
+Use this before opening PR or finalizing a feature branch:
+
+1. Data model synced (`prisma:generate` + `prisma:push` passed).
+2. Backend implemented (module/controller/service/DTOs, no scaffold placeholders left).
+3. Manifest updated (`template/features.manifest.json` matches actual files/routes).
+4. API mutator contract preserved (`npm run verify:api-mutator` passed).
+5. Frontend API regenerated (`npm run gen:api` passed).
+6. Route/navigation wired (`App.tsx`, dashboard entry, header/nav entry).
+7. Full template pipeline green (`npm run verify:template` passed).
+8. No bypasses (do not disable checks or hardcode obsolete smoke paths).
+
 ## Architecture Guardrails
 - Source of truth for enabled features: `template/features.manifest.json`
 - Hard check command: `npm run verify:architecture`

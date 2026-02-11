@@ -1,64 +1,24 @@
 import axios, { type AxiosRequestConfig } from 'axios';
 
-import { safeStorage } from '@/shared/lib/storage';
+// -----------------------------------------------------------------------------
+// WARN: DO NOT ADD BROWSER-SPECIFIC CODE HERE (localStorage, window, import.meta, etc.)
+// -----------------------------------------------------------------------------
+// This file is imported by the Orval generator running in Node.js.
+// Any browser API usage will cause the generation script (`npm run gen:api`) to fail.
+//
+// Put all interceptors, auth logic, storage access, and env reading in runtime files.
+// Runtime base URL is configured in `App.tsx` via configureApiBaseUrl(...).
+// -----------------------------------------------------------------------------
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: 'http://localhost:3000',
 });
 
-api.interceptors.request.use((config) => {
-  const token = safeStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export const configureApiBaseUrl = (baseUrl?: string) => {
+  if (baseUrl) {
+    api.defaults.baseURL = baseUrl;
   }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => {
-    // Возвращаем данные как есть, так как бэкенд теперь не оборачивает успех
-    return response.data;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      const refreshToken = safeStorage.getItem('refreshToken');
-      try {
-        const response = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${refreshToken}` },
-          },
-        );
-
-        // Бэкенд возвращает токены напрямую
-        const tokens = response.data;
-
-        safeStorage.setItem('accessToken', tokens.accessToken);
-        safeStorage.setItem('refreshToken', tokens.refreshToken);
-
-        originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
-        return axios(originalRequest);
-      } catch (refreshError) {
-        safeStorage.removeItem('accessToken');
-        safeStorage.removeItem('refreshToken');
-
-        // Сбрасываем состояние авторизации в сторе, чтобы предотвратить петлю редиректов
-        // Импортируем динамически или используем getState, если возможно
-        const { useAuthStore } = await import('@/entities/session');
-        useAuthStore.getState().logout();
-
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  },
-);
+};
 
 export const customInstance = <T>(
   config: AxiosRequestConfig,

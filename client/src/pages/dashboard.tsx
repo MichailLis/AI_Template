@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { useAuthStore } from '@/entities/session';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -20,6 +22,21 @@ export default function Dashboard() {
             <p>
               <strong>Email:</strong> {user?.email}
             </p>
+          </div>
+
+          <div className="grid gap-2">
+            <Button asChild variant="outline">
+              <Link to="/calculator">Open Calculator</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/bookmarks">Open Bookmarks</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/notes">Open Notes</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/tasks">Open Tasks</Link>
+            </Button>
           </div>
 
           <div className="pt-4 space-y-2">

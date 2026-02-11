@@ -50,6 +50,10 @@ Note:
    Notes:
    - OpenAPI source is generated to `server/openapi.json`
    - The script clears stale generated files before Orval run.
+   - Before generation, run mutator guard (or use full template verify):
+     ```powershell
+     npm run verify:api-mutator
+     ```
 2. Implement UI in `features/*` and page in `pages/*` using generated hooks.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
@@ -102,10 +106,45 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
 6. **Storage Safety:** NEVER use `localStorage` or `sessionStorage` directly. Always use `safeStorage` from `@/shared/lib/storage` to avoid "Access to storage is not allowed" errors in restricted browser contexts.
-7. Keep server error format unified:
+7. **API Architecture (Node.js Compatibility):**
+   - `client/src/shared/api/api.ts` MUST contain ONLY the Axios instance creation. No browser-specific code (localStorage, window, etc.) is allowed here because this file is imported by Orval generator in a Node.js environment.
+   - `client/src/shared/api/api.ts` MUST NOT contain `import.meta` (it causes Orval/esbuild warnings in Node target).
+   - `client/src/shared/api/api.ts` must export `customInstance`, default `api`, and `configureApiBaseUrl`.
+   - All browser-specific interceptors (auth token injection, refresh logic) MUST reside in `client/src/shared/api/interceptors.ts`.
+   - `client/src/app/App.tsx` must call:
+     - `configureApiBaseUrl(import.meta.env.VITE_API_URL)`
+     - `setupInterceptors(api)`
+   - Enforced by `npm run verify:api-mutator`.
+8. Keep server error format unified:
    ```json
    { "success": false, "error": { "code": "...", "message": "..." } }
    ```
+
+## PR-Ready Checklist (Feature Delivery)
+Use this checklist before opening PR or finalizing work.
+
+1. **Data model synced**
+   - `server/prisma/schema.prisma` updated.
+   - `npm run prisma:generate` and `npm run prisma:push` passed.
+2. **Backend completed**
+   - Module/controller/service/DTOs implemented.
+   - Controllers include `@ApiOperation` and `@ApiResponse`.
+3. **Manifest aligned**
+   - Feature added or updated in `template/features.manifest.json`.
+   - `backendFiles`, `frontendFiles`, and `generatedApiFile` paths are correct.
+4. **Mutator contract preserved**
+   - `client/src/shared/api/api.ts` remains Node-safe.
+   - `npm run verify:api-mutator` passed.
+5. **Frontend API regenerated**
+   - `npm run gen:api` passed.
+   - Generated hooks are used by the new UI.
+6. **Routes and navigation wired**
+   - Route added in `client/src/app/App.tsx`.
+   - Feature entry points available from `client/src/pages/dashboard.tsx` and header/nav.
+7. **Full pipeline green**
+   - `npm run verify:template` passed with no failures.
+8. **No hidden bypasses**
+   - Do not disable checks, do not comment out failing logic, do not hardcode obsolete smoke paths.
 
 ## Generator Status
 - Backend resource generator is available via `npm run gen:nest <name>`.

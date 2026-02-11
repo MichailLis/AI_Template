@@ -26,8 +26,23 @@ export const newsSchema = z.object({
   content: z.string().min(10, 'News content is too short'),
 });
 
+export const calculatorSchema = z.object({
+  expression: z.string().min(1, 'Expression is required'),
+});
+
+export const createNoteSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  content: z.string().min(1, 'Content is required'),
+});
+
+export const createTaskSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type BookmarkInput = z.infer<typeof bookmarkSchema>;
 export type SnippetInput = z.infer<typeof snippetSchema>;
 export type NewsInput = z.infer<typeof newsSchema>;
+export type CreateNoteInput = z.infer<typeof createNoteSchema>;
+export type CreateTaskInput = z.infer<typeof createTaskSchema>;
