@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
@@ -36,19 +36,21 @@ export const LoginForm = () => {
   });
 
   async function onSubmit(values: LoginInput) {
-    loginMutation.mutate({ data: values }, {
-      onSuccess: (data) => {
-        // Теперь данные приходят без обертки .success/ .data
-        setAuth(data.user, data.accessToken, data.refreshToken);
-        toast.success('Welcome back!');
-        navigate('/');
+    loginMutation.mutate(
+      { data: values },
+      {
+        onSuccess: (data) => {
+          setAuth(data.user, data.accessToken, data.refreshToken);
+          toast.success('Welcome back!');
+          navigate('/login');
+        },
+        onError: (error: unknown) => {
+          const authError = error as AuthError;
+          const message = authError.response?.data?.error?.message || 'Invalid credentials';
+          toast.error(message);
+        },
       },
-      onError: (error: unknown) => {
-        const authError = error as AuthError;
-        const message = authError.response?.data?.error?.message || 'Invalid credentials';
-        toast.error(message);
-      }
-    });
+    );
   }
 
   return (
@@ -83,12 +85,6 @@ export const LoginForm = () => {
         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
           {loginMutation.isPending ? 'Loading...' : 'Login'}
         </Button>
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="underline">
-            Sign up
-          </Link>
-        </div>
       </form>
     </Form>
   );

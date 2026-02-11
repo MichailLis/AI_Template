@@ -1,15 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import Dashboard from '@/pages/dashboard';
 import LoginPage from '@/pages/login';
-import RegisterPage from '@/pages/register';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { setupInterceptors } from '@/shared/api/interceptors';
-import { Header } from '@/widgets/header';
-
-import { ProtectedRoute, PublicRoute } from './providers/auth-guard';
 
 configureApiBaseUrl(import.meta.env.VITE_API_URL);
 setupInterceptors(api);
@@ -27,16 +22,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Header />
         <main>
           <Routes>
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Dashboard />} />
-            </Route>
-            <Route element={<PublicRoute />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </main>
         <Toaster position="top-right" richColors />

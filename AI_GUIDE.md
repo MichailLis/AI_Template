@@ -4,6 +4,7 @@ This template is a minimal, stable base for AI-driven development.
 
 Target template baseline:
 - Auth flow (`/auth/signup`, `/auth/signin`, `/auth/logout`, `/auth/refresh`)
+- Frontend auth UI route: `/login` only
 - No business modules in the final template branch (auth-only)
 
 Note:
@@ -78,10 +79,10 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 3. Frontend:
    - `npm run gen:api`
    - Add form/page and route wiring:
-     - `client/src/features/create-news/ui/create-news-form.tsx`
-     - `client/src/pages/news/news-page.tsx`
-     - `client/src/app/App.tsx`
-     - `client/src/pages/dashboard.tsx`
+      - `client/src/features/create-news/ui/create-news-form.tsx`
+      - `client/src/pages/news/news-page.tsx`
+      - `client/src/app/App.tsx`
+      - if dashboard/navigation exists in current template state, add feature entry point there as well
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
@@ -140,7 +141,7 @@ Use this checklist before opening PR or finalizing work.
    - Generated hooks are used by the new UI.
 6. **Routes and navigation wired**
    - Route added in `client/src/app/App.tsx`.
-   - Feature entry points available from `client/src/pages/dashboard.tsx` and header/nav.
+   - If project currently includes dashboard/header navigation, feature entry points are updated there too.
 7. **Full pipeline green**
    - `npm run verify:template` passed with no failures.
 8. **No hidden bypasses**
@@ -153,9 +154,11 @@ Use this checklist before opening PR or finalizing work.
 ## Architecture Source of Truth
 - Feature inventory is declared in `template/features.manifest.json`.
 - In final template state, `features` can be empty (auth-only baseline).
+- In auth-only frontend baseline, required auth route is `"/login"`.
 - Every declared feature must have:
   - backend module/controller/service/DTO files
   - frontend page + create form
   - generated API file from Orval
-  - route wiring in `client/src/app/App.tsx` and `client/src/pages/dashboard.tsx`
+  - route wiring in `client/src/app/App.tsx`
+  - if `client/src/pages/dashboard.tsx` exists, it should include a feature entry link
 - `npm run verify:architecture` fails if any of these constraints are broken.

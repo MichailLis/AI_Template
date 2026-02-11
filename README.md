@@ -5,6 +5,7 @@ Minimal template for AI-assisted feature delivery.
 Current template state:
 - Auth is fully wired (JWT access/refresh)
 - Final template target is auth-only (business modules are temporary during validation)
+- Frontend baseline is login-only (`/login`); dashboard/register UI pages are not part of the final template state
 
 ## Stack
 - Backend: NestJS, Prisma 7, PostgreSQL, nestjs-zod, Swagger
@@ -40,6 +41,10 @@ URLs:
 - Backend: `http://localhost:3000`
 - Swagger: `http://localhost:3000/api`
 - Adminer: `http://localhost:8080`
+
+Auth-only UI note:
+- The template exposes only the login page in frontend routing.
+- Signup is still available as backend API (`POST /auth/signup`) and can be tested via Swagger.
 
 ## Required Workflow for New Features
 
@@ -80,7 +85,7 @@ npm run gen:nest news
 ```powershell
 npm run gen:api
 ```
-5. Implement UI in `features` and `pages`, wire route in `client/src/app/App.tsx`, add dashboard entry.
+5. Implement UI in `features` and `pages`, wire route in `client/src/app/App.tsx`, and update navigation only if such navigation exists in the current template state.
 6. Update `template/features.manifest.json`.
 7. Run quality gate:
 ```powershell
@@ -109,7 +114,7 @@ Use this before opening PR or finalizing a feature branch:
 3. Manifest updated (`template/features.manifest.json` matches actual files/routes).
 4. API mutator contract preserved (`npm run verify:api-mutator` passed).
 5. Frontend API regenerated (`npm run gen:api` passed).
-6. Route/navigation wired (`App.tsx`, dashboard entry, header/nav entry).
+6. Route/navigation wired (`App.tsx`; if project currently includes navigation widgets, update them too).
 7. Full template pipeline green (`npm run verify:template` passed).
 8. No bypasses (do not disable checks or hardcode obsolete smoke paths).
 
@@ -118,6 +123,7 @@ Use this before opening PR or finalizing a feature branch:
 - Hard check command: `npm run verify:architecture`
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In final auth-only template state, keep manifest `features` empty.
+- In auth-only baseline, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 
 ## Notes
 - Keep auth always working while evolving business features.

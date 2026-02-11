@@ -2,8 +2,7 @@
   "version": 1,
   "auth": {
     "requiredRoutes": [
-      "/login",
-      "/register"
+      "/login"
     ],
     "requiredBackendModule": "AuthModule"
   },
