@@ -17,18 +17,6 @@ export const Header = () => {
             <Link to="/" className="transition-colors hover:text-foreground/80">
               Dashboard
             </Link>
-            <Link to="/calculator" className="transition-colors hover:text-foreground/80">
-              Calculator
-            </Link>
-            <Link to="/bookmarks" className="transition-colors hover:text-foreground/80">
-              Bookmarks
-            </Link>
-            <Link to="/notes" className="transition-colors hover:text-foreground/80">
-              Notes
-            </Link>
-            <Link to="/tasks" className="transition-colors hover:text-foreground/80">
-              Tasks
-            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">
