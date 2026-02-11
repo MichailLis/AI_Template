@@ -6,9 +6,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { BookmarkModule } from './bookmark/bookmark.module';
-import { SnippetModule } from './snippet/snippet.module';
-import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -17,9 +14,6 @@ import { NewsModule } from './news/news.module';
     }),
     PrismaModule,
     AuthModule,
-    BookmarkModule,
-    SnippetModule,
-    NewsModule,
   ],
   controllers: [AppController],
   providers: [

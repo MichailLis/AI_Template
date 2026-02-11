@@ -24,48 +24,8 @@ model User {
   hashedRefreshToken String?
   role               Role     @default(USER)
 
-  bookmarks          Bookmark[]
-  news               News[]
-  snippets           Snippet[]
-
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
   @@map("users")
-}
-
-model Bookmark {
-  id        Int      @id @default(autoincrement())
-  title     String
-  url       String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("bookmarks")
-}
-
-model Snippet {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("snippets")
-}
-
-model News {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("news")
 }

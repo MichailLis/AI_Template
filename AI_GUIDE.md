@@ -101,7 +101,8 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
-6. Keep server error format unified:
+6. **Storage Safety:** NEVER use `localStorage` or `sessionStorage` directly. Always use `safeStorage` from `@/shared/lib/storage` to avoid "Access to storage is not allowed" errors in restricted browser contexts.
+7. Keep server error format unified:
    ```json
    { "success": false, "error": { "code": "...", "message": "..." } }
    ```

@@ -8,11 +8,5 @@
 
 export * from './authResponseDto';
 export * from './authResponseDtoUser';
-export * from './bookmarkResponseDto';
-export * from './createBookmarkDto';
-export * from './createNewsDto';
-export * from './createSnippetDto';
-export * from './newsResponseDto';
 export * from './signinDto';
 export * from './signupDto';
-export * from './snippetResponseDto';

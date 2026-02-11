@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 import { useAuthStore } from '@/entities/session';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -25,15 +23,6 @@ export default function Dashboard() {
           </div>
 
           <div className="pt-4 space-y-2">
-            <Button asChild className="w-full">
-              <Link to="/bookmarks">Open Bookmarks</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/news">Open News</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/snippets">Open Snippets</Link>
-            </Button>
             <Button variant="destructive" className="w-full" onClick={logout}>
               Logout
             </Button>
