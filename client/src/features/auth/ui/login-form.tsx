@@ -42,7 +42,7 @@ export const LoginForm = () => {
         onSuccess: (data) => {
           setAuth(data.user, data.accessToken, data.refreshToken);
           toast.success('Welcome back!');
-          navigate('/login');
+          navigate('/admin');
         },
         onError: (error: unknown) => {
           const authError = error as AuthError;

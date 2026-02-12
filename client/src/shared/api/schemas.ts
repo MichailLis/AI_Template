@@ -11,5 +11,26 @@ export const signupSchema = z.object({
   name: z.string().min(2, 'Name is too short'),
 });
 
+export const adminOverviewSchema = z.object({
+  title: z.string(),
+  subtitle: z.string(),
+  cards: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      value: z.number(),
+      trend: z.string(),
+    }),
+  ),
+  shortcuts: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      hint: z.string(),
+      path: z.string(),
+    }),
+  ),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;

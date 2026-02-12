@@ -6,5 +6,25 @@
     ],
     "requiredBackendModule": "AuthModule"
   },
-  "features": []
+  "features": [
+    {
+      "name": "admin",
+      "route": "/admin",
+      "backendModule": "AdminModule",
+      "prismaModel": "User",
+      "schema": "adminOverviewSchema",
+      "backendFiles": [
+        "server/src/admin/admin.module.ts",
+        "server/src/admin/admin.controller.ts",
+        "server/src/admin/admin.service.ts",
+        "server/src/admin/dto/admin-overview-response.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/admin/admin-page.tsx",
+        "client/src/features/admin/ui/admin-shell.tsx",
+        "client/src/features/admin/ui/admin-overview.tsx"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts"
+    }
+  ]
 }

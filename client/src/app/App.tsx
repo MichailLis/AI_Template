@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
+import { ProtectedRoute } from '@/features/auth';
+import AdminPage from '@/pages/admin/admin-page';
 import LoginPage from '@/pages/login';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { setupInterceptors } from '@/shared/api/interceptors';
@@ -26,6 +28,14 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </main>
