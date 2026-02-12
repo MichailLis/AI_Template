@@ -92,9 +92,11 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    - Run `npm run verify:template` again
 
 ## Stability Rules
-1. Lint/build must pass on both apps:
+1. Lint/test/build must pass:
    ```powershell
    npm run lint
+   npm run test --prefix server
+   npm run test:e2e --prefix server
    npm run build --prefix server
    npm run build --prefix client
    ```
@@ -102,7 +104,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    ```powershell
    npm run verify:template
    ```
-   This includes `verify:architecture` against `template/features.manifest.json`.
+   This includes `verify:architecture` against `template/features.manifest.json` and mandatory server unit/e2e tests.
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
@@ -143,8 +145,10 @@ Use this checklist before opening PR or finalizing work.
    - Route added in `client/src/app/App.tsx`.
    - If project currently includes dashboard/header navigation, feature entry points are updated there too.
 7. **Full pipeline green**
+   - `npm run test --prefix server` and `npm run test:e2e --prefix server` passed.
+8. **Full pipeline green**
    - `npm run verify:template` passed with no failures.
-8. **No hidden bypasses**
+9. **No hidden bypasses**
    - Do not disable checks, do not comment out failing logic, do not hardcode obsolete smoke paths.
 
 ## Generator Status
@@ -162,3 +166,4 @@ Use this checklist before opening PR or finalizing work.
   - route wiring in `client/src/app/App.tsx`
   - if `client/src/pages/dashboard.tsx` exists, it should include a feature entry link
 - `npm run verify:architecture` fails if any of these constraints are broken.
+- It also fails on stale architecture artifacts not declared in manifest (extra backend feature modules, extra non-auth feature/page directories, stale generated API directories, unexpected routes in App routing).

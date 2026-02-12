@@ -98,12 +98,14 @@ npm run verify:template
 Run before finalizing changes:
 ```powershell
 npm run lint
+npm run test --prefix server
+npm run test:e2e --prefix server
 npm run build --prefix server
 npm run build --prefix client
 npm run verify:template
 ```
 
-`verify:template` also enforces architecture consistency via `template/features.manifest.json`.
+`verify:template` also enforces architecture consistency via `template/features.manifest.json` and runs mandatory server unit/e2e tests.
 
 ## PR-Ready Checklist
 
@@ -115,14 +117,16 @@ Use this before opening PR or finalizing a feature branch:
 4. API mutator contract preserved (`npm run verify:api-mutator` passed).
 5. Frontend API regenerated (`npm run gen:api` passed).
 6. Route/navigation wired (`App.tsx`; if project currently includes navigation widgets, update them too).
-7. Full template pipeline green (`npm run verify:template` passed).
-8. No bypasses (do not disable checks or hardcode obsolete smoke paths).
+7. Server tests green (`npm run test --prefix server` and `npm run test:e2e --prefix server` passed).
+8. Full template pipeline green (`npm run verify:template` passed).
+9. No bypasses (do not disable checks or hardcode obsolete smoke paths).
 
 ## Architecture Guardrails
 - Source of truth for enabled features: `template/features.manifest.json`
 - Hard check command: `npm run verify:architecture`
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In final auth-only template state, keep manifest `features` empty.
+- `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
 - In auth-only baseline, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 
 ## Notes
