@@ -82,7 +82,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
       - `client/src/features/create-news/ui/create-news-form.tsx`
       - `client/src/pages/news/news-page.tsx`
       - `client/src/app/App.tsx`
-      - if dashboard/navigation exists in current template state, add feature entry point there as well
+      - add feature entry point to `client/src/pages/dashboard.tsx` (required by `verify:architecture` when features are declared)
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
@@ -143,7 +143,7 @@ Use this checklist before opening PR or finalizing work.
    - Generated hooks are used by the new UI.
 6. **Routes and navigation wired**
    - Route added in `client/src/app/App.tsx`.
-   - If project currently includes dashboard/header navigation, feature entry points are updated there too.
+   - `client/src/pages/dashboard.tsx` includes feature entry links for declared routes (required by `verify:architecture`).
 7. **Full pipeline green**
    - `npm run test --prefix server` and `npm run test:e2e --prefix server` passed.
 8. **Full pipeline green**
@@ -164,6 +164,6 @@ Use this checklist before opening PR or finalizing work.
   - frontend page + create form
   - generated API file from Orval
   - route wiring in `client/src/app/App.tsx`
-  - if `client/src/pages/dashboard.tsx` exists, it should include a feature entry link
+  - `client/src/pages/dashboard.tsx` must exist and include a feature entry link (`to="<feature.route>"`) for each declared feature
 - `npm run verify:architecture` fails if any of these constraints are broken.
 - It also fails on stale architecture artifacts not declared in manifest (extra backend feature modules, extra non-auth feature/page directories, stale generated API directories, unexpected routes in App routing).
