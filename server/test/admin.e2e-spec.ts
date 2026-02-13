@@ -104,9 +104,9 @@ describe('Admin (e2e)', () => {
     expect(response.body.totalPages).toBeGreaterThanOrEqual(1);
     expect(Array.isArray(response.body.users)).toBe(true);
 
-    const createdAtValues = (response.body.users as Array<{ createdAt: string }>).map(
-      (user) => new Date(user.createdAt).getTime(),
-    );
+    const createdAtValues = (
+      response.body.users as Array<{ createdAt: string }>
+    ).map((user) => new Date(user.createdAt).getTime());
     const sortedValues = [...createdAtValues].sort((a, b) => a - b);
 
     expect(createdAtValues).toEqual(sortedValues);
