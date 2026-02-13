@@ -58,6 +58,29 @@ Note:
 2. Implement UI in `features/*` and page in `pages/*` using generated hooks.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
+## OpenRouter Prompt Studio Foundation (Current Branch)
+
+Current admin prompt foundation is implemented under:
+- Backend: `server/src/admin/admin.controller.ts`, `server/src/admin/admin.service.ts`
+- Frontend page: `client/src/pages/admin/admin-prompts-page.tsx`
+- Route: `"/admin/prompts"`
+
+Required behavior:
+1. OpenRouter key is backend-only (`OPENROUTER_API_KEY` in `server/.env`).
+2. Model catalog must be loaded through backend proxy (`GET /admin/prompts/models`).
+3. Prompt generation must be proxied via backend (`POST /admin/prompts/generate`).
+4. Frontend must never call OpenRouter directly.
+5. Prefer free models by default to reduce accidental spend.
+6. Prompt test variables are local UI helpers until question system is integrated.
+
+Recommended env vars for prompt foundation:
+```env
+OPENROUTER_API_KEY="sk-or-v1-..."
+OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
+OPENROUTER_HTTP_REFERER="http://localhost:5173"
+OPENROUTER_APP_NAME="AI Template Admin"
+```
+
 ## Reference Example For AI Agents (Illustrative)
 
 Example goal: implement `news` feature with editor UI (example only, not part of final auth-only template).

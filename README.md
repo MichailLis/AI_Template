@@ -2,10 +2,10 @@
 
 Minimal template for AI-assisted feature delivery.
 
-Current template state:
+Current project state:
 - Auth is fully wired (JWT access/refresh)
-- Final template target is auth-only (business modules are temporary during validation)
-- Frontend baseline is login-only (`/login`); dashboard/register UI pages are not part of the final template state
+- Admin feature is enabled on this branch (`/admin`) with users management and Prompt Studio foundation
+- Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
 
 ## Stack
 - Backend: NestJS, Prisma 7, PostgreSQL, nestjs-zod, Swagger
@@ -42,9 +42,31 @@ URLs:
 - Swagger: `http://localhost:3000/api`
 - Adminer: `http://localhost:8080`
 
-Auth-only UI note:
-- The template exposes only the login page in frontend routing.
-- Signup is still available as backend API (`POST /auth/signup`) and can be tested via Swagger.
+Current UI note:
+- This branch exposes `/login` and a protected admin workspace under `/admin`.
+- Signup is available as backend API (`POST /auth/signup`) and can be tested via Swagger.
+
+## Prompt Studio (OpenRouter Foundation)
+
+Prompt Studio is available at `"/admin/prompts"` and currently includes:
+- model catalog loaded from OpenRouter (`all/free/paid` filter + search)
+- safe default to free models when available
+- prompt editor with line numbers
+- editable test variables (add/remove) with duplicate-key validation
+- response format switch (`text` / `json`)
+
+Required backend environment variables (`server/.env`):
+```env
+OPENROUTER_API_KEY="sk-or-v1-..."
+# optional
+OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
+OPENROUTER_HTTP_REFERER="http://localhost:5173"
+OPENROUTER_APP_NAME="AI Template Admin"
+```
+
+Security note:
+- Never expose OpenRouter API key in frontend code.
+- All OpenRouter requests must go through backend (`/admin/prompts/*`).
 
 ## Required Workflow for New Features
 

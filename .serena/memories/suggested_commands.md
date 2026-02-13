@@ -10,6 +10,16 @@
 - Frontend: `npm run dev:client`
 - Both: `npm run dev`
 
+## Prompt Studio env (backend)
+Add to `server/.env`:
+```env
+OPENROUTER_API_KEY="sk-or-v1-..."
+OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
+OPENROUTER_HTTP_REFERER="http://localhost:5173"
+OPENROUTER_APP_NAME="AI Template Admin"
+```
+Then restart backend/dev process.
+
 ## Health / diagnostics
 - Backend reachable check:
   - `node -e "fetch('http://localhost:3000/api').then(r=>console.log(r.status)).catch(e=>console.error(e.message))"`

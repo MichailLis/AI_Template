@@ -6,10 +6,11 @@
 - Avoid `any` (lint-enforced).
 
 ## Frontend
-- Keep baseline routing aligned with current template state (login-only unless feature work explicitly adds routes).
-- Use alias imports (`@/...`) and keep import order lint-compliant.
-- Forms use `react-hook-form` + Zod schemas from `client/src/shared/api/schemas.ts`.
-- API hooks are generated under `client/src/shared/api/generated`.
+- Use alias imports (`@/...`) and keep import order lint-compliant (eslint `import/order`).
+- Keep route wiring aligned with manifest (`/login` + declared feature routes in `App.tsx`).
+- Forms/schemas should use Zod schemas from `client/src/shared/api/schemas.ts` where applicable.
+- API hooks are generated under `client/src/shared/api/generated` and consumed directly.
+- For larger admin UI pages, prefer splitting into focused page-local components (e.g., `client/src/pages/admin/prompt-studio/*`) while keeping `admin-prompts-page.tsx` as orchestration container.
 
 ## Backend
 - Feature modules under `server/src/<feature>`.
@@ -26,9 +27,16 @@
 
 ## Architecture strictness
 - `verify:architecture` validates route/module/schema/model consistency against manifest.
-- It also fails on stale artifacts (extra backend feature modules, extra feature/page dirs, stale generated API dirs, unexpected routes).
+- It fails on stale artifacts (extra backend feature modules, extra feature/page dirs, stale generated API dirs, unexpected routes).
+- For non-empty manifest features, `client/src/pages/dashboard.tsx` must include links to declared feature routes.
+
+## Prompt Studio safety rules
+- OpenRouter API key is backend-only (`server/.env`).
+- Frontend must use backend proxy endpoints only (`/admin/prompts/*`).
+- Prefer free-model defaults to reduce accidental spend.
+- Prompt variables must have unique keys before running simulation.
 
 ## Testing baseline
-- Auth must have unit coverage for controller/service behavior.
-- Auth must have e2e coverage for signup/signin happy paths.
-- `verify:template` enforces both `npm run test --prefix server` and `npm run test:e2e --prefix server`.
+- Keep auth unit + e2e coverage passing.
+- Admin e2e coverage includes users-management paths.
+- `verify:template` is the required final gate.
