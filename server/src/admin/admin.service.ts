@@ -330,11 +330,12 @@ export class AdminService {
       const configuredDefaultModel = this.config.get<string>(
         'OPENROUTER_DEFAULT_MODEL',
       );
+      const firstFreeModelId = models.find((model) => model.isFree)?.id;
       const defaultModel = models.some(
         (model) => model.id === configuredDefaultModel,
       )
         ? configuredDefaultModel
-        : models[0].id;
+        : (firstFreeModelId ?? models[0].id);
 
       return {
         defaultModel,
