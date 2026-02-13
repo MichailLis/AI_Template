@@ -11,6 +11,10 @@
 - Forms/schemas should use Zod schemas from `client/src/shared/api/schemas.ts` where applicable.
 - API hooks are generated under `client/src/shared/api/generated` and consumed directly.
 - For larger admin UI pages, prefer splitting into focused page-local components (e.g., `client/src/pages/admin/prompt-studio/*`) while keeping `admin-prompts-page.tsx` as orchestration container.
+- Admin QA screens are currently Russian-localized; keep UX copy consistent on touched screens.
+- For `admin-tests-page`, question create/edit should stay modal-first (avoid always-visible full editor blocks).
+- For choice/slider question builders, prefer explicit structured inputs over delimiter-based text parsing UI.
+- Hide non-essential technical fields from content managers; keep advanced fields collapsed by default.
 
 ## Backend
 - Feature modules under `server/src/<feature>`.

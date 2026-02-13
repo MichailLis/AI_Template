@@ -23,6 +23,14 @@ const roleBadgeClass = (role: string) => {
   return 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100';
 };
 
+const roleLabel = (role: string) => {
+  if (role === 'ADMIN') {
+    return 'Администратор';
+  }
+
+  return 'Пользователь';
+};
+
 const formatDateTime = (value: string) => {
   try {
     return new Date(value).toLocaleString();
@@ -37,19 +45,19 @@ type SortOrder = 'asc' | 'desc';
 
 const getApiErrorMessage = (error: unknown) => {
   if (typeof error !== 'object' || error === null || !('response' in error)) {
-    return 'Request failed';
+    return 'Не удалось выполнить запрос';
   }
 
   const response = error.response;
 
   if (typeof response !== 'object' || response === null || !('data' in response)) {
-    return 'Request failed';
+    return 'Не удалось выполнить запрос';
   }
 
   const data = response.data;
 
   if (typeof data !== 'object' || data === null) {
-    return 'Request failed';
+    return 'Не удалось выполнить запрос';
   }
 
   if (
@@ -65,7 +73,7 @@ const getApiErrorMessage = (error: unknown) => {
     return String(data.message);
   }
 
-  return 'Request failed';
+  return 'Не удалось выполнить запрос';
 };
 
 export default function AdminUsersPage() {
@@ -138,7 +146,7 @@ export default function AdminUsersPage() {
       },
       {
         onSuccess: () => {
-          toast.success(`Role updated to ${nextRole}`);
+          toast.success(`Роль обновлена: ${roleLabel(nextRole)}`);
           usersQuery.refetch();
         },
         onError: (error: unknown) => {
@@ -155,16 +163,16 @@ export default function AdminUsersPage() {
   const handleCopyEmail = async (email: string) => {
     try {
       await navigator.clipboard.writeText(email);
-      toast.success('Email copied');
+      toast.success('Email скопирован');
     } catch {
-      toast.error('Unable to copy email');
+      toast.error('Не удалось скопировать email');
     }
   };
 
   if (usersQuery.isLoading) {
     return (
       <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6 text-sm text-slate-500">Loading users...</CardContent>
+        <CardContent className="p-6 text-sm text-slate-500">Загрузка пользователей...</CardContent>
       </Card>
     );
   }
@@ -173,9 +181,9 @@ export default function AdminUsersPage() {
     return (
       <Card className="border-red-200 bg-red-50 shadow-sm">
         <CardContent className="space-y-4 p-6 text-sm text-red-700">
-          <p>Unable to load users.</p>
+          <p>Не удалось загрузить пользователей.</p>
           <Button variant="outline" size="sm" onClick={() => usersQuery.refetch()}>
-            Retry
+            Повторить
           </Button>
         </CardContent>
       </Card>
@@ -185,22 +193,22 @@ export default function AdminUsersPage() {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle>User directory</CardTitle>
-        <CardDescription>Search, filter, paginate, and manage user roles.</CardDescription>
+        <CardTitle>Пользователи</CardTitle>
+        <CardDescription>Поиск, фильтры, пагинация и управление ролями.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-2">
           <Input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search by email or name"
+            placeholder="Поиск по email или имени"
             className="w-full max-w-sm"
           />
           <Button type="submit" size="sm" variant="secondary">
-            Apply
+            Применить
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={handleResetFilters}>
-            Reset
+            Сбросить
           </Button>
         </form>
 
@@ -210,59 +218,59 @@ export default function AdminUsersPage() {
             variant={roleFilter === 'ALL' ? 'secondary' : 'outline'}
             onClick={() => handleRoleFilterChange('ALL')}
           >
-            All
+            Все
           </Button>
           <Button
             size="sm"
             variant={roleFilter === 'ADMIN' ? 'secondary' : 'outline'}
             onClick={() => handleRoleFilterChange('ADMIN')}
           >
-            Admins
+            Администраторы
           </Button>
           <Button
             size="sm"
             variant={roleFilter === 'USER' ? 'secondary' : 'outline'}
             onClick={() => handleRoleFilterChange('USER')}
           >
-            Users
+            Пользователи
           </Button>
           <Button
             size="sm"
             variant={sortBy === 'updatedAt' ? 'secondary' : 'outline'}
             onClick={() => handleSortByChange('updatedAt')}
           >
-            Sort: Updated
+            Сортировка: Обновлены
           </Button>
           <Button
             size="sm"
             variant={sortBy === 'createdAt' ? 'secondary' : 'outline'}
             onClick={() => handleSortByChange('createdAt')}
           >
-            Sort: Created
+            Сортировка: Созданы
           </Button>
           <Button size="sm" variant="outline" onClick={handleSortOrderToggle}>
-            Order: {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+            Порядок: {sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
           </Button>
           <p className="ml-auto text-sm text-slate-500">
-            Total: {usersQuery.data.total} {usersQuery.isFetching ? '(refreshing...)' : ''}
+            Всего: {usersQuery.data.total} {usersQuery.isFetching ? '(обновление...)' : ''}
           </p>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Пользователь</TableHead>
+              <TableHead>Роль</TableHead>
+              <TableHead>Создан</TableHead>
+              <TableHead>Обновлен</TableHead>
+              <TableHead className="text-right">Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {usersQuery.data.users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                  No users found for current filters.
+                  По текущим фильтрам пользователи не найдены.
                 </TableCell>
               </TableRow>
             ) : null}
@@ -277,7 +285,7 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={roleBadgeClass(user.role)}>
-                    {user.role}
+                    {roleLabel(user.role)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-slate-600">{formatDateTime(user.createdAt)}</TableCell>
@@ -287,7 +295,7 @@ export default function AdminUsersPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`Actions for ${user.email}`}
+                      aria-label={`Действия для ${user.email}`}
                       onClick={() =>
                         setActiveActionsUserId((previous) =>
                           previous === user.id ? null : user.id,
@@ -314,16 +322,16 @@ export default function AdminUsersPage() {
                             }
                           >
                             {pendingUserId === user.id ? (
-                              'Updating...'
+                              'Обновление...'
                             ) : user.role === 'ADMIN' ? (
                               <>
                                 <ShieldOff className="mr-2 h-4 w-4" />
-                                Revoke admin
+                                Снять права администратора
                               </>
                             ) : (
                               <>
                                 <ShieldCheck className="mr-2 h-4 w-4" />
-                                Make admin
+                                Сделать администратором
                               </>
                             )}
                           </Button>
@@ -337,7 +345,7 @@ export default function AdminUsersPage() {
                             }}
                           >
                             <Copy className="mr-2 h-4 w-4" />
-                            Copy email
+                            Скопировать email
                           </Button>
                         </CardContent>
                       </Card>
@@ -351,7 +359,7 @@ export default function AdminUsersPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
           <p className="text-sm text-slate-500">
-            Page {usersQuery.data.page} of {usersQuery.data.totalPages}
+            Страница {usersQuery.data.page} из {usersQuery.data.totalPages}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -360,7 +368,7 @@ export default function AdminUsersPage() {
               onClick={() => setPage((previous) => Math.max(1, previous - 1))}
               disabled={usersQuery.data.page <= 1 || usersQuery.isFetching}
             >
-              Previous
+              Назад
             </Button>
             <Button
               variant="outline"
@@ -368,7 +376,7 @@ export default function AdminUsersPage() {
               onClick={() => setPage((previous) => previous + 1)}
               disabled={usersQuery.data.page >= usersQuery.data.totalPages || usersQuery.isFetching}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

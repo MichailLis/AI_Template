@@ -39,11 +39,11 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
               <ShieldCheck className="h-4 w-4" />
-              Protected zone
+              Защищенная зона
             </div>
             <Button asChild variant="outline" size="sm">
               <Link to="/admin">
-                Refresh metrics
+                Обновить метрики
                 <ArrowUpRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -68,8 +68,8 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Quick actions</CardTitle>
-            <CardDescription>Operational shortcuts wired for admin baseline.</CardDescription>
+            <CardTitle>Быстрые действия</CardTitle>
+            <CardDescription>Операционные ярлыки для базовой админки.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {shortcuts.map((item) => (
@@ -88,34 +88,34 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
 
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Readiness</CardTitle>
-            <CardDescription>Commercial baseline checks for this workspace.</CardDescription>
+            <CardTitle>Готовность</CardTitle>
+            <CardDescription>Базовые проверки для рабочего пространства.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <span className="flex items-center gap-2 text-slate-700">
                 <CircleCheckBig className="h-4 w-4 text-emerald-600" />
-                Access guard enabled
+                Защита доступа включена
               </span>
-              <span className="text-xs font-medium text-emerald-700">OK</span>
+              <span className="text-xs font-medium text-emerald-700">ОК</span>
             </div>
             <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <span className="flex items-center gap-2 text-slate-700">
                 <CircleCheckBig className="h-4 w-4 text-emerald-600" />
-                API contract generated
+                API-контракт сгенерирован
               </span>
-              <span className="text-xs font-medium text-emerald-700">OK</span>
+              <span className="text-xs font-medium text-emerald-700">ОК</span>
             </div>
             <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <span className="flex items-center gap-2 text-slate-700">
                 <Clock3 className="h-4 w-4 text-amber-600" />
-                Extended modules
+                Расширенные модули
               </span>
-              <span className="text-xs font-medium text-amber-700">Planned</span>
+              <span className="text-xs font-medium text-amber-700">Запланировано</span>
             </div>
             <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Total tracked entities
+                Отслеживаемых сущностей
               </p>
               <p className="mt-1 text-2xl font-semibold text-slate-900">{totalTracked}</p>
             </div>
@@ -126,7 +126,7 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
       <Card className="border-amber-200 bg-amber-50 shadow-none">
         <CardContent className="flex items-center gap-3 p-4 text-amber-800">
           <AlertTriangle className="h-5 w-5" />
-          This is a baseline admin scaffold. Extend it through template pipeline steps.
+          Это базовый каркас админки. Расширяйте его по шагам шаблонного пайплайна.
         </CardContent>
       </Card>
     </div>

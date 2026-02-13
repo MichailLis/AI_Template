@@ -31,6 +31,13 @@ Then restart backend/dev process.
 - `npm run prisma:push`
 - `npm run gen:api`
 
+## Tests module workflow (admin/tests)
+- `npm run prisma:generate && npm run prisma:push`
+- `npm run gen:api`
+- `npm run build --prefix server`
+- `npm run build --prefix client`
+- `npm run verify:architecture`
+
 ## Validation
 - `npm run verify:api-mutator`
 - `npm run verify:architecture`

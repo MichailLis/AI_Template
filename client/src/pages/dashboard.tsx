@@ -8,15 +8,21 @@ export default function DashboardPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Template Dashboard Stub</CardTitle>
+          <CardTitle>Техническая страница шаблона</CardTitle>
           <CardDescription>
-            Compatibility page required by architecture checks when feature modules are declared.
+            Страница совместимости, необходимая для архитектурных проверок при объявленных
+            feature-модулях.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild>
-            <Link to="/admin">Open admin</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link to="/admin">Открыть админку</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/admin/tests">Открыть тесты</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -4,7 +4,7 @@ Minimal template for AI-assisted feature delivery.
 
 Current project state:
 - Auth is fully wired (JWT access/refresh)
-- Admin feature is enabled on this branch (`/admin`) with users management and Prompt Studio foundation
+- Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio foundation, and Tests module workspace
 - Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
 
 ## Stack
@@ -45,6 +45,7 @@ URLs:
 Current UI note:
 - This branch exposes `/login` and a protected admin workspace under `/admin`.
 - Signup is available as backend API (`POST /auth/signup`) and can be tested via Swagger.
+- Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
 
 ## Prompt Studio (OpenRouter Foundation)
 
@@ -67,6 +68,26 @@ OPENROUTER_APP_NAME="AI Template Admin"
 Security note:
 - Never expose OpenRouter API key in frontend code.
 - All OpenRouter requests must go through backend (`/admin/prompts/*`).
+
+## Tests Module (Draft/Publish Baseline)
+
+Tests workspace is available at `"/admin/tests"` and currently includes:
+- topic management with slug + description
+- version model with one active draft and optional published snapshot
+- draft editor with question CRUD
+- question types: `OPEN_TEXT`, `SINGLE_CHOICE`, `MULTI_CHOICE`, `SLIDER`
+- publish flow: current draft -> published, then auto-create next draft copy
+
+Current UX baseline for question editing:
+- add/edit question via modal (avoids long inline page growth)
+- choice options are edited with structured rows (text + integer weight), no manual service code input
+- slider bands are edited with structured rows (`min`, `max`, `label`, `weight`)
+- optional JSON settings are hidden under "Advanced settings"
+
+Domain constraints currently applied:
+- no branching configurator yet
+- no parallel drafts
+- weights are `Int`
 
 ## Required Workflow for New Features
 

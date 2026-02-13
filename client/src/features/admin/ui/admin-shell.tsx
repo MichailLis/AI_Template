@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   MessageSquareText,
@@ -24,33 +25,39 @@ interface AdminShellProps {
 const navItems = [
   {
     id: 'overview',
-    label: 'Overview',
+    label: 'Обзор',
     icon: LayoutDashboard,
     href: '/admin',
   },
   {
     id: 'users',
-    label: 'Users',
+    label: 'Пользователи',
     icon: Users,
     href: '/admin/users',
   },
   {
     id: 'security',
-    label: 'Security',
+    label: 'Безопасность',
     icon: ShieldCheck,
     href: '/admin/security',
   },
   {
     id: 'analytics',
-    label: 'Analytics',
+    label: 'Аналитика',
     icon: BarChart3,
     href: '/admin/analytics',
   },
   {
     id: 'prompts',
-    label: 'Prompts',
+    label: 'Промпты',
     icon: MessageSquareText,
     href: '/admin/prompts',
+  },
+  {
+    id: 'tests',
+    label: 'Тесты',
+    icon: ClipboardList,
+    href: '/admin/tests',
   },
 ];
 
@@ -79,7 +86,7 @@ export const AdminShell = ({
                 <span className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
                   ADMIN
                 </span>
-                <span className="text-sm font-semibold text-slate-800">Workspace</span>
+                <span className="text-sm font-semibold text-slate-800">Рабочее пространство</span>
               </Link>
             </Button>
           </div>
@@ -106,10 +113,10 @@ export const AdminShell = ({
             </div>
           </nav>
           <div className="space-y-3 border-t border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Template baseline mode</p>
-            <p className="mt-1 text-sm font-medium">Admin skeleton</p>
+            <p className="text-xs text-slate-500">Базовый режим шаблона</p>
+            <p className="mt-1 text-sm font-medium">Каркас админки</p>
             <Button asChild variant="outline" size="sm" className="w-full justify-start">
-              <Link to="/login">Back to login</Link>
+              <Link to="/login">К входу</Link>
             </Button>
           </div>
         </aside>
@@ -119,21 +126,21 @@ export const AdminShell = ({
             <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-2 md:px-6 md:py-0">
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Operations
+                  Операции
                 </p>
-                <p className="text-sm font-semibold text-slate-900">Admin workspace</p>
+                <p className="text-sm font-semibold text-slate-900">Админ-панель</p>
               </div>
               <div className="ml-auto flex min-w-0 items-center gap-2">
                 <Input
                   className="hidden w-64 border-slate-300 bg-slate-50 md:block lg:w-80"
-                  placeholder="Search admin tools"
+                  placeholder="Поиск по админке"
                 />
                 <span className="rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
                   {userLabel}
                 </span>
                 <Button variant="outline" size="sm" onClick={onLogout} disabled={isLoggingOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  {isLoggingOut ? 'Logout...' : 'Logout'}
+                  {isLoggingOut ? 'Выход...' : 'Выйти'}
                 </Button>
               </div>
             </div>

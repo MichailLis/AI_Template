@@ -8,6 +8,7 @@ import AdminOverviewPage from '@/pages/admin/admin-overview-page';
 import AdminPage from '@/pages/admin/admin-page';
 import AdminPromptsPage from '@/pages/admin/admin-prompts-page';
 import AdminSecurityPage from '@/pages/admin/admin-security-page';
+import AdminTestsPage from '@/pages/admin/admin-tests-page';
 import AdminUsersPage from '@/pages/admin/admin-users-page';
 import LoginPage from '@/pages/login';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/admin/security" element={<AdminSecurityPage />} />
               <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
               <Route path="/admin/prompts" element={<AdminPromptsPage />} />
+              <Route path="/admin/tests" element={<AdminTestsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

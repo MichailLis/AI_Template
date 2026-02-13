@@ -3,30 +3,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 
 const events = [
-  { id: 'EVT-9214', area: 'Auth', actor: 'ops-admin@company.dev', impact: 'Medium', time: '09:15' },
+  {
+    id: 'EVT-9214',
+    area: 'Авторизация',
+    actor: 'ops-admin@company.dev',
+    impact: 'Средний',
+    time: '09:15',
+  },
   {
     id: 'EVT-9213',
-    area: 'Users',
+    area: 'Пользователи',
     actor: 'security.lead@company.dev',
-    impact: 'Low',
+    impact: 'Низкий',
     time: '09:02',
   },
-  { id: 'EVT-9208', area: 'Config', actor: 'ops-admin@company.dev', impact: 'High', time: '08:31' },
+  {
+    id: 'EVT-9208',
+    area: 'Конфигурация',
+    actor: 'ops-admin@company.dev',
+    impact: 'Высокий',
+    time: '08:31',
+  },
   {
     id: 'EVT-9204',
-    area: 'Access',
+    area: 'Доступ',
     actor: 'finance.viewer@company.dev',
-    impact: 'Low',
+    impact: 'Низкий',
     time: '08:04',
   },
 ];
 
 const impactVariant = (impact: string) => {
-  if (impact === 'High') {
+  if (impact === 'Высокий') {
     return 'destructive' as const;
   }
 
-  if (impact === 'Medium') {
+  if (impact === 'Средний') {
     return 'outline' as const;
   }
 
@@ -39,49 +51,49 @@ export default function AdminAnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Events today</CardDescription>
+            <CardDescription>События за сегодня</CardDescription>
             <CardTitle className="text-3xl">124</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Operational events captured in this workspace.</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardDescription>High impact</CardDescription>
-            <CardTitle className="text-3xl">8</CardTitle>
-          </CardHeader>
-          <CardContent>
             <p className="text-sm text-slate-500">
-              Actions requiring review and approval workflow.
+              Операционные события, зафиксированные в этом пространстве.
             </p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Mean response</CardDescription>
+            <CardDescription>Высокий приоритет</CardDescription>
+            <CardTitle className="text-3xl">8</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500">Действия, требующие проверки и согласования.</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>Среднее время реакции</CardDescription>
             <CardTitle className="text-3xl">11m</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Target SLA: under 15 minutes for admin events.</p>
+            <p className="text-sm text-slate-500">Целевой SLA: менее 15 минут для админ-событий.</p>
           </CardContent>
         </Card>
       </div>
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Recent admin events</CardTitle>
-          <CardDescription>Event stream table scaffold for operational analytics.</CardDescription>
+          <CardTitle>Последние события админки</CardTitle>
+          <CardDescription>Таблица потока событий для операционной аналитики.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Area</TableHead>
-                <TableHead>Actor</TableHead>
-                <TableHead>Impact</TableHead>
-                <TableHead className="text-right">Time</TableHead>
+                <TableHead>Событие</TableHead>
+                <TableHead>Область</TableHead>
+                <TableHead>Инициатор</TableHead>
+                <TableHead>Влияние</TableHead>
+                <TableHead className="text-right">Время</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -5,21 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 const checks = [
   {
     id: 'sec-01',
-    title: 'MFA policy',
-    status: 'Enabled',
-    description: 'All admin accounts require MFA verification at login.',
+    title: 'Политика MFA',
+    status: 'Включено',
+    description: 'Для всех админ-аккаунтов требуется MFA при входе.',
   },
   {
     id: 'sec-02',
-    title: 'Session rotation',
-    status: 'Enabled',
-    description: 'Refresh token rotation and revoke-on-logout are active.',
+    title: 'Ротация сессий',
+    status: 'Включено',
+    description: 'Ротация refresh-токенов и отзыв при выходе активны.',
   },
   {
     id: 'sec-03',
-    title: 'Audit stream',
-    status: 'Planned',
-    description: 'Operational audit export is scheduled for the next iteration.',
+    title: 'Поток аудита',
+    status: 'Запланировано',
+    description: 'Экспорт операционного аудита запланирован на следующую итерацию.',
   },
 ];
 
@@ -28,15 +28,15 @@ export default function AdminSecurityPage() {
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Security controls</CardTitle>
-          <CardDescription>Control-plane status for baseline admin hardening.</CardDescription>
+          <CardTitle>Контроль безопасности</CardTitle>
+          <CardDescription>Статус базовых мер защиты админ-панели.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {checks.map((item) => (
             <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-slate-900">{item.title}</p>
-                <Badge variant={item.status === 'Enabled' ? 'secondary' : 'outline'}>
+                <Badge variant={item.status === 'Включено' ? 'secondary' : 'outline'}>
                   {item.status}
                 </Badge>
               </div>
@@ -48,18 +48,18 @@ export default function AdminSecurityPage() {
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Policy actions</CardTitle>
-          <CardDescription>Reserved actions for policy management.</CardDescription>
+          <CardTitle>Действия по политикам</CardTitle>
+          <CardDescription>Зарезервированные действия для управления политиками.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <Button variant="outline" className="w-full justify-start" disabled>
-            Rotate all sessions
+            Ротировать все сессии
           </Button>
           <Button variant="outline" className="w-full justify-start" disabled>
-            Export audit trail
+            Экспорт журнала аудита
           </Button>
           <Button variant="outline" className="w-full justify-start" disabled>
-            Open security report
+            Открыть отчет по безопасности
           </Button>
         </CardContent>
       </Card>

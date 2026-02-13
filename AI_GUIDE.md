@@ -81,6 +81,27 @@ OPENROUTER_HTTP_REFERER="http://localhost:5173"
 OPENROUTER_APP_NAME="AI Template Admin"
 ```
 
+## Tests Module Foundation (Current Branch)
+
+Current tests implementation is wired as a dedicated backend module + admin page:
+- Backend module: `server/src/tests/*`
+- Admin route: `"/admin/tests"`
+- Manifest feature entry: `tests` (`template/features.manifest.json`)
+
+Domain/versioning baseline:
+1. Single active draft per topic (`activeDraftVersionId`).
+2. Optional active published version (`activePublishedVersionId`).
+3. Publish action archives prior published version (if exists), promotes draft, then clones a new draft.
+4. Question weights are `Int`.
+5. Branching configurator is intentionally out of scope for this stage.
+
+Frontend UX baseline for tests editor:
+1. Question add/edit must happen in modal UI (avoid oversized inline editor blocks).
+2. Choice-type options should use explicit row-based inputs, not manual delimiter syntax.
+3. Service-side option code should be auto-generated when not explicitly required in UI.
+4. Advanced JSON settings should be collapsible by default ("Advanced settings").
+5. Keep labels and helper copy clear enough for non-technical content managers.
+
 ## Reference Example For AI Agents (Illustrative)
 
 Example goal: implement `news` feature with editor UI (example only, not part of final auth-only template).

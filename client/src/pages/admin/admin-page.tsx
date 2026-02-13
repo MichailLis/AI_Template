@@ -27,7 +27,7 @@ export default function AdminPage() {
     logoutMutation.mutate(undefined, {
       onSettled: () => {
         logoutLocal();
-        toast.success('Session closed');
+        toast.success('Сессия завершена');
         navigate('/login');
       },
     });
@@ -42,9 +42,7 @@ export default function AdminPage() {
         isLoggingOut={logoutMutation.isPending}
       >
         <Card className="border-slate-200">
-          <CardContent className="p-6 text-sm text-slate-500">
-            Loading admin overview...
-          </CardContent>
+          <CardContent className="p-6 text-sm text-slate-500">Загрузка админ-панели...</CardContent>
         </Card>
       </AdminShell>
     );
@@ -60,9 +58,9 @@ export default function AdminPage() {
       >
         <Card className="border-red-200 bg-red-50">
           <CardContent className="space-y-4 p-6 text-sm text-red-700">
-            <p>Access denied or admin data is unavailable.</p>
+            <p>Доступ запрещен или данные админ-панели недоступны.</p>
             <Button variant="outline" size="sm" onClick={() => adminQuery.refetch()}>
-              Retry
+              Повторить
             </Button>
           </CardContent>
         </Card>

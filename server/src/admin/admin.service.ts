@@ -179,33 +179,33 @@ export class AdminService {
     ]);
 
     return {
-      title: 'Admin Console',
-      subtitle: `Signed in as ${currentUser.name ?? currentUser.email}`,
+      title: 'Консоль администратора',
+      subtitle: `Вы вошли как ${currentUser.name ?? currentUser.email}`,
       cards: [
         {
           id: 'users-total',
-          label: 'Total users',
+          label: 'Всего пользователей',
           value: totalUsers,
-          trend: 'Live system metric',
+          trend: 'Актуальная метрика системы',
         },
         {
           id: 'admins-total',
-          label: 'Admin accounts',
+          label: 'Администраторы',
           value: totalAdmins,
-          trend: 'Role-based access baseline',
+          trend: 'Базовый контроль ролевого доступа',
         },
       ],
       shortcuts: [
         {
           id: 'health-check',
-          label: 'Health checks',
-          hint: 'Use this block for system probes and smoke checks.',
+          label: 'Проверки состояния',
+          hint: 'Используйте этот блок для системных проверок и smoke-тестов.',
           path: '/admin',
         },
         {
           id: 'user-audit',
-          label: 'User audit',
-          hint: 'Wire user management actions here in the next iteration.',
+          label: 'Аудит пользователей',
+          hint: 'Подключите здесь действия по управлению пользователями на следующей итерации.',
           path: '/admin/users',
         },
       ],

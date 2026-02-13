@@ -39,6 +39,24 @@
         "client/src/shared/ui/badge.tsx"
       ],
       "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts"
+    },
+    {
+      "name": "tests",
+      "route": "/admin/tests",
+      "backendModule": "TestsModule",
+      "prismaModel": "TestTopic",
+      "schema": "testsTopicCreateSchema",
+      "backendFiles": [
+        "server/src/tests/tests.module.ts",
+        "server/src/tests/tests.controller.ts",
+        "server/src/tests/tests.service.ts",
+        "server/src/tests/dto/tests.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/admin/admin-tests-page.tsx",
+        "client/src/features/admin/ui/admin-shell.tsx"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/tests/tests.ts"
     }
   ]
 }

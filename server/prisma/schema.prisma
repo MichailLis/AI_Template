@@ -16,6 +16,19 @@ enum Role {
   ADMIN
 }
 
+enum TestTopicVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TestQuestionType {
+  OPEN_TEXT
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  SLIDER
+}
+
 model User {
   id                 Int      @id @default(autoincrement())
   email              String   @unique
@@ -28,4 +41,90 @@ model User {
   updatedAt          DateTime @updatedAt
 
   @@map("users")
+}
+
+model TestTopic {
+  id                     Int               @id @default(autoincrement())
+  slug                   String            @unique
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  activeDraftVersionId   Int?
+  activePublishedVersionId Int?
+
+  versions               TestTopicVersion[] @relation("TestTopicVersions")
+  activeDraftVersion     TestTopicVersion?  @relation("ActiveDraftVersion", fields: [activeDraftVersionId], references: [id], onDelete: SetNull)
+  activePublishedVersion TestTopicVersion?  @relation("ActivePublishedVersion", fields: [activePublishedVersionId], references: [id], onDelete: SetNull)
+
+  @@map("test_topics")
+}
+
+model TestTopicVersion {
+  id            Int                    @id @default(autoincrement())
+  topicId        Int
+  versionNumber  Int
+  status         TestTopicVersionStatus @default(DRAFT)
+  title          String
+  description    String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  topic          TestTopic              @relation("TestTopicVersions", fields: [topicId], references: [id], onDelete: Cascade)
+  draftForTopic  TestTopic[]            @relation("ActiveDraftVersion")
+  publishedForTopic TestTopic[]         @relation("ActivePublishedVersion")
+  questions      TestQuestion[]
+
+  @@unique([topicId, versionNumber])
+  @@index([topicId, status])
+  @@map("test_topic_versions")
+}
+
+model TestQuestion {
+  id           Int              @id @default(autoincrement())
+  versionId    Int
+  type         TestQuestionType
+  title        String
+  description  String?
+  required     Boolean          @default(true)
+  order        Int
+  settings     Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  version      TestTopicVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  options      TestQuestionOption[]
+  sliderBands  TestQuestionSliderBand[]
+
+  @@index([versionId, order])
+  @@map("test_questions")
+}
+
+model TestQuestionOption {
+  id          Int          @id @default(autoincrement())
+  questionId  Int
+  label       String
+  value       String
+  weight      Int          @default(0)
+  order       Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  question    TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, order])
+  @@map("test_question_options")
+}
+
+model TestQuestionSliderBand {
+  id          Int          @id @default(autoincrement())
+  questionId  Int
+  minValue    Int
+  maxValue    Int
+  label       String
+  weight      Int          @default(0)
+  order       Int
+
+  question    TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, order])
+  @@map("test_question_slider_bands")
 }

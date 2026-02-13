@@ -43,7 +43,14 @@ export const adminPromptGenerateSchema = z.object({
   responseFormat: z.enum(['text', 'json']).default('text'),
 });
 
+export const testsTopicCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  slug: z.string().trim().min(1).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type AdminUserRoleInput = z.infer<typeof adminUserRoleSchema>;
 export type AdminPromptGenerateInput = z.infer<typeof adminPromptGenerateSchema>;
+export type TestsTopicCreateInput = z.infer<typeof testsTopicCreateSchema>;
