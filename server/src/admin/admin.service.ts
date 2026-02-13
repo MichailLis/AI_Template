@@ -1,17 +1,24 @@
 import {
+  BadGatewayException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
+import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import type { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import type { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   private async ensureAdminAccess(userId: number) {
     const currentUser = await this.prisma.user.findUnique({
@@ -47,6 +54,120 @@ export class AdminService {
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
+  }
+
+  private toNumberOrNull(value: unknown) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  }
+
+  private toPromptModelResponse(rawModel: unknown) {
+    if (typeof rawModel !== 'object' || rawModel === null) {
+      return null;
+    }
+
+    const modelRecord = rawModel as Record<string, unknown>;
+    const rawId = modelRecord.id;
+
+    if (typeof rawId !== 'string' || rawId.trim().length === 0) {
+      return null;
+    }
+
+    const id = rawId.trim();
+    const name =
+      typeof modelRecord.name === 'string' && modelRecord.name.trim().length > 0
+        ? modelRecord.name.trim()
+        : id;
+    const provider = id.includes('/') ? id.split('/')[0] : 'unknown';
+
+    const pricingRecord =
+      typeof modelRecord.pricing === 'object' && modelRecord.pricing !== null
+        ? (modelRecord.pricing as Record<string, unknown>)
+        : null;
+
+    const promptPrice = pricingRecord
+      ? this.toNumberOrNull(pricingRecord.prompt)
+      : null;
+    const completionPrice = pricingRecord
+      ? this.toNumberOrNull(pricingRecord.completion)
+      : null;
+    const contextLength = this.toNumberOrNull(modelRecord.context_length);
+    const isFree =
+      id.endsWith(':free') ||
+      (promptPrice !== null &&
+        completionPrice !== null &&
+        promptPrice === 0 &&
+        completionPrice === 0);
+
+    return {
+      id,
+      label: name === id ? id : `${name} (${id})`,
+      provider,
+      isFree,
+      contextLength,
+      promptPrice,
+      completionPrice,
+    };
+  }
+
+  private parseOpenRouterModels(payload: unknown) {
+    if (typeof payload !== 'object' || payload === null) {
+      return [];
+    }
+
+    const payloadRecord = payload as Record<string, unknown>;
+
+    if (!Array.isArray(payloadRecord.data)) {
+      return [];
+    }
+
+    const uniqueModels = new Map<
+      string,
+      ReturnType<typeof this.toPromptModelResponse>
+    >();
+
+    for (const model of payloadRecord.data) {
+      const parsedModel = this.toPromptModelResponse(model);
+
+      if (parsedModel && !uniqueModels.has(parsedModel.id)) {
+        uniqueModels.set(parsedModel.id, parsedModel);
+      }
+    }
+
+    return Array.from(uniqueModels.values())
+      .filter((model): model is NonNullable<typeof model> => model !== null)
+      .sort((left, right) => left.label.localeCompare(right.label));
+  }
+
+  private extractOpenRouterErrorMessage(payload: unknown) {
+    if (
+      typeof payload !== 'object' ||
+      payload === null ||
+      !('error' in payload)
+    ) {
+      return 'OpenRouter request failed';
+    }
+
+    const errorValue = payload.error;
+
+    if (
+      typeof errorValue !== 'object' ||
+      errorValue === null ||
+      !('message' in errorValue)
+    ) {
+      return 'OpenRouter request failed';
+    }
+
+    return String(errorValue.message);
   }
 
   async getOverview(userId: number) {
@@ -157,6 +278,192 @@ export class AdminService {
       totalPages,
       users: users.map((user) => this.toAdminUserResponse(user)),
     };
+  }
+
+  async getPromptModels(userId: number) {
+    await this.ensureAdminAccess(userId);
+
+    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
+
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'OPENROUTER_API_KEY is not configured on server',
+      );
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer':
+            this.config.get<string>('OPENROUTER_HTTP_REFERER') ??
+            'http://localhost:5173',
+          'X-Title':
+            this.config.get<string>('OPENROUTER_APP_NAME') ??
+            'AI Template Admin',
+        },
+        signal: controller.signal,
+      });
+
+      const payload: unknown = await response
+        .json()
+        .catch(async () => ({ message: await response.text() }));
+
+      if (!response.ok) {
+        const errorMessage = this.extractOpenRouterErrorMessage(payload);
+
+        throw new BadGatewayException(errorMessage);
+      }
+
+      const models = this.parseOpenRouterModels(payload);
+
+      if (models.length === 0) {
+        throw new BadGatewayException(
+          'OpenRouter returned empty model catalog',
+        );
+      }
+
+      const configuredDefaultModel = this.config.get<string>(
+        'OPENROUTER_DEFAULT_MODEL',
+      );
+      const defaultModel = models.some(
+        (model) => model.id === configuredDefaultModel,
+      )
+        ? configuredDefaultModel
+        : models[0].id;
+
+      return {
+        defaultModel,
+        models,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new BadGatewayException(
+          'OpenRouter model catalog request timeout',
+        );
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async generatePrompt(userId: number, dto: GeneratePromptDto) {
+    await this.ensureAdminAccess(userId);
+
+    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
+
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'OPENROUTER_API_KEY is not configured on server',
+      );
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    const responseFormat = dto.responseFormat ?? 'text';
+
+    const openRouterRequestBody: {
+      model: string;
+      temperature: number;
+      messages: Array<{ role: 'user'; content: string }>;
+      response_format?: { type: 'json_object' };
+    } = {
+      model: dto.model,
+      temperature: dto.temperature ?? 0.7,
+      messages: [{ role: 'user', content: dto.prompt }],
+    };
+
+    if (responseFormat === 'json') {
+      openRouterRequestBody.response_format = { type: 'json_object' };
+    }
+
+    try {
+      const response = await fetch(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer':
+              this.config.get<string>('OPENROUTER_HTTP_REFERER') ??
+              'http://localhost:5173',
+            'X-Title':
+              this.config.get<string>('OPENROUTER_APP_NAME') ??
+              'AI Template Admin',
+          },
+          body: JSON.stringify(openRouterRequestBody),
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        const errorPayload: unknown = await response
+          .json()
+          .catch(async () => ({ message: await response.text() }));
+
+        const errorMessage = this.extractOpenRouterErrorMessage(errorPayload);
+
+        throw new BadGatewayException(errorMessage);
+      }
+
+      const payload = (await response.json()) as {
+        choices?: Array<{
+          message?: {
+            content?:
+              | string
+              | Array<{
+                  text?: string;
+                }>;
+          };
+        }>;
+      };
+
+      const rawContent = payload.choices?.[0]?.message?.content;
+      const output =
+        typeof rawContent === 'string'
+          ? rawContent
+          : Array.isArray(rawContent)
+            ? rawContent
+                .map((chunk) => chunk.text ?? '')
+                .join('')
+                .trim()
+            : '';
+
+      if (!output) {
+        throw new BadGatewayException('OpenRouter returned an empty response');
+      }
+
+      const formattedOutput =
+        responseFormat === 'json'
+          ? (() => {
+              try {
+                return JSON.stringify(JSON.parse(output), null, 2);
+              } catch {
+                return output;
+              }
+            })()
+          : output;
+
+      return {
+        model: dto.model,
+        output: formattedOutput,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new BadGatewayException('OpenRouter request timeout');
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async updateUserRole(

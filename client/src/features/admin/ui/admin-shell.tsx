@@ -1,4 +1,11 @@
-import { BarChart3, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
+import {
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  MessageSquareText,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/shared/ui/button';
@@ -38,6 +45,12 @@ const navItems = [
     label: 'Analytics',
     icon: BarChart3,
     href: '/admin/analytics',
+  },
+  {
+    id: 'prompts',
+    label: 'Prompts',
+    icon: MessageSquareText,
+    href: '/admin/prompts',
   },
 ];
 

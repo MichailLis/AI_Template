@@ -18,9 +18,12 @@
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin.service.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
+        "server/src/admin/dto/admin-prompt-models-response.dto.ts",
+        "server/src/admin/dto/admin-prompt-response.dto.ts",
         "server/src/admin/dto/admin-users-query.dto.ts",
         "server/src/admin/dto/admin-user-response.dto.ts",
         "server/src/admin/dto/admin-users-response.dto.ts",
+        "server/src/admin/dto/generate-prompt.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts"
       ],
       "frontendFiles": [
@@ -29,6 +32,7 @@
         "client/src/pages/admin/admin-users-page.tsx",
         "client/src/pages/admin/admin-security-page.tsx",
         "client/src/pages/admin/admin-analytics-page.tsx",
+        "client/src/pages/admin/admin-prompts-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",
         "client/src/features/admin/ui/admin-overview.tsx",
         "client/src/shared/ui/table.tsx",

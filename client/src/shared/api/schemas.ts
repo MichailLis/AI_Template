@@ -36,6 +36,14 @@ export const adminUserRoleSchema = z.object({
   role: z.enum(['USER', 'ADMIN']),
 });
 
+export const adminPromptGenerateSchema = z.object({
+  model: z.string().min(1),
+  prompt: z.string().min(1).max(8000),
+  temperature: z.number().min(0).max(2).default(0.7),
+  responseFormat: z.enum(['text', 'json']).default('text'),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type AdminUserRoleInput = z.infer<typeof adminUserRoleSchema>;
+export type AdminPromptGenerateInput = z.infer<typeof adminPromptGenerateSchema>;
