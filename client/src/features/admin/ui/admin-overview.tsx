@@ -1,4 +1,5 @@
-import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ArrowUpRight, CircleCheckBig, Clock3, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -25,24 +26,34 @@ interface AdminOverviewProps {
 }
 
 export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOverviewProps) => {
+  const totalTracked = cards.reduce((acc, item) => acc + item.value, 0);
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <CardTitle className="text-2xl">{title}</CardTitle>
             <CardDescription className="mt-1">{subtitle}</CardDescription>
           </div>
-          <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-            <ShieldCheck className="h-4 w-4" />
-            Protected zone
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+              <ShieldCheck className="h-4 w-4" />
+              Protected zone
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin">
+                Refresh metrics
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </CardHeader>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         {cards.map((item) => (
-          <Card key={item.id}>
+          <Card key={item.id} className="border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardDescription>{item.label}</CardDescription>
               <CardTitle className="text-3xl">{item.value}</CardTitle>
@@ -54,25 +65,65 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick actions</CardTitle>
-          <CardDescription>Placeholder actions for further admin modules.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
-          {shortcuts.map((item) => (
-            <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="font-medium text-slate-900">{item.label}</p>
-              <p className="mt-1 text-sm text-slate-500">{item.hint}</p>
-              <Button variant="outline" size="sm" className="mt-3" disabled>
-                {item.path}
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader>
+            <CardTitle>Quick actions</CardTitle>
+            <CardDescription>Operational shortcuts wired for admin baseline.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {shortcuts.map((item) => (
+              <Card key={item.id} className="border-slate-200 bg-slate-50 shadow-none">
+                <CardContent className="p-4">
+                  <p className="font-medium text-slate-900">{item.label}</p>
+                  <p className="mt-1 text-sm text-slate-500">{item.hint}</p>
+                  <Button asChild variant="outline" size="sm" className="mt-3">
+                    <Link to={item.path}>{item.path}</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
 
-      <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader>
+            <CardTitle>Readiness</CardTitle>
+            <CardDescription>Commercial baseline checks for this workspace.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="flex items-center gap-2 text-slate-700">
+                <CircleCheckBig className="h-4 w-4 text-emerald-600" />
+                Access guard enabled
+              </span>
+              <span className="text-xs font-medium text-emerald-700">OK</span>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="flex items-center gap-2 text-slate-700">
+                <CircleCheckBig className="h-4 w-4 text-emerald-600" />
+                API contract generated
+              </span>
+              <span className="text-xs font-medium text-emerald-700">OK</span>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="flex items-center gap-2 text-slate-700">
+                <Clock3 className="h-4 w-4 text-amber-600" />
+                Extended modules
+              </span>
+              <span className="text-xs font-medium text-amber-700">Planned</span>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                Total tracked entities
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-slate-900">{totalTracked}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-amber-200 bg-amber-50 shadow-none">
         <CardContent className="flex items-center gap-3 p-4 text-amber-800">
           <AlertTriangle className="h-5 w-5" />
           This is a baseline admin scaffold. Extend it through template pipeline steps.

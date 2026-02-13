@@ -6,10 +6,21 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './adminControllerGetUsersParams';
+export * from './adminControllerGetUsersRole';
+export * from './adminControllerGetUsersSortBy';
+export * from './adminControllerGetUsersSortOrder';
 export * from './adminOverviewResponseDto';
 export * from './adminOverviewResponseDtoCardsItem';
 export * from './adminOverviewResponseDtoShortcutsItem';
+export * from './adminUserResponseDto';
+export * from './adminUserResponseDtoRole';
+export * from './adminUsersResponseDto';
+export * from './adminUsersResponseDtoUsersItem';
+export * from './adminUsersResponseDtoUsersItemRole';
 export * from './authResponseDto';
 export * from './authResponseDtoUser';
 export * from './signinDto';
 export * from './signupDto';
+export * from './updateUserRoleDto';
+export * from './updateUserRoleDtoRole';

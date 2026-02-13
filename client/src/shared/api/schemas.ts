@@ -32,5 +32,10 @@ export const adminOverviewSchema = z.object({
   ),
 });
 
+export const adminUserRoleSchema = z.object({
+  role: z.enum(['USER', 'ADMIN']),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
+export type AdminUserRoleInput = z.infer<typeof adminUserRoleSchema>;

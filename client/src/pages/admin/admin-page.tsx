@@ -1,14 +1,22 @@
-import { useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
-import { AdminOverview } from '@/features/admin/ui/admin-overview';
 import { AdminShell } from '@/features/admin/ui/admin-shell';
 import { useAdminControllerGetOverview } from '@/shared/api/generated/admin/admin';
 import { useAuthControllerLogout } from '@/shared/api/generated/auth/auth';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+
+import type { AdminOverviewResponseDto } from '@/shared/api/model';
+
+export interface AdminOutletContext {
+  overview: AdminOverviewResponseDto;
+}
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logoutLocal = useAuthStore((state) => state.logout);
 
@@ -29,12 +37,15 @@ export default function AdminPage() {
     return (
       <AdminShell
         userLabel={user?.email ?? 'Admin'}
+        activePath={location.pathname}
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          Loading admin overview...
-        </div>
+        <Card className="border-slate-200">
+          <CardContent className="p-6 text-sm text-slate-500">
+            Loading admin overview...
+          </CardContent>
+        </Card>
       </AdminShell>
     );
   }
@@ -43,12 +54,18 @@ export default function AdminPage() {
     return (
       <AdminShell
         userLabel={user?.email ?? 'Admin'}
+        activePath={location.pathname}
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <div className="rounded-md border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-          Access denied or admin data is unavailable.
-        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="space-y-4 p-6 text-sm text-red-700">
+            <p>Access denied or admin data is unavailable.</p>
+            <Button variant="outline" size="sm" onClick={() => adminQuery.refetch()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </AdminShell>
     );
   }
@@ -56,15 +73,11 @@ export default function AdminPage() {
   return (
     <AdminShell
       userLabel={user?.email ?? 'Admin'}
+      activePath={location.pathname}
       onLogout={handleLogout}
       isLoggingOut={logoutMutation.isPending}
     >
-      <AdminOverview
-        title={adminQuery.data.title}
-        subtitle={adminQuery.data.subtitle}
-        cards={adminQuery.data.cards}
-        shortcuts={adminQuery.data.shortcuts}
-      />
+      <Outlet context={{ overview: adminQuery.data }} />
     </AdminShell>
   );
 }

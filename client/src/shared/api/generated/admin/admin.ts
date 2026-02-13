@@ -5,20 +5,29 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { AdminOverviewResponseDto } from '../../model';
+import type {
+  AdminControllerGetUsersParams,
+  AdminOverviewResponseDto,
+  AdminUserResponseDto,
+  AdminUsersResponseDto,
+  UpdateUserRoleDto,
+} from '../../model';
 
 import { customInstance } from '../../api';
 
@@ -146,3 +155,220 @@ export function useAdminControllerGetOverview<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List users for admin management
+ */
+export const adminControllerGetUsers = (
+  params?: AdminControllerGetUsersParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUsersResponseDto>(
+    { url: `/admin/users`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getAdminControllerGetUsersQueryKey = (params?: AdminControllerGetUsersParams) => {
+  return [`/admin/users`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminControllerGetUsersQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
+  TError = unknown,
+>(
+  params?: AdminControllerGetUsersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminControllerGetUsersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUsers>>> = ({
+    signal,
+  }) => adminControllerGetUsers(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminControllerGetUsers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminControllerGetUsersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerGetUsers>>
+>;
+export type AdminControllerGetUsersQueryError = unknown;
+
+export function useAdminControllerGetUsers<
+  TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
+  TError = unknown,
+>(
+  params: undefined | AdminControllerGetUsersParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetUsers>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetUsers>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminControllerGetUsers<
+  TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
+  TError = unknown,
+>(
+  params?: AdminControllerGetUsersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetUsers>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetUsers>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminControllerGetUsers<
+  TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
+  TError = unknown,
+>(
+  params?: AdminControllerGetUsersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List users for admin management
+ */
+
+export function useAdminControllerGetUsers<
+  TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
+  TError = unknown,
+>(
+  params?: AdminControllerGetUsersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminControllerGetUsersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update user role
+ */
+export const adminControllerUpdateUserRole = (
+  id: number,
+  updateUserRoleDto: UpdateUserRoleDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserResponseDto>(
+    {
+      url: `/admin/users/${id}/role`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateUserRoleDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminControllerUpdateUserRoleMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerUpdateUserRole>>,
+    TError,
+    { id: number; data: UpdateUserRoleDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerUpdateUserRole>>,
+  TError,
+  { id: number; data: UpdateUserRoleDto },
+  TContext
+> => {
+  const mutationKey = ['adminControllerUpdateUserRole'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerUpdateUserRole>>,
+    { id: number; data: UpdateUserRoleDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminControllerUpdateUserRole(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerUpdateUserRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerUpdateUserRole>>
+>;
+export type AdminControllerUpdateUserRoleMutationBody = UpdateUserRoleDto;
+export type AdminControllerUpdateUserRoleMutationError = unknown;
+
+/**
+ * @summary Update user role
+ */
+export const useAdminControllerUpdateUserRole = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerUpdateUserRole>>,
+      TError,
+      { id: number; data: UpdateUserRoleDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerUpdateUserRole>>,
+  TError,
+  { id: number; data: UpdateUserRoleDto },
+  TContext
+> => {
+  return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
+};

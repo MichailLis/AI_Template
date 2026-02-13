@@ -17,12 +17,22 @@
         "server/src/admin/admin.module.ts",
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin.service.ts",
-        "server/src/admin/dto/admin-overview-response.dto.ts"
+        "server/src/admin/dto/admin-overview-response.dto.ts",
+        "server/src/admin/dto/admin-users-query.dto.ts",
+        "server/src/admin/dto/admin-user-response.dto.ts",
+        "server/src/admin/dto/admin-users-response.dto.ts",
+        "server/src/admin/dto/update-user-role.dto.ts"
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-page.tsx",
+        "client/src/pages/admin/admin-overview-page.tsx",
+        "client/src/pages/admin/admin-users-page.tsx",
+        "client/src/pages/admin/admin-security-page.tsx",
+        "client/src/pages/admin/admin-analytics-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",
-        "client/src/features/admin/ui/admin-overview.tsx"
+        "client/src/features/admin/ui/admin-overview.tsx",
+        "client/src/shared/ui/table.tsx",
+        "client/src/shared/ui/badge.tsx"
       ],
       "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts"
     }

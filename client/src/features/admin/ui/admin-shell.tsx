@@ -1,4 +1,5 @@
 import { BarChart3, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -8,6 +9,7 @@ import type { ReactNode } from 'react';
 interface AdminShellProps {
   children: ReactNode;
   userLabel: string;
+  activePath: string;
   onLogout: () => void;
   isLoggingOut: boolean;
 }
@@ -17,73 +19,102 @@ const navItems = [
     id: 'overview',
     label: 'Overview',
     icon: LayoutDashboard,
-    active: true,
+    href: '/admin',
   },
   {
     id: 'users',
     label: 'Users',
     icon: Users,
-    active: false,
+    href: '/admin/users',
   },
   {
     id: 'security',
     label: 'Security',
     icon: ShieldCheck,
-    active: false,
+    href: '/admin/security',
   },
   {
     id: 'analytics',
     label: 'Analytics',
     icon: BarChart3,
-    active: false,
+    href: '/admin/analytics',
   },
 ];
 
-export const AdminShell = ({ children, userLabel, onLogout, isLoggingOut }: AdminShellProps) => {
+const isPathActive = (href: string, currentPath: string) => {
+  if (href === '/admin') {
+    return currentPath === '/admin';
+  }
+
+  return currentPath.startsWith(href);
+};
+
+export const AdminShell = ({
+  children,
+  userLabel,
+  activePath,
+  onLogout,
+  isLoggingOut,
+}: AdminShellProps) => {
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
-        <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col">
+    <div className="min-h-screen w-full bg-slate-100 text-slate-900">
+      <div className="grid min-h-screen w-full md:grid-cols-[18rem_minmax(0,1fr)]">
+        <aside className="hidden border-r border-slate-200 bg-white md:sticky md:top-0 md:flex md:h-screen md:flex-col">
           <div className="flex h-16 items-center border-b border-slate-200 px-5">
-            <div className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-              ADMIN
-            </div>
+            <Button asChild variant="ghost" className="h-auto p-0 text-left hover:bg-transparent">
+              <Link to="/admin" className="flex items-center gap-2">
+                <span className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
+                  ADMIN
+                </span>
+                <span className="text-sm font-semibold text-slate-800">Workspace</span>
+              </Link>
+            </Button>
           </div>
           <nav className="flex-1 p-4">
             <div className="space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = isPathActive(item.href, activePath);
 
                 return (
                   <Button
                     key={item.id}
-                    variant={item.active ? 'secondary' : 'ghost'}
+                    asChild
+                    variant={isActive ? 'secondary' : 'ghost'}
                     className="w-full justify-start gap-2"
-                    disabled={!item.active}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <Link to={item.href}>
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
                   </Button>
                 );
               })}
             </div>
           </nav>
-          <div className="border-t border-slate-200 p-4">
+          <div className="space-y-3 border-t border-slate-200 p-4">
             <p className="text-xs text-slate-500">Template baseline mode</p>
             <p className="mt-1 text-sm font-medium">Admin skeleton</p>
+            <Button asChild variant="outline" size="sm" className="w-full justify-start">
+              <Link to="/login">Back to login</Link>
+            </Button>
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-col">
           <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
-            <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-6">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-2 md:px-6 md:py-0">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Operations
+                </p>
+                <p className="text-sm font-semibold text-slate-900">Admin workspace</p>
+              </div>
+              <div className="ml-auto flex min-w-0 items-center gap-2">
                 <Input
-                  className="max-w-xs border-slate-300 bg-slate-50"
+                  className="hidden w-64 border-slate-300 bg-slate-50 md:block lg:w-80"
                   placeholder="Search admin tools"
                 />
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
                   {userLabel}
                 </span>
@@ -91,6 +122,28 @@ export const AdminShell = ({ children, userLabel, onLogout, isLoggingOut }: Admi
                   <LogOut className="mr-2 h-4 w-4" />
                   {isLoggingOut ? 'Logout...' : 'Logout'}
                 </Button>
+              </div>
+            </div>
+            <div className="border-t border-slate-200 px-4 py-2 md:hidden">
+              <div className="grid grid-cols-2 gap-2">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = isPathActive(item.href, activePath);
+
+                  return (
+                    <Button
+                      key={item.id}
+                      asChild
+                      variant={isActive ? 'secondary' : 'outline'}
+                      size="sm"
+                    >
+                      <Link to={item.href}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           </header>
