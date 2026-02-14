@@ -6,6 +6,8 @@ Current project state:
 
 - Auth is fully wired (JWT access/refresh)
 - Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio foundation, and Tests module workspace
+- Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/stats`)
+- Public student flow (`/t/*`) is product-ready and uses a scoped theme isolated from admin screens
 - Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
 
 ## Stack
@@ -115,6 +117,33 @@ Domain constraints currently applied:
 - no branching configurator yet
 - no parallel drafts
 - weights are `Int`
+
+## Public Links and Student Flow (Current Branch)
+
+Admin routes:
+
+- `"/admin/public-links"`: create/manage public links for tests
+- `"/admin/public-links/stats"`: dedicated statistics workspace with table-first layout
+
+Admin capabilities baseline:
+
+- archive/restore lifecycle for public links (archive disables access without losing historical data)
+- filters by test + public link on stats page
+- table actions for student-level details (analysis and submitted answers)
+- link selector copy uses business language (`тестов пройдено`)
+
+Public student routes:
+
+- `"/t/:code"`: registration/entry screen
+- `"/t/:code/session/:sessionToken"`: test run workspace
+- `"/t/:code/result/:sessionToken"`: result and analysis screen
+
+UI/theming contract for public pages:
+
+- public pages must be wrapped with `PublicThemeLayout`
+- public theme tokens live in `client/src/widgets/public-test-workspace/ui/public-theme.css` (`.theme-public` scope)
+- do not move public-theme tokens into global `client/src/app/index.css`
+- user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
 
 ## Required Workflow for New Features
 

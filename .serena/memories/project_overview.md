@@ -43,3 +43,16 @@
 ## Quality gates
 - Primary gate: `npm run verify:template`.
 - Gate includes: prisma generate/push, API mutator guard, OpenAPI + Orval generation, strict architecture check, lint, server unit/e2e tests, server/client build, smoke checks.
+
+
+## Public links + student flow (updated 2026-02)
+- Admin public-link management is split into two routes:
+  - `/admin/public-links` (create/manage/archive/restore links)
+  - `/admin/public-links/stats` (table-first analytics workspace)
+- Public-link archive is soft-disable, not deletion: archived links are inaccessible for students but historical sessions/results remain available.
+- Stats workflow includes filter-by-test + filter-by-link and student-level actions for analysis and submitted answers.
+- Selector/business copy uses wording around completed tests (`тестов пройдено`).
+- Public student flow routes are: `/t/:code`, `/t/:code/session/:sessionToken`, `/t/:code/result/:sessionToken`.
+- Public pages use isolated scoped theme (`PublicThemeLayout` + `.theme-public` in `public-theme.css`) so admin/login visuals are not affected.
+- Student-facing UI should avoid raw technical statuses (e.g. do not expose `IN_PROGRESS` badge); use human labels (`готов`, `в обработке`, `ошибка`).
+- Runtime API autodiscovery must validate required API routes before accepting discovered origin to avoid binding to unrelated local Swagger instances.

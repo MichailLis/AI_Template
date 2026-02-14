@@ -54,6 +54,17 @@ Then restart backend/dev process.
 - `npm run test:e2e --prefix server`
 - `npm run verify:template`
 
+## Public links / public flow verification
+- `npm run lint --prefix client`
+- `npm run build --prefix client`
+- `npm run verify:architecture`
+- Manual route checks in browser:
+  - `/admin/public-links`
+  - `/admin/public-links/stats`
+  - `/t/:code`
+  - `/t/:code/session/:sessionToken`
+  - `/t/:code/result/:sessionToken`
+
 ## Build
 - `npm run build --prefix server`
 - `npm run build --prefix client`

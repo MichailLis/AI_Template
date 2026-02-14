@@ -155,6 +155,40 @@ AI-assisted tests generation baseline:
 3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
 4. Model selector must show only models with structured-output capability.
 
+## Admin Public Links + Stats Contract (Current Branch)
+
+Routes and ownership:
+
+- `"/admin/public-links"` -> link lifecycle workspace
+- `"/admin/public-links/stats"` -> dedicated statistics workspace
+- Admin shell navigation must keep links/stats as separate menu entries.
+
+Behavior baseline:
+
+1. Public link lifecycle is `create/regenerate/archive/restore`.
+2. Archive must disable student access without deleting historical attempts/results.
+3. Stats page is table-first (avoid oversized decorative summary blocks above core filters/table).
+4. Filters must support both test and public link selection.
+5. Link labels in selectors should use business copy (`тестов пройдено`).
+6. Student row actions must provide direct access to analysis and answers.
+
+## Public Student UX Contract (`/t/*`)
+
+Target routes:
+
+- `"/t/:code"` -> entry form
+- `"/t/:code/session/:sessionToken"` -> run workspace
+- `"/t/:code/result/:sessionToken"` -> result workspace
+
+UI/theming rules:
+
+1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
+2. Scoped theme tokens are defined in `client/src/widgets/public-test-workspace/ui/public-theme.css` under `.theme-public`.
+3. Do not place public-theme tokens in global `client/src/app/index.css`.
+4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
+5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
+6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
+
 ## Reference Example For AI Agents (Illustrative)
 
 Example goal: implement `news` feature with editor UI (example only, not part of final auth-only template).
@@ -221,6 +255,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    ```json
    { "success": false, "error": { "code": "...", "message": "..." } }
    ```
+9. Runtime API discovery must validate required API routes before accepting discovered origin (prevents binding to unrelated local Swagger instances).
 
 ## PR-Ready Checklist (Feature Delivery)
 

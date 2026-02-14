@@ -42,6 +42,15 @@
 - For strict JSON automation flows, prefer `response_format: json_schema` with explicit schema + `strict=true`.
 - Avoid OpenRouter web-search for tests generation flows (no `web` plugin and no `:online` model suffixes).
 
+## Public links + public student UX rules
+- Keep admin public-link management and stats as separate pages (`/admin/public-links`, `/admin/public-links/stats`).
+- For link lifecycle, prefer archive/restore over destructive delete when history must be preserved.
+- Stats page should remain table-first with compact filters; avoid large decorative blocks that reduce data density.
+- Public `/t/*` pages must use `PublicThemeLayout` and scoped tokens from `client/src/widgets/public-test-workspace/ui/public-theme.css`.
+- Do not leak scoped public theme into global styles (`client/src/app/index.css`).
+- Student-facing copy should be product language; avoid raw backend/status enums in visible UI.
+- Keep entry page centered and mobile-safe (no horizontal overflow, stable CTA prominence).
+
 ## Tests workspace UX rules
 - Keep test-topic deletion explicit: icon action + destructive confirmation dialog.
 - Sidebar cards must wrap long titles/slugs without overflow outside card bounds.
