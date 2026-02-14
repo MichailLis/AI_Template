@@ -17,34 +17,40 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   SLIDER: 'Слайдер',
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
+
+const extractErrorMessage = (data: Record<string, unknown>) => {
+  const nestedError = data.error;
+
+  if (isRecord(nestedError) && 'message' in nestedError) {
+    return String(nestedError.message);
+  }
+
+  if ('message' in data) {
+    return String(data.message);
+  }
+
+  return null;
+};
+
 export const parseApiError = (error: unknown) => {
-  if (typeof error !== 'object' || error === null) {
+  if (!isRecord(error)) {
     return 'Не удалось выполнить запрос';
   }
 
-  if ('response' in error) {
+  if ('response' in error && isRecord(error.response)) {
     const response = error.response;
-    if (typeof response === 'object' && response !== null) {
-      if ('status' in response && response.status === 401) {
-        return 'Сессия истекла или доступ запрещен. Войдите заново.';
-      }
 
-      if ('data' in response) {
-        const data = response.data;
-        if (typeof data === 'object' && data !== null) {
-          if (
-            'error' in data &&
-            typeof data.error === 'object' &&
-            data.error !== null &&
-            'message' in data.error
-          ) {
-            return String(data.error.message);
-          }
+    if ('status' in response && response.status === 401) {
+      return 'Сессия истекла или доступ запрещен. Войдите заново.';
+    }
 
-          if ('message' in data) {
-            return String(data.message);
-          }
-        }
+    if ('data' in response && isRecord(response.data)) {
+      const message = extractErrorMessage(response.data);
+      if (message) {
+        return message;
       }
     }
   }

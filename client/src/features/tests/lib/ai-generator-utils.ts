@@ -29,13 +29,48 @@ interface BuildAiQuestionJsonSchemaParams {
   allowedTypes: Array<CreateTestsTopicFromAiDtoQuestionsItemType>;
 }
 
+const trimUnderscoreEdges = (value: string) => {
+  let start = 0;
+  let end = value.length;
+
+  while (start < end && value[start] === '_') {
+    start += 1;
+  }
+
+  while (end > start && value[end - 1] === '_') {
+    end -= 1;
+  }
+
+  return value.slice(start, end);
+};
+
 const toSlugLikeValue = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_]+/g, '')
-    .replace(/^_+|_+$/g, '');
+  trimUnderscoreEdges(
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]+/g, ''),
+  );
+
+const extractFencedJson = (value: string) => {
+  const openFenceIndex = value.indexOf('```');
+  if (openFenceIndex < 0) {
+    return null;
+  }
+
+  const closeFenceIndex = value.indexOf('```', openFenceIndex + 3);
+  if (closeFenceIndex < 0) {
+    return null;
+  }
+
+  let fencedContent = value.slice(openFenceIndex + 3, closeFenceIndex).trim();
+  if (fencedContent.toLowerCase().startsWith('json')) {
+    fencedContent = fencedContent.slice(4).trim();
+  }
+
+  return fencedContent || null;
+};
 
 const getUniqueOptionValue = (proposed: string, usedValues: Set<string>, index: number) => {
   const base = proposed || `option_${index + 1}`;
@@ -278,9 +313,9 @@ const extractFirstJsonObject = (raw: string) => {
   try {
     return JSON.parse(trimmed) as unknown;
   } catch {
-    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fenced?.[1]) {
-      return JSON.parse(fenced[1].trim()) as unknown;
+    const fenced = extractFencedJson(trimmed);
+    if (fenced) {
+      return JSON.parse(fenced) as unknown;
     }
     throw new Error('ИИ вернул невалидный JSON');
   }
