@@ -303,11 +303,12 @@ export function useAdminTestsWorkspaceActions({
     );
   };
 
-  const autosaveHint = draftAutosave.isAutoSavingDraft
-    ? 'Автосохранение...'
-    : draftAutosave.lastAutoSavedAt
-      ? `Автосохранено в ${draftAutosave.lastAutoSavedAt}`
-      : null;
+  let autosaveHint: string | null = null;
+  if (draftAutosave.isAutoSavingDraft) {
+    autosaveHint = 'Автосохранение...';
+  } else if (draftAutosave.lastAutoSavedAt) {
+    autosaveHint = `Автосохранено в ${draftAutosave.lastAutoSavedAt}`;
+  }
 
   return {
     handleCreateTest,

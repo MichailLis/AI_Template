@@ -41,6 +41,13 @@ export function QuestionModal({
   onRequestClose,
   onFormChange,
 }: QuestionModalProps) {
+  let submitLabel = 'Добавить вопрос';
+  if (isSubmitting) {
+    submitLabel = 'Сохранение...';
+  } else if (mode === 'edit') {
+    submitLabel = 'Обновить вопрос';
+  }
+
   const setType = (type: QuestionType) => {
     let nextOptions = form.options;
     let nextSliderBands = form.sliderBands;
@@ -155,7 +162,6 @@ export function QuestionModal({
             value={form.title}
             onChange={(event) => onFormChange({ ...form, title: event.target.value })}
             placeholder="Заголовок вопроса"
-            autoFocus
           />
 
           <Label htmlFor="question-description-modal">Описание</Label>
@@ -318,11 +324,7 @@ export function QuestionModal({
 
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={onSubmit} disabled={isSubmitting}>
-              {isSubmitting
-                ? 'Сохранение...'
-                : mode === 'edit'
-                  ? 'Обновить вопрос'
-                  : 'Добавить вопрос'}
+              {submitLabel}
             </Button>
             <Button variant="outline" onClick={onRequestClose} disabled={isSubmitting}>
               Отмена

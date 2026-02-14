@@ -31,6 +31,24 @@ const roleLabel = (role: string) => {
   return 'Пользователь';
 };
 
+const renderRoleToggleLabel = (role: string) => {
+  if (role === 'ADMIN') {
+    return (
+      <>
+        <ShieldOff className="mr-2 h-4 w-4" />
+        Снять права администратора
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ShieldCheck className="mr-2 h-4 w-4" />
+      Сделать администратором
+    </>
+  );
+};
+
 const formatDateTime = (value: string) => {
   try {
     return new Date(value).toLocaleString();
@@ -321,19 +339,9 @@ export function AdminUsersWorkspace() {
                               handleRoleToggle(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')
                             }
                           >
-                            {pendingUserId === user.id ? (
-                              'Обновление...'
-                            ) : user.role === 'ADMIN' ? (
-                              <>
-                                <ShieldOff className="mr-2 h-4 w-4" />
-                                Снять права администратора
-                              </>
-                            ) : (
-                              <>
-                                <ShieldCheck className="mr-2 h-4 w-4" />
-                                Сделать администратором
-                              </>
-                            )}
+                            {pendingUserId === user.id
+                              ? 'Обновление...'
+                              : renderRoleToggleLabel(user.role)}
                           </Button>
                           <Button
                             variant="outline"

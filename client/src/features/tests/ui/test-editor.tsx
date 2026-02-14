@@ -42,6 +42,7 @@ interface TestEditorProps {
 
 type DropPosition = 'before' | 'after';
 
+// eslint-disable-next-line sonarjs/cognitive-complexity -- Drag-and-drop editor intentionally keeps reorder guards close to UI events to preserve ordering invariants.
 export function TestEditor({
   hasSelection,
   loading,
@@ -140,6 +141,13 @@ export function TestEditor({
     resetDragState();
   };
 
+  let publishButtonLabel = 'Опубликовать тест';
+  if (isPublishing) {
+    publishButtonLabel = 'Публикация...';
+  } else if (detail?.published) {
+    publishButtonLabel = 'Опубликовать изменения';
+  }
+
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
@@ -199,11 +207,7 @@ export function TestEditor({
                       onClick={onRequestPublish}
                       disabled={!canPublish || isPublishing}
                     >
-                      {isPublishing
-                        ? 'Публикация...'
-                        : detail.published
-                          ? 'Опубликовать изменения'
-                          : 'Опубликовать тест'}
+                      {publishButtonLabel}
                     </Button>
                   </div>
                 </div>

@@ -46,6 +46,14 @@ export function PublicLinksListCard({
   isArchivingPublicLink,
   isRestoringPublicLink,
 }: PublicLinksListCardProps) {
+  const getLinkStateLabel = (link: PublicLinkListItem) => {
+    if (link.archivedAt) {
+      return 'В архиве';
+    }
+
+    return link.isActive ? 'Активна' : 'Отключена';
+  };
+
   return (
     <Card className="h-full border-slate-200">
       <CardHeader className="space-y-2">
@@ -91,9 +99,7 @@ export function PublicLinksListCard({
                   {link.shortCode}
                 </button>
                 <span className="text-xs text-slate-600">{link.title}</span>
-                <span className="ml-auto text-xs text-slate-500">
-                  {link.archivedAt ? 'В архиве' : link.isActive ? 'Активна' : 'Отключена'}
-                </span>
+                <span className="ml-auto text-xs text-slate-500">{getLinkStateLabel(link)}</span>
               </div>
 
               <div className="mt-2 flex flex-wrap gap-2">
