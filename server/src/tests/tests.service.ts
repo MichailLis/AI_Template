@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { TestQuestionType } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
@@ -19,52 +18,22 @@ import type {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
+import {
+  mapQuestion,
+  normalizeSlug,
+  parseSliderSettings,
+  prepareQuestionPayload,
+  toPrismaSettingsInput,
+  validateDraftForPublish,
+} from './tests-domain.utils';
+import { TestsQuestionService } from './tests-question.service';
 
 @Injectable()
 export class TestsService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  private isInputJsonValue(value: unknown): value is Prisma.InputJsonValue {
-    if (
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'boolean'
-    ) {
-      return true;
-    }
-
-    if (Array.isArray(value)) {
-      return value.every(
-        (item) => item === null || this.isInputJsonValue(item),
-      );
-    }
-
-    if (typeof value === 'object' && value !== null) {
-      return Object.values(value).every(
-        (item) => item === null || this.isInputJsonValue(item),
-      );
-    }
-
-    return false;
-  }
-
-  private toPrismaSettingsInput(
-    value: unknown,
-  ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (value === null) {
-      return Prisma.JsonNull;
-    }
-
-    if (!this.isInputJsonValue(value)) {
-      throw new BadRequestException('Question settings must be valid JSON');
-    }
-
-    return value;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly testsQuestionService: TestsQuestionService,
+  ) {}
 
   private async ensureAdminAccess(userId: number) {
     const user = await this.prisma.user.findUnique({
@@ -77,17 +46,8 @@ export class TestsService {
     }
   }
 
-  private normalizeSlug(value: string) {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 120);
-  }
-
   private async ensureUniqueSlug(baseSlug: string) {
-    const normalized = this.normalizeSlug(baseSlug) || 'topic';
+    const normalized = normalizeSlug(baseSlug) || 'topic';
 
     const existing = await this.prisma.testTopic.findMany({
       where: {
@@ -110,170 +70,6 @@ export class TestsService {
     }
 
     return `${normalized}-${index}`;
-  }
-
-  private parseSliderSettings(settings: unknown) {
-    if (typeof settings !== 'object' || settings === null) {
-      return null;
-    }
-
-    const record = settings as Record<string, unknown>;
-    const min = typeof record.min === 'number' ? record.min : null;
-    const max = typeof record.max === 'number' ? record.max : null;
-    const step = typeof record.step === 'number' ? record.step : null;
-
-    if (min === null || max === null || step === null) {
-      return null;
-    }
-
-    if (
-      !Number.isFinite(min) ||
-      !Number.isFinite(max) ||
-      !Number.isFinite(step)
-    ) {
-      return null;
-    }
-
-    if (max <= min || step <= 0) {
-      return null;
-    }
-
-    return { min, max, step };
-  }
-
-  private mapQuestion(question: {
-    id: number;
-    type: TestQuestionType;
-    title: string;
-    description: string | null;
-    required: boolean;
-    order: number;
-    settings: unknown;
-    options: Array<{
-      id: number;
-      label: string;
-      value: string;
-      weight: number;
-      order: number;
-    }>;
-    sliderBands: Array<{
-      id: number;
-      minValue: number;
-      maxValue: number;
-      label: string;
-      weight: number;
-      order: number;
-    }>;
-  }) {
-    return {
-      id: question.id,
-      type: question.type,
-      title: question.title,
-      description: question.description,
-      required: question.required,
-      order: question.order,
-      settings: question.settings ?? null,
-      options: question.options,
-      sliderBands: question.sliderBands,
-    };
-  }
-
-  private validateDraftForPublish(draft: {
-    questions: Array<{
-      type: TestQuestionType;
-      title: string;
-      order: number;
-      settings: unknown;
-      options: Array<{ id: number }>;
-      sliderBands: Array<{ minValue: number; maxValue: number }>;
-    }>;
-  }) {
-    if (draft.questions.length === 0) {
-      throw new BadRequestException(
-        'Draft must contain at least one question before publish',
-      );
-    }
-
-    const seenOrder = new Set<number>();
-
-    for (const question of draft.questions) {
-      if (seenOrder.has(question.order)) {
-        throw new BadRequestException(
-          'Questions order must be unique within draft',
-        );
-      }
-      seenOrder.add(question.order);
-
-      if (
-        question.type === 'SINGLE_CHOICE' ||
-        question.type === 'MULTI_CHOICE'
-      ) {
-        if (question.options.length < 2) {
-          throw new BadRequestException(
-            `Question "${question.title}" requires at least two options`,
-          );
-        }
-      }
-
-      if (question.type === 'SLIDER') {
-        const sliderSettings = this.parseSliderSettings(question.settings);
-
-        if (!sliderSettings) {
-          throw new BadRequestException(
-            `Slider question "${question.title}" has invalid settings`,
-          );
-        }
-
-        for (const band of question.sliderBands) {
-          if (band.maxValue < band.minValue) {
-            throw new BadRequestException(
-              `Slider question "${question.title}" has invalid score range`,
-            );
-          }
-        }
-      }
-    }
-  }
-
-  private prepareQuestionPayload(dto: UpsertTestsQuestionDto) {
-    const options =
-      dto.type === 'SINGLE_CHOICE' || dto.type === 'MULTI_CHOICE'
-        ? (dto.options ?? []).map((option, index) => ({
-            label: option.label,
-            value: option.value,
-            weight: option.weight,
-            order: index + 1,
-          }))
-        : [];
-
-    const sliderBands =
-      dto.type === 'SLIDER'
-        ? (dto.sliderBands ?? []).map((band, index) => {
-            if (band.maxValue < band.minValue) {
-              throw new BadRequestException(
-                'Slider band maxValue must be greater than or equal to minValue',
-              );
-            }
-
-            return {
-              minValue: band.minValue,
-              maxValue: band.maxValue,
-              label: band.label,
-              weight: band.weight,
-              order: index + 1,
-            };
-          })
-        : [];
-
-    return {
-      type: dto.type,
-      title: dto.title,
-      description: dto.description ?? null,
-      required: dto.required,
-      settings: dto.settings,
-      options,
-      sliderBands,
-    };
   }
 
   private async getTopicSnapshot(topicId: number) {
@@ -411,7 +207,7 @@ export class TestsService {
     const baseSlug = dto.slug ?? dto.title;
     const slug = await this.ensureUniqueSlug(baseSlug);
     const questionPayloads = dto.questions.map((question, index) => {
-      const payload = this.prepareQuestionPayload(question);
+      const payload = prepareQuestionPayload(question);
       const questionLabel = `Question #${index + 1}`;
 
       if (
@@ -430,7 +226,7 @@ export class TestsService {
           );
         }
 
-        const sliderSettings = this.parseSliderSettings(payload.settings);
+        const sliderSettings = parseSliderSettings(payload.settings);
         if (!sliderSettings) {
           throw new BadRequestException(
             `${questionLabel} has invalid slider settings`,
@@ -475,7 +271,7 @@ export class TestsService {
             required: question.required,
             order: index + 1,
             ...(question.settings !== undefined
-              ? { settings: this.toPrismaSettingsInput(question.settings) }
+              ? { settings: toPrismaSettingsInput(question.settings) }
               : {}),
           },
         });
@@ -553,9 +349,7 @@ export class TestsService {
         versionNumber: draft.versionNumber,
         title: draft.title,
         description: draft.description,
-        questions: draft.questions.map((question) =>
-          this.mapQuestion(question),
-        ),
+        questions: draft.questions.map((question) => mapQuestion(question)),
       },
       published: topic.activePublishedVersion
         ? {
@@ -598,53 +392,10 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    const draft = topic.activeDraftVersion;
-    const payload = this.prepareQuestionPayload(dto);
-    const nextOrder =
-      draft.questions.length > 0
-        ? Math.max(...draft.questions.map((question) => question.order)) + 1
-        : 1;
-
-    await this.prisma.$transaction(async (tx) => {
-      const createdQuestion = await tx.testQuestion.create({
-        data: {
-          versionId: draft.id,
-          type: payload.type,
-          title: payload.title,
-          description: payload.description,
-          required: payload.required,
-          order: nextOrder,
-          ...(payload.settings !== undefined
-            ? { settings: this.toPrismaSettingsInput(payload.settings) }
-            : {}),
-        },
-      });
-
-      if (payload.options.length > 0) {
-        await tx.testQuestionOption.createMany({
-          data: payload.options.map((option) => ({
-            questionId: createdQuestion.id,
-            label: option.label,
-            value: option.value,
-            weight: option.weight,
-            order: option.order,
-          })),
-        });
-      }
-
-      if (payload.sliderBands.length > 0) {
-        await tx.testQuestionSliderBand.createMany({
-          data: payload.sliderBands.map((band) => ({
-            questionId: createdQuestion.id,
-            minValue: band.minValue,
-            maxValue: band.maxValue,
-            label: band.label,
-            weight: band.weight,
-            order: band.order,
-          })),
-        });
-      }
-    });
+    await this.testsQuestionService.createQuestion(
+      topic.activeDraftVersion,
+      dto,
+    );
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -658,63 +409,11 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    const draft = topic.activeDraftVersion;
-    const existingQuestion = draft.questions.find(
-      (question) => question.id === questionId,
+    await this.testsQuestionService.updateQuestion(
+      topic.activeDraftVersion,
+      questionId,
+      dto,
     );
-
-    if (!existingQuestion) {
-      throw new NotFoundException('Question not found in active draft');
-    }
-
-    const payload = this.prepareQuestionPayload(dto);
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.testQuestion.update({
-        where: { id: questionId },
-        data: {
-          type: payload.type,
-          title: payload.title,
-          description: payload.description,
-          required: payload.required,
-          ...(payload.settings !== undefined
-            ? { settings: this.toPrismaSettingsInput(payload.settings) }
-            : { settings: Prisma.JsonNull }),
-        },
-      });
-
-      await tx.testQuestionOption.deleteMany({
-        where: { questionId },
-      });
-      await tx.testQuestionSliderBand.deleteMany({
-        where: { questionId },
-      });
-
-      if (payload.options.length > 0) {
-        await tx.testQuestionOption.createMany({
-          data: payload.options.map((option) => ({
-            questionId,
-            label: option.label,
-            value: option.value,
-            weight: option.weight,
-            order: option.order,
-          })),
-        });
-      }
-
-      if (payload.sliderBands.length > 0) {
-        await tx.testQuestionSliderBand.createMany({
-          data: payload.sliderBands.map((band) => ({
-            questionId,
-            minValue: band.minValue,
-            maxValue: band.maxValue,
-            label: band.label,
-            weight: band.weight,
-            order: band.order,
-          })),
-        });
-      }
-    });
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -727,35 +426,10 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    const draft = topic.activeDraftVersion;
-    const existingQuestion = draft.questions.find(
-      (question) => question.id === questionId,
+    await this.testsQuestionService.deleteQuestion(
+      topic.activeDraftVersion,
+      questionId,
     );
-
-    if (!existingQuestion) {
-      throw new NotFoundException('Question not found in active draft');
-    }
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.testQuestion.delete({
-        where: {
-          id: questionId,
-        },
-      });
-
-      const remaining = await tx.testQuestion.findMany({
-        where: { versionId: draft.id },
-        orderBy: { order: 'asc' },
-        select: { id: true },
-      });
-
-      for (const [index, question] of remaining.entries()) {
-        await tx.testQuestion.update({
-          where: { id: question.id },
-          data: { order: index + 1 },
-        });
-      }
-    });
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -768,45 +442,10 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    const draft = topic.activeDraftVersion;
-
-    if (draft.questions.length === 0) {
-      throw new BadRequestException('Draft has no questions to reorder');
-    }
-
-    if (dto.questionIds.length !== draft.questions.length) {
-      throw new BadRequestException(
-        'Reorder payload must include all draft question ids exactly once',
-      );
-    }
-
-    const uniqueIds = new Set(dto.questionIds);
-    if (uniqueIds.size !== dto.questionIds.length) {
-      throw new BadRequestException(
-        'Reorder payload contains duplicate question ids',
-      );
-    }
-
-    const draftQuestionIds = new Set(
-      draft.questions.map((question) => question.id),
+    await this.testsQuestionService.reorderQuestions(
+      topic.activeDraftVersion,
+      dto,
     );
-
-    for (const questionId of dto.questionIds) {
-      if (!draftQuestionIds.has(questionId)) {
-        throw new BadRequestException(
-          `Question ${questionId} does not belong to active draft`,
-        );
-      }
-    }
-
-    await this.prisma.$transaction(async (tx) => {
-      for (const [index, questionId] of dto.questionIds.entries()) {
-        await tx.testQuestion.update({
-          where: { id: questionId },
-          data: { order: index + 1 },
-        });
-      }
-    });
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -820,7 +459,7 @@ export class TestsService {
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
 
-    this.validateDraftForPublish(draft);
+    validateDraftForPublish(draft);
 
     return this.prisma.$transaction(async (tx) => {
       if (
@@ -858,7 +497,7 @@ export class TestsService {
             required: question.required,
             order: question.order,
             ...(question.settings !== null
-              ? { settings: this.toPrismaSettingsInput(question.settings) }
+              ? { settings: toPrismaSettingsInput(question.settings) }
               : { settings: Prisma.JsonNull }),
           },
         });
