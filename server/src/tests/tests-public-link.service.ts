@@ -45,6 +45,14 @@ type PublicLinkWithTopicVersion = Prisma.TestPublicLinkGetPayload<{
   };
 }>;
 
+/**
+ * Сервис публичных ссылок для прохождения теста.
+ *
+ * Ключевые инварианты:
+ * - доступ к админским операциям только для роли ADMIN;
+ * - публичная ссылка всегда указывает на опубликованную версию теста;
+ * - удаление в UI реализовано как архивирование, чтобы не терять историю прохождений.
+ */
 @Injectable()
 export class TestsPublicLinkService {
   constructor(private readonly prisma: PrismaService) {}
@@ -136,6 +144,8 @@ export class TestsPublicLinkService {
       return normalizedCode;
     }
 
+    // Ограничиваем количество попыток, чтобы при высоких коллизиях не зависать
+    // в бесконечном цикле и явно сигнализировать о проблеме вызывающему коду.
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const candidate = createShortCodeCandidate();
       const existing = await this.prisma.testPublicLink.findUnique({
@@ -320,6 +330,11 @@ export class TestsPublicLinkService {
     return this.toAdminPublicLink(updated);
   }
 
+  /**
+   * Архивирует публичную ссылку вместо hard delete.
+   *
+   * Причина: статистика и результаты прохождений должны оставаться доступными в админской аналитике.
+   */
   async deletePublicLink(userId: number, linkId: number) {
     await this.ensureAdminAccess(userId);
 
@@ -404,6 +419,12 @@ export class TestsPublicLinkService {
     return this.toAdminPublicLink(restored);
   }
 
+  /**
+   * Возвращает ссылку только если она действительно доступна для публичного прохождения.
+   *
+   * Проверяем доступность централизованно, чтобы все consumers сервиса использовали
+   * единые правила (архив, active-флаг, публикация версии, окно доступности).
+   */
   async getAccessiblePublicLinkByCode(shortCode: string): Promise<PublicLinkWithTopicVersion> {
     const normalizedCode = shortCode.trim().toUpperCase();
     const link = await this.prisma.testPublicLink.findUnique({
@@ -438,6 +459,8 @@ export class TestsPublicLinkService {
       throw new NotFoundException('Public test link not found');
     }
 
+    // Специально маскируем архивную ссылку как "not found":
+    // это не раскрывает пользователю, что код когда-то существовал.
     if (link.archivedAt) {
       throw new NotFoundException('Public test link not found');
     }
@@ -463,6 +486,9 @@ export class TestsPublicLinkService {
     return link;
   }
 
+  /**
+   * Возвращает DTO для публичной entry-страницы без раскрытия лишних технических деталей.
+   */
   async getPublicLinkAccessByCode(shortCode: string): Promise<PublicLinkAccessResponseDto> {
     const link = await this.getAccessiblePublicLinkByCode(shortCode);
 

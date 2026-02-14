@@ -11,6 +11,8 @@ const API_FALLBACK_PORT_ATTEMPTS = 20;
 const API_PROBE_TIMEOUT_MS = 400;
 const API_DISCOVERY_CACHE_TTL_MS = 5000;
 const API_HOST_CANDIDATES = ['localhost', '127.0.0.1'] as const;
+// Важно: рядом могут работать чужие Swagger-серверы на localhost.
+// Принимаем candidate API только если в схеме есть обязательные маршруты именно этого проекта.
 const API_REQUIRED_PATHS = [
   '/auth/signin',
   '/admin/tests/public-links',
@@ -19,6 +21,8 @@ const API_REQUIRED_PATHS = [
 
 let cachedApiBaseUrl: string | null = null;
 let cacheExpiresAt = 0;
+// Инвариант: один активный discovery-проход на процесс,
+// чтобы параллельные запросы к discovery-роуту не создавали шторм проверок по портам.
 let inFlightApiDiscovery: Promise<string | null> | null = null;
 
 const isSwaggerDocument = (payload: unknown): payload is Record<string, unknown> => {
@@ -145,6 +149,8 @@ const apiDiscoveryMiddleware = (
       res.end(JSON.stringify({ baseUrl }));
     })
     .catch(() => {
+      // Ограничение bootstrap-потока: discovery должен деградировать в `null`,
+      // а не падать ошибкой, чтобы клиент мог продолжить запуск с fallback-логикой.
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-store');

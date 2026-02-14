@@ -9,6 +9,12 @@ interface PublicThemeLayoutProps {
   containerClassName?: string;
 }
 
+/**
+ * Обертка для публичных `/t/*` страниц.
+ *
+ * Инвариант: тема должна быть строго scoped через `.theme-public`,
+ * чтобы визуальные токены публичного контура не протекали в admin/login.
+ */
 export function PublicThemeLayout({ children, containerClassName }: PublicThemeLayoutProps) {
   return (
     <main className="theme-public relative min-h-screen overflow-hidden bg-background text-foreground">
