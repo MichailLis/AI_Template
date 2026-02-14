@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
@@ -14,6 +15,7 @@ import AdminUsersPage from '@/pages/admin/admin-users-page';
 import LoginPage from '@/pages/login';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/interceptors';
+import { discoverAndConfigureApiBaseUrl } from '@/shared/api/runtime-api-base-url';
 
 configureApiBaseUrl(import.meta.env.VITE_API_URL);
 configureInterceptorsRuntime({
@@ -33,6 +35,38 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const [apiReady, setApiReady] = useState(Boolean(import.meta.env.VITE_API_URL));
+
+  useEffect(() => {
+    if (import.meta.env.VITE_API_URL) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const resolveRuntimeApiBaseUrl = async () => {
+      await discoverAndConfigureApiBaseUrl();
+
+      if (!cancelled) {
+        setApiReady(true);
+      }
+    };
+
+    void resolveRuntimeApiBaseUrl();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!apiReady) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-sm text-slate-600">
+        Подключаемся к API...
+      </main>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>

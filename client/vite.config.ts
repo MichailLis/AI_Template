@@ -1,11 +1,150 @@
+import { request } from 'node:http';
 import path from 'path';
 
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Connect } from 'vite';
+
+const API_DISCOVERY_ROUTE = '/__api-base-url';
+const API_SWAGGER_PATH = '/api-json';
+const API_FALLBACK_PORT_START = 3000;
+const API_FALLBACK_PORT_ATTEMPTS = 20;
+const API_PROBE_TIMEOUT_MS = 400;
+const API_DISCOVERY_CACHE_TTL_MS = 5000;
+const API_HOST_CANDIDATES = ['localhost', '127.0.0.1'] as const;
+
+let cachedApiBaseUrl: string | null = null;
+let cacheExpiresAt = 0;
+let inFlightApiDiscovery: Promise<string | null> | null = null;
+
+const isSwaggerDocument = (payload: unknown): payload is Record<string, unknown> => {
+  return (
+    typeof payload === 'object' && payload !== null && ('openapi' in payload || 'swagger' in payload)
+  );
+};
+
+const probeApiHostPort = (host: string, port: number) =>
+  new Promise<boolean>((resolve) => {
+    const req = request(
+      {
+        host,
+        port,
+        method: 'GET',
+        path: API_SWAGGER_PATH,
+        timeout: API_PROBE_TIMEOUT_MS,
+      },
+      (response) => {
+        let body = '';
+
+        response.setEncoding('utf8');
+        response.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        response.on('end', () => {
+          const statusCode = response.statusCode ?? 0;
+          if (statusCode < 200 || statusCode >= 300) {
+            resolve(false);
+            return;
+          }
+
+          try {
+            const parsedBody: unknown = JSON.parse(body);
+            resolve(isSwaggerDocument(parsedBody));
+          } catch {
+            resolve(false);
+          }
+        });
+      },
+    );
+
+    req.on('error', () => {
+      resolve(false);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+
+    req.end();
+  });
+
+const discoverApiBaseUrl = async () => {
+  for (let offset = 0; offset < API_FALLBACK_PORT_ATTEMPTS; offset += 1) {
+    const candidatePort = API_FALLBACK_PORT_START + offset;
+
+    for (const candidateHost of API_HOST_CANDIDATES) {
+      if (await probeApiHostPort(candidateHost, candidatePort)) {
+        return `http://${candidateHost}:${candidatePort}`;
+      }
+    }
+  }
+
+  return null;
+};
+
+const discoverApiBaseUrlCached = async () => {
+  if (Date.now() < cacheExpiresAt) {
+    return cachedApiBaseUrl;
+  }
+
+  if (inFlightApiDiscovery) {
+    return inFlightApiDiscovery;
+  }
+
+  inFlightApiDiscovery = discoverApiBaseUrl()
+    .then((baseUrl) => {
+      cachedApiBaseUrl = baseUrl;
+      cacheExpiresAt = Date.now() + API_DISCOVERY_CACHE_TTL_MS;
+      return baseUrl;
+    })
+    .finally(() => {
+      inFlightApiDiscovery = null;
+    });
+
+  return inFlightApiDiscovery;
+};
+
+const apiDiscoveryMiddleware: Connect.NextHandleFunction = (req, res, next) => {
+  if (!req.url || !req.url.startsWith(API_DISCOVERY_ROUTE)) {
+    next();
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.statusCode = 405;
+    res.end();
+    return;
+  }
+
+  void discoverApiBaseUrlCached()
+    .then((baseUrl) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-store');
+      res.end(JSON.stringify({ baseUrl }));
+    })
+    .catch(() => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-store');
+      res.end(JSON.stringify({ baseUrl: null }));
+    });
+};
+
+const runtimeApiDiscoveryPlugin = () => ({
+  name: 'runtime-api-discovery',
+  configureServer(server: { middlewares: { use: Connect.NextHandleFunction } }) {
+    server.middlewares.use(apiDiscoveryMiddleware);
+  },
+  configurePreviewServer(server: { middlewares: { use: Connect.NextHandleFunction } }) {
+    server.middlewares.use(apiDiscoveryMiddleware);
+  },
+});
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), runtimeApiDiscoveryPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
