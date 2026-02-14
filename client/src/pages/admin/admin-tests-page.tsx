@@ -1,18 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  useTestsControllerCreateQuestion,
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
-  useTestsControllerDeleteQuestion,
   useTestsControllerGetTopicDraft,
   useTestsControllerListTopics,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
-  useTestsControllerUpdateQuestion,
-  useTestsControllerUpdateTopicDraft,
 } from '@/shared/api/generated/tests/tests';
 
 import { AiTestGeneratorModal } from './tests/ai-test-generator-modal';
@@ -20,27 +16,18 @@ import { ConfirmActionDialog } from './tests/confirm-action-dialog';
 import { QuestionModal } from './tests/question-modal';
 import { TestEditor } from './tests/test-editor';
 import { TestsSidebar } from './tests/tests-sidebar';
-import {
-  buildQuestionFormFromQuestion,
-  createEmptyQuestionFormState,
-  createQuestionPayload,
-  hasDraftEdits,
-  hasQuestionFormChanges,
-  parseApiError,
-} from './tests/utils';
+import { useDraftAutosave } from './tests/use-draft-autosave';
+import { useQuestionEditor } from './tests/use-question-editor';
+import { hasDraftEdits, parseApiError } from './tests/utils';
 
-import type { QuestionFormState, TestDraftQuestion, TestTopicListItem } from './tests/types';
+import type { TestTopicListItem } from './tests/types';
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
 export default function AdminTestsPage() {
   const topicsQuery = useTestsControllerListTopics();
   const createTopicMutation = useTestsControllerCreateTopic();
   const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
-  const updateDraftMutation = useTestsControllerUpdateTopicDraft();
-  const createQuestionMutation = useTestsControllerCreateQuestion();
-  const updateQuestionMutation = useTestsControllerUpdateQuestion();
   const deleteTopicMutation = useTestsControllerDeleteTopic();
-  const deleteQuestionMutation = useTestsControllerDeleteQuestion();
   const reorderQuestionsMutation = useTestsControllerReorderQuestions();
   const publishMutation = useTestsControllerPublishTopic();
 
@@ -55,27 +42,11 @@ export default function AdminTestsPage() {
   const [testSearch, setTestSearch] = useState('');
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
 
-  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
-  const [questionForm, setQuestionForm] = useState<QuestionFormState>(
-    createEmptyQuestionFormState(),
-  );
-  const [questionFormInitial, setQuestionFormInitial] = useState<QuestionFormState | null>(null);
-  const [questionSubmitError, setQuestionSubmitError] = useState<string | null>(null);
-
-  const [isDiscardQuestionConfirmOpen, setIsDiscardQuestionConfirmOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [pendingDeleteTopic, setPendingDeleteTopic] = useState<TestTopicListItem | null>(null);
-  const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<TestDraftQuestion | null>(
-    null,
-  );
 
   const [pendingTopicSwitchId, setPendingTopicSwitchId] = useState<number | null>(null);
   const [isSwitchConfirmOpen, setIsSwitchConfirmOpen] = useState(false);
-
-  const [isAutoSavingDraft, setIsAutoSavingDraft] = useState(false);
-  const [lastAutoSavedAt, setLastAutoSavedAt] = useState<string | null>(null);
-  const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
 
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
 
@@ -115,18 +86,6 @@ export default function AdminTestsPage() {
     };
   }, [draft, draftEdits]);
 
-  const isDraftDirty = draft ? hasDraftEdits(draft, draftForm.title, draftForm.description) : false;
-  const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
-
-  const isQuestionSubmitting = createQuestionMutation.isPending || updateQuestionMutation.isPending;
-  const isQuestionDirty = hasQuestionFormChanges(questionForm, questionFormInitial);
-
-  const resetAutosaveMeta = () => {
-    setLastAutoSavedAt(null);
-    setAutoSaveError(null);
-    setIsAutoSavingDraft(false);
-  };
-
   const clearDraftEdits = useCallback((draftId: number) => {
     setDraftEdits((previous) => {
       const next = { ...previous };
@@ -134,6 +93,28 @@ export default function AdminTestsPage() {
       return next;
     });
   }, []);
+
+  const isDraftDirty = draft ? hasDraftEdits(draft, draftForm.title, draftForm.description) : false;
+  const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
+
+  const refetchTestsData = useCallback(() => {
+    void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+  }, [detailQuery, topicsQuery]);
+
+  const draftAutosave = useDraftAutosave({
+    topicId: effectiveSelectedTopicId,
+    draft,
+    draftForm,
+    isDraftDirty,
+    publishIsPending: publishMutation.isPending,
+    clearDraftEdits,
+    onAfterSave: refetchTestsData,
+  });
+
+  const questionEditor = useQuestionEditor({
+    topicId: effectiveSelectedTopicId,
+    onDataChanged: refetchTestsData,
+  });
 
   const updateCurrentDraftEdits = (patch: Partial<{ title: string; description: string }>) => {
     if (!draft) {
@@ -170,7 +151,7 @@ export default function AdminTestsPage() {
           setNewTestTitle('');
           setNewTestSlug('');
           setNewTestDescription('');
-          resetAutosaveMeta();
+          draftAutosave.resetAutosaveMeta();
           setSelectedTopicId(topic.topicId);
           void topicsQuery.refetch();
         },
@@ -190,9 +171,9 @@ export default function AdminTestsPage() {
         onSuccess: (topic) => {
           toast.success('Тест успешно создан с помощью ИИ');
           setIsAiGeneratorOpen(false);
-          resetAutosaveMeta();
+          draftAutosave.resetAutosaveMeta();
           setSelectedTopicId(topic.topicId);
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+          refetchTestsData();
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -212,7 +193,7 @@ export default function AdminTestsPage() {
       return;
     }
 
-    resetAutosaveMeta();
+    draftAutosave.resetAutosaveMeta();
     setSelectedTopicId(topicId);
   };
 
@@ -226,194 +207,10 @@ export default function AdminTestsPage() {
       clearDraftEdits(draft.id);
     }
 
-    resetAutosaveMeta();
+    draftAutosave.resetAutosaveMeta();
     setSelectedTopicId(pendingTopicSwitchId);
     setPendingTopicSwitchId(null);
     setIsSwitchConfirmOpen(false);
-  };
-
-  const handleSaveDraft = useCallback(
-    (mode: 'manual' | 'auto' = 'manual') => {
-      if (!effectiveSelectedTopicId || !draft) {
-        return;
-      }
-
-      if (mode === 'auto') {
-        setIsAutoSavingDraft(true);
-        setAutoSaveError(null);
-      }
-
-      updateDraftMutation.mutate(
-        {
-          topicId: effectiveSelectedTopicId,
-          data: {
-            title: draftForm.title.trim() || undefined,
-            description: draftForm.description.trim() || null,
-          },
-        },
-        {
-          onSuccess: () => {
-            if (mode === 'manual') {
-              toast.success('Изменения сохранены');
-            } else {
-              setLastAutoSavedAt(
-                new Date().toLocaleTimeString('ru-RU', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                }),
-              );
-            }
-
-            setIsAutoSavingDraft(false);
-            setAutoSaveError(null);
-            clearDraftEdits(draft.id);
-            void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
-          },
-          onError: (error) => {
-            const message = parseApiError(error);
-
-            setIsAutoSavingDraft(false);
-            if (mode === 'manual') {
-              toast.error(message);
-            } else {
-              setAutoSaveError(message);
-            }
-          },
-        },
-      );
-    },
-    [
-      clearDraftEdits,
-      detailQuery,
-      draft,
-      draftForm.description,
-      draftForm.title,
-      effectiveSelectedTopicId,
-      topicsQuery,
-      updateDraftMutation,
-    ],
-  );
-
-  useEffect(() => {
-    if (!isDraftDirty || !draft || !effectiveSelectedTopicId) {
-      return;
-    }
-
-    if (updateDraftMutation.isPending || publishMutation.isPending) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      handleSaveDraft('auto');
-    }, 1300);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [
-    handleSaveDraft,
-    draft,
-    effectiveSelectedTopicId,
-    isDraftDirty,
-    publishMutation.isPending,
-    updateDraftMutation.isPending,
-  ]);
-
-  const openCreateQuestionModal = () => {
-    const initial = createEmptyQuestionFormState();
-    setEditingQuestionId(null);
-    setQuestionForm(initial);
-    setQuestionFormInitial(initial);
-    setQuestionSubmitError(null);
-    setIsQuestionModalOpen(true);
-  };
-
-  const openEditQuestionModal = (question: TestDraftQuestion) => {
-    const initial = buildQuestionFormFromQuestion(question);
-    setEditingQuestionId(question.id);
-    setQuestionForm(initial);
-    setQuestionFormInitial(initial);
-    setQuestionSubmitError(null);
-    setIsQuestionModalOpen(true);
-  };
-
-  const closeQuestionModalDirect = () => {
-    setIsQuestionModalOpen(false);
-    setEditingQuestionId(null);
-    setQuestionForm(createEmptyQuestionFormState());
-    setQuestionFormInitial(null);
-    setQuestionSubmitError(null);
-    setIsDiscardQuestionConfirmOpen(false);
-  };
-
-  const handleQuestionModalRequestClose = () => {
-    if (isQuestionDirty) {
-      setIsDiscardQuestionConfirmOpen(true);
-      return;
-    }
-
-    closeQuestionModalDirect();
-  };
-
-  const handleSubmitQuestion = () => {
-    if (!effectiveSelectedTopicId) {
-      return;
-    }
-
-    let payload: ReturnType<typeof createQuestionPayload>;
-    try {
-      payload = createQuestionPayload(questionForm);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Некорректные данные вопроса';
-      setQuestionSubmitError(message);
-      return;
-    }
-
-    setQuestionSubmitError(null);
-
-    if (editingQuestionId) {
-      updateQuestionMutation.mutate(
-        {
-          topicId: effectiveSelectedTopicId,
-          questionId: editingQuestionId,
-          data: payload,
-        },
-        {
-          onSuccess: () => {
-            toast.success('Вопрос обновлен');
-            closeQuestionModalDirect();
-            void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
-          },
-          onError: (error) => {
-            const message = parseApiError(error);
-            setQuestionSubmitError(message);
-            toast.error(message);
-          },
-        },
-      );
-
-      return;
-    }
-
-    createQuestionMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-        data: payload,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Вопрос добавлен');
-          closeQuestionModalDirect();
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
-        },
-        onError: (error) => {
-          const message = parseApiError(error);
-          setQuestionSubmitError(message);
-          toast.error(message);
-        },
-      },
-    );
   };
 
   const handleConfirmDeleteTopic = () => {
@@ -438,43 +235,16 @@ export default function AdminTestsPage() {
 
             const nextTopic = topics.find((topic) => topic.id !== topicIdToDelete);
             setSelectedTopicId(nextTopic?.id ?? null);
-            closeQuestionModalDirect();
-            setPendingDeleteQuestion(null);
+            questionEditor.closeQuestionModalDirect();
+            questionEditor.setPendingDeleteQuestion(null);
             setIsPublishConfirmOpen(false);
             setPendingTopicSwitchId(null);
             setIsSwitchConfirmOpen(false);
           }
 
           setPendingDeleteTopic(null);
-          resetAutosaveMeta();
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleConfirmDeleteQuestion = () => {
-    if (!effectiveSelectedTopicId || !pendingDeleteQuestion) {
-      setPendingDeleteQuestion(null);
-      return;
-    }
-
-    deleteQuestionMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-        questionId: pendingDeleteQuestion.id,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Вопрос удален');
-          if (editingQuestionId === pendingDeleteQuestion.id) {
-            closeQuestionModalDirect();
-          }
-          setPendingDeleteQuestion(null);
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+          draftAutosave.resetAutosaveMeta();
+          refetchTestsData();
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -499,12 +269,14 @@ export default function AdminTestsPage() {
             `Опубликована версия v${result.publishedVersionNumber}. Создана новая версия в работе v${result.newDraftVersionNumber}`,
           );
           setIsPublishConfirmOpen(false);
-          closeQuestionModalDirect();
+          questionEditor.closeQuestionModalDirect();
+
           if (draft) {
             clearDraftEdits(draft.id);
           }
-          resetAutosaveMeta();
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+
+          draftAutosave.resetAutosaveMeta();
+          refetchTestsData();
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -546,7 +318,7 @@ export default function AdminTestsPage() {
       {
         onSuccess: () => {
           toast.success('Порядок вопросов обновлен');
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+          refetchTestsData();
         },
         onError: (error) => {
           const message = parseApiError(error);
@@ -564,16 +336,16 @@ export default function AdminTestsPage() {
             toast.error(`Не удалось изменить порядок: ${message}`);
           }
 
-          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+          refetchTestsData();
         },
       },
     );
   };
 
-  const autosaveHint = isAutoSavingDraft
+  const autosaveHint = draftAutosave.isAutoSavingDraft
     ? 'Автосохранение...'
-    : lastAutoSavedAt
-      ? `Автосохранено в ${lastAutoSavedAt}`
+    : draftAutosave.lastAutoSavedAt
+      ? `Автосохранено в ${draftAutosave.lastAutoSavedAt}`
       : null;
 
   return (
@@ -616,19 +388,19 @@ export default function AdminTestsPage() {
           draftDescription={draftForm.description}
           draftDirty={isDraftDirty}
           canPublish={canPublish}
-          isSavingDraft={updateDraftMutation.isPending}
+          isSavingDraft={draftAutosave.isSavingDraft}
           isPublishing={publishMutation.isPending}
           isReorderingQuestions={reorderQuestionsMutation.isPending}
-          isDeletingQuestion={deleteQuestionMutation.isPending}
+          isDeletingQuestion={questionEditor.isDeletingQuestion}
           autosaveHint={autosaveHint}
-          autosaveError={autoSaveError}
+          autosaveError={draftAutosave.autoSaveError}
           onDraftTitleChange={(value) => updateCurrentDraftEdits({ title: value })}
           onDraftDescriptionChange={(value) => updateCurrentDraftEdits({ description: value })}
-          onSaveDraft={() => handleSaveDraft('manual')}
+          onSaveDraft={() => draftAutosave.saveDraft('manual')}
           onRequestPublish={() => setIsPublishConfirmOpen(true)}
-          onCreateQuestion={openCreateQuestionModal}
-          onEditQuestion={openEditQuestionModal}
-          onRequestDeleteQuestion={setPendingDeleteQuestion}
+          onCreateQuestion={questionEditor.openCreateQuestionModal}
+          onEditQuestion={questionEditor.openEditQuestionModal}
+          onRequestDeleteQuestion={questionEditor.setPendingDeleteQuestion}
           onReorderQuestions={handleReorderQuestions}
           onRetryLoad={() => {
             void detailQuery.refetch();
@@ -644,19 +416,14 @@ export default function AdminTestsPage() {
       />
 
       <QuestionModal
-        open={isQuestionModalOpen}
-        mode={editingQuestionId ? 'edit' : 'create'}
-        form={questionForm}
-        submitError={questionSubmitError}
-        isSubmitting={isQuestionSubmitting}
-        onSubmit={handleSubmitQuestion}
-        onRequestClose={handleQuestionModalRequestClose}
-        onFormChange={(nextForm) => {
-          setQuestionForm(nextForm);
-          if (questionSubmitError) {
-            setQuestionSubmitError(null);
-          }
-        }}
+        open={questionEditor.isQuestionModalOpen}
+        mode={questionEditor.editingQuestionId ? 'edit' : 'create'}
+        form={questionEditor.questionForm}
+        submitError={questionEditor.questionSubmitError}
+        isSubmitting={questionEditor.isQuestionSubmitting}
+        onSubmit={questionEditor.handleSubmitQuestion}
+        onRequestClose={questionEditor.handleQuestionModalRequestClose}
+        onFormChange={questionEditor.handleQuestionFormChange}
       />
 
       <ConfirmActionDialog
@@ -673,13 +440,13 @@ export default function AdminTestsPage() {
       />
 
       <ConfirmActionDialog
-        open={isDiscardQuestionConfirmOpen}
+        open={questionEditor.isDiscardQuestionConfirmOpen}
         title="Закрыть редактор вопроса?"
         description="Есть несохраненные изменения в вопросе. Они будут потеряны."
         confirmLabel="Закрыть без сохранения"
         variant="destructive"
-        onConfirm={closeQuestionModalDirect}
-        onClose={() => setIsDiscardQuestionConfirmOpen(false)}
+        onConfirm={questionEditor.closeQuestionModalDirect}
+        onClose={() => questionEditor.setIsDiscardQuestionConfirmOpen(false)}
       />
 
       <ConfirmActionDialog
@@ -698,18 +465,18 @@ export default function AdminTestsPage() {
       />
 
       <ConfirmActionDialog
-        open={Boolean(pendingDeleteQuestion)}
+        open={Boolean(questionEditor.pendingDeleteQuestion)}
         title="Удалить вопрос?"
         description={
-          pendingDeleteQuestion
-            ? `Вопрос "${pendingDeleteQuestion.title}" будет удален из версии в работе.`
+          questionEditor.pendingDeleteQuestion
+            ? `Вопрос "${questionEditor.pendingDeleteQuestion.title}" будет удален из версии в работе.`
             : 'Вопрос будет удален из версии в работе.'
         }
         confirmLabel="Удалить вопрос"
         variant="destructive"
-        isConfirming={deleteQuestionMutation.isPending}
-        onConfirm={handleConfirmDeleteQuestion}
-        onClose={() => setPendingDeleteQuestion(null)}
+        isConfirming={questionEditor.isDeletingQuestion}
+        onConfirm={questionEditor.handleConfirmDeleteQuestion}
+        onClose={() => questionEditor.setPendingDeleteQuestion(null)}
       />
 
       <ConfirmActionDialog
