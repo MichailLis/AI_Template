@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminControllerGetUsersRole =
-  (typeof AdminControllerGetUsersRole)[keyof typeof AdminControllerGetUsersRole];
+export type AdminControllerGetUsersRole = typeof AdminControllerGetUsersRole[keyof typeof AdminControllerGetUsersRole];
+
 
 export const AdminControllerGetUsersRole = {
   USER: 'USER',

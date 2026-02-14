@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 
-export type TestsTopicDetailResponseDtoDraftQuestionsItemType = typeof TestsTopicDetailResponseDtoDraftQuestionsItemType[keyof typeof TestsTopicDetailResponseDtoDraftQuestionsItemType];
+export type PublicSessionStartResponseDtoSessionQuestionsItemType = typeof PublicSessionStartResponseDtoSessionQuestionsItemType[keyof typeof PublicSessionStartResponseDtoSessionQuestionsItemType];
 
 
-export const TestsTopicDetailResponseDtoDraftQuestionsItemType = {
+export const PublicSessionStartResponseDtoSessionQuestionsItemType = {
   OPEN_TEXT: 'OPEN_TEXT',
   SINGLE_CHOICE: 'SINGLE_CHOICE',
   MULTI_CHOICE: 'MULTI_CHOICE',

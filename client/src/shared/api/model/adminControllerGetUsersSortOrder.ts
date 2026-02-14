@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminControllerGetUsersSortOrder =
-  (typeof AdminControllerGetUsersSortOrder)[keyof typeof AdminControllerGetUsersSortOrder];
+export type AdminControllerGetUsersSortOrder = typeof AdminControllerGetUsersSortOrder[keyof typeof AdminControllerGetUsersSortOrder];
+
 
 export const AdminControllerGetUsersSortOrder = {
   asc: 'asc',

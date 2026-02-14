@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminControllerGetUsersSortBy =
-  (typeof AdminControllerGetUsersSortBy)[keyof typeof AdminControllerGetUsersSortBy];
+export type AdminControllerGetUsersSortBy = typeof AdminControllerGetUsersSortBy[keyof typeof AdminControllerGetUsersSortBy];
+
 
 export const AdminControllerGetUsersSortBy = {
   createdAt: 'createdAt',

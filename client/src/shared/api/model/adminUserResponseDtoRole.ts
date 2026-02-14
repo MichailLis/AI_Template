@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminUserResponseDtoRole =
-  (typeof AdminUserResponseDtoRole)[keyof typeof AdminUserResponseDtoRole];
+export type AdminUserResponseDtoRole = typeof AdminUserResponseDtoRole[keyof typeof AdminUserResponseDtoRole];
+
 
 export const AdminUserResponseDtoRole = {
   USER: 'USER',

@@ -5,7 +5,10 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery
+} from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -18,10 +21,16 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  AdminCreatePublicLinkDto,
+  AdminPublicAttemptDetailResponseDto,
+  AdminPublicAttemptsListResponseDto,
+  AdminPublicLinkDto,
+  AdminPublicLinksListResponseDto,
+  AdminUpdatePublicLinkDto,
   CreateTestsTopicDto,
   CreateTestsTopicFromAiDto,
   DeleteTestsTopicResponseDto,
@@ -30,1008 +39,1158 @@ import type {
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
   UpdateTestsTopicDraftDto,
-  UpsertTestsQuestionDto,
+  UpsertTestsQuestionDto
 } from '../../model';
 
 import { customInstance } from '../../api';
 
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * @summary Create short public link for published test version
+ */
+export const testsControllerCreatePublicLink = (
+    adminCreatePublicLinkDto: AdminCreatePublicLinkDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreatePublicLinkDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerCreatePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext> => {
+
+const mutationKey = ['testsControllerCreatePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, {data: AdminCreatePublicLinkDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsControllerCreatePublicLink(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerCreatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>>
+    export type TestsControllerCreatePublicLinkMutationBody = AdminCreatePublicLinkDto
+    export type TestsControllerCreatePublicLinkMutationError = unknown
+
+    /**
+ * @summary Create short public link for published test version
+ */
+export const useTestsControllerCreatePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerCreatePublicLink>>,
+        TError,
+        {data: AdminCreatePublicLinkDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerCreatePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List short public links for tests
+ */
+export const testsControllerListPublicLinks = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinksListResponseDto>(
+      {url: `/admin/tests/public-links`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsControllerListPublicLinksQueryKey = () => {
+    return [
+    `/admin/tests/public-links`
+    ] as const;
+    }
+
+    
+export const getTestsControllerListPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListPublicLinksQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListPublicLinks>>> = ({ signal }) => testsControllerListPublicLinks(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerListPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListPublicLinks>>>
+export type TestsControllerListPublicLinksQueryError = unknown
+
+
+export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List short public links for tests
+ */
+
+export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsControllerListPublicLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Update short public link settings
+ */
+export const testsControllerUpdatePublicLink = (
+    linkId: number,
+    adminUpdatePublicLinkDto: AdminUpdatePublicLinkDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdatePublicLinkDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerUpdatePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext> => {
+
+const mutationKey = ['testsControllerUpdatePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, {linkId: number;data: AdminUpdatePublicLinkDto}> = (props) => {
+          const {linkId,data} = props ?? {};
+
+          return  testsControllerUpdatePublicLink(linkId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerUpdatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>>
+    export type TestsControllerUpdatePublicLinkMutationBody = AdminUpdatePublicLinkDto
+    export type TestsControllerUpdatePublicLinkMutationError = unknown
+
+    /**
+ * @summary Update short public link settings
+ */
+export const useTestsControllerUpdatePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>,
+        TError,
+        {linkId: number;data: AdminUpdatePublicLinkDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerUpdatePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List student attempts by public link
+ */
+export const testsControllerListPublicLinkAttempts = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicAttemptsListResponseDto>(
+      {url: `/admin/tests/public-links/${linkId}/attempts`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsControllerListPublicLinkAttemptsQueryKey = (linkId: number,) => {
+    return [
+    `/admin/tests/public-links/${linkId}/attempts`
+    ] as const;
+    }
+
+    
+export const getTestsControllerListPublicLinkAttemptsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListPublicLinkAttemptsQueryKey(linkId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>> = ({ signal }) => testsControllerListPublicLinkAttempts(linkId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(linkId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerListPublicLinkAttemptsQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>>
+export type TestsControllerListPublicLinkAttemptsQueryError = unknown
+
+
+export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List student attempts by public link
+ */
+
+export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsControllerListPublicLinkAttemptsQueryOptions(linkId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Get student attempt details with answers and analysis
+ */
+export const testsControllerGetAttemptDetail = (
+    attemptId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicAttemptDetailResponseDto>(
+      {url: `/admin/tests/attempts/${attemptId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsControllerGetAttemptDetailQueryKey = (attemptId: number,) => {
+    return [
+    `/admin/tests/attempts/${attemptId}`
+    ] as const;
+    }
+
+    
+export const getTestsControllerGetAttemptDetailQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerGetAttemptDetailQueryKey(attemptId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>> = ({ signal }) => testsControllerGetAttemptDetail(attemptId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(attemptId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerGetAttemptDetailQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>>
+export type TestsControllerGetAttemptDetailQueryError = unknown
+
+
+export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get student attempt details with answers and analysis
+ */
+
+export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsControllerGetAttemptDetailQueryOptions(attemptId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
 
 /**
  * @summary List test topics with draft and published snapshots
  */
 export const testsControllerListTopics = (
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicListResponseDto>(
-    { url: `/admin/tests`, method: 'GET', signal },
-    options,
-  );
-};
+      
+      
+      return customInstance<TestsTopicListResponseDto>(
+      {url: `/admin/tests`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
 
 export const getTestsControllerListTopicsQueryKey = () => {
-  return [`/admin/tests`] as const;
-};
+    return [
+    `/admin/tests`
+    ] as const;
+    }
 
-export const getTestsControllerListTopicsQueryOptions = <
-  TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+    
+export const getTestsControllerListTopicsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
 
-  const queryKey = queryOptions?.queryKey ?? getTestsControllerListTopicsQueryKey();
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListTopics>>> = ({
-    signal,
-  }) => testsControllerListTopics(requestOptions, signal);
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListTopicsQueryKey();
 
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof testsControllerListTopics>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
+  
 
-export type TestsControllerListTopicsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerListTopics>>
->;
-export type TestsControllerListTopicsQueryError = unknown;
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListTopics>>> = ({ signal }) => testsControllerListTopics(requestOptions, signal);
 
-export function useTestsControllerListTopics<
-  TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
-  TError = unknown,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>
-    > &
-      Pick<
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerListTopicsQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListTopics>>>
+export type TestsControllerListTopicsQueryError = unknown
+
+
+export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerListTopics>>,
           TError,
           Awaited<ReturnType<typeof testsControllerListTopics>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTestsControllerListTopics<
-  TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>
-    > &
-      Pick<
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerListTopics>>,
           TError,
           Awaited<ReturnType<typeof testsControllerListTopics>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTestsControllerListTopics<
-  TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List test topics with draft and published snapshots
  */
 
-export function useTestsControllerListTopics<
-  TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getTestsControllerListTopicsQueryOptions(options);
+export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
+  const queryOptions = getTestsControllerListTopicsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
 
 /**
  * @summary Create test topic with initial draft version
  */
 export const testsControllerCreateTopic = (
-  createTestsTopicDto: CreateTestsTopicDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    createTestsTopicDto: CreateTestsTopicDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      data: createTestsTopicDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTestsTopicDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerCreateTopicMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerCreateTopic>>,
-    TError,
-    { data: CreateTestsTopicDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerCreateTopic>>,
-  TError,
-  { data: CreateTestsTopicDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerCreateTopic'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerCreateTopic>>,
-    { data: CreateTestsTopicDto }
-  > = (props) => {
-    const { data } = props ?? {};
+export const getTestsControllerCreateTopicMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopic>>, TError,{data: CreateTestsTopicDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopic>>, TError,{data: CreateTestsTopicDto}, TContext> => {
 
-    return testsControllerCreateTopic(data, requestOptions);
-  };
+const mutationKey = ['testsControllerCreateTopic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerCreateTopicMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerCreateTopic>>
->;
-export type TestsControllerCreateTopicMutationBody = CreateTestsTopicDto;
-export type TestsControllerCreateTopicMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreateTopic>>, {data: CreateTestsTopicDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsControllerCreateTopic(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerCreateTopicMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreateTopic>>>
+    export type TestsControllerCreateTopicMutationBody = CreateTestsTopicDto
+    export type TestsControllerCreateTopicMutationError = unknown
+
+    /**
  * @summary Create test topic with initial draft version
  */
-export const useTestsControllerCreateTopic = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerCreateTopic>>,
-      TError,
-      { data: CreateTestsTopicDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerCreateTopic>>,
-  TError,
-  { data: CreateTestsTopicDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerCreateTopicMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerCreateTopic = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopic>>, TError,{data: CreateTestsTopicDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerCreateTopic>>,
+        TError,
+        {data: CreateTestsTopicDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerCreateTopicMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Create test topic with generated questions in one transaction
  */
 export const testsControllerCreateTopicFromAi = (
-  createTestsTopicFromAiDto: CreateTestsTopicFromAiDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    createTestsTopicFromAiDto: CreateTestsTopicFromAiDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests/ai/create`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      data: createTestsTopicFromAiDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/ai/create`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTestsTopicFromAiDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerCreateTopicFromAiMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
-    TError,
-    { data: CreateTestsTopicFromAiDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
-  TError,
-  { data: CreateTestsTopicFromAiDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerCreateTopicFromAi'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
-    { data: CreateTestsTopicFromAiDto }
-  > = (props) => {
-    const { data } = props ?? {};
+export const getTestsControllerCreateTopicFromAiMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>, TError,{data: CreateTestsTopicFromAiDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>, TError,{data: CreateTestsTopicFromAiDto}, TContext> => {
 
-    return testsControllerCreateTopicFromAi(data, requestOptions);
-  };
+const mutationKey = ['testsControllerCreateTopicFromAi'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerCreateTopicFromAiMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>
->;
-export type TestsControllerCreateTopicFromAiMutationBody = CreateTestsTopicFromAiDto;
-export type TestsControllerCreateTopicFromAiMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>, {data: CreateTestsTopicFromAiDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsControllerCreateTopicFromAi(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerCreateTopicFromAiMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>>
+    export type TestsControllerCreateTopicFromAiMutationBody = CreateTestsTopicFromAiDto
+    export type TestsControllerCreateTopicFromAiMutationError = unknown
+
+    /**
  * @summary Create test topic with generated questions in one transaction
  */
-export const useTestsControllerCreateTopicFromAi = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
-      TError,
-      { data: CreateTestsTopicFromAiDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
-  TError,
-  { data: CreateTestsTopicFromAiDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerCreateTopicFromAiMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerCreateTopicFromAi = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>, TError,{data: CreateTestsTopicFromAiDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+        TError,
+        {data: CreateTestsTopicFromAiDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerCreateTopicFromAiMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Delete test topic with all versions and questions
  */
 export const testsControllerDeleteTopic = (
-  topicId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<DeleteTestsTopicResponseDto>(
-    { url: `/admin/tests/${topicId}`, method: 'DELETE', signal },
-    options,
-  );
-};
+      
+      
+      return customInstance<DeleteTestsTopicResponseDto>(
+      {url: `/admin/tests/${topicId}`, method: 'DELETE', signal
+    },
+      options);
+    }
+  
 
-export const getTestsControllerDeleteTopicMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
-    TError,
-    { topicId: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
-  TError,
-  { topicId: number },
-  TContext
-> => {
-  const mutationKey = ['testsControllerDeleteTopic'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
-    { topicId: number }
-  > = (props) => {
-    const { topicId } = props ?? {};
+export const getTestsControllerDeleteTopicMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteTopic>>, TError,{topicId: number}, TContext> => {
 
-    return testsControllerDeleteTopic(topicId, requestOptions);
-  };
+const mutationKey = ['testsControllerDeleteTopic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerDeleteTopicMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerDeleteTopic>>
->;
 
-export type TestsControllerDeleteTopicMutationError = unknown;
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerDeleteTopic>>, {topicId: number}> = (props) => {
+          const {topicId} = props ?? {};
 
-/**
+          return  testsControllerDeleteTopic(topicId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerDeleteTopicMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerDeleteTopic>>>
+    
+    export type TestsControllerDeleteTopicMutationError = unknown
+
+    /**
  * @summary Delete test topic with all versions and questions
  */
-export const useTestsControllerDeleteTopic = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
-      TError,
-      { topicId: number },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
-  TError,
-  { topicId: number },
-  TContext
-> => {
-  return useMutation(getTestsControllerDeleteTopicMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerDeleteTopic = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+        TError,
+        {topicId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerDeleteTopicMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Get active draft topic detail
  */
 export const testsControllerGetTopicDraft = (
-  topicId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    { url: `/admin/tests/${topicId}/draft`, method: 'GET', signal },
-    options,
-  );
-};
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
-export const getTestsControllerGetTopicDraftQueryKey = (topicId: number) => {
-  return [`/admin/tests/${topicId}/draft`] as const;
-};
 
-export const getTestsControllerGetTopicDraftQueryOptions = <
-  TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-  TError = unknown,
->(
-  topicId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
+
+export const getTestsControllerGetTopicDraftQueryKey = (topicId: number,) => {
+    return [
+    `/admin/tests/${topicId}/draft`
+    ] as const;
+    }
+
+    
+export const getTestsControllerGetTopicDraftQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError = unknown>(topicId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getTestsControllerGetTopicDraftQueryKey(topicId);
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>> = ({
-    signal,
-  }) => testsControllerGetTopicDraft(topicId, requestOptions, signal);
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerGetTopicDraftQueryKey(topicId);
 
-  return { queryKey, queryFn, enabled: !!topicId, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
+  
 
-export type TestsControllerGetTopicDraftQueryResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerGetTopicDraft>>
->;
-export type TestsControllerGetTopicDraftQueryError = unknown;
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>> = ({ signal }) => testsControllerGetTopicDraft(topicId, requestOptions, signal);
 
-export function useTestsControllerGetTopicDraft<
-  TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-  TError = unknown,
->(
-  topicId: number,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>
-    > &
-      Pick<
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(topicId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerGetTopicDraftQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>>
+export type TestsControllerGetTopicDraftQueryError = unknown
+
+
+export function useTestsControllerGetTopicDraft<TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError = unknown>(
+ topicId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
           TError,
           Awaited<ReturnType<typeof testsControllerGetTopicDraft>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTestsControllerGetTopicDraft<
-  TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-  TError = unknown,
->(
-  topicId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>
-    > &
-      Pick<
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerGetTopicDraft<TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError = unknown>(
+ topicId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
           TError,
           Awaited<ReturnType<typeof testsControllerGetTopicDraft>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTestsControllerGetTopicDraft<
-  TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-  TError = unknown,
->(
-  topicId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerGetTopicDraft<TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError = unknown>(
+ topicId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get active draft topic detail
  */
 
-export function useTestsControllerGetTopicDraft<
-  TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
-  TError = unknown,
->(
-  topicId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getTestsControllerGetTopicDraftQueryOptions(topicId, options);
+export function useTestsControllerGetTopicDraft<TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError = unknown>(
+ topicId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicDraft>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
+  const queryOptions = getTestsControllerGetTopicDraftQueryOptions(topicId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
 
 /**
  * @summary Update active draft topic metadata
  */
 export const testsControllerUpdateTopicDraft = (
-  topicId: number,
-  updateTestsTopicDraftDto: UpdateTestsTopicDraftDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+    updateTestsTopicDraftDto: UpdateTestsTopicDraftDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests/${topicId}/draft`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      data: updateTestsTopicDraftDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTestsTopicDraftDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerUpdateTopicDraftMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
-    TError,
-    { topicId: number; data: UpdateTestsTopicDraftDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
-  TError,
-  { topicId: number; data: UpdateTestsTopicDraftDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerUpdateTopicDraft'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
-    { topicId: number; data: UpdateTestsTopicDraftDto }
-  > = (props) => {
-    const { topicId, data } = props ?? {};
+export const getTestsControllerUpdateTopicDraftMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>, TError,{topicId: number;data: UpdateTestsTopicDraftDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>, TError,{topicId: number;data: UpdateTestsTopicDraftDto}, TContext> => {
 
-    return testsControllerUpdateTopicDraft(topicId, data, requestOptions);
-  };
+const mutationKey = ['testsControllerUpdateTopicDraft'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerUpdateTopicDraftMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>
->;
-export type TestsControllerUpdateTopicDraftMutationBody = UpdateTestsTopicDraftDto;
-export type TestsControllerUpdateTopicDraftMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>, {topicId: number;data: UpdateTestsTopicDraftDto}> = (props) => {
+          const {topicId,data} = props ?? {};
+
+          return  testsControllerUpdateTopicDraft(topicId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerUpdateTopicDraftMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>>
+    export type TestsControllerUpdateTopicDraftMutationBody = UpdateTestsTopicDraftDto
+    export type TestsControllerUpdateTopicDraftMutationError = unknown
+
+    /**
  * @summary Update active draft topic metadata
  */
-export const useTestsControllerUpdateTopicDraft = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
-      TError,
-      { topicId: number; data: UpdateTestsTopicDraftDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
-  TError,
-  { topicId: number; data: UpdateTestsTopicDraftDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerUpdateTopicDraftMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerUpdateTopicDraft = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>, TError,{topicId: number;data: UpdateTestsTopicDraftDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerUpdateTopicDraft>>,
+        TError,
+        {topicId: number;data: UpdateTestsTopicDraftDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerUpdateTopicDraftMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Create question in active draft
  */
 export const testsControllerCreateQuestion = (
-  topicId: number,
-  upsertTestsQuestionDto: UpsertTestsQuestionDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+    upsertTestsQuestionDto: UpsertTestsQuestionDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests/${topicId}/draft/questions`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      data: upsertTestsQuestionDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft/questions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertTestsQuestionDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerCreateQuestionMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
-    TError,
-    { topicId: number; data: UpsertTestsQuestionDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
-  TError,
-  { topicId: number; data: UpsertTestsQuestionDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerCreateQuestion'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
-    { topicId: number; data: UpsertTestsQuestionDto }
-  > = (props) => {
-    const { topicId, data } = props ?? {};
+export const getTestsControllerCreateQuestionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateQuestion>>, TError,{topicId: number;data: UpsertTestsQuestionDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateQuestion>>, TError,{topicId: number;data: UpsertTestsQuestionDto}, TContext> => {
 
-    return testsControllerCreateQuestion(topicId, data, requestOptions);
-  };
+const mutationKey = ['testsControllerCreateQuestion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerCreateQuestionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerCreateQuestion>>
->;
-export type TestsControllerCreateQuestionMutationBody = UpsertTestsQuestionDto;
-export type TestsControllerCreateQuestionMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreateQuestion>>, {topicId: number;data: UpsertTestsQuestionDto}> = (props) => {
+          const {topicId,data} = props ?? {};
+
+          return  testsControllerCreateQuestion(topicId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerCreateQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreateQuestion>>>
+    export type TestsControllerCreateQuestionMutationBody = UpsertTestsQuestionDto
+    export type TestsControllerCreateQuestionMutationError = unknown
+
+    /**
  * @summary Create question in active draft
  */
-export const useTestsControllerCreateQuestion = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
-      TError,
-      { topicId: number; data: UpsertTestsQuestionDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
-  TError,
-  { topicId: number; data: UpsertTestsQuestionDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerCreateQuestionMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerCreateQuestion = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateQuestion>>, TError,{topicId: number;data: UpsertTestsQuestionDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerCreateQuestion>>,
+        TError,
+        {topicId: number;data: UpsertTestsQuestionDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerCreateQuestionMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Reorder questions in active draft
  */
 export const testsControllerReorderQuestions = (
-  topicId: number,
-  reorderTestsQuestionsDto: ReorderTestsQuestionsDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+    reorderTestsQuestionsDto: ReorderTestsQuestionsDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests/${topicId}/draft/questions/reorder`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      data: reorderTestsQuestionsDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft/questions/reorder`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: reorderTestsQuestionsDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerReorderQuestionsMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
-    TError,
-    { topicId: number; data: ReorderTestsQuestionsDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
-  TError,
-  { topicId: number; data: ReorderTestsQuestionsDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerReorderQuestions'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
-    { topicId: number; data: ReorderTestsQuestionsDto }
-  > = (props) => {
-    const { topicId, data } = props ?? {};
+export const getTestsControllerReorderQuestionsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerReorderQuestions>>, TError,{topicId: number;data: ReorderTestsQuestionsDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerReorderQuestions>>, TError,{topicId: number;data: ReorderTestsQuestionsDto}, TContext> => {
 
-    return testsControllerReorderQuestions(topicId, data, requestOptions);
-  };
+const mutationKey = ['testsControllerReorderQuestions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerReorderQuestionsMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerReorderQuestions>>
->;
-export type TestsControllerReorderQuestionsMutationBody = ReorderTestsQuestionsDto;
-export type TestsControllerReorderQuestionsMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerReorderQuestions>>, {topicId: number;data: ReorderTestsQuestionsDto}> = (props) => {
+          const {topicId,data} = props ?? {};
+
+          return  testsControllerReorderQuestions(topicId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerReorderQuestionsMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerReorderQuestions>>>
+    export type TestsControllerReorderQuestionsMutationBody = ReorderTestsQuestionsDto
+    export type TestsControllerReorderQuestionsMutationError = unknown
+
+    /**
  * @summary Reorder questions in active draft
  */
-export const useTestsControllerReorderQuestions = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
-      TError,
-      { topicId: number; data: ReorderTestsQuestionsDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
-  TError,
-  { topicId: number; data: ReorderTestsQuestionsDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerReorderQuestionsMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerReorderQuestions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerReorderQuestions>>, TError,{topicId: number;data: ReorderTestsQuestionsDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+        TError,
+        {topicId: number;data: ReorderTestsQuestionsDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerReorderQuestionsMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Update draft question
  */
 export const testsControllerUpdateQuestion = (
-  topicId: number,
-  questionId: number,
-  upsertTestsQuestionDto: UpsertTestsQuestionDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+    questionId: number,
+    upsertTestsQuestionDto: UpsertTestsQuestionDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    {
-      url: `/admin/tests/${topicId}/draft/questions/${questionId}`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      data: upsertTestsQuestionDto,
-      signal,
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft/questions/${questionId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertTestsQuestionDto, signal
     },
-    options,
-  );
-};
+      options);
+    }
+  
 
-export const getTestsControllerUpdateQuestionMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
-    TError,
-    { topicId: number; questionId: number; data: UpsertTestsQuestionDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
-  TError,
-  { topicId: number; questionId: number; data: UpsertTestsQuestionDto },
-  TContext
-> => {
-  const mutationKey = ['testsControllerUpdateQuestion'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
-    { topicId: number; questionId: number; data: UpsertTestsQuestionDto }
-  > = (props) => {
-    const { topicId, questionId, data } = props ?? {};
+export const getTestsControllerUpdateQuestionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateQuestion>>, TError,{topicId: number;questionId: number;data: UpsertTestsQuestionDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateQuestion>>, TError,{topicId: number;questionId: number;data: UpsertTestsQuestionDto}, TContext> => {
 
-    return testsControllerUpdateQuestion(topicId, questionId, data, requestOptions);
-  };
+const mutationKey = ['testsControllerUpdateQuestion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerUpdateQuestionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerUpdateQuestion>>
->;
-export type TestsControllerUpdateQuestionMutationBody = UpsertTestsQuestionDto;
-export type TestsControllerUpdateQuestionMutationError = unknown;
 
-/**
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdateQuestion>>, {topicId: number;questionId: number;data: UpsertTestsQuestionDto}> = (props) => {
+          const {topicId,questionId,data} = props ?? {};
+
+          return  testsControllerUpdateQuestion(topicId,questionId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerUpdateQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdateQuestion>>>
+    export type TestsControllerUpdateQuestionMutationBody = UpsertTestsQuestionDto
+    export type TestsControllerUpdateQuestionMutationError = unknown
+
+    /**
  * @summary Update draft question
  */
-export const useTestsControllerUpdateQuestion = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
-      TError,
-      { topicId: number; questionId: number; data: UpsertTestsQuestionDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
-  TError,
-  { topicId: number; questionId: number; data: UpsertTestsQuestionDto },
-  TContext
-> => {
-  return useMutation(getTestsControllerUpdateQuestionMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerUpdateQuestion = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateQuestion>>, TError,{topicId: number;questionId: number;data: UpsertTestsQuestionDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerUpdateQuestion>>,
+        TError,
+        {topicId: number;questionId: number;data: UpsertTestsQuestionDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerUpdateQuestionMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Delete draft question
  */
 export const testsControllerDeleteQuestion = (
-  topicId: number,
-  questionId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+    questionId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<TestsTopicDetailResponseDto>(
-    { url: `/admin/tests/${topicId}/draft/questions/${questionId}`, method: 'DELETE', signal },
-    options,
-  );
-};
+      
+      
+      return customInstance<TestsTopicDetailResponseDto>(
+      {url: `/admin/tests/${topicId}/draft/questions/${questionId}`, method: 'DELETE', signal
+    },
+      options);
+    }
+  
 
-export const getTestsControllerDeleteQuestionMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
-    TError,
-    { topicId: number; questionId: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
-  TError,
-  { topicId: number; questionId: number },
-  TContext
-> => {
-  const mutationKey = ['testsControllerDeleteQuestion'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
-    { topicId: number; questionId: number }
-  > = (props) => {
-    const { topicId, questionId } = props ?? {};
+export const getTestsControllerDeleteQuestionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteQuestion>>, TError,{topicId: number;questionId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteQuestion>>, TError,{topicId: number;questionId: number}, TContext> => {
 
-    return testsControllerDeleteQuestion(topicId, questionId, requestOptions);
-  };
+const mutationKey = ['testsControllerDeleteQuestion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerDeleteQuestionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerDeleteQuestion>>
->;
 
-export type TestsControllerDeleteQuestionMutationError = unknown;
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerDeleteQuestion>>, {topicId: number;questionId: number}> = (props) => {
+          const {topicId,questionId} = props ?? {};
 
-/**
+          return  testsControllerDeleteQuestion(topicId,questionId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerDeleteQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerDeleteQuestion>>>
+    
+    export type TestsControllerDeleteQuestionMutationError = unknown
+
+    /**
  * @summary Delete draft question
  */
-export const useTestsControllerDeleteQuestion = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
-      TError,
-      { topicId: number; questionId: number },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
-  TError,
-  { topicId: number; questionId: number },
-  TContext
-> => {
-  return useMutation(getTestsControllerDeleteQuestionMutationOptions(options), queryClient);
-};
-/**
+export const useTestsControllerDeleteQuestion = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeleteQuestion>>, TError,{topicId: number;questionId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerDeleteQuestion>>,
+        TError,
+        {topicId: number;questionId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerDeleteQuestionMutationOptions(options), queryClient);
+    }
+    /**
  * @summary Publish active draft and create next draft version
  */
 export const testsControllerPublishTopic = (
-  topicId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
+    topicId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-  return customInstance<PublishTestsTopicResponseDto>(
-    { url: `/admin/tests/${topicId}/publish`, method: 'POST', signal },
-    options,
-  );
-};
+      
+      
+      return customInstance<PublishTestsTopicResponseDto>(
+      {url: `/admin/tests/${topicId}/publish`, method: 'POST', signal
+    },
+      options);
+    }
+  
 
-export const getTestsControllerPublishTopicMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof testsControllerPublishTopic>>,
-    TError,
-    { topicId: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof testsControllerPublishTopic>>,
-  TError,
-  { topicId: number },
-  TContext
-> => {
-  const mutationKey = ['testsControllerPublishTopic'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof testsControllerPublishTopic>>,
-    { topicId: number }
-  > = (props) => {
-    const { topicId } = props ?? {};
+export const getTestsControllerPublishTopicMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerPublishTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerPublishTopic>>, TError,{topicId: number}, TContext> => {
 
-    return testsControllerPublishTopic(topicId, requestOptions);
-  };
+const mutationKey = ['testsControllerPublishTopic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-  return { mutationFn, ...mutationOptions };
-};
+      
 
-export type TestsControllerPublishTopicMutationResult = NonNullable<
-  Awaited<ReturnType<typeof testsControllerPublishTopic>>
->;
 
-export type TestsControllerPublishTopicMutationError = unknown;
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerPublishTopic>>, {topicId: number}> = (props) => {
+          const {topicId} = props ?? {};
 
-/**
+          return  testsControllerPublishTopic(topicId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerPublishTopicMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerPublishTopic>>>
+    
+    export type TestsControllerPublishTopicMutationError = unknown
+
+    /**
  * @summary Publish active draft and create next draft version
  */
-export const useTestsControllerPublishTopic = <TError = unknown, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof testsControllerPublishTopic>>,
-      TError,
-      { topicId: number },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof testsControllerPublishTopic>>,
-  TError,
-  { topicId: number },
-  TContext
-> => {
-  return useMutation(getTestsControllerPublishTopicMutationOptions(options), queryClient);
-};
+export const useTestsControllerPublishTopic = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerPublishTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerPublishTopic>>,
+        TError,
+        {topicId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerPublishTopicMutationOptions(options), queryClient);
+    }
+    

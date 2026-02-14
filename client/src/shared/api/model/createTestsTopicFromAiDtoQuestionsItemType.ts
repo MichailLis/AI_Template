@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type CreateTestsTopicFromAiDtoQuestionsItemType =
-  (typeof CreateTestsTopicFromAiDtoQuestionsItemType)[keyof typeof CreateTestsTopicFromAiDtoQuestionsItemType];
+export type CreateTestsTopicFromAiDtoQuestionsItemType = typeof CreateTestsTopicFromAiDtoQuestionsItemType[keyof typeof CreateTestsTopicFromAiDtoQuestionsItemType];
+
 
 export const CreateTestsTopicFromAiDtoQuestionsItemType = {
   OPEN_TEXT: 'OPEN_TEXT',

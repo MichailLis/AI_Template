@@ -10,22 +10,22 @@ import type { AdminControllerGetUsersSortBy } from './adminControllerGetUsersSor
 import type { AdminControllerGetUsersSortOrder } from './adminControllerGetUsersSortOrder';
 
 export type AdminControllerGetUsersParams = {
-  /**
-   * @minLength 1
-   * @maxLength 100
-   */
-  search?: string;
-  role?: AdminControllerGetUsersRole;
-  sortBy?: AdminControllerGetUsersSortBy;
-  sortOrder?: AdminControllerGetUsersSortOrder;
-  /**
-   * @minimum 1
-   * @maximum 9007199254740991
-   */
-  page?: number;
-  /**
-   * @minimum 1
-   * @maximum 50
-   */
-  limit?: number;
+/**
+ * @minLength 1
+ * @maxLength 100
+ */
+search?: string;
+role?: AdminControllerGetUsersRole;
+sortBy?: AdminControllerGetUsersSortBy;
+sortOrder?: AdminControllerGetUsersSortOrder;
+/**
+ * @minimum 1
+ * @maximum 9007199254740991
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
 };

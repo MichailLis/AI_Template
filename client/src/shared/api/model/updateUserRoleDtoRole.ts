@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type UpdateUserRoleDtoRole =
-  (typeof UpdateUserRoleDtoRole)[keyof typeof UpdateUserRoleDtoRole];
+export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
+
 
 export const UpdateUserRoleDtoRole = {
   USER: 'USER',

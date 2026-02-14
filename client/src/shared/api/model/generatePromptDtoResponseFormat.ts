@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GeneratePromptDtoResponseFormat =
-  (typeof GeneratePromptDtoResponseFormat)[keyof typeof GeneratePromptDtoResponseFormat];
+export type GeneratePromptDtoResponseFormat = typeof GeneratePromptDtoResponseFormat[keyof typeof GeneratePromptDtoResponseFormat];
+
 
 export const GeneratePromptDtoResponseFormat = {
   text: 'text',

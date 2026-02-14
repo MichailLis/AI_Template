@@ -6,8 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type UpsertTestsQuestionDtoType =
-  (typeof UpsertTestsQuestionDtoType)[keyof typeof UpsertTestsQuestionDtoType];
+export type UpsertTestsQuestionDtoType = typeof UpsertTestsQuestionDtoType[keyof typeof UpsertTestsQuestionDtoType];
+
 
 export const UpsertTestsQuestionDtoType = {
   OPEN_TEXT: 'OPEN_TEXT',

@@ -6,4 +6,9 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GeneratePromptDtoResponseSchemaSchema = {[key: string]: unknown};
+export type PublicSessionGetResponseDtoSessionQuestionsItemOptionsItem = {
+  id: number;
+  label: string;
+  value: string;
+  order: number;
+};
