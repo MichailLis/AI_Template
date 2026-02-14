@@ -28,6 +28,7 @@ import {
 } from './dto/tests.dto';
 import {
   AdminCreatePublicLinkDto,
+  AdminDeletePublicLinkResponseDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
@@ -63,6 +64,13 @@ export class TestsController {
     return this.testsPublicLinkService.listPublicLinks(userId);
   }
 
+  @Get('public-links/archived')
+  @ApiOperation({ summary: 'List archived public links for tests' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
+  listArchivedPublicLinks(@GetCurrentUserId() userId: number) {
+    return this.testsPublicLinkService.listArchivedPublicLinks(userId);
+  }
+
   @Patch('public-links/:linkId')
   @ApiOperation({ summary: 'Update short public link settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
@@ -72,6 +80,36 @@ export class TestsController {
     @Body() dto: AdminUpdatePublicLinkDto,
   ) {
     return this.testsPublicLinkService.updatePublicLink(userId, linkId, dto);
+  }
+
+  @Post('public-links/:linkId/regenerate')
+  @ApiOperation({ summary: 'Regenerate short code for public link' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
+  regeneratePublicLinkShortCode(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.regeneratePublicLinkShortCode(userId, linkId);
+  }
+
+  @Delete('public-links/:linkId')
+  @ApiOperation({ summary: 'Archive public link (disable access and hide from default list)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminDeletePublicLinkResponseDto })
+  deletePublicLink(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.deletePublicLink(userId, linkId);
+  }
+
+  @Post('public-links/:linkId/restore')
+  @ApiOperation({ summary: 'Restore archived public link' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
+  restorePublicLink(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.restorePublicLink(userId, linkId);
   }
 
   @Get('public-links/:linkId/attempts')

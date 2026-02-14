@@ -74,6 +74,7 @@ export class TestsPublicLinkService {
       shortCode: link.shortCode,
       shortUrl: `/t/${link.shortCode}`,
       isActive: link.isActive,
+      archivedAt: this.toIso(link.archivedAt),
       startsAt: this.toIso(link.startsAt),
       endsAt: this.toIso(link.endsAt),
       maxAttemptsPerStudent: link.maxAttemptsPerStudent,
@@ -188,6 +189,9 @@ export class TestsPublicLinkService {
     await this.ensureAdminAccess(userId);
 
     const links = await this.prisma.testPublicLink.findMany({
+      where: {
+        archivedAt: null,
+      },
       include: {
         topicVersion: {
           select: {
@@ -207,15 +211,47 @@ export class TestsPublicLinkService {
     };
   }
 
+  async listArchivedPublicLinks(userId: number) {
+    await this.ensureAdminAccess(userId);
+
+    const links = await this.prisma.testPublicLink.findMany({
+      where: {
+        archivedAt: {
+          not: null,
+        },
+      },
+      include: {
+        topicVersion: {
+          select: {
+            id: true,
+            topicId: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        archivedAt: 'desc',
+      },
+    });
+
+    return {
+      links: links.map((link) => this.toAdminPublicLink(link)),
+    };
+  }
+
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
     await this.ensureAdminAccess(userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true },
+      select: { id: true, archivedAt: true },
     });
 
     if (!existing) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    if (existing.archivedAt) {
       throw new NotFoundException('Public link not found');
     }
 
@@ -245,6 +281,127 @@ export class TestsPublicLinkService {
     });
 
     return this.toAdminPublicLink(updated);
+  }
+
+  async regeneratePublicLinkShortCode(userId: number, linkId: number) {
+    await this.ensureAdminAccess(userId);
+
+    const existing = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    if (existing.archivedAt) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    const shortCode = await this.ensureUniqueShortCode();
+
+    const updated = await this.prisma.testPublicLink.update({
+      where: { id: linkId },
+      data: {
+        shortCode,
+      },
+      include: {
+        topicVersion: {
+          select: {
+            id: true,
+            topicId: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    return this.toAdminPublicLink(updated);
+  }
+
+  async deletePublicLink(userId: number, linkId: number) {
+    await this.ensureAdminAccess(userId);
+
+    const existing = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    if (existing.archivedAt) {
+      return {
+        linkId,
+      };
+    }
+
+    await this.prisma.testPublicLink.update({
+      where: { id: linkId },
+      data: {
+        isActive: false,
+        archivedAt: new Date(),
+      },
+    });
+
+    return {
+      linkId,
+    };
+  }
+
+  async restorePublicLink(userId: number, linkId: number) {
+    await this.ensureAdminAccess(userId);
+
+    const existing = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    if (!existing.archivedAt) {
+      const current = await this.prisma.testPublicLink.findUnique({
+        where: { id: linkId },
+        include: {
+          topicVersion: {
+            select: {
+              id: true,
+              topicId: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      if (!current) {
+        throw new NotFoundException('Public link not found');
+      }
+
+      return this.toAdminPublicLink(current);
+    }
+
+    const restored = await this.prisma.testPublicLink.update({
+      where: { id: linkId },
+      data: {
+        archivedAt: null,
+        isActive: true,
+      },
+      include: {
+        topicVersion: {
+          select: {
+            id: true,
+            topicId: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    return this.toAdminPublicLink(restored);
   }
 
   async getAccessiblePublicLinkByCode(shortCode: string): Promise<PublicLinkWithTopicVersion> {
@@ -278,6 +435,10 @@ export class TestsPublicLinkService {
     });
 
     if (!link) {
+      throw new NotFoundException('Public test link not found');
+    }
+
+    if (link.archivedAt) {
       throw new NotFoundException('Public test link not found');
     }
 

@@ -11,6 +11,7 @@ export * from './adminControllerGetUsersRole';
 export * from './adminControllerGetUsersSortBy';
 export * from './adminControllerGetUsersSortOrder';
 export * from './adminCreatePublicLinkDto';
+export * from './adminDeletePublicLinkResponseDto';
 export * from './adminOverviewResponseDto';
 export * from './adminOverviewResponseDtoCardsItem';
 export * from './adminOverviewResponseDtoShortcutsItem';

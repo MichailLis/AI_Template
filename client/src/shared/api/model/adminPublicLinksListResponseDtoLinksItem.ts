@@ -14,6 +14,8 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   shortUrl: string;
   isActive: boolean;
   /** @nullable */
+  archivedAt: string | null;
+  /** @nullable */
   startsAt: string | null;
   /** @nullable */
   endsAt: string | null;

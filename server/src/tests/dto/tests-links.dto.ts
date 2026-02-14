@@ -66,6 +66,7 @@ export const AdminPublicLinkSchema = z.object({
   shortCode: z.string(),
   shortUrl: z.string(),
   isActive: z.boolean(),
+  archivedAt: z.string().nullable(),
   startsAt: z.string().nullable(),
   endsAt: z.string().nullable(),
   maxAttemptsPerStudent: z.number().int().min(1),
@@ -80,6 +81,10 @@ export const AdminPublicLinkSchema = z.object({
 
 export const AdminPublicLinksListResponseSchema = z.object({
   links: z.array(AdminPublicLinkSchema),
+});
+
+export const AdminDeletePublicLinkResponseSchema = z.object({
+  linkId: z.number(),
 });
 
 export const AdminPublicAttemptSummarySchema = z.object({
@@ -145,6 +150,9 @@ export class AdminUpdatePublicLinkDto extends createZodDto(AdminUpdatePublicLink
 export class AdminPublicLinkDto extends createZodDto(AdminPublicLinkSchema) {}
 export class AdminPublicLinksListResponseDto extends createZodDto(
   AdminPublicLinksListResponseSchema,
+) {}
+export class AdminDeletePublicLinkResponseDto extends createZodDto(
+  AdminDeletePublicLinkResponseSchema,
 ) {}
 export class AdminPublicAttemptsListResponseDto extends createZodDto(
   AdminPublicAttemptsListResponseSchema,

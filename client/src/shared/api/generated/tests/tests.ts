@@ -26,6 +26,7 @@ import type {
 
 import type {
   AdminCreatePublicLinkDto,
+  AdminDeletePublicLinkResponseDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
@@ -203,6 +204,96 @@ export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typ
 
 
 /**
+ * @summary List archived public links for tests
+ */
+export const testsControllerListArchivedPublicLinks = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinksListResponseDto>(
+      {url: `/admin/tests/public-links/archived`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsControllerListArchivedPublicLinksQueryKey = () => {
+    return [
+    `/admin/tests/public-links/archived`
+    ] as const;
+    }
+
+    
+export const getTestsControllerListArchivedPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListArchivedPublicLinksQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>> = ({ signal }) => testsControllerListArchivedPublicLinks(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerListArchivedPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>>
+export type TestsControllerListArchivedPublicLinksQueryError = unknown
+
+
+export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List archived public links for tests
+ */
+
+export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsControllerListArchivedPublicLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * @summary Update short public link settings
  */
 export const testsControllerUpdatePublicLink = (
@@ -265,6 +356,189 @@ export const useTestsControllerUpdatePublicLink = <TError = unknown,
         TContext
       > => {
       return useMutation(getTestsControllerUpdatePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Archive public link (disable access and hide from default list)
+ */
+export const testsControllerDeletePublicLink = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminDeletePublicLinkResponseDto>(
+      {url: `/admin/tests/public-links/${linkId}`, method: 'DELETE', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerDeletePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsControllerDeletePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsControllerDeletePublicLink(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerDeletePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>>
+    
+    export type TestsControllerDeletePublicLinkMutationError = unknown
+
+    /**
+ * @summary Archive public link (disable access and hide from default list)
+ */
+export const useTestsControllerDeletePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerDeletePublicLink>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerDeletePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Regenerate short code for public link
+ */
+export const testsControllerRegeneratePublicLinkShortCode = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}/regenerate`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerRegeneratePublicLinkShortCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsControllerRegeneratePublicLinkShortCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsControllerRegeneratePublicLinkShortCode(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerRegeneratePublicLinkShortCodeMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>>
+    
+    export type TestsControllerRegeneratePublicLinkShortCodeMutationError = unknown
+
+    /**
+ * @summary Regenerate short code for public link
+ */
+export const useTestsControllerRegeneratePublicLinkShortCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerRegeneratePublicLinkShortCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Restore archived public link
+ */
+export const testsControllerRestorePublicLink = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}/restore`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerRestorePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsControllerRestorePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsControllerRestorePublicLink(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerRestorePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>>
+    
+    export type TestsControllerRestorePublicLinkMutationError = unknown
+
+    /**
+ * @summary Restore archived public link
+ */
+export const useTestsControllerRestorePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerRestorePublicLink>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerRestorePublicLinkMutationOptions(options), queryClient);
     }
     /**
  * @summary List student attempts by public link

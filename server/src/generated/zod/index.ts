@@ -68,7 +68,7 @@ export const TestQuestionOptionScalarFieldEnumSchema = z.enum(['id','questionId'
 
 export const TestQuestionSliderBandScalarFieldEnumSchema = z.enum(['id','questionId','minValue','maxValue','label','weight','order']);
 
-export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt']);
+export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
 
 export const TestStudentAttemptScalarFieldEnumSchema = z.enum(['id','publicLinkId','topicVersionId','attemptNumber','status','studentName','studentLastInitial','studentMiddleInitial','educationOrganization','groupOrClass','studentKeyHash','consentAcceptedAt','consentVersion','consentTextSnapshot','resumeToken','startedAt','expiresAt','finishedAt','anonymizedAt','createdAt','updatedAt']);
 
@@ -236,6 +236,7 @@ export const TestPublicLinkSchema = z.object({
   createdByUserId: z.number().int().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  archivedAt: z.coerce.date().nullable(),
 })
 
 export type TestPublicLink = z.infer<typeof TestPublicLinkSchema>
@@ -557,6 +558,7 @@ export const TestPublicLinkSelectSchema: z.ZodType<Prisma.TestPublicLinkSelect> 
   createdByUserId: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  archivedAt: z.boolean().optional(),
   topicVersion: z.union([z.boolean(),z.lazy(() => TestTopicVersionArgsSchema)]).optional(),
   createdByUser: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
   attempts: z.union([z.boolean(),z.lazy(() => TestStudentAttemptFindManyArgsSchema)]).optional(),
@@ -1194,6 +1196,7 @@ export const TestPublicLinkWhereInputSchema: z.ZodType<Prisma.TestPublicLinkWher
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   topicVersion: z.union([ z.lazy(() => TestTopicVersionScalarRelationFilterSchema), z.lazy(() => TestTopicVersionWhereInputSchema) ]).optional(),
   createdByUser: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
@@ -1214,6 +1217,7 @@ export const TestPublicLinkOrderByWithRelationInputSchema: z.ZodType<Prisma.Test
   createdByUserId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   topicVersion: z.lazy(() => TestTopicVersionOrderByWithRelationInputSchema).optional(),
   createdByUser: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptOrderByRelationAggregateInputSchema).optional(),
@@ -1249,6 +1253,7 @@ export const TestPublicLinkWhereUniqueInputSchema: z.ZodType<Prisma.TestPublicLi
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   topicVersion: z.union([ z.lazy(() => TestTopicVersionScalarRelationFilterSchema), z.lazy(() => TestTopicVersionWhereInputSchema) ]).optional(),
   createdByUser: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
@@ -1269,6 +1274,7 @@ export const TestPublicLinkOrderByWithAggregationInputSchema: z.ZodType<Prisma.T
   createdByUserId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => TestPublicLinkCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => TestPublicLinkAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => TestPublicLinkMaxOrderByAggregateInputSchema).optional(),
@@ -1294,6 +1300,7 @@ export const TestPublicLinkScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   createdByUserId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
 });
 
 export const TestStudentAttemptWhereInputSchema: z.ZodType<Prisma.TestStudentAttemptWhereInput> = z.strictObject({
@@ -2136,6 +2143,7 @@ export const TestPublicLinkCreateInputSchema: z.ZodType<Prisma.TestPublicLinkCre
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
@@ -2156,6 +2164,7 @@ export const TestPublicLinkUncheckedCreateInputSchema: z.ZodType<Prisma.TestPubl
   createdByUserId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
 
@@ -2171,6 +2180,7 @@ export const TestPublicLinkUpdateInputSchema: z.ZodType<Prisma.TestPublicLinkUpd
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
@@ -2191,6 +2201,7 @@ export const TestPublicLinkUncheckedUpdateInputSchema: z.ZodType<Prisma.TestPubl
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
 
@@ -2209,6 +2220,7 @@ export const TestPublicLinkCreateManyInputSchema: z.ZodType<Prisma.TestPublicLin
   createdByUserId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
 });
 
 export const TestPublicLinkUpdateManyMutationInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateManyMutationInput> = z.strictObject({
@@ -2223,6 +2235,7 @@ export const TestPublicLinkUpdateManyMutationInputSchema: z.ZodType<Prisma.TestP
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyInput> = z.strictObject({
@@ -2240,6 +2253,7 @@ export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Test
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestStudentAttemptCreateInputSchema: z.ZodType<Prisma.TestStudentAttemptCreateInput> = z.strictObject({
@@ -3228,6 +3242,7 @@ export const TestPublicLinkCountOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const TestPublicLinkAvgOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkAvgOrderByAggregateInput> = z.strictObject({
@@ -3253,6 +3268,7 @@ export const TestPublicLinkMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Test
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const TestPublicLinkMinOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkMinOrderByAggregateInput> = z.strictObject({
@@ -3270,6 +3286,7 @@ export const TestPublicLinkMinOrderByAggregateInputSchema: z.ZodType<Prisma.Test
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const TestPublicLinkSumOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkSumOrderByAggregateInput> = z.strictObject({
@@ -4717,6 +4734,7 @@ export const TestPublicLinkCreateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
@@ -4735,6 +4753,7 @@ export const TestPublicLinkUncheckedCreateWithoutCreatedByUserInputSchema: z.Zod
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
 
@@ -4782,6 +4801,7 @@ export const TestPublicLinkScalarWhereInputSchema: z.ZodType<Prisma.TestPublicLi
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
 });
 
 export const TestTopicVersionCreateWithoutTopicInputSchema: z.ZodType<Prisma.TestTopicVersionCreateWithoutTopicInput> = z.strictObject({
@@ -5128,6 +5148,7 @@ export const TestPublicLinkCreateWithoutTopicVersionInputSchema: z.ZodType<Prism
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
@@ -5146,6 +5167,7 @@ export const TestPublicLinkUncheckedCreateWithoutTopicVersionInputSchema: z.ZodT
   createdByUserId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
 
@@ -5996,6 +6018,7 @@ export const TestPublicLinkCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
 });
@@ -6015,6 +6038,7 @@ export const TestPublicLinkUncheckedCreateWithoutAttemptsInputSchema: z.ZodType<
   createdByUserId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
 });
 
 export const TestPublicLinkCreateOrConnectWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkCreateOrConnectWithoutAttemptsInput> = z.strictObject({
@@ -6136,6 +6160,7 @@ export const TestPublicLinkUpdateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
 });
@@ -6155,6 +6180,7 @@ export const TestPublicLinkUncheckedUpdateWithoutAttemptsInputSchema: z.ZodType<
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestTopicVersionUpsertWithoutStudentAttemptsInputSchema: z.ZodType<Prisma.TestTopicVersionUpsertWithoutStudentAttemptsInput> = z.strictObject({
@@ -6563,6 +6589,7 @@ export const TestPublicLinkCreateManyCreatedByUserInputSchema: z.ZodType<Prisma.
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
 });
 
 export const TestPublicLinkUpdateWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateWithoutCreatedByUserInput> = z.strictObject({
@@ -6577,6 +6604,7 @@ export const TestPublicLinkUpdateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
@@ -6595,6 +6623,7 @@ export const TestPublicLinkUncheckedUpdateWithoutCreatedByUserInputSchema: z.Zod
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
 
@@ -6612,6 +6641,7 @@ export const TestPublicLinkUncheckedUpdateManyWithoutCreatedByUserInputSchema: z
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestTopicVersionCreateManyTopicInputSchema: z.ZodType<Prisma.TestTopicVersionCreateManyTopicInput> = z.strictObject({
@@ -6705,6 +6735,7 @@ export const TestPublicLinkCreateManyTopicVersionInputSchema: z.ZodType<Prisma.T
   createdByUserId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
 });
 
 export const TestStudentAttemptCreateManyTopicVersionInputSchema: z.ZodType<Prisma.TestStudentAttemptCreateManyTopicVersionInput> = z.strictObject({
@@ -6833,6 +6864,7 @@ export const TestPublicLinkUpdateWithoutTopicVersionInputSchema: z.ZodType<Prism
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
@@ -6851,6 +6883,7 @@ export const TestPublicLinkUncheckedUpdateWithoutTopicVersionInputSchema: z.ZodT
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
 
@@ -6868,6 +6901,7 @@ export const TestPublicLinkUncheckedUpdateManyWithoutTopicVersionInputSchema: z.
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestStudentAttemptUpdateWithoutTopicVersionInputSchema: z.ZodType<Prisma.TestStudentAttemptUpdateWithoutTopicVersionInput> = z.strictObject({

@@ -17,13 +17,17 @@ import {
   useTestsControllerCreatePublicLink,
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
+  useTestsControllerDeletePublicLink,
   useTestsControllerDeleteTopic,
   useTestsControllerGetAttemptDetail,
   useTestsControllerGetTopicDraft,
+  useTestsControllerListArchivedPublicLinks,
   useTestsControllerListPublicLinkAttempts,
   useTestsControllerListPublicLinks,
   useTestsControllerListTopics,
   useTestsControllerPublishTopic,
+  useTestsControllerRegeneratePublicLinkShortCode,
+  useTestsControllerRestorePublicLink,
   useTestsControllerReorderQuestions,
   useTestsControllerUpdatePublicLink,
 } from '@/shared/api/generated/tests/tests';
@@ -35,6 +39,8 @@ import { Textarea } from '@/shared/ui/textarea';
 
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
+type PublicLinksTab = 'active' | 'archived';
+
 export function AdminTestsWorkspace() {
   const topicsQuery = useTestsControllerListTopics();
   const createTopicMutation = useTestsControllerCreateTopic();
@@ -43,8 +49,12 @@ export function AdminTestsWorkspace() {
   const reorderQuestionsMutation = useTestsControllerReorderQuestions();
   const publishMutation = useTestsControllerPublishTopic();
   const listPublicLinksQuery = useTestsControllerListPublicLinks();
+  const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
   const createPublicLinkMutation = useTestsControllerCreatePublicLink();
+  const deletePublicLinkMutation = useTestsControllerDeletePublicLink();
   const updatePublicLinkMutation = useTestsControllerUpdatePublicLink();
+  const regeneratePublicLinkShortCodeMutation = useTestsControllerRegeneratePublicLinkShortCode();
+  const restorePublicLinkMutation = useTestsControllerRestorePublicLink();
 
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [draftEdits, setDraftEdits] = useState<
@@ -73,11 +83,21 @@ export function AdminTestsWorkspace() {
   );
   const [selectedPublicLinkId, setSelectedPublicLinkId] = useState<number | null>(null);
   const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
+  const [pendingDeletePublicLinkId, setPendingDeletePublicLinkId] = useState<number | null>(null);
+  const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
 
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
-  const publicLinks = useMemo(
+  const activePublicLinks = useMemo(
     () => listPublicLinksQuery.data?.links ?? [],
     [listPublicLinksQuery.data?.links],
+  );
+  const archivedPublicLinks = useMemo(
+    () => listArchivedPublicLinksQuery.data?.links ?? [],
+    [listArchivedPublicLinksQuery.data?.links],
+  );
+  const visiblePublicLinks = useMemo(
+    () => (publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
+    [activePublicLinks, archivedPublicLinks, publicLinksTab],
   );
 
   const effectiveSelectedTopicId = useMemo(() => {
@@ -93,16 +113,19 @@ export function AdminTestsWorkspace() {
   }, [selectedTopicId, topics]);
 
   const effectivePublicLinkId = useMemo(() => {
-    if (publicLinks.length === 0) {
+    if (visiblePublicLinks.length === 0) {
       return null;
     }
 
-    if (selectedPublicLinkId && publicLinks.some((link) => link.id === selectedPublicLinkId)) {
+    if (
+      selectedPublicLinkId &&
+      visiblePublicLinks.some((link) => link.id === selectedPublicLinkId)
+    ) {
       return selectedPublicLinkId;
     }
 
-    return publicLinks[0].id;
-  }, [publicLinks, selectedPublicLinkId]);
+    return visiblePublicLinks[0].id;
+  }, [visiblePublicLinks, selectedPublicLinkId]);
 
   const publicAttemptsQuery = useTestsControllerListPublicLinkAttempts(effectivePublicLinkId ?? 0, {
     query: {
@@ -462,9 +485,14 @@ export function AdminTestsWorkspace() {
       {
         onSuccess: (link) => {
           toast.success('Публичная ссылка создана');
+          setPublicLinksTab('active');
           setSelectedPublicLinkId(link.id);
+          setSelectedAttemptId(null);
           setNewPublicShortCode('');
-          void listPublicLinksQuery.refetch();
+          void Promise.all([
+            listPublicLinksQuery.refetch(),
+            listArchivedPublicLinksQuery.refetch(),
+          ]);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -484,13 +512,98 @@ export function AdminTestsWorkspace() {
       {
         onSuccess: () => {
           toast.success(nextActive ? 'Ссылка активирована' : 'Ссылка деактивирована');
-          void listPublicLinksQuery.refetch();
+          void Promise.all([
+            listPublicLinksQuery.refetch(),
+            listArchivedPublicLinksQuery.refetch(),
+          ]);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
         },
       },
     );
+  };
+
+  const handleRegeneratePublicLinkShortCode = (linkId: number) => {
+    regeneratePublicLinkShortCodeMutation.mutate(
+      {
+        linkId,
+      },
+      {
+        onSuccess: (link) => {
+          toast.success('Короткий код обновлен');
+          setSelectedPublicLinkId(link.id);
+          setSelectedAttemptId(null);
+          void Promise.all([
+            listPublicLinksQuery.refetch(),
+            listArchivedPublicLinksQuery.refetch(),
+          ]);
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  const handleDeletePublicLink = () => {
+    if (!pendingDeletePublicLinkId) {
+      return;
+    }
+
+    const deletingId = pendingDeletePublicLinkId;
+
+    deletePublicLinkMutation.mutate(
+      {
+        linkId: deletingId,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Ссылка архивирована и скрыта из списка');
+          setPendingDeletePublicLinkId(null);
+          if (selectedPublicLinkId === deletingId) {
+            setSelectedPublicLinkId(null);
+            setSelectedAttemptId(null);
+          }
+          void Promise.all([
+            listPublicLinksQuery.refetch(),
+            listArchivedPublicLinksQuery.refetch(),
+          ]);
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  const handleRestorePublicLink = (linkId: number) => {
+    restorePublicLinkMutation.mutate(
+      {
+        linkId,
+      },
+      {
+        onSuccess: (link) => {
+          toast.success('Ссылка восстановлена');
+          setPublicLinksTab('active');
+          setSelectedPublicLinkId(link.id);
+          setSelectedAttemptId(null);
+          void Promise.all([
+            listPublicLinksQuery.refetch(),
+            listArchivedPublicLinksQuery.refetch(),
+          ]);
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  const handleSwitchPublicLinksTab = (tab: PublicLinksTab) => {
+    setPublicLinksTab(tab);
+    setSelectedPublicLinkId(null);
+    setSelectedAttemptId(null);
   };
 
   const copyShortLink = async (shortCode: string) => {
@@ -507,7 +620,8 @@ export function AdminTestsWorkspace() {
     : draftAutosave.lastAutoSavedAt
       ? `Автосохранено в ${draftAutosave.lastAutoSavedAt}`
       : null;
-  const selectedPublicLink = publicLinks.find((link) => link.id === effectivePublicLinkId) ?? null;
+  const selectedPublicLink =
+    visiblePublicLinks.find((link) => link.id === effectivePublicLinkId) ?? null;
   const selectedAttemptDetail = attemptDetailQuery.data ?? null;
 
   return (
@@ -645,8 +759,27 @@ export function AdminTestsWorkspace() {
               {createPublicLinkMutation.isPending ? 'Создаем...' : 'Создать публичную ссылку'}
             </Button>
 
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={publicLinksTab === 'active' ? 'default' : 'outline'}
+                onClick={() => handleSwitchPublicLinksTab('active')}
+              >
+                Активные
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={publicLinksTab === 'archived' ? 'default' : 'outline'}
+                onClick={() => handleSwitchPublicLinksTab('archived')}
+              >
+                Архив
+              </Button>
+            </div>
+
             <div className="space-y-2">
-              {publicLinks.map((link) => (
+              {visiblePublicLinks.map((link) => (
                 <div
                   key={link.id}
                   className={`rounded-md border p-3 ${
@@ -668,51 +801,84 @@ export function AdminTestsWorkspace() {
                     </button>
                     <span className="text-xs text-slate-600">{link.title}</span>
                     <span className="ml-auto text-xs text-slate-500">
-                      {link.isActive ? 'Активна' : 'Отключена'}
+                      {link.archivedAt ? 'В архиве' : link.isActive ? 'Активна' : 'Отключена'}
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void copyShortLink(link.shortCode)}
-                    >
-                      Копировать ссылку
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        window.open(
-                          `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-                            getShortLinkUrl(link.shortCode),
-                          )}`,
-                          '_blank',
-                          'noopener,noreferrer',
-                        )
-                      }
-                    >
-                      Открыть QR
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTogglePublicLink(link.id, !link.isActive)}
-                      disabled={updatePublicLinkMutation.isPending}
-                    >
-                      {link.isActive ? 'Деактивировать' : 'Активировать'}
-                    </Button>
+                    {publicLinksTab === 'active' ? (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void copyShortLink(link.shortCode)}
+                        >
+                          Копировать ссылку
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(
+                              `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                                getShortLinkUrl(link.shortCode),
+                              )}`,
+                              '_blank',
+                              'noopener,noreferrer',
+                            )
+                          }
+                        >
+                          Открыть QR
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleTogglePublicLink(link.id, !link.isActive)}
+                          disabled={updatePublicLinkMutation.isPending}
+                        >
+                          {link.isActive ? 'Деактивировать' : 'Активировать'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRegeneratePublicLinkShortCode(link.id)}
+                          disabled={regeneratePublicLinkShortCodeMutation.isPending}
+                        >
+                          Обновить код
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setPendingDeletePublicLinkId(link.id)}
+                          disabled={deletePublicLinkMutation.isPending}
+                        >
+                          Архивировать
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRestorePublicLink(link.id)}
+                        disabled={restorePublicLinkMutation.isPending}
+                      >
+                        Восстановить
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
 
-              {publicLinks.length === 0 ? (
+              {visiblePublicLinks.length === 0 ? (
                 <p className="text-sm text-slate-500">
-                  Публичные ссылки еще не созданы. Опубликуйте версию теста и создайте первую
-                  ссылку.
+                  {publicLinksTab === 'active'
+                    ? 'Публичные ссылки еще не созданы. Опубликуйте версию теста и создайте первую ссылку.'
+                    : 'Архив пуст. Здесь появятся ссылки после архивирования.'}
                 </p>
               ) : null}
             </div>
@@ -837,6 +1003,17 @@ export function AdminTestsWorkspace() {
         isConfirming={deleteTopicMutation.isPending}
         onConfirm={handleConfirmDeleteTopic}
         onClose={() => setPendingDeleteTopic(null)}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDeletePublicLinkId)}
+        title="Архивировать публичную ссылку?"
+        description="Ссылка станет недоступной и исчезнет из списка. Данные попыток сохранятся."
+        confirmLabel="Архивировать"
+        variant="destructive"
+        isConfirming={deletePublicLinkMutation.isPending}
+        onConfirm={handleDeletePublicLink}
+        onClose={() => setPendingDeletePublicLinkId(null)}
       />
 
       <ConfirmActionDialog
