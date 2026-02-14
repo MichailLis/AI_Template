@@ -88,6 +88,14 @@ export class AdminService {
         ? modelRecord.name.trim()
         : id;
     const provider = id.includes('/') ? id.split('/')[0] : 'unknown';
+    const supportedParameters = Array.isArray(modelRecord.supported_parameters)
+      ? modelRecord.supported_parameters.filter(
+          (value): value is string => typeof value === 'string',
+        )
+      : [];
+    const normalizedSupportedParameters = supportedParameters.map((value) =>
+      value.toLowerCase(),
+    );
 
     const pricingRecord =
       typeof modelRecord.pricing === 'object' && modelRecord.pricing !== null
@@ -107,12 +115,17 @@ export class AdminService {
         completionPrice !== null &&
         promptPrice === 0 &&
         completionPrice === 0);
+    const supportsStructuredOutputs = normalizedSupportedParameters.some(
+      (parameter) =>
+        parameter === 'structured_outputs' || parameter === 'response_format',
+    );
 
     return {
       id,
       label: name === id ? id : `${name} (${id})`,
       provider,
       isFree,
+      supportsStructuredOutputs,
       contextLength,
       promptPrice,
       completionPrice,
@@ -373,7 +386,20 @@ export class AdminService {
       model: string;
       temperature: number;
       messages: Array<{ role: 'user'; content: string }>;
-      response_format?: { type: 'json_object' };
+      response_format?:
+        | { type: 'json_object' }
+        | {
+            type: 'json_schema';
+            json_schema: {
+              name: string;
+              strict: boolean;
+              schema: Record<string, unknown>;
+            };
+          };
+      provider?: {
+        require_parameters?: boolean;
+      };
+      plugins?: Array<{ id: 'response-healing' }>;
     } = {
       model: dto.model,
       temperature: dto.temperature ?? 0.7,
@@ -381,7 +407,32 @@ export class AdminService {
     };
 
     if (responseFormat === 'json') {
-      openRouterRequestBody.response_format = { type: 'json_object' };
+      if (dto.responseSchema) {
+        openRouterRequestBody.response_format = {
+          type: 'json_schema',
+          json_schema: {
+            name: dto.responseSchema.name ?? 'structured_output',
+            strict: dto.responseSchema.strict ?? true,
+            schema: dto.responseSchema.schema,
+          },
+        };
+      } else {
+        openRouterRequestBody.response_format = { type: 'json_object' };
+      }
+
+      const requireParameters =
+        dto.requireParameters ?? Boolean(dto.responseSchema);
+      if (requireParameters) {
+        openRouterRequestBody.provider = {
+          require_parameters: true,
+        };
+      }
+
+      const useResponseHealing =
+        dto.useResponseHealing ?? Boolean(dto.responseSchema);
+      if (useResponseHealing) {
+        openRouterRequestBody.plugins = [{ id: 'response-healing' }];
+      }
     }
 
     try {

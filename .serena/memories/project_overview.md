@@ -25,6 +25,8 @@
 - OpenRouter key is backend-only (`OPENROUTER_API_KEY` in `server/.env`), never exposed in frontend.
 - Frontend page: `client/src/pages/admin/admin-prompts-page.tsx`.
 - UI currently supports model search/filter (`all/free/paid`), free-safe default, response format switch (`text/json`), prompt variables editor, and simulation log.
+- Generation proxy now supports strict structured output options (`responseSchema`, `requireParameters`, `useResponseHealing`) for schema-constrained JSON responses.
+- Model catalog response includes `supportsStructuredOutputs` capability flag.
 
 ## Tests module baseline (current branch)
 - Backend module and DTO/controller/service live in `server/src/tests/*`.
@@ -34,6 +36,9 @@
 - Admin tests editor UX is modal-based for add/edit question.
 - Choice options are row-based (`text`, `weight`) with service code hidden from UI.
 - JSON settings are available under collapsible advanced section.
+- Sidebar includes search, long-title-safe cards, and delete-topic action with confirmation.
+- Drag-and-drop reorder is supported with backend reorder endpoint and validation.
+- AI test generator modal is available (generate preview + transactional create via `POST /admin/tests/ai/create`).
 
 ## Quality gates
 - Primary gate: `npm run verify:template`.

@@ -55,6 +55,9 @@ Prompt Studio is available at `"/admin/prompts"` and currently includes:
 - prompt editor with line numbers
 - editable test variables (add/remove) with duplicate-key validation
 - response format switch (`text` / `json`)
+- strict structured JSON support for generation (`response_format: json_schema`) when schema is provided
+- provider parameter strictness support (`provider.require_parameters`) for schema-compatible routing
+- optional response-healing plugin support for malformed JSON repair
 
 Required backend environment variables (`server/.env`):
 ```env
@@ -73,16 +76,25 @@ Security note:
 
 Tests workspace is available at `"/admin/tests"` and currently includes:
 - topic management with slug + description
+- topic deletion with confirmation (removes topic versions/questions cascade)
 - version model with one active draft and optional published snapshot
 - draft editor with question CRUD
 - question types: `OPEN_TEXT`, `SINGLE_CHOICE`, `MULTI_CHOICE`, `SLIDER`
 - publish flow: current draft -> published, then auto-create next draft copy
+- drag-and-drop reorder with backend validation and user-facing recovery messaging
+- AI-assisted test creation modal (generate questions -> preview -> transactional create)
 
 Current UX baseline for question editing:
 - add/edit question via modal (avoids long inline page growth)
 - choice options are edited with structured rows (text + integer weight), no manual service code input
 - slider bands are edited with structured rows (`min`, `max`, `label`, `weight`)
 - optional JSON settings are hidden under "Advanced settings"
+- test list cards in sidebar handle long titles/slugs with safe wrapping
+
+AI generation safety rules in tests workspace:
+- model picker shows only models that advertise `structured_outputs` support
+- generation requests use strict JSON schema (`responseSchema.strict=true`) to constrain allowed question types
+- requests do not use OpenRouter web-search plugin (`web`) or `:online` model variants
 
 Domain constraints currently applied:
 - no branching configurator yet

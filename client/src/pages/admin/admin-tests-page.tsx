@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import {
   useTestsControllerCreateQuestion,
   useTestsControllerCreateTopic,
+  useTestsControllerCreateTopicFromAi,
+  useTestsControllerDeleteTopic,
   useTestsControllerDeleteQuestion,
   useTestsControllerGetTopicDraft,
   useTestsControllerListTopics,
@@ -13,6 +15,7 @@ import {
   useTestsControllerUpdateTopicDraft,
 } from '@/shared/api/generated/tests/tests';
 
+import { AiTestGeneratorModal } from './tests/ai-test-generator-modal';
 import { ConfirmActionDialog } from './tests/confirm-action-dialog';
 import { QuestionModal } from './tests/question-modal';
 import { TestEditor } from './tests/test-editor';
@@ -26,14 +29,17 @@ import {
   parseApiError,
 } from './tests/utils';
 
-import type { QuestionFormState, TestDraftQuestion } from './tests/types';
+import type { QuestionFormState, TestDraftQuestion, TestTopicListItem } from './tests/types';
+import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
 export default function AdminTestsPage() {
   const topicsQuery = useTestsControllerListTopics();
   const createTopicMutation = useTestsControllerCreateTopic();
+  const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
   const updateDraftMutation = useTestsControllerUpdateTopicDraft();
   const createQuestionMutation = useTestsControllerCreateQuestion();
   const updateQuestionMutation = useTestsControllerUpdateQuestion();
+  const deleteTopicMutation = useTestsControllerDeleteTopic();
   const deleteQuestionMutation = useTestsControllerDeleteQuestion();
   const reorderQuestionsMutation = useTestsControllerReorderQuestions();
   const publishMutation = useTestsControllerPublishTopic();
@@ -47,6 +53,7 @@ export default function AdminTestsPage() {
   const [newTestSlug, setNewTestSlug] = useState('');
   const [newTestDescription, setNewTestDescription] = useState('');
   const [testSearch, setTestSearch] = useState('');
+  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
 
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
@@ -58,6 +65,7 @@ export default function AdminTestsPage() {
 
   const [isDiscardQuestionConfirmOpen, setIsDiscardQuestionConfirmOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  const [pendingDeleteTopic, setPendingDeleteTopic] = useState<TestTopicListItem | null>(null);
   const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<TestDraftQuestion | null>(
     null,
   );
@@ -165,6 +173,26 @@ export default function AdminTestsPage() {
           resetAutosaveMeta();
           setSelectedTopicId(topic.topicId);
           void topicsQuery.refetch();
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  const handleCreateTestFromAi = (payload: CreateTestsTopicFromAiDto) => {
+    createTopicFromAiMutation.mutate(
+      {
+        data: payload,
+      },
+      {
+        onSuccess: (topic) => {
+          toast.success('Тест успешно создан с помощью ИИ');
+          setIsAiGeneratorOpen(false);
+          resetAutosaveMeta();
+          setSelectedTopicId(topic.topicId);
+          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -388,6 +416,46 @@ export default function AdminTestsPage() {
     );
   };
 
+  const handleConfirmDeleteTopic = () => {
+    if (!pendingDeleteTopic) {
+      return;
+    }
+
+    const topicIdToDelete = pendingDeleteTopic.id;
+
+    deleteTopicMutation.mutate(
+      {
+        topicId: topicIdToDelete,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Тест удален');
+
+          if (effectiveSelectedTopicId === topicIdToDelete) {
+            if (draft) {
+              clearDraftEdits(draft.id);
+            }
+
+            const nextTopic = topics.find((topic) => topic.id !== topicIdToDelete);
+            setSelectedTopicId(nextTopic?.id ?? null);
+            closeQuestionModalDirect();
+            setPendingDeleteQuestion(null);
+            setIsPublishConfirmOpen(false);
+            setPendingTopicSwitchId(null);
+            setIsSwitchConfirmOpen(false);
+          }
+
+          setPendingDeleteTopic(null);
+          resetAutosaveMeta();
+          void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
   const handleConfirmDeleteQuestion = () => {
     if (!effectiveSelectedTopicId || !pendingDeleteQuestion) {
       setPendingDeleteQuestion(null);
@@ -523,10 +591,15 @@ export default function AdminTestsPage() {
           newTestSlug={newTestSlug}
           newTestDescription={newTestDescription}
           isCreating={createTopicMutation.isPending}
+          isCreatingWithAi={createTopicFromAiMutation.isPending}
+          isDeletingTopic={deleteTopicMutation.isPending}
+          deletingTopicId={pendingDeleteTopic?.id ?? null}
           onNewTestTitleChange={setNewTestTitle}
           onNewTestSlugChange={setNewTestSlug}
           onNewTestDescriptionChange={setNewTestDescription}
           onCreateTest={handleCreateTest}
+          onOpenAiGenerator={() => setIsAiGeneratorOpen(true)}
+          onRequestDeleteTest={setPendingDeleteTopic}
           onSelectTest={handleSelectTest}
           onRetryTopics={() => {
             void topicsQuery.refetch();
@@ -562,6 +635,13 @@ export default function AdminTestsPage() {
           }}
         />
       </div>
+
+      <AiTestGeneratorModal
+        open={isAiGeneratorOpen}
+        isCreating={createTopicFromAiMutation.isPending}
+        onOpenChange={setIsAiGeneratorOpen}
+        onCreate={handleCreateTestFromAi}
+      />
 
       <QuestionModal
         open={isQuestionModalOpen}
@@ -600,6 +680,21 @@ export default function AdminTestsPage() {
         variant="destructive"
         onConfirm={closeQuestionModalDirect}
         onClose={() => setIsDiscardQuestionConfirmOpen(false)}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDeleteTopic)}
+        title="Удалить тест?"
+        description={
+          pendingDeleteTopic
+            ? `Тест "${pendingDeleteTopic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
+            : 'Тест будет удален вместе с черновиком и опубликованными версиями.'
+        }
+        confirmLabel="Удалить тест"
+        variant="destructive"
+        isConfirming={deleteTopicMutation.isPending}
+        onConfirm={handleConfirmDeleteTopic}
+        onClose={() => setPendingDeleteTopic(null)}
       />
 
       <ConfirmActionDialog

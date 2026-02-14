@@ -23,6 +23,8 @@ import type {
 
 import type {
   CreateTestsTopicDto,
+  CreateTestsTopicFromAiDto,
+  DeleteTestsTopicResponseDto,
   PublishTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
   TestsTopicDetailResponseDto,
@@ -241,6 +243,168 @@ export const useTestsControllerCreateTopic = <TError = unknown, TContext = unkno
   TContext
 > => {
   return useMutation(getTestsControllerCreateTopicMutationOptions(options), queryClient);
+};
+/**
+ * @summary Create test topic with generated questions in one transaction
+ */
+export const testsControllerCreateTopicFromAi = (
+  createTestsTopicFromAiDto: CreateTestsTopicFromAiDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<TestsTopicDetailResponseDto>(
+    {
+      url: `/admin/tests/ai/create`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createTestsTopicFromAiDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getTestsControllerCreateTopicFromAiMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+    TError,
+    { data: CreateTestsTopicFromAiDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+  TError,
+  { data: CreateTestsTopicFromAiDto },
+  TContext
+> => {
+  const mutationKey = ['testsControllerCreateTopicFromAi'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+    { data: CreateTestsTopicFromAiDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return testsControllerCreateTopicFromAi(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsControllerCreateTopicFromAiMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>
+>;
+export type TestsControllerCreateTopicFromAiMutationBody = CreateTestsTopicFromAiDto;
+export type TestsControllerCreateTopicFromAiMutationError = unknown;
+
+/**
+ * @summary Create test topic with generated questions in one transaction
+ */
+export const useTestsControllerCreateTopicFromAi = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+      TError,
+      { data: CreateTestsTopicFromAiDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsControllerCreateTopicFromAi>>,
+  TError,
+  { data: CreateTestsTopicFromAiDto },
+  TContext
+> => {
+  return useMutation(getTestsControllerCreateTopicFromAiMutationOptions(options), queryClient);
+};
+/**
+ * @summary Delete test topic with all versions and questions
+ */
+export const testsControllerDeleteTopic = (
+  topicId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<DeleteTestsTopicResponseDto>(
+    { url: `/admin/tests/${topicId}`, method: 'DELETE', signal },
+    options,
+  );
+};
+
+export const getTestsControllerDeleteTopicMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+    TError,
+    { topicId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+  TError,
+  { topicId: number },
+  TContext
+> => {
+  const mutationKey = ['testsControllerDeleteTopic'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+    { topicId: number }
+  > = (props) => {
+    const { topicId } = props ?? {};
+
+    return testsControllerDeleteTopic(topicId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsControllerDeleteTopicMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsControllerDeleteTopic>>
+>;
+
+export type TestsControllerDeleteTopicMutationError = unknown;
+
+/**
+ * @summary Delete test topic with all versions and questions
+ */
+export const useTestsControllerDeleteTopic = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+      TError,
+      { topicId: number },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsControllerDeleteTopic>>,
+  TError,
+  { topicId: number },
+  TContext
+> => {
+  return useMutation(getTestsControllerDeleteTopicMutationOptions(options), queryClient);
 };
 /**
  * @summary Get active draft topic detail

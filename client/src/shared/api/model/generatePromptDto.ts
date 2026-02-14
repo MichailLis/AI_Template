@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { GeneratePromptDtoResponseFormat } from './generatePromptDtoResponseFormat';
+import type { GeneratePromptDtoResponseSchema } from './generatePromptDtoResponseSchema';
 
 export interface GeneratePromptDto {
   /** @minLength 1 */
@@ -21,4 +22,7 @@ export interface GeneratePromptDto {
    */
   temperature?: number;
   responseFormat?: GeneratePromptDtoResponseFormat;
+  responseSchema?: GeneratePromptDtoResponseSchema;
+  requireParameters?: boolean;
+  useResponseHealing?: boolean;
 }

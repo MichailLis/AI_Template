@@ -109,6 +109,13 @@ export const UpsertTestsQuestionSchema = z.object({
   sliderBands: z.array(UpsertTestQuestionSliderBandSchema).optional(),
 });
 
+export const CreateTestsTopicFromAiSchema = z.object({
+  title: z.string().min(1).max(200),
+  slug: z.string().trim().min(1).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  questions: z.array(UpsertTestsQuestionSchema).min(1).max(60),
+});
+
 export const ReorderTestsQuestionsSchema = z.object({
   questionIds: z.array(z.number().int().min(1)).min(1),
 });
@@ -117,6 +124,10 @@ export const PublishTestsTopicResponseSchema = z.object({
   topicId: z.number(),
   publishedVersionNumber: z.number(),
   newDraftVersionNumber: z.number(),
+});
+
+export const DeleteTestsTopicResponseSchema = z.object({
+  topicId: z.number(),
 });
 
 export class TestsTopicListResponseDto extends createZodDto(
@@ -132,9 +143,15 @@ export class UpdateTestsTopicDraftDto extends createZodDto(
 export class UpsertTestsQuestionDto extends createZodDto(
   UpsertTestsQuestionSchema,
 ) {}
+export class CreateTestsTopicFromAiDto extends createZodDto(
+  CreateTestsTopicFromAiSchema,
+) {}
 export class ReorderTestsQuestionsDto extends createZodDto(
   ReorderTestsQuestionsSchema,
 ) {}
 export class PublishTestsTopicResponseDto extends createZodDto(
   PublishTestsTopicResponseSchema,
+) {}
+export class DeleteTestsTopicResponseDto extends createZodDto(
+  DeleteTestsTopicResponseSchema,
 ) {}

@@ -11,6 +11,7 @@ export type AdminPromptModelsResponseDtoModelsItem = {
   label: string;
   provider: string;
   isFree: boolean;
+  supportsStructuredOutputs: boolean;
   /** @nullable */
   contextLength: number | null;
   /** @nullable */

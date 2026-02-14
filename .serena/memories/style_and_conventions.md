@@ -39,6 +39,13 @@
 - Frontend must use backend proxy endpoints only (`/admin/prompts/*`).
 - Prefer free-model defaults to reduce accidental spend.
 - Prompt variables must have unique keys before running simulation.
+- For strict JSON automation flows, prefer `response_format: json_schema` with explicit schema + `strict=true`.
+- Avoid OpenRouter web-search for tests generation flows (no `web` plugin and no `:online` model suffixes).
+
+## Tests workspace UX rules
+- Keep test-topic deletion explicit: icon action + destructive confirmation dialog.
+- Sidebar cards must wrap long titles/slugs without overflow outside card bounds.
+- AI test generation should use preview-first UX and transactional commit endpoint.
 
 ## Testing baseline
 - Keep auth unit + e2e coverage passing.

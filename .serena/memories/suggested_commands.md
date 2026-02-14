@@ -38,6 +38,14 @@ Then restart backend/dev process.
 - `npm run build --prefix client`
 - `npm run verify:architecture`
 
+## AI tests generation workflow
+- `npm run gen:api`
+- `npm run lint --prefix server && npm run lint --prefix client`
+- `npm run test:e2e --prefix server -- admin.e2e-spec.ts`
+
+## UI troubleshooting
+- Clear Vite optimize cache and restart dev: `npm run dev:force --prefix client`
+
 ## Validation
 - `npm run verify:api-mutator`
 - `npm run verify:architecture`

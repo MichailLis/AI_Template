@@ -9,7 +9,9 @@ import type { TestQuestionType } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
+  CreateTestsTopicFromAiDto,
   CreateTestsTopicDto,
+  DeleteTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
   PublishTestsTopicResponseDto,
   TestsTopicDetailResponseDto,
@@ -398,6 +400,140 @@ export class TestsService {
     });
 
     return this.getTopicDraft(userId, topicId);
+  }
+
+  async createTopicFromAi(
+    userId: number,
+    dto: CreateTestsTopicFromAiDto,
+  ): Promise<TestsTopicDetailResponseDto> {
+    await this.ensureAdminAccess(userId);
+
+    const baseSlug = dto.slug ?? dto.title;
+    const slug = await this.ensureUniqueSlug(baseSlug);
+    const questionPayloads = dto.questions.map((question, index) => {
+      const payload = this.prepareQuestionPayload(question);
+      const questionLabel = `Question #${index + 1}`;
+
+      if (
+        (payload.type === 'SINGLE_CHOICE' || payload.type === 'MULTI_CHOICE') &&
+        payload.options.length < 2
+      ) {
+        throw new BadRequestException(
+          `${questionLabel} requires at least two options`,
+        );
+      }
+
+      if (payload.type === 'SLIDER') {
+        if (payload.sliderBands.length === 0) {
+          throw new BadRequestException(
+            `${questionLabel} requires at least one slider band`,
+          );
+        }
+
+        const sliderSettings = this.parseSliderSettings(payload.settings);
+        if (!sliderSettings) {
+          throw new BadRequestException(
+            `${questionLabel} has invalid slider settings`,
+          );
+        }
+      }
+
+      return payload;
+    });
+
+    const topicId = await this.prisma.$transaction(async (tx) => {
+      const topic = await tx.testTopic.create({
+        data: {
+          slug,
+        },
+      });
+
+      const draft = await tx.testTopicVersion.create({
+        data: {
+          topicId: topic.id,
+          versionNumber: 1,
+          status: 'DRAFT',
+          title: dto.title,
+          description: dto.description ?? null,
+        },
+      });
+
+      await tx.testTopic.update({
+        where: { id: topic.id },
+        data: {
+          activeDraftVersionId: draft.id,
+        },
+      });
+
+      for (const [index, question] of questionPayloads.entries()) {
+        const createdQuestion = await tx.testQuestion.create({
+          data: {
+            versionId: draft.id,
+            type: question.type,
+            title: question.title,
+            description: question.description,
+            required: question.required,
+            order: index + 1,
+            ...(question.settings !== undefined
+              ? { settings: this.toPrismaSettingsInput(question.settings) }
+              : {}),
+          },
+        });
+
+        if (question.options.length > 0) {
+          await tx.testQuestionOption.createMany({
+            data: question.options.map((option) => ({
+              questionId: createdQuestion.id,
+              label: option.label,
+              value: option.value,
+              weight: option.weight,
+              order: option.order,
+            })),
+          });
+        }
+
+        if (question.sliderBands.length > 0) {
+          await tx.testQuestionSliderBand.createMany({
+            data: question.sliderBands.map((band) => ({
+              questionId: createdQuestion.id,
+              minValue: band.minValue,
+              maxValue: band.maxValue,
+              label: band.label,
+              weight: band.weight,
+              order: band.order,
+            })),
+          });
+        }
+      }
+
+      return topic.id;
+    });
+
+    return this.getTopicDraft(userId, topicId);
+  }
+
+  async deleteTopic(
+    userId: number,
+    topicId: number,
+  ): Promise<DeleteTestsTopicResponseDto> {
+    await this.ensureAdminAccess(userId);
+
+    const topic = await this.prisma.testTopic.findUnique({
+      where: { id: topicId },
+      select: { id: true },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Test topic not found');
+    }
+
+    await this.prisma.testTopic.delete({
+      where: { id: topicId },
+    });
+
+    return {
+      topicId,
+    };
   }
 
   async getTopicDraft(

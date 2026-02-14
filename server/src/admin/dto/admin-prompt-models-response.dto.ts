@@ -6,6 +6,7 @@ const AdminPromptModelSchema = z.object({
   label: z.string(),
   provider: z.string(),
   isFree: z.boolean(),
+  supportsStructuredOutputs: z.boolean(),
   contextLength: z.number().nullable(),
   promptPrice: z.number().nullable(),
   completionPrice: z.number().nullable(),

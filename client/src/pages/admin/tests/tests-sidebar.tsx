@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { Badge } from '@/shared/ui/badge';
@@ -21,10 +22,15 @@ interface TestsSidebarProps {
   newTestSlug: string;
   newTestDescription: string;
   isCreating: boolean;
+  isCreatingWithAi: boolean;
+  isDeletingTopic: boolean;
+  deletingTopicId: number | null;
   onNewTestTitleChange: (value: string) => void;
   onNewTestSlugChange: (value: string) => void;
   onNewTestDescriptionChange: (value: string) => void;
   onCreateTest: () => void;
+  onOpenAiGenerator: () => void;
+  onRequestDeleteTest: (topic: TestTopicListItem) => void;
   onSelectTest: (topicId: number) => void;
   onRetryTopics: () => void;
 }
@@ -41,10 +47,15 @@ export function TestsSidebar({
   newTestSlug,
   newTestDescription,
   isCreating,
+  isCreatingWithAi,
+  isDeletingTopic,
+  deletingTopicId,
   onNewTestTitleChange,
   onNewTestSlugChange,
   onNewTestDescriptionChange,
   onCreateTest,
+  onOpenAiGenerator,
+  onRequestDeleteTest,
   onSelectTest,
   onRetryTopics,
 }: TestsSidebarProps) {
@@ -98,6 +109,15 @@ export function TestsSidebar({
           <Button className="w-full" onClick={onCreateTest} disabled={isCreating}>
             {isCreating ? 'Создание теста...' : 'Создать тест'}
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={onOpenAiGenerator}
+            disabled={isCreatingWithAi}
+          >
+            {isCreatingWithAi ? 'Создание теста...' : 'Создать тест с ИИ'}
+          </Button>
         </div>
 
         <div className="space-y-2 border-t border-slate-200 pt-4">
@@ -128,25 +148,40 @@ export function TestsSidebar({
           ) : null}
 
           {filteredTopics.map((topic) => (
-            <Button
-              key={topic.id}
-              variant={selectedTopicId === topic.id ? 'secondary' : 'outline'}
-              className="h-auto w-full justify-start"
-              onClick={() => onSelectTest(topic.id)}
-            >
-              <div className="w-full space-y-1 text-left">
-                <p className="text-sm font-semibold">{topic.draftTitle}</p>
-                <p className="text-xs text-slate-500">{topic.slug}</p>
-                <div className="flex flex-wrap items-center gap-1">
-                  <Badge variant="outline">В работе v{topic.draftVersionNumber}</Badge>
-                  <Badge variant="outline">
-                    {topic.publishedVersionNumber
-                      ? `Опубликован v${topic.publishedVersionNumber}`
-                      : 'Не опубликован'}
-                  </Badge>
+            <div key={topic.id} className="relative">
+              <Button
+                variant={selectedTopicId === topic.id ? 'secondary' : 'outline'}
+                className="h-auto w-full items-start justify-start whitespace-normal pr-10"
+                onClick={() => onSelectTest(topic.id)}
+              >
+                <div className="min-w-0 w-full space-y-1 text-left">
+                  <p className="break-words text-sm font-semibold leading-snug">
+                    {topic.draftTitle}
+                  </p>
+                  <p className="break-all text-xs text-slate-500">{topic.slug}</p>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <Badge variant="outline">В работе v{topic.draftVersionNumber}</Badge>
+                    <Badge variant="outline">
+                      {topic.publishedVersionNumber
+                        ? `Опубликован v${topic.publishedVersionNumber}`
+                        : 'Не опубликован'}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-            </Button>
+              </Button>
+
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="absolute right-1 top-1 h-7 w-7 text-slate-500 hover:text-red-600"
+                onClick={() => onRequestDeleteTest(topic)}
+                disabled={isDeletingTopic && deletingTopicId === topic.id}
+                aria-label={`Удалить тест ${topic.draftTitle}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           ))}
         </div>
       </CardContent>

@@ -21,7 +21,9 @@ import {
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import {
+  CreateTestsTopicFromAiDto,
   CreateTestsTopicDto,
+  DeleteTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
   PublishTestsTopicResponseDto,
   TestsTopicDetailResponseDto,
@@ -58,6 +60,33 @@ export class TestsController {
     @Body() dto: CreateTestsTopicDto,
   ) {
     return this.testsService.createTopic(userId, dto);
+  }
+
+  @Post('ai/create')
+  @ApiOperation({
+    summary: 'Create test topic with generated questions in one transaction',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: TestsTopicDetailResponseDto,
+  })
+  createTopicFromAi(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: CreateTestsTopicFromAiDto,
+  ) {
+    return this.testsService.createTopicFromAi(userId, dto);
+  }
+
+  @Delete(':topicId')
+  @ApiOperation({
+    summary: 'Delete test topic with all versions and questions',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: DeleteTestsTopicResponseDto })
+  deleteTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.deleteTopic(userId, topicId);
   }
 
   @Get(':topicId/draft')

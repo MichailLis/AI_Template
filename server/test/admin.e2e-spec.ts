@@ -285,4 +285,134 @@ describe('Admin (e2e)', () => {
       ),
     ).toEqual(['Второй вопрос', 'Первый вопрос']);
   });
+
+  it('tests module should delete topic for admin', async () => {
+    const adminToken = await signin(adminEmail);
+    const topicSlug = `${testsSlugPrefix}-delete`;
+
+    const createTopicResponse = await request(app.getHttpServer())
+      .post('/admin/tests')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Тест на удаление',
+        slug: topicSlug,
+        description: 'Будет удален в рамках e2e',
+      })
+      .expect(201);
+
+    const topicId = createTopicResponse.body.topicId as number;
+
+    const deleteResponse = await request(app.getHttpServer())
+      .delete(`/admin/tests/${topicId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(deleteResponse.body.topicId).toBe(topicId);
+
+    const listResponse = await request(app.getHttpServer())
+      .get('/admin/tests')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const topicSlugs = (
+      listResponse.body.topics as Array<{ slug: string }>
+    ).map((topic) => topic.slug);
+
+    expect(topicSlugs).not.toContain(topicSlug);
+  });
+
+  it('tests module should create topic from AI blueprint in one request', async () => {
+    const adminToken = await signin(adminEmail);
+
+    const createFromAiResponse = await request(app.getHttpServer())
+      .post('/admin/tests/ai/create')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'AI Blueprint Test',
+        slug: `${testsSlugPrefix}-ai-blueprint`,
+        description: 'Создано по результату генерации ИИ',
+        questions: [
+          {
+            type: 'OPEN_TEXT',
+            title: 'Что вам нравится делать больше всего?',
+            description: 'Коротко опишите любимые занятия',
+            required: true,
+          },
+          {
+            type: 'SINGLE_CHOICE',
+            title: 'Какой формат задач вам ближе?',
+            description: null,
+            required: true,
+            options: [
+              {
+                label: 'Точные расчеты и алгоритмы',
+                value: 'engineering_math',
+                weight: 3,
+              },
+              {
+                label: 'Коммуникация и работа с людьми',
+                value: 'communication_people',
+                weight: 1,
+              },
+            ],
+          },
+        ],
+      })
+      .expect(201);
+
+    expect(createFromAiResponse.body.slug).toBe(
+      `${testsSlugPrefix}-ai-blueprint`,
+    );
+    expect(createFromAiResponse.body.draft.versionNumber).toBe(1);
+    expect(createFromAiResponse.body.draft.questions).toHaveLength(2);
+    expect(createFromAiResponse.body.draft.questions[0].title).toBe(
+      'Что вам нравится делать больше всего?',
+    );
+    expect(createFromAiResponse.body.draft.questions[1].type).toBe(
+      'SINGLE_CHOICE',
+    );
+  });
+
+  it('tests module should reject invalid AI blueprint payload', async () => {
+    const adminToken = await signin(adminEmail);
+    const invalidSlug = `${testsSlugPrefix}-ai-invalid`;
+
+    const response = await request(app.getHttpServer())
+      .post('/admin/tests/ai/create')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Invalid AI Blueprint',
+        slug: invalidSlug,
+        questions: [
+          {
+            type: 'SINGLE_CHOICE',
+            title: 'Недостаточно вариантов',
+            required: true,
+            options: [
+              {
+                label: 'Единственный вариант',
+                value: 'only_one',
+                weight: 1,
+              },
+            ],
+          },
+        ],
+      })
+      .expect(400);
+
+    const message = Array.isArray(response.body.message)
+      ? response.body.message[0]
+      : response.body.message;
+
+    expect(message).toContain('requires at least two options');
+
+    const createdTopic = await prisma.testTopic.findUnique({
+      where: {
+        slug: invalidSlug,
+      },
+      select: { id: true },
+    });
+
+    expect(createdTopic).toBeNull();
+  });
 });

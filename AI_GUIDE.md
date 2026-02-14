@@ -72,6 +72,9 @@ Required behavior:
 4. Frontend must never call OpenRouter directly.
 5. Prefer free models by default to reduce accidental spend.
 6. Prompt test variables are local UI helpers until question system is integrated.
+7. For strict machine-parseable output, use `response_format: json_schema` + `strict: true` with explicit schema.
+8. When schema is required, set `provider.require_parameters=true` to avoid routing to providers that ignore required params.
+9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
 
 Recommended env vars for prompt foundation:
 ```env
@@ -101,6 +104,14 @@ Frontend UX baseline for tests editor:
 3. Service-side option code should be auto-generated when not explicitly required in UI.
 4. Advanced JSON settings should be collapsible by default ("Advanced settings").
 5. Keep labels and helper copy clear enough for non-technical content managers.
+6. Topic list must support safe deletion with explicit confirmation.
+7. Sidebar cards must gracefully handle long titles/slugs (no overflow beyond card bounds).
+
+AI-assisted tests generation baseline:
+1. Trigger from tests workspace via dedicated modal (`Создать тест с ИИ`).
+2. Flow is two-phase: generate preview -> commit via transactional backend endpoint.
+3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
+4. Model selector must show only models with structured-output capability.
 
 ## Reference Example For AI Agents (Illustrative)
 
