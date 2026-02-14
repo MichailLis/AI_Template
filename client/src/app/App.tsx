@@ -13,6 +13,9 @@ import AdminSecurityPage from '@/pages/admin/admin-security-page';
 import AdminTestsPage from '@/pages/admin/admin-tests-page';
 import AdminUsersPage from '@/pages/admin/admin-users-page';
 import LoginPage from '@/pages/login';
+import PublicTestEntryPage from '@/pages/t/public-test-entry-page';
+import PublicTestResultPage from '@/pages/t/public-test-result-page';
+import PublicTestRunPage from '@/pages/t/public-test-run-page';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/interceptors';
 import { discoverAndConfigureApiBaseUrl } from '@/shared/api/runtime-api-base-url';
@@ -74,6 +77,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/t/:code" element={<PublicTestEntryPage />} />
+            <Route path="/t/:code/session/:sessionToken" element={<PublicTestRunPage />} />
+            <Route path="/t/:code/result/:sessionToken" element={<PublicTestResultPage />} />
             <Route
               path="/admin"
               element={
