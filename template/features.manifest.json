@@ -4,6 +4,8 @@
     "requiredRoutes": ["/login"],
     "requiredBackendModule": "AuthModule"
   },
+  "publicRoutes": ["/t/:code", "/t/:code/session/:sessionToken", "/t/:code/result/:sessionToken"],
+  "generatedApiDirs": ["tests-public"],
   "features": [
     {
       "name": "admin",

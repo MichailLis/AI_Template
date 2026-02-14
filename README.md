@@ -201,7 +201,7 @@ Use this before opening PR or finalizing a feature branch:
 3. Manifest updated (`template/features.manifest.json` matches actual files/routes).
 4. API mutator contract preserved (`npm run verify:api-mutator` passed).
 5. Frontend API regenerated (`npm run gen:api` passed).
-6. Route/navigation wired (`App.tsx` and `client/src/pages/dashboard.tsx` contains links to declared feature routes).
+6. Route/navigation wired (`App.tsx` contains declared `features` and `publicRoutes`; `client/src/pages/dashboard.tsx` contains links to declared feature routes).
 7. Server tests green (`npm run test --prefix server` and `npm run test:e2e --prefix server` passed).
 8. Full template pipeline green (`npm run verify:template` passed).
 9. No bypasses (do not disable checks or hardcode obsolete smoke paths).
@@ -209,12 +209,16 @@ Use this before opening PR or finalizing a feature branch:
 ## Architecture Guardrails
 
 - Source of truth for enabled features: `template/features.manifest.json`
+- Source of truth for public student routes: `template/features.manifest.json` (`publicRoutes`)
+- Source of truth for non-feature generated API dirs: `template/features.manifest.json` (`generatedApiDirs`)
 - Frontend layer rules source of truth: `template/fsd.rules.json`
 - Hard check command: `npm run verify:architecture`
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In final auth-only template state, keep manifest `features` empty.
 - `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
 - When `features` is not empty, `client/src/pages/dashboard.tsx` must exist and include `to="<feature.route>"` links for declared features.
+- Declared `publicRoutes` must be present in `client/src/app/App.tsx`.
+- Generated API directories that do not match feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - In auth-only baseline, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 
 Frontend strict FSD contract for this branch:

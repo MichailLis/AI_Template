@@ -230,6 +230,8 @@ const verify = async () => {
 
   const authModule = manifest.auth?.requiredBackendModule;
   const authRoutes = manifest.auth?.requiredRoutes ?? [];
+  const publicRoutes = manifest.publicRoutes ?? [];
+  const generatedApiDirs = manifest.generatedApiDirs ?? [];
   const featureRoutes = features.map((feature) => feature.route);
   const featureModules = features.map((feature) => feature.backendModule);
 
@@ -238,6 +240,10 @@ const verify = async () => {
   }
 
   for (const route of authRoutes) {
+    ensureIncludes(errors, appRoutes, `path="${route}"`, 'client/src/app/App.tsx');
+  }
+
+  for (const route of publicRoutes) {
     ensureIncludes(errors, appRoutes, `path="${route}"`, 'client/src/app/App.tsx');
   }
 
@@ -252,7 +258,11 @@ const verify = async () => {
       return true;
     }
 
-    if (authRoutes.includes(route) || featureRoutes.includes(route)) {
+    if (
+      authRoutes.includes(route) ||
+      featureRoutes.includes(route) ||
+      publicRoutes.includes(route)
+    ) {
       return true;
     }
 
@@ -262,7 +272,7 @@ const verify = async () => {
   for (const route of declaredRoutePaths) {
     if (!isAllowedRoute(route)) {
       errors.push(
-        `client/src/app/App.tsx: unexpected route path="${route}" not declared by auth or features manifest`,
+        `client/src/app/App.tsx: unexpected route path="${route}" not declared by auth, publicRoutes, or features manifest`,
       );
     }
   }
@@ -335,7 +345,9 @@ const verify = async () => {
   }
 
   const pageDirEntries = await readDirFromRoot('client/src/pages', true);
-  const allowedPageDirs = new Set(featureRoutes.map(toRouteSegment).filter(Boolean));
+  const allowedPageDirs = new Set(
+    [...featureRoutes, ...publicRoutes].map(toRouteSegment).filter(Boolean),
+  );
 
   for (const entry of pageDirEntries) {
     if (!entry.isDirectory()) {
@@ -351,7 +363,12 @@ const verify = async () => {
   }
 
   const generatedDirEntries = await readDirFromRoot('client/src/shared/api/generated', true);
-  const allowedGeneratedDirs = new Set(['app', 'auth', ...features.map((feature) => feature.name)]);
+  const allowedGeneratedDirs = new Set([
+    'app',
+    'auth',
+    ...features.map((feature) => feature.name),
+    ...generatedApiDirs,
+  ]);
 
   for (const entry of generatedDirEntries) {
     if (!entry.isDirectory()) {

@@ -26,7 +26,7 @@ Source of truth:
 
 - `template/fsd.rules.json` (layer rules)
 - `scripts/verify-architecture.mjs` (automated checks)
-- `template/features.manifest.json` (feature inventory + route/module wiring)
+- `template/features.manifest.json` (feature inventory + route/module wiring + `publicRoutes` + `generatedApiDirs`)
 
 Layer order (imports only "down"):
 
@@ -36,7 +36,7 @@ Rules:
 
 1. `pages/*` are route entrypoints/composition only. No deep business logic inside page files.
 2. Cross-slice imports in `widgets/features/entities` must go through slice public API (`index.ts`) in strict mode.
-3. Feature inventory still comes from `template/features.manifest.json`; FSD does not replace manifest discipline.
+3. Feature inventory and public student routes still come from `template/features.manifest.json`; FSD does not replace manifest discipline.
 4. Any architecture change must keep `npm run verify:architecture` green.
 5. Feature implementation order remains strict: data model -> backend -> `gen:api` -> frontend -> full verification.
 
@@ -243,7 +243,8 @@ Use this checklist before opening PR or finalizing work.
    - Generated hooks are used by the new UI.
 6. **Routes and navigation wired**
    - Route added in `client/src/app/App.tsx`.
-   - `client/src/pages/dashboard.tsx` includes feature entry links for declared routes (required by `verify:architecture`).
+   - `publicRoutes` from manifest are wired in `client/src/app/App.tsx`.
+   - `client/src/pages/dashboard.tsx` includes feature entry links for declared feature routes (required by `verify:architecture`).
 7. **Full pipeline green**
    - `npm run test --prefix server` and `npm run test:e2e --prefix server` passed.
 8. **Full pipeline green**
@@ -259,6 +260,8 @@ Use this checklist before opening PR or finalizing work.
 ## Architecture Source of Truth
 
 - Feature inventory is declared in `template/features.manifest.json`.
+- Public student routes are declared in `template/features.manifest.json` under `publicRoutes`.
+- Additional non-feature generated API directories are declared in `template/features.manifest.json` under `generatedApiDirs`.
 - In final template state, `features` can be empty (auth-only baseline).
 - In auth-only frontend baseline, required auth route is `"/login"`.
 - Every declared feature must have:
@@ -267,5 +270,7 @@ Use this checklist before opening PR or finalizing work.
   - generated API file from Orval
   - route wiring in `client/src/app/App.tsx`
   - `client/src/pages/dashboard.tsx` must exist and include a feature entry link (`to="<feature.route>"`) for each declared feature
+- Every declared `publicRoutes` entry must be wired in `client/src/app/App.tsx`.
+- Every generated API directory outside feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - `npm run verify:architecture` fails if any of these constraints are broken.
 - It also fails on stale architecture artifacts not declared in manifest (extra backend feature modules, extra non-auth feature/page directories, stale generated API directories, unexpected routes in App routing).
