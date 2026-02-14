@@ -1,10 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 
 import {
   AiTestGeneratorModal,
-  ConfirmActionDialog,
   QuestionModal,
   TestEditor,
   TestsSidebar,
@@ -23,10 +20,10 @@ import {
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
 } from '@/shared/api/generated/tests/tests';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
-import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
+import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
+import { PublicLinksHandoffCard } from './public-links-handoff-card';
+import { useAdminTestsWorkspaceActions } from './use-admin-tests-workspace-actions';
 
 export function AdminTestsWorkspace() {
   const topicsQuery = useTestsControllerListTopics();
@@ -136,222 +133,51 @@ export function AdminTestsWorkspace() {
     }));
   };
 
-  const handleCreateTest = () => {
-    if (!newTestTitle.trim()) {
-      toast.error('Укажите название теста');
-      return;
-    }
-
-    createTopicMutation.mutate(
-      {
-        data: {
-          title: newTestTitle.trim(),
-          slug: newTestSlug.trim() || undefined,
-          description: newTestDescription.trim() || null,
-        },
-      },
-      {
-        onSuccess: (topic) => {
-          toast.success('Тест создан');
-          setNewTestTitle('');
-          setNewTestSlug('');
-          setNewTestDescription('');
-          draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
-          void topicsQuery.refetch();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleCreateTestFromAi = (payload: CreateTestsTopicFromAiDto) => {
-    createTopicFromAiMutation.mutate(
-      {
-        data: payload,
-      },
-      {
-        onSuccess: (topic) => {
-          toast.success('Тест успешно создан с помощью ИИ');
-          setIsAiGeneratorOpen(false);
-          draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleSelectTest = (topicId: number) => {
-    if (topicId === effectiveSelectedTopicId) {
-      return;
-    }
-
-    if (isDraftDirty) {
-      setPendingTopicSwitchId(topicId);
-      setIsSwitchConfirmOpen(true);
-      return;
-    }
-
-    draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(topicId);
-  };
-
-  const handleConfirmTopicSwitch = () => {
-    if (pendingTopicSwitchId === null) {
-      setIsSwitchConfirmOpen(false);
-      return;
-    }
-
-    if (draft) {
-      clearDraftEdits(draft.id);
-    }
-
-    draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(pendingTopicSwitchId);
-    setPendingTopicSwitchId(null);
-    setIsSwitchConfirmOpen(false);
-  };
-
-  const handleConfirmDeleteTopic = () => {
-    if (!pendingDeleteTopic) {
-      return;
-    }
-
-    const topicIdToDelete = pendingDeleteTopic.id;
-
-    deleteTopicMutation.mutate(
-      {
-        topicId: topicIdToDelete,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Тест удален');
-
-          if (effectiveSelectedTopicId === topicIdToDelete) {
-            if (draft) {
-              clearDraftEdits(draft.id);
-            }
-
-            const nextTopic = topics.find((topic) => topic.id !== topicIdToDelete);
-            setSelectedTopicId(nextTopic?.id ?? null);
-            questionEditor.closeQuestionModalDirect();
-            questionEditor.setPendingDeleteQuestion(null);
-            setIsPublishConfirmOpen(false);
-            setPendingTopicSwitchId(null);
-            setIsSwitchConfirmOpen(false);
-          }
-
-          setPendingDeleteTopic(null);
-          draftAutosave.resetAutosaveMeta();
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleConfirmPublish = () => {
-    if (!effectiveSelectedTopicId) {
-      setIsPublishConfirmOpen(false);
-      return;
-    }
-
-    publishMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-      },
-      {
-        onSuccess: (result) => {
-          toast.success(
-            `Опубликована версия v${result.publishedVersionNumber}. Создана новая версия в работе v${result.newDraftVersionNumber}`,
-          );
-          setIsPublishConfirmOpen(false);
-          questionEditor.closeQuestionModalDirect();
-
-          if (draft) {
-            clearDraftEdits(draft.id);
-          }
-
-          draftAutosave.resetAutosaveMeta();
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleReorderQuestions = (questionIds: number[]) => {
-    if (!effectiveSelectedTopicId || !detail || reorderQuestionsMutation.isPending) {
-      return;
-    }
-
-    const currentIds = detail.draft.questions.map((question) => question.id);
-    if (JSON.stringify(currentIds) === JSON.stringify(questionIds)) {
-      return;
-    }
-
-    const currentIdSet = new Set(currentIds);
-    const nextIdSet = new Set(questionIds);
-    const hasInvalidPayload =
-      nextIdSet.size !== questionIds.length ||
-      questionIds.length !== currentIds.length ||
-      questionIds.some((id) => !currentIdSet.has(id));
-
-    if (hasInvalidPayload) {
-      toast.error('Не удалось изменить порядок: список вопросов устарел. Обновите страницу теста.');
+  const {
+    handleCreateTest,
+    handleCreateTestFromAi,
+    handleSelectTest,
+    handleConfirmTopicSwitch,
+    handleConfirmDeleteTopic,
+    handleConfirmPublish,
+    handleReorderQuestions,
+    autosaveHint,
+  } = useAdminTestsWorkspaceActions({
+    newTestTitle,
+    newTestSlug,
+    newTestDescription,
+    setNewTestTitle,
+    setNewTestSlug,
+    setNewTestDescription,
+    setIsAiGeneratorOpen,
+    createTopicMutation,
+    createTopicFromAiMutation,
+    deleteTopicMutation,
+    reorderQuestionsMutation,
+    publishMutation,
+    draftAutosave,
+    setSelectedTopicId,
+    refetchTopicsOnly: () => {
+      void topicsQuery.refetch();
+    },
+    refetchTestsData,
+    effectiveSelectedTopicId,
+    isDraftDirty,
+    setPendingTopicSwitchId,
+    setIsSwitchConfirmOpen,
+    pendingTopicSwitchId,
+    draft,
+    clearDraftEdits,
+    pendingDeleteTopic,
+    setPendingDeleteTopic,
+    topics,
+    questionEditor,
+    setIsPublishConfirmOpen,
+    detail,
+    refetchDetailOnly: () => {
       void detailQuery.refetch();
-      return;
-    }
-
-    reorderQuestionsMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-        data: {
-          questionIds,
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Порядок вопросов обновлен');
-          refetchTestsData();
-        },
-        onError: (error) => {
-          const message = parseApiError(error);
-          const normalizedMessage = message.toLowerCase();
-
-          if (
-            normalizedMessage.includes('numeric string is expected') ||
-            normalizedMessage.includes('questionid') ||
-            normalizedMessage.includes('validation failed')
-          ) {
-            toast.error(
-              'Ошибка маршрута reorder на backend. Перезапустите сервер и обновите страницу.',
-            );
-          } else {
-            toast.error(`Не удалось изменить порядок: ${message}`);
-          }
-
-          refetchTestsData();
-        },
-      },
-    );
-  };
-
-  const autosaveHint = draftAutosave.isAutoSavingDraft
-    ? 'Автосохранение...'
-    : draftAutosave.lastAutoSavedAt
-      ? `Автосохранено в ${draftAutosave.lastAutoSavedAt}`
-      : null;
+    },
+  });
 
   return (
     <>
@@ -413,20 +239,7 @@ export function AdminTestsWorkspace() {
         />
       </div>
 
-      <Card className="mt-6 border-slate-200">
-        <CardHeader>
-          <CardTitle>Публичные ссылки вынесены отдельно</CardTitle>
-          <CardDescription>
-            Управление ссылками, архивом и статистикой попыток теперь доступно на отдельной
-            странице.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild type="button" variant="outline">
-            <Link to="/admin/public-links">Открыть страницу ссылок</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <PublicLinksHandoffCard />
 
       <AiTestGeneratorModal
         open={isAiGeneratorOpen}
@@ -446,67 +259,28 @@ export function AdminTestsWorkspace() {
         onFormChange={questionEditor.handleQuestionFormChange}
       />
 
-      <ConfirmActionDialog
-        open={isSwitchConfirmOpen}
-        title="Переключить тест без сохранения?"
-        description="У текущего теста есть несохраненные изменения. Они будут потеряны при переключении."
-        confirmLabel="Переключить без сохранения"
-        variant="destructive"
-        onConfirm={handleConfirmTopicSwitch}
-        onClose={() => {
+      <AdminTestsConfirmDialogs
+        isSwitchConfirmOpen={isSwitchConfirmOpen}
+        onConfirmTopicSwitch={handleConfirmTopicSwitch}
+        onCloseTopicSwitch={() => {
           setIsSwitchConfirmOpen(false);
           setPendingTopicSwitchId(null);
         }}
-      />
-
-      <ConfirmActionDialog
-        open={questionEditor.isDiscardQuestionConfirmOpen}
-        title="Закрыть редактор вопроса?"
-        description="Есть несохраненные изменения в вопросе. Они будут потеряны."
-        confirmLabel="Закрыть без сохранения"
-        variant="destructive"
-        onConfirm={questionEditor.closeQuestionModalDirect}
-        onClose={() => questionEditor.setIsDiscardQuestionConfirmOpen(false)}
-      />
-
-      <ConfirmActionDialog
-        open={Boolean(pendingDeleteTopic)}
-        title="Удалить тест?"
-        description={
-          pendingDeleteTopic
-            ? `Тест "${pendingDeleteTopic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
-            : 'Тест будет удален вместе с черновиком и опубликованными версиями.'
-        }
-        confirmLabel="Удалить тест"
-        variant="destructive"
-        isConfirming={deleteTopicMutation.isPending}
-        onConfirm={handleConfirmDeleteTopic}
-        onClose={() => setPendingDeleteTopic(null)}
-      />
-
-      <ConfirmActionDialog
-        open={Boolean(questionEditor.pendingDeleteQuestion)}
-        title="Удалить вопрос?"
-        description={
-          questionEditor.pendingDeleteQuestion
-            ? `Вопрос "${questionEditor.pendingDeleteQuestion.title}" будет удален из версии в работе.`
-            : 'Вопрос будет удален из версии в работе.'
-        }
-        confirmLabel="Удалить вопрос"
-        variant="destructive"
-        isConfirming={questionEditor.isDeletingQuestion}
-        onConfirm={questionEditor.handleConfirmDeleteQuestion}
-        onClose={() => questionEditor.setPendingDeleteQuestion(null)}
-      />
-
-      <ConfirmActionDialog
-        open={isPublishConfirmOpen}
-        title="Опубликовать текущую версию теста?"
-        description="Текущая версия в работе станет опубликованной. После публикации будет создана новая версия в работе для дальнейших изменений."
-        confirmLabel="Опубликовать"
-        isConfirming={publishMutation.isPending}
-        onConfirm={handleConfirmPublish}
-        onClose={() => setIsPublishConfirmOpen(false)}
+        isDiscardQuestionConfirmOpen={questionEditor.isDiscardQuestionConfirmOpen}
+        onConfirmDiscardQuestion={questionEditor.closeQuestionModalDirect}
+        onCloseDiscardQuestion={() => questionEditor.setIsDiscardQuestionConfirmOpen(false)}
+        pendingDeleteTopic={pendingDeleteTopic}
+        isDeletingTopic={deleteTopicMutation.isPending}
+        onConfirmDeleteTopic={handleConfirmDeleteTopic}
+        onCloseDeleteTopic={() => setPendingDeleteTopic(null)}
+        pendingDeleteQuestion={questionEditor.pendingDeleteQuestion}
+        isDeletingQuestion={questionEditor.isDeletingQuestion}
+        onConfirmDeleteQuestion={questionEditor.handleConfirmDeleteQuestion}
+        onCloseDeleteQuestion={() => questionEditor.setPendingDeleteQuestion(null)}
+        isPublishConfirmOpen={isPublishConfirmOpen}
+        isPublishing={publishMutation.isPending}
+        onConfirmPublish={handleConfirmPublish}
+        onClosePublish={() => setIsPublishConfirmOpen(false)}
       />
     </>
   );

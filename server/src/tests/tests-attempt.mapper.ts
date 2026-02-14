@@ -1,0 +1,170 @@
+import type { Prisma, TestStudentAttemptStatus } from '@prisma/client';
+
+import type { AttemptWithSessionData } from './tests-attempt.query';
+
+const toIso = (value: Date | null) => {
+  return value ? value.toISOString() : null;
+};
+
+const mapPublicQuestion = (
+  question: AttemptWithSessionData['topicVersion']['questions'][number],
+) => {
+  return {
+    id: question.id,
+    type: question.type,
+    title: question.title,
+    description: question.description,
+    required: question.required,
+    order: question.order,
+    settings: question.settings ?? null,
+    options: question.options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      value: option.value,
+      order: option.order,
+    })),
+    sliderBands: question.sliderBands.map((band) => ({
+      id: band.id,
+      minValue: band.minValue,
+      maxValue: band.maxValue,
+      label: band.label,
+      order: band.order,
+    })),
+  };
+};
+
+interface AttemptDetailRecord {
+  id: number;
+  status: TestStudentAttemptStatus;
+  publicLink: {
+    id: number;
+    shortCode: string;
+  };
+  attemptNumber: number;
+  studentName: string;
+  studentLastInitial: string;
+  studentMiddleInitial: string;
+  educationOrganization: string;
+  groupOrClass: string;
+  consentAcceptedAt: Date;
+  consentVersion: string;
+  startedAt: Date;
+  finishedAt: Date | null;
+  expiresAt: Date | null;
+  answers: Array<{
+    questionId: number;
+    questionTypeSnapshot: string;
+    questionTitleSnapshot: string;
+    answerPayload: Prisma.JsonValue;
+    updatedAt: Date;
+  }>;
+  analysis: {
+    providerMode: string;
+    status: string;
+    summary: Prisma.JsonValue;
+    rawText: string | null;
+    errorMessage: string | null;
+    generatedAt: Date | null;
+  } | null;
+}
+
+interface AttemptListRecord {
+  id: number;
+  status: TestStudentAttemptStatus;
+  attemptNumber: number;
+  studentName: string;
+  studentLastInitial: string;
+  studentMiddleInitial: string;
+  educationOrganization: string;
+  groupOrClass: string;
+  startedAt: Date;
+  finishedAt: Date | null;
+  expiresAt: Date | null;
+  analysis: {
+    status: string;
+  } | null;
+}
+
+export const mapSessionState = (
+  attempt: AttemptWithSessionData,
+  toAttemptStatus: (attempt: AttemptWithSessionData) => string,
+) => {
+  return {
+    sessionToken: attempt.resumeToken,
+    shortCode: attempt.publicLink.shortCode,
+    attemptNumber: attempt.attemptNumber,
+    status: toAttemptStatus(attempt),
+    startedAt: attempt.startedAt.toISOString(),
+    expiresAt: toIso(attempt.expiresAt),
+    finishedAt: toIso(attempt.finishedAt),
+    timeLimitMinutes: attempt.publicLink.timeLimitMinutes,
+    questions: attempt.topicVersion.questions.map((question) => mapPublicQuestion(question)),
+    answers: attempt.answers.map((answer) => ({
+      questionId: answer.questionId,
+      answerPayload: answer.answerPayload,
+      updatedAt: answer.updatedAt.toISOString(),
+    })),
+  };
+};
+
+export const mapAttemptListItem = (
+  attempt: AttemptListRecord,
+  toAttemptStatus: (attempt: AttemptListRecord) => string,
+) => {
+  return {
+    attemptId: attempt.id,
+    attemptNumber: attempt.attemptNumber,
+    status: toAttemptStatus(attempt),
+    studentName: attempt.studentName,
+    studentLastInitial: attempt.studentLastInitial,
+    studentMiddleInitial: attempt.studentMiddleInitial,
+    educationOrganization: attempt.educationOrganization,
+    groupOrClass: attempt.groupOrClass,
+    startedAt: attempt.startedAt.toISOString(),
+    finishedAt: toIso(attempt.finishedAt),
+    expiresAt: toIso(attempt.expiresAt),
+    analysisStatus: attempt.analysis?.status ?? null,
+  };
+};
+
+export const mapAttemptDetail = (
+  attempt: AttemptDetailRecord,
+  toAttemptStatus: (attempt: AttemptDetailRecord) => string,
+) => {
+  return {
+    attemptId: attempt.id,
+    publicLinkId: attempt.publicLink.id,
+    shortCode: attempt.publicLink.shortCode,
+    attemptNumber: attempt.attemptNumber,
+    status: toAttemptStatus(attempt),
+    studentName: attempt.studentName,
+    studentLastInitial: attempt.studentLastInitial,
+    studentMiddleInitial: attempt.studentMiddleInitial,
+    educationOrganization: attempt.educationOrganization,
+    groupOrClass: attempt.groupOrClass,
+    consentAcceptedAt: attempt.consentAcceptedAt.toISOString(),
+    consentVersion: attempt.consentVersion,
+    startedAt: attempt.startedAt.toISOString(),
+    finishedAt: toIso(attempt.finishedAt),
+    expiresAt: toIso(attempt.expiresAt),
+    answers: attempt.answers.map((answer) => ({
+      questionId: answer.questionId,
+      questionType: answer.questionTypeSnapshot,
+      questionTitle: answer.questionTitleSnapshot,
+      answerPayload: answer.answerPayload,
+      updatedAt: answer.updatedAt.toISOString(),
+    })),
+    analysis: attempt.analysis
+      ? {
+          providerMode: attempt.analysis.providerMode,
+          status: attempt.analysis.status,
+          summary: attempt.analysis.summary,
+          rawText: attempt.analysis.rawText,
+          errorMessage: attempt.analysis.errorMessage,
+          generatedAt: toIso(attempt.analysis.generatedAt),
+        }
+      : null,
+  };
+};
+
+export const toOptionalIsoString = toIso;

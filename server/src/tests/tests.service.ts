@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
 import type {
@@ -19,13 +13,14 @@ import type {
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
 import {
-  mapQuestion,
-  normalizeSlug,
-  parseSliderSettings,
-  prepareQuestionPayload,
-  toPrismaSettingsInput,
-  validateDraftForPublish,
-} from './tests-domain.utils';
+  buildAiQuestionPayloads,
+  cloneQuestionsToVersion,
+  createQuestionsInVersion,
+  createTopicWithDraft,
+} from './tests-topic-version.utils';
+import { mapQuestion, validateDraftForPublish } from './tests-domain.utils';
+import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureUniqueTopicSlug } from './tests-topic-slug.utils';
 import { TestsQuestionService } from './tests-question.service';
 
 @Injectable()
@@ -34,43 +29,6 @@ export class TestsService {
     private readonly prisma: PrismaService,
     private readonly testsQuestionService: TestsQuestionService,
   ) {}
-
-  private async ensureAdminAccess(userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || user.role !== 'ADMIN') {
-      throw new ForbiddenException('Admin area only');
-    }
-  }
-
-  private async ensureUniqueSlug(baseSlug: string) {
-    const normalized = normalizeSlug(baseSlug) || 'topic';
-
-    const existing = await this.prisma.testTopic.findMany({
-      where: {
-        slug: {
-          startsWith: normalized,
-        },
-      },
-      select: { slug: true },
-    });
-
-    const used = new Set(existing.map((item) => item.slug));
-
-    if (!used.has(normalized)) {
-      return normalized;
-    }
-
-    let index = 2;
-    while (used.has(`${normalized}-${index}`)) {
-      index += 1;
-    }
-
-    return `${normalized}-${index}`;
-  }
 
   private async getTopicSnapshot(topicId: number) {
     const topic = await this.prisma.testTopic.findUnique({
@@ -114,7 +72,7 @@ export class TestsService {
   }
 
   async listTopics(userId: number): Promise<TestsTopicListResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topics = await this.prisma.testTopic.findMany({
       include: {
@@ -162,36 +120,19 @@ export class TestsService {
     userId: number,
     dto: CreateTestsTopicDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const baseSlug = dto.slug ?? dto.title;
-    const slug = await this.ensureUniqueSlug(baseSlug);
+    const slug = await ensureUniqueTopicSlug(this.prisma, baseSlug);
 
     const topicId = await this.prisma.$transaction(async (tx) => {
-      const topic = await tx.testTopic.create({
-        data: {
-          slug,
-        },
+      const createdTopic = await createTopicWithDraft(tx, {
+        slug,
+        title: dto.title,
+        description: dto.description ?? null,
       });
 
-      const draft = await tx.testTopicVersion.create({
-        data: {
-          topicId: topic.id,
-          versionNumber: 1,
-          status: 'DRAFT',
-          title: dto.title,
-          description: dto.description ?? null,
-        },
-      });
-
-      await tx.testTopic.update({
-        where: { id: topic.id },
-        data: {
-          activeDraftVersionId: draft.id,
-        },
-      });
-
-      return topic.id;
+      return createdTopic.topicId;
     });
 
     return this.getTopicDraft(userId, topicId);
@@ -201,108 +142,29 @@ export class TestsService {
     userId: number,
     dto: CreateTestsTopicFromAiDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const baseSlug = dto.slug ?? dto.title;
-    const slug = await this.ensureUniqueSlug(baseSlug);
-    const questionPayloads = dto.questions.map((question, index) => {
-      const payload = prepareQuestionPayload(question);
-      const questionLabel = `Question #${index + 1}`;
-
-      if (
-        (payload.type === 'SINGLE_CHOICE' || payload.type === 'MULTI_CHOICE') &&
-        payload.options.length < 2
-      ) {
-        throw new BadRequestException(`${questionLabel} requires at least two options`);
-      }
-
-      if (payload.type === 'SLIDER') {
-        if (payload.sliderBands.length === 0) {
-          throw new BadRequestException(`${questionLabel} requires at least one slider band`);
-        }
-
-        const sliderSettings = parseSliderSettings(payload.settings);
-        if (!sliderSettings) {
-          throw new BadRequestException(`${questionLabel} has invalid slider settings`);
-        }
-      }
-
-      return payload;
-    });
+    const slug = await ensureUniqueTopicSlug(this.prisma, baseSlug);
+    const questionPayloads = buildAiQuestionPayloads(dto.questions);
 
     const topicId = await this.prisma.$transaction(async (tx) => {
-      const topic = await tx.testTopic.create({
-        data: {
-          slug,
-        },
+      const createdTopic = await createTopicWithDraft(tx, {
+        slug,
+        title: dto.title,
+        description: dto.description ?? null,
       });
 
-      const draft = await tx.testTopicVersion.create({
-        data: {
-          topicId: topic.id,
-          versionNumber: 1,
-          status: 'DRAFT',
-          title: dto.title,
-          description: dto.description ?? null,
-        },
-      });
+      await createQuestionsInVersion(tx, createdTopic.draftVersionId, questionPayloads);
 
-      await tx.testTopic.update({
-        where: { id: topic.id },
-        data: {
-          activeDraftVersionId: draft.id,
-        },
-      });
-
-      for (const [index, question] of questionPayloads.entries()) {
-        const createdQuestion = await tx.testQuestion.create({
-          data: {
-            versionId: draft.id,
-            type: question.type,
-            title: question.title,
-            description: question.description,
-            required: question.required,
-            order: index + 1,
-            ...(question.settings !== undefined
-              ? { settings: toPrismaSettingsInput(question.settings) }
-              : {}),
-          },
-        });
-
-        if (question.options.length > 0) {
-          await tx.testQuestionOption.createMany({
-            data: question.options.map((option) => ({
-              questionId: createdQuestion.id,
-              label: option.label,
-              value: option.value,
-              weight: option.weight,
-              order: option.order,
-            })),
-          });
-        }
-
-        if (question.sliderBands.length > 0) {
-          await tx.testQuestionSliderBand.createMany({
-            data: question.sliderBands.map((band) => ({
-              questionId: createdQuestion.id,
-              minValue: band.minValue,
-              maxValue: band.maxValue,
-              label: band.label,
-              weight: band.weight,
-              order: band.order,
-            })),
-          });
-        }
-      }
-
-      return topic.id;
+      return createdTopic.topicId;
     });
 
     return this.getTopicDraft(userId, topicId);
   }
 
   async deleteTopic(userId: number, topicId: number): Promise<DeleteTestsTopicResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
@@ -323,7 +185,7 @@ export class TestsService {
   }
 
   async getTopicDraft(userId: number, topicId: number): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
@@ -353,7 +215,7 @@ export class TestsService {
     topicId: number,
     dto: UpdateTestsTopicDraftDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
 
@@ -374,7 +236,7 @@ export class TestsService {
     topicId: number,
     dto: UpsertTestsQuestionDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.createQuestion(topic.activeDraftVersion, dto);
@@ -388,7 +250,7 @@ export class TestsService {
     questionId: number,
     dto: UpsertTestsQuestionDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.updateQuestion(topic.activeDraftVersion, questionId, dto);
@@ -401,7 +263,7 @@ export class TestsService {
     topicId: number,
     questionId: number,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.deleteQuestion(topic.activeDraftVersion, questionId);
@@ -414,7 +276,7 @@ export class TestsService {
     topicId: number,
     dto: ReorderTestsQuestionsDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.reorderQuestions(topic.activeDraftVersion, dto);
@@ -423,7 +285,7 @@ export class TestsService {
   }
 
   async publishTopic(userId: number, topicId: number): Promise<PublishTestsTopicResponseDto> {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
@@ -453,46 +315,7 @@ export class TestsService {
         },
       });
 
-      for (const question of draft.questions) {
-        const clonedQuestion = await tx.testQuestion.create({
-          data: {
-            versionId: newDraftVersion.id,
-            type: question.type,
-            title: question.title,
-            description: question.description,
-            required: question.required,
-            order: question.order,
-            ...(question.settings !== null
-              ? { settings: toPrismaSettingsInput(question.settings) }
-              : { settings: Prisma.JsonNull }),
-          },
-        });
-
-        if (question.options.length > 0) {
-          await tx.testQuestionOption.createMany({
-            data: question.options.map((option) => ({
-              questionId: clonedQuestion.id,
-              label: option.label,
-              value: option.value,
-              weight: option.weight,
-              order: option.order,
-            })),
-          });
-        }
-
-        if (question.sliderBands.length > 0) {
-          await tx.testQuestionSliderBand.createMany({
-            data: question.sliderBands.map((band) => ({
-              questionId: clonedQuestion.id,
-              minValue: band.minValue,
-              maxValue: band.maxValue,
-              label: band.label,
-              weight: band.weight,
-              order: band.order,
-            })),
-          });
-        }
-      }
+      await cloneQuestionsToVersion(tx, newDraftVersion.id, draft.questions);
 
       await tx.testTopic.update({
         where: { id: topic.id },

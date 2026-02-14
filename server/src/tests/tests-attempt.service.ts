@@ -1,16 +1,19 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
 import type {
   PublicSessionSaveAnswersRequestDto,
   PublicSessionStartRequestDto,
 } from './dto/tests-public.dto';
+import {
+  mapAttemptDetail,
+  mapAttemptListItem,
+  mapSessionState,
+  toOptionalIsoString,
+} from './tests-attempt.mapper';
+import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
+import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
+import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 import {
   buildStudentKeyHash,
   createRandomToken,
@@ -19,39 +22,6 @@ import {
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 
-type AttemptWithSessionData = Prisma.TestStudentAttemptGetPayload<{
-  include: {
-    publicLink: true;
-    topicVersion: {
-      include: {
-        questions: {
-          orderBy: {
-            order: 'asc';
-          };
-          include: {
-            options: {
-              orderBy: {
-                order: 'asc';
-              };
-            };
-            sliderBands: {
-              orderBy: {
-                order: 'asc';
-              };
-            };
-          };
-        };
-      };
-    };
-    answers: {
-      orderBy: {
-        updatedAt: 'desc';
-      };
-    };
-    analysis: true;
-  };
-}>;
-
 @Injectable()
 export class TestsAttemptService {
   constructor(
@@ -59,147 +29,6 @@ export class TestsAttemptService {
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
   ) {}
-
-  private async ensureAdminAccess(userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || user.role !== 'ADMIN') {
-      throw new ForbiddenException('Admin area only');
-    }
-  }
-
-  private toIso(value: Date | null) {
-    return value ? value.toISOString() : null;
-  }
-
-  private mapPublicQuestion(question: AttemptWithSessionData['topicVersion']['questions'][number]) {
-    return {
-      id: question.id,
-      type: question.type,
-      title: question.title,
-      description: question.description,
-      required: question.required,
-      order: question.order,
-      settings: question.settings ?? null,
-      options: question.options.map((option) => ({
-        id: option.id,
-        label: option.label,
-        value: option.value,
-        order: option.order,
-      })),
-      sliderBands: question.sliderBands.map((band) => ({
-        id: band.id,
-        minValue: band.minValue,
-        maxValue: band.maxValue,
-        label: band.label,
-        order: band.order,
-      })),
-    };
-  }
-
-  private mapSessionState(attempt: AttemptWithSessionData) {
-    return {
-      sessionToken: attempt.resumeToken,
-      shortCode: attempt.publicLink.shortCode,
-      attemptNumber: attempt.attemptNumber,
-      status: this.analysisService.toAttemptStatus(attempt),
-      startedAt: attempt.startedAt.toISOString(),
-      expiresAt: this.toIso(attempt.expiresAt),
-      finishedAt: this.toIso(attempt.finishedAt),
-      timeLimitMinutes: attempt.publicLink.timeLimitMinutes,
-      questions: attempt.topicVersion.questions.map((question) => this.mapPublicQuestion(question)),
-      answers: attempt.answers.map((answer) => ({
-        questionId: answer.questionId,
-        answerPayload: answer.answerPayload,
-        updatedAt: answer.updatedAt.toISOString(),
-      })),
-    };
-  }
-
-  private async getSessionAttemptByTokenOrThrow(
-    sessionToken: string,
-  ): Promise<AttemptWithSessionData> {
-    const attempt = await this.prisma.testStudentAttempt.findUnique({
-      where: { resumeToken: sessionToken },
-      include: {
-        publicLink: true,
-        topicVersion: {
-          include: {
-            questions: {
-              orderBy: { order: 'asc' },
-              include: {
-                options: {
-                  orderBy: { order: 'asc' },
-                },
-                sliderBands: {
-                  orderBy: { order: 'asc' },
-                },
-              },
-            },
-          },
-        },
-        answers: {
-          orderBy: { updatedAt: 'desc' },
-        },
-        analysis: true,
-      },
-    });
-
-    if (!attempt) {
-      throw new NotFoundException('Test session not found');
-    }
-
-    const now = new Date();
-
-    if (attempt.status === 'IN_PROGRESS' && attempt.expiresAt && now > attempt.expiresAt) {
-      const expired = await this.prisma.testStudentAttempt.update({
-        where: { id: attempt.id },
-        data: {
-          status: 'EXPIRED',
-          finishedAt: attempt.finishedAt ?? now,
-        },
-        include: {
-          publicLink: true,
-          topicVersion: {
-            include: {
-              questions: {
-                orderBy: { order: 'asc' },
-                include: {
-                  options: {
-                    orderBy: { order: 'asc' },
-                  },
-                  sliderBands: {
-                    orderBy: { order: 'asc' },
-                  },
-                },
-              },
-            },
-          },
-          answers: {
-            orderBy: { updatedAt: 'desc' },
-          },
-          analysis: true,
-        },
-      });
-
-      return expired;
-    }
-
-    return attempt;
-  }
-
-  private ensureAttemptCanAcceptAnswers(attempt: AttemptWithSessionData) {
-    if (attempt.status !== 'IN_PROGRESS') {
-      throw new BadRequestException('Test session is not active');
-    }
-
-    if (attempt.expiresAt && new Date() > attempt.expiresAt) {
-      throw new BadRequestException('Test session expired');
-    }
-  }
 
   async startSessionByCode(shortCode: string, dto: PublicSessionStartRequestDto) {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
@@ -285,16 +114,18 @@ export class TestsAttemptService {
   }
 
   async getSessionByToken(sessionToken: string) {
-    const attempt = await this.getSessionAttemptByTokenOrThrow(sessionToken);
+    const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
 
     return {
-      session: this.mapSessionState(attempt),
+      session: mapSessionState(attempt, (currentAttempt) =>
+        this.analysisService.toAttemptStatus(currentAttempt),
+      ),
     };
   }
 
   async saveAnswers(sessionToken: string, dto: PublicSessionSaveAnswersRequestDto) {
-    const attempt = await this.getSessionAttemptByTokenOrThrow(sessionToken);
-    this.ensureAttemptCanAcceptAnswers(attempt);
+    const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
+    ensureAttemptCanAcceptAnswers(attempt);
 
     const questionMap = new Map(
       attempt.topicVersion.questions.map((question) => [question.id, question]),
@@ -357,13 +188,13 @@ export class TestsAttemptService {
   }
 
   async finishSession(sessionToken: string) {
-    const attempt = await this.getSessionAttemptByTokenOrThrow(sessionToken);
+    const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
 
     if (attempt.status === 'EXPIRED') {
       return {
         sessionToken,
         status: 'EXPIRED',
-        finishedAt: this.toIso(attempt.finishedAt),
+        finishedAt: toOptionalIsoString(attempt.finishedAt),
         analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
       };
     }
@@ -372,12 +203,12 @@ export class TestsAttemptService {
       return {
         sessionToken,
         status: 'COMPLETED',
-        finishedAt: this.toIso(attempt.finishedAt),
+        finishedAt: toOptionalIsoString(attempt.finishedAt),
         analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
       };
     }
 
-    this.ensureAttemptCanAcceptAnswers(attempt);
+    ensureAttemptCanAcceptAnswers(attempt);
 
     const finishedAttempt = await this.prisma.$transaction(async (tx) => {
       const updatedAttempt = await tx.testStudentAttempt.update({
@@ -411,13 +242,13 @@ export class TestsAttemptService {
     return {
       sessionToken,
       status: 'COMPLETED',
-      finishedAt: this.toIso(finishedAttempt.updatedAttempt.finishedAt),
+      finishedAt: toOptionalIsoString(finishedAttempt.updatedAttempt.finishedAt),
       analysis: this.analysisService.toPublicAnalysisResponse(finishedAttempt.analysis),
     };
   }
 
   async getSessionResult(sessionToken: string) {
-    const attempt = await this.getSessionAttemptByTokenOrThrow(sessionToken);
+    const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
 
     if (attempt.status === 'IN_PROGRESS') {
       throw new BadRequestException('Test session is still in progress');
@@ -426,13 +257,13 @@ export class TestsAttemptService {
     return {
       sessionToken,
       status: this.analysisService.toAttemptStatus(attempt),
-      finishedAt: this.toIso(attempt.finishedAt),
+      finishedAt: toOptionalIsoString(attempt.finishedAt),
       analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
     };
   }
 
   async listAttemptsForLink(userId: number, linkId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const link = await this.prisma.testPublicLink.findUnique({
       where: {
@@ -464,25 +295,16 @@ export class TestsAttemptService {
     });
 
     return {
-      attempts: attempts.map((attempt) => ({
-        attemptId: attempt.id,
-        attemptNumber: attempt.attemptNumber,
-        status: this.analysisService.toAttemptStatus(attempt),
-        studentName: attempt.studentName,
-        studentLastInitial: attempt.studentLastInitial,
-        studentMiddleInitial: attempt.studentMiddleInitial,
-        educationOrganization: attempt.educationOrganization,
-        groupOrClass: attempt.groupOrClass,
-        startedAt: attempt.startedAt.toISOString(),
-        finishedAt: this.toIso(attempt.finishedAt),
-        expiresAt: this.toIso(attempt.expiresAt),
-        analysisStatus: attempt.analysis?.status ?? null,
-      })),
+      attempts: attempts.map((attempt) =>
+        mapAttemptListItem(attempt, (currentAttempt) =>
+          this.analysisService.toAttemptStatus(currentAttempt),
+        ),
+      ),
     };
   }
 
   async getAttemptDetail(userId: number, attemptId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const attempt = await this.prisma.testStudentAttempt.findUnique({
       where: {
@@ -508,39 +330,8 @@ export class TestsAttemptService {
       throw new NotFoundException('Attempt not found');
     }
 
-    return {
-      attemptId: attempt.id,
-      publicLinkId: attempt.publicLink.id,
-      shortCode: attempt.publicLink.shortCode,
-      attemptNumber: attempt.attemptNumber,
-      status: this.analysisService.toAttemptStatus(attempt),
-      studentName: attempt.studentName,
-      studentLastInitial: attempt.studentLastInitial,
-      studentMiddleInitial: attempt.studentMiddleInitial,
-      educationOrganization: attempt.educationOrganization,
-      groupOrClass: attempt.groupOrClass,
-      consentAcceptedAt: attempt.consentAcceptedAt.toISOString(),
-      consentVersion: attempt.consentVersion,
-      startedAt: attempt.startedAt.toISOString(),
-      finishedAt: this.toIso(attempt.finishedAt),
-      expiresAt: this.toIso(attempt.expiresAt),
-      answers: attempt.answers.map((answer) => ({
-        questionId: answer.questionId,
-        questionType: answer.questionTypeSnapshot,
-        questionTitle: answer.questionTitleSnapshot,
-        answerPayload: answer.answerPayload,
-        updatedAt: answer.updatedAt.toISOString(),
-      })),
-      analysis: attempt.analysis
-        ? {
-            providerMode: attempt.analysis.providerMode,
-            status: attempt.analysis.status,
-            summary: attempt.analysis.summary,
-            rawText: attempt.analysis.rawText,
-            errorMessage: attempt.analysis.errorMessage,
-            generatedAt: this.toIso(attempt.analysis.generatedAt),
-          }
-        : null,
-    };
+    return mapAttemptDetail(attempt, (currentAttempt) =>
+      this.analysisService.toAttemptStatus(currentAttempt),
+    );
   }
 }

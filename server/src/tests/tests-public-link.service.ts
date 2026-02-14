@@ -1,49 +1,20 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import type { Prisma, TestPublicLink, TestTopicVersion } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
 import type { AdminCreatePublicLinkDto, AdminUpdatePublicLinkDto } from './dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from './dto/tests-public.dto';
+import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { parseDateOrNull } from './tests-date.utils';
+import { mapAdminPublicLink, toOptionalIsoString } from './tests-public-link.mapper';
+import {
+  publicLinkAccessInclude,
+  publicLinkAdminInclude,
+  type PublicLinkWithTopicVersion,
+} from './tests-public-link.query';
 import { createShortCodeCandidate } from './tests-domain.utils';
 
 const DEFAULT_MAX_ATTEMPTS = 1;
 const DEFAULT_ALLOW_RESUME = true;
-
-type PublicLinkWithTopicVersion = Prisma.TestPublicLinkGetPayload<{
-  include: {
-    topicVersion: {
-      include: {
-        _count: {
-          select: {
-            questions: true;
-          };
-        };
-        questions: {
-          orderBy: {
-            order: 'asc';
-          };
-          include: {
-            options: {
-              orderBy: {
-                order: 'asc';
-              };
-            };
-            sliderBands: {
-              orderBy: {
-                order: 'asc';
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-}>;
 
 /**
  * Сервис публичных ссылок для прохождения теста.
@@ -56,57 +27,6 @@ type PublicLinkWithTopicVersion = Prisma.TestPublicLinkGetPayload<{
 @Injectable()
 export class TestsPublicLinkService {
   constructor(private readonly prisma: PrismaService) {}
-
-  private async ensureAdminAccess(userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || user.role !== 'ADMIN') {
-      throw new ForbiddenException('Admin area only');
-    }
-  }
-
-  private toIso(value: Date | null) {
-    return value ? value.toISOString() : null;
-  }
-
-  private toAdminPublicLink(
-    link: TestPublicLink & { topicVersion: Pick<TestTopicVersion, 'id' | 'topicId' | 'title'> },
-  ) {
-    return {
-      id: link.id,
-      publishedVersionId: link.topicVersion.id,
-      topicId: link.topicVersion.topicId,
-      shortCode: link.shortCode,
-      shortUrl: `/t/${link.shortCode}`,
-      isActive: link.isActive,
-      archivedAt: this.toIso(link.archivedAt),
-      startsAt: this.toIso(link.startsAt),
-      endsAt: this.toIso(link.endsAt),
-      maxAttemptsPerStudent: link.maxAttemptsPerStudent,
-      timeLimitMinutes: link.timeLimitMinutes,
-      allowResume: link.allowResume,
-      consentVersion: link.consentVersion,
-      consentText: link.consentTextSnapshot,
-      title: link.topicVersion.title,
-      updatedAt: link.updatedAt.toISOString(),
-      createdAt: link.createdAt.toISOString(),
-    };
-  }
-
-  private parseDateOrNull(value: string | null | undefined) {
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (value === null) {
-      return null;
-    }
-
-    return new Date(value);
-  }
 
   private async ensurePublishedVersion(versionId: number) {
     const version = await this.prisma.testTopicVersion.findUnique({
@@ -162,7 +82,7 @@ export class TestsPublicLinkService {
   }
 
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkDto) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
 
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
@@ -172,8 +92,8 @@ export class TestsPublicLinkService {
         topicVersionId: dto.publishedVersionId,
         shortCode,
         isActive: dto.isActive ?? true,
-        startsAt: this.parseDateOrNull(dto.startsAt),
-        endsAt: this.parseDateOrNull(dto.endsAt),
+        startsAt: parseDateOrNull(dto.startsAt),
+        endsAt: parseDateOrNull(dto.endsAt),
         maxAttemptsPerStudent: dto.maxAttemptsPerStudent ?? DEFAULT_MAX_ATTEMPTS,
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
@@ -181,48 +101,32 @@ export class TestsPublicLinkService {
         consentTextSnapshot: dto.consentText,
         createdByUserId: userId,
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
     });
 
-    return this.toAdminPublicLink(created);
+    return mapAdminPublicLink(created);
   }
 
   async listPublicLinks(userId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const links = await this.prisma.testPublicLink.findMany({
       where: {
         archivedAt: null,
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
       orderBy: {
         createdAt: 'desc',
       },
     });
 
     return {
-      links: links.map((link) => this.toAdminPublicLink(link)),
+      links: links.map((link) => mapAdminPublicLink(link)),
     };
   }
 
   async listArchivedPublicLinks(userId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const links = await this.prisma.testPublicLink.findMany({
       where: {
@@ -230,27 +134,19 @@ export class TestsPublicLinkService {
           not: null,
         },
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
       orderBy: {
         archivedAt: 'desc',
       },
     });
 
     return {
-      links: links.map((link) => this.toAdminPublicLink(link)),
+      links: links.map((link) => mapAdminPublicLink(link)),
     };
   }
 
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -269,8 +165,8 @@ export class TestsPublicLinkService {
       where: { id: linkId },
       data: {
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...(dto.startsAt !== undefined ? { startsAt: this.parseDateOrNull(dto.startsAt) } : {}),
-        ...(dto.endsAt !== undefined ? { endsAt: this.parseDateOrNull(dto.endsAt) } : {}),
+        ...(dto.startsAt !== undefined ? { startsAt: parseDateOrNull(dto.startsAt) } : {}),
+        ...(dto.endsAt !== undefined ? { endsAt: parseDateOrNull(dto.endsAt) } : {}),
         ...(dto.maxAttemptsPerStudent !== undefined
           ? { maxAttemptsPerStudent: dto.maxAttemptsPerStudent }
           : {}),
@@ -279,22 +175,14 @@ export class TestsPublicLinkService {
         ...(dto.consentVersion !== undefined ? { consentVersion: dto.consentVersion } : {}),
         ...(dto.consentText !== undefined ? { consentTextSnapshot: dto.consentText } : {}),
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
     });
 
-    return this.toAdminPublicLink(updated);
+    return mapAdminPublicLink(updated);
   }
 
   async regeneratePublicLinkShortCode(userId: number, linkId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -316,18 +204,10 @@ export class TestsPublicLinkService {
       data: {
         shortCode,
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
     });
 
-    return this.toAdminPublicLink(updated);
+    return mapAdminPublicLink(updated);
   }
 
   /**
@@ -336,7 +216,7 @@ export class TestsPublicLinkService {
    * Причина: статистика и результаты прохождений должны оставаться доступными в админской аналитике.
    */
   async deletePublicLink(userId: number, linkId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -367,7 +247,7 @@ export class TestsPublicLinkService {
   }
 
   async restorePublicLink(userId: number, linkId: number) {
-    await this.ensureAdminAccess(userId);
+    await ensureTestsAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -381,22 +261,14 @@ export class TestsPublicLinkService {
     if (!existing.archivedAt) {
       const current = await this.prisma.testPublicLink.findUnique({
         where: { id: linkId },
-        include: {
-          topicVersion: {
-            select: {
-              id: true,
-              topicId: true,
-              title: true,
-            },
-          },
-        },
+        include: publicLinkAdminInclude,
       });
 
       if (!current) {
         throw new NotFoundException('Public link not found');
       }
 
-      return this.toAdminPublicLink(current);
+      return mapAdminPublicLink(current);
     }
 
     const restored = await this.prisma.testPublicLink.update({
@@ -405,18 +277,10 @@ export class TestsPublicLinkService {
         archivedAt: null,
         isActive: true,
       },
-      include: {
-        topicVersion: {
-          select: {
-            id: true,
-            topicId: true,
-            title: true,
-          },
-        },
-      },
+      include: publicLinkAdminInclude,
     });
 
-    return this.toAdminPublicLink(restored);
+    return mapAdminPublicLink(restored);
   }
 
   /**
@@ -431,28 +295,7 @@ export class TestsPublicLinkService {
       where: {
         shortCode: normalizedCode,
       },
-      include: {
-        topicVersion: {
-          include: {
-            _count: {
-              select: {
-                questions: true,
-              },
-            },
-            questions: {
-              orderBy: { order: 'asc' },
-              include: {
-                options: {
-                  orderBy: { order: 'asc' },
-                },
-                sliderBands: {
-                  orderBy: { order: 'asc' },
-                },
-              },
-            },
-          },
-        },
-      },
+      include: publicLinkAccessInclude,
     });
 
     if (!link) {
@@ -500,8 +343,8 @@ export class TestsPublicLinkService {
       maxAttemptsPerStudent: link.maxAttemptsPerStudent,
       timeLimitMinutes: link.timeLimitMinutes,
       allowResume: link.allowResume,
-      startsAt: this.toIso(link.startsAt),
-      endsAt: this.toIso(link.endsAt),
+      startsAt: toOptionalIsoString(link.startsAt),
+      endsAt: toOptionalIsoString(link.endsAt),
       consentVersion: link.consentVersion,
       consentText: link.consentTextSnapshot,
     };
