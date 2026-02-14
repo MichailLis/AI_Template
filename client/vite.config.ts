@@ -1,8 +1,8 @@
-import { request } from 'node:http';
+import { request, type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'path';
 
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Connect } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 const API_DISCOVERY_ROUTE = '/__api-base-url';
 const API_SWAGGER_PATH = '/api-json';
@@ -105,7 +105,13 @@ const discoverApiBaseUrlCached = async () => {
   return inFlightApiDiscovery;
 };
 
-const apiDiscoveryMiddleware: Connect.NextHandleFunction = (req, res, next) => {
+type MiddlewareNext = (error?: unknown) => void;
+
+const apiDiscoveryMiddleware = (
+  req: IncomingMessage & { url?: string; method?: string },
+  res: ServerResponse<IncomingMessage>,
+  next: MiddlewareNext,
+) => {
   if (!req.url || !req.url.startsWith(API_DISCOVERY_ROUTE)) {
     next();
     return;
@@ -132,12 +138,12 @@ const apiDiscoveryMiddleware: Connect.NextHandleFunction = (req, res, next) => {
     });
 };
 
-const runtimeApiDiscoveryPlugin = () => ({
+const runtimeApiDiscoveryPlugin = (): Plugin => ({
   name: 'runtime-api-discovery',
-  configureServer(server: { middlewares: { use: Connect.NextHandleFunction } }) {
+  configureServer(server) {
     server.middlewares.use(apiDiscoveryMiddleware);
   },
-  configurePreviewServer(server: { middlewares: { use: Connect.NextHandleFunction } }) {
+  configurePreviewServer(server) {
     server.middlewares.use(apiDiscoveryMiddleware);
   },
 });
