@@ -29,6 +29,24 @@ enum TestQuestionType {
   SLIDER
 }
 
+enum TestStudentAttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  ABANDONED
+}
+
+enum TestStudentAnalysisStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum TestStudentAnalysisProviderMode {
+  STUB
+  LLM
+}
+
 model User {
   id                 Int      @id @default(autoincrement())
   email              String   @unique
@@ -39,6 +57,8 @@ model User {
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  createdPublicTestLinks TestPublicLink[] @relation("PublicLinkCreatedBy")
 
   @@map("users")
 }
@@ -72,6 +92,8 @@ model TestTopicVersion {
   draftForTopic  TestTopic[]            @relation("ActiveDraftVersion")
   publishedForTopic TestTopic[]         @relation("ActivePublishedVersion")
   questions      TestQuestion[]
+  publicLinks    TestPublicLink[]
+  studentAttempts TestStudentAttempt[]
 
   @@unique([topicId, versionNumber])
   @@index([topicId, status])
@@ -93,6 +115,7 @@ model TestQuestion {
   version      TestTopicVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   options      TestQuestionOption[]
   sliderBands  TestQuestionSliderBand[]
+  studentAnswers TestStudentAnswer[]
 
   @@index([versionId, order])
   @@map("test_questions")
@@ -127,4 +150,101 @@ model TestQuestionSliderBand {
 
   @@index([questionId, order])
   @@map("test_question_slider_bands")
+}
+
+model TestPublicLink {
+  id                   Int       @id @default(autoincrement())
+  topicVersionId       Int
+  shortCode            String    @unique
+  isActive             Boolean   @default(true)
+  startsAt             DateTime?
+  endsAt               DateTime?
+  maxAttemptsPerStudent Int      @default(1)
+  timeLimitMinutes     Int?
+  allowResume          Boolean   @default(true)
+  consentVersion       String
+  consentTextSnapshot  String
+  createdByUserId      Int?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  topicVersion         TestTopicVersion  @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
+  createdByUser        User?             @relation("PublicLinkCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  attempts             TestStudentAttempt[]
+
+  @@index([topicVersionId])
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("test_public_links")
+}
+
+model TestStudentAttempt {
+  id                    Int                            @id @default(autoincrement())
+  publicLinkId          Int
+  topicVersionId        Int
+  attemptNumber         Int
+  status                TestStudentAttemptStatus      @default(IN_PROGRESS)
+  studentName           String
+  studentLastInitial    String
+  studentMiddleInitial  String
+  educationOrganization String
+  groupOrClass          String
+  studentKeyHash        String
+  consentAcceptedAt     DateTime
+  consentVersion        String
+  consentTextSnapshot   String
+  resumeToken           String                         @unique
+  startedAt             DateTime                       @default(now())
+  expiresAt             DateTime?
+  finishedAt            DateTime?
+  anonymizedAt          DateTime?
+  createdAt             DateTime                       @default(now())
+  updatedAt             DateTime                       @updatedAt
+
+  publicLink            TestPublicLink                 @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
+  topicVersion          TestTopicVersion               @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
+  answers               TestStudentAnswer[]
+  analysis              TestStudentAnalysis?
+
+  @@unique([publicLinkId, studentKeyHash, attemptNumber])
+  @@index([publicLinkId, studentKeyHash])
+  @@index([status, startedAt])
+  @@index([topicVersionId])
+  @@map("test_student_attempts")
+}
+
+model TestStudentAnswer {
+  id                    Int              @id @default(autoincrement())
+  attemptId             Int
+  questionId            Int
+  questionTypeSnapshot  TestQuestionType
+  questionTitleSnapshot String
+  answerPayload         Json
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  attempt               TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question              TestQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@map("test_student_answers")
+}
+
+model TestStudentAnalysis {
+  id              Int                               @id @default(autoincrement())
+  attemptId       Int                               @unique
+  providerMode    TestStudentAnalysisProviderMode   @default(STUB)
+  status          TestStudentAnalysisStatus         @default(PENDING)
+  summary         Json?
+  rawText         String?
+  errorMessage    String?
+  generatedAt     DateTime?
+  createdAt       DateTime                          @default(now())
+  updatedAt       DateTime                          @updatedAt
+
+  attempt         TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([status, generatedAt])
+  @@map("test_student_analyses")
 }

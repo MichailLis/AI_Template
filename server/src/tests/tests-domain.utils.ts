@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { createHash, randomBytes } from 'node:crypto';
 import type { TestQuestionType } from '@prisma/client';
 
 import type { UpsertTestsQuestionDto } from './dto/tests.dto';
@@ -38,6 +39,20 @@ export const toPrismaSettingsInput = (
   return value;
 };
 
+export const toPrismaRequiredJsonInput = (
+  value: unknown,
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput => {
+  if (value === null) {
+    return Prisma.JsonNull;
+  }
+
+  if (!isInputJsonValue(value)) {
+    throw new BadRequestException('Value must be valid JSON');
+  }
+
+  return value;
+};
+
 export const normalizeSlug = (value: string) => {
   return value
     .toLowerCase()
@@ -45,6 +60,36 @@ export const normalizeSlug = (value: string) => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 120);
+};
+
+export const normalizeStudentIdentityPart = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 300);
+
+export const buildStudentKeyHash = (input: {
+  studentName: string;
+  studentLastInitial: string;
+  studentMiddleInitial: string;
+  educationOrganization: string;
+  groupOrClass: string;
+}) => {
+  const fingerprint = [
+    normalizeStudentIdentityPart(input.studentName),
+    normalizeStudentIdentityPart(input.studentLastInitial),
+    normalizeStudentIdentityPart(input.studentMiddleInitial),
+    normalizeStudentIdentityPart(input.educationOrganization),
+    normalizeStudentIdentityPart(input.groupOrClass),
+  ].join('|');
+
+  return createHash('sha256').update(fingerprint).digest('hex');
+};
+
+export const createRandomToken = (size = 24) => randomBytes(size).toString('hex');
+
+export const createShortCodeCandidate = (length = 8) => {
+  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const bytes = randomBytes(length);
+
+  return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
 };
 
 export const parseSliderSettings = (settings: unknown) => {

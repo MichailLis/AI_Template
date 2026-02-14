@@ -26,6 +26,16 @@ import {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
+import {
+  AdminCreatePublicLinkDto,
+  AdminPublicAttemptDetailResponseDto,
+  AdminPublicAttemptsListResponseDto,
+  AdminPublicLinkDto,
+  AdminPublicLinksListResponseDto,
+  AdminUpdatePublicLinkDto,
+} from './dto/tests-links.dto';
+import { TestsAttemptService } from './tests-attempt.service';
+import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsService } from './tests.service';
 
 @ApiTags('tests')
@@ -33,7 +43,56 @@ import { TestsService } from './tests.service';
 @UseGuards(AtGuard)
 @Controller('admin/tests')
 export class TestsController {
-  constructor(private readonly testsService: TestsService) {}
+  constructor(
+    private readonly testsService: TestsService,
+    private readonly testsPublicLinkService: TestsPublicLinkService,
+    private readonly testsAttemptService: TestsAttemptService,
+  ) {}
+
+  @Post('public-links')
+  @ApiOperation({ summary: 'Create short public link for published test version' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AdminPublicLinkDto })
+  createPublicLink(@GetCurrentUserId() userId: number, @Body() dto: AdminCreatePublicLinkDto) {
+    return this.testsPublicLinkService.createPublicLink(userId, dto);
+  }
+
+  @Get('public-links')
+  @ApiOperation({ summary: 'List short public links for tests' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
+  listPublicLinks(@GetCurrentUserId() userId: number) {
+    return this.testsPublicLinkService.listPublicLinks(userId);
+  }
+
+  @Patch('public-links/:linkId')
+  @ApiOperation({ summary: 'Update short public link settings' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
+  updatePublicLink(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+    @Body() dto: AdminUpdatePublicLinkDto,
+  ) {
+    return this.testsPublicLinkService.updatePublicLink(userId, linkId, dto);
+  }
+
+  @Get('public-links/:linkId/attempts')
+  @ApiOperation({ summary: 'List student attempts by public link' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptsListResponseDto })
+  listPublicLinkAttempts(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsAttemptService.listAttemptsForLink(userId, linkId);
+  }
+
+  @Get('attempts/:attemptId')
+  @ApiOperation({ summary: 'Get student attempt details with answers and analysis' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptDetailResponseDto })
+  getAttemptDetail(
+    @GetCurrentUserId() userId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    return this.testsAttemptService.getAttemptDetail(userId, attemptId);
+  }
 
   @Get()
   @ApiOperation({
