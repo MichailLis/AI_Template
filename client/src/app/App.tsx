@@ -9,6 +9,8 @@ import AdminAnalyticsPage from '@/pages/admin/admin-analytics-page';
 import AdminOverviewPage from '@/pages/admin/admin-overview-page';
 import AdminPage from '@/pages/admin/admin-page';
 import AdminPromptsPage from '@/pages/admin/admin-prompts-page';
+import AdminPublicLinksPage from '@/pages/admin/admin-public-links-page';
+import AdminPublicLinksStatsPage from '@/pages/admin/admin-public-links-stats-page';
 import AdminSecurityPage from '@/pages/admin/admin-security-page';
 import AdminTestsPage from '@/pages/admin/admin-tests-page';
 import AdminUsersPage from '@/pages/admin/admin-users-page';
@@ -94,6 +96,8 @@ function App() {
               <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
               <Route path="/admin/prompts" element={<AdminPromptsPage />} />
               <Route path="/admin/tests" element={<AdminTestsPage />} />
+              <Route path="/admin/public-links" element={<AdminPublicLinksPage />} />
+              <Route path="/admin/public-links/stats" element={<AdminPublicLinksStatsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

@@ -1,6 +1,7 @@
 import {
   BarChart3,
   ClipboardList,
+  Link2,
   LayoutDashboard,
   LogOut,
   MessageSquareText,
@@ -58,6 +59,18 @@ const navItems = [
     label: 'Тесты',
     icon: ClipboardList,
     href: '/admin/tests',
+  },
+  {
+    id: 'public-links',
+    label: 'Публичные ссылки',
+    icon: Link2,
+    href: '/admin/public-links',
+  },
+  {
+    id: 'public-links-stats',
+    label: 'Статистика ссылок',
+    icon: BarChart3,
+    href: '/admin/public-links/stats',
   },
 ];
 
