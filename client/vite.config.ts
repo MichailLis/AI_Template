@@ -11,6 +11,11 @@ const API_FALLBACK_PORT_ATTEMPTS = 20;
 const API_PROBE_TIMEOUT_MS = 400;
 const API_DISCOVERY_CACHE_TTL_MS = 5000;
 const API_HOST_CANDIDATES = ['localhost', '127.0.0.1'] as const;
+const API_REQUIRED_PATHS = [
+  '/auth/signin',
+  '/admin/tests/public-links',
+  '/tests/public/links/{code}',
+] as const;
 
 let cachedApiBaseUrl: string | null = null;
 let cacheExpiresAt = 0;
@@ -20,6 +25,15 @@ const isSwaggerDocument = (payload: unknown): payload is Record<string, unknown>
   return (
     typeof payload === 'object' && payload !== null && ('openapi' in payload || 'swagger' in payload)
   );
+};
+
+const hasRequiredApiPaths = (payload: Record<string, unknown>) => {
+  const paths = payload.paths;
+  if (typeof paths !== 'object' || paths === null) {
+    return false;
+  }
+
+  return API_REQUIRED_PATHS.every((path) => path in paths);
 };
 
 const probeApiHostPort = (host: string, port: number) =>
@@ -49,7 +63,7 @@ const probeApiHostPort = (host: string, port: number) =>
 
           try {
             const parsedBody: unknown = JSON.parse(body);
-            resolve(isSwaggerDocument(parsedBody));
+            resolve(isSwaggerDocument(parsedBody) && hasRequiredApiPaths(parsedBody));
           } catch {
             resolve(false);
           }
