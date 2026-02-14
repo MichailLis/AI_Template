@@ -5,7 +5,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
-import type { SimulationRun } from './types';
+import type { SimulationRun } from '../model/types';
 
 interface SimulationOutputCardProps {
   runs: SimulationRun[];

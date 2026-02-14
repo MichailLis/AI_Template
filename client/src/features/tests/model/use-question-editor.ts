@@ -13,7 +13,7 @@ import {
   createQuestionPayload,
   hasQuestionFormChanges,
   parseApiError,
-} from './utils';
+} from '../lib/tests-utils';
 
 import type { QuestionFormState, TestDraftQuestion } from './types';
 

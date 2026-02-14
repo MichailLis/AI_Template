@@ -7,7 +7,12 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import type { DuplicateVariableData, ModelFilter, PromptVariable, ResponseFormat } from './types';
+import type {
+  DuplicateVariableData,
+  ModelFilter,
+  PromptVariable,
+  ResponseFormat,
+} from '../model/types';
 import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
 
 interface PromptEditorCardProps {

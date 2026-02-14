@@ -178,12 +178,20 @@ Use this before opening PR or finalizing a feature branch:
 
 ## Architecture Guardrails
 - Source of truth for enabled features: `template/features.manifest.json`
+- Frontend layer rules source of truth: `template/fsd.rules.json`
 - Hard check command: `npm run verify:architecture`
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In final auth-only template state, keep manifest `features` empty.
 - `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
 - When `features` is not empty, `client/src/pages/dashboard.tsx` must exist and include `to="<feature.route>"` links for declared features.
 - In auth-only baseline, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
+
+Frontend strict FSD target for this branch:
+- layer order: `app -> pages -> widgets -> features -> entities -> shared`
+- imports are allowed only down this chain
+- cross-slice imports should use public API (`index.ts`) for `widgets/features/entities`
+- page files must stay thin (route composition, no heavy domain logic)
+- temporary transition exceptions (if any) are documented in `template/fsd.rules.json` and must be removed by migration end
 
 ## Notes
 - Keep auth always working while evolving business features.

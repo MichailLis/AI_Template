@@ -1,4 +1,4 @@
-import type { DuplicateVariableData, PromptVariable } from './types';
+import type { DuplicateVariableData, PromptVariable } from '../model/types';
 
 export const getApiErrorMessage = (error: unknown) => {
   if (typeof error !== 'object' || error === null || !('response' in error)) {

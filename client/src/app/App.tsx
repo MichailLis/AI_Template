@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
+import { useAuthStore } from '@/entities/session';
 import { ProtectedRoute } from '@/features/auth';
 import AdminAnalyticsPage from '@/pages/admin/admin-analytics-page';
 import AdminOverviewPage from '@/pages/admin/admin-overview-page';
@@ -12,9 +13,14 @@ import AdminTestsPage from '@/pages/admin/admin-tests-page';
 import AdminUsersPage from '@/pages/admin/admin-users-page';
 import LoginPage from '@/pages/login';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
-import { setupInterceptors } from '@/shared/api/interceptors';
+import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/interceptors';
 
 configureApiBaseUrl(import.meta.env.VITE_API_URL);
+configureInterceptorsRuntime({
+  onAuthRefreshFailed: () => {
+    useAuthStore.getState().logout();
+  },
+});
 setupInterceptors(api);
 
 const queryClient = new QueryClient({

@@ -1,4 +1,4 @@
-import type { PromptVariable, SimulationRun } from './types';
+import type { PromptVariable, SimulationRun } from '../model/types';
 
 export const INITIAL_PROMPT = `# SYSTEM PROMPT
 You are an AI Career Strategist specialized in {{target_industry}} transitions.

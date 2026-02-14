@@ -15,7 +15,28 @@ Note:
 - Backend: NestJS, Prisma 7, PostgreSQL, JWT (Passport), nestjs-zod, Swagger
 - Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
 - Infra: Docker Compose (Postgres + Adminer)
-- Frontend architecture: FSD-style layers (`app/pages/features/entities/shared/widgets`)
+- Frontend architecture: Strict FSD target with template guardrails
+
+## Frontend Architecture Contract (Strict FSD)
+
+Source of truth:
+- `template/fsd.rules.json` (layer rules)
+- `scripts/verify-architecture.mjs` (automated checks)
+- `template/features.manifest.json` (feature inventory + route/module wiring)
+
+Layer order (imports only "down"):
+- `app -> pages -> widgets -> features -> entities -> shared`
+
+Rules:
+1. `pages/*` are route entrypoints/composition only. No deep business logic inside page files.
+2. Cross-slice imports in `widgets/features/entities` must go through slice public API (`index.ts`) in strict mode.
+3. Feature inventory still comes from `template/features.manifest.json`; FSD does not replace manifest discipline.
+4. Any architecture change must keep `npm run verify:architecture` green.
+5. Feature implementation order remains strict: data model -> backend -> `gen:api` -> frontend -> full verification.
+
+Transition note for this branch:
+- `template/fsd.rules.json` may contain temporary compatibility exceptions during migration.
+- Final goal is `mode: "strict"` with zero transition exceptions.
 
 ## Feature Pipeline (Required Order)
 

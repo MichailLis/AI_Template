@@ -1,10 +1,18 @@
-import { useAuthStore } from '@/entities/session';
-
 import { safeStorage } from '../lib/storage';
 
 import type { AxiosInstance } from 'axios';
 
 const configuredApis = new WeakSet<AxiosInstance>();
+
+interface InterceptorRuntimeHooks {
+  onAuthRefreshFailed?: () => void;
+}
+
+let runtimeHooks: InterceptorRuntimeHooks = {};
+
+export const configureInterceptorsRuntime = (hooks: InterceptorRuntimeHooks) => {
+  runtimeHooks = hooks;
+};
 
 export const setupInterceptors = (api: AxiosInstance) => {
   if (configuredApis.has(api)) {
@@ -54,7 +62,7 @@ export const setupInterceptors = (api: AxiosInstance) => {
           safeStorage.removeItem('accessToken');
           safeStorage.removeItem('refreshToken');
 
-          useAuthStore.getState().logout();
+          runtimeHooks.onAuthRefreshFailed?.();
 
           if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
             window.location.href = '/login';

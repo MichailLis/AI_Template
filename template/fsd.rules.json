@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "mode": "strict",
+  "layers": [
+    "app",
+    "pages",
+    "widgets",
+    "features",
+    "entities",
+    "shared"
+  ],
+  "allowedImports": {
+    "app": [
+      "pages",
+      "widgets",
+      "features",
+      "entities",
+      "shared"
+    ],
+    "pages": [
+      "widgets",
+      "features",
+      "entities",
+      "shared"
+    ],
+    "widgets": [
+      "features",
+      "entities",
+      "shared"
+    ],
+    "features": [
+      "entities",
+      "shared"
+    ],
+    "entities": [
+      "shared"
+    ],
+    "shared": [
+      "shared"
+    ]
+  },
+  "publicApi": {
+    "enforce": true,
+    "layers": [
+      "widgets",
+      "features",
+      "entities"
+    ]
+  },
+  "ignorePrefixes": [
+    "client/src/shared/api/generated/",
+    "client/src/shared/api/model/",
+    "client/src/assets/"
+  ],
+  "transition": {
+    "allowLayerBypass": [],
+    "allowDeepImports": []
+  }
+}

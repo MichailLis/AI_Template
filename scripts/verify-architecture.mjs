@@ -1,6 +1,6 @@
 import { constants } from 'node:fs';
 import { access, readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 
 const root = process.cwd();
 
@@ -45,6 +45,180 @@ const unique = (items) => Array.from(new Set(items));
 const toRouteSegment = (route) => route.replace(/^\/+/, '').split('/')[0];
 
 const hasToken = (source, token) => new RegExp(`\\b${token}\\b`).test(source);
+
+const toPosixPath = (value) => value.replace(/\\/g, '/');
+
+const collectClientSourceFiles = async (relativePath) => {
+  const entries = await readDirFromRoot(relativePath, true);
+  const files = [];
+
+  for (const entry of entries) {
+    const nextPath = `${relativePath}/${entry.name}`;
+
+    if (entry.isDirectory()) {
+      files.push(...(await collectClientSourceFiles(nextPath)));
+      continue;
+    }
+
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+      files.push(toPosixPath(nextPath));
+    }
+  }
+
+  return files;
+};
+
+const collectImportSpecifiers = (source) => {
+  const matches = [];
+
+  const staticImportRegex = /import\s+(?:type\s+)?[\s\S]*?from\s+['"]([^'"]+)['"]/g;
+  const exportFromRegex = /export\s+[\s\S]*?from\s+['"]([^'"]+)['"]/g;
+  const dynamicImportRegex = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
+
+  matches.push(...collectMatches(source, staticImportRegex));
+  matches.push(...collectMatches(source, exportFromRegex));
+  matches.push(...collectMatches(source, dynamicImportRegex));
+
+  return unique(matches);
+};
+
+const resolveImportTargetPath = (fromFilePath, importSpecifier) => {
+  if (importSpecifier.startsWith('@/')) {
+    return toPosixPath(`client/src/${importSpecifier.slice(2)}`);
+  }
+
+  if (importSpecifier.startsWith('.')) {
+    const baseDir = toPosixPath(dirname(fromFilePath));
+    return toPosixPath(posix.normalize(posix.join(baseDir, importSpecifier)));
+  }
+
+  return null;
+};
+
+const getLayerInfo = (clientPath, layers) => {
+  const normalized = toPosixPath(clientPath);
+  const prefix = 'client/src/';
+
+  if (!normalized.startsWith(prefix)) {
+    return null;
+  }
+
+  const rest = normalized.slice(prefix.length);
+  const parts = rest.split('/').filter(Boolean);
+  const [layer, slice = null] = parts;
+
+  if (!layer || !layers.includes(layer)) {
+    return null;
+  }
+
+  return {
+    layer,
+    slice,
+    parts,
+    path: normalized,
+  };
+};
+
+const hasPrefixMatch = (value, prefixes) =>
+  prefixes.some((prefix) => value.startsWith(prefix));
+
+const hasLayerBypass = (fromLayer, toLayer, rules) =>
+  rules.some((rule) => rule.from === fromLayer && rule.to === toLayer);
+
+const hasDeepImportBypass = (specifier, rules) =>
+  rules.some((rule) => specifier.startsWith(rule.prefix));
+
+const verifyFsdRules = async (errors) => {
+  const fsdRulesPath = 'template/fsd.rules.json';
+
+  if (!(await existsFromRoot(fsdRulesPath))) {
+    errors.push(`${fsdRulesPath}: missing strict FSD rules file`);
+    return;
+  }
+
+  const fsdRules = JSON.parse(await readFromRoot(fsdRulesPath));
+  const fsdMode = fsdRules.mode ?? 'strict';
+
+  const layers = fsdRules.layers ?? [];
+  const allowedImports = fsdRules.allowedImports ?? {};
+  const publicApi = fsdRules.publicApi ?? { enforce: false, layers: [] };
+  const ignorePrefixes = (fsdRules.ignorePrefixes ?? []).map(toPosixPath);
+  const transitionLayerBypass =
+    fsdMode === 'transition'
+      ? fsdRules.transition?.allowLayerBypass ?? []
+      : [];
+  const transitionDeepImportBypass =
+    fsdMode === 'transition'
+      ? fsdRules.transition?.allowDeepImports ?? []
+      : [];
+
+  const clientFiles = await collectClientSourceFiles('client/src');
+
+  for (const filePath of clientFiles) {
+    if (hasPrefixMatch(filePath, ignorePrefixes)) {
+      continue;
+    }
+
+    const sourceInfo = getLayerInfo(filePath, layers);
+    if (!sourceInfo) {
+      continue;
+    }
+
+    const source = await readFromRoot(filePath);
+    const importSpecifiers = collectImportSpecifiers(source);
+
+    for (const importSpecifier of importSpecifiers) {
+      const targetPath = resolveImportTargetPath(filePath, importSpecifier);
+
+      if (!targetPath || hasPrefixMatch(targetPath, ignorePrefixes)) {
+        continue;
+      }
+
+      const targetInfo = getLayerInfo(targetPath, layers);
+      if (!targetInfo) {
+        continue;
+      }
+
+      const sameSlice =
+        sourceInfo.layer === targetInfo.layer &&
+        sourceInfo.slice !== null &&
+        sourceInfo.slice === targetInfo.slice;
+
+      if (sameSlice) {
+        continue;
+      }
+
+      const allowedLayers = new Set([
+        sourceInfo.layer,
+        ...(allowedImports[sourceInfo.layer] ?? []),
+      ]);
+
+      if (
+        !allowedLayers.has(targetInfo.layer) &&
+        !hasLayerBypass(sourceInfo.layer, targetInfo.layer, transitionLayerBypass)
+      ) {
+        errors.push(
+          `FSD layer violation: ${filePath} imports ${importSpecifier} (${sourceInfo.layer} -> ${targetInfo.layer})`,
+        );
+      }
+
+      if (
+        publicApi.enforce &&
+        (publicApi.layers ?? []).includes(targetInfo.layer) &&
+        targetInfo.parts.length > 2 &&
+        !hasDeepImportBypass(importSpecifier, transitionDeepImportBypass)
+      ) {
+        errors.push(
+          `FSD public API violation: ${filePath} imports deep path ${importSpecifier}; use @/${targetInfo.layer}/${targetInfo.slice}`,
+        );
+      }
+    }
+  }
+};
 
 const verify = async () => {
   const errors = [];
@@ -240,6 +414,8 @@ const verify = async () => {
       errors.push(`${featurePrefix}: route ${feature.route} missing in server/openapi.json`);
     }
   }
+
+  await verifyFsdRules(errors);
 
   if (errors.length > 0) {
     console.error('Architecture verification failed.');

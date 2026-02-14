@@ -1,6 +1,6 @@
 import { Badge } from '@/shared/ui/badge';
 
-import { AI_QUESTION_TYPE_LABELS } from './ai-generator-utils';
+import { AI_QUESTION_TYPE_LABELS } from '../lib/ai-generator-utils';
 
 import type { CreateTestsTopicFromAiDtoQuestionsItem } from '@/shared/api/model';
 

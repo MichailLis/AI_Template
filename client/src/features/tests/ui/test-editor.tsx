@@ -8,9 +8,9 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { QUESTION_TYPE_LABELS } from './utils';
+import { QUESTION_TYPE_LABELS } from '../lib/tests-utils';
 
-import type { TestDraftQuestion } from './types';
+import type { TestDraftQuestion } from '../model/types';
 import type { TestsTopicDetailResponseDto } from '@/shared/api/model';
 
 interface TestEditorProps {

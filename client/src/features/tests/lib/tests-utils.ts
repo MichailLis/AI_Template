@@ -3,7 +3,7 @@ import type {
   QuestionOptionDraft,
   QuestionSliderBandDraft,
   QuestionType,
-} from './types';
+} from '../model/types';
 import type {
   TestsTopicDetailResponseDtoDraft,
   TestsTopicDetailResponseDtoDraftQuestionsItem,

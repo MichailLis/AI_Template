@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import { useTestsControllerUpdateTopicDraft } from '@/shared/api/generated/tests/tests';
 
-import { parseApiError } from './utils';
+import { parseApiError } from '../lib/tests-utils';
 
 import type { TestsTopicDetailResponseDtoDraft } from '@/shared/api/model';
 

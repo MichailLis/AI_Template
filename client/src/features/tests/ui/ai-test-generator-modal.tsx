@@ -13,10 +13,11 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { AI_QUESTION_TYPE_LABELS, AI_QUESTION_TYPES } from './ai-generator-utils';
+import { AI_QUESTION_TYPE_LABELS, AI_QUESTION_TYPES } from '../lib/ai-generator-utils';
+import { useAiTestGeneration } from '../model/use-ai-test-generation';
+
 import { AiModelCombobox } from './ai-model-combobox';
 import { AiQuestionsPreview } from './ai-questions-preview';
-import { useAiTestGeneration } from './use-ai-test-generation';
 
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 

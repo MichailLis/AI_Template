@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import type { TestTopicListItem } from './types';
+import type { TestTopicListItem } from '../model/types';
 
 interface TestsSidebarProps {
   topics: TestTopicListItem[];

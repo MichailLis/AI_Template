@@ -12,9 +12,13 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { createEmptyOptionDraft, createEmptySliderBandDraft, isChoiceType } from './utils';
+import {
+  createEmptyOptionDraft,
+  createEmptySliderBandDraft,
+  isChoiceType,
+} from '../lib/tests-utils';
 
-import type { QuestionFormState, QuestionType } from './types';
+import type { QuestionFormState, QuestionType } from '../model/types';
 
 interface QuestionModalProps {
   open: boolean;

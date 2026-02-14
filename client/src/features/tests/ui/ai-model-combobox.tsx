@@ -15,7 +15,7 @@ import {
 import { Label } from '@/shared/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 
-import type { AiModelOption, ModelFilter } from './use-ai-test-generation';
+import type { AiModelOption, ModelFilter } from '../model/use-ai-test-generation';
 
 interface AiModelComboboxProps {
   allModelsCount: number;

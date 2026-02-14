@@ -1,4 +1,4 @@
-import { LoginForm } from '@/features/auth/ui/login-form';
+import { LoginForm } from '@/features/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 export default function LoginPage() {
@@ -7,9 +7,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account.
-          </CardDescription>
+          <CardDescription>Enter your email below to login to your account.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />

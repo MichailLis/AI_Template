@@ -11,8 +11,8 @@ import {
   buildAiQuestionGenerationPrompt,
   buildAiQuestionJsonSchema,
   parseAiQuestionsOutput,
-} from './ai-generator-utils';
-import { parseApiError } from './utils';
+} from '../lib/ai-generator-utils';
+import { parseApiError } from '../lib/tests-utils';
 
 import type {
   AdminPromptModelsResponseDtoModelsItem,
