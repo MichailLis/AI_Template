@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -21,6 +22,7 @@ import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import {
   CreateTestsTopicDto,
+  ReorderTestsQuestionsDto,
   PublishTestsTopicResponseDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
@@ -93,6 +95,17 @@ export class TestsController {
     return this.testsService.createQuestion(userId, topicId, dto);
   }
 
+  @Patch(':topicId/draft/questions/reorder')
+  @ApiOperation({ summary: 'Reorder questions in active draft' })
+  @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
+  reorderQuestions(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+    @Body() dto: ReorderTestsQuestionsDto,
+  ) {
+    return this.testsService.reorderQuestions(userId, topicId, dto);
+  }
+
   @Patch(':topicId/draft/questions/:questionId')
   @ApiOperation({ summary: 'Update draft question' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
@@ -117,6 +130,7 @@ export class TestsController {
   }
 
   @Post(':topicId/publish')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Publish active draft and create next draft version',
   })

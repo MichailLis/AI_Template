@@ -24,6 +24,7 @@ import type {
 import type {
   CreateTestsTopicDto,
   PublishTestsTopicResponseDto,
+  ReorderTestsQuestionsDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
   UpdateTestsTopicDraftDto,
@@ -541,6 +542,91 @@ export const useTestsControllerCreateQuestion = <TError = unknown, TContext = un
   TContext
 > => {
   return useMutation(getTestsControllerCreateQuestionMutationOptions(options), queryClient);
+};
+/**
+ * @summary Reorder questions in active draft
+ */
+export const testsControllerReorderQuestions = (
+  topicId: number,
+  reorderTestsQuestionsDto: ReorderTestsQuestionsDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<TestsTopicDetailResponseDto>(
+    {
+      url: `/admin/tests/${topicId}/draft/questions/reorder`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: reorderTestsQuestionsDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getTestsControllerReorderQuestionsMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+    TError,
+    { topicId: number; data: ReorderTestsQuestionsDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+  TError,
+  { topicId: number; data: ReorderTestsQuestionsDto },
+  TContext
+> => {
+  const mutationKey = ['testsControllerReorderQuestions'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+    { topicId: number; data: ReorderTestsQuestionsDto }
+  > = (props) => {
+    const { topicId, data } = props ?? {};
+
+    return testsControllerReorderQuestions(topicId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsControllerReorderQuestionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsControllerReorderQuestions>>
+>;
+export type TestsControllerReorderQuestionsMutationBody = ReorderTestsQuestionsDto;
+export type TestsControllerReorderQuestionsMutationError = unknown;
+
+/**
+ * @summary Reorder questions in active draft
+ */
+export const useTestsControllerReorderQuestions = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+      TError,
+      { topicId: number; data: ReorderTestsQuestionsDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsControllerReorderQuestions>>,
+  TError,
+  { topicId: number; data: ReorderTestsQuestionsDto },
+  TContext
+> => {
+  return useMutation(getTestsControllerReorderQuestionsMutationOptions(options), queryClient);
 };
 /**
  * @summary Update draft question

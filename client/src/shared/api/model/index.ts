@@ -27,6 +27,7 @@ export * from './createTestsTopicDto';
 export * from './generatePromptDto';
 export * from './generatePromptDtoResponseFormat';
 export * from './publishTestsTopicResponseDto';
+export * from './reorderTestsQuestionsDto';
 export * from './signinDto';
 export * from './signupDto';
 export * from './testsTopicDetailResponseDto';

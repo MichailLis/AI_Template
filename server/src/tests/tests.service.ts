@@ -10,6 +10,7 @@ import type { TestQuestionType } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import type {
   CreateTestsTopicDto,
+  ReorderTestsQuestionsDto,
   PublishTestsTopicResponseDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
@@ -615,6 +616,57 @@ export class TestsService {
       for (const [index, question] of remaining.entries()) {
         await tx.testQuestion.update({
           where: { id: question.id },
+          data: { order: index + 1 },
+        });
+      }
+    });
+
+    return this.getTopicDraft(userId, topicId);
+  }
+
+  async reorderQuestions(
+    userId: number,
+    topicId: number,
+    dto: ReorderTestsQuestionsDto,
+  ): Promise<TestsTopicDetailResponseDto> {
+    await this.ensureAdminAccess(userId);
+
+    const topic = await this.getTopicSnapshot(topicId);
+    const draft = topic.activeDraftVersion;
+
+    if (draft.questions.length === 0) {
+      throw new BadRequestException('Draft has no questions to reorder');
+    }
+
+    if (dto.questionIds.length !== draft.questions.length) {
+      throw new BadRequestException(
+        'Reorder payload must include all draft question ids exactly once',
+      );
+    }
+
+    const uniqueIds = new Set(dto.questionIds);
+    if (uniqueIds.size !== dto.questionIds.length) {
+      throw new BadRequestException(
+        'Reorder payload contains duplicate question ids',
+      );
+    }
+
+    const draftQuestionIds = new Set(
+      draft.questions.map((question) => question.id),
+    );
+
+    for (const questionId of dto.questionIds) {
+      if (!draftQuestionIds.has(questionId)) {
+        throw new BadRequestException(
+          `Question ${questionId} does not belong to active draft`,
+        );
+      }
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const [index, questionId] of dto.questionIds.entries()) {
+        await tx.testQuestion.update({
+          where: { id: questionId },
           data: { order: index + 1 },
         });
       }

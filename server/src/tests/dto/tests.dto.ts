@@ -109,6 +109,10 @@ export const UpsertTestsQuestionSchema = z.object({
   sliderBands: z.array(UpsertTestQuestionSliderBandSchema).optional(),
 });
 
+export const ReorderTestsQuestionsSchema = z.object({
+  questionIds: z.array(z.number().int().min(1)).min(1),
+});
+
 export const PublishTestsTopicResponseSchema = z.object({
   topicId: z.number(),
   publishedVersionNumber: z.number(),
@@ -127,6 +131,9 @@ export class UpdateTestsTopicDraftDto extends createZodDto(
 ) {}
 export class UpsertTestsQuestionDto extends createZodDto(
   UpsertTestsQuestionSchema,
+) {}
+export class ReorderTestsQuestionsDto extends createZodDto(
+  ReorderTestsQuestionsSchema,
 ) {}
 export class PublishTestsTopicResponseDto extends createZodDto(
   PublishTestsTopicResponseSchema,
