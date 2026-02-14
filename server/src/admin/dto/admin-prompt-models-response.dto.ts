@@ -17,6 +17,4 @@ export const AdminPromptModelsResponseSchema = z.object({
   models: z.array(AdminPromptModelSchema),
 });
 
-export class AdminPromptModelsResponseDto extends createZodDto(
-  AdminPromptModelsResponseSchema,
-) {}
+export class AdminPromptModelsResponseDto extends createZodDto(AdminPromptModelsResponseSchema) {}

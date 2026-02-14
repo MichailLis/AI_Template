@@ -10,13 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AdminService } from './admin.service';
 import { AtGuard } from '../auth/guards';
@@ -47,10 +41,7 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'List users for admin management' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminUsersResponseDto })
-  getUsers(
-    @GetCurrentUserId() userId: number,
-    @Query() query: AdminUsersQueryDto,
-  ) {
+  getUsers(@GetCurrentUserId() userId: number, @Query() query: AdminUsersQueryDto) {
     return this.adminService.getUsers(userId, query);
   }
 
@@ -64,10 +55,7 @@ export class AdminController {
   @Post('prompts/generate')
   @ApiOperation({ summary: 'Generate response from prompt via OpenRouter' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
-  generatePrompt(
-    @GetCurrentUserId() userId: number,
-    @Body() dto: GeneratePromptDto,
-  ) {
+  generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
     return this.adminService.generatePrompt(userId, dto);
   }
 

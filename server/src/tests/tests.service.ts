@@ -151,8 +151,7 @@ export class TestsService {
           draftVersionNumber: topic.activeDraftVersion!.versionNumber,
           draftTitle: topic.activeDraftVersion!.title,
           draftQuestionCount: topic.activeDraftVersion!._count.questions,
-          publishedVersionNumber:
-            topic.activePublishedVersion?.versionNumber ?? null,
+          publishedVersionNumber: topic.activePublishedVersion?.versionNumber ?? null,
           publishedTitle: topic.activePublishedVersion?.title ?? null,
           updatedAt: topic.updatedAt.toISOString(),
         })),
@@ -214,23 +213,17 @@ export class TestsService {
         (payload.type === 'SINGLE_CHOICE' || payload.type === 'MULTI_CHOICE') &&
         payload.options.length < 2
       ) {
-        throw new BadRequestException(
-          `${questionLabel} requires at least two options`,
-        );
+        throw new BadRequestException(`${questionLabel} requires at least two options`);
       }
 
       if (payload.type === 'SLIDER') {
         if (payload.sliderBands.length === 0) {
-          throw new BadRequestException(
-            `${questionLabel} requires at least one slider band`,
-          );
+          throw new BadRequestException(`${questionLabel} requires at least one slider band`);
         }
 
         const sliderSettings = parseSliderSettings(payload.settings);
         if (!sliderSettings) {
-          throw new BadRequestException(
-            `${questionLabel} has invalid slider settings`,
-          );
+          throw new BadRequestException(`${questionLabel} has invalid slider settings`);
         }
       }
 
@@ -308,10 +301,7 @@ export class TestsService {
     return this.getTopicDraft(userId, topicId);
   }
 
-  async deleteTopic(
-    userId: number,
-    topicId: number,
-  ): Promise<DeleteTestsTopicResponseDto> {
+  async deleteTopic(userId: number, topicId: number): Promise<DeleteTestsTopicResponseDto> {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.prisma.testTopic.findUnique({
@@ -332,10 +322,7 @@ export class TestsService {
     };
   }
 
-  async getTopicDraft(
-    userId: number,
-    topicId: number,
-  ): Promise<TestsTopicDetailResponseDto> {
+  async getTopicDraft(userId: number, topicId: number): Promise<TestsTopicDetailResponseDto> {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
@@ -375,9 +362,7 @@ export class TestsService {
       data: {
         title: dto.title ?? topic.activeDraftVersion.title,
         description:
-          dto.description !== undefined
-            ? dto.description
-            : topic.activeDraftVersion.description,
+          dto.description !== undefined ? dto.description : topic.activeDraftVersion.description,
       },
     });
 
@@ -392,10 +377,7 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    await this.testsQuestionService.createQuestion(
-      topic.activeDraftVersion,
-      dto,
-    );
+    await this.testsQuestionService.createQuestion(topic.activeDraftVersion, dto);
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -409,11 +391,7 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    await this.testsQuestionService.updateQuestion(
-      topic.activeDraftVersion,
-      questionId,
-      dto,
-    );
+    await this.testsQuestionService.updateQuestion(topic.activeDraftVersion, questionId, dto);
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -426,10 +404,7 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    await this.testsQuestionService.deleteQuestion(
-      topic.activeDraftVersion,
-      questionId,
-    );
+    await this.testsQuestionService.deleteQuestion(topic.activeDraftVersion, questionId);
 
     return this.getTopicDraft(userId, topicId);
   }
@@ -442,18 +417,12 @@ export class TestsService {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
-    await this.testsQuestionService.reorderQuestions(
-      topic.activeDraftVersion,
-      dto,
-    );
+    await this.testsQuestionService.reorderQuestions(topic.activeDraftVersion, dto);
 
     return this.getTopicDraft(userId, topicId);
   }
 
-  async publishTopic(
-    userId: number,
-    topicId: number,
-  ): Promise<PublishTestsTopicResponseDto> {
+  async publishTopic(userId: number, topicId: number): Promise<PublishTestsTopicResponseDto> {
     await this.ensureAdminAccess(userId);
 
     const topic = await this.getTopicSnapshot(topicId);
@@ -462,10 +431,7 @@ export class TestsService {
     validateDraftForPublish(draft);
 
     return this.prisma.$transaction(async (tx) => {
-      if (
-        topic.activePublishedVersionId &&
-        topic.activePublishedVersionId !== draft.id
-      ) {
+      if (topic.activePublishedVersionId && topic.activePublishedVersionId !== draft.id) {
         await tx.testTopicVersion.update({
           where: { id: topic.activePublishedVersionId },
           data: { status: 'ARCHIVED' },

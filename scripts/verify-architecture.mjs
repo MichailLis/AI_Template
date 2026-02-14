@@ -7,8 +7,7 @@ const root = process.cwd();
 const isNotFoundError = (error) =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT';
 
-const readFromRoot = async (relativePath) =>
-  readFile(join(root, relativePath), 'utf-8');
+const readFromRoot = async (relativePath) => readFile(join(root, relativePath), 'utf-8');
 
 const readDirFromRoot = async (relativePath, withFileTypes = false) => {
   try {
@@ -123,8 +122,7 @@ const getLayerInfo = (clientPath, layers) => {
   };
 };
 
-const hasPrefixMatch = (value, prefixes) =>
-  prefixes.some((prefix) => value.startsWith(prefix));
+const hasPrefixMatch = (value, prefixes) => prefixes.some((prefix) => value.startsWith(prefix));
 
 const hasLayerBypass = (fromLayer, toLayer, rules) =>
   rules.some((rule) => rule.from === fromLayer && rule.to === toLayer);
@@ -148,13 +146,9 @@ const verifyFsdRules = async (errors) => {
   const publicApi = fsdRules.publicApi ?? { enforce: false, layers: [] };
   const ignorePrefixes = (fsdRules.ignorePrefixes ?? []).map(toPosixPath);
   const transitionLayerBypass =
-    fsdMode === 'transition'
-      ? fsdRules.transition?.allowLayerBypass ?? []
-      : [];
+    fsdMode === 'transition' ? (fsdRules.transition?.allowLayerBypass ?? []) : [];
   const transitionDeepImportBypass =
-    fsdMode === 'transition'
-      ? fsdRules.transition?.allowDeepImports ?? []
-      : [];
+    fsdMode === 'transition' ? (fsdRules.transition?.allowDeepImports ?? []) : [];
 
   const clientFiles = await collectClientSourceFiles('client/src');
 
@@ -276,7 +270,9 @@ const verify = async () => {
   const localModuleImports = unique(
     collectMatches(appModule, /import\s+\{\s*([A-Za-z0-9_]+Module)\s*\}\s+from\s+'\.\/[^']+'/g),
   );
-  const expectedLocalModules = new Set(['PrismaModule', authModule, ...featureModules].filter(Boolean));
+  const expectedLocalModules = new Set(
+    ['PrismaModule', authModule, ...featureModules].filter(Boolean),
+  );
 
   for (const moduleName of expectedLocalModules) {
     if (!localModuleImports.includes(moduleName)) {
@@ -301,9 +297,7 @@ const verify = async () => {
   }
 
   const openApiExists = await existsFromRoot('server/openapi.json');
-  const openApiDoc = openApiExists
-    ? JSON.parse(await readFromRoot('server/openapi.json'))
-    : null;
+  const openApiDoc = openApiExists ? JSON.parse(await readFromRoot('server/openapi.json')) : null;
 
   const allowedBackendModuleFiles = new Set([
     'server/src/auth/auth.module.ts',
@@ -377,7 +371,9 @@ const verify = async () => {
     ensureIncludes(errors, appModule, feature.backendModule, 'server/src/app.module.ts');
     ensureIncludes(errors, appRoutes, `path="${feature.route}"`, 'client/src/app/App.tsx');
     if (!dashboardExists) {
-      errors.push('client/src/pages/dashboard.tsx is missing but features are declared in manifest');
+      errors.push(
+        'client/src/pages/dashboard.tsx is missing but features are declared in manifest',
+      );
     } else {
       ensureIncludes(errors, dashboard, `to="${feature.route}"`, 'client/src/pages/dashboard.tsx');
     }

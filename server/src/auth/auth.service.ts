@@ -37,12 +37,7 @@ export class AuthService {
         },
       };
     } catch (e: unknown) {
-      if (
-        typeof e === 'object' &&
-        e !== null &&
-        'code' in e &&
-        e.code === 'P2002'
-      ) {
+      if (typeof e === 'object' && e !== null && 'code' in e && e.code === 'P2002') {
         throw new ForbiddenException('Email already exists');
       }
       throw e;
@@ -84,13 +79,9 @@ export class AuthService {
       where: { id: userId },
     });
 
-    if (!user || !user.hashedRefreshToken)
-      throw new ForbiddenException('Access Denied');
+    if (!user || !user.hashedRefreshToken) throw new ForbiddenException('Access Denied');
 
-    const refreshTokenMatches = await argon2.verify(
-      user.hashedRefreshToken,
-      refreshToken,
-    );
+    const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken, refreshToken);
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user.id, user.email);

@@ -11,6 +11,4 @@ export const AdminUsersResponseSchema = z.object({
   users: z.array(AdminUserResponseSchema),
 });
 
-export class AdminUsersResponseDto extends createZodDto(
-  AdminUsersResponseSchema,
-) {}
+export class AdminUsersResponseDto extends createZodDto(AdminUsersResponseSchema) {}

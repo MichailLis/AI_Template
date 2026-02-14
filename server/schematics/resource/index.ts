@@ -19,10 +19,10 @@ function updateAppModule(options: any): Rule {
     const source = content.toString();
     const name = strings.classify(options.name);
     const dasherizedName = strings.dasherize(options.name);
-    
+
     const moduleName = `${name}Module`;
     const importStatement = `import { ${moduleName} } from './${dasherizedName}/${dasherizedName}.module';`;
-    
+
     if (source.includes(importStatement)) return tree;
 
     // 1. Вставляем импорт в начало файла (после последнего существующего импорта)
@@ -39,10 +39,11 @@ function updateAppModule(options: any): Rule {
     const importsRegex = /imports:\s*\[([\s\S]*?)\]/;
     newContent = newContent.replace(importsRegex, (match, p1) => {
       // Очищаем существующие модули от лишних пробелов и запятых
-      const modules = p1.split(',')
-        .map(m => m.trim())
-        .filter(m => m.length > 0);
-      
+      const modules = p1
+        .split(',')
+        .map((m) => m.trim())
+        .filter((m) => m.length > 0);
+
       if (!modules.includes(moduleName)) {
         modules.push(moduleName);
       }
@@ -66,7 +67,7 @@ export function resource(options: any): Rule {
           ...strings,
         }),
         move(`src/${strings.dasherize(options.name)}`),
-      ])
+      ]),
     ),
     updateAppModule(options),
   ]);

@@ -8,7 +8,8 @@
     "dev:force": "node -e \"const fs=require('node:fs');fs.rmSync('node_modules/.vite',{recursive:true,force:true});\" && vite --force",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "format": "npx prettier --write",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "gen:api": "node -e \"const fs=require('node:fs');fs.rmSync('src/shared/api/generated',{recursive:true,force:true});fs.rmSync('src/shared/api/model',{recursive:true,force:true});\" && orval",
     "preview": "vite preview"
   },
@@ -51,6 +52,7 @@
     "globals": "^16.5.0",
     "orval": "^8.2.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.4.2",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",

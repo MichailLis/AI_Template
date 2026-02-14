@@ -5,10 +5,7 @@ const port = '4173';
 const targetUrl = `http://127.0.0.1:${port}/`;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const npmExecutable =
-  process.platform === 'win32'
-    ? process.execPath
-    : 'npm';
+const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
 const npmCliPath =
   process.platform === 'win32'
     ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
@@ -76,17 +73,7 @@ const client = spawn(
         '--port',
         port,
       ]
-    : [
-        'run',
-        'preview',
-        '--prefix',
-        'client',
-        '--',
-        '--host',
-        '127.0.0.1',
-        '--port',
-        port,
-      ],
+    : ['run', 'preview', '--prefix', 'client', '--', '--host', '127.0.0.1', '--port', port],
   {
     stdio: ['ignore', 'pipe', 'pipe'],
   },

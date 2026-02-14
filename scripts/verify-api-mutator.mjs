@@ -3,14 +3,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const apiMutatorPath = join(root, 'client', 'src', 'shared', 'api', 'api.ts');
-const interceptorsPath = join(
-  root,
-  'client',
-  'src',
-  'shared',
-  'api',
-  'interceptors.ts',
-);
+const interceptorsPath = join(root, 'client', 'src', 'shared', 'api', 'interceptors.ts');
 const appPath = join(root, 'client', 'src', 'app', 'App.tsx');
 
 const [apiMutatorSource, interceptorsSource, appSource] = await Promise.all([
@@ -20,9 +13,7 @@ const [apiMutatorSource, interceptorsSource, appSource] = await Promise.all([
 ]);
 
 const stripComments = (source) => {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '');
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 };
 
 const apiMutatorCode = stripComments(apiMutatorSource);
@@ -58,7 +49,9 @@ if (!/export\s+const\s+customInstance\s*=/.test(apiMutatorSource)) {
 }
 
 if (!/export\s+const\s+configureApiBaseUrl\s*=/.test(apiMutatorSource)) {
-  errors.push('client/src/shared/api/api.ts must export `configureApiBaseUrl` for runtime base URL setup.');
+  errors.push(
+    'client/src/shared/api/api.ts must export `configureApiBaseUrl` for runtime base URL setup.',
+  );
 }
 
 if (!/export\s+default\s+api\s*;/.test(apiMutatorSource)) {
@@ -70,7 +63,9 @@ if (!/export\s+const\s+setupInterceptors\s*=/.test(interceptorsSource)) {
 }
 
 if (!/configureApiBaseUrl\(import\.meta\.env\.VITE_API_URL\)/.test(appSource)) {
-  errors.push('client/src/app/App.tsx must call configureApiBaseUrl(import.meta.env.VITE_API_URL).');
+  errors.push(
+    'client/src/app/App.tsx must call configureApiBaseUrl(import.meta.env.VITE_API_URL).',
+  );
 }
 
 if (!/setupInterceptors\(api\)/.test(appSource)) {

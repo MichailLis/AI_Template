@@ -5,11 +5,7 @@ import type { TestQuestionType } from '@prisma/client';
 import type { UpsertTestsQuestionDto } from './dto/tests.dto';
 
 const isInputJsonValue = (value: unknown): value is Prisma.InputJsonValue => {
-  if (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
-  ) {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return true;
   }
 
@@ -18,9 +14,7 @@ const isInputJsonValue = (value: unknown): value is Prisma.InputJsonValue => {
   }
 
   if (typeof value === 'object' && value !== null) {
-    return Object.values(value).every(
-      (item) => item === null || isInputJsonValue(item),
-    );
+    return Object.values(value).every((item) => item === null || isInputJsonValue(item));
   }
 
   return false;
@@ -67,11 +61,7 @@ export const parseSliderSettings = (settings: unknown) => {
     return null;
   }
 
-  if (
-    !Number.isFinite(min) ||
-    !Number.isFinite(max) ||
-    !Number.isFinite(step)
-  ) {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) {
     return null;
   }
 
@@ -130,26 +120,20 @@ export const validateDraftForPublish = (draft: {
   }>;
 }) => {
   if (draft.questions.length === 0) {
-    throw new BadRequestException(
-      'Draft must contain at least one question before publish',
-    );
+    throw new BadRequestException('Draft must contain at least one question before publish');
   }
 
   const seenOrder = new Set<number>();
 
   for (const question of draft.questions) {
     if (seenOrder.has(question.order)) {
-      throw new BadRequestException(
-        'Questions order must be unique within draft',
-      );
+      throw new BadRequestException('Questions order must be unique within draft');
     }
     seenOrder.add(question.order);
 
     if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTI_CHOICE') {
       if (question.options.length < 2) {
-        throw new BadRequestException(
-          `Question "${question.title}" requires at least two options`,
-        );
+        throw new BadRequestException(`Question "${question.title}" requires at least two options`);
       }
     }
 
@@ -157,9 +141,7 @@ export const validateDraftForPublish = (draft: {
       const sliderSettings = parseSliderSettings(question.settings);
 
       if (!sliderSettings) {
-        throw new BadRequestException(
-          `Slider question "${question.title}" has invalid settings`,
-        );
+        throw new BadRequestException(`Slider question "${question.title}" has invalid settings`);
       }
 
       for (const band of question.sliderBands) {

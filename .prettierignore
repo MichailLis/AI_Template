@@ -1,0 +1,16 @@
+node_modules
+client/node_modules
+server/node_modules
+.serena
+Design
+nul
+Промт инжиниринг
+package-lock.json
+client/package-lock.json
+server/package-lock.json
+client/dist
+server/dist
+coverage
+client/src/shared/api/generated
+client/src/shared/api/model
+server/src/generated

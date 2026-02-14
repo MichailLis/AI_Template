@@ -4,12 +4,7 @@ import { dirname, join } from 'node:path';
 
 const port = '3105';
 const targetUrl = `http://127.0.0.1:${port}/api-json`;
-const authApiPaths = [
-  '/auth/signup',
-  '/auth/signin',
-  '/auth/logout',
-  '/auth/refresh',
-];
+const authApiPaths = ['/auth/signup', '/auth/signin', '/auth/logout', '/auth/refresh'];
 
 const manifestRaw = await readFile(
   join(process.cwd(), 'template', 'features.manifest.json'),
@@ -22,10 +17,7 @@ const featureApiPaths = (manifest.features ?? [])
 const requiredPaths = [...authApiPaths, ...featureApiPaths];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const npmExecutable =
-  process.platform === 'win32'
-    ? process.execPath
-    : 'npm';
+const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
 const npmCliPath =
   process.platform === 'win32'
     ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')

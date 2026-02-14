@@ -22,6 +22,4 @@ export const AdminOverviewResponseSchema = z.object({
   shortcuts: z.array(AdminShortcutSchema),
 });
 
-export class AdminOverviewResponseDto extends createZodDto(
-  AdminOverviewResponseSchema,
-) {}
+export class AdminOverviewResponseDto extends createZodDto(AdminOverviewResponseSchema) {}

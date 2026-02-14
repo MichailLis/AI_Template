@@ -84,12 +84,7 @@ describe('AuthController', () => {
 
     authServiceMock.refreshTokens.mockResolvedValue(response);
 
-    await expect(
-      controller.refreshTokens(22, 'refresh-token'),
-    ).resolves.toEqual(response);
-    expect(authServiceMock.refreshTokens).toHaveBeenCalledWith(
-      22,
-      'refresh-token',
-    );
+    await expect(controller.refreshTokens(22, 'refresh-token')).resolves.toEqual(response);
+    expect(authServiceMock.refreshTokens).toHaveBeenCalledWith(22, 'refresh-token');
   });
 });

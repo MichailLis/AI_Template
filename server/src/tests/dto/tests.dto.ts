@@ -130,28 +130,12 @@ export const DeleteTestsTopicResponseSchema = z.object({
   topicId: z.number(),
 });
 
-export class TestsTopicListResponseDto extends createZodDto(
-  TestsTopicListResponseSchema,
-) {}
-export class TestsTopicDetailResponseDto extends createZodDto(
-  TestsTopicDetailResponseSchema,
-) {}
+export class TestsTopicListResponseDto extends createZodDto(TestsTopicListResponseSchema) {}
+export class TestsTopicDetailResponseDto extends createZodDto(TestsTopicDetailResponseSchema) {}
 export class CreateTestsTopicDto extends createZodDto(CreateTestsTopicSchema) {}
-export class UpdateTestsTopicDraftDto extends createZodDto(
-  UpdateTestsTopicDraftSchema,
-) {}
-export class UpsertTestsQuestionDto extends createZodDto(
-  UpsertTestsQuestionSchema,
-) {}
-export class CreateTestsTopicFromAiDto extends createZodDto(
-  CreateTestsTopicFromAiSchema,
-) {}
-export class ReorderTestsQuestionsDto extends createZodDto(
-  ReorderTestsQuestionsSchema,
-) {}
-export class PublishTestsTopicResponseDto extends createZodDto(
-  PublishTestsTopicResponseSchema,
-) {}
-export class DeleteTestsTopicResponseDto extends createZodDto(
-  DeleteTestsTopicResponseSchema,
-) {}
+export class UpdateTestsTopicDraftDto extends createZodDto(UpdateTestsTopicDraftSchema) {}
+export class UpsertTestsQuestionDto extends createZodDto(UpsertTestsQuestionSchema) {}
+export class CreateTestsTopicFromAiDto extends createZodDto(CreateTestsTopicFromAiSchema) {}
+export class ReorderTestsQuestionsDto extends createZodDto(ReorderTestsQuestionsSchema) {}
+export class PublishTestsTopicResponseDto extends createZodDto(PublishTestsTopicResponseSchema) {}
+export class DeleteTestsTopicResponseDto extends createZodDto(DeleteTestsTopicResponseSchema) {}

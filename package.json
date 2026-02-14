@@ -17,6 +17,7 @@
     "verify:smoke:client": "node scripts/smoke-client.mjs",
     "verify:template": "npm run prisma:generate && npm run prisma:push && npm run verify:api-mutator && npm run gen:api && npm run verify:architecture && npm run lint && npm run test --prefix server && npm run test:e2e --prefix server && npm run build --prefix server && npm run build --prefix client && npm run verify:smoke:server && npm run verify:smoke:client",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prisma:generate": "npm run prisma:generate --prefix server",
     "prisma:push": "npm run prisma:push --prefix server",
     "prisma:studio": "npm run prisma:studio --prefix server",
@@ -27,7 +28,8 @@
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7"
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.4.2"
   },
   "dependencies": {
     "nestjs-zod": "^5.1.1",

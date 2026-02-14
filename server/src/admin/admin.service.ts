@@ -93,21 +93,15 @@ export class AdminService {
           (value): value is string => typeof value === 'string',
         )
       : [];
-    const normalizedSupportedParameters = supportedParameters.map((value) =>
-      value.toLowerCase(),
-    );
+    const normalizedSupportedParameters = supportedParameters.map((value) => value.toLowerCase());
 
     const pricingRecord =
       typeof modelRecord.pricing === 'object' && modelRecord.pricing !== null
         ? (modelRecord.pricing as Record<string, unknown>)
         : null;
 
-    const promptPrice = pricingRecord
-      ? this.toNumberOrNull(pricingRecord.prompt)
-      : null;
-    const completionPrice = pricingRecord
-      ? this.toNumberOrNull(pricingRecord.completion)
-      : null;
+    const promptPrice = pricingRecord ? this.toNumberOrNull(pricingRecord.prompt) : null;
+    const completionPrice = pricingRecord ? this.toNumberOrNull(pricingRecord.completion) : null;
     const contextLength = this.toNumberOrNull(modelRecord.context_length);
     const isFree =
       id.endsWith(':free') ||
@@ -116,8 +110,7 @@ export class AdminService {
         promptPrice === 0 &&
         completionPrice === 0);
     const supportsStructuredOutputs = normalizedSupportedParameters.some(
-      (parameter) =>
-        parameter === 'structured_outputs' || parameter === 'response_format',
+      (parameter) => parameter === 'structured_outputs' || parameter === 'response_format',
     );
 
     return {
@@ -143,10 +136,7 @@ export class AdminService {
       return [];
     }
 
-    const uniqueModels = new Map<
-      string,
-      ReturnType<typeof this.toPromptModelResponse>
-    >();
+    const uniqueModels = new Map<string, ReturnType<typeof this.toPromptModelResponse>>();
 
     for (const model of payloadRecord.data) {
       const parsedModel = this.toPromptModelResponse(model);
@@ -162,21 +152,13 @@ export class AdminService {
   }
 
   private extractOpenRouterErrorMessage(payload: unknown) {
-    if (
-      typeof payload !== 'object' ||
-      payload === null ||
-      !('error' in payload)
-    ) {
+    if (typeof payload !== 'object' || payload === null || !('error' in payload)) {
       return 'OpenRouter request failed';
     }
 
     const errorValue = payload.error;
 
-    if (
-      typeof errorValue !== 'object' ||
-      errorValue === null ||
-      !('message' in errorValue)
-    ) {
+    if (typeof errorValue !== 'object' || errorValue === null || !('message' in errorValue)) {
       return 'OpenRouter request failed';
     }
 
@@ -263,9 +245,7 @@ export class AdminService {
     const currentPage = Math.min(page, totalPages);
     const skip = (currentPage - 1) * limit;
     const orderBy: Prisma.UserOrderByWithRelationInput[] = [
-      sortBy === 'createdAt'
-        ? { createdAt: sortOrder }
-        : { updatedAt: sortOrder },
+      sortBy === 'createdAt' ? { createdAt: sortOrder } : { updatedAt: sortOrder },
       { id: 'asc' },
     ];
 
@@ -299,9 +279,7 @@ export class AdminService {
     const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
 
     if (!apiKey) {
-      throw new ServiceUnavailableException(
-        'OPENROUTER_API_KEY is not configured on server',
-      );
+      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
     }
 
     const controller = new AbortController();
@@ -313,11 +291,8 @@ export class AdminService {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer':
-            this.config.get<string>('OPENROUTER_HTTP_REFERER') ??
-            'http://localhost:5173',
-          'X-Title':
-            this.config.get<string>('OPENROUTER_APP_NAME') ??
-            'AI Template Admin',
+            this.config.get<string>('OPENROUTER_HTTP_REFERER') ?? 'http://localhost:5173',
+          'X-Title': this.config.get<string>('OPENROUTER_APP_NAME') ?? 'AI Template Admin',
         },
         signal: controller.signal,
       });
@@ -335,18 +310,12 @@ export class AdminService {
       const models = this.parseOpenRouterModels(payload);
 
       if (models.length === 0) {
-        throw new BadGatewayException(
-          'OpenRouter returned empty model catalog',
-        );
+        throw new BadGatewayException('OpenRouter returned empty model catalog');
       }
 
-      const configuredDefaultModel = this.config.get<string>(
-        'OPENROUTER_DEFAULT_MODEL',
-      );
+      const configuredDefaultModel = this.config.get<string>('OPENROUTER_DEFAULT_MODEL');
       const firstFreeModelId = models.find((model) => model.isFree)?.id;
-      const defaultModel = models.some(
-        (model) => model.id === configuredDefaultModel,
-      )
+      const defaultModel = models.some((model) => model.id === configuredDefaultModel)
         ? configuredDefaultModel
         : (firstFreeModelId ?? models[0].id);
 
@@ -356,9 +325,7 @@ export class AdminService {
       };
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new BadGatewayException(
-          'OpenRouter model catalog request timeout',
-        );
+        throw new BadGatewayException('OpenRouter model catalog request timeout');
       }
 
       throw error;
@@ -373,9 +340,7 @@ export class AdminService {
     const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
 
     if (!apiKey) {
-      throw new ServiceUnavailableException(
-        'OPENROUTER_API_KEY is not configured on server',
-      );
+      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
     }
 
     const controller = new AbortController();
@@ -420,40 +385,32 @@ export class AdminService {
         openRouterRequestBody.response_format = { type: 'json_object' };
       }
 
-      const requireParameters =
-        dto.requireParameters ?? Boolean(dto.responseSchema);
+      const requireParameters = dto.requireParameters ?? Boolean(dto.responseSchema);
       if (requireParameters) {
         openRouterRequestBody.provider = {
           require_parameters: true,
         };
       }
 
-      const useResponseHealing =
-        dto.useResponseHealing ?? Boolean(dto.responseSchema);
+      const useResponseHealing = dto.useResponseHealing ?? Boolean(dto.responseSchema);
       if (useResponseHealing) {
         openRouterRequestBody.plugins = [{ id: 'response-healing' }];
       }
     }
 
     try {
-      const response = await fetch(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer':
-              this.config.get<string>('OPENROUTER_HTTP_REFERER') ??
-              'http://localhost:5173',
-            'X-Title':
-              this.config.get<string>('OPENROUTER_APP_NAME') ??
-              'AI Template Admin',
-          },
-          body: JSON.stringify(openRouterRequestBody),
-          signal: controller.signal,
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer':
+            this.config.get<string>('OPENROUTER_HTTP_REFERER') ?? 'http://localhost:5173',
+          'X-Title': this.config.get<string>('OPENROUTER_APP_NAME') ?? 'AI Template Admin',
         },
-      );
+        body: JSON.stringify(openRouterRequestBody),
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
         const errorPayload: unknown = await response
@@ -518,11 +475,7 @@ export class AdminService {
     }
   }
 
-  async updateUserRole(
-    adminId: number,
-    targetUserId: number,
-    dto: UpdateUserRoleDto,
-  ) {
+  async updateUserRole(adminId: number, targetUserId: number, dto: UpdateUserRoleDto) {
     await this.ensureAdminAccess(adminId);
 
     if (adminId === targetUserId && dto.role !== 'ADMIN') {

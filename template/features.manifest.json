@@ -1,9 +1,7 @@
 {
   "version": 1,
   "auth": {
-    "requiredRoutes": [
-      "/login"
-    ],
+    "requiredRoutes": ["/login"],
     "requiredBackendModule": "AuthModule"
   },
   "features": [

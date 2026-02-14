@@ -1,19 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
-import type {
-  ReorderTestsQuestionsDto,
-  UpsertTestsQuestionDto,
-} from './dto/tests.dto';
-import {
-  prepareQuestionPayload,
-  toPrismaSettingsInput,
-} from './tests-domain.utils';
+import type { ReorderTestsQuestionsDto, UpsertTestsQuestionDto } from './dto/tests.dto';
+import { prepareQuestionPayload, toPrismaSettingsInput } from './tests-domain.utils';
 
 interface DraftQuestionRef {
   id: number;
@@ -78,14 +68,8 @@ export class TestsQuestionService {
     });
   }
 
-  async updateQuestion(
-    draft: DraftRef,
-    questionId: number,
-    dto: UpsertTestsQuestionDto,
-  ) {
-    const existingQuestion = draft.questions.find(
-      (question) => question.id === questionId,
-    );
+  async updateQuestion(draft: DraftRef, questionId: number, dto: UpsertTestsQuestionDto) {
+    const existingQuestion = draft.questions.find((question) => question.id === questionId);
 
     if (!existingQuestion) {
       throw new NotFoundException('Question not found in active draft');
@@ -142,9 +126,7 @@ export class TestsQuestionService {
   }
 
   async deleteQuestion(draft: DraftRef, questionId: number) {
-    const existingQuestion = draft.questions.find(
-      (question) => question.id === questionId,
-    );
+    const existingQuestion = draft.questions.find((question) => question.id === questionId);
 
     if (!existingQuestion) {
       throw new NotFoundException('Question not found in active draft');
@@ -185,20 +167,14 @@ export class TestsQuestionService {
 
     const uniqueIds = new Set(dto.questionIds);
     if (uniqueIds.size !== dto.questionIds.length) {
-      throw new BadRequestException(
-        'Reorder payload contains duplicate question ids',
-      );
+      throw new BadRequestException('Reorder payload contains duplicate question ids');
     }
 
-    const draftQuestionIds = new Set(
-      draft.questions.map((question) => question.id),
-    );
+    const draftQuestionIds = new Set(draft.questions.map((question) => question.id));
 
     for (const questionId of dto.questionIds) {
       if (!draftQuestionIds.has(questionId)) {
-        throw new BadRequestException(
-          `Question ${questionId} does not belong to active draft`,
-        );
+        throw new BadRequestException(`Question ${questionId} does not belong to active draft`);
       }
     }
 

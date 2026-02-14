@@ -117,9 +117,9 @@ describe('Admin (e2e)', () => {
     expect(response.body.totalPages).toBeGreaterThanOrEqual(1);
     expect(Array.isArray(response.body.users)).toBe(true);
 
-    const createdAtValues = (
-      response.body.users as Array<{ createdAt: string }>
-    ).map((user) => new Date(user.createdAt).getTime());
+    const createdAtValues = (response.body.users as Array<{ createdAt: string }>).map((user) =>
+      new Date(user.createdAt).getTime(),
+    );
     const sortedValues = [...createdAtValues].sort((a, b) => a - b);
 
     expect(createdAtValues).toEqual(sortedValues);
@@ -234,12 +234,8 @@ describe('Admin (e2e)', () => {
     expect(questions).toHaveLength(2);
     expect(questions.map((question) => question.order)).toEqual([1, 2]);
 
-    const firstQuestion = questions.find(
-      (question) => question.title === 'Первый вопрос',
-    );
-    const secondQuestion = questions.find(
-      (question) => question.title === 'Второй вопрос',
-    );
+    const firstQuestion = questions.find((question) => question.title === 'Первый вопрос');
+    const secondQuestion = questions.find((question) => question.title === 'Второй вопрос');
 
     expect(firstQuestion).toBeDefined();
     expect(secondQuestion).toBeDefined();
@@ -259,9 +255,7 @@ describe('Admin (e2e)', () => {
 
     expect(reorderedQuestions[0].id).toBe(secondQuestion!.id);
     expect(reorderedQuestions[1].id).toBe(firstQuestion!.id);
-    expect(reorderedQuestions.map((question) => question.order)).toEqual([
-      1, 2,
-    ]);
+    expect(reorderedQuestions.map((question) => question.order)).toEqual([1, 2]);
 
     const publishResponse = await request(app.getHttpServer())
       .post(`/admin/tests/${topicId}/publish`)
@@ -314,9 +308,9 @@ describe('Admin (e2e)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    const topicSlugs = (
-      listResponse.body.topics as Array<{ slug: string }>
-    ).map((topic) => topic.slug);
+    const topicSlugs = (listResponse.body.topics as Array<{ slug: string }>).map(
+      (topic) => topic.slug,
+    );
 
     expect(topicSlugs).not.toContain(topicSlug);
   });
@@ -360,17 +354,13 @@ describe('Admin (e2e)', () => {
       })
       .expect(201);
 
-    expect(createFromAiResponse.body.slug).toBe(
-      `${testsSlugPrefix}-ai-blueprint`,
-    );
+    expect(createFromAiResponse.body.slug).toBe(`${testsSlugPrefix}-ai-blueprint`);
     expect(createFromAiResponse.body.draft.versionNumber).toBe(1);
     expect(createFromAiResponse.body.draft.questions).toHaveLength(2);
     expect(createFromAiResponse.body.draft.questions[0].title).toBe(
       'Что вам нравится делать больше всего?',
     );
-    expect(createFromAiResponse.body.draft.questions[1].type).toBe(
-      'SINGLE_CHOICE',
-    );
+    expect(createFromAiResponse.body.draft.questions[1].type).toBe('SINGLE_CHOICE');
   });
 
   it('tests module should reject invalid AI blueprint payload', async () => {

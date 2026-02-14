@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function createAdmin() {
   const hashedPassword = await argon2.hash('admin');
-  
+
   const user = await prisma.user.create({
     data: {
       email: 'admin@admin.admin',
@@ -14,7 +14,7 @@ async function createAdmin() {
       role: 'ADMIN',
     },
   });
-  
+
   console.log('Admin created:', { id: user.id, email: user.email, name: user.name });
   await prisma.$disconnect();
 }

@@ -3,44 +3,53 @@
 This template is a minimal, stable base for AI-driven development.
 
 Target template baseline:
+
 - Auth flow (`/auth/signup`, `/auth/signin`, `/auth/logout`, `/auth/refresh`)
 - Frontend auth UI route: `/login` only
 - No business modules in the final template branch (auth-only)
 
 Note:
+
 - Temporary feature modules can exist in feature branches for pipeline checks.
 - Before finalizing template state, remove temporary modules and keep only auth.
 
 ## Tech Stack
+
 - Backend: NestJS, Prisma 7, PostgreSQL, JWT (Passport), nestjs-zod, Swagger
 - Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
 - Infra: Docker Compose (Postgres + Adminer)
-- Frontend architecture: Strict FSD target with template guardrails
+- Frontend architecture: Strict FSD with template guardrails (enforced)
 
 ## Frontend Architecture Contract (Strict FSD)
 
 Source of truth:
+
 - `template/fsd.rules.json` (layer rules)
 - `scripts/verify-architecture.mjs` (automated checks)
 - `template/features.manifest.json` (feature inventory + route/module wiring)
 
 Layer order (imports only "down"):
+
 - `app -> pages -> widgets -> features -> entities -> shared`
 
 Rules:
+
 1. `pages/*` are route entrypoints/composition only. No deep business logic inside page files.
 2. Cross-slice imports in `widgets/features/entities` must go through slice public API (`index.ts`) in strict mode.
 3. Feature inventory still comes from `template/features.manifest.json`; FSD does not replace manifest discipline.
 4. Any architecture change must keep `npm run verify:architecture` green.
 5. Feature implementation order remains strict: data model -> backend -> `gen:api` -> frontend -> full verification.
 
-Transition note for this branch:
-- `template/fsd.rules.json` may contain temporary compatibility exceptions during migration.
-- Final goal is `mode: "strict"` with zero transition exceptions.
+Current branch state:
+
+- `template/fsd.rules.json` uses `mode: "strict"`.
+- `transition.allowLayerBypass` and `transition.allowDeepImports` must remain empty.
+- Any temporary bypass must be explicitly documented and removed before merge.
 
 ## Feature Pipeline (Required Order)
 
 ### Phase 1: Data Modeling
+
 1. Update `server/prisma/schema.prisma`.
 2. Regenerate Prisma + Zod types:
    ```powershell
@@ -52,6 +61,7 @@ Transition note for this branch:
    ```
 
 ### Phase 2: Backend API
+
 1. Scaffold module:
    ```powershell
    npm run gen:nest <name>
@@ -65,6 +75,7 @@ Transition note for this branch:
    - Always add `@ApiResponse({ type: ... })`
 
 ### Phase 3: Frontend Integration
+
 1. Regenerate OpenAPI + API hooks (no running backend required):
    ```powershell
    npm run gen:api
@@ -76,17 +87,20 @@ Transition note for this branch:
      ```powershell
      npm run verify:api-mutator
      ```
-2. Implement UI in `features/*` and page in `pages/*` using generated hooks.
+2. Implement UI/domain composition in `widgets/*` and `features/*`; keep `pages/*` as thin route entrypoints.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
 ## OpenRouter Prompt Studio Foundation (Current Branch)
 
 Current admin prompt foundation is implemented under:
+
 - Backend: `server/src/admin/admin.controller.ts`, `server/src/admin/admin.service.ts`
-- Frontend page: `client/src/pages/admin/admin-prompts-page.tsx`
+- Frontend page wrapper: `client/src/pages/admin/admin-prompts-page.tsx`
+- Frontend workspace: `client/src/widgets/admin-prompts-workspace/*`
 - Route: `"/admin/prompts"`
 
 Required behavior:
+
 1. OpenRouter key is backend-only (`OPENROUTER_API_KEY` in `server/.env`).
 2. Model catalog must be loaded through backend proxy (`GET /admin/prompts/models`).
 3. Prompt generation must be proxied via backend (`POST /admin/prompts/generate`).
@@ -98,6 +112,7 @@ Required behavior:
 9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
 
 Recommended env vars for prompt foundation:
+
 ```env
 OPENROUTER_API_KEY="sk-or-v1-..."
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
@@ -107,12 +122,16 @@ OPENROUTER_APP_NAME="AI Template Admin"
 
 ## Tests Module Foundation (Current Branch)
 
-Current tests implementation is wired as a dedicated backend module + admin page:
+Current tests implementation is wired as a dedicated backend module + admin workspace:
+
 - Backend module: `server/src/tests/*`
+- Frontend page wrapper: `client/src/pages/admin/admin-tests-page.tsx`
+- Frontend workspace: `client/src/widgets/admin-tests-workspace/*`
 - Admin route: `"/admin/tests"`
 - Manifest feature entry: `tests` (`template/features.manifest.json`)
 
 Domain/versioning baseline:
+
 1. Single active draft per topic (`activeDraftVersionId`).
 2. Optional active published version (`activePublishedVersionId`).
 3. Publish action archives prior published version (if exists), promotes draft, then clones a new draft.
@@ -120,6 +139,7 @@ Domain/versioning baseline:
 5. Branching configurator is intentionally out of scope for this stage.
 
 Frontend UX baseline for tests editor:
+
 1. Question add/edit must happen in modal UI (avoid oversized inline editor blocks).
 2. Choice-type options should use explicit row-based inputs, not manual delimiter syntax.
 3. Service-side option code should be auto-generated when not explicitly required in UI.
@@ -129,6 +149,7 @@ Frontend UX baseline for tests editor:
 7. Sidebar cards must gracefully handle long titles/slugs (no overflow beyond card bounds).
 
 AI-assisted tests generation baseline:
+
 1. Trigger from tests workspace via dedicated modal (`Создать тест с ИИ`).
 2. Flow is two-phase: generate preview -> commit via transactional backend endpoint.
 3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
@@ -155,10 +176,10 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 3. Frontend:
    - `npm run gen:api`
    - Add form/page and route wiring:
-      - `client/src/features/create-news/ui/create-news-form.tsx`
-      - `client/src/pages/news/news-page.tsx`
-      - `client/src/app/App.tsx`
-      - add feature entry point to `client/src/pages/dashboard.tsx` (required by `verify:architecture` when features are declared)
+     - `client/src/features/create-news/ui/create-news-form.tsx`
+     - `client/src/pages/news/news-page.tsx`
+     - `client/src/app/App.tsx`
+     - add feature entry point to `client/src/pages/dashboard.tsx` (required by `verify:architecture` when features are declared)
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
@@ -168,6 +189,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    - Run `npm run verify:template` again
 
 ## Stability Rules
+
 1. Lint/test/build must pass:
    ```powershell
    npm run lint
@@ -192,6 +214,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    - All browser-specific interceptors (auth token injection, refresh logic) MUST reside in `client/src/shared/api/interceptors.ts`.
    - `client/src/app/App.tsx` must call:
      - `configureApiBaseUrl(import.meta.env.VITE_API_URL)`
+     - `configureInterceptorsRuntime(...)`
      - `setupInterceptors(api)`
    - Enforced by `npm run verify:api-mutator`.
 8. Keep server error format unified:
@@ -200,6 +223,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    ```
 
 ## PR-Ready Checklist (Feature Delivery)
+
 Use this checklist before opening PR or finalizing work.
 
 1. **Data model synced**
@@ -228,10 +252,12 @@ Use this checklist before opening PR or finalizing work.
    - Do not disable checks, do not comment out failing logic, do not hardcode obsolete smoke paths.
 
 ## Generator Status
+
 - Backend resource generator is available via `npm run gen:nest <name>`.
 - Fullstack feature generator (backend + frontend + route wiring in one command) is not implemented yet and should be designed separately.
 
 ## Architecture Source of Truth
+
 - Feature inventory is declared in `template/features.manifest.json`.
 - In final template state, `features` can be empty (auth-only baseline).
 - In auth-only frontend baseline, required auth route is `"/login"`.

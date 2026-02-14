@@ -10,6 +10,4 @@ export const AdminUserResponseSchema = z.object({
   updatedAt: z.string(),
 });
 
-export class AdminUserResponseDto extends createZodDto(
-  AdminUserResponseSchema,
-) {}
+export class AdminUserResponseDto extends createZodDto(AdminUserResponseSchema) {}

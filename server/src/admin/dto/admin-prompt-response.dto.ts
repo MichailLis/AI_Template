@@ -6,6 +6,4 @@ export const AdminPromptResponseSchema = z.object({
   output: z.string(),
 });
 
-export class AdminPromptResponseDto extends createZodDto(
-  AdminPromptResponseSchema,
-) {}
+export class AdminPromptResponseDto extends createZodDto(AdminPromptResponseSchema) {}

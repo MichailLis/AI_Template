@@ -11,12 +11,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
@@ -55,10 +50,7 @@ export class TestsController {
     status: HttpStatus.CREATED,
     type: TestsTopicDetailResponseDto,
   })
-  createTopic(
-    @GetCurrentUserId() userId: number,
-    @Body() dto: CreateTestsTopicDto,
-  ) {
+  createTopic(@GetCurrentUserId() userId: number, @Body() dto: CreateTestsTopicDto) {
     return this.testsService.createTopic(userId, dto);
   }
 
@@ -70,10 +62,7 @@ export class TestsController {
     status: HttpStatus.CREATED,
     type: TestsTopicDetailResponseDto,
   })
-  createTopicFromAi(
-    @GetCurrentUserId() userId: number,
-    @Body() dto: CreateTestsTopicFromAiDto,
-  ) {
+  createTopicFromAi(@GetCurrentUserId() userId: number, @Body() dto: CreateTestsTopicFromAiDto) {
     return this.testsService.createTopicFromAi(userId, dto);
   }
 
@@ -82,10 +71,7 @@ export class TestsController {
     summary: 'Delete test topic with all versions and questions',
   })
   @ApiResponse({ status: HttpStatus.OK, type: DeleteTestsTopicResponseDto })
-  deleteTopic(
-    @GetCurrentUserId() userId: number,
-    @Param('topicId', ParseIntPipe) topicId: number,
-  ) {
+  deleteTopic(@GetCurrentUserId() userId: number, @Param('topicId', ParseIntPipe) topicId: number) {
     return this.testsService.deleteTopic(userId, topicId);
   }
 

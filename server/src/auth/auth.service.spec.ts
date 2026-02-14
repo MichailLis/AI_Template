@@ -97,9 +97,7 @@ describe('AuthService', () => {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     });
-    const updateRefreshTokenSpy = jest
-      .spyOn(service, 'updateRefreshToken')
-      .mockResolvedValue();
+    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
 
     const result = await service.signup(dto);
 
@@ -173,9 +171,7 @@ describe('AuthService', () => {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     });
-    const updateRefreshTokenSpy = jest
-      .spyOn(service, 'updateRefreshToken')
-      .mockResolvedValue();
+    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
 
     const result = await service.signin(dto);
 
@@ -192,9 +188,7 @@ describe('AuthService', () => {
   });
 
   it('logout should clear user refresh token hash', async () => {
-    prismaMock.user.update.mockResolvedValue(
-      createTestUser({ hashedRefreshToken: null }),
-    );
+    prismaMock.user.update.mockResolvedValue(createTestUser({ hashedRefreshToken: null }));
 
     await service.logout(11);
 
@@ -205,22 +199,18 @@ describe('AuthService', () => {
   });
 
   it('refreshTokens should throw ForbiddenException when user has no refresh hash', async () => {
-    prismaMock.user.findUnique.mockResolvedValue(
-      createTestUser({ hashedRefreshToken: null }),
-    );
+    prismaMock.user.findUnique.mockResolvedValue(createTestUser({ hashedRefreshToken: null }));
 
-    await expect(service.refreshTokens(1, 'refresh-token')).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(service.refreshTokens(1, 'refresh-token')).rejects.toThrow(ForbiddenException);
   });
 
   it('refreshTokens should throw ForbiddenException when refresh token does not match', async () => {
     prismaMock.user.findUnique.mockResolvedValue(createTestUser());
     jest.mocked(argon2.verify).mockResolvedValue(false);
 
-    await expect(
-      service.refreshTokens(1, 'invalid-refresh-token'),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.refreshTokens(1, 'invalid-refresh-token')).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('refreshTokens should return new tokens when refresh token is valid', async () => {
@@ -230,9 +220,7 @@ describe('AuthService', () => {
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
     });
-    const updateRefreshTokenSpy = jest
-      .spyOn(service, 'updateRefreshToken')
-      .mockResolvedValue();
+    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
 
     const result = await service.refreshTokens(1, 'valid-refresh-token');
 
