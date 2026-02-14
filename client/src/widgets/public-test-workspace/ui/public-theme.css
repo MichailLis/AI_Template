@@ -1,0 +1,21 @@
+.theme-public {
+  --background: 204 36% 92%;
+  --foreground: 214 32% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 214 32% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 214 32% 13%;
+  --primary: 199 80% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 167 84% 31%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 205 26% 88%;
+  --muted-foreground: 214 12% 41%;
+  --accent: 170 82% 34%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 75% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 208 20% 80%;
+  --input: 208 20% 80%;
+  --ring: 199 80% 40%;
+}
