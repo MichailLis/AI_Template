@@ -61,7 +61,7 @@ export function PublicLinksListCard({
     <Card className="h-full border-slate-200">
       <CardHeader className="space-y-2">
         <CardTitle className="text-base">Ссылки и архив</CardTitle>
-        <CardDescription>Операции со ссылками без перехода между экранами.</CardDescription>
+        <CardDescription>Управление активными и архивными публичными ссылками.</CardDescription>
       </CardHeader>
       <CardContent className="flex h-[calc(100%-6.5rem)] flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">

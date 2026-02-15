@@ -8,10 +8,9 @@ export default function DashboardPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Техническая страница шаблона</CardTitle>
+          <CardTitle>Навигация по разделам</CardTitle>
           <CardDescription>
-            Страница совместимости, необходимая для архитектурных проверок при объявленных
-            feature-модулях.
+            Быстрый переход к ключевым административным разделам системы.
           </CardDescription>
         </CardHeader>
         <CardContent>

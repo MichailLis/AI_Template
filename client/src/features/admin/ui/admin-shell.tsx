@@ -126,8 +126,8 @@ export const AdminShell = ({
             </div>
           </nav>
           <div className="space-y-3 border-t border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Базовый режим шаблона</p>
-            <p className="mt-1 text-sm font-medium">Каркас админки</p>
+            <p className="text-xs text-slate-500">Административный раздел</p>
+            <p className="mt-1 text-sm font-medium">Панель управления</p>
             <Button asChild variant="outline" size="sm" className="w-full justify-start">
               <Link to="/login">К входу</Link>
             </Button>

@@ -69,7 +69,7 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle>Быстрые действия</CardTitle>
-            <CardDescription>Операционные ярлыки для базовой админки.</CardDescription>
+            <CardDescription>Быстрый доступ к основным разделам управления.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {shortcuts.map((item) => (
@@ -126,7 +126,7 @@ export const AdminOverview = ({ title, subtitle, cards, shortcuts }: AdminOvervi
       <Card className="border-amber-200 bg-amber-50 shadow-none">
         <CardContent className="flex items-center gap-3 p-4 text-amber-800">
           <AlertTriangle className="h-5 w-5" />
-          Это базовый каркас админки. Расширяйте его по шагам шаблонного пайплайна.
+          Панель готова к работе. Используйте разделы слева для управления процессами.
         </CardContent>
       </Card>
     </div>
