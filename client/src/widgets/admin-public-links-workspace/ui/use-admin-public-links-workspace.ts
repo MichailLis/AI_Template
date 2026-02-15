@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 
 import {
+  useTestsControllerCreateEducationOrganization,
   useTestsControllerCreatePublicLink,
+  useTestsControllerListEducationOrganizations,
   useTestsControllerDeletePublicLink,
   useTestsControllerGetTopicDraft,
   useTestsControllerListArchivedPublicLinks,
@@ -37,12 +39,16 @@ export function useAdminPublicLinksWorkspace() {
   const listPublicLinksQuery = useTestsControllerListPublicLinks();
   const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
   const createPublicLinkMutation = useTestsControllerCreatePublicLink();
+  const listEducationOrganizationsQuery = useTestsControllerListEducationOrganizations();
+  const createEducationOrganizationMutation = useTestsControllerCreateEducationOrganization();
   const deletePublicLinkMutation = useTestsControllerDeletePublicLink();
   const updatePublicLinkMutation = useTestsControllerUpdatePublicLink();
   const regeneratePublicLinkShortCodeMutation = useTestsControllerRegeneratePublicLinkShortCode();
   const restorePublicLinkMutation = useTestsControllerRestorePublicLink();
 
   const [newPublicShortCode, setNewPublicShortCode] = useState('');
+  const [newEducationOrganizationId, setNewEducationOrganizationId] = useState<number | null>(null);
+  const [newEducationOrganizationName, setNewEducationOrganizationName] = useState('');
   const [newPublicMaxAttempts, setNewPublicMaxAttempts] = useState('3');
   const [newPublicTimeLimit, setNewPublicTimeLimit] = useState('30');
   const [newPublicAllowResume, setNewPublicAllowResume] = useState(true);
@@ -78,8 +84,10 @@ export function useAdminPublicLinksWorkspace() {
 
   const {
     handleCreatePublicLink,
+    handleCreateEducationOrganization,
     handleSwitchPublicLinksTab,
     handleCopyShortLink,
+    handleOpenShortLink,
     handleOpenShortLinkQr,
     handleTogglePublicLink,
     handleRegeneratePublicLinkShortCode,
@@ -88,6 +96,8 @@ export function useAdminPublicLinksWorkspace() {
   } = useAdminPublicLinksActions({
     publishedVersionId: detailQuery.data?.published?.id,
     newPublicShortCode,
+    newEducationOrganizationId,
+    newEducationOrganizationName,
     newPublicMaxAttempts,
     newPublicTimeLimit,
     newPublicAllowResume,
@@ -95,6 +105,8 @@ export function useAdminPublicLinksWorkspace() {
     newPublicConsentText,
     pendingDeletePublicLinkId,
     selectedPublicLinkId,
+    listEducationOrganizationsQuery,
+    createEducationOrganizationMutation,
     createPublicLinkMutation,
     updatePublicLinkMutation,
     regeneratePublicLinkShortCodeMutation,
@@ -104,7 +116,10 @@ export function useAdminPublicLinksWorkspace() {
     setSelectedPublicLinkId,
     setPendingDeletePublicLinkId,
     setNewPublicShortCode,
+    setNewEducationOrganizationId,
+    setNewEducationOrganizationName,
     refetchPublicLinks,
+    refetchEducationOrganizations: () => void listEducationOrganizationsQuery.refetch(),
   });
 
   return {
@@ -112,6 +127,9 @@ export function useAdminPublicLinksWorkspace() {
     effectiveSelectedTopicId,
     detailQuery,
     newPublicShortCode,
+    educationOrganizations: listEducationOrganizationsQuery.data?.organizations ?? [],
+    newEducationOrganizationId,
+    newEducationOrganizationName,
     newPublicMaxAttempts,
     newPublicTimeLimit,
     newPublicAllowResume,
@@ -122,12 +140,16 @@ export function useAdminPublicLinksWorkspace() {
     visiblePublicLinks,
     effectivePublicLinkId,
     createPublicLinkMutation,
+    listEducationOrganizationsQuery,
+    createEducationOrganizationMutation,
     updatePublicLinkMutation,
     regeneratePublicLinkShortCodeMutation,
     deletePublicLinkMutation,
     restorePublicLinkMutation,
     setSelectedTopicId,
     setNewPublicShortCode,
+    setNewEducationOrganizationId,
+    setNewEducationOrganizationName,
     setNewPublicMaxAttempts,
     setNewPublicTimeLimit,
     setNewPublicAllowResume,
@@ -136,8 +158,10 @@ export function useAdminPublicLinksWorkspace() {
     setSelectedPublicLinkId,
     setPendingDeletePublicLinkId,
     handleCreatePublicLink,
+    handleCreateEducationOrganization,
     handleSwitchPublicLinksTab,
     handleCopyShortLink,
+    handleOpenShortLink,
     handleOpenShortLinkQr,
     handleTogglePublicLink,
     handleRegeneratePublicLinkShortCode,

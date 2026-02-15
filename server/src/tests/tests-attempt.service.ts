@@ -32,7 +32,17 @@ export class TestsAttemptService {
 
   async startSessionByCode(shortCode: string, dto: PublicSessionStartRequestDto) {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
-    const studentKeyHash = buildStudentKeyHash(dto);
+    const resolvedEducationOrganization =
+      link.educationOrganization?.name ?? dto.educationOrganization?.trim() ?? '';
+
+    if (!resolvedEducationOrganization) {
+      throw new BadRequestException('Учебное заведение обязательно для начала теста');
+    }
+
+    const studentKeyHash = buildStudentKeyHash({
+      ...dto,
+      educationOrganization: resolvedEducationOrganization,
+    });
     const now = new Date();
 
     await this.prisma.testStudentAttempt.updateMany({
@@ -98,7 +108,7 @@ export class TestsAttemptService {
         studentName: dto.studentName,
         studentLastInitial: dto.studentLastInitial,
         studentMiddleInitial: dto.studentMiddleInitial,
-        educationOrganization: dto.educationOrganization,
+        educationOrganization: resolvedEducationOrganization,
         groupOrClass: dto.groupOrClass,
         studentKeyHash,
         consentAcceptedAt: now,

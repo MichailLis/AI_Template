@@ -7,9 +7,12 @@ import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace
 export function AdminPublicLinksWorkspace() {
   const {
     topics,
+    educationOrganizations,
     effectiveSelectedTopicId,
     detailQuery,
     newPublicShortCode,
+    newEducationOrganizationId,
+    newEducationOrganizationName,
     newPublicMaxAttempts,
     newPublicTimeLimit,
     newPublicAllowResume,
@@ -20,11 +23,14 @@ export function AdminPublicLinksWorkspace() {
     visiblePublicLinks,
     effectivePublicLinkId,
     createPublicLinkMutation,
+    createEducationOrganizationMutation,
     updatePublicLinkMutation,
     regeneratePublicLinkShortCodeMutation,
     deletePublicLinkMutation,
     restorePublicLinkMutation,
     setSelectedTopicId,
+    setNewEducationOrganizationId,
+    setNewEducationOrganizationName,
     setNewPublicShortCode,
     setNewPublicMaxAttempts,
     setNewPublicTimeLimit,
@@ -34,8 +40,10 @@ export function AdminPublicLinksWorkspace() {
     setSelectedPublicLinkId,
     setPendingDeletePublicLinkId,
     handleCreatePublicLink,
+    handleCreateEducationOrganization,
     handleSwitchPublicLinksTab,
     handleCopyShortLink,
+    handleOpenShortLink,
     handleOpenShortLinkQr,
     handleTogglePublicLink,
     handleRegeneratePublicLinkShortCode,
@@ -48,8 +56,15 @@ export function AdminPublicLinksWorkspace() {
       <div className="grid min-h-[calc(100vh-11rem)] gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
         <PublicLinkCreateCard
           topics={topics}
+          educationOrganizations={educationOrganizations}
           effectiveSelectedTopicId={effectiveSelectedTopicId}
           onSelectTopic={setSelectedTopicId}
+          newEducationOrganizationId={newEducationOrganizationId}
+          onEducationOrganizationSelect={setNewEducationOrganizationId}
+          newEducationOrganizationName={newEducationOrganizationName}
+          onEducationOrganizationNameChange={setNewEducationOrganizationName}
+          onCreateEducationOrganization={handleCreateEducationOrganization}
+          isCreatingEducationOrganization={createEducationOrganizationMutation.isPending}
           newPublicShortCode={newPublicShortCode}
           onShortCodeChange={setNewPublicShortCode}
           newPublicMaxAttempts={newPublicMaxAttempts}
@@ -74,6 +89,7 @@ export function AdminPublicLinksWorkspace() {
           effectivePublicLinkId={effectivePublicLinkId}
           onSelectPublicLink={setSelectedPublicLinkId}
           onCopyShortLink={handleCopyShortLink}
+          onOpenShortLink={handleOpenShortLink}
           onOpenQr={handleOpenShortLinkQr}
           onTogglePublicLink={handleTogglePublicLink}
           onRegenerateShortCode={handleRegeneratePublicLinkShortCode}

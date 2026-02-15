@@ -100,11 +100,30 @@ export function usePublicTestRunWorkspace() {
   };
 
   const handleFinish = async () => {
-    if (!sessionToken || !code) {
+    if (!sessionToken || !code || !session) {
       return;
     }
 
+    const mergedAnswers = {
+      ...serverAnswerMap,
+      ...answerDraft,
+    };
+
+    const answers = session.questions
+      .map((question) => ({
+        questionId: question.id,
+        answerPayload: mergedAnswers[question.id],
+      }))
+      .filter((item) => item.answerPayload !== undefined);
+
     try {
+      if (answers.length > 0) {
+        await saveAnswersMutation.mutateAsync({
+          sessionToken,
+          data: { answers },
+        });
+      }
+
       const response = await finishMutation.mutateAsync({ sessionToken });
       navigate(`/t/${code}/result/${response.sessionToken}`);
     } catch {

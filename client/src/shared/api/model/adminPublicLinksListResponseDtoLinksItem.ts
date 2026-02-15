@@ -10,6 +10,10 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   id: number;
   publishedVersionId: number;
   topicId: number;
+  /** @nullable */
+  educationOrganizationId: number | null;
+  /** @nullable */
+  educationOrganizationName: string | null;
   shortCode: string;
   shortUrl: string;
   isActive: boolean;

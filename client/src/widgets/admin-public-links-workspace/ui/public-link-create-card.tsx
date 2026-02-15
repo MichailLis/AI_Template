@@ -11,10 +11,23 @@ interface TopicOption {
   draftTitle: string;
 }
 
+interface EducationOrganizationOption {
+  id: number;
+  name: string;
+  isActive: boolean;
+}
+
 interface PublicLinkCreateCardProps {
   topics: TopicOption[];
+  educationOrganizations: EducationOrganizationOption[];
   effectiveSelectedTopicId: number;
   onSelectTopic: (topicId: number) => void;
+  newEducationOrganizationId: number | null;
+  onEducationOrganizationSelect: (organizationId: number | null) => void;
+  newEducationOrganizationName: string;
+  onEducationOrganizationNameChange: (value: string) => void;
+  onCreateEducationOrganization: () => void;
+  isCreatingEducationOrganization: boolean;
   newPublicShortCode: string;
   onShortCodeChange: (value: string) => void;
   newPublicMaxAttempts: string;
@@ -34,8 +47,15 @@ interface PublicLinkCreateCardProps {
 
 export function PublicLinkCreateCard({
   topics,
+  educationOrganizations,
   effectiveSelectedTopicId,
   onSelectTopic,
+  newEducationOrganizationId,
+  onEducationOrganizationSelect,
+  newEducationOrganizationName,
+  onEducationOrganizationNameChange,
+  onCreateEducationOrganization,
+  isCreatingEducationOrganization,
   newPublicShortCode,
   onShortCodeChange,
   newPublicMaxAttempts,
@@ -77,6 +97,43 @@ export function PublicLinkCreateCard({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="education-organization">Учебное заведение</Label>
+          <select
+            id="education-organization"
+            value={newEducationOrganizationId ? String(newEducationOrganizationId) : ''}
+            onChange={(event) => {
+              const value = event.target.value;
+              onEducationOrganizationSelect(value ? Number.parseInt(value, 10) : null);
+            }}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Выберите учебное заведение</option>
+            {educationOrganizations
+              .filter((organization) => organization.isActive)
+              .map((organization) => (
+                <option key={organization.id} value={organization.id}>
+                  {organization.name}
+                </option>
+              ))}
+          </select>
+          <div className="flex gap-2">
+            <Input
+              value={newEducationOrganizationName}
+              onChange={(event) => onEducationOrganizationNameChange(event.target.value)}
+              placeholder="Добавить новое заведение"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCreateEducationOrganization}
+              disabled={isCreatingEducationOrganization}
+            >
+              {isCreatingEducationOrganization ? 'Добавляем...' : 'Добавить'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3">

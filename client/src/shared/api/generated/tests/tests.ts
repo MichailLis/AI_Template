@@ -25,8 +25,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminCreateEducationOrganizationDto,
   AdminCreatePublicLinkDto,
   AdminDeletePublicLinkResponseDto,
+  AdminEducationOrganizationDto,
+  AdminEducationOrganizationsListResponseDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
@@ -204,6 +207,159 @@ export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typ
 
 
 /**
+ * @summary List educational organizations for link binding
+ */
+export const testsControllerListEducationOrganizations = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationsListResponseDto>(
+      {url: `/admin/tests/education-organizations`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsControllerListEducationOrganizationsQueryKey = () => {
+    return [
+    `/admin/tests/education-organizations`
+    ] as const;
+    }
+
+    
+export const getTestsControllerListEducationOrganizationsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListEducationOrganizationsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>> = ({ signal }) => testsControllerListEducationOrganizations(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsControllerListEducationOrganizationsQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>>
+export type TestsControllerListEducationOrganizationsQueryError = unknown
+
+
+export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List educational organizations for link binding
+ */
+
+export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsControllerListEducationOrganizationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Create educational organization for link binding
+ */
+export const testsControllerCreateEducationOrganization = (
+    adminCreateEducationOrganizationDto: AdminCreateEducationOrganizationDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationDto>(
+      {url: `/admin/tests/education-organizations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateEducationOrganizationDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerCreateEducationOrganizationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext> => {
+
+const mutationKey = ['testsControllerCreateEducationOrganization'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, {data: AdminCreateEducationOrganizationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsControllerCreateEducationOrganization(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerCreateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>>
+    export type TestsControllerCreateEducationOrganizationMutationBody = AdminCreateEducationOrganizationDto
+    export type TestsControllerCreateEducationOrganizationMutationError = unknown
+
+    /**
+ * @summary Create educational organization for link binding
+ */
+export const useTestsControllerCreateEducationOrganization = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>,
+        TError,
+        {data: AdminCreateEducationOrganizationDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerCreateEducationOrganizationMutationOptions(options), queryClient);
+    }
+    /**
  * @summary List archived public links for tests
  */
 export const testsControllerListArchivedPublicLinks = (

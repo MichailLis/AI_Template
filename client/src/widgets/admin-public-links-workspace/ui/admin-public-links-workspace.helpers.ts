@@ -10,6 +10,7 @@ interface PublicLinkOption {
 
 interface ValidateCreatePublicLinkParams {
   publishedVersionId: number | undefined;
+  educationOrganizationId: number | null;
   maxAttemptsRaw: string;
   timeLimitRaw: string;
 }
@@ -18,6 +19,7 @@ type ValidateCreatePublicLinkResult =
   | {
       ok: true;
       publishedVersionId: number;
+      educationOrganizationId: number;
       maxAttemptsPerStudent: number;
       timeLimitMinutes: number | null;
     }
@@ -55,6 +57,7 @@ export const resolveEffectivePublicLinkId = (
 
 export const validateCreatePublicLinkInput = ({
   publishedVersionId,
+  educationOrganizationId,
   maxAttemptsRaw,
   timeLimitRaw,
 }: ValidateCreatePublicLinkParams): ValidateCreatePublicLinkResult => {
@@ -62,6 +65,13 @@ export const validateCreatePublicLinkInput = ({
     return {
       ok: false,
       error: 'Сначала опубликуйте версию теста, затем создайте публичную ссылку',
+    };
+  }
+
+  if (!educationOrganizationId || educationOrganizationId < 1) {
+    return {
+      ok: false,
+      error: 'Выберите учебное заведение для новой публичной ссылки',
     };
   }
 
@@ -85,6 +95,7 @@ export const validateCreatePublicLinkInput = ({
   return {
     ok: true,
     publishedVersionId,
+    educationOrganizationId,
     maxAttemptsPerStudent,
     timeLimitMinutes,
   };

@@ -27,8 +27,11 @@ import {
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
 import {
+  AdminCreateEducationOrganizationDto,
   AdminCreatePublicLinkDto,
   AdminDeletePublicLinkResponseDto,
+  AdminEducationOrganizationDto,
+  AdminEducationOrganizationsListResponseDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
@@ -55,6 +58,23 @@ export class TestsController {
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminPublicLinkDto })
   createPublicLink(@GetCurrentUserId() userId: number, @Body() dto: AdminCreatePublicLinkDto) {
     return this.testsPublicLinkService.createPublicLink(userId, dto);
+  }
+
+  @Get('education-organizations')
+  @ApiOperation({ summary: 'List educational organizations for link binding' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationsListResponseDto })
+  listEducationOrganizations(@GetCurrentUserId() userId: number) {
+    return this.testsPublicLinkService.listEducationOrganizations(userId);
+  }
+
+  @Post('education-organizations')
+  @ApiOperation({ summary: 'Create educational organization for link binding' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AdminEducationOrganizationDto })
+  createEducationOrganization(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: AdminCreateEducationOrganizationDto,
+  ) {
+    return this.testsPublicLinkService.createEducationOrganization(userId, dto);
   }
 
   @Get('public-links')

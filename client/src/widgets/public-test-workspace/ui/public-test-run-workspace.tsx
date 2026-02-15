@@ -17,7 +17,6 @@ export function PublicTestRunWorkspace() {
     answeredQuestionsCount,
     getCurrentAnswer,
     setQuestionAnswer,
-    handleSaveAnswers,
     handleFinish,
   } = usePublicTestRunWorkspace();
 
@@ -65,12 +64,10 @@ export function PublicTestRunWorkspace() {
       </div>
 
       <PublicTestRunActionBar
-        saveIsPending={saveAnswersMutation.isPending}
-        finishIsPending={finishMutation.isPending}
+        finishIsPending={saveAnswersMutation.isPending || finishMutation.isPending}
         sessionStatus={session.status}
         answeredQuestionsCount={answeredQuestionsCount}
         totalQuestionsCount={totalQuestionsCount}
-        onSaveAnswers={handleSaveAnswers}
         onFinish={handleFinish}
       />
     </PublicThemeLayout>

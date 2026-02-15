@@ -11,6 +11,8 @@ export interface PublicLinkAccessResponseDto {
   title: string;
   /** @nullable */
   description: string | null;
+  /** @nullable */
+  educationOrganization: string | null;
   /**
    * @minimum 0
    * @maximum 9007199254740991

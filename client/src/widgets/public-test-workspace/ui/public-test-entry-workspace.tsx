@@ -92,6 +92,14 @@ export function PublicTestEntryWorkspace() {
       return;
     }
 
+    const effectiveEducationOrganization =
+      linkQuery.data?.educationOrganization?.trim() ?? formState.educationOrganization.trim();
+
+    if (!effectiveEducationOrganization) {
+      toast.error('Укажите учебное заведение');
+      return;
+    }
+
     try {
       const response = await startMutation.mutateAsync({
         code,
@@ -99,7 +107,7 @@ export function PublicTestEntryWorkspace() {
           studentName: formState.studentName.trim(),
           studentLastInitial: normalizeInitial(formState.studentLastInitial),
           studentMiddleInitial: normalizeInitial(formState.studentMiddleInitial),
-          educationOrganization: formState.educationOrganization.trim(),
+          educationOrganization: effectiveEducationOrganization,
           groupOrClass: formState.groupOrClass.trim(),
           consentAccepted: true,
         },
@@ -159,7 +167,11 @@ export function PublicTestEntryWorkspace() {
         />
 
         <PublicTestRegistrationCard
-          formState={formState}
+          formState={{
+            ...formState,
+            educationOrganization: link.educationOrganization ?? formState.educationOrganization,
+          }}
+          lockedEducationOrganization={link.educationOrganization}
           consentVersion={link.consentVersion}
           consentText={link.consentText}
           isSubmitting={startMutation.isPending}

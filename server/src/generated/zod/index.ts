@@ -68,7 +68,9 @@ export const TestQuestionOptionScalarFieldEnumSchema = z.enum(['id','questionId'
 
 export const TestQuestionSliderBandScalarFieldEnumSchema = z.enum(['id','questionId','minValue','maxValue','label','weight','order']);
 
-export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
+export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','educationOrganizationId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
+
+export const EducationOrganizationScalarFieldEnumSchema = z.enum(['id','name','isActive','createdAt','updatedAt']);
 
 export const TestStudentAttemptScalarFieldEnumSchema = z.enum(['id','publicLinkId','topicVersionId','attemptNumber','status','studentName','studentLastInitial','studentMiddleInitial','educationOrganization','groupOrClass','studentKeyHash','consentAcceptedAt','consentVersion','consentTextSnapshot','resumeToken','startedAt','expiresAt','finishedAt','anonymizedAt','createdAt','updatedAt']);
 
@@ -224,6 +226,7 @@ export type TestQuestionSliderBand = z.infer<typeof TestQuestionSliderBandSchema
 export const TestPublicLinkSchema = z.object({
   id: z.number().int(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().nullable(),
   shortCode: z.string(),
   isActive: z.boolean(),
   startsAt: z.coerce.date().nullable(),
@@ -240,6 +243,20 @@ export const TestPublicLinkSchema = z.object({
 })
 
 export type TestPublicLink = z.infer<typeof TestPublicLinkSchema>
+
+/////////////////////////////////////////
+// EDUCATION ORGANIZATION SCHEMA
+/////////////////////////////////////////
+
+export const EducationOrganizationSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  isActive: z.boolean(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type EducationOrganization = z.infer<typeof EducationOrganizationSchema>
 
 /////////////////////////////////////////
 // TEST STUDENT ATTEMPT SCHEMA
@@ -525,6 +542,7 @@ export const TestQuestionSliderBandSelectSchema: z.ZodType<Prisma.TestQuestionSl
 
 export const TestPublicLinkIncludeSchema: z.ZodType<Prisma.TestPublicLinkInclude> = z.object({
   topicVersion: z.union([z.boolean(),z.lazy(() => TestTopicVersionArgsSchema)]).optional(),
+  educationOrganization: z.union([z.boolean(),z.lazy(() => EducationOrganizationArgsSchema)]).optional(),
   createdByUser: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
   attempts: z.union([z.boolean(),z.lazy(() => TestStudentAttemptFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => TestPublicLinkCountOutputTypeArgsSchema)]).optional(),
@@ -546,6 +564,7 @@ export const TestPublicLinkCountOutputTypeSelectSchema: z.ZodType<Prisma.TestPub
 export const TestPublicLinkSelectSchema: z.ZodType<Prisma.TestPublicLinkSelect> = z.object({
   id: z.boolean().optional(),
   topicVersionId: z.boolean().optional(),
+  educationOrganizationId: z.boolean().optional(),
   shortCode: z.boolean().optional(),
   isActive: z.boolean().optional(),
   startsAt: z.boolean().optional(),
@@ -560,9 +579,41 @@ export const TestPublicLinkSelectSchema: z.ZodType<Prisma.TestPublicLinkSelect> 
   updatedAt: z.boolean().optional(),
   archivedAt: z.boolean().optional(),
   topicVersion: z.union([z.boolean(),z.lazy(() => TestTopicVersionArgsSchema)]).optional(),
+  educationOrganization: z.union([z.boolean(),z.lazy(() => EducationOrganizationArgsSchema)]).optional(),
   createdByUser: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
   attempts: z.union([z.boolean(),z.lazy(() => TestStudentAttemptFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => TestPublicLinkCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+// EDUCATION ORGANIZATION
+//------------------------------------------------------
+
+export const EducationOrganizationIncludeSchema: z.ZodType<Prisma.EducationOrganizationInclude> = z.object({
+  publicLinks: z.union([z.boolean(),z.lazy(() => TestPublicLinkFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => EducationOrganizationCountOutputTypeArgsSchema)]).optional(),
+}).strict();
+
+export const EducationOrganizationArgsSchema: z.ZodType<Prisma.EducationOrganizationDefaultArgs> = z.object({
+  select: z.lazy(() => EducationOrganizationSelectSchema).optional(),
+  include: z.lazy(() => EducationOrganizationIncludeSchema).optional(),
+}).strict();
+
+export const EducationOrganizationCountOutputTypeArgsSchema: z.ZodType<Prisma.EducationOrganizationCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => EducationOrganizationCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const EducationOrganizationCountOutputTypeSelectSchema: z.ZodType<Prisma.EducationOrganizationCountOutputTypeSelect> = z.object({
+  publicLinks: z.boolean().optional(),
+}).strict();
+
+export const EducationOrganizationSelectSchema: z.ZodType<Prisma.EducationOrganizationSelect> = z.object({
+  id: z.boolean().optional(),
+  name: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  publicLinks: z.union([z.boolean(),z.lazy(() => TestPublicLinkFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => EducationOrganizationCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
 // TEST STUDENT ATTEMPT
@@ -1184,6 +1235,7 @@ export const TestPublicLinkWhereInputSchema: z.ZodType<Prisma.TestPublicLinkWher
   NOT: z.union([ z.lazy(() => TestPublicLinkWhereInputSchema), z.lazy(() => TestPublicLinkWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
   topicVersionId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   shortCode: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
@@ -1198,6 +1250,7 @@ export const TestPublicLinkWhereInputSchema: z.ZodType<Prisma.TestPublicLinkWher
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   topicVersion: z.union([ z.lazy(() => TestTopicVersionScalarRelationFilterSchema), z.lazy(() => TestTopicVersionWhereInputSchema) ]).optional(),
+  educationOrganization: z.union([ z.lazy(() => EducationOrganizationNullableScalarRelationFilterSchema), z.lazy(() => EducationOrganizationWhereInputSchema) ]).optional().nullable(),
   createdByUser: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
 });
@@ -1205,6 +1258,7 @@ export const TestPublicLinkWhereInputSchema: z.ZodType<Prisma.TestPublicLinkWher
 export const TestPublicLinkOrderByWithRelationInputSchema: z.ZodType<Prisma.TestPublicLinkOrderByWithRelationInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   shortCode: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1219,6 +1273,7 @@ export const TestPublicLinkOrderByWithRelationInputSchema: z.ZodType<Prisma.Test
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   topicVersion: z.lazy(() => TestTopicVersionOrderByWithRelationInputSchema).optional(),
+  educationOrganization: z.lazy(() => EducationOrganizationOrderByWithRelationInputSchema).optional(),
   createdByUser: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptOrderByRelationAggregateInputSchema).optional(),
 });
@@ -1242,6 +1297,7 @@ export const TestPublicLinkWhereUniqueInputSchema: z.ZodType<Prisma.TestPublicLi
   OR: z.lazy(() => TestPublicLinkWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TestPublicLinkWhereInputSchema), z.lazy(() => TestPublicLinkWhereInputSchema).array() ]).optional(),
   topicVersionId: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   endsAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
@@ -1255,6 +1311,7 @@ export const TestPublicLinkWhereUniqueInputSchema: z.ZodType<Prisma.TestPublicLi
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   topicVersion: z.union([ z.lazy(() => TestTopicVersionScalarRelationFilterSchema), z.lazy(() => TestTopicVersionWhereInputSchema) ]).optional(),
+  educationOrganization: z.union([ z.lazy(() => EducationOrganizationNullableScalarRelationFilterSchema), z.lazy(() => EducationOrganizationWhereInputSchema) ]).optional().nullable(),
   createdByUser: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema), z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
   attempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
 }));
@@ -1262,6 +1319,7 @@ export const TestPublicLinkWhereUniqueInputSchema: z.ZodType<Prisma.TestPublicLi
 export const TestPublicLinkOrderByWithAggregationInputSchema: z.ZodType<Prisma.TestPublicLinkOrderByWithAggregationInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   shortCode: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1288,6 +1346,7 @@ export const TestPublicLinkScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   NOT: z.union([ z.lazy(() => TestPublicLinkScalarWhereWithAggregatesInputSchema), z.lazy(() => TestPublicLinkScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
   topicVersionId: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   shortCode: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
@@ -1301,6 +1360,75 @@ export const TestPublicLinkScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   archivedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
+});
+
+export const EducationOrganizationWhereInputSchema: z.ZodType<Prisma.EducationOrganizationWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => EducationOrganizationWhereInputSchema), z.lazy(() => EducationOrganizationWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EducationOrganizationWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EducationOrganizationWhereInputSchema), z.lazy(() => EducationOrganizationWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  name: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
+});
+
+export const EducationOrganizationOrderByWithRelationInputSchema: z.ZodType<Prisma.EducationOrganizationOrderByWithRelationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  name: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkOrderByRelationAggregateInputSchema).optional(),
+});
+
+export const EducationOrganizationWhereUniqueInputSchema: z.ZodType<Prisma.EducationOrganizationWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    name: z.string(),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    name: z.string(),
+  }),
+])
+.and(z.strictObject({
+  id: z.number().int().optional(),
+  name: z.string().optional(),
+  AND: z.union([ z.lazy(() => EducationOrganizationWhereInputSchema), z.lazy(() => EducationOrganizationWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EducationOrganizationWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EducationOrganizationWhereInputSchema), z.lazy(() => EducationOrganizationWhereInputSchema).array() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
+}));
+
+export const EducationOrganizationOrderByWithAggregationInputSchema: z.ZodType<Prisma.EducationOrganizationOrderByWithAggregationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  name: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => EducationOrganizationCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => EducationOrganizationAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => EducationOrganizationMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => EducationOrganizationMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => EducationOrganizationSumOrderByAggregateInputSchema).optional(),
+});
+
+export const EducationOrganizationScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.EducationOrganizationScalarWhereWithAggregatesInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => EducationOrganizationScalarWhereWithAggregatesInputSchema), z.lazy(() => EducationOrganizationScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EducationOrganizationScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EducationOrganizationScalarWhereWithAggregatesInputSchema), z.lazy(() => EducationOrganizationScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  name: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  isActive: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });
 
 export const TestStudentAttemptWhereInputSchema: z.ZodType<Prisma.TestStudentAttemptWhereInput> = z.strictObject({
@@ -2145,6 +2273,7 @@ export const TestPublicLinkCreateInputSchema: z.ZodType<Prisma.TestPublicLinkCre
   updatedAt: z.coerce.date().optional(),
   archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
+  educationOrganization: z.lazy(() => EducationOrganizationCreateNestedOneWithoutPublicLinksInputSchema).optional(),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
@@ -2152,6 +2281,7 @@ export const TestPublicLinkCreateInputSchema: z.ZodType<Prisma.TestPublicLinkCre
 export const TestPublicLinkUncheckedCreateInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateInput> = z.strictObject({
   id: z.number().int().optional(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -2182,6 +2312,7 @@ export const TestPublicLinkUpdateInputSchema: z.ZodType<Prisma.TestPublicLinkUpd
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
+  educationOrganization: z.lazy(() => EducationOrganizationUpdateOneWithoutPublicLinksNestedInputSchema).optional(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
@@ -2189,6 +2320,7 @@ export const TestPublicLinkUpdateInputSchema: z.ZodType<Prisma.TestPublicLinkUpd
 export const TestPublicLinkUncheckedUpdateInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -2208,6 +2340,7 @@ export const TestPublicLinkUncheckedUpdateInputSchema: z.ZodType<Prisma.TestPubl
 export const TestPublicLinkCreateManyInputSchema: z.ZodType<Prisma.TestPublicLinkCreateManyInput> = z.strictObject({
   id: z.number().int().optional(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -2241,6 +2374,7 @@ export const TestPublicLinkUpdateManyMutationInputSchema: z.ZodType<Prisma.TestP
 export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -2254,6 +2388,63 @@ export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Test
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+});
+
+export const EducationOrganizationCreateInputSchema: z.ZodType<Prisma.EducationOrganizationCreateInput> = z.strictObject({
+  name: z.string(),
+  isActive: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutEducationOrganizationInputSchema).optional(),
+});
+
+export const EducationOrganizationUncheckedCreateInputSchema: z.ZodType<Prisma.EducationOrganizationUncheckedCreateInput> = z.strictObject({
+  id: z.number().int().optional(),
+  name: z.string(),
+  isActive: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUncheckedCreateNestedManyWithoutEducationOrganizationInputSchema).optional(),
+});
+
+export const EducationOrganizationUpdateInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateInput> = z.strictObject({
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInputSchema).optional(),
+});
+
+export const EducationOrganizationUncheckedUpdateInputSchema: z.ZodType<Prisma.EducationOrganizationUncheckedUpdateInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationNestedInputSchema).optional(),
+});
+
+export const EducationOrganizationCreateManyInputSchema: z.ZodType<Prisma.EducationOrganizationCreateManyInput> = z.strictObject({
+  id: z.number().int().optional(),
+  name: z.string(),
+  isActive: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const EducationOrganizationUpdateManyMutationInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateManyMutationInput> = z.strictObject({
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const EducationOrganizationUncheckedUpdateManyInputSchema: z.ZodType<Prisma.EducationOrganizationUncheckedUpdateManyInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
 
 export const TestStudentAttemptCreateInputSchema: z.ZodType<Prisma.TestStudentAttemptCreateInput> = z.strictObject({
@@ -3222,6 +3413,11 @@ export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilt
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
 });
 
+export const EducationOrganizationNullableScalarRelationFilterSchema: z.ZodType<Prisma.EducationOrganizationNullableScalarRelationFilter> = z.strictObject({
+  is: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
+});
+
 export const UserNullableScalarRelationFilterSchema: z.ZodType<Prisma.UserNullableScalarRelationFilter> = z.strictObject({
   is: z.lazy(() => UserWhereInputSchema).optional().nullable(),
   isNot: z.lazy(() => UserWhereInputSchema).optional().nullable(),
@@ -3230,6 +3426,7 @@ export const UserNullableScalarRelationFilterSchema: z.ZodType<Prisma.UserNullab
 export const TestPublicLinkCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkCountOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.lazy(() => SortOrderSchema).optional(),
   shortCode: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
@@ -3248,6 +3445,7 @@ export const TestPublicLinkCountOrderByAggregateInputSchema: z.ZodType<Prisma.Te
 export const TestPublicLinkAvgOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkAvgOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.lazy(() => SortOrderSchema).optional(),
   maxAttemptsPerStudent: z.lazy(() => SortOrderSchema).optional(),
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
@@ -3256,6 +3454,7 @@ export const TestPublicLinkAvgOrderByAggregateInputSchema: z.ZodType<Prisma.Test
 export const TestPublicLinkMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkMaxOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.lazy(() => SortOrderSchema).optional(),
   shortCode: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
@@ -3274,6 +3473,7 @@ export const TestPublicLinkMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Test
 export const TestPublicLinkMinOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkMinOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.lazy(() => SortOrderSchema).optional(),
   shortCode: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
@@ -3292,6 +3492,7 @@ export const TestPublicLinkMinOrderByAggregateInputSchema: z.ZodType<Prisma.Test
 export const TestPublicLinkSumOrderByAggregateInputSchema: z.ZodType<Prisma.TestPublicLinkSumOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   topicVersionId: z.lazy(() => SortOrderSchema).optional(),
+  educationOrganizationId: z.lazy(() => SortOrderSchema).optional(),
   maxAttemptsPerStudent: z.lazy(() => SortOrderSchema).optional(),
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
@@ -3309,6 +3510,38 @@ export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTi
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+});
+
+export const EducationOrganizationCountOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationCountOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  name: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EducationOrganizationAvgOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationAvgOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EducationOrganizationMaxOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationMaxOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  name: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EducationOrganizationMinOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationMinOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  name: z.lazy(() => SortOrderSchema).optional(),
+  isActive: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EducationOrganizationSumOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationSumOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const EnumTestStudentAttemptStatusFilterSchema: z.ZodType<Prisma.EnumTestStudentAttemptStatusFilter> = z.strictObject({
@@ -4159,6 +4392,12 @@ export const TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema: z.Zod
   connect: z.lazy(() => TestTopicVersionWhereUniqueInputSchema).optional(),
 });
 
+export const EducationOrganizationCreateNestedOneWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationCreateNestedOneWithoutPublicLinksInput> = z.strictObject({
+  create: z.union([ z.lazy(() => EducationOrganizationCreateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EducationOrganizationCreateOrConnectWithoutPublicLinksInputSchema).optional(),
+  connect: z.lazy(() => EducationOrganizationWhereUniqueInputSchema).optional(),
+});
+
 export const UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema: z.ZodType<Prisma.UserCreateNestedOneWithoutCreatedPublicTestLinksInput> = z.strictObject({
   create: z.union([ z.lazy(() => UserCreateWithoutCreatedPublicTestLinksInputSchema), z.lazy(() => UserUncheckedCreateWithoutCreatedPublicTestLinksInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutCreatedPublicTestLinksInputSchema).optional(),
@@ -4189,6 +4428,16 @@ export const TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchem
   upsert: z.lazy(() => TestTopicVersionUpsertWithoutPublicLinksInputSchema).optional(),
   connect: z.lazy(() => TestTopicVersionWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => TestTopicVersionUpdateToOneWithWhereWithoutPublicLinksInputSchema), z.lazy(() => TestTopicVersionUpdateWithoutPublicLinksInputSchema), z.lazy(() => TestTopicVersionUncheckedUpdateWithoutPublicLinksInputSchema) ]).optional(),
+});
+
+export const EducationOrganizationUpdateOneWithoutPublicLinksNestedInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateOneWithoutPublicLinksNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => EducationOrganizationCreateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EducationOrganizationCreateOrConnectWithoutPublicLinksInputSchema).optional(),
+  upsert: z.lazy(() => EducationOrganizationUpsertWithoutPublicLinksInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => EducationOrganizationWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => EducationOrganizationWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => EducationOrganizationWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => EducationOrganizationUpdateToOneWithWhereWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUpdateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedUpdateWithoutPublicLinksInputSchema) ]).optional(),
 });
 
 export const UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema: z.ZodType<Prisma.UserUpdateOneWithoutCreatedPublicTestLinksNestedInput> = z.strictObject({
@@ -4227,6 +4476,48 @@ export const TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkNestedInputSc
   update: z.union([ z.lazy(() => TestStudentAttemptUpdateWithWhereUniqueWithoutPublicLinkInputSchema), z.lazy(() => TestStudentAttemptUpdateWithWhereUniqueWithoutPublicLinkInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => TestStudentAttemptUpdateManyWithWhereWithoutPublicLinkInputSchema), z.lazy(() => TestStudentAttemptUpdateManyWithWhereWithoutPublicLinkInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => TestStudentAttemptScalarWhereInputSchema), z.lazy(() => TestStudentAttemptScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const TestPublicLinkCreateNestedManyWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkCreateNestedManyWithoutEducationOrganizationInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema).array(), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const TestPublicLinkUncheckedCreateNestedManyWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateNestedManyWithoutEducationOrganizationInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema).array(), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema).array(), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestPublicLinkScalarWhereInputSchema), z.lazy(() => TestPublicLinkScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationNestedInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema).array(), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestPublicLinkScalarWhereInputSchema), z.lazy(() => TestPublicLinkScalarWhereInputSchema).array() ]).optional(),
 });
 
 export const TestPublicLinkCreateNestedOneWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkCreateNestedOneWithoutAttemptsInput> = z.strictObject({
@@ -4736,12 +5027,14 @@ export const TestPublicLinkCreateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   updatedAt: z.coerce.date().optional(),
   archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
+  educationOrganization: z.lazy(() => EducationOrganizationCreateNestedOneWithoutPublicLinksInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedCreateWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateWithoutCreatedByUserInput> = z.strictObject({
   id: z.number().int().optional(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -4789,6 +5082,7 @@ export const TestPublicLinkScalarWhereInputSchema: z.ZodType<Prisma.TestPublicLi
   NOT: z.union([ z.lazy(() => TestPublicLinkScalarWhereInputSchema), z.lazy(() => TestPublicLinkScalarWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
   topicVersionId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  educationOrganizationId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   shortCode: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
@@ -5149,12 +5443,14 @@ export const TestPublicLinkCreateWithoutTopicVersionInputSchema: z.ZodType<Prism
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   archivedAt: z.coerce.date().optional().nullable(),
+  educationOrganization: z.lazy(() => EducationOrganizationCreateNestedOneWithoutPublicLinksInputSchema).optional(),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedCreateWithoutTopicVersionInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateWithoutTopicVersionInput> = z.strictObject({
   id: z.number().int().optional(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -5833,6 +6129,26 @@ export const TestTopicVersionCreateOrConnectWithoutPublicLinksInputSchema: z.Zod
   create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutPublicLinksInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutPublicLinksInputSchema) ]),
 });
 
+export const EducationOrganizationCreateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationCreateWithoutPublicLinksInput> = z.strictObject({
+  name: z.string(),
+  isActive: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUncheckedCreateWithoutPublicLinksInput> = z.strictObject({
+  id: z.number().int().optional(),
+  name: z.string(),
+  isActive: z.boolean().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const EducationOrganizationCreateOrConnectWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationCreateOrConnectWithoutPublicLinksInput> = z.strictObject({
+  where: z.lazy(() => EducationOrganizationWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => EducationOrganizationCreateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema) ]),
+});
+
 export const UserCreateWithoutCreatedPublicTestLinksInputSchema: z.ZodType<Prisma.UserCreateWithoutCreatedPublicTestLinksInput> = z.strictObject({
   email: z.string(),
   name: z.string().optional().nullable(),
@@ -5958,6 +6274,32 @@ export const TestTopicVersionUncheckedUpdateWithoutPublicLinksInputSchema: z.Zod
   studentAttempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
 });
 
+export const EducationOrganizationUpsertWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUpsertWithoutPublicLinksInput> = z.strictObject({
+  update: z.union([ z.lazy(() => EducationOrganizationUpdateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedUpdateWithoutPublicLinksInputSchema) ]),
+  create: z.union([ z.lazy(() => EducationOrganizationCreateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema) ]),
+  where: z.lazy(() => EducationOrganizationWhereInputSchema).optional(),
+});
+
+export const EducationOrganizationUpdateToOneWithWhereWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateToOneWithWhereWithoutPublicLinksInput> = z.strictObject({
+  where: z.lazy(() => EducationOrganizationWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => EducationOrganizationUpdateWithoutPublicLinksInputSchema), z.lazy(() => EducationOrganizationUncheckedUpdateWithoutPublicLinksInputSchema) ]),
+});
+
+export const EducationOrganizationUpdateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateWithoutPublicLinksInput> = z.strictObject({
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const EducationOrganizationUncheckedUpdateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUncheckedUpdateWithoutPublicLinksInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
 export const UserUpsertWithoutCreatedPublicTestLinksInputSchema: z.ZodType<Prisma.UserUpsertWithoutCreatedPublicTestLinksInput> = z.strictObject({
   update: z.union([ z.lazy(() => UserUpdateWithoutCreatedPublicTestLinksInputSchema), z.lazy(() => UserUncheckedUpdateWithoutCreatedPublicTestLinksInputSchema) ]),
   create: z.union([ z.lazy(() => UserCreateWithoutCreatedPublicTestLinksInputSchema), z.lazy(() => UserUncheckedCreateWithoutCreatedPublicTestLinksInputSchema) ]),
@@ -6006,7 +6348,7 @@ export const TestStudentAttemptUpdateManyWithWhereWithoutPublicLinkInputSchema: 
   data: z.union([ z.lazy(() => TestStudentAttemptUpdateManyMutationInputSchema), z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkInputSchema) ]),
 });
 
-export const TestPublicLinkCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkCreateWithoutAttemptsInput> = z.strictObject({
+export const TestPublicLinkCreateWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkCreateWithoutEducationOrganizationInput> = z.strictObject({
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -6021,11 +6363,76 @@ export const TestPublicLinkCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   archivedAt: z.coerce.date().optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
   createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
+  attempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutPublicLinkInputSchema).optional(),
+});
+
+export const TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateWithoutEducationOrganizationInput> = z.strictObject({
+  id: z.number().int().optional(),
+  topicVersionId: z.number().int(),
+  shortCode: z.string(),
+  isActive: z.boolean().optional(),
+  startsAt: z.coerce.date().optional().nullable(),
+  endsAt: z.coerce.date().optional().nullable(),
+  maxAttemptsPerStudent: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().optional().nullable(),
+  allowResume: z.boolean().optional(),
+  consentVersion: z.string(),
+  consentTextSnapshot: z.string(),
+  createdByUserId: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  attempts: z.lazy(() => TestStudentAttemptUncheckedCreateNestedManyWithoutPublicLinkInputSchema).optional(),
+});
+
+export const TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkCreateOrConnectWithoutEducationOrganizationInput> = z.strictObject({
+  where: z.lazy(() => TestPublicLinkWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema) ]),
+});
+
+export const TestPublicLinkCreateManyEducationOrganizationInputEnvelopeSchema: z.ZodType<Prisma.TestPublicLinkCreateManyEducationOrganizationInputEnvelope> = z.strictObject({
+  data: z.union([ z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateManyEducationOrganizationInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional(),
+});
+
+export const TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUpsertWithWhereUniqueWithoutEducationOrganizationInput> = z.strictObject({
+  where: z.lazy(() => TestPublicLinkWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => TestPublicLinkUpdateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedUpdateWithoutEducationOrganizationInputSchema) ]),
+  create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema) ]),
+});
+
+export const TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateWithWhereUniqueWithoutEducationOrganizationInput> = z.strictObject({
+  where: z.lazy(() => TestPublicLinkWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => TestPublicLinkUpdateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedUpdateWithoutEducationOrganizationInputSchema) ]),
+});
+
+export const TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateManyWithWhereWithoutEducationOrganizationInput> = z.strictObject({
+  where: z.lazy(() => TestPublicLinkScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => TestPublicLinkUpdateManyMutationInputSchema), z.lazy(() => TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationInputSchema) ]),
+});
+
+export const TestPublicLinkCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkCreateWithoutAttemptsInput> = z.strictObject({
+  shortCode: z.string(),
+  isActive: z.boolean().optional(),
+  startsAt: z.coerce.date().optional().nullable(),
+  endsAt: z.coerce.date().optional().nullable(),
+  maxAttemptsPerStudent: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().optional().nullable(),
+  allowResume: z.boolean().optional(),
+  consentVersion: z.string(),
+  consentTextSnapshot: z.string(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  topicVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublicLinksInputSchema),
+  educationOrganization: z.lazy(() => EducationOrganizationCreateNestedOneWithoutPublicLinksInputSchema).optional(),
+  createdByUser: z.lazy(() => UserCreateNestedOneWithoutCreatedPublicTestLinksInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedCreateWithoutAttemptsInput> = z.strictObject({
   id: z.number().int().optional(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -6162,12 +6569,14 @@ export const TestPublicLinkUpdateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
+  educationOrganization: z.lazy(() => EducationOrganizationUpdateOneWithoutPublicLinksNestedInputSchema).optional(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedUpdateWithoutAttemptsInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateWithoutAttemptsInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -6578,6 +6987,7 @@ export const TestStudentAttemptUncheckedUpdateWithoutAnalysisInputSchema: z.ZodT
 export const TestPublicLinkCreateManyCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkCreateManyCreatedByUserInput> = z.strictObject({
   id: z.number().int().optional(),
   topicVersionId: z.number().int(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -6606,12 +7016,14 @@ export const TestPublicLinkUpdateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
+  educationOrganization: z.lazy(() => EducationOrganizationUpdateOneWithoutPublicLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedUpdateWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateWithoutCreatedByUserInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -6630,6 +7042,7 @@ export const TestPublicLinkUncheckedUpdateWithoutCreatedByUserInputSchema: z.Zod
 export const TestPublicLinkUncheckedUpdateManyWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyWithoutCreatedByUserInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -6723,6 +7136,7 @@ export const TestQuestionCreateManyVersionInputSchema: z.ZodType<Prisma.TestQues
 
 export const TestPublicLinkCreateManyTopicVersionInputSchema: z.ZodType<Prisma.TestPublicLinkCreateManyTopicVersionInput> = z.strictObject({
   id: z.number().int().optional(),
+  educationOrganizationId: z.number().int().optional().nullable(),
   shortCode: z.string(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().optional().nullable(),
@@ -6865,12 +7279,14 @@ export const TestPublicLinkUpdateWithoutTopicVersionInputSchema: z.ZodType<Prism
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  educationOrganization: z.lazy(() => EducationOrganizationUpdateOneWithoutPublicLinksNestedInputSchema).optional(),
   createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
   attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
 });
 
 export const TestPublicLinkUncheckedUpdateWithoutTopicVersionInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateWithoutTopicVersionInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -6889,6 +7305,7 @@ export const TestPublicLinkUncheckedUpdateWithoutTopicVersionInputSchema: z.ZodT
 
 export const TestPublicLinkUncheckedUpdateManyWithoutTopicVersionInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyWithoutTopicVersionInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  educationOrganizationId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -7182,6 +7599,79 @@ export const TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkInputSchema: 
   anonymizedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const TestPublicLinkCreateManyEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkCreateManyEducationOrganizationInput> = z.strictObject({
+  id: z.number().int().optional(),
+  topicVersionId: z.number().int(),
+  shortCode: z.string(),
+  isActive: z.boolean().optional(),
+  startsAt: z.coerce.date().optional().nullable(),
+  endsAt: z.coerce.date().optional().nullable(),
+  maxAttemptsPerStudent: z.number().int().optional(),
+  timeLimitMinutes: z.number().int().optional().nullable(),
+  allowResume: z.boolean().optional(),
+  consentVersion: z.string(),
+  consentTextSnapshot: z.string(),
+  createdByUserId: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
+});
+
+export const TestPublicLinkUpdateWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateWithoutEducationOrganizationInput> = z.strictObject({
+  shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  endsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  maxAttemptsPerStudent: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  topicVersion: z.lazy(() => TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema).optional(),
+  createdByUser: z.lazy(() => UserUpdateOneWithoutCreatedPublicTestLinksNestedInputSchema).optional(),
+  attempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
+});
+
+export const TestPublicLinkUncheckedUpdateWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateWithoutEducationOrganizationInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  endsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  maxAttemptsPerStudent: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  attempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutPublicLinkNestedInputSchema).optional(),
+});
+
+export const TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationInputSchema: z.ZodType<Prisma.TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  topicVersionId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  shortCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  startsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  endsAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  maxAttemptsPerStudent: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestStudentAnswerCreateManyAttemptInputSchema: z.ZodType<Prisma.TestStudentAnswerCreateManyAttemptInput> = z.strictObject({
@@ -7659,6 +8149,68 @@ export const TestPublicLinkFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.TestPub
   select: TestPublicLinkSelectSchema.optional(),
   include: TestPublicLinkIncludeSchema.optional(),
   where: TestPublicLinkWhereUniqueInputSchema, 
+}).strict();
+
+export const EducationOrganizationFindFirstArgsSchema: z.ZodType<Prisma.EducationOrganizationFindFirstArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  orderBy: z.union([ EducationOrganizationOrderByWithRelationInputSchema.array(), EducationOrganizationOrderByWithRelationInputSchema ]).optional(),
+  cursor: EducationOrganizationWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EducationOrganizationScalarFieldEnumSchema, EducationOrganizationScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const EducationOrganizationFindFirstOrThrowArgsSchema: z.ZodType<Prisma.EducationOrganizationFindFirstOrThrowArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  orderBy: z.union([ EducationOrganizationOrderByWithRelationInputSchema.array(), EducationOrganizationOrderByWithRelationInputSchema ]).optional(),
+  cursor: EducationOrganizationWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EducationOrganizationScalarFieldEnumSchema, EducationOrganizationScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const EducationOrganizationFindManyArgsSchema: z.ZodType<Prisma.EducationOrganizationFindManyArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  orderBy: z.union([ EducationOrganizationOrderByWithRelationInputSchema.array(), EducationOrganizationOrderByWithRelationInputSchema ]).optional(),
+  cursor: EducationOrganizationWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EducationOrganizationScalarFieldEnumSchema, EducationOrganizationScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const EducationOrganizationAggregateArgsSchema: z.ZodType<Prisma.EducationOrganizationAggregateArgs> = z.object({
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  orderBy: z.union([ EducationOrganizationOrderByWithRelationInputSchema.array(), EducationOrganizationOrderByWithRelationInputSchema ]).optional(),
+  cursor: EducationOrganizationWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const EducationOrganizationGroupByArgsSchema: z.ZodType<Prisma.EducationOrganizationGroupByArgs> = z.object({
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  orderBy: z.union([ EducationOrganizationOrderByWithAggregationInputSchema.array(), EducationOrganizationOrderByWithAggregationInputSchema ]).optional(),
+  by: EducationOrganizationScalarFieldEnumSchema.array(), 
+  having: EducationOrganizationScalarWhereWithAggregatesInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const EducationOrganizationFindUniqueArgsSchema: z.ZodType<Prisma.EducationOrganizationFindUniqueArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereUniqueInputSchema, 
+}).strict();
+
+export const EducationOrganizationFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.EducationOrganizationFindUniqueOrThrowArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereUniqueInputSchema, 
 }).strict();
 
 export const TestStudentAttemptFindFirstArgsSchema: z.ZodType<Prisma.TestStudentAttemptFindFirstArgs> = z.object({
@@ -8222,6 +8774,60 @@ export const TestPublicLinkUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.TestP
 
 export const TestPublicLinkDeleteManyArgsSchema: z.ZodType<Prisma.TestPublicLinkDeleteManyArgs> = z.object({
   where: TestPublicLinkWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const EducationOrganizationCreateArgsSchema: z.ZodType<Prisma.EducationOrganizationCreateArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  data: z.union([ EducationOrganizationCreateInputSchema, EducationOrganizationUncheckedCreateInputSchema ]),
+}).strict();
+
+export const EducationOrganizationUpsertArgsSchema: z.ZodType<Prisma.EducationOrganizationUpsertArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereUniqueInputSchema, 
+  create: z.union([ EducationOrganizationCreateInputSchema, EducationOrganizationUncheckedCreateInputSchema ]),
+  update: z.union([ EducationOrganizationUpdateInputSchema, EducationOrganizationUncheckedUpdateInputSchema ]),
+}).strict();
+
+export const EducationOrganizationCreateManyArgsSchema: z.ZodType<Prisma.EducationOrganizationCreateManyArgs> = z.object({
+  data: z.union([ EducationOrganizationCreateManyInputSchema, EducationOrganizationCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const EducationOrganizationCreateManyAndReturnArgsSchema: z.ZodType<Prisma.EducationOrganizationCreateManyAndReturnArgs> = z.object({
+  data: z.union([ EducationOrganizationCreateManyInputSchema, EducationOrganizationCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const EducationOrganizationDeleteArgsSchema: z.ZodType<Prisma.EducationOrganizationDeleteArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  where: EducationOrganizationWhereUniqueInputSchema, 
+}).strict();
+
+export const EducationOrganizationUpdateArgsSchema: z.ZodType<Prisma.EducationOrganizationUpdateArgs> = z.object({
+  select: EducationOrganizationSelectSchema.optional(),
+  include: EducationOrganizationIncludeSchema.optional(),
+  data: z.union([ EducationOrganizationUpdateInputSchema, EducationOrganizationUncheckedUpdateInputSchema ]),
+  where: EducationOrganizationWhereUniqueInputSchema, 
+}).strict();
+
+export const EducationOrganizationUpdateManyArgsSchema: z.ZodType<Prisma.EducationOrganizationUpdateManyArgs> = z.object({
+  data: z.union([ EducationOrganizationUpdateManyMutationInputSchema, EducationOrganizationUncheckedUpdateManyInputSchema ]),
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const EducationOrganizationUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.EducationOrganizationUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ EducationOrganizationUpdateManyMutationInputSchema, EducationOrganizationUncheckedUpdateManyInputSchema ]),
+  where: EducationOrganizationWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const EducationOrganizationDeleteManyArgsSchema: z.ZodType<Prisma.EducationOrganizationDeleteManyArgs> = z.object({
+  where: EducationOrganizationWhereInputSchema.optional(), 
   limit: z.number().optional(),
 }).strict();
 

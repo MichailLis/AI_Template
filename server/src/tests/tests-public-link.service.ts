@@ -1,7 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
-import type { AdminCreatePublicLinkDto, AdminUpdatePublicLinkDto } from './dto/tests-links.dto';
+import type {
+  AdminCreateEducationOrganizationDto,
+  AdminCreatePublicLinkDto,
+  AdminUpdatePublicLinkDto,
+} from './dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from './dto/tests-public.dto';
 import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 import { parseDateOrNull } from './tests-date.utils';
@@ -27,6 +31,25 @@ const DEFAULT_ALLOW_RESUME = true;
 @Injectable()
 export class TestsPublicLinkService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async ensureActiveEducationOrganizationIfProvided(
+    educationOrganizationId?: number | null,
+  ) {
+    if (!educationOrganizationId) {
+      return null;
+    }
+
+    const organization = await this.prisma.educationOrganization.findUnique({
+      where: { id: educationOrganizationId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!organization || !organization.isActive) {
+      throw new BadRequestException('Выбранное учебное заведение недоступно');
+    }
+
+    return organization.id;
+  }
 
   private async ensurePublishedVersion(versionId: number) {
     const version = await this.prisma.testTopicVersion.findUnique({
@@ -84,6 +107,9 @@ export class TestsPublicLinkService {
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkDto) {
     await ensureTestsAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
+    const educationOrganizationId = await this.ensureActiveEducationOrganizationIfProvided(
+      dto.educationOrganizationId,
+    );
 
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
 
@@ -97,6 +123,7 @@ export class TestsPublicLinkService {
         maxAttemptsPerStudent: dto.maxAttemptsPerStudent ?? DEFAULT_MAX_ATTEMPTS,
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
+        educationOrganizationId,
         consentVersion: dto.consentVersion,
         consentTextSnapshot: dto.consentText,
         createdByUserId: userId,
@@ -148,6 +175,11 @@ export class TestsPublicLinkService {
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
     await ensureTestsAdminAccess(this.prisma, userId);
 
+    const educationOrganizationId =
+      dto.educationOrganizationId !== undefined
+        ? await this.ensureActiveEducationOrganizationIfProvided(dto.educationOrganizationId)
+        : undefined;
+
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, archivedAt: true },
@@ -172,6 +204,7 @@ export class TestsPublicLinkService {
           : {}),
         ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
         ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
+        ...(educationOrganizationId !== undefined ? { educationOrganizationId } : {}),
         ...(dto.consentVersion !== undefined ? { consentVersion: dto.consentVersion } : {}),
         ...(dto.consentText !== undefined ? { consentTextSnapshot: dto.consentText } : {}),
       },
@@ -339,6 +372,7 @@ export class TestsPublicLinkService {
       shortCode: link.shortCode,
       title: link.topicVersion.title,
       description: link.topicVersion.description,
+      educationOrganization: link.educationOrganization?.name ?? null,
       questionCount: link.topicVersion._count.questions,
       maxAttemptsPerStudent: link.maxAttemptsPerStudent,
       timeLimitMinutes: link.timeLimitMinutes,
@@ -347,6 +381,58 @@ export class TestsPublicLinkService {
       endsAt: toOptionalIsoString(link.endsAt),
       consentVersion: link.consentVersion,
       consentText: link.consentTextSnapshot,
+    };
+  }
+
+  async listEducationOrganizations(userId: number) {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const organizations = await this.prisma.educationOrganization.findMany({
+      orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
+    });
+
+    return {
+      organizations: organizations.map((organization) => ({
+        id: organization.id,
+        name: organization.name,
+        isActive: organization.isActive,
+        createdAt: organization.createdAt.toISOString(),
+        updatedAt: organization.updatedAt.toISOString(),
+      })),
+    };
+  }
+
+  async createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const name = dto.name.trim();
+
+    const existing = await this.prisma.educationOrganization.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive',
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Учебное заведение с таким названием уже существует');
+    }
+
+    const created = await this.prisma.educationOrganization.create({
+      data: {
+        name,
+      },
+    });
+
+    return {
+      id: created.id,
+      name: created.name,
+      isActive: created.isActive,
+      createdAt: created.createdAt.toISOString(),
+      updatedAt: created.updatedAt.toISOString(),
     };
   }
 }

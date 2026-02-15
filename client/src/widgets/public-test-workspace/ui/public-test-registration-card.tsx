@@ -10,6 +10,7 @@ import type { FormEvent } from 'react';
 
 interface PublicTestRegistrationCardProps {
   formState: StudentFormState;
+  lockedEducationOrganization: string | null;
   consentVersion: string;
   consentText: string;
   isSubmitting: boolean;
@@ -19,6 +20,7 @@ interface PublicTestRegistrationCardProps {
 
 export function PublicTestRegistrationCard({
   formState,
+  lockedEducationOrganization,
   consentVersion,
   consentText,
   isSubmitting,
@@ -103,9 +105,19 @@ export function PublicTestRegistrationCard({
                   value={formState.educationOrganization}
                   onChange={(event) => onFieldChange('educationOrganization', event.target.value)}
                   required
+                  disabled={Boolean(lockedEducationOrganization)}
                   className="h-11"
-                  placeholder="Школа, колледж, вуз..."
+                  placeholder={
+                    lockedEducationOrganization
+                      ? 'Учебное заведение определено по ссылке'
+                      : 'Школа, колледж, вуз...'
+                  }
                 />
+                {lockedEducationOrganization ? (
+                  <p className="text-xs text-slate-500">
+                    Значение задано администратором для этой публичной ссылки.
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="student-group" className="font-medium">

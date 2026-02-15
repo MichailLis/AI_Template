@@ -41,6 +41,12 @@ export interface AdminCreatePublicLinkDto {
   timeLimitMinutes?: number | null;
   allowResume?: boolean;
   /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  educationOrganizationId?: number | null;
+  /**
    * @minLength 1
    * @maxLength 64
    */

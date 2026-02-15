@@ -1,43 +1,41 @@
-# Public Flow + Admin Public Links Update (2026-02-14)
+# Public Flow + Public Links Update (refreshed 2026-02-15)
 
-## Context
-This branch currently carries active business modules (admin/tests/public flow) for feature delivery, while final template target remains auth-only baseline.
+## Routing and ownership
+- Admin links lifecycle: `/admin/public-links`
+- Admin stats: `/admin/public-links/stats`
+- Student flow:
+  - `/t/:code`
+  - `/t/:code/session/:sessionToken`
+  - `/t/:code/result/:sessionToken`
 
-## Delivered capabilities
-1. Admin public links split into dedicated pages:
-   - `/admin/public-links`
-   - `/admin/public-links/stats`
-2. Public-link lifecycle uses non-destructive archive/restore:
-   - archive disables student access
-   - historical sessions/results remain intact
-3. Stats UX upgraded to table-first layout with practical controls:
-   - filter by test
-   - filter by link
-   - actions per student row for analysis + answers
-   - business copy in selectors: `тестов пройдено`
-4. Public student flow routes:
-   - `/t/:code`
-   - `/t/:code/session/:sessionToken`
-   - `/t/:code/result/:sessionToken`
-5. Product-ready public theme architecture:
-   - shared wrapper: `client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`
-   - scoped tokens: `client/src/widgets/public-test-workspace/ui/public-theme.css` (`.theme-public`)
-   - rule: do not move this scoped theme back into global `client/src/app/index.css`
-6. UX contract for student-facing pages:
-   - entry page centered and mobile-safe
-   - run header hides raw technical status (`IN_PROGRESS`)
-   - result page maps analysis statuses to human labels: `готов`, `в обработке`, `ошибка`
+## Current behavior baseline
+1. Public links lifecycle: create/regenerate/archive/restore.
+2. Archive is non-destructive (historical attempts remain queryable in stats).
+3. Stats view is table-first with practical filters/actions.
+4. Student-facing public pages use scoped theme via `PublicThemeLayout` + `public-theme.css` (`.theme-public`).
+5. Student UI avoids raw technical statuses.
 
-## Important implementation notes
-- Runtime API autodiscovery should validate required API routes before accepting discovered origin (prevents attaching to unrelated local Swagger API).
-- Keep admin visuals untouched by public theme (scope strictly to `/t/*` composition layer).
+## Educational organization binding (new)
+1. Added managed educational organizations on admin side.
+2. Public link can be bound to one organization (`educationOrganizationId`).
+3. Link access payload includes linked organization name.
+4. Student entry form locks/uses organization from link metadata when present.
+5. Goal: remove manual org typing variance and improve downstream data quality.
 
-## Recent commit reference
-- `45276b9` `feat(client): finalize public test product-ready ui`
-  - touched: public entry/run/result UI + `public-theme-layout.tsx` + `public-theme.css`
+## Reliability fix (critical)
+- Root cause discovered: some completed attempts had zero answers because users could finish without explicit save.
+- Mitigation implemented in public run flow:
+  - Finish action now auto-saves merged draft/server answers before calling finish endpoint.
+  - Manual save button removed from student action bar.
 
-## Verification pattern used
-- `npm run lint --prefix client`
-- `npm run build --prefix client`
-- `npm run verify:architecture`
-- Manual visual/UX route check by user on public pages
+## Recent UX improvements
+- In admin public links list, added direct action to open short link in new tab (`Перейти`) for faster testing.
+- In student run action bar, primary `Завершить тест` action placed on the right side.
+
+## Verification pattern
+- Client checks for public-flow UX changes:
+  - `npm run lint --prefix client`
+  - `npm run build --prefix client`
+  - `npm run verify:smoke:client`
+- Full validation for contract-affecting changes:
+  - `npm run verify:local` (or `verify:template` before release)

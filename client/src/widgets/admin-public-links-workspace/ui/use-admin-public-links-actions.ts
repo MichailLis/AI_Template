@@ -2,8 +2,10 @@ import { toast } from 'sonner';
 
 import { parseApiError } from '@/features/tests';
 import {
+  useTestsControllerCreateEducationOrganization,
   useTestsControllerCreatePublicLink,
   useTestsControllerDeletePublicLink,
+  useTestsControllerListEducationOrganizations,
   useTestsControllerRegeneratePublicLinkShortCode,
   useTestsControllerRestorePublicLink,
   useTestsControllerUpdatePublicLink,
@@ -17,6 +19,12 @@ import {
 } from './admin-public-links-workspace.helpers';
 
 type CreatePublicLinkMutation = ReturnType<typeof useTestsControllerCreatePublicLink>;
+type ListEducationOrganizationsQuery = ReturnType<
+  typeof useTestsControllerListEducationOrganizations
+>;
+type CreateEducationOrganizationMutation = ReturnType<
+  typeof useTestsControllerCreateEducationOrganization
+>;
 type UpdatePublicLinkMutation = ReturnType<typeof useTestsControllerUpdatePublicLink>;
 type RegenerateShortCodeMutation = ReturnType<
   typeof useTestsControllerRegeneratePublicLinkShortCode
@@ -27,6 +35,8 @@ type RestorePublicLinkMutation = ReturnType<typeof useTestsControllerRestorePubl
 interface UseAdminPublicLinksActionsParams {
   publishedVersionId: number | undefined;
   newPublicShortCode: string;
+  newEducationOrganizationId: number | null;
+  newEducationOrganizationName: string;
   newPublicMaxAttempts: string;
   newPublicTimeLimit: string;
   newPublicAllowResume: boolean;
@@ -34,6 +44,8 @@ interface UseAdminPublicLinksActionsParams {
   newPublicConsentText: string;
   pendingDeletePublicLinkId: number | null;
   selectedPublicLinkId: number | null;
+  listEducationOrganizationsQuery: ListEducationOrganizationsQuery;
+  createEducationOrganizationMutation: CreateEducationOrganizationMutation;
   createPublicLinkMutation: CreatePublicLinkMutation;
   updatePublicLinkMutation: UpdatePublicLinkMutation;
   regeneratePublicLinkShortCodeMutation: RegenerateShortCodeMutation;
@@ -43,12 +55,17 @@ interface UseAdminPublicLinksActionsParams {
   setSelectedPublicLinkId: (value: number | null) => void;
   setPendingDeletePublicLinkId: (value: number | null) => void;
   setNewPublicShortCode: (value: string) => void;
+  setNewEducationOrganizationId: (value: number | null) => void;
+  setNewEducationOrganizationName: (value: string) => void;
   refetchPublicLinks: () => void;
+  refetchEducationOrganizations: () => void;
 }
 
 export function useAdminPublicLinksActions({
   publishedVersionId,
   newPublicShortCode,
+  newEducationOrganizationId,
+  newEducationOrganizationName,
   newPublicMaxAttempts,
   newPublicTimeLimit,
   newPublicAllowResume,
@@ -56,6 +73,8 @@ export function useAdminPublicLinksActions({
   newPublicConsentText,
   pendingDeletePublicLinkId,
   selectedPublicLinkId,
+  listEducationOrganizationsQuery,
+  createEducationOrganizationMutation,
   createPublicLinkMutation,
   updatePublicLinkMutation,
   regeneratePublicLinkShortCodeMutation,
@@ -65,11 +84,15 @@ export function useAdminPublicLinksActions({
   setSelectedPublicLinkId,
   setPendingDeletePublicLinkId,
   setNewPublicShortCode,
+  setNewEducationOrganizationId,
+  setNewEducationOrganizationName,
   refetchPublicLinks,
+  refetchEducationOrganizations,
 }: UseAdminPublicLinksActionsParams) {
   const handleCreatePublicLink = () => {
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
+      educationOrganizationId: newEducationOrganizationId,
       maxAttemptsRaw: newPublicMaxAttempts,
       timeLimitRaw: newPublicTimeLimit,
     });
@@ -83,6 +106,7 @@ export function useAdminPublicLinksActions({
       {
         data: {
           publishedVersionId: validation.publishedVersionId,
+          educationOrganizationId: validation.educationOrganizationId,
           shortCode: newPublicShortCode.trim() || undefined,
           maxAttemptsPerStudent: validation.maxAttemptsPerStudent,
           timeLimitMinutes: validation.timeLimitMinutes,
@@ -98,6 +122,33 @@ export function useAdminPublicLinksActions({
           setSelectedPublicLinkId(link.id);
           setNewPublicShortCode('');
           refetchPublicLinks();
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  const handleCreateEducationOrganization = () => {
+    const name = newEducationOrganizationName.trim();
+
+    if (!name) {
+      toast.error('Введите название учебного заведения');
+      return;
+    }
+
+    createEducationOrganizationMutation.mutate(
+      {
+        data: { name },
+      },
+      {
+        onSuccess: (organization) => {
+          toast.success('Учебное заведение добавлено');
+          setNewEducationOrganizationName('');
+          setNewEducationOrganizationId(organization.id);
+          refetchEducationOrganizations();
+          void listEducationOrganizationsQuery.refetch();
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -210,14 +261,20 @@ export function useAdminPublicLinksActions({
     window.open(getShortLinkQrUrl(shortCode), '_blank', 'noopener,noreferrer');
   };
 
+  const handleOpenShortLink = (shortCode: string) => {
+    window.open(getShortLinkUrl(shortCode), '_blank', 'noopener,noreferrer');
+  };
+
   return {
     handleCreatePublicLink,
+    handleCreateEducationOrganization,
     handleTogglePublicLink,
     handleRegeneratePublicLinkShortCode,
     handleDeletePublicLink,
     handleRestorePublicLink,
     handleSwitchPublicLinksTab,
     handleCopyShortLink,
+    handleOpenShortLink,
     handleOpenShortLinkQr,
   };
 }

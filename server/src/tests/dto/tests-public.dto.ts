@@ -22,7 +22,7 @@ export const PublicStudentProfileSchema = z.object({
   studentName: z.string().trim().min(1).max(200),
   studentLastInitial: z.string().trim().min(1).max(1),
   studentMiddleInitial: z.string().trim().min(1).max(1),
-  educationOrganization: z.string().trim().min(1).max(300),
+  educationOrganization: z.string().trim().min(1).max(300).optional(),
   groupOrClass: z.string().trim().min(1).max(120),
   consentAccepted: z.literal(true),
 });
@@ -56,6 +56,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   shortCode: z.string(),
   title: z.string(),
   description: z.string().nullable(),
+  educationOrganization: z.string().nullable(),
   questionCount: z.number().int().min(0),
   maxAttemptsPerStudent: z.number().int().min(1),
   timeLimitMinutes: z.number().int().min(1).nullable(),

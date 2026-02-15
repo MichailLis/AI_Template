@@ -17,6 +17,7 @@ export const AdminCreatePublicLinkSchema = z
     maxAttemptsPerStudent: z.number().int().min(1).max(20).optional(),
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
+    educationOrganizationId: z.number().int().min(1).nullable().optional(),
     consentVersion: z.string().trim().min(1).max(64),
     consentText: z.string().trim().min(1).max(16000),
   })
@@ -42,6 +43,7 @@ export const AdminUpdatePublicLinkSchema = z
     maxAttemptsPerStudent: z.number().int().min(1).max(20).optional(),
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
+    educationOrganizationId: z.number().int().min(1).nullable().optional(),
     consentVersion: z.string().trim().min(1).max(64).optional(),
     consentText: z.string().trim().min(1).max(16000).optional(),
   })
@@ -63,6 +65,8 @@ export const AdminPublicLinkSchema = z.object({
   id: z.number(),
   publishedVersionId: z.number(),
   topicId: z.number(),
+  educationOrganizationId: z.number().nullable(),
+  educationOrganizationName: z.string().nullable(),
   shortCode: z.string(),
   shortUrl: z.string(),
   isActive: z.boolean(),
@@ -77,6 +81,22 @@ export const AdminPublicLinkSchema = z.object({
   title: z.string(),
   updatedAt: z.string(),
   createdAt: z.string(),
+});
+
+export const AdminCreateEducationOrganizationSchema = z.object({
+  name: z.string().trim().min(2).max(300),
+});
+
+export const AdminEducationOrganizationSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const AdminEducationOrganizationsListResponseSchema = z.object({
+  organizations: z.array(AdminEducationOrganizationSchema),
 });
 
 export const AdminPublicLinksListResponseSchema = z.object({
@@ -160,3 +180,10 @@ export class AdminPublicAttemptsListResponseDto extends createZodDto(
 export class AdminPublicAttemptDetailResponseDto extends createZodDto(
   AdminPublicAttemptDetailResponseSchema,
 ) {}
+export class AdminCreateEducationOrganizationDto extends createZodDto(
+  AdminCreateEducationOrganizationSchema,
+) {}
+export class AdminEducationOrganizationsListResponseDto extends createZodDto(
+  AdminEducationOrganizationsListResponseSchema,
+) {}
+export class AdminEducationOrganizationDto extends createZodDto(AdminEducationOrganizationSchema) {}

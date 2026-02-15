@@ -1,6 +1,13 @@
 import type { Prisma } from '@prisma/client';
 
 export const publicLinkAdminInclude = {
+  educationOrganization: {
+    select: {
+      id: true,
+      name: true,
+      isActive: true,
+    },
+  },
   topicVersion: {
     select: {
       id: true,
@@ -11,6 +18,13 @@ export const publicLinkAdminInclude = {
 } as const satisfies Prisma.TestPublicLinkInclude;
 
 export const publicLinkAccessInclude = {
+  educationOrganization: {
+    select: {
+      id: true,
+      name: true,
+      isActive: true,
+    },
+  },
   topicVersion: {
     include: {
       _count: {

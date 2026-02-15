@@ -48,15 +48,15 @@ enum TestStudentAnalysisProviderMode {
 }
 
 model User {
-  id                 Int      @id @default(autoincrement())
-  email              String   @unique
+  id                 Int     @id @default(autoincrement())
+  email              String  @unique
   name               String?
   password           String
   hashedRefreshToken String?
-  role               Role     @default(USER)
+  role               Role    @default(USER)
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   createdPublicTestLinks TestPublicLink[] @relation("PublicLinkCreatedBy")
 
@@ -64,11 +64,11 @@ model User {
 }
 
 model TestTopic {
-  id                     Int               @id @default(autoincrement())
-  slug                   String            @unique
-  createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @updatedAt
-  activeDraftVersionId   Int?
+  id                       Int      @id @default(autoincrement())
+  slug                     String   @unique
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  activeDraftVersionId     Int?
   activePublishedVersionId Int?
 
   versions               TestTopicVersion[] @relation("TestTopicVersions")
@@ -80,20 +80,20 @@ model TestTopic {
 
 model TestTopicVersion {
   id            Int                    @id @default(autoincrement())
-  topicId        Int
-  versionNumber  Int
-  status         TestTopicVersionStatus @default(DRAFT)
-  title          String
-  description    String?
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
+  topicId       Int
+  versionNumber Int
+  status        TestTopicVersionStatus @default(DRAFT)
+  title         String
+  description   String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
-  topic          TestTopic              @relation("TestTopicVersions", fields: [topicId], references: [id], onDelete: Cascade)
-  draftForTopic  TestTopic[]            @relation("ActiveDraftVersion")
-  publishedForTopic TestTopic[]         @relation("ActivePublishedVersion")
-  questions      TestQuestion[]
-  publicLinks    TestPublicLink[]
-  studentAttempts TestStudentAttempt[]
+  topic             TestTopic            @relation("TestTopicVersions", fields: [topicId], references: [id], onDelete: Cascade)
+  draftForTopic     TestTopic[]          @relation("ActiveDraftVersion")
+  publishedForTopic TestTopic[]          @relation("ActivePublishedVersion")
+  questions         TestQuestion[]
+  publicLinks       TestPublicLink[]
+  studentAttempts   TestStudentAttempt[]
 
   @@unique([topicId, versionNumber])
   @@index([topicId, status])
@@ -101,20 +101,20 @@ model TestTopicVersion {
 }
 
 model TestQuestion {
-  id           Int              @id @default(autoincrement())
-  versionId    Int
-  type         TestQuestionType
-  title        String
-  description  String?
-  required     Boolean          @default(true)
-  order        Int
-  settings     Json?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id          Int              @id @default(autoincrement())
+  versionId   Int
+  type        TestQuestionType
+  title       String
+  description String?
+  required    Boolean          @default(true)
+  order       Int
+  settings    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  version      TestTopicVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  options      TestQuestionOption[]
-  sliderBands  TestQuestionSliderBand[]
+  version        TestTopicVersion         @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  options        TestQuestionOption[]
+  sliderBands    TestQuestionSliderBand[]
   studentAnswers TestStudentAnswer[]
 
   @@index([versionId, order])
@@ -122,69 +122,85 @@ model TestQuestion {
 }
 
 model TestQuestionOption {
-  id          Int          @id @default(autoincrement())
-  questionId  Int
-  label       String
-  value       String
-  weight      Int          @default(0)
-  order       Int
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  label      String
+  value      String
+  weight     Int      @default(0)
+  order      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  question    TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId, order])
   @@map("test_question_options")
 }
 
 model TestQuestionSliderBand {
-  id          Int          @id @default(autoincrement())
-  questionId  Int
-  minValue    Int
-  maxValue    Int
-  label       String
-  weight      Int          @default(0)
-  order       Int
+  id         Int    @id @default(autoincrement())
+  questionId Int
+  minValue   Int
+  maxValue   Int
+  label      String
+  weight     Int    @default(0)
+  order      Int
 
-  question    TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId, order])
   @@map("test_question_slider_bands")
 }
 
 model TestPublicLink {
-  id                   Int       @id @default(autoincrement())
-  topicVersionId       Int
-  shortCode            String    @unique
-  isActive             Boolean   @default(true)
-  startsAt             DateTime?
-  endsAt               DateTime?
-  maxAttemptsPerStudent Int      @default(1)
-  timeLimitMinutes     Int?
-  allowResume          Boolean   @default(true)
-  consentVersion       String
-  consentTextSnapshot  String
-  createdByUserId      Int?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  archivedAt           DateTime?
+  id                      Int       @id @default(autoincrement())
+  topicVersionId          Int
+  educationOrganizationId Int?
+  shortCode               String    @unique
+  isActive                Boolean   @default(true)
+  startsAt                DateTime?
+  endsAt                  DateTime?
+  maxAttemptsPerStudent   Int       @default(1)
+  timeLimitMinutes        Int?
+  allowResume             Boolean   @default(true)
+  consentVersion          String
+  consentTextSnapshot     String
+  createdByUserId         Int?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  archivedAt              DateTime?
 
-  topicVersion         TestTopicVersion  @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
-  createdByUser        User?             @relation("PublicLinkCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  attempts             TestStudentAttempt[]
+  topicVersion          TestTopicVersion       @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
+  educationOrganization EducationOrganization? @relation(fields: [educationOrganizationId], references: [id], onDelete: SetNull)
+  createdByUser         User?                  @relation("PublicLinkCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  attempts              TestStudentAttempt[]
 
   @@index([topicVersionId])
+  @@index([educationOrganizationId])
   @@index([isActive])
   @@index([createdAt])
   @@map("test_public_links")
 }
 
+model EducationOrganization {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  publicLinks TestPublicLink[]
+
+  @@index([isActive])
+  @@map("education_organizations")
+}
+
 model TestStudentAttempt {
-  id                    Int                            @id @default(autoincrement())
+  id                    Int                      @id @default(autoincrement())
   publicLinkId          Int
   topicVersionId        Int
   attemptNumber         Int
-  status                TestStudentAttemptStatus      @default(IN_PROGRESS)
+  status                TestStudentAttemptStatus @default(IN_PROGRESS)
   studentName           String
   studentLastInitial    String
   studentMiddleInitial  String
@@ -194,18 +210,18 @@ model TestStudentAttempt {
   consentAcceptedAt     DateTime
   consentVersion        String
   consentTextSnapshot   String
-  resumeToken           String                         @unique
-  startedAt             DateTime                       @default(now())
+  resumeToken           String                   @unique
+  startedAt             DateTime                 @default(now())
   expiresAt             DateTime?
   finishedAt            DateTime?
   anonymizedAt          DateTime?
-  createdAt             DateTime                       @default(now())
-  updatedAt             DateTime                       @updatedAt
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
 
-  publicLink            TestPublicLink                 @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
-  topicVersion          TestTopicVersion               @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
-  answers               TestStudentAnswer[]
-  analysis              TestStudentAnalysis?
+  publicLink   TestPublicLink       @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
+  topicVersion TestTopicVersion     @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
+  answers      TestStudentAnswer[]
+  analysis     TestStudentAnalysis?
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
   @@index([publicLinkId, studentKeyHash])
@@ -224,8 +240,8 @@ model TestStudentAnswer {
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 
-  attempt               TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question              TestQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attempt  TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question TestQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
@@ -233,18 +249,18 @@ model TestStudentAnswer {
 }
 
 model TestStudentAnalysis {
-  id              Int                               @id @default(autoincrement())
-  attemptId       Int                               @unique
-  providerMode    TestStudentAnalysisProviderMode   @default(STUB)
-  status          TestStudentAnalysisStatus         @default(PENDING)
-  summary         Json?
-  rawText         String?
-  errorMessage    String?
-  generatedAt     DateTime?
-  createdAt       DateTime                          @default(now())
-  updatedAt       DateTime                          @updatedAt
+  id           Int                             @id @default(autoincrement())
+  attemptId    Int                             @unique
+  providerMode TestStudentAnalysisProviderMode @default(STUB)
+  status       TestStudentAnalysisStatus       @default(PENDING)
+  summary      Json?
+  rawText      String?
+  errorMessage String?
+  generatedAt  DateTime?
+  createdAt    DateTime                        @default(now())
+  updatedAt    DateTime                        @updatedAt
 
-  attempt         TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attempt TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@index([status, generatedAt])
   @@map("test_student_analyses")

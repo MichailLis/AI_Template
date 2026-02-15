@@ -9,6 +9,8 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
     id: link.id,
     publishedVersionId: link.topicVersion.id,
     topicId: link.topicVersion.topicId,
+    educationOrganizationId: link.educationOrganization?.id ?? null,
+    educationOrganizationName: link.educationOrganization?.name ?? null,
     shortCode: link.shortCode,
     shortUrl: `/t/${link.shortCode}`,
     isActive: link.isActive,

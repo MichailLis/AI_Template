@@ -7,6 +7,7 @@ interface PublicLinkListItem {
   id: number;
   shortCode: string;
   title: string;
+  educationOrganizationName: string | null;
   archivedAt: string | null;
   isActive: boolean;
 }
@@ -18,6 +19,7 @@ interface PublicLinksListCardProps {
   effectivePublicLinkId: number | null;
   onSelectPublicLink: (linkId: number) => void;
   onCopyShortLink: (shortCode: string) => Promise<void>;
+  onOpenShortLink: (shortCode: string) => void;
   onOpenQr: (shortCode: string) => void;
   onTogglePublicLink: (linkId: number, nextActive: boolean) => void;
   onRegenerateShortCode: (linkId: number) => void;
@@ -36,6 +38,7 @@ export function PublicLinksListCard({
   effectivePublicLinkId,
   onSelectPublicLink,
   onCopyShortLink,
+  onOpenShortLink,
   onOpenQr,
   onTogglePublicLink,
   onRegenerateShortCode,
@@ -99,6 +102,11 @@ export function PublicLinksListCard({
                   {link.shortCode}
                 </button>
                 <span className="text-xs text-slate-600">{link.title}</span>
+                {link.educationOrganizationName ? (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                    {link.educationOrganizationName}
+                  </span>
+                ) : null}
                 <span className="ml-auto text-xs text-slate-500">{getLinkStateLabel(link)}</span>
               </div>
 
@@ -112,6 +120,14 @@ export function PublicLinksListCard({
                       onClick={() => void onCopyShortLink(link.shortCode)}
                     >
                       Копировать
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onOpenShortLink(link.shortCode)}
+                    >
+                      Перейти
                     </Button>
                     <Button
                       type="button"

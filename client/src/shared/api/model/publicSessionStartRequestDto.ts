@@ -26,7 +26,7 @@ export interface PublicSessionStartRequestDto {
    * @minLength 1
    * @maxLength 300
    */
-  educationOrganization: string;
+  educationOrganization?: string;
   /**
    * @minLength 1
    * @maxLength 120
