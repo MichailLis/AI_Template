@@ -17,6 +17,14 @@ import {
   interpolatePrompt,
 } from '../lib/utils';
 
+import {
+  applySimulationError,
+  applySimulationSuccess,
+  buildRunningSimulationRun,
+  resolveSelectedPromptModel,
+  validateSimulationInput,
+} from './admin-prompts-workspace.helpers';
+
 import type { ModelFilter, PromptVariable, ResponseFormat, SimulationRun } from '../model/types';
 
 export function useAdminPromptsWorkspace() {
@@ -66,12 +74,11 @@ export function useAdminPromptsWorkspace() {
     });
   }, [allModels, modelFilter, modelSearch]);
 
-  const defaultFreeModel = allModels.find((item) => item.isFree)?.id;
-  const selectedModelCandidate =
-    model || defaultFreeModel || modelsQuery.data?.defaultModel || allModels[0]?.id || '';
-  const selectedModel = filteredModels.some((item) => item.id === selectedModelCandidate)
-    ? selectedModelCandidate
-    : filteredModels[0]?.id || selectedModelCandidate;
+  const selectedModel = useMemo(
+    () =>
+      resolveSelectedPromptModel(model, filteredModels, allModels, modelsQuery.data?.defaultModel),
+    [allModels, filteredModels, model, modelsQuery.data?.defaultModel],
+  );
 
   const selectedModelItem = allModels.find((item) => item.id === selectedModel) ?? null;
 
@@ -143,41 +150,25 @@ export function useAdminPromptsWorkspace() {
   };
 
   const handleGenerate = () => {
-    if (!selectedModel) {
-      toast.error('Select a model first');
+    const validation = validateSimulationInput({
+      selectedModel,
+      duplicateVariableData,
+      temperature,
+      renderedPrompt,
+    });
+
+    if (!validation.ok) {
+      toast.error(validation.error);
       return;
     }
 
-    if (duplicateVariableData.duplicateKeys.length > 0) {
-      toast.error(`Duplicate variable keys: ${duplicateVariableData.duplicateKeys.join(', ')}`);
-      return;
-    }
-
-    const parsedTemperature = Number(temperature);
-
-    if (Number.isNaN(parsedTemperature) || parsedTemperature < 0 || parsedTemperature > 2) {
-      toast.error('Temperature must be between 0 and 2');
-      return;
-    }
-
-    const preparedPrompt = renderedPrompt.trim();
-
-    if (!preparedPrompt) {
-      toast.error('Prompt is empty after variable substitution');
-      return;
-    }
+    const { parsedTemperature, preparedPrompt } = validation;
 
     const runId = generateRunId();
     const startedAt = Date.now();
 
     setRuns((prev) => [
-      {
-        id: runId,
-        createdAt: formatNow(),
-        status: 'running',
-        model: selectedModel,
-        prompt: preparedPrompt,
-      },
+      buildRunningSimulationRun(runId, selectedModel, preparedPrompt, formatNow()),
       ...prev,
     ]);
 
@@ -195,33 +186,12 @@ export function useAdminPromptsWorkspace() {
           const latencyMs = Date.now() - startedAt;
           const totalTokens = estimateTokens(preparedPrompt + data.output);
 
-          setRuns((prev) =>
-            prev.map((run) =>
-              run.id === runId
-                ? {
-                    ...run,
-                    status: 'success',
-                    output: data.output,
-                    latencyMs,
-                    totalTokens,
-                  }
-                : run,
-            ),
-          );
+          setRuns((prev) => applySimulationSuccess(prev, runId, data, latencyMs, totalTokens));
         },
         onError: (error: unknown) => {
-          setRuns((prev) =>
-            prev.map((run) =>
-              run.id === runId
-                ? {
-                    ...run,
-                    status: 'error',
-                    errorMessage: getApiErrorMessage(error),
-                  }
-                : run,
-            ),
-          );
-          toast.error(getApiErrorMessage(error));
+          const message = getApiErrorMessage(error);
+          setRuns((prev) => applySimulationError(prev, runId, message));
+          toast.error(message);
         },
       },
     );

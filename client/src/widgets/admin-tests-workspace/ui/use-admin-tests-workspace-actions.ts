@@ -1,8 +1,16 @@
-import { toast } from 'sonner';
-
-import { parseApiError, type TestTopicListItem } from '@/features/tests';
+import {
+  createHandleConfirmDeleteTopic,
+  createHandleConfirmPublish,
+  createHandleConfirmTopicSwitch,
+  createHandleCreateTest,
+  createHandleCreateTestFromAi,
+  createHandleReorderQuestions,
+  createHandleSelectTest,
+} from './admin-tests-workspace-action-creators';
+import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
 
 import type { useDraftAutosave, useQuestionEditor } from '@/features/tests';
+import type { TestTopicListItem } from '@/features/tests';
 import type {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
@@ -10,7 +18,6 @@ import type {
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
 } from '@/shared/api/generated/tests/tests';
-import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
 type CreateTopicMutation = ReturnType<typeof useTestsControllerCreateTopic>;
 type CreateTopicFromAiMutation = ReturnType<typeof useTestsControllerCreateTopicFromAi>;
@@ -92,223 +99,83 @@ export function useAdminTestsWorkspaceActions({
   detail,
   refetchDetailOnly,
 }: UseAdminTestsWorkspaceActionsParams) {
-  const handleCreateTest = () => {
-    if (!newTestTitle.trim()) {
-      toast.error('Укажите название теста');
-      return;
-    }
+  const handleCreateTest = createHandleCreateTest({
+    newTestTitle,
+    newTestSlug,
+    newTestDescription,
+    setNewTestTitle,
+    setNewTestSlug,
+    setNewTestDescription,
+    createTopicMutation,
+    draftAutosave,
+    setSelectedTopicId,
+    refetchTopicsOnly,
+  });
 
-    createTopicMutation.mutate(
-      {
-        data: {
-          title: newTestTitle.trim(),
-          slug: newTestSlug.trim() || undefined,
-          description: newTestDescription.trim() || null,
-        },
-      },
-      {
-        onSuccess: (topic) => {
-          toast.success('Тест создан');
-          setNewTestTitle('');
-          setNewTestSlug('');
-          setNewTestDescription('');
-          draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
-          refetchTopicsOnly();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
+  const handleCreateTestFromAi = createHandleCreateTestFromAi({
+    createTopicFromAiMutation,
+    setIsAiGeneratorOpen,
+    draftAutosave,
+    setSelectedTopicId,
+    refetchTestsData,
+  });
 
-  const handleCreateTestFromAi = (payload: CreateTestsTopicFromAiDto) => {
-    createTopicFromAiMutation.mutate(
-      {
-        data: payload,
-      },
-      {
-        onSuccess: (topic) => {
-          toast.success('Тест успешно создан с помощью ИИ');
-          setIsAiGeneratorOpen(false);
-          draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
+  const handleSelectTest = createHandleSelectTest({
+    effectiveSelectedTopicId,
+    isDraftDirty,
+    setPendingTopicSwitchId,
+    setIsSwitchConfirmOpen,
+    draftAutosave,
+    setSelectedTopicId,
+  });
 
-  const handleSelectTest = (topicId: number) => {
-    if (topicId === effectiveSelectedTopicId) {
-      return;
-    }
+  const handleConfirmTopicSwitch = createHandleConfirmTopicSwitch({
+    pendingTopicSwitchId,
+    setIsSwitchConfirmOpen,
+    draft,
+    clearDraftEdits,
+    draftAutosave,
+    setSelectedTopicId,
+    setPendingTopicSwitchId,
+  });
 
-    if (isDraftDirty) {
-      setPendingTopicSwitchId(topicId);
-      setIsSwitchConfirmOpen(true);
-      return;
-    }
+  const handleConfirmDeleteTopic = createHandleConfirmDeleteTopic({
+    pendingDeleteTopic,
+    deleteTopicMutation,
+    effectiveSelectedTopicId,
+    draft,
+    clearDraftEdits,
+    topics,
+    setSelectedTopicId,
+    questionEditor,
+    setIsPublishConfirmOpen,
+    setPendingTopicSwitchId,
+    setIsSwitchConfirmOpen,
+    setPendingDeleteTopic,
+    draftAutosave,
+    refetchTestsData,
+  });
 
-    draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(topicId);
-  };
+  const handleConfirmPublish = createHandleConfirmPublish({
+    effectiveSelectedTopicId,
+    setIsPublishConfirmOpen,
+    publishMutation,
+    questionEditor,
+    draft,
+    clearDraftEdits,
+    draftAutosave,
+    refetchTestsData,
+  });
 
-  const handleConfirmTopicSwitch = () => {
-    if (pendingTopicSwitchId === null) {
-      setIsSwitchConfirmOpen(false);
-      return;
-    }
+  const handleReorderQuestions = createHandleReorderQuestions({
+    effectiveSelectedTopicId,
+    detail,
+    reorderQuestionsMutation,
+    refetchDetailOnly,
+    refetchTestsData,
+  });
 
-    if (draft) {
-      clearDraftEdits(draft.id);
-    }
-
-    draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(pendingTopicSwitchId);
-    setPendingTopicSwitchId(null);
-    setIsSwitchConfirmOpen(false);
-  };
-
-  const handleConfirmDeleteTopic = () => {
-    if (!pendingDeleteTopic) {
-      return;
-    }
-
-    const topicIdToDelete = pendingDeleteTopic.id;
-
-    deleteTopicMutation.mutate(
-      {
-        topicId: topicIdToDelete,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Тест удален');
-
-          if (effectiveSelectedTopicId === topicIdToDelete) {
-            if (draft) {
-              clearDraftEdits(draft.id);
-            }
-
-            const nextTopic = topics.find((topic) => topic.id !== topicIdToDelete);
-            setSelectedTopicId(nextTopic?.id ?? null);
-            questionEditor.closeQuestionModalDirect();
-            questionEditor.setPendingDeleteQuestion(null);
-            setIsPublishConfirmOpen(false);
-            setPendingTopicSwitchId(null);
-            setIsSwitchConfirmOpen(false);
-          }
-
-          setPendingDeleteTopic(null);
-          draftAutosave.resetAutosaveMeta();
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleConfirmPublish = () => {
-    if (!effectiveSelectedTopicId) {
-      setIsPublishConfirmOpen(false);
-      return;
-    }
-
-    publishMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-      },
-      {
-        onSuccess: (result) => {
-          toast.success(
-            `Опубликована версия v${result.publishedVersionNumber}. Создана новая версия в работе v${result.newDraftVersionNumber}`,
-          );
-          setIsPublishConfirmOpen(false);
-          questionEditor.closeQuestionModalDirect();
-
-          if (draft) {
-            clearDraftEdits(draft.id);
-          }
-
-          draftAutosave.resetAutosaveMeta();
-          refetchTestsData();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  const handleReorderQuestions = (questionIds: number[]) => {
-    if (!effectiveSelectedTopicId || !detail || reorderQuestionsMutation.isPending) {
-      return;
-    }
-
-    const currentIds = detail.draft.questions.map((question) => question.id);
-    if (JSON.stringify(currentIds) === JSON.stringify(questionIds)) {
-      return;
-    }
-
-    const currentIdSet = new Set(currentIds);
-    const nextIdSet = new Set(questionIds);
-    const hasInvalidPayload =
-      nextIdSet.size !== questionIds.length ||
-      questionIds.length !== currentIds.length ||
-      questionIds.some((id) => !currentIdSet.has(id));
-
-    if (hasInvalidPayload) {
-      toast.error('Не удалось изменить порядок: список вопросов устарел. Обновите страницу теста.');
-      refetchDetailOnly();
-      return;
-    }
-
-    reorderQuestionsMutation.mutate(
-      {
-        topicId: effectiveSelectedTopicId,
-        data: {
-          questionIds,
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Порядок вопросов обновлен');
-          refetchTestsData();
-        },
-        onError: (error) => {
-          const message = parseApiError(error);
-          const normalizedMessage = message.toLowerCase();
-
-          if (
-            normalizedMessage.includes('numeric string is expected') ||
-            normalizedMessage.includes('questionid') ||
-            normalizedMessage.includes('validation failed')
-          ) {
-            toast.error(
-              'Ошибка маршрута reorder на backend. Перезапустите сервер и обновите страницу.',
-            );
-          } else {
-            toast.error(`Не удалось изменить порядок: ${message}`);
-          }
-
-          refetchTestsData();
-        },
-      },
-    );
-  };
-
-  let autosaveHint: string | null = null;
-  if (draftAutosave.isAutoSavingDraft) {
-    autosaveHint = 'Автосохранение...';
-  } else if (draftAutosave.lastAutoSavedAt) {
-    autosaveHint = `Автосохранено в ${draftAutosave.lastAutoSavedAt}`;
-  }
+  const autosaveHint = buildAutosaveHint(draftAutosave);
 
   return {
     handleCreateTest,

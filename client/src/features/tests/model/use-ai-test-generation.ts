@@ -14,6 +14,13 @@ import {
 } from '../lib/ai-generator-utils';
 import { parseApiError } from '../lib/tests-utils';
 
+import {
+  buildCreatePayloadResult,
+  DEFAULT_SELECTED_TYPES,
+  resolveEffectiveModel,
+  validateGenerationInput,
+} from './use-ai-test-generation.helpers';
+
 import type {
   AdminPromptModelsResponseDtoModelsItem,
   CreateTestsTopicFromAiDto,
@@ -22,13 +29,6 @@ import type {
 } from '@/shared/api/model';
 
 export type ModelFilter = 'free' | 'all';
-
-const DEFAULT_SELECTED_TYPES: Record<CreateTestsTopicFromAiDtoQuestionsItemType, boolean> = {
-  OPEN_TEXT: true,
-  SINGLE_CHOICE: true,
-  MULTI_CHOICE: true,
-  SLIDER: false,
-};
 
 interface UseAiTestGenerationParams {
   open: boolean;
@@ -75,17 +75,16 @@ export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
     return modelOptions;
   }, [freeModelOptions, modelFilter, modelOptions]);
 
-  const effectiveModel =
-    (selectedModel && visibleModelOptions.some((model) => model.id === selectedModel)
-      ? selectedModel
-      : '') ||
-    visibleModelOptions.find((model) => model.isFree)?.id ||
-    (modelsQuery.data?.defaultModel &&
-    modelOptions.some((model) => model.id === modelsQuery.data.defaultModel)
-      ? modelsQuery.data.defaultModel
-      : '') ||
-    visibleModelOptions[0]?.id ||
-    '';
+  const effectiveModel = useMemo(
+    () =>
+      resolveEffectiveModel({
+        selectedModel,
+        visibleModelOptions,
+        modelOptions,
+        defaultModel: modelsQuery.data?.defaultModel,
+      }),
+    [modelOptions, modelsQuery.data?.defaultModel, selectedModel, visibleModelOptions],
+  );
 
   const selectedModelItem = useMemo(
     () => modelOptions.find((model) => model.id === effectiveModel) ?? null,
@@ -108,31 +107,20 @@ export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
   };
 
   const handleGenerate = () => {
-    if (!topicTitle.trim()) {
-      setGenerationError('Укажите тему теста');
+    const validation = validateGenerationInput({
+      topicTitle,
+      generationTask,
+      effectiveModel,
+      allowedTypes,
+      questionCount,
+    });
+
+    if (!validation.ok) {
+      setGenerationError(validation.error);
       return;
     }
 
-    if (!generationTask.trim()) {
-      setGenerationError('Опишите, что именно должен генерировать ИИ');
-      return;
-    }
-
-    if (!effectiveModel) {
-      setGenerationError('Не удалось выбрать модель ИИ');
-      return;
-    }
-
-    if (allowedTypes.length === 0) {
-      setGenerationError('Выберите хотя бы один тип вопроса');
-      return;
-    }
-
-    const parsedQuestionCount = Number.parseInt(questionCount, 10);
-    if (Number.isNaN(parsedQuestionCount) || parsedQuestionCount < 1 || parsedQuestionCount > 60) {
-      setGenerationError('Количество вопросов должно быть от 1 до 60');
-      return;
-    }
+    const parsedQuestionCount = validation.parsedQuestionCount;
 
     setGenerationError(null);
 
@@ -194,21 +182,18 @@ export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
   };
 
   const buildCreatePayload = (): CreateTestsTopicFromAiDto | null => {
-    if (!topicTitle.trim()) {
-      setGenerationError('Укажите тему теста');
+    const payloadResult = buildCreatePayloadResult({
+      topicTitle,
+      topicDescription,
+      previewQuestions,
+    });
+
+    if (!payloadResult.ok) {
+      setGenerationError(payloadResult.error);
       return null;
     }
 
-    if (previewQuestions.length === 0) {
-      setGenerationError('Сначала сгенерируйте вопросы');
-      return null;
-    }
-
-    return {
-      title: topicTitle.trim(),
-      description: topicDescription.trim() || null,
-      questions: previewQuestions,
-    };
+    return payloadResult.payload;
   };
 
   return {
