@@ -20,6 +20,58 @@ Note:
 - Infra: Docker Compose (Postgres + Adminer)
 - Frontend architecture: Strict FSD with template guardrails (enforced)
 
+## AI Agent Operating Mode (Local Development)
+
+This repository is optimized for AI-agent implementation loops.
+
+Mandatory behavior for agents:
+
+1. Read `AI_GUIDE.md` first and treat it as repository source-of-truth.
+2. Start with search and evidence collection before edits.
+3. Prefer small, reversible commits over broad refactors.
+4. Never bypass architecture/lint/test gates to "make it pass".
+5. Keep changes scoped to the user's request; no opportunistic rewrites.
+
+## Search Mode (Exhaustive, For Non-Trivial Tasks)
+
+Use exhaustive search mode when request touches unfamiliar areas, multiple modules, or architecture decisions.
+
+Execution protocol:
+
+1. Run parallel internal discovery first:
+   - codebase search (`grep` / `rg` / AST search)
+   - structure scan (feature, widget, page, shared layers)
+   - existing pattern lookup in neighboring modules
+2. In parallel, run external reference scan for unfamiliar libraries:
+   - official docs first
+   - high-quality OSS examples second
+3. Do not stop at the first hit. Confirm patterns from multiple matches.
+4. Summarize findings before implementation (what exists, what differs, what to reuse).
+5. Then implement minimally, following discovered conventions.
+
+Stop conditions for search:
+
+- You can name exact target files and existing pattern to follow.
+- Additional searches return repetitive information.
+- Required external behavior is confirmed by official docs.
+
+## Refactor Debt Prevention (Always-On)
+
+Goal: avoid another large refactor wave by enforcing guardrails continuously.
+
+1. Prefer extraction when file size grows near warning thresholds.
+2. Keep pages thin (routing/composition only).
+3. Keep side-effect orchestration in hooks/actions, not in JSX-heavy components.
+4. Keep helpers pure and colocated with their feature/workspace.
+5. If change requires broad structural edits, split into dedicated refactor commit first.
+
+Maintainability thresholds for proactive extraction:
+
+- Prefer splitting files before they cross ~350 lines (lint warning).
+- Hard fail guard exists at 420 lines (`npm run verify:maintainability`).
+- Prefer reducer/extraction when a module accumulates more than ~14 `useState` calls.
+- Treat complexity warnings as mandatory refactor candidates for the next small PR.
+
 ## Frontend Architecture Contract (Strict FSD)
 
 Source of truth:
@@ -256,6 +308,22 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    { "success": false, "error": { "code": "...", "message": "..." } }
    ```
 9. Runtime API discovery must validate required API routes before accepting discovered origin (prevents binding to unrelated local Swagger instances).
+
+## Local Verification Entry Points
+
+Use these commands during local AI-agent development:
+
+1. Fast local gate (no DB reset, no API regeneration):
+   ```powershell
+   npm run verify:local
+   ```
+2. Full template gate (release-level):
+   ```powershell
+   npm run verify:template
+   ```
+
+`verify:local` is the default loop for daily implementation.
+`verify:template` is mandatory before finalizing branch state.
 
 ## PR-Ready Checklist (Feature Delivery)
 

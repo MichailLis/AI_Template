@@ -211,6 +211,13 @@ npm run verify:template
 Run before finalizing changes:
 
 ```powershell
+npm run verify:local
+npm run verify:template
+```
+
+For explicit step-by-step checks:
+
+```powershell
 npm run lint
 npm run test --prefix server
 npm run test:e2e --prefix server
@@ -218,6 +225,9 @@ npm run build --prefix server
 npm run build --prefix client
 npm run verify:template
 ```
+
+`verify:local` is the default daily development loop.
+`verify:template` is the release-level full pipeline (including Prisma sync, API regeneration, architecture/smoke checks).
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json` and runs mandatory server unit/e2e tests.
 
