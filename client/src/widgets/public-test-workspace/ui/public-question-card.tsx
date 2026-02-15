@@ -1,72 +1,18 @@
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-interface PublicQuestionOption {
-  id: number;
-  label: string;
-  value: string;
-}
+import { getSliderQuestionMeta } from './public-question-card.utils';
+import { PublicQuestionChoiceGroup } from './public-question-choice-group';
+import { PublicQuestionSliderField } from './public-question-slider-field';
 
-interface PublicQuestionSliderBand {
-  minValue: number;
-  maxValue: number;
-}
-
-interface PublicQuestion {
-  id: number;
-  type: 'OPEN_TEXT' | 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'SLIDER';
-  title: string;
-  description: string | null;
-  required: boolean;
-  order: number;
-  settings: unknown;
-  options: PublicQuestionOption[];
-  sliderBands: PublicQuestionSliderBand[];
-}
-
-interface SliderQuestionMeta {
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-}
+import type { PublicTestQuestion } from './public-test-run.types';
 
 interface PublicQuestionCardProps {
-  question: PublicQuestion;
+  question: PublicTestQuestion;
   currentAnswer: unknown;
   onAnswerChange: (questionId: number, value: unknown) => void;
 }
-
-const getChoiceOptionClass = (checked: boolean) => {
-  return checked ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted/30';
-};
-
-const getSliderQuestionMeta = (
-  settings: unknown,
-  sliderBands: PublicQuestionSliderBand[],
-  currentAnswer: unknown,
-): SliderQuestionMeta => {
-  const settingsRecord =
-    typeof settings === 'object' && settings !== null
-      ? (settings as Record<string, unknown>)
-      : null;
-
-  const fallbackMin = sliderBands[0]?.minValue ?? 0;
-  const fallbackMax = sliderBands.length > 0 ? sliderBands[sliderBands.length - 1].maxValue : 100;
-  const min = typeof settingsRecord?.min === 'number' ? settingsRecord.min : fallbackMin;
-  const max = typeof settingsRecord?.max === 'number' ? settingsRecord.max : fallbackMax;
-  const step = typeof settingsRecord?.step === 'number' ? settingsRecord.step : 1;
-  const value = typeof currentAnswer === 'number' ? currentAnswer : min;
-
-  return {
-    min,
-    max,
-    step,
-    value,
-  };
-};
 
 export function PublicQuestionCard({
   question,
@@ -100,81 +46,34 @@ export function PublicQuestionCard({
         ) : null}
 
         {question.type === 'SINGLE_CHOICE' ? (
-          <div className="space-y-2">
-            {question.options.map((option) => {
-              const checked = currentAnswer === option.value;
-
-              return (
-                <label
-                  key={option.id}
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${getChoiceOptionClass(checked)}`}
-                >
-                  <input
-                    type="radio"
-                    name={`single-${question.id}`}
-                    checked={checked}
-                    onChange={() => onAnswerChange(question.id, option.value)}
-                    className="h-4 w-4 border-border text-primary"
-                  />
-                  {option.label}
-                </label>
-              );
-            })}
-          </div>
+          <PublicQuestionChoiceGroup
+            mode="single"
+            questionId={question.id}
+            options={question.options}
+            currentAnswer={currentAnswer}
+            onAnswerChange={onAnswerChange}
+          />
         ) : null}
 
         {question.type === 'MULTI_CHOICE' ? (
-          <div className="space-y-2">
-            {question.options.map((option) => {
-              const currentValue = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
-              const checked = currentValue.includes(option.value);
-
-              return (
-                <label
-                  key={option.id}
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${getChoiceOptionClass(checked)}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        onAnswerChange(question.id, [...currentValue, option.value]);
-                      } else {
-                        onAnswerChange(
-                          question.id,
-                          currentValue.filter((value) => value !== option.value),
-                        );
-                      }
-                    }}
-                    className="h-4 w-4 border-border text-primary"
-                  />
-                  {option.label}
-                </label>
-              );
-            })}
-          </div>
+          <PublicQuestionChoiceGroup
+            mode="multi"
+            questionId={question.id}
+            options={question.options}
+            currentAnswer={currentAnswer}
+            onAnswerChange={onAnswerChange}
+          />
         ) : null}
 
-        {question.type === 'SLIDER' ? (
-          <div className="space-y-3">
-            <Label>{sliderMeta!.value}</Label>
-            <input
-              type="range"
-              min={sliderMeta!.min}
-              max={sliderMeta!.max}
-              step={sliderMeta!.step}
-              value={sliderMeta!.value}
-              onChange={(event) =>
-                onAnswerChange(question.id, Number.parseInt(event.target.value, 10))
-              }
-              className="w-full accent-primary"
-            />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{sliderMeta!.min}</span>
-              <span>{sliderMeta!.max}</span>
-            </div>
-          </div>
+        {question.type === 'SLIDER' && sliderMeta ? (
+          <PublicQuestionSliderField
+            questionId={question.id}
+            min={sliderMeta.min}
+            max={sliderMeta.max}
+            step={sliderMeta.step}
+            value={sliderMeta.value}
+            onAnswerChange={onAnswerChange}
+          />
         ) : null}
       </CardContent>
     </Card>
