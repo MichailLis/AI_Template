@@ -49,6 +49,10 @@ export default tseslint.config(
       // СТРОГИЕ ПРАВИЛА ДЛЯ ПРОДАКШН-КОДА
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
 
       'import/order': [
         'error',
@@ -89,10 +93,19 @@ export default tseslint.config(
       ],
 
       'no-nested-ternary': 'error',
+      'max-lines': ['warn', { max: 350, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': [
+        'warn',
+        { max: 120, skipBlankLines: true, skipComments: true, IIFEs: true },
+      ],
+      'max-params': ['warn', 5],
+      'max-depth': ['warn', 4],
+      'max-len': ['warn', { code: 160, ignoreStrings: true, ignoreTemplateLiterals: true }],
       'react/jsx-no-useless-fragment': 'error',
       'react/no-unstable-nested-components': 'error',
       'react/self-closing-comp': 'error',
       'react/jsx-boolean-value': ['error', 'never'],
+      'react/jsx-max-depth': ['warn', { max: 6 }],
 
       'jsx-a11y/alt-text': 'error',
       'jsx-a11y/anchor-is-valid': 'error',
@@ -100,7 +113,7 @@ export default tseslint.config(
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-autofocus': 'warn',
 
-      'sonarjs/cognitive-complexity': ['warn', 18],
+      'sonarjs/cognitive-complexity': ['warn', 15],
       'sonarjs/no-duplicated-branches': 'error',
       'sonarjs/no-nested-conditional': 'off',
       'sonarjs/void-use': 'off',
@@ -120,6 +133,13 @@ export default tseslint.config(
       'unicorn/consistent-existence-index-check': 'off',
       'unicorn/no-negated-condition': 'off',
       'unicorn/no-nested-ternary': 'off',
+    },
+  },
+  {
+    files: ['src/shared/api/model/**/*.ts'],
+    rules: {
+      'max-len': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
     },
   },
 );
