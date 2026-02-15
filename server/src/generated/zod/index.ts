@@ -70,7 +70,7 @@ export const TestQuestionSliderBandScalarFieldEnumSchema = z.enum(['id','questio
 
 export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','educationOrganizationId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
 
-export const EducationOrganizationScalarFieldEnumSchema = z.enum(['id','name','isActive','createdAt','updatedAt']);
+export const EducationOrganizationScalarFieldEnumSchema = z.enum(['id','name','isActive','groupValidationMode','groupValidationPattern','groupValidationExample','groupValidationHint','createdAt','updatedAt']);
 
 export const TestStudentAttemptScalarFieldEnumSchema = z.enum(['id','publicLinkId','topicVersionId','attemptNumber','status','studentName','studentLastInitial','studentMiddleInitial','educationOrganization','groupOrClass','studentKeyHash','consentAcceptedAt','consentVersion','consentTextSnapshot','resumeToken','startedAt','expiresAt','finishedAt','anonymizedAt','createdAt','updatedAt']);
 
@@ -113,6 +113,10 @@ export type TestStudentAnalysisStatusType = `${z.infer<typeof TestStudentAnalysi
 export const TestStudentAnalysisProviderModeSchema = z.enum(['STUB','LLM']);
 
 export type TestStudentAnalysisProviderModeType = `${z.infer<typeof TestStudentAnalysisProviderModeSchema>}`
+
+export const GroupOrClassValidationModeSchema = z.enum(['NONE','HINT','STRICT']);
+
+export type GroupOrClassValidationModeType = `${z.infer<typeof GroupOrClassValidationModeSchema>}`
 
 /////////////////////////////////////////
 // MODELS
@@ -249,9 +253,13 @@ export type TestPublicLink = z.infer<typeof TestPublicLinkSchema>
 /////////////////////////////////////////
 
 export const EducationOrganizationSchema = z.object({
+  groupValidationMode: GroupOrClassValidationModeSchema,
   id: z.number().int(),
   name: z.string(),
   isActive: z.boolean(),
+  groupValidationPattern: z.string().nullable(),
+  groupValidationExample: z.string().nullable(),
+  groupValidationHint: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -610,6 +618,10 @@ export const EducationOrganizationSelectSchema: z.ZodType<Prisma.EducationOrgani
   id: z.boolean().optional(),
   name: z.boolean().optional(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.boolean().optional(),
+  groupValidationPattern: z.boolean().optional(),
+  groupValidationExample: z.boolean().optional(),
+  groupValidationHint: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   publicLinks: z.union([z.boolean(),z.lazy(() => TestPublicLinkFindManyArgsSchema)]).optional(),
@@ -1369,6 +1381,10 @@ export const EducationOrganizationWhereInputSchema: z.ZodType<Prisma.EducationOr
   id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => EnumGroupOrClassValidationModeFilterSchema), z.lazy(() => GroupOrClassValidationModeSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationExample: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationHint: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
@@ -1378,6 +1394,10 @@ export const EducationOrganizationOrderByWithRelationInputSchema: z.ZodType<Pris
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationMode: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationPattern: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  groupValidationExample: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  groupValidationHint: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkOrderByRelationAggregateInputSchema).optional(),
@@ -1402,6 +1422,10 @@ export const EducationOrganizationWhereUniqueInputSchema: z.ZodType<Prisma.Educa
   OR: z.lazy(() => EducationOrganizationWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => EducationOrganizationWhereInputSchema), z.lazy(() => EducationOrganizationWhereInputSchema).array() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => EnumGroupOrClassValidationModeFilterSchema), z.lazy(() => GroupOrClassValidationModeSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationExample: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationHint: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
@@ -1411,6 +1435,10 @@ export const EducationOrganizationOrderByWithAggregationInputSchema: z.ZodType<P
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationMode: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationPattern: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  groupValidationExample: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  groupValidationHint: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => EducationOrganizationCountOrderByAggregateInputSchema).optional(),
@@ -1427,6 +1455,10 @@ export const EducationOrganizationScalarWhereWithAggregatesInputSchema: z.ZodTyp
   id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
   name: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   isActive: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => EnumGroupOrClassValidationModeWithAggregatesFilterSchema), z.lazy(() => GroupOrClassValidationModeSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationExample: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  groupValidationHint: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -2393,6 +2425,10 @@ export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Test
 export const EducationOrganizationCreateInputSchema: z.ZodType<Prisma.EducationOrganizationCreateInput> = z.strictObject({
   name: z.string(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  groupValidationPattern: z.string().optional().nullable(),
+  groupValidationExample: z.string().optional().nullable(),
+  groupValidationHint: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutEducationOrganizationInputSchema).optional(),
@@ -2402,6 +2438,10 @@ export const EducationOrganizationUncheckedCreateInputSchema: z.ZodType<Prisma.E
   id: z.number().int().optional(),
   name: z.string(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  groupValidationPattern: z.string().optional().nullable(),
+  groupValidationExample: z.string().optional().nullable(),
+  groupValidationHint: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   publicLinks: z.lazy(() => TestPublicLinkUncheckedCreateNestedManyWithoutEducationOrganizationInputSchema).optional(),
@@ -2410,6 +2450,10 @@ export const EducationOrganizationUncheckedCreateInputSchema: z.ZodType<Prisma.E
 export const EducationOrganizationUpdateInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateInput> = z.strictObject({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInputSchema).optional(),
@@ -2419,6 +2463,10 @@ export const EducationOrganizationUncheckedUpdateInputSchema: z.ZodType<Prisma.E
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationNestedInputSchema).optional(),
@@ -2428,6 +2476,10 @@ export const EducationOrganizationCreateManyInputSchema: z.ZodType<Prisma.Educat
   id: z.number().int().optional(),
   name: z.string(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  groupValidationPattern: z.string().optional().nullable(),
+  groupValidationExample: z.string().optional().nullable(),
+  groupValidationHint: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -2435,6 +2487,10 @@ export const EducationOrganizationCreateManyInputSchema: z.ZodType<Prisma.Educat
 export const EducationOrganizationUpdateManyMutationInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateManyMutationInput> = z.strictObject({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -2443,6 +2499,10 @@ export const EducationOrganizationUncheckedUpdateManyInputSchema: z.ZodType<Pris
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -3512,10 +3572,21 @@ export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTi
   _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
 });
 
+export const EnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.EnumGroupOrClassValidationModeFilter> = z.strictObject({
+  equals: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  in: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  notIn: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  not: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema) ]).optional(),
+});
+
 export const EducationOrganizationCountOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationCountOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationMode: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationPattern: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationExample: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationHint: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3528,6 +3599,10 @@ export const EducationOrganizationMaxOrderByAggregateInputSchema: z.ZodType<Pris
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationMode: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationPattern: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationExample: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationHint: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3536,12 +3611,26 @@ export const EducationOrganizationMinOrderByAggregateInputSchema: z.ZodType<Pris
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationMode: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationPattern: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationExample: z.lazy(() => SortOrderSchema).optional(),
+  groupValidationHint: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const EducationOrganizationSumOrderByAggregateInputSchema: z.ZodType<Prisma.EducationOrganizationSumOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EnumGroupOrClassValidationModeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumGroupOrClassValidationModeWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  in: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  notIn: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  not: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => NestedEnumGroupOrClassValidationModeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema).optional(),
 });
 
 export const EnumTestStudentAttemptStatusFilterSchema: z.ZodType<Prisma.EnumTestStudentAttemptStatusFilter> = z.strictObject({
@@ -4492,6 +4581,10 @@ export const TestPublicLinkUncheckedCreateNestedManyWithoutEducationOrganization
   connect: z.union([ z.lazy(() => TestPublicLinkWhereUniqueInputSchema), z.lazy(() => TestPublicLinkWhereUniqueInputSchema).array() ]).optional(),
 });
 
+export const EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumGroupOrClassValidationModeFieldUpdateOperationsInput> = z.strictObject({
+  set: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+});
+
 export const TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInputSchema: z.ZodType<Prisma.TestPublicLinkUpdateManyWithoutEducationOrganizationNestedInput> = z.strictObject({
   create: z.union([ z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateWithoutEducationOrganizationInputSchema).array(), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema), z.lazy(() => TestPublicLinkCreateOrConnectWithoutEducationOrganizationInputSchema).array() ]).optional(),
@@ -4943,6 +5036,23 @@ export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+});
+
+export const NestedEnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.NestedEnumGroupOrClassValidationModeFilter> = z.strictObject({
+  equals: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  in: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  notIn: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  not: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema) ]).optional(),
+});
+
+export const NestedEnumGroupOrClassValidationModeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumGroupOrClassValidationModeWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  in: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  notIn: z.lazy(() => GroupOrClassValidationModeSchema).array().optional(),
+  not: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => NestedEnumGroupOrClassValidationModeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumGroupOrClassValidationModeFilterSchema).optional(),
 });
 
 export const NestedEnumTestStudentAttemptStatusFilterSchema: z.ZodType<Prisma.NestedEnumTestStudentAttemptStatusFilter> = z.strictObject({
@@ -6132,6 +6242,10 @@ export const TestTopicVersionCreateOrConnectWithoutPublicLinksInputSchema: z.Zod
 export const EducationOrganizationCreateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationCreateWithoutPublicLinksInput> = z.strictObject({
   name: z.string(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  groupValidationPattern: z.string().optional().nullable(),
+  groupValidationExample: z.string().optional().nullable(),
+  groupValidationHint: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -6140,6 +6254,10 @@ export const EducationOrganizationUncheckedCreateWithoutPublicLinksInputSchema: 
   id: z.number().int().optional(),
   name: z.string(),
   isActive: z.boolean().optional(),
+  groupValidationMode: z.lazy(() => GroupOrClassValidationModeSchema).optional(),
+  groupValidationPattern: z.string().optional().nullable(),
+  groupValidationExample: z.string().optional().nullable(),
+  groupValidationHint: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -6288,6 +6406,10 @@ export const EducationOrganizationUpdateToOneWithWhereWithoutPublicLinksInputSch
 export const EducationOrganizationUpdateWithoutPublicLinksInputSchema: z.ZodType<Prisma.EducationOrganizationUpdateWithoutPublicLinksInput> = z.strictObject({
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -6296,6 +6418,10 @@ export const EducationOrganizationUncheckedUpdateWithoutPublicLinksInputSchema: 
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   isActive: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationMode: z.union([ z.lazy(() => GroupOrClassValidationModeSchema), z.lazy(() => EnumGroupOrClassValidationModeFieldUpdateOperationsInputSchema) ]).optional(),
+  groupValidationPattern: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationExample: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  groupValidationHint: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });

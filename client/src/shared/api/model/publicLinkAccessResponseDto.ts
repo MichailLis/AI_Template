@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLinkAccessResponseDtoGroupValidationMode';
 
 export interface PublicLinkAccessResponseDto {
   shortCode: string;
@@ -13,6 +14,13 @@ export interface PublicLinkAccessResponseDto {
   description: string | null;
   /** @nullable */
   educationOrganization: string | null;
+  groupValidationMode: PublicLinkAccessResponseDtoGroupValidationMode;
+  /** @nullable */
+  groupValidationPattern: string | null;
+  /** @nullable */
+  groupValidationExample: string | null;
+  /** @nullable */
+  groupValidationHint: string | null;
   /**
    * @minimum 0
    * @maximum 9007199254740991

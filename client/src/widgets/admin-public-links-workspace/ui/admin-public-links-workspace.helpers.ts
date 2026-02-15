@@ -19,7 +19,7 @@ type ValidateCreatePublicLinkResult =
   | {
       ok: true;
       publishedVersionId: number;
-      educationOrganizationId: number;
+      educationOrganizationId: number | null;
       maxAttemptsPerStudent: number;
       timeLimitMinutes: number | null;
     }
@@ -65,13 +65,6 @@ export const validateCreatePublicLinkInput = ({
     return {
       ok: false,
       error: 'Сначала опубликуйте версию теста, затем создайте публичную ссылку',
-    };
-  }
-
-  if (!educationOrganizationId || educationOrganizationId < 1) {
-    return {
-      ok: false,
-      error: 'Выберите учебное заведение для новой публичной ссылки',
     };
   }
 

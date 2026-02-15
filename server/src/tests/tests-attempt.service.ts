@@ -30,6 +30,33 @@ export class TestsAttemptService {
     private readonly analysisService: TestsAnalysisService,
   ) {}
 
+  private matchesGroupPattern(groupOrClass: string, pattern: string) {
+    try {
+      return new RegExp(pattern, 'u').test(groupOrClass);
+    } catch {
+      return true;
+    }
+  }
+
+  private validateGroupOrClassForLink(
+    groupOrClass: string,
+    link: Awaited<ReturnType<TestsPublicLinkService['getAccessiblePublicLinkByCode']>>,
+  ) {
+    const validationMode = link.educationOrganization?.groupValidationMode ?? 'NONE';
+    const validationPattern = link.educationOrganization?.groupValidationPattern;
+
+    if (validationMode !== 'STRICT' || !validationPattern) {
+      return;
+    }
+
+    if (!this.matchesGroupPattern(groupOrClass, validationPattern)) {
+      throw new BadRequestException(
+        link.educationOrganization?.groupValidationHint ||
+          'Формат поля "Группа / класс" не соответствует требованиям учебного заведения',
+      );
+    }
+  }
+
   async startSessionByCode(shortCode: string, dto: PublicSessionStartRequestDto) {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
     const resolvedEducationOrganization =
@@ -39,9 +66,13 @@ export class TestsAttemptService {
       throw new BadRequestException('Учебное заведение обязательно для начала теста');
     }
 
+    const normalizedGroupOrClass = dto.groupOrClass.trim();
+    this.validateGroupOrClassForLink(normalizedGroupOrClass, link);
+
     const studentKeyHash = buildStudentKeyHash({
       ...dto,
       educationOrganization: resolvedEducationOrganization,
+      groupOrClass: normalizedGroupOrClass,
     });
     const now = new Date();
 
@@ -109,7 +140,7 @@ export class TestsAttemptService {
         studentLastInitial: dto.studentLastInitial,
         studentMiddleInitial: dto.studentMiddleInitial,
         educationOrganization: resolvedEducationOrganization,
-        groupOrClass: dto.groupOrClass,
+        groupOrClass: normalizedGroupOrClass,
         studentKeyHash,
         consentAcceptedAt: now,
         consentVersion: link.consentVersion,

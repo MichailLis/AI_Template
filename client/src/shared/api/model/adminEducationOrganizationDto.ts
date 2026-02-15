@@ -5,11 +5,34 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { AdminEducationOrganizationDtoGroupValidationMode } from './adminEducationOrganizationDtoGroupValidationMode';
 
 export interface AdminEducationOrganizationDto {
   id: number;
   name: string;
   isActive: boolean;
+  groupValidationMode: AdminEducationOrganizationDtoGroupValidationMode;
+  /** @nullable */
+  groupValidationPattern: string | null;
+  /** @nullable */
+  groupValidationExample: string | null;
+  /** @nullable */
+  groupValidationHint: string | null;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  linksCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  activeLinksCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  attemptsCount: number;
   createdAt: string;
   updatedAt: string;
 }

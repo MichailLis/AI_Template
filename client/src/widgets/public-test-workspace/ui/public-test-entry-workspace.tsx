@@ -1,66 +1,24 @@
 import { GraduationCap } from 'lucide-react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 
 import {
   useTestsPublicControllerGetLinkAccess,
   useTestsPublicControllerStartSession,
 } from '@/shared/api/generated/tests-public/tests-public';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { PublicEntryStateCard } from './public-entry-state-card';
+import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
+import { initialFormState, resolveGroupValidationWarning } from './public-test-entry.helpers';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
 
 import type { StudentFormState } from './public-test-entry.types';
 
-interface PublicEntryStateCardProps {
-  title: string;
-  description?: string;
-  accentClassName: string;
-  icon?: ReactNode;
-}
-
-const initialFormState: StudentFormState = {
-  studentName: '',
-  studentLastInitial: '',
-  studentMiddleInitial: '',
-  educationOrganization: '',
-  groupOrClass: '',
-  consentAccepted: false,
-};
-
-const normalizeInitial = (value: string) => value.trim().slice(0, 1).toUpperCase();
-
-function PublicEntryStateCard({
-  title,
-  description,
-  accentClassName,
-  icon,
-}: PublicEntryStateCardProps) {
-  return (
-    <PublicThemeLayout containerClassName="max-w-4xl">
-      <Card className="relative w-full overflow-hidden border border-border/50 bg-card shadow-xl">
-        <div className={`absolute inset-x-0 top-0 h-1 ${accentClassName}`} />
-        <CardHeader className="pb-4 pt-6 text-center">
-          <CardTitle className="text-2xl font-bold text-foreground">{title}</CardTitle>
-        </CardHeader>
-        {description || icon ? (
-          <CardContent className="px-6 pb-6 text-center">
-            {icon ? <div className="mb-4 flex justify-center">{icon}</div> : null}
-            {description ? <p className="text-muted-foreground">{description}</p> : null}
-          </CardContent>
-        ) : null}
-      </Card>
-    </PublicThemeLayout>
-  );
-}
-
 export function PublicTestEntryWorkspace() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-
   const [formState, setFormState] = useState<StudentFormState>(initialFormState);
 
   const linkQuery = useTestsPublicControllerGetLinkAccess(code ?? '', {
@@ -69,55 +27,29 @@ export function PublicTestEntryWorkspace() {
       retry: false,
     },
   });
-
   const startMutation = useTestsPublicControllerStartSession();
 
   const updateField = <K extends keyof StudentFormState>(key: K, value: StudentFormState[K]) => {
-    setFormState((prev) => ({
-      ...prev,
+    setFormState((previousState) => ({
+      ...previousState,
       [key]: value,
     }));
   };
 
-  const handleStart = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!code) {
-      toast.error('Некорректная ссылка на тест');
-      return;
-    }
-
-    if (!formState.consentAccepted) {
-      toast.error('Необходимо согласие на обработку персональных данных');
-      return;
-    }
-
-    const effectiveEducationOrganization =
-      linkQuery.data?.educationOrganization?.trim() ?? formState.educationOrganization.trim();
-
-    if (!effectiveEducationOrganization) {
-      toast.error('Укажите учебное заведение');
-      return;
-    }
-
-    try {
-      const response = await startMutation.mutateAsync({
-        code,
-        data: {
-          studentName: formState.studentName.trim(),
-          studentLastInitial: normalizeInitial(formState.studentLastInitial),
-          studentMiddleInitial: normalizeInitial(formState.studentMiddleInitial),
-          educationOrganization: effectiveEducationOrganization,
-          groupOrClass: formState.groupOrClass.trim(),
-          consentAccepted: true,
-        },
-      });
-
-      navigate(`/t/${code}/session/${response.session.sessionToken}`);
-    } catch {
-      toast.error('Не удалось начать тест. Проверьте корректность данных и попробуйте снова.');
-    }
-  };
+  const handleStart = createPublicTestEntryStartHandler({
+    code,
+    formState,
+    linkData: linkQuery.data
+      ? {
+          educationOrganization: linkQuery.data.educationOrganization,
+          groupValidationMode: linkQuery.data.groupValidationMode,
+          groupValidationPattern: linkQuery.data.groupValidationPattern,
+          groupValidationHint: linkQuery.data.groupValidationHint,
+        }
+      : undefined,
+    startSession: startMutation.mutateAsync,
+    navigate,
+  });
 
   if (!code) {
     return (
@@ -154,6 +86,16 @@ export function PublicTestEntryWorkspace() {
   }
 
   const link = linkQuery.data;
+  const registrationFormState = {
+    ...formState,
+    educationOrganization: link.educationOrganization ?? formState.educationOrganization,
+  };
+  const currentGroupValidationWarning = resolveGroupValidationWarning({
+    groupValue: formState.groupOrClass.trim(),
+    groupValidationMode: link.groupValidationMode,
+    groupValidationPattern: link.groupValidationPattern,
+    groupValidationHint: link.groupValidationHint,
+  });
 
   return (
     <PublicThemeLayout containerClassName="max-w-6xl py-6 md:py-8 lg:py-10">
@@ -167,11 +109,12 @@ export function PublicTestEntryWorkspace() {
         />
 
         <PublicTestRegistrationCard
-          formState={{
-            ...formState,
-            educationOrganization: link.educationOrganization ?? formState.educationOrganization,
-          }}
+          formState={registrationFormState}
           lockedEducationOrganization={link.educationOrganization}
+          groupValidationMode={link.groupValidationMode}
+          groupValidationExample={link.groupValidationExample}
+          groupValidationHint={link.groupValidationHint}
+          groupValidationWarning={currentGroupValidationWarning}
           consentVersion={link.consentVersion}
           consentText={link.consentText}
           isSubmitting={startMutation.isPending}

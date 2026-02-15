@@ -14,6 +14,9 @@ const AdminOverviewPage = lazy(() => import('@/pages/admin/admin-overview-page')
 const AdminPage = lazy(() => import('@/pages/admin/admin-page'));
 const AdminPromptsPage = lazy(() => import('@/pages/admin/admin-prompts-page'));
 const AdminPublicLinksPage = lazy(() => import('@/pages/admin/admin-public-links-page'));
+const AdminPublicLinksOrganizationsPage = lazy(
+  () => import('@/pages/admin/admin-public-links-organizations-page'),
+);
 const AdminPublicLinksStatsPage = lazy(() => import('@/pages/admin/admin-public-links-stats-page'));
 const AdminSecurityPage = lazy(() => import('@/pages/admin/admin-security-page'));
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
@@ -107,6 +110,10 @@ function App() {
                 <Route path="/admin/prompts" element={<AdminPromptsPage />} />
                 <Route path="/admin/tests" element={<AdminTestsPage />} />
                 <Route path="/admin/public-links" element={<AdminPublicLinksPage />} />
+                <Route
+                  path="/admin/public-links/organizations"
+                  element={<AdminPublicLinksOrganizationsPage />}
+                />
                 <Route path="/admin/public-links/stats" element={<AdminPublicLinksStatsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/login" replace />} />

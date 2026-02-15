@@ -7,6 +7,18 @@ import {
   PublicSessionStatusSchema,
 } from './tests-public.dto';
 
+const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
+
+const isRegexPatternValid = (pattern: string) => {
+  try {
+    // `u` stabilizes behavior for Cyrillic/Unicode group names.
+    new RegExp(pattern, 'u');
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const AdminCreatePublicLinkSchema = z
   .object({
     publishedVersionId: z.number().int().min(1),
@@ -83,14 +95,67 @@ export const AdminPublicLinkSchema = z.object({
   createdAt: z.string(),
 });
 
-export const AdminCreateEducationOrganizationSchema = z.object({
-  name: z.string().trim().min(2).max(300),
-});
+export const AdminCreateEducationOrganizationSchema = z
+  .object({
+    name: z.string().trim().min(2).max(300),
+    groupValidationMode: GroupOrClassValidationModeSchema.optional(),
+    groupValidationPattern: z.string().trim().min(1).max(300).nullable().optional(),
+    groupValidationExample: z.string().trim().min(1).max(120).nullable().optional(),
+    groupValidationHint: z.string().trim().min(1).max(300).nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const mode = value.groupValidationMode ?? 'NONE';
+    const pattern = value.groupValidationPattern?.trim();
+
+    if (mode !== 'NONE' && !pattern) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['groupValidationPattern'],
+        message: 'Укажите регулярное выражение для проверки группы/класса',
+      });
+    }
+
+    if (pattern && !isRegexPatternValid(pattern)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['groupValidationPattern'],
+        message: 'Некорректное регулярное выражение формата группы/класса',
+      });
+    }
+  });
+
+export const AdminUpdateEducationOrganizationSchema = z
+  .object({
+    name: z.string().trim().min(2).max(300).optional(),
+    isActive: z.boolean().optional(),
+    groupValidationMode: GroupOrClassValidationModeSchema.optional(),
+    groupValidationPattern: z.string().trim().min(1).max(300).nullable().optional(),
+    groupValidationExample: z.string().trim().min(1).max(120).nullable().optional(),
+    groupValidationHint: z.string().trim().min(1).max(300).nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const pattern = value.groupValidationPattern?.trim();
+
+    if (pattern && !isRegexPatternValid(pattern)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['groupValidationPattern'],
+        message: 'Некорректное регулярное выражение формата группы/класса',
+      });
+    }
+  });
 
 export const AdminEducationOrganizationSchema = z.object({
   id: z.number(),
   name: z.string(),
   isActive: z.boolean(),
+  groupValidationMode: GroupOrClassValidationModeSchema,
+  groupValidationPattern: z.string().nullable(),
+  groupValidationExample: z.string().nullable(),
+  groupValidationHint: z.string().nullable(),
+  linksCount: z.number().int().min(0),
+  activeLinksCount: z.number().int().min(0),
+  attemptsCount: z.number().int().min(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -182,6 +247,9 @@ export class AdminPublicAttemptDetailResponseDto extends createZodDto(
 ) {}
 export class AdminCreateEducationOrganizationDto extends createZodDto(
   AdminCreateEducationOrganizationSchema,
+) {}
+export class AdminUpdateEducationOrganizationDto extends createZodDto(
+  AdminUpdateEducationOrganizationSchema,
 ) {}
 export class AdminEducationOrganizationsListResponseDto extends createZodDto(
   AdminEducationOrganizationsListResponseSchema,

@@ -52,11 +52,17 @@ export const PublicSessionStatusSchema = z.enum([
   'ABANDONED',
 ]);
 
+export const PublicGroupValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
+
 export const PublicLinkAccessResponseSchema = z.object({
   shortCode: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   educationOrganization: z.string().nullable(),
+  groupValidationMode: PublicGroupValidationModeSchema,
+  groupValidationPattern: z.string().nullable(),
+  groupValidationExample: z.string().nullable(),
+  groupValidationHint: z.string().nullable(),
   questionCount: z.number().int().min(0),
   maxAttemptsPerStudent: z.number().int().min(1),
   timeLimitMinutes: z.number().int().min(1).nullable(),

@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import type { GroupOrClassValidationMode } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
   AdminCreatePublicLinkDto,
+  AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
 } from './dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from './dto/tests-public.dto';
@@ -31,6 +33,133 @@ const DEFAULT_ALLOW_RESUME = true;
 @Injectable()
 export class TestsPublicLinkService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private normalizeGroupValidationConfig(value: {
+    groupValidationMode?: GroupOrClassValidationMode;
+    groupValidationPattern?: string | null;
+    groupValidationExample?: string | null;
+    groupValidationHint?: string | null;
+  }) {
+    const mode = value.groupValidationMode ?? 'NONE';
+    const pattern = value.groupValidationPattern?.trim() || null;
+    const example = value.groupValidationExample?.trim() || null;
+    const hint = value.groupValidationHint?.trim() || null;
+
+    if (mode === 'NONE') {
+      return {
+        groupValidationMode: mode,
+        groupValidationPattern: null,
+        groupValidationExample: null,
+        groupValidationHint: null,
+      };
+    }
+
+    if (!pattern) {
+      throw new BadRequestException('Укажите шаблон формата группы/класса для выбранного режима');
+    }
+
+    return {
+      groupValidationMode: mode,
+      groupValidationPattern: pattern,
+      groupValidationExample: example,
+      groupValidationHint: hint,
+    };
+  }
+
+  private mapEducationOrganization(
+    organization: {
+      id: number;
+      name: string;
+      isActive: boolean;
+      groupValidationMode: GroupOrClassValidationMode;
+      groupValidationPattern: string | null;
+      groupValidationExample: string | null;
+      groupValidationHint: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    stats: {
+      linksCount: number;
+      activeLinksCount: number;
+      attemptsCount: number;
+    },
+  ) {
+    return {
+      id: organization.id,
+      name: organization.name,
+      isActive: organization.isActive,
+      groupValidationMode: organization.groupValidationMode,
+      groupValidationPattern: organization.groupValidationPattern,
+      groupValidationExample: organization.groupValidationExample,
+      groupValidationHint: organization.groupValidationHint,
+      linksCount: stats.linksCount,
+      activeLinksCount: stats.activeLinksCount,
+      attemptsCount: stats.attemptsCount,
+      createdAt: organization.createdAt.toISOString(),
+      updatedAt: organization.updatedAt.toISOString(),
+    };
+  }
+
+  private async getOrganizationStatsByIds(organizationIds: number[]) {
+    const statsMap = new Map<
+      number,
+      {
+        linksCount: number;
+        activeLinksCount: number;
+        attemptsCount: number;
+      }
+    >();
+
+    for (const organizationId of organizationIds) {
+      statsMap.set(organizationId, {
+        linksCount: 0,
+        activeLinksCount: 0,
+        attemptsCount: 0,
+      });
+    }
+
+    if (organizationIds.length === 0) {
+      return statsMap;
+    }
+
+    const links = await this.prisma.testPublicLink.findMany({
+      where: {
+        educationOrganizationId: {
+          in: organizationIds,
+        },
+      },
+      select: {
+        educationOrganizationId: true,
+        isActive: true,
+        _count: {
+          select: {
+            attempts: true,
+          },
+        },
+      },
+    });
+
+    for (const link of links) {
+      if (!link.educationOrganizationId) {
+        continue;
+      }
+
+      const currentStats = statsMap.get(link.educationOrganizationId);
+
+      if (!currentStats) {
+        continue;
+      }
+
+      currentStats.linksCount += 1;
+      currentStats.attemptsCount += link._count.attempts;
+
+      if (link.isActive) {
+        currentStats.activeLinksCount += 1;
+      }
+    }
+
+    return statsMap;
+  }
 
   private async ensureActiveEducationOrganizationIfProvided(
     educationOrganizationId?: number | null,
@@ -373,6 +502,10 @@ export class TestsPublicLinkService {
       title: link.topicVersion.title,
       description: link.topicVersion.description,
       educationOrganization: link.educationOrganization?.name ?? null,
+      groupValidationMode: link.educationOrganization?.groupValidationMode ?? 'NONE',
+      groupValidationPattern: link.educationOrganization?.groupValidationPattern ?? null,
+      groupValidationExample: link.educationOrganization?.groupValidationExample ?? null,
+      groupValidationHint: link.educationOrganization?.groupValidationHint ?? null,
       questionCount: link.topicVersion._count.questions,
       maxAttemptsPerStudent: link.maxAttemptsPerStudent,
       timeLimitMinutes: link.timeLimitMinutes,
@@ -391,14 +524,21 @@ export class TestsPublicLinkService {
       orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
     });
 
+    const statsByOrganizationId = await this.getOrganizationStatsByIds(
+      organizations.map((organization) => organization.id),
+    );
+
     return {
-      organizations: organizations.map((organization) => ({
-        id: organization.id,
-        name: organization.name,
-        isActive: organization.isActive,
-        createdAt: organization.createdAt.toISOString(),
-        updatedAt: organization.updatedAt.toISOString(),
-      })),
+      organizations: organizations.map((organization) =>
+        this.mapEducationOrganization(
+          organization,
+          statsByOrganizationId.get(organization.id) ?? {
+            linksCount: 0,
+            activeLinksCount: 0,
+            attemptsCount: 0,
+          },
+        ),
+      ),
     };
   }
 
@@ -421,18 +561,111 @@ export class TestsPublicLinkService {
       throw new BadRequestException('Учебное заведение с таким названием уже существует');
     }
 
+    const validationConfig = this.normalizeGroupValidationConfig({
+      groupValidationMode: dto.groupValidationMode,
+      groupValidationPattern: dto.groupValidationPattern,
+      groupValidationExample: dto.groupValidationExample,
+      groupValidationHint: dto.groupValidationHint,
+    });
+
     const created = await this.prisma.educationOrganization.create({
       data: {
         name,
+        ...validationConfig,
       },
     });
 
-    return {
-      id: created.id,
-      name: created.name,
-      isActive: created.isActive,
-      createdAt: created.createdAt.toISOString(),
-      updatedAt: created.updatedAt.toISOString(),
-    };
+    const statsByOrganizationId = await this.getOrganizationStatsByIds([created.id]);
+
+    return this.mapEducationOrganization(
+      created,
+      statsByOrganizationId.get(created.id) ?? {
+        linksCount: 0,
+        activeLinksCount: 0,
+        attemptsCount: 0,
+      },
+    );
+  }
+
+  async updateEducationOrganization(
+    userId: number,
+    organizationId: number,
+    dto: AdminUpdateEducationOrganizationDto,
+  ) {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const existing = await this.prisma.educationOrganization.findUnique({
+      where: { id: organizationId },
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
+        groupValidationMode: true,
+        groupValidationPattern: true,
+        groupValidationExample: true,
+        groupValidationHint: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Учебное заведение не найдено');
+    }
+
+    const nextName = dto.name?.trim() ?? existing.name;
+
+    if (dto.name !== undefined) {
+      const duplicate = await this.prisma.educationOrganization.findFirst({
+        where: {
+          id: {
+            not: organizationId,
+          },
+          name: {
+            equals: nextName,
+            mode: 'insensitive',
+          },
+        },
+        select: { id: true },
+      });
+
+      if (duplicate) {
+        throw new BadRequestException('Учебное заведение с таким названием уже существует');
+      }
+    }
+
+    const validationConfig = this.normalizeGroupValidationConfig({
+      groupValidationMode: dto.groupValidationMode ?? existing.groupValidationMode,
+      groupValidationPattern:
+        dto.groupValidationPattern !== undefined
+          ? dto.groupValidationPattern
+          : existing.groupValidationPattern,
+      groupValidationExample:
+        dto.groupValidationExample !== undefined
+          ? dto.groupValidationExample
+          : existing.groupValidationExample,
+      groupValidationHint:
+        dto.groupValidationHint !== undefined
+          ? dto.groupValidationHint
+          : existing.groupValidationHint,
+    });
+
+    const updated = await this.prisma.educationOrganization.update({
+      where: { id: organizationId },
+      data: {
+        ...(dto.name !== undefined ? { name: nextName } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...validationConfig,
+      },
+    });
+
+    const statsByOrganizationId = await this.getOrganizationStatsByIds([updated.id]);
+
+    return this.mapEducationOrganization(
+      updated,
+      statsByOrganizationId.get(updated.id) ?? {
+        linksCount: 0,
+        activeLinksCount: 0,
+        attemptsCount: 0,
+      },
+    );
   }
 }

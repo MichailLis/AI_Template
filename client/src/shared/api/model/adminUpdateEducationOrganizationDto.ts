@@ -5,15 +5,16 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import type { AdminCreateEducationOrganizationDtoGroupValidationMode } from './adminCreateEducationOrganizationDtoGroupValidationMode';
+import type { AdminUpdateEducationOrganizationDtoGroupValidationMode } from './adminUpdateEducationOrganizationDtoGroupValidationMode';
 
-export interface AdminCreateEducationOrganizationDto {
+export interface AdminUpdateEducationOrganizationDto {
   /**
    * @minLength 2
    * @maxLength 300
    */
-  name: string;
-  groupValidationMode?: AdminCreateEducationOrganizationDtoGroupValidationMode;
+  name?: string;
+  isActive?: boolean;
+  groupValidationMode?: AdminUpdateEducationOrganizationDtoGroupValidationMode;
   /**
    * @minLength 1
    * @maxLength 300

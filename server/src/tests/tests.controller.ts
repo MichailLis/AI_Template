@@ -32,6 +32,7 @@ import {
   AdminDeletePublicLinkResponseDto,
   AdminEducationOrganizationDto,
   AdminEducationOrganizationsListResponseDto,
+  AdminUpdateEducationOrganizationDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
@@ -75,6 +76,17 @@ export class TestsController {
     @Body() dto: AdminCreateEducationOrganizationDto,
   ) {
     return this.testsPublicLinkService.createEducationOrganization(userId, dto);
+  }
+
+  @Patch('education-organizations/:organizationId')
+  @ApiOperation({ summary: 'Update educational organization validation settings' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationDto })
+  updateEducationOrganization(
+    @GetCurrentUserId() userId: number,
+    @Param('organizationId', ParseIntPipe) organizationId: number,
+    @Body() dto: AdminUpdateEducationOrganizationDto,
+  ) {
+    return this.testsPublicLinkService.updateEducationOrganization(userId, organizationId, dto);
   }
 
   @Get('public-links')

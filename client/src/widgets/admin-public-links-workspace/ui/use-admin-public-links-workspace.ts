@@ -1,33 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import {
-  useTestsControllerCreateEducationOrganization,
-  useTestsControllerCreatePublicLink,
-  useTestsControllerListEducationOrganizations,
-  useTestsControllerDeletePublicLink,
   useTestsControllerGetTopicDraft,
   useTestsControllerListArchivedPublicLinks,
+  useTestsControllerListEducationOrganizations,
   useTestsControllerListPublicLinks,
   useTestsControllerListTopics,
-  useTestsControllerRegeneratePublicLinkShortCode,
-  useTestsControllerRestorePublicLink,
-  useTestsControllerUpdatePublicLink,
 } from '@/shared/api/generated/tests/tests';
 
 import {
   resolveEffectivePublicLinkId,
   resolveEffectiveTopicId,
-  type PublicLinksTab,
 } from './admin-public-links-workspace.helpers';
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
+import { useAdminPublicLinksFormState } from './use-admin-public-links-form-state';
 
 export function useAdminPublicLinksWorkspace() {
   const topicsQuery = useTestsControllerListTopics();
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
+  const listPublicLinksQuery = useTestsControllerListPublicLinks();
+  const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
+  const listEducationOrganizationsQuery = useTestsControllerListEducationOrganizations();
+  const formState = useAdminPublicLinksFormState();
+
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
+  const educationOrganizations = useMemo(
+    () => listEducationOrganizationsQuery.data?.organizations ?? [],
+    [listEducationOrganizationsQuery.data?.organizations],
+  );
   const effectiveSelectedTopicId = useMemo(
-    () => resolveEffectiveTopicId(selectedTopicId, topics),
-    [selectedTopicId, topics],
+    () => resolveEffectiveTopicId(formState.selectedTopicId, topics),
+    [formState.selectedTopicId, topics],
   );
 
   const detailQuery = useTestsControllerGetTopicDraft(effectiveSelectedTopicId, {
@@ -35,30 +37,6 @@ export function useAdminPublicLinksWorkspace() {
       enabled: effectiveSelectedTopicId > 0,
     },
   });
-
-  const listPublicLinksQuery = useTestsControllerListPublicLinks();
-  const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
-  const createPublicLinkMutation = useTestsControllerCreatePublicLink();
-  const listEducationOrganizationsQuery = useTestsControllerListEducationOrganizations();
-  const createEducationOrganizationMutation = useTestsControllerCreateEducationOrganization();
-  const deletePublicLinkMutation = useTestsControllerDeletePublicLink();
-  const updatePublicLinkMutation = useTestsControllerUpdatePublicLink();
-  const regeneratePublicLinkShortCodeMutation = useTestsControllerRegeneratePublicLinkShortCode();
-  const restorePublicLinkMutation = useTestsControllerRestorePublicLink();
-
-  const [newPublicShortCode, setNewPublicShortCode] = useState('');
-  const [newEducationOrganizationId, setNewEducationOrganizationId] = useState<number | null>(null);
-  const [newEducationOrganizationName, setNewEducationOrganizationName] = useState('');
-  const [newPublicMaxAttempts, setNewPublicMaxAttempts] = useState('3');
-  const [newPublicTimeLimit, setNewPublicTimeLimit] = useState('30');
-  const [newPublicAllowResume, setNewPublicAllowResume] = useState(true);
-  const [newPublicConsentVersion, setNewPublicConsentVersion] = useState('v1');
-  const [newPublicConsentText, setNewPublicConsentText] = useState(
-    'Я даю согласие на обработку персональных данных для прохождения тестирования и формирования аналитики.',
-  );
-  const [selectedPublicLinkId, setSelectedPublicLinkId] = useState<number | null>(null);
-  const [pendingDeletePublicLinkId, setPendingDeletePublicLinkId] = useState<number | null>(null);
-  const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
 
   const activePublicLinks = useMemo(
     () => listPublicLinksQuery.data?.links ?? [],
@@ -69,103 +47,64 @@ export function useAdminPublicLinksWorkspace() {
     [listArchivedPublicLinksQuery.data?.links],
   );
   const visiblePublicLinks = useMemo(
-    () => (publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
-    [activePublicLinks, archivedPublicLinks, publicLinksTab],
+    () => (formState.publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
+    [activePublicLinks, archivedPublicLinks, formState.publicLinksTab],
+  );
+  const effectivePublicLinkId = useMemo(
+    () => resolveEffectivePublicLinkId(formState.selectedPublicLinkId, visiblePublicLinks),
+    [formState.selectedPublicLinkId, visiblePublicLinks],
   );
 
-  const effectivePublicLinkId = useMemo(
-    () => resolveEffectivePublicLinkId(selectedPublicLinkId, visiblePublicLinks),
-    [selectedPublicLinkId, visiblePublicLinks],
-  );
+  const setNewEducationOrganizationId = (value: number | null) => {
+    formState.applyEducationOrganizationSelection(value, educationOrganizations);
+  };
 
   const refetchPublicLinks = () => {
     void Promise.all([listPublicLinksQuery.refetch(), listArchivedPublicLinksQuery.refetch()]);
   };
+  const refetchEducationOrganizations = () => {
+    void listEducationOrganizationsQuery.refetch();
+  };
 
-  const {
-    handleCreatePublicLink,
-    handleCreateEducationOrganization,
-    handleSwitchPublicLinksTab,
-    handleCopyShortLink,
-    handleOpenShortLink,
-    handleOpenShortLinkQr,
-    handleTogglePublicLink,
-    handleRegeneratePublicLinkShortCode,
-    handleDeletePublicLink,
-    handleRestorePublicLink,
-  } = useAdminPublicLinksActions({
+  const actions = useAdminPublicLinksActions({
     publishedVersionId: detailQuery.data?.published?.id,
-    newPublicShortCode,
-    newEducationOrganizationId,
-    newEducationOrganizationName,
-    newPublicMaxAttempts,
-    newPublicTimeLimit,
-    newPublicAllowResume,
-    newPublicConsentVersion,
-    newPublicConsentText,
-    pendingDeletePublicLinkId,
-    selectedPublicLinkId,
-    listEducationOrganizationsQuery,
-    createEducationOrganizationMutation,
-    createPublicLinkMutation,
-    updatePublicLinkMutation,
-    regeneratePublicLinkShortCodeMutation,
-    deletePublicLinkMutation,
-    restorePublicLinkMutation,
-    setPublicLinksTab,
-    setSelectedPublicLinkId,
-    setPendingDeletePublicLinkId,
-    setNewPublicShortCode,
+    newPublicShortCode: formState.newPublicShortCode,
+    newEducationOrganizationId: formState.newEducationOrganizationId,
+    newEducationOrganizationName: formState.newEducationOrganizationName,
+    groupValidationMode: formState.groupValidationMode,
+    groupValidationPattern: formState.groupValidationPattern,
+    groupValidationExample: formState.groupValidationExample,
+    groupValidationHint: formState.groupValidationHint,
+    newPublicMaxAttempts: formState.newPublicMaxAttempts,
+    newPublicTimeLimit: formState.newPublicTimeLimit,
+    newPublicAllowResume: formState.newPublicAllowResume,
+    newPublicConsentVersion: formState.newPublicConsentVersion,
+    newPublicConsentText: formState.newPublicConsentText,
+    pendingDeletePublicLinkId: formState.pendingDeletePublicLinkId,
+    selectedPublicLinkId: formState.selectedPublicLinkId,
+    setPublicLinksTab: formState.setPublicLinksTab,
+    setSelectedPublicLinkId: formState.setSelectedPublicLinkId,
+    setPendingDeletePublicLinkId: formState.setPendingDeletePublicLinkId,
+    setNewPublicShortCode: formState.setNewPublicShortCode,
     setNewEducationOrganizationId,
-    setNewEducationOrganizationName,
+    setNewEducationOrganizationName: formState.setNewEducationOrganizationName,
+    setGroupValidationMode: formState.setGroupValidationMode,
+    setGroupValidationPattern: formState.setGroupValidationPattern,
+    setGroupValidationExample: formState.setGroupValidationExample,
+    setGroupValidationHint: formState.setGroupValidationHint,
     refetchPublicLinks,
-    refetchEducationOrganizations: () => void listEducationOrganizationsQuery.refetch(),
+    refetchEducationOrganizations,
   });
 
   return {
     topics,
+    educationOrganizations,
     effectiveSelectedTopicId,
     detailQuery,
-    newPublicShortCode,
-    educationOrganizations: listEducationOrganizationsQuery.data?.organizations ?? [],
-    newEducationOrganizationId,
-    newEducationOrganizationName,
-    newPublicMaxAttempts,
-    newPublicTimeLimit,
-    newPublicAllowResume,
-    newPublicConsentVersion,
-    newPublicConsentText,
-    pendingDeletePublicLinkId,
-    publicLinksTab,
     visiblePublicLinks,
     effectivePublicLinkId,
-    createPublicLinkMutation,
-    listEducationOrganizationsQuery,
-    createEducationOrganizationMutation,
-    updatePublicLinkMutation,
-    regeneratePublicLinkShortCodeMutation,
-    deletePublicLinkMutation,
-    restorePublicLinkMutation,
-    setSelectedTopicId,
-    setNewPublicShortCode,
+    ...formState,
+    ...actions,
     setNewEducationOrganizationId,
-    setNewEducationOrganizationName,
-    setNewPublicMaxAttempts,
-    setNewPublicTimeLimit,
-    setNewPublicAllowResume,
-    setNewPublicConsentVersion,
-    setNewPublicConsentText,
-    setSelectedPublicLinkId,
-    setPendingDeletePublicLinkId,
-    handleCreatePublicLink,
-    handleCreateEducationOrganization,
-    handleSwitchPublicLinksTab,
-    handleCopyShortLink,
-    handleOpenShortLink,
-    handleOpenShortLinkQr,
-    handleTogglePublicLink,
-    handleRegeneratePublicLinkShortCode,
-    handleDeletePublicLink,
-    handleRestorePublicLink,
   };
 }

@@ -47,6 +47,12 @@ enum TestStudentAnalysisProviderMode {
   LLM
 }
 
+enum GroupOrClassValidationMode {
+  NONE
+  HINT
+  STRICT
+}
+
 model User {
   id                 Int     @id @default(autoincrement())
   email              String  @unique
@@ -183,15 +189,20 @@ model TestPublicLink {
 }
 
 model EducationOrganization {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @unique
+  isActive                 Boolean                    @default(true)
+  groupValidationMode      GroupOrClassValidationMode @default(NONE)
+  groupValidationPattern   String?
+  groupValidationExample   String?
+  groupValidationHint      String?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
 
   publicLinks TestPublicLink[]
 
   @@index([isActive])
+  @@index([groupValidationMode])
   @@map("education_organizations")
 }
 

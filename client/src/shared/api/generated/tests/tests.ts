@@ -34,6 +34,7 @@ import type {
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
   AdminPublicLinksListResponseDto,
+  AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
   CreateTestsTopicDto,
   CreateTestsTopicFromAiDto,
@@ -358,6 +359,70 @@ export const useTestsControllerCreateEducationOrganization = <TError = unknown,
         TContext
       > => {
       return useMutation(getTestsControllerCreateEducationOrganizationMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Update educational organization validation settings
+ */
+export const testsControllerUpdateEducationOrganization = (
+    organizationId: number,
+    adminUpdateEducationOrganizationDto: AdminUpdateEducationOrganizationDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationDto>(
+      {url: `/admin/tests/education-organizations/${organizationId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateEducationOrganizationDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerUpdateEducationOrganizationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext> => {
+
+const mutationKey = ['testsControllerUpdateEducationOrganization'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, {organizationId: number;data: AdminUpdateEducationOrganizationDto}> = (props) => {
+          const {organizationId,data} = props ?? {};
+
+          return  testsControllerUpdateEducationOrganization(organizationId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerUpdateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>>
+    export type TestsControllerUpdateEducationOrganizationMutationBody = AdminUpdateEducationOrganizationDto
+    export type TestsControllerUpdateEducationOrganizationMutationError = unknown
+
+    /**
+ * @summary Update educational organization validation settings
+ */
+export const useTestsControllerUpdateEducationOrganization = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>,
+        TError,
+        {organizationId: number;data: AdminUpdateEducationOrganizationDto},
+        TContext
+      > => {
+      return useMutation(getTestsControllerUpdateEducationOrganizationMutationOptions(options), queryClient);
     }
     /**
  * @summary List archived public links for tests

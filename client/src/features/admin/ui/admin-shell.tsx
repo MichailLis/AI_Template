@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Building2,
   ClipboardList,
   Link2,
   LayoutDashboard,
@@ -67,6 +68,12 @@ const navItems = [
     href: '/admin/public-links',
   },
   {
+    id: 'education-organizations',
+    label: 'Учебные заведения',
+    icon: Building2,
+    href: '/admin/public-links/organizations',
+  },
+  {
     id: 'public-links-stats',
     label: 'Статистика ссылок',
     icon: BarChart3,
@@ -74,12 +81,17 @@ const navItems = [
   },
 ];
 
-const isPathActive = (href: string, currentPath: string) => {
-  if (href === '/admin') {
-    return currentPath === '/admin';
+const resolveActiveNavHref = (currentPath: string) => {
+  if (currentPath === '/admin') {
+    return '/admin';
   }
 
-  return currentPath.startsWith(href);
+  const matchedHrefs = navItems
+    .map((item) => item.href)
+    .filter((href) => currentPath === href || currentPath.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length);
+
+  return matchedHrefs[0] ?? '';
 };
 
 export const AdminShell = ({
@@ -89,6 +101,8 @@ export const AdminShell = ({
   onLogout,
   isLoggingOut,
 }: AdminShellProps) => {
+  const activeNavHref = resolveActiveNavHref(activePath);
+
   return (
     <div className="min-h-screen w-full bg-slate-100 text-slate-900">
       <div className="grid min-h-screen w-full md:grid-cols-[18rem_minmax(0,1fr)]">
@@ -107,7 +121,7 @@ export const AdminShell = ({
             <div className="space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = isPathActive(item.href, activePath);
+                const isActive = item.href === activeNavHref;
 
                 return (
                   <Button
@@ -161,7 +175,7 @@ export const AdminShell = ({
               <div className="grid grid-cols-2 gap-2">
                 {navItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = isPathActive(item.href, activePath);
+                  const isActive = item.href === activeNavHref;
 
                   return (
                     <Button

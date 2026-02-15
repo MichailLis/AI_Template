@@ -2,10 +2,8 @@ import { toast } from 'sonner';
 
 import { parseApiError } from '@/features/tests';
 import {
-  useTestsControllerCreateEducationOrganization,
   useTestsControllerCreatePublicLink,
   useTestsControllerDeletePublicLink,
-  useTestsControllerListEducationOrganizations,
   useTestsControllerRegeneratePublicLinkShortCode,
   useTestsControllerRestorePublicLink,
   useTestsControllerUpdatePublicLink,
@@ -14,81 +12,31 @@ import {
 import {
   getShortLinkQrUrl,
   getShortLinkUrl,
-  type PublicLinksTab,
   validateCreatePublicLinkInput,
 } from './admin-public-links-workspace.helpers';
+import { useEducationOrganizationActions } from './use-admin-public-links-organization-actions';
 
-type CreatePublicLinkMutation = ReturnType<typeof useTestsControllerCreatePublicLink>;
-type ListEducationOrganizationsQuery = ReturnType<
-  typeof useTestsControllerListEducationOrganizations
->;
-type CreateEducationOrganizationMutation = ReturnType<
-  typeof useTestsControllerCreateEducationOrganization
->;
-type UpdatePublicLinkMutation = ReturnType<typeof useTestsControllerUpdatePublicLink>;
-type RegenerateShortCodeMutation = ReturnType<
-  typeof useTestsControllerRegeneratePublicLinkShortCode
->;
-type DeletePublicLinkMutation = ReturnType<typeof useTestsControllerDeletePublicLink>;
-type RestorePublicLinkMutation = ReturnType<typeof useTestsControllerRestorePublicLink>;
+import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
+import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
 
-interface UseAdminPublicLinksActionsParams {
-  publishedVersionId: number | undefined;
-  newPublicShortCode: string;
-  newEducationOrganizationId: number | null;
-  newEducationOrganizationName: string;
-  newPublicMaxAttempts: string;
-  newPublicTimeLimit: string;
-  newPublicAllowResume: boolean;
-  newPublicConsentVersion: string;
-  newPublicConsentText: string;
-  pendingDeletePublicLinkId: number | null;
-  selectedPublicLinkId: number | null;
-  listEducationOrganizationsQuery: ListEducationOrganizationsQuery;
-  createEducationOrganizationMutation: CreateEducationOrganizationMutation;
-  createPublicLinkMutation: CreatePublicLinkMutation;
-  updatePublicLinkMutation: UpdatePublicLinkMutation;
-  regeneratePublicLinkShortCodeMutation: RegenerateShortCodeMutation;
-  deletePublicLinkMutation: DeletePublicLinkMutation;
-  restorePublicLinkMutation: RestorePublicLinkMutation;
-  setPublicLinksTab: (tab: PublicLinksTab) => void;
-  setSelectedPublicLinkId: (value: number | null) => void;
-  setPendingDeletePublicLinkId: (value: number | null) => void;
-  setNewPublicShortCode: (value: string) => void;
-  setNewEducationOrganizationId: (value: number | null) => void;
-  setNewEducationOrganizationName: (value: string) => void;
-  refetchPublicLinks: () => void;
-  refetchEducationOrganizations: () => void;
-}
+function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
+  const {
+    publishedVersionId,
+    newPublicShortCode,
+    newEducationOrganizationId,
+    newPublicMaxAttempts,
+    newPublicTimeLimit,
+    newPublicAllowResume,
+    newPublicConsentVersion,
+    newPublicConsentText,
+    setPublicLinksTab,
+    setSelectedPublicLinkId,
+    setNewPublicShortCode,
+    refetchPublicLinks,
+  } = params;
 
-export function useAdminPublicLinksActions({
-  publishedVersionId,
-  newPublicShortCode,
-  newEducationOrganizationId,
-  newEducationOrganizationName,
-  newPublicMaxAttempts,
-  newPublicTimeLimit,
-  newPublicAllowResume,
-  newPublicConsentVersion,
-  newPublicConsentText,
-  pendingDeletePublicLinkId,
-  selectedPublicLinkId,
-  listEducationOrganizationsQuery,
-  createEducationOrganizationMutation,
-  createPublicLinkMutation,
-  updatePublicLinkMutation,
-  regeneratePublicLinkShortCodeMutation,
-  deletePublicLinkMutation,
-  restorePublicLinkMutation,
-  setPublicLinksTab,
-  setSelectedPublicLinkId,
-  setPendingDeletePublicLinkId,
-  setNewPublicShortCode,
-  setNewEducationOrganizationId,
-  setNewEducationOrganizationName,
-  refetchPublicLinks,
-  refetchEducationOrganizations,
-}: UseAdminPublicLinksActionsParams) {
+  const createPublicLinkMutation = useTestsControllerCreatePublicLink();
+
   const handleCreatePublicLink = () => {
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
@@ -130,32 +78,26 @@ export function useAdminPublicLinksActions({
     );
   };
 
-  const handleCreateEducationOrganization = () => {
-    const name = newEducationOrganizationName.trim();
-
-    if (!name) {
-      toast.error('Введите название учебного заведения');
-      return;
-    }
-
-    createEducationOrganizationMutation.mutate(
-      {
-        data: { name },
-      },
-      {
-        onSuccess: (organization) => {
-          toast.success('Учебное заведение добавлено');
-          setNewEducationOrganizationName('');
-          setNewEducationOrganizationId(organization.id);
-          refetchEducationOrganizations();
-          void listEducationOrganizationsQuery.refetch();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
+  return {
+    createPublicLinkMutation,
+    handleCreatePublicLink,
   };
+}
+
+function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams) {
+  const {
+    pendingDeletePublicLinkId,
+    selectedPublicLinkId,
+    setPublicLinksTab,
+    setSelectedPublicLinkId,
+    setPendingDeletePublicLinkId,
+    refetchPublicLinks,
+  } = params;
+
+  const updatePublicLinkMutation = useTestsControllerUpdatePublicLink();
+  const regeneratePublicLinkShortCodeMutation = useTestsControllerRegeneratePublicLinkShortCode();
+  const deletePublicLinkMutation = useTestsControllerDeletePublicLink();
+  const restorePublicLinkMutation = useTestsControllerRestorePublicLink();
 
   const handleTogglePublicLink = (linkId: number, nextActive: boolean) => {
     updatePublicLinkMutation.mutate(
@@ -179,9 +121,7 @@ export function useAdminPublicLinksActions({
 
   const handleRegeneratePublicLinkShortCode = (linkId: number) => {
     regeneratePublicLinkShortCodeMutation.mutate(
-      {
-        linkId,
-      },
+      { linkId },
       {
         onSuccess: (link) => {
           toast.success('Короткий код обновлен');
@@ -203,9 +143,7 @@ export function useAdminPublicLinksActions({
     const deletingId = pendingDeletePublicLinkId;
 
     deletePublicLinkMutation.mutate(
-      {
-        linkId: deletingId,
-      },
+      { linkId: deletingId },
       {
         onSuccess: () => {
           toast.success('Ссылка архивирована и скрыта из списка');
@@ -226,9 +164,7 @@ export function useAdminPublicLinksActions({
 
   const handleRestorePublicLink = (linkId: number) => {
     restorePublicLinkMutation.mutate(
-      {
-        linkId,
-      },
+      { linkId },
       {
         onSuccess: (link) => {
           toast.success('Ссылка восстановлена');
@@ -248,6 +184,20 @@ export function useAdminPublicLinksActions({
     setSelectedPublicLinkId(null);
   };
 
+  return {
+    updatePublicLinkMutation,
+    regeneratePublicLinkShortCodeMutation,
+    deletePublicLinkMutation,
+    restorePublicLinkMutation,
+    handleTogglePublicLink,
+    handleRegeneratePublicLinkShortCode,
+    handleDeletePublicLink,
+    handleRestorePublicLink,
+    handleSwitchPublicLinksTab,
+  };
+}
+
+function useShortLinkActions() {
   const handleCopyShortLink = async (shortCode: string) => {
     try {
       await navigator.clipboard.writeText(getShortLinkUrl(shortCode));
@@ -266,15 +216,22 @@ export function useAdminPublicLinksActions({
   };
 
   return {
-    handleCreatePublicLink,
-    handleCreateEducationOrganization,
-    handleTogglePublicLink,
-    handleRegeneratePublicLinkShortCode,
-    handleDeletePublicLink,
-    handleRestorePublicLink,
-    handleSwitchPublicLinksTab,
     handleCopyShortLink,
     handleOpenShortLink,
     handleOpenShortLinkQr,
+  };
+}
+
+export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsParams) {
+  const organizationActions = useEducationOrganizationActions(params);
+  const publicLinkCreateActions = usePublicLinkCreateActions(params);
+  const publicLinkManagementActions = usePublicLinkManagementActions(params);
+  const shortLinkActions = useShortLinkActions();
+
+  return {
+    ...organizationActions,
+    ...publicLinkCreateActions,
+    ...publicLinkManagementActions,
+    ...shortLinkActions,
   };
 }

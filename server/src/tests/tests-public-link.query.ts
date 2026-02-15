@@ -6,6 +6,10 @@ export const publicLinkAdminInclude = {
       id: true,
       name: true,
       isActive: true,
+      groupValidationMode: true,
+      groupValidationPattern: true,
+      groupValidationExample: true,
+      groupValidationHint: true,
     },
   },
   topicVersion: {
@@ -23,6 +27,10 @@ export const publicLinkAccessInclude = {
       id: true,
       name: true,
       isActive: true,
+      groupValidationMode: true,
+      groupValidationPattern: true,
+      groupValidationExample: true,
+      groupValidationHint: true,
     },
   },
   topicVersion: {
