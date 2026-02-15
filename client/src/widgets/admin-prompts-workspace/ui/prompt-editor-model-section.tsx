@@ -1,0 +1,111 @@
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+
+import type { ModelFilter } from '../model/types';
+import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
+
+interface PromptEditorModelSectionProps {
+  modelSearch: string;
+  onModelSearchChange: (value: string) => void;
+  modelFilter: ModelFilter;
+  onModelFilterChange: (value: ModelFilter) => void;
+  filteredModels: AdminPromptModelsResponseDtoModelsItem[];
+  allModelsCount: number;
+  selectedModel: string;
+  onModelChange: (value: string) => void;
+  selectedModelItem: AdminPromptModelsResponseDtoModelsItem | null;
+}
+
+export function PromptEditorModelSection({
+  modelSearch,
+  onModelSearchChange,
+  modelFilter,
+  onModelFilterChange,
+  filteredModels,
+  allModelsCount,
+  selectedModel,
+  onModelChange,
+  selectedModelItem,
+}: PromptEditorModelSectionProps) {
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="prompt-model-search">Search models</Label>
+          <Input
+            id="prompt-model-search"
+            value={modelSearch}
+            onChange={(event) => onModelSearchChange(event.target.value)}
+            placeholder="Search by name, id, or provider"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="prompt-model">Model</Label>
+          <select
+            id="prompt-model"
+            value={selectedModel}
+            onChange={(event) => onModelChange(event.target.value)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {filteredModels.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={modelFilter === 'all' ? 'secondary' : 'outline'}
+          onClick={() => onModelFilterChange('all')}
+        >
+          All
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={modelFilter === 'free' ? 'secondary' : 'outline'}
+          onClick={() => onModelFilterChange('free')}
+        >
+          Free
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={modelFilter === 'paid' ? 'secondary' : 'outline'}
+          onClick={() => onModelFilterChange('paid')}
+        >
+          Paid
+        </Button>
+        <p className="ml-auto text-xs text-slate-500">
+          Showing {filteredModels.length} of {allModelsCount}
+        </p>
+      </div>
+
+      {selectedModelItem ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+          <Badge
+            variant="outline"
+            className={
+              selectedModelItem.isFree
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-slate-300'
+            }
+          >
+            {selectedModelItem.isFree ? 'FREE' : 'PAID'}
+          </Badge>
+          <span className="text-xs text-slate-600">Provider: {selectedModelItem.provider}</span>
+          <span className="text-xs text-slate-600">
+            Context: {selectedModelItem.contextLength ?? 'n/a'}
+          </span>
+        </div>
+      ) : null}
+    </>
+  );
+}
