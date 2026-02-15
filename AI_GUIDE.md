@@ -125,6 +125,13 @@ Current branch state:
 4. Controller docs:
    - Always add `@ApiOperation(...)`
    - Always add `@ApiResponse({ type: ... })`
+   - For endpoints used by generated frontend clients, do not use schema-only responses as a substitute for typed DTO response declarations.
+
+### React Query/Form Sync Rule
+
+1. Do not mirror query data into form state via `setState` inside `useEffect`.
+2. Prefer derived/effective values (`queryValue ?? localFormValue`) at render/submit boundaries.
+3. If metadata must be fixed (for example link-bound organization), lock the input and submit the effective value.
 
 ### Phase 3: Frontend Integration
 
@@ -139,6 +146,7 @@ Current branch state:
      ```powershell
      npm run verify:api-mutator
      ```
+   - If backend DTOs/controllers changed, regenerate API client before any frontend lint/build/test step.
 2. Implement UI/domain composition in `widgets/*` and `features/*`; keep `pages/*` as thin route entrypoints.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
