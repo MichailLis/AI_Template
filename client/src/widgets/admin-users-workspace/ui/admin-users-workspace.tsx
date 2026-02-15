@@ -1,4 +1,3 @@
-import { Copy, MoreHorizontal, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,12 +6,19 @@ import {
   useAdminControllerGetUsers,
   useAdminControllerUpdateUserRole,
 } from '@/shared/api/generated/admin/admin';
-import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Input } from '@/shared/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 
+import { AdminUsersFilters } from './admin-users-filters';
+import { AdminUsersPagination } from './admin-users-pagination';
+import { AdminUsersTable } from './admin-users-table';
+import {
+  buildUsersQueryParams,
+  formatDateTime,
+  getApiErrorMessage,
+} from './admin-users-workspace.utils';
+
+import type { RoleFilter, SortBy, SortOrder } from './admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 const roleBadgeClass = (role: string) => {
@@ -31,69 +37,6 @@ const roleLabel = (role: string) => {
   return 'Пользователь';
 };
 
-const renderRoleToggleLabel = (role: string) => {
-  if (role === 'ADMIN') {
-    return (
-      <>
-        <ShieldOff className="mr-2 h-4 w-4" />
-        Снять права администратора
-      </>
-    );
-  }
-
-  return (
-    <>
-      <ShieldCheck className="mr-2 h-4 w-4" />
-      Сделать администратором
-    </>
-  );
-};
-
-const formatDateTime = (value: string) => {
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
-
-type RoleFilter = 'ALL' | 'USER' | 'ADMIN';
-type SortBy = 'createdAt' | 'updatedAt';
-type SortOrder = 'asc' | 'desc';
-
-const getApiErrorMessage = (error: unknown) => {
-  if (typeof error !== 'object' || error === null || !('response' in error)) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  const response = error.response;
-
-  if (typeof response !== 'object' || response === null || !('data' in response)) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  const data = response.data;
-
-  if (typeof data !== 'object' || data === null) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  if (
-    'error' in data &&
-    typeof data.error === 'object' &&
-    data.error !== null &&
-    'message' in data.error
-  ) {
-    return String(data.error.message);
-  }
-
-  if ('message' in data) {
-    return String(data.message);
-  }
-
-  return 'Не удалось выполнить запрос';
-};
-
 export function AdminUsersWorkspace() {
   const currentUser = useAuthStore((state) => state.user);
   const [searchInput, setSearchInput] = useState('');
@@ -107,14 +50,14 @@ export function AdminUsersWorkspace() {
   const limit = 10;
 
   const queryParams = useMemo(() => {
-    return {
+    return buildUsersQueryParams({
       page,
       limit,
       sortBy,
       sortOrder,
-      ...(searchQuery ? { search: searchQuery } : {}),
-      ...(roleFilter !== 'ALL' ? { role: roleFilter } : {}),
-    };
+      searchQuery,
+      roleFilter,
+    });
   }, [page, roleFilter, searchQuery, sortBy, sortOrder]);
 
   const usersQuery = useAdminControllerGetUsers(queryParams, {
@@ -215,179 +158,44 @@ export function AdminUsersWorkspace() {
         <CardDescription>Поиск, фильтры, пагинация и управление ролями.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-2">
-          <Input
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Поиск по email или имени"
-            className="w-full max-w-sm"
-          />
-          <Button type="submit" size="sm" variant="secondary">
-            Применить
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={handleResetFilters}>
-            Сбросить
-          </Button>
-        </form>
+        <AdminUsersFilters
+          searchInput={searchInput}
+          roleFilter={roleFilter}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          total={usersQuery.data.total}
+          isFetching={usersQuery.isFetching}
+          onSearchInputChange={setSearchInput}
+          onSearchSubmit={handleSearchSubmit}
+          onResetFilters={handleResetFilters}
+          onRoleFilterChange={handleRoleFilterChange}
+          onSortByChange={handleSortByChange}
+          onSortOrderToggle={handleSortOrderToggle}
+        />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            variant={roleFilter === 'ALL' ? 'secondary' : 'outline'}
-            onClick={() => handleRoleFilterChange('ALL')}
-          >
-            Все
-          </Button>
-          <Button
-            size="sm"
-            variant={roleFilter === 'ADMIN' ? 'secondary' : 'outline'}
-            onClick={() => handleRoleFilterChange('ADMIN')}
-          >
-            Администраторы
-          </Button>
-          <Button
-            size="sm"
-            variant={roleFilter === 'USER' ? 'secondary' : 'outline'}
-            onClick={() => handleRoleFilterChange('USER')}
-          >
-            Пользователи
-          </Button>
-          <Button
-            size="sm"
-            variant={sortBy === 'updatedAt' ? 'secondary' : 'outline'}
-            onClick={() => handleSortByChange('updatedAt')}
-          >
-            Сортировка: Обновлены
-          </Button>
-          <Button
-            size="sm"
-            variant={sortBy === 'createdAt' ? 'secondary' : 'outline'}
-            onClick={() => handleSortByChange('createdAt')}
-          >
-            Сортировка: Созданы
-          </Button>
-          <Button size="sm" variant="outline" onClick={handleSortOrderToggle}>
-            Порядок: {sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
-          </Button>
-          <p className="ml-auto text-sm text-slate-500">
-            Всего: {usersQuery.data.total} {usersQuery.isFetching ? '(обновление...)' : ''}
-          </p>
-        </div>
+        <AdminUsersTable
+          users={usersQuery.data.users}
+          currentUserId={currentUser?.id}
+          pendingUserId={pendingUserId}
+          activeActionsUserId={activeActionsUserId}
+          onToggleActionsMenu={(userId) =>
+            setActiveActionsUserId((previous) => (previous === userId ? null : userId))
+          }
+          onCloseActionsMenu={() => setActiveActionsUserId(null)}
+          onToggleRole={handleRoleToggle}
+          onCopyEmail={handleCopyEmail}
+          formatDateTime={formatDateTime}
+          getRoleBadgeClass={roleBadgeClass}
+          getRoleLabel={roleLabel}
+        />
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Пользователь</TableHead>
-              <TableHead>Роль</TableHead>
-              <TableHead>Создан</TableHead>
-              <TableHead>Обновлен</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {usersQuery.data.users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                  По текущим фильтрам пользователи не найдены.
-                </TableCell>
-              </TableRow>
-            ) : null}
-            {usersQuery.data.users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium text-slate-900">{user.email}</p>
-                    <p className="text-xs text-slate-500">ID: {user.id}</p>
-                    {user.name ? <p className="text-xs text-slate-500">{user.name}</p> : null}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={roleBadgeClass(user.role)}>
-                    {roleLabel(user.role)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-slate-600">{formatDateTime(user.createdAt)}</TableCell>
-                <TableCell className="text-slate-600">{formatDateTime(user.updatedAt)}</TableCell>
-                <TableCell>
-                  <div className="relative flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Действия для ${user.email}`}
-                      onClick={() =>
-                        setActiveActionsUserId((previous) =>
-                          previous === user.id ? null : user.id,
-                        )
-                      }
-                      disabled={pendingUserId === user.id}
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-
-                    {activeActionsUserId === user.id ? (
-                      <Card className="absolute right-0 top-10 z-20 w-48 border-slate-200 shadow-md">
-                        <CardContent className="space-y-2 p-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="w-full justify-start"
-                            disabled={
-                              pendingUserId === user.id ||
-                              (currentUser?.id === user.id && user.role === 'ADMIN')
-                            }
-                            onClick={() =>
-                              handleRoleToggle(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')
-                            }
-                          >
-                            {pendingUserId === user.id
-                              ? 'Обновление...'
-                              : renderRoleToggleLabel(user.role)}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              void handleCopyEmail(user.email);
-                              setActiveActionsUserId(null);
-                            }}
-                          >
-                            <Copy className="mr-2 h-4 w-4" />
-                            Скопировать email
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-          <p className="text-sm text-slate-500">
-            Страница {usersQuery.data.page} из {usersQuery.data.totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-              disabled={usersQuery.data.page <= 1 || usersQuery.isFetching}
-            >
-              Назад
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((previous) => previous + 1)}
-              disabled={usersQuery.data.page >= usersQuery.data.totalPages || usersQuery.isFetching}
-            >
-              Далее
-            </Button>
-          </div>
-        </div>
+        <AdminUsersPagination
+          page={usersQuery.data.page}
+          totalPages={usersQuery.data.totalPages}
+          isFetching={usersQuery.isFetching}
+          onPrevious={() => setPage((previous) => Math.max(1, previous - 1))}
+          onNext={() => setPage((previous) => previous + 1)}
+        />
       </CardContent>
     </Card>
   );
