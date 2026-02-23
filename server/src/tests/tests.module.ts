@@ -1,21 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { TestsAttemptService } from './tests-attempt.service';
-import { TestsAnalysisService } from './tests-analysis.service';
-import { TestsService } from './tests.service';
-import { TestsController } from './tests.controller';
-import { TestsPublicController } from './tests-public.controller';
-import { TestsPublicLinkService } from './tests-public-link.service';
-import { TestsQuestionService } from './tests-question.service';
+import { TestsAttemptsModule } from './tests-attempts.module';
+import { TestsPublicLinksModule } from './tests-public-links.module';
+import { TestsTopicsModule } from './tests-topics.module';
 
 @Module({
-  controllers: [TestsController, TestsPublicController],
-  providers: [
-    TestsService,
-    TestsQuestionService,
-    TestsPublicLinkService,
-    TestsAttemptService,
-    TestsAnalysisService,
-  ],
+  imports: [TestsTopicsModule, TestsPublicLinksModule, TestsAttemptsModule],
 })
 export class TestsModule {}

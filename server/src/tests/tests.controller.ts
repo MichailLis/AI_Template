@@ -19,28 +19,13 @@ import {
   CreateTestsTopicFromAiDto,
   CreateTestsTopicDto,
   DeleteTestsTopicResponseDto,
-  ReorderTestsQuestionsDto,
   PublishTestsTopicResponseDto,
+  ReorderTestsQuestionsDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
-import {
-  AdminCreateEducationOrganizationDto,
-  AdminCreatePublicLinkDto,
-  AdminDeletePublicLinkResponseDto,
-  AdminEducationOrganizationDto,
-  AdminEducationOrganizationsListResponseDto,
-  AdminUpdateEducationOrganizationDto,
-  AdminPublicAttemptDetailResponseDto,
-  AdminPublicAttemptsListResponseDto,
-  AdminPublicLinkDto,
-  AdminPublicLinksListResponseDto,
-  AdminUpdatePublicLinkDto,
-} from './dto/tests-links.dto';
-import { TestsAttemptService } from './tests-attempt.service';
-import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsService } from './tests.service';
 
 @ApiTags('tests')
@@ -48,121 +33,7 @@ import { TestsService } from './tests.service';
 @UseGuards(AtGuard)
 @Controller('admin/tests')
 export class TestsController {
-  constructor(
-    private readonly testsService: TestsService,
-    private readonly testsPublicLinkService: TestsPublicLinkService,
-    private readonly testsAttemptService: TestsAttemptService,
-  ) {}
-
-  @Post('public-links')
-  @ApiOperation({ summary: 'Create short public link for published test version' })
-  @ApiResponse({ status: HttpStatus.CREATED, type: AdminPublicLinkDto })
-  createPublicLink(@GetCurrentUserId() userId: number, @Body() dto: AdminCreatePublicLinkDto) {
-    return this.testsPublicLinkService.createPublicLink(userId, dto);
-  }
-
-  @Get('education-organizations')
-  @ApiOperation({ summary: 'List educational organizations for link binding' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationsListResponseDto })
-  listEducationOrganizations(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listEducationOrganizations(userId);
-  }
-
-  @Post('education-organizations')
-  @ApiOperation({ summary: 'Create educational organization for link binding' })
-  @ApiResponse({ status: HttpStatus.CREATED, type: AdminEducationOrganizationDto })
-  createEducationOrganization(
-    @GetCurrentUserId() userId: number,
-    @Body() dto: AdminCreateEducationOrganizationDto,
-  ) {
-    return this.testsPublicLinkService.createEducationOrganization(userId, dto);
-  }
-
-  @Patch('education-organizations/:organizationId')
-  @ApiOperation({ summary: 'Update educational organization validation settings' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationDto })
-  updateEducationOrganization(
-    @GetCurrentUserId() userId: number,
-    @Param('organizationId', ParseIntPipe) organizationId: number,
-    @Body() dto: AdminUpdateEducationOrganizationDto,
-  ) {
-    return this.testsPublicLinkService.updateEducationOrganization(userId, organizationId, dto);
-  }
-
-  @Get('public-links')
-  @ApiOperation({ summary: 'List short public links for tests' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
-  listPublicLinks(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listPublicLinks(userId);
-  }
-
-  @Get('public-links/archived')
-  @ApiOperation({ summary: 'List archived public links for tests' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
-  listArchivedPublicLinks(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listArchivedPublicLinks(userId);
-  }
-
-  @Patch('public-links/:linkId')
-  @ApiOperation({ summary: 'Update short public link settings' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
-  updatePublicLink(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-    @Body() dto: AdminUpdatePublicLinkDto,
-  ) {
-    return this.testsPublicLinkService.updatePublicLink(userId, linkId, dto);
-  }
-
-  @Post('public-links/:linkId/regenerate')
-  @ApiOperation({ summary: 'Regenerate short code for public link' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
-  regeneratePublicLinkShortCode(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-  ) {
-    return this.testsPublicLinkService.regeneratePublicLinkShortCode(userId, linkId);
-  }
-
-  @Delete('public-links/:linkId')
-  @ApiOperation({ summary: 'Archive public link (disable access and hide from default list)' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminDeletePublicLinkResponseDto })
-  deletePublicLink(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-  ) {
-    return this.testsPublicLinkService.deletePublicLink(userId, linkId);
-  }
-
-  @Post('public-links/:linkId/restore')
-  @ApiOperation({ summary: 'Restore archived public link' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
-  restorePublicLink(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-  ) {
-    return this.testsPublicLinkService.restorePublicLink(userId, linkId);
-  }
-
-  @Get('public-links/:linkId/attempts')
-  @ApiOperation({ summary: 'List student attempts by public link' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptsListResponseDto })
-  listPublicLinkAttempts(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-  ) {
-    return this.testsAttemptService.listAttemptsForLink(userId, linkId);
-  }
-
-  @Get('attempts/:attemptId')
-  @ApiOperation({ summary: 'Get student attempt details with answers and analysis' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptDetailResponseDto })
-  getAttemptDetail(
-    @GetCurrentUserId() userId: number,
-    @Param('attemptId', ParseIntPipe) attemptId: number,
-  ) {
-    return this.testsAttemptService.getAttemptDetail(userId, attemptId);
-  }
+  constructor(private readonly testsService: TestsService) {}
 
   @Get()
   @ApiOperation({
