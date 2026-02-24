@@ -170,7 +170,11 @@ export function TestEditor({
   if (!hasSelection) {
     return (
       <TestEditorStateCard
-        content={<p className="text-sm text-slate-500">Выберите или создайте тест.</p>}
+        content={
+          <p className="text-sm text-slate-500">
+            Выберите тест из списка или создайте новый для начала работы.
+          </p>
+        }
       />
     );
   }
@@ -178,7 +182,11 @@ export function TestEditor({
   if (loading) {
     return (
       <TestEditorStateCard
-        content={<p className="text-sm text-slate-500">Загрузка версии в работе...</p>}
+        content={
+          <p className="text-sm text-slate-500">
+            Загрузка версии в работе... Пожалуйста, подождите.
+          </p>
+        }
       />
     );
   }
@@ -188,7 +196,10 @@ export function TestEditor({
       <TestEditorStateCard
         content={
           <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
-            <p className="text-sm text-red-700">{errorMessage ?? 'Не удалось загрузить тест.'}</p>
+            <p className="text-sm text-red-700">
+              {errorMessage ??
+                'Не удалось загрузить тест. Проверьте подключение и повторите попытку.'}
+            </p>
             <Button type="button" size="sm" variant="outline" onClick={onRetryLoad}>
               Повторить
             </Button>

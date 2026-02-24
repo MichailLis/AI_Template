@@ -44,7 +44,7 @@ export function PublicLinksStatsFiltersCard({
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-40 space-y-2">
-            <Label htmlFor="public-link-scope">Ссылки</Label>
+            <Label htmlFor="public-link-scope">Область ссылок</Label>
             <select
               id="public-link-scope"
               value={publicLinksTab}
@@ -59,7 +59,7 @@ export function PublicLinksStatsFiltersCard({
           </div>
 
           <div className="min-w-64 space-y-2">
-            <Label htmlFor="stats-topic-select">Тест</Label>
+            <Label htmlFor="stats-topic-select">Тест (контекст)</Label>
             <select
               id="stats-topic-select"
               value={effectiveTopicId ? String(effectiveTopicId) : ''}
@@ -69,7 +69,9 @@ export function PublicLinksStatsFiltersCard({
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               disabled={topicOptions.length === 0}
             >
-              {topicOptions.length === 0 ? <option value="">Нет доступных тестов</option> : null}
+              {topicOptions.length === 0 ? (
+                <option value="">Нет доступных тестов в выбранной области</option>
+              ) : null}
               {topicOptions.map((topic) => (
                 <option key={topic.id} value={topic.id}>
                   {topic.title}
@@ -79,7 +81,7 @@ export function PublicLinksStatsFiltersCard({
           </div>
 
           <div className="min-w-64 space-y-2">
-            <Label htmlFor="stats-link-select">Публичная ссылка (тестов пройдено)</Label>
+            <Label htmlFor="stats-link-select">Публичная ссылка (число попыток)</Label>
             <select
               id="stats-link-select"
               value={effectivePublicLinkId ? String(effectivePublicLinkId) : ''}
@@ -89,7 +91,9 @@ export function PublicLinksStatsFiltersCard({
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               disabled={linksForTopic.length === 0}
             >
-              {linksForTopic.length === 0 ? <option value="">Нет доступных ссылок</option> : null}
+              {linksForTopic.length === 0 ? (
+                <option value="">Нет доступных ссылок для выбранного теста</option>
+              ) : null}
               {linksForTopic.map((link) => {
                 const attemptsCount = linkAttemptsCountById.get(link.id) ?? 0;
 
@@ -103,9 +107,12 @@ export function PublicLinksStatsFiltersCard({
           </div>
 
           <Button asChild type="button" variant="outline" size="sm" className="md:ml-auto">
-            <Link to="/admin/public-links">К управлению ссылками</Link>
+            <Link to="/admin/public-links">Вернуться к управлению ссылками</Link>
           </Button>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Сначала выберите область, затем тест и ссылку.
+        </p>
       </CardContent>
     </Card>
   );

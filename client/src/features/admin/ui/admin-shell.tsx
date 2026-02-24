@@ -30,54 +30,82 @@ const navItems = [
     label: 'Обзор',
     icon: LayoutDashboard,
     href: '/admin',
+    group: 'overview',
   },
   {
     id: 'users',
     label: 'Пользователи',
     icon: Users,
     href: '/admin/users',
+    group: 'content',
   },
   {
     id: 'security',
     label: 'Безопасность',
     icon: ShieldCheck,
     href: '/admin/security',
-  },
-  {
-    id: 'analytics',
-    label: 'Аналитика',
-    icon: BarChart3,
-    href: '/admin/analytics',
+    group: 'content',
   },
   {
     id: 'prompts',
     label: 'Промпты',
     icon: MessageSquareText,
     href: '/admin/prompts',
+    group: 'content',
   },
   {
     id: 'tests',
     label: 'Тесты',
     icon: ClipboardList,
     href: '/admin/tests',
+    group: 'content',
   },
   {
     id: 'public-links',
     label: 'Публичные ссылки',
     icon: Link2,
     href: '/admin/public-links',
+    group: 'publication',
   },
   {
     id: 'education-organizations',
     label: 'Учебные заведения',
     icon: Building2,
     href: '/admin/public-links/organizations',
+    group: 'publication',
+  },
+  {
+    id: 'analytics',
+    label: 'Аналитика',
+    icon: BarChart3,
+    href: '/admin/analytics',
+    group: 'analytics',
   },
   {
     id: 'public-links-stats',
     label: 'Статистика ссылок',
     icon: BarChart3,
     href: '/admin/public-links/stats',
+    group: 'analytics',
+  },
+];
+
+const navGroups = [
+  {
+    id: 'overview',
+    label: 'Обзор',
+  },
+  {
+    id: 'content',
+    label: 'Контент',
+  },
+  {
+    id: 'publication',
+    label: 'Публикация',
+  },
+  {
+    id: 'analytics',
+    label: 'Аналитика',
   },
 ];
 
@@ -118,23 +146,40 @@ export const AdminShell = ({
             </Button>
           </div>
           <nav className="flex-1 p-4">
-            <div className="space-y-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = item.href === activeNavHref;
+            <div className="space-y-6">
+              {navGroups.map((group) => {
+                const groupItems = navItems.filter((item) => item.group === group.id);
+
+                if (groupItems.length === 0) {
+                  return null;
+                }
 
                 return (
-                  <Button
-                    key={item.id}
-                    asChild
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className="w-full justify-start gap-2"
-                  >
-                    <Link to={item.href}>
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </Button>
+                  <div key={group.id}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {group.label}
+                    </p>
+                    <div className="space-y-1">
+                      {groupItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = item.href === activeNavHref;
+
+                        return (
+                          <Button
+                            key={item.id}
+                            asChild
+                            variant={isActive ? 'secondary' : 'ghost'}
+                            className="w-full justify-start gap-2"
+                          >
+                            <Link to={item.href}>
+                              <Icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -172,23 +217,40 @@ export const AdminShell = ({
               </div>
             </div>
             <div className="border-t border-slate-200 px-4 py-2 md:hidden">
-              <div className="grid grid-cols-2 gap-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = item.href === activeNavHref;
+              <div className="space-y-4">
+                {navGroups.map((group) => {
+                  const groupItems = navItems.filter((item) => item.group === group.id);
+
+                  if (groupItems.length === 0) {
+                    return null;
+                  }
 
                   return (
-                    <Button
-                      key={item.id}
-                      asChild
-                      variant={isActive ? 'secondary' : 'outline'}
-                      size="sm"
-                    >
-                      <Link to={item.href}>
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </Button>
+                    <div key={group.id}>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        {group.label}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {groupItems.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = item.href === activeNavHref;
+
+                          return (
+                            <Button
+                              key={item.id}
+                              asChild
+                              variant={isActive ? 'secondary' : 'outline'}
+                              size="sm"
+                            >
+                              <Link to={item.href}>
+                                <Icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                              </Link>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>

@@ -42,7 +42,9 @@ export function AdminPageLayout() {
         isLoggingOut={logoutMutation.isPending}
       >
         <Card className="border-slate-200">
-          <CardContent className="p-6 text-sm text-slate-500">Загрузка админ-панели...</CardContent>
+          <CardContent className="p-6 text-sm text-slate-500">
+            Загрузка админ-панели... Пожалуйста, подождите
+          </CardContent>
         </Card>
       </AdminShell>
     );
@@ -58,9 +60,11 @@ export function AdminPageLayout() {
       >
         <Card className="border-red-200 bg-red-50">
           <CardContent className="space-y-4 p-6 text-sm text-red-700">
-            <p>Доступ запрещен или данные админ-панели недоступны.</p>
+            <p>
+              Не удалось загрузить данные админ-панели. Проверьте подключение и повторите попытку.
+            </p>
             <Button variant="outline" size="sm" onClick={() => adminQuery.refetch()}>
-              Повторить
+              Повторить загрузку
             </Button>
           </CardContent>
         </Card>

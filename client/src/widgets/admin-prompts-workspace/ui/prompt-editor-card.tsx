@@ -79,10 +79,10 @@ export function PromptEditorCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />
-          Prompt Editor
+          Редактор промптов
         </CardTitle>
         <CardDescription>
-          First approximation for student career guidance prompt workflow.
+          Черновой сценарий для навигации по студенческим карьерным траекториям.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

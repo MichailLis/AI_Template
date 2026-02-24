@@ -50,10 +50,15 @@ export function PublicLinksAttemptsTableCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? <p className="text-sm text-slate-500">Загружаем прохождения...</p> : null}
+        {isLoading ? (
+          <p className="text-sm text-slate-500">Загружаем данные прохождений...</p>
+        ) : null}
 
         {!isLoading && publicAttempts.length === 0 ? (
-          <p className="text-sm text-slate-500">По выбранной ссылке пока нет прохождений.</p>
+          <p className="text-sm text-slate-500">
+            По выбранной ссылке пока нет прохождений.
+            {selectedPublicLink ? ' Студенты могут начать тестирование по ссылке.' : ''}
+          </p>
         ) : null}
 
         {publicAttempts.length > 0 ? (
@@ -69,10 +74,10 @@ export function PublicLinksAttemptsTableCard({
                   <TableHead>Инициалы</TableHead>
                   <TableHead>Учреждение</TableHead>
                   <TableHead>Группа/класс</TableHead>
-                  <TableHead>Начало</TableHead>
-                  <TableHead>Завершение</TableHead>
-                  <TableHead>Истекает</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
+                  <TableHead>Начало работы</TableHead>
+                  <TableHead>Завершение работы</TableHead>
+                  <TableHead>Истекает через</TableHead>
+                  <TableHead className="text-right">Просмотр</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -24,15 +24,15 @@ export function PromptEditorVariablesSection({
     <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase text-slate-600">
-          Test Variables ({variables.length})
+          Тестовые переменные ({variables.length})
         </p>
         <div className="flex items-center gap-2">
           <p className="text-xs text-slate-500">
-            Question system is not connected yet, using manual values.
+            Система вопросов пока не подключена, используются ручные значения.
           </p>
           <Button type="button" size="sm" variant="outline" onClick={onAddVariable}>
             <Plus className="mr-2 h-4 w-4" />
-            Add variable
+            Добавить переменную
           </Button>
         </div>
       </div>
@@ -40,7 +40,7 @@ export function PromptEditorVariablesSection({
       <div className="grid gap-2">
         {variables.length === 0 ? (
           <div className="rounded-md border border-dashed border-slate-300 p-3 text-xs text-slate-500">
-            No test variables. Add one to inject placeholders.
+            Нет тестовых переменных. Добавьте одну для подстановки.
           </div>
         ) : null}
 
@@ -48,8 +48,8 @@ export function PromptEditorVariablesSection({
           <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
             <AlertTriangle className="mt-0.5 h-4 w-4" />
             <span>
-              Duplicate variable keys detected: {duplicateVariableData.duplicateKeys.join(', ')}.
-              Keep each key unique to avoid ambiguous substitutions.
+              Обнаружены дубликаты ключей: {duplicateVariableData.duplicateKeys.join(', ')}. Каждому
+              ключу уникальное значение, чтобы избежать неоднозначной подстановки.
             </span>
           </div>
         ) : null}
@@ -67,20 +67,20 @@ export function PromptEditorVariablesSection({
                   ? 'border-amber-300 bg-amber-50 focus-visible:ring-amber-400'
                   : ''
               }`}
-              placeholder="variable_key"
+              placeholder="ключ_переменной"
             />
             <Input
               value={variable.value}
               onChange={(event) => onVariableChange(variable.id, 'value', event.target.value)}
               className="font-mono text-xs"
-              placeholder="Variable value"
+              placeholder="Значение переменной"
             />
             <Button
               type="button"
               size="icon"
               variant="ghost"
               onClick={() => onRemoveVariable(variable.id)}
-              aria-label={`Remove variable ${variable.key}`}
+              aria-label={`Удалить переменную ${variable.key}`}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -42,7 +42,7 @@ function RegistrationCardHeader() {
             Регистрация
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Заполните анкету для начала тестирования
+            Заполните данные и начните тест
           </CardDescription>
         </div>
         <div className="ml-4 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent p-3 shadow-md">
@@ -197,9 +197,10 @@ function ConsentSection({
 }: ConsentSectionProps) {
   return (
     <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 text-sm">
-      <p className="font-semibold text-foreground">
-        Согласие на обработку персональных данных ({consentVersion})
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="font-semibold text-foreground">Согласие на обработку данных</p>
+        <span className="text-xs text-muted-foreground">{consentVersion}</span>
+      </div>
       <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
         {consentText}
       </p>
@@ -211,7 +212,7 @@ function ConsentSection({
           className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
         />
         <span className="font-medium text-foreground">
-          Даю согласие на обработку персональных данных
+          Согласен(а) с условиями обработки данных
         </span>
       </label>
     </div>
@@ -232,12 +233,12 @@ function SubmitButton({ isSubmitting }: SubmitButtonProps) {
       {isSubmitting ? (
         <span className="flex items-center gap-2">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          Запускаем...
+          Запускаем тест...
         </span>
       ) : (
         <span className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />
-          Перейти к тесту
+          Начать тестирование
         </span>
       )}
     </Button>
@@ -290,6 +291,10 @@ export function PublicTestRegistrationCard({
             />
 
             <SubmitButton isSubmitting={isSubmitting} />
+
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              После нажатия кнопки вы перейдете к вопросам теста
+            </p>
           </form>
         </CardContent>
       </Card>

@@ -33,16 +33,16 @@ export function PromptEditorModelSection({
     <>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="prompt-model-search">Search models</Label>
+          <Label htmlFor="prompt-model-search">Поиск моделей</Label>
           <Input
             id="prompt-model-search"
             value={modelSearch}
             onChange={(event) => onModelSearchChange(event.target.value)}
-            placeholder="Search by name, id, or provider"
+            placeholder="Поиск по названию, ID или поставщику"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="prompt-model">Model</Label>
+          <Label htmlFor="prompt-model">Модель</Label>
           <select
             id="prompt-model"
             value={selectedModel}
@@ -65,7 +65,7 @@ export function PromptEditorModelSection({
           variant={modelFilter === 'all' ? 'secondary' : 'outline'}
           onClick={() => onModelFilterChange('all')}
         >
-          All
+          Все
         </Button>
         <Button
           type="button"
@@ -73,7 +73,7 @@ export function PromptEditorModelSection({
           variant={modelFilter === 'free' ? 'secondary' : 'outline'}
           onClick={() => onModelFilterChange('free')}
         >
-          Free
+          Бесплатные
         </Button>
         <Button
           type="button"
@@ -81,10 +81,10 @@ export function PromptEditorModelSection({
           variant={modelFilter === 'paid' ? 'secondary' : 'outline'}
           onClick={() => onModelFilterChange('paid')}
         >
-          Paid
+          Платные
         </Button>
         <p className="ml-auto text-xs text-slate-500">
-          Showing {filteredModels.length} of {allModelsCount}
+          Показано {filteredModels.length} из {allModelsCount}
         </p>
       </div>
 
@@ -100,9 +100,9 @@ export function PromptEditorModelSection({
           >
             {selectedModelItem.isFree ? 'FREE' : 'PAID'}
           </Badge>
-          <span className="text-xs text-slate-600">Provider: {selectedModelItem.provider}</span>
+          <span className="text-xs text-slate-600">Поставщик: {selectedModelItem.provider}</span>
           <span className="text-xs text-slate-600">
-            Context: {selectedModelItem.contextLength ?? 'n/a'}
+            Контекст: {selectedModelItem.contextLength ?? 'н/д'}
           </span>
         </div>
       ) : null}

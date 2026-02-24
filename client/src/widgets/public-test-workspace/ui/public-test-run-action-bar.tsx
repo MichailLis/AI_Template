@@ -22,7 +22,7 @@ export function PublicTestRunActionBar({
       <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
         <Clock3 className="h-4 w-4" />
         <ListChecks className="h-4 w-4" />
-        {answeredQuestionsCount}/{totalQuestionsCount} заполнено
+        Шаг {answeredQuestionsCount}/{totalQuestionsCount}
       </div>
 
       <Button

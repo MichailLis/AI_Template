@@ -110,21 +110,13 @@ export function PublicLinksListCard({
                 <span className="ml-auto text-xs text-slate-500">{getLinkStateLabel(link)}</span>
               </div>
 
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 {publicLinksTab === 'active' ? (
                   <>
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
-                      onClick={() => void onCopyShortLink(link.shortCode)}
-                    >
-                      Копировать
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
+                      variant="default"
                       onClick={() => onOpenShortLink(link.shortCode)}
                     >
                       Перейти
@@ -132,7 +124,15 @@ export function PublicLinksListCard({
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
+                      onClick={() => void onCopyShortLink(link.shortCode)}
+                    >
+                      Копировать
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
                       onClick={() => onOpenQr(link.shortCode)}
                     >
                       QR
@@ -140,7 +140,7 @@ export function PublicLinksListCard({
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => onTogglePublicLink(link.id, !link.isActive)}
                       disabled={isUpdatingPublicLink}
                     >
@@ -149,12 +149,13 @@ export function PublicLinksListCard({
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => onRegenerateShortCode(link.id)}
                       disabled={isRegeneratingShortCode}
                     >
                       Новый код
                     </Button>
+                    <div className="ml-2 w-px h-5 bg-slate-200" />
                     <Button
                       type="button"
                       size="sm"

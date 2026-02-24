@@ -21,7 +21,12 @@ export function PublicTestRunWorkspace() {
   } = usePublicTestRunWorkspace();
 
   if (!code || !sessionToken) {
-    return <PublicTestRunStateScreen message="Некорректная ссылка сессии теста." tone="danger" />;
+    return (
+      <PublicTestRunStateScreen
+        message="Ссылка недействительна. Проверьте, что вы перешли по верной ссылке или запросите новую у администратора."
+        tone="danger"
+      />
+    );
   }
 
   if (sessionQuery.isLoading) {
@@ -30,14 +35,24 @@ export function PublicTestRunWorkspace() {
 
   if (sessionQuery.isError || !session) {
     return (
-      <PublicTestRunStateScreen message="Сессия недоступна или уже завершена." tone="danger" />
+      <PublicTestRunStateScreen
+        message="Сессия недоступна или уже завершена. Свяжитесь с администратором теста для получения новой ссылки."
+        tone="danger"
+      />
     );
   }
 
   if (session.shortCode !== code) {
     return (
-      <PublicTestRunStateScreen message="Код ссылки не совпадает с сессией теста." tone="danger" />
+      <PublicTestRunStateScreen
+        message="Ссылка недействительна. Проверьте, что вы перешли по верной ссылке или запросите новую у администратора."
+        tone="danger"
+      />
     );
+  }
+
+  if (session.questions.length === 0) {
+    return <PublicTestRunStateScreen message="Тест пока не содержит вопросов." tone="danger" />;
   }
 
   return (
@@ -47,6 +62,10 @@ export function PublicTestRunWorkspace() {
         totalQuestionsCount={totalQuestionsCount}
         answeredQuestionsCount={answeredQuestionsCount}
       />
+
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        Заполните все вопросы и нажмите «Завершить тест», чтобы отправить ответы.
+      </p>
 
       <div className="space-y-4">
         {session.questions.map((question) => {

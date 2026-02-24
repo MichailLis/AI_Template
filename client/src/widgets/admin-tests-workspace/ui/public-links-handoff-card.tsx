@@ -7,14 +7,14 @@ export function PublicLinksHandoffCard() {
   return (
     <Card className="mt-6 border-slate-200">
       <CardHeader>
-        <CardTitle>Публичные ссылки вынесены отдельно</CardTitle>
+        <CardTitle>Опубликуйте тест и поделитесь ссылкой</CardTitle>
         <CardDescription>
-          Управление ссылками, архивом и статистикой попыток теперь доступно на отдельной странице.
+          После создания теста создайте публичную ссылку для студентов и настройте условия доступа.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Button asChild type="button" variant="outline">
-          <Link to="/admin/public-links">Открыть страницу ссылок</Link>
+          <Link to="/admin/public-links">Создать публичную ссылку</Link>
         </Button>
       </CardContent>
     </Card>

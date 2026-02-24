@@ -53,7 +53,7 @@ export function PublicTestResultWorkspace() {
     return (
       <PublicThemeLayout containerClassName="max-w-3xl">
         <div className="flex min-h-[60vh] items-center justify-center px-4 py-10 text-sm text-red-700">
-          Некорректная ссылка результата теста.
+          Ссылка недействительна. Проверьте, что вы перешли по верной ссылке.
         </div>
       </PublicThemeLayout>
     );
@@ -63,7 +63,7 @@ export function PublicTestResultWorkspace() {
     return (
       <PublicThemeLayout containerClassName="max-w-3xl">
         <div className="flex min-h-[60vh] items-center justify-center px-4 py-10 text-sm text-muted-foreground">
-          Загружаем результат...
+          Анализируется ваш результат. Это займет несколько секунд.
         </div>
       </PublicThemeLayout>
     );
@@ -73,7 +73,7 @@ export function PublicTestResultWorkspace() {
     return (
       <PublicThemeLayout containerClassName="max-w-3xl">
         <div className="flex min-h-[60vh] items-center justify-center px-4 py-10 text-sm text-red-700">
-          Результат недоступен. Возможно, тест еще не завершен.
+          Анализируется ваш результат. Это займет несколько секунд.
         </div>
       </PublicThemeLayout>
     );
@@ -142,6 +142,14 @@ export function PublicTestResultWorkspace() {
             </pre>
           </div>
 
+          {result.analysis.status === 'FAILED' ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+              <p>
+                Попробуйте обновить страницу через несколько секунд. Если проблема сохраняется,
+                свяжитесь с администратором.
+              </p>
+            </div>
+          ) : null}
           {result.analysis.errorMessage ? (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
               {result.analysis.errorMessage}

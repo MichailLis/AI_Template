@@ -6,8 +6,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account.</CardDescription>
+          <CardTitle className="text-2xl">Вход</CardTitle>
+          <CardDescription>Введите email для входа в аккаунт</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />

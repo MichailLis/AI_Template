@@ -18,7 +18,7 @@ export function PromptEditorTemplateSection({
 }: PromptEditorTemplateSectionProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="prompt-template">Prompt template</Label>
+      <Label htmlFor="prompt-template">Шаблон промпта</Label>
       <div className="grid grid-cols-[44px_minmax(0,1fr)] overflow-hidden rounded-md border border-input">
         <div className="overflow-hidden border-r border-slate-200 bg-slate-50 text-right">
           <div

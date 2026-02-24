@@ -30,7 +30,7 @@ export function PromptEditorSettingsSection({
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="prompt-temperature">
-            Temperature <span className="text-slate-500">({temperature})</span>
+            Температура <span className="text-slate-500">({temperature})</span>
           </Label>
           <input
             id="prompt-temperature"
@@ -44,7 +44,7 @@ export function PromptEditorSettingsSection({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="prompt-max-tokens">Max tokens</Label>
+          <Label htmlFor="prompt-max-tokens">Макс. токенов</Label>
           <Input
             id="prompt-max-tokens"
             value={maxTokens}
@@ -55,7 +55,7 @@ export function PromptEditorSettingsSection({
 
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="prompt-system-role">System role</Label>
+          <Label htmlFor="prompt-system-role">Системная роль</Label>
           <Input
             id="prompt-system-role"
             value={systemRole}
@@ -63,7 +63,7 @@ export function PromptEditorSettingsSection({
           />
         </div>
         <div className="space-y-2">
-          <Label>Response format</Label>
+          <Label>Формат ответа</Label>
           <div className="flex items-center gap-2">
             <Button
               type="button"
@@ -71,7 +71,7 @@ export function PromptEditorSettingsSection({
               variant={responseFormat === 'text' ? 'secondary' : 'outline'}
               onClick={() => onResponseFormatChange('text')}
             >
-              Text
+              Текст
             </Button>
             <Button
               type="button"

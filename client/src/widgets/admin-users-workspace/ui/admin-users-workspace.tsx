@@ -50,7 +50,9 @@ export function AdminUsersWorkspace() {
   if (usersQuery.isLoading) {
     return (
       <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6 text-sm text-slate-500">Загрузка пользователей...</CardContent>
+        <CardContent className="p-6 text-sm text-slate-500">
+          Загрузка пользователей... Пожалуйста, подождите.
+        </CardContent>
       </Card>
     );
   }
@@ -59,7 +61,7 @@ export function AdminUsersWorkspace() {
     return (
       <Card className="border-red-200 bg-red-50 shadow-sm">
         <CardContent className="space-y-4 p-6 text-sm text-red-700">
-          <p>Не удалось загрузить пользователей.</p>
+          <p>Не удалось загрузить пользователей. Проверьте подключение и повторите попытку.</p>
           <Button variant="outline" size="sm" onClick={() => usersQuery.refetch()}>
             Повторить
           </Button>

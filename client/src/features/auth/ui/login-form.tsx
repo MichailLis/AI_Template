@@ -41,12 +41,16 @@ export const LoginForm = () => {
       {
         onSuccess: (data) => {
           setAuth(data.user, data.accessToken, data.refreshToken);
-          toast.success('Welcome back!');
+          toast.success('С возвращением!');
           navigate('/admin');
         },
         onError: (error: unknown) => {
           const authError = error as AuthError;
-          const message = authError.response?.data?.error?.message || 'Invalid credentials';
+          const backendMessage = authError.response?.data?.error?.message;
+          const credentialErrors = ['Invalid credentials', 'Access Denied'];
+          const message = credentialErrors.includes(backendMessage || '')
+            ? 'Неверные данные'
+            : backendMessage || 'Неверные данные';
           toast.error(message);
         },
       },
@@ -74,7 +78,7 @@ export const LoginForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem className="grid gap-2 space-y-0">
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Пароль</FormLabel>
               <FormControl>
                 <Input type="password" {...field} />
               </FormControl>
@@ -83,7 +87,7 @@ export const LoginForm = () => {
           )}
         />
         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? 'Loading...' : 'Login'}
+          {loginMutation.isPending ? 'Загрузка...' : 'Войти'}
         </Button>
       </form>
     </Form>

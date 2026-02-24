@@ -50,36 +50,33 @@ export function PublicTestOverviewPanel({
       </div>
 
       <div className="space-y-3 rounded-xl border border-border/60 bg-card/85 p-5 shadow-sm backdrop-blur">
-        <h4 className="font-semibold text-foreground">Что вы получите</h4>
+        <h4 className="font-semibold text-foreground">После прохождения</h4>
         <ul className="space-y-3 text-sm text-muted-foreground">
           <li className="flex items-start gap-3">
             <span className="mt-0.5 rounded-md bg-primary/12 p-1.5 text-primary">
               <Target className="h-4 w-4" />
             </span>
-            <span>Диагностику сильных сторон и профессиональных склонностей.</span>
+            <span>Узнаете свои сильные стороны и профессиональные склонности.</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-0.5 rounded-md bg-primary/12 p-1.5 text-primary">
               <BarChart3 className="h-4 w-4" />
             </span>
-            <span>Подробный анализ результатов после завершения теста.</span>
+            <span>Получите подробный анализ результатов сразу после завершения.</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-0.5 rounded-md bg-primary/12 p-1.5 text-primary">
               <FileText className="h-4 w-4" />
             </span>
-            <span>Рекомендации для выбора образовательной и карьерной траектории.</span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="mt-0.5 rounded-md bg-primary/12 p-1.5 text-primary">
-              <Clock3 className="h-4 w-4" />
-            </span>
-            <span>
-              Среднее время прохождения:{' '}
-              {timeLimitMinutes ? `${timeLimitMinutes} минут` : '15-20 минут'}.
-            </span>
+            <span>Получите персональные рекомендации для выбора профессии.</span>
           </li>
         </ul>
+        <div className="mt-4 flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2">
+          <Clock3 className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">
+            Время прохождения: {timeLimitMinutes ? `${timeLimitMinutes} минут` : '15-20 минут'}
+          </span>
+        </div>
       </div>
     </div>
   );

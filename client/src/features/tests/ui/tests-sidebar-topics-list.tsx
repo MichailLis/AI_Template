@@ -32,11 +32,14 @@ export function TestsSidebarTopicsList({
 }: TestsSidebarTopicsListProps) {
   return (
     <div className="space-y-2 border-t border-slate-200 pt-4">
-      {topicsLoading ? <p className="text-sm text-slate-500">Загрузка тестов...</p> : null}
+      {topicsLoading ? (
+        <p className="text-sm text-slate-500">Загрузка тестов... Пожалуйста, подождите.</p>
+      ) : null}
       {topicsError ? (
         <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
           <p className="text-sm text-red-700">
-            {topicsErrorMessage ?? 'Не удалось загрузить тесты.'}
+            {topicsErrorMessage ??
+              'Не удалось загрузить тесты. Проверьте подключение и повторите попытку.'}
           </p>
           <Button type="button" size="sm" variant="outline" onClick={onRetryTopics}>
             Повторить
@@ -45,7 +48,9 @@ export function TestsSidebarTopicsList({
       ) : null}
 
       {!topicsLoading && !topicsError && filteredTopics.length === 0 ? (
-        <p className="text-sm text-slate-500">Ничего не найдено по текущему фильтру.</p>
+        <p className="text-sm text-slate-500">
+          Ничего не найдено. Измените фильтры или создайте новый тест.
+        </p>
       ) : null}
 
       {filteredTopics.map((topic) => (

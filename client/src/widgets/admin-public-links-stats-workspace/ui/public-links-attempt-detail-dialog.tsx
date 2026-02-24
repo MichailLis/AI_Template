@@ -86,14 +86,14 @@ export function PublicLinksAttemptDetailDialog({
             </p>
 
             <div>
-              <p className="mb-1 text-sm font-medium text-slate-800">Summary</p>
+              <p className="mb-1 text-sm font-medium text-slate-800">Сводка</p>
               <pre className="max-h-60 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-100">
                 {toPrettyJson(detailAttempt.analysis?.summary ?? null)}
               </pre>
             </div>
 
             <div>
-              <p className="mb-1 text-sm font-medium text-slate-800">Raw text</p>
+              <p className="mb-1 text-sm font-medium text-slate-800">Исходный текст</p>
               <pre className="max-h-60 overflow-auto rounded-md bg-slate-100 p-3 text-xs text-slate-900">
                 {detailAttempt.analysis?.rawText ?? '—'}
               </pre>
