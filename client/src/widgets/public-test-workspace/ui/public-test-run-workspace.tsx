@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { PublicQuestionCard } from './public-question-card';
 import { PublicTestRunActionBar } from './public-test-run-action-bar';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
@@ -19,6 +21,7 @@ export function PublicTestRunWorkspace() {
     setQuestionAnswer,
     handleFinish,
   } = usePublicTestRunWorkspace();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   if (!code || !sessionToken) {
     return (
@@ -64,30 +67,35 @@ export function PublicTestRunWorkspace() {
       />
 
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Заполните все вопросы и нажмите «Завершить тест», чтобы отправить ответы.
+        Переходите между вопросами и нажмите «Завершить тест» на последнем шаге.
       </p>
 
       <div className="space-y-4">
-        {session.questions.map((question) => {
-          const currentAnswer = getCurrentAnswer(question.id);
-
+        {(() => {
+          const currentQuestion = session.questions[currentQuestionIndex];
+          const currentAnswer = getCurrentAnswer(currentQuestion.id);
           return (
             <PublicQuestionCard
-              key={question.id}
-              question={question}
+              key={currentQuestion.id}
+              question={currentQuestion}
               currentAnswer={currentAnswer}
               onAnswerChange={setQuestionAnswer}
             />
           );
-        })}
+        })()}
       </div>
 
       <PublicTestRunActionBar
         finishIsPending={saveAnswersMutation.isPending || finishMutation.isPending}
         sessionStatus={session.status}
-        answeredQuestionsCount={answeredQuestionsCount}
         totalQuestionsCount={totalQuestionsCount}
+        currentQuestionIndex={currentQuestionIndex}
+        canGoBack={currentQuestionIndex > 0}
+        canGoNext={currentQuestionIndex < session.questions.length - 1}
+        isLastQuestion={currentQuestionIndex === session.questions.length - 1}
         onFinish={handleFinish}
+        onBack={() => setCurrentQuestionIndex((i) => i - 1)}
+        onNext={() => setCurrentQuestionIndex((i) => i + 1)}
       />
     </PublicThemeLayout>
   );
