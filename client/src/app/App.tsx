@@ -18,7 +18,6 @@ const AdminPublicLinksOrganizationsPage = lazy(
   () => import('@/pages/admin/admin-public-links-organizations-page'),
 );
 const AdminPublicLinksStatsPage = lazy(() => import('@/pages/admin/admin-public-links-stats-page'));
-const AdminSecurityPage = lazy(() => import('@/pages/admin/admin-security-page'));
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/admin-users-page'));
 const LoginPage = lazy(() => import('@/pages/login'));
@@ -105,7 +104,6 @@ function App() {
               >
                 <Route index element={<AdminOverviewPage />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="/admin/security" element={<AdminSecurityPage />} />
                 <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                 <Route path="/admin/prompts" element={<AdminPromptsPage />} />
                 <Route path="/admin/tests" element={<AdminTestsPage />} />

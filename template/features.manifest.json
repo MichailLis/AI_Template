@@ -30,7 +30,6 @@
         "client/src/pages/admin/admin-page.tsx",
         "client/src/pages/admin/admin-overview-page.tsx",
         "client/src/pages/admin/admin-users-page.tsx",
-        "client/src/pages/admin/admin-security-page.tsx",
         "client/src/pages/admin/admin-analytics-page.tsx",
         "client/src/pages/admin/admin-prompts-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",

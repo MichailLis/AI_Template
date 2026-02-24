@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquareText,
-  ShieldCheck,
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -37,13 +36,6 @@ const navItems = [
     label: 'Пользователи',
     icon: Users,
     href: '/admin/users',
-    group: 'content',
-  },
-  {
-    id: 'security',
-    label: 'Безопасность',
-    icon: ShieldCheck,
-    href: '/admin/security',
     group: 'content',
   },
   {
