@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 
 import { parseApiError } from '@/features/tests';
 import {
-  useTestsControllerCreateEducationOrganization,
-  useTestsControllerListEducationOrganizations,
-  useTestsControllerUpdateEducationOrganization,
+  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
+  useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
+  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
 } from '@/shared/api/generated/tests/tests';
 
 import {
@@ -42,9 +42,12 @@ const defaultEditOrganizationValues = (): OrganizationEditorValues => ({
 });
 
 export function useAdminEducationOrganizationsWorkspace() {
-  const listOrganizationsQuery = useTestsControllerListEducationOrganizations();
-  const createOrganizationMutation = useTestsControllerCreateEducationOrganization();
-  const updateOrganizationMutation = useTestsControllerUpdateEducationOrganization();
+  const listOrganizationsQuery =
+    useTestsAdminEducationOrganizationsControllerListEducationOrganizations();
+  const createOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
+  const updateOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
   const organizations = useMemo(
     () => listOrganizationsQuery.data?.organizations ?? [],
     [listOrganizationsQuery.data?.organizations],

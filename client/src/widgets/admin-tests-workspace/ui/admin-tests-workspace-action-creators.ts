@@ -46,8 +46,8 @@ interface CreateTestDeps {
   setNewTestDescription: (value: string) => void;
   createTopicMutation: CreateTopicMutation;
   draftAutosave: DraftAutosave;
-  setSelectedTopicId: (value: number | null) => void;
   refetchTopicsOnly: () => void;
+  navigateToTopic: (topicId: number) => void;
 }
 
 export const createHandleCreateTest = ({
@@ -59,8 +59,8 @@ export const createHandleCreateTest = ({
   setNewTestDescription,
   createTopicMutation,
   draftAutosave,
-  setSelectedTopicId,
   refetchTopicsOnly,
+  navigateToTopic,
 }: CreateTestDeps) => {
   return () => {
     if (!newTestTitle.trim()) {
@@ -77,14 +77,14 @@ export const createHandleCreateTest = ({
         },
       },
       {
-        onSuccess: (topic) => {
+        onSuccess: (result) => {
           toast.success('Тест создан');
           setNewTestTitle('');
           setNewTestSlug('');
           setNewTestDescription('');
           draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
           refetchTopicsOnly();
+          navigateToTopic(result.topicId);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -98,16 +98,16 @@ interface CreateTestFromAiDeps {
   createTopicFromAiMutation: CreateTopicFromAiMutation;
   setIsAiGeneratorOpen: (value: boolean) => void;
   draftAutosave: DraftAutosave;
-  setSelectedTopicId: (value: number | null) => void;
   refetchTestsData: () => void;
+  navigateToTopic: (topicId: number) => void;
 }
 
 export const createHandleCreateTestFromAi = ({
   createTopicFromAiMutation,
   setIsAiGeneratorOpen,
   draftAutosave,
-  setSelectedTopicId,
   refetchTestsData,
+  navigateToTopic,
 }: CreateTestFromAiDeps) => {
   return (payload: CreateTestsTopicFromAiDto) => {
     createTopicFromAiMutation.mutate(
@@ -115,12 +115,12 @@ export const createHandleCreateTestFromAi = ({
         data: payload,
       },
       {
-        onSuccess: (topic) => {
+        onSuccess: (result) => {
           toast.success('Тест успешно создан с помощью ИИ');
           setIsAiGeneratorOpen(false);
           draftAutosave.resetAutosaveMeta();
-          setSelectedTopicId(topic.topicId);
           refetchTestsData();
+          navigateToTopic(result.topicId);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -136,7 +136,7 @@ interface SelectTestDeps {
   setPendingTopicSwitchId: (value: number | null) => void;
   setIsSwitchConfirmOpen: (value: boolean) => void;
   draftAutosave: DraftAutosave;
-  setSelectedTopicId: (value: number | null) => void;
+  navigateToTopic: (topicId: number) => void;
 }
 
 export const createHandleSelectTest = ({
@@ -145,7 +145,7 @@ export const createHandleSelectTest = ({
   setPendingTopicSwitchId,
   setIsSwitchConfirmOpen,
   draftAutosave,
-  setSelectedTopicId,
+  navigateToTopic,
 }: SelectTestDeps) => {
   return (topicId: number) => {
     if (topicId === effectiveSelectedTopicId) {
@@ -159,7 +159,8 @@ export const createHandleSelectTest = ({
     }
 
     draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(topicId);
+    navigateToTopic(topicId);
+    return;
   };
 };
 
@@ -169,8 +170,8 @@ interface ConfirmTopicSwitchDeps {
   draft: { id: number } | undefined;
   clearDraftEdits: (draftId: number) => void;
   draftAutosave: DraftAutosave;
-  setSelectedTopicId: (value: number | null) => void;
   setPendingTopicSwitchId: (value: number | null) => void;
+  navigateToTopic: (topicId: number) => void;
 }
 
 export const createHandleConfirmTopicSwitch = ({
@@ -179,8 +180,8 @@ export const createHandleConfirmTopicSwitch = ({
   draft,
   clearDraftEdits,
   draftAutosave,
-  setSelectedTopicId,
   setPendingTopicSwitchId,
+  navigateToTopic,
 }: ConfirmTopicSwitchDeps) => {
   return () => {
     if (pendingTopicSwitchId === null) {
@@ -193,8 +194,9 @@ export const createHandleConfirmTopicSwitch = ({
     }
 
     draftAutosave.resetAutosaveMeta();
-    setSelectedTopicId(pendingTopicSwitchId);
     setPendingTopicSwitchId(null);
+    navigateToTopic(pendingTopicSwitchId);
+
     setIsSwitchConfirmOpen(false);
   };
 };
@@ -206,9 +208,7 @@ interface ConfirmDeleteTopicDeps {
   draft: { id: number } | undefined;
   clearDraftEdits: (draftId: number) => void;
   topics: TestTopicListItem[];
-  setSelectedTopicId: (value: number | null) => void;
   questionEditor: QuestionEditor;
-  setIsPublishConfirmOpen: (value: boolean) => void;
   setPendingTopicSwitchId: (value: number | null) => void;
   setIsSwitchConfirmOpen: (value: boolean) => void;
   setPendingDeleteTopic: (value: TestTopicListItem | null) => void;
@@ -223,9 +223,6 @@ export const createHandleConfirmDeleteTopic = ({
   draft,
   clearDraftEdits,
   topics,
-  setSelectedTopicId,
-  questionEditor,
-  setIsPublishConfirmOpen,
   setPendingTopicSwitchId,
   setIsSwitchConfirmOpen,
   setPendingDeleteTopic,
@@ -253,12 +250,10 @@ export const createHandleConfirmDeleteTopic = ({
             }
 
             const nextTopicId = resolveNextTopicAfterDelete(topics, topicIdToDelete);
-            setSelectedTopicId(nextTopicId);
-            questionEditor.closeQuestionModalDirect();
-            questionEditor.setPendingDeleteQuestion(null);
-            setIsPublishConfirmOpen(false);
-            setPendingTopicSwitchId(null);
-            setIsSwitchConfirmOpen(false);
+            if (nextTopicId !== null) {
+              setPendingTopicSwitchId(nextTopicId);
+              setIsSwitchConfirmOpen(true);
+            }
           }
 
           setPendingDeleteTopic(null);
@@ -381,6 +376,98 @@ export const createHandleReorderQuestions = ({
           }
 
           refetchTestsData();
+        },
+      },
+    );
+  };
+};
+
+interface ConfirmArchiveTopicDeps {
+  pendingArchiveTopic: TestTopicListItem | null;
+  archiveTopicMutation: {
+    isPending: boolean;
+    mutate: (
+      args: { topicId: number },
+      options?: {
+        onSuccess?: () => void;
+        onError?: (error: unknown) => void;
+      },
+    ) => void;
+  };
+  setPendingArchiveTopic: (value: TestTopicListItem | null) => void;
+  setListMode: (value: 'active' | 'archived') => void;
+  refetchTopicsOnly: () => void;
+}
+
+export const createHandleConfirmArchiveTopic = ({
+  pendingArchiveTopic,
+  archiveTopicMutation,
+  setPendingArchiveTopic,
+  setListMode,
+  refetchTopicsOnly,
+}: ConfirmArchiveTopicDeps) => {
+  return () => {
+    if (!pendingArchiveTopic) {
+      return;
+    }
+
+    archiveTopicMutation.mutate(
+      { topicId: pendingArchiveTopic.id },
+      {
+        onSuccess: () => {
+          toast.success('Тест заархивирован');
+          setPendingArchiveTopic(null);
+          setListMode('archived');
+          refetchTopicsOnly();
+        },
+        onError: (error: unknown) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+};
+
+interface ConfirmRestoreTopicDeps {
+  pendingRestoreTopic: TestTopicListItem | null;
+  restoreTopicMutation: {
+    isPending: boolean;
+    mutate: (
+      args: { topicId: number },
+      options?: {
+        onSuccess?: () => void;
+        onError?: (error: unknown) => void;
+      },
+    ) => void;
+  };
+  setPendingRestoreTopic: (value: TestTopicListItem | null) => void;
+  setListMode: (value: 'active' | 'archived') => void;
+  refetchTopicsOnly: () => void;
+}
+
+export const createHandleConfirmRestoreTopic = ({
+  pendingRestoreTopic,
+  restoreTopicMutation,
+  setPendingRestoreTopic,
+  setListMode,
+  refetchTopicsOnly,
+}: ConfirmRestoreTopicDeps) => {
+  return () => {
+    if (!pendingRestoreTopic) {
+      return;
+    }
+
+    restoreTopicMutation.mutate(
+      { topicId: pendingRestoreTopic.id },
+      {
+        onSuccess: () => {
+          toast.success('Тест восстановлен');
+          setPendingRestoreTopic(null);
+          setListMode('active');
+          refetchTopicsOnly();
+        },
+        onError: (error: unknown) => {
+          toast.error(parseApiError(error));
         },
       },
     );

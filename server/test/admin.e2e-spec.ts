@@ -405,4 +405,106 @@ describe('Admin (e2e)', () => {
 
     expect(createdTopic).toBeNull();
   });
+
+  it('tests module should cover archive/restore lifecycle and admin access control', async () => {
+    const lifecycleSuffix = Date.now();
+    const lifecycleAdminEmail = `archive-admin-e2e-${suffix}-${lifecycleSuffix}@example.com`;
+    const lifecycleTopicSlug = `${testsSlugPrefix}-archive-restore-${lifecycleSuffix}`;
+    const lifecycleTopicTitle = `Archive Restore E2E ${lifecycleSuffix}`;
+
+    await signup(lifecycleAdminEmail, 'Archive Admin E2E');
+    await signin(lifecycleAdminEmail);
+
+    const lifecycleAdmin = await prisma.user.findUniqueOrThrow({
+      where: { email: lifecycleAdminEmail },
+      select: { id: true },
+    });
+
+    await prisma.user.update({
+      where: { id: lifecycleAdmin.id },
+      data: { role: 'ADMIN' },
+    });
+
+    const lifecycleAdminToken = await signin(lifecycleAdminEmail);
+
+    const createTopicResponse = await request(app.getHttpServer())
+      .post('/admin/tests')
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .send({
+        title: lifecycleTopicTitle,
+        slug: lifecycleTopicSlug,
+        description: 'Archive/restore e2e lifecycle',
+      })
+      .expect(201);
+
+    const topicId = createTopicResponse.body.topicId as number;
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/archive`)
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const activeAfterArchiveResponse = await request(app.getHttpServer())
+      .get('/admin/tests')
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const activeAfterArchiveSlugs = (
+      activeAfterArchiveResponse.body.topics as Array<{ slug: string }>
+    ).map((topic) => topic.slug);
+    expect(activeAfterArchiveSlugs).not.toContain(lifecycleTopicSlug);
+
+    const archivedAfterArchiveResponse = await request(app.getHttpServer())
+      .get('/admin/tests')
+      .query({ archived: true })
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const archivedAfterArchiveSlugs = (
+      archivedAfterArchiveResponse.body.topics as Array<{ slug: string }>
+    ).map((topic) => topic.slug);
+    expect(archivedAfterArchiveSlugs).toContain(lifecycleTopicSlug);
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/restore`)
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const activeAfterRestoreResponse = await request(app.getHttpServer())
+      .get('/admin/tests')
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const activeAfterRestoreSlugs = (
+      activeAfterRestoreResponse.body.topics as Array<{ slug: string }>
+    ).map((topic) => topic.slug);
+    expect(activeAfterRestoreSlugs).toContain(lifecycleTopicSlug);
+
+    const archivedAfterRestoreResponse = await request(app.getHttpServer())
+      .get('/admin/tests')
+      .query({ archived: true })
+      .set('Authorization', `Bearer ${lifecycleAdminToken}`)
+      .expect(200);
+
+    const archivedAfterRestoreSlugs = (
+      archivedAfterRestoreResponse.body.topics as Array<{ slug: string }>
+    ).map((topic) => topic.slug);
+    expect(archivedAfterRestoreSlugs).not.toContain(lifecycleTopicSlug);
+
+    const viewerToken = await signin(viewerEmail);
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/archive`)
+      .set('Authorization', `Bearer ${viewerToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/restore`)
+      .set('Authorization', `Bearer ${viewerToken}`)
+      .expect(403);
+
+    await prisma.user.deleteMany({
+      where: { email: lifecycleAdminEmail },
+    });
+  });
 });

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 
 import {
+  useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
+  useTestsAdminPublicLinksControllerListArchivedPublicLinks,
+  useTestsAdminPublicLinksControllerListPublicLinks,
   useTestsControllerGetTopicDraft,
-  useTestsControllerListArchivedPublicLinks,
-  useTestsControllerListEducationOrganizations,
-  useTestsControllerListPublicLinks,
   useTestsControllerListTopics,
 } from '@/shared/api/generated/tests/tests';
 
@@ -17,9 +17,10 @@ import { useAdminPublicLinksFormState } from './use-admin-public-links-form-stat
 
 export function useAdminPublicLinksWorkspace() {
   const topicsQuery = useTestsControllerListTopics();
-  const listPublicLinksQuery = useTestsControllerListPublicLinks();
-  const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
-  const listEducationOrganizationsQuery = useTestsControllerListEducationOrganizations();
+  const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
+  const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
+  const listEducationOrganizationsQuery =
+    useTestsAdminEducationOrganizationsControllerListEducationOrganizations();
   const formState = useAdminPublicLinksFormState();
 
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);

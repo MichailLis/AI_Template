@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
   hasDraftEdits,
@@ -8,6 +9,7 @@ import {
   type TestTopicListItem,
 } from '@/features/tests';
 import {
+  useTestsControllerArchiveTopic,
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
@@ -15,19 +17,28 @@ import {
   useTestsControllerListTopics,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
+  useTestsControllerRestoreTopic,
 } from '@/shared/api/generated/tests/tests';
 
 import { useAdminTestsWorkspaceActions } from './use-admin-tests-workspace-actions';
 
+export type ListMode = 'active' | 'archived';
+
 export function useAdminTestsWorkspace() {
-  const topicsQuery = useTestsControllerListTopics();
+  const { topicId: topicIdParam } = useParams<{ topicId?: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const activeTopicsQuery = useTestsControllerListTopics();
+  const archivedTopicsQuery = useTestsControllerListTopics({ archived: true });
   const createTopicMutation = useTestsControllerCreateTopic();
   const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
   const deleteTopicMutation = useTestsControllerDeleteTopic();
+  const archiveTopicMutation = useTestsControllerArchiveTopic();
+  const restoreTopicMutation = useTestsControllerRestoreTopic();
   const reorderQuestionsMutation = useTestsControllerReorderQuestions();
   const publishMutation = useTestsControllerPublishTopic();
 
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [draftEdits, setDraftEdits] = useState<
     Record<number, { title: string; description: string }>
   >({});
@@ -44,19 +55,51 @@ export function useAdminTestsWorkspace() {
   const [pendingTopicSwitchId, setPendingTopicSwitchId] = useState<number | null>(null);
   const [isSwitchConfirmOpen, setIsSwitchConfirmOpen] = useState(false);
 
-  const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
+  const [isNavigationConfirmOpen, setIsNavigationConfirmOpen] = useState(false);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
-  const effectiveSelectedTopicId = useMemo(() => {
-    if (topics.length === 0) {
+  const [listMode, setListMode] = useState<ListMode>('active');
+  const [pendingArchiveTopic, setPendingArchiveTopic] = useState<TestTopicListItem | null>(null);
+  const [pendingRestoreTopic, setPendingRestoreTopic] = useState<TestTopicListItem | null>(null);
+
+  const topicsQuery = useMemo(
+    () => (listMode === 'active' ? activeTopicsQuery : archivedTopicsQuery),
+    [activeTopicsQuery, archivedTopicsQuery, listMode],
+  );
+
+  const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
+  const archivedTopics = useMemo(
+    () => archivedTopicsQuery.data?.topics ?? [],
+    [archivedTopicsQuery.data?.topics],
+  );
+
+  const routeSelectedTopicId = useMemo(() => {
+    if (!topicIdParam) {
       return null;
     }
 
-    if (selectedTopicId && topics.some((topic) => topic.id === selectedTopicId)) {
-      return selectedTopicId;
+    const parsedTopicId = Number(topicIdParam);
+    if (!Number.isInteger(parsedTopicId) || parsedTopicId <= 0) {
+      return null;
     }
 
-    return topics[0].id;
-  }, [selectedTopicId, topics]);
+    return parsedTopicId;
+  }, [topicIdParam]);
+
+  const effectiveSelectedTopicId = useMemo(() => {
+    if (location.pathname === '/admin/tests') {
+      return null;
+    }
+
+    return routeSelectedTopicId;
+  }, [location.pathname, routeSelectedTopicId]);
+
+  const navigateToTopic = useCallback(
+    (topicId: number) => {
+      navigate(`/admin/tests/${topicId}`);
+    },
+    [navigate],
+  );
 
   const detailQuery = useTestsControllerGetTopicDraft(effectiveSelectedTopicId ?? 0, {
     query: {
@@ -68,6 +111,14 @@ export function useAdminTestsWorkspace() {
   const draft = detail?.draft;
   const topicsErrorMessage = topicsQuery.isError ? parseApiError(topicsQuery.error) : null;
   const detailErrorMessage = detailQuery.isError ? parseApiError(detailQuery.error) : null;
+
+  const isSelectedTopicArchived = useMemo(() => {
+    if (!effectiveSelectedTopicId) {
+      return false;
+    }
+
+    return archivedTopics.some((topic) => topic.id === effectiveSelectedTopicId);
+  }, [archivedTopics, effectiveSelectedTopicId]);
 
   const draftForm = useMemo(() => {
     if (!draft) {
@@ -93,9 +144,17 @@ export function useAdminTestsWorkspace() {
   const isDraftDirty = draft ? hasDraftEdits(draft, draftForm.title, draftForm.description) : false;
   const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
 
+  const refetchTopicsOnly = useCallback(() => {
+    void Promise.all([activeTopicsQuery.refetch(), archivedTopicsQuery.refetch()]);
+  }, [activeTopicsQuery, archivedTopicsQuery]);
+
   const refetchTestsData = useCallback(() => {
-    void Promise.all([topicsQuery.refetch(), detailQuery.refetch()]);
-  }, [detailQuery, topicsQuery]);
+    void Promise.all([
+      activeTopicsQuery.refetch(),
+      archivedTopicsQuery.refetch(),
+      detailQuery.refetch(),
+    ]);
+  }, [activeTopicsQuery, archivedTopicsQuery, detailQuery]);
 
   const draftAutosave = useDraftAutosave({
     topicId: effectiveSelectedTopicId,
@@ -112,6 +171,38 @@ export function useAdminTestsWorkspace() {
     onDataChanged: refetchTestsData,
   });
 
+  const discardCurrentDraftEditsAndResetAutosave = useCallback(() => {
+    if (draft) {
+      clearDraftEdits(draft.id);
+    }
+
+    draftAutosave.resetAutosaveMeta();
+  }, [clearDraftEdits, draft, draftAutosave]);
+
+  const handleAttemptNavigation = useCallback(
+    (targetPath: string) => {
+      if (isDraftDirty) {
+        setPendingNavigationPath(targetPath);
+        setIsNavigationConfirmOpen(true);
+        return false;
+      }
+
+      return true;
+    },
+    [isDraftDirty],
+  );
+
+  const handleConfirmNavigationLeave = useCallback(() => {
+    discardCurrentDraftEditsAndResetAutosave();
+    setIsNavigationConfirmOpen(false);
+    setPendingNavigationPath(null);
+  }, [discardCurrentDraftEditsAndResetAutosave]);
+
+  const handleConfirmNavigationStay = useCallback(() => {
+    setIsNavigationConfirmOpen(false);
+    setPendingNavigationPath(null);
+  }, []);
+
   const updateCurrentDraftEdits = (patch: Partial<{ title: string; description: string }>) => {
     if (!draft) {
       return;
@@ -127,6 +218,26 @@ export function useAdminTestsWorkspace() {
     }));
   };
 
+  const handleToggleTopicActive = useCallback(
+    (nextActive: boolean) => {
+      if (!effectiveSelectedTopicId) {
+        return;
+      }
+
+      const mutation = nextActive ? restoreTopicMutation : archiveTopicMutation;
+      mutation.mutate(
+        { topicId: effectiveSelectedTopicId },
+        {
+          onSuccess: () => {
+            setListMode(nextActive ? 'active' : 'archived');
+            refetchTestsData();
+          },
+        },
+      );
+    },
+    [archiveTopicMutation, effectiveSelectedTopicId, refetchTestsData, restoreTopicMutation],
+  );
+
   const {
     handleCreateTest,
     handleCreateTestFromAi,
@@ -134,7 +245,8 @@ export function useAdminTestsWorkspace() {
     handleConfirmTopicSwitch,
     handleConfirmDeleteTopic,
     handleConfirmPublish,
-    handleReorderQuestions,
+    handleConfirmArchiveTopic,
+    handleConfirmRestoreTopic,
     autosaveHint,
   } = useAdminTestsWorkspaceActions({
     newTestTitle,
@@ -150,10 +262,7 @@ export function useAdminTestsWorkspace() {
     reorderQuestionsMutation,
     publishMutation,
     draftAutosave,
-    setSelectedTopicId,
-    refetchTopicsOnly: () => {
-      void topicsQuery.refetch();
-    },
+    refetchTopicsOnly,
     refetchTestsData,
     effectiveSelectedTopicId,
     isDraftDirty,
@@ -171,7 +280,48 @@ export function useAdminTestsWorkspace() {
     refetchDetailOnly: () => {
       void detailQuery.refetch();
     },
+    pendingArchiveTopic,
+    setPendingArchiveTopic,
+    pendingRestoreTopic,
+    setPendingRestoreTopic,
+    archiveTopicMutation,
+    restoreTopicMutation,
+    setListMode,
+    navigateToTopic,
   });
+
+  // Reorder questions handler (not provided by actions hook due to bug)
+  const handleReorderQuestions = useCallback(
+    (questionIds: number[]) => {
+      if (!effectiveSelectedTopicId || !detail || reorderQuestionsMutation.isPending) {
+        return;
+      }
+
+      const currentIds = detail.draft.questions.map((question) => question.id);
+      if (JSON.stringify(currentIds) === JSON.stringify(questionIds)) {
+        return;
+      }
+
+      reorderQuestionsMutation.mutate(
+        {
+          topicId: effectiveSelectedTopicId,
+          data: {
+            questionIds,
+          },
+        },
+        {
+          onSuccess: () => {
+            void refetchTestsData();
+          },
+          onError: (error) => {
+            console.error('Failed to reorder questions:', parseApiError(error));
+            void refetchTestsData();
+          },
+        },
+      );
+    },
+    [effectiveSelectedTopicId, detail, reorderQuestionsMutation, refetchTestsData],
+  );
 
   return {
     topics,
@@ -211,6 +361,10 @@ export function useAdminTestsWorkspace() {
     setIsSwitchConfirmOpen,
     setIsPublishConfirmOpen,
     updateCurrentDraftEdits,
+    discardCurrentDraftEditsAndResetAutosave,
+    handleAttemptNavigation,
+    handleConfirmNavigationLeave,
+    handleConfirmNavigationStay,
     handleCreateTest,
     handleCreateTestFromAi,
     handleSelectTest,
@@ -218,5 +372,21 @@ export function useAdminTestsWorkspace() {
     handleConfirmDeleteTopic,
     handleConfirmPublish,
     handleReorderQuestions,
+    handleConfirmArchiveTopic,
+    handleConfirmRestoreTopic,
+    handleToggleTopicActive,
+    listMode,
+    setListMode,
+    pendingArchiveTopic,
+    pendingRestoreTopic,
+    isSelectedTopicArchived,
+    archiveTopicMutation,
+    restoreTopicMutation,
+    setPendingArchiveTopic,
+    setPendingRestoreTopic,
+    isNavigationConfirmOpen,
+    setIsNavigationConfirmOpen,
+    pendingNavigationPath,
+    setPendingNavigationPath,
   };
 }

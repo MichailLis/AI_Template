@@ -52,6 +52,10 @@ export const TestsTopicListResponseSchema = z.object({
   topics: z.array(TestsTopicSummarySchema),
 });
 
+export const TestsTopicListQuerySchema = z.object({
+  archived: z.coerce.boolean().optional(),
+});
+
 export const TestsTopicDraftSchema = z.object({
   id: z.number(),
   versionNumber: z.number(),
@@ -130,7 +134,13 @@ export const DeleteTestsTopicResponseSchema = z.object({
   topicId: z.number(),
 });
 
+export const UpdateTestsTopicArchiveStatusResponseSchema = z.object({
+  topicId: z.number(),
+  archivedAt: z.string().nullable(),
+});
+
 export class TestsTopicListResponseDto extends createZodDto(TestsTopicListResponseSchema) {}
+export class TestsTopicListQueryDto extends createZodDto(TestsTopicListQuerySchema) {}
 export class TestsTopicDetailResponseDto extends createZodDto(TestsTopicDetailResponseSchema) {}
 export class CreateTestsTopicDto extends createZodDto(CreateTestsTopicSchema) {}
 export class UpdateTestsTopicDraftDto extends createZodDto(UpdateTestsTopicDraftSchema) {}
@@ -139,3 +149,6 @@ export class CreateTestsTopicFromAiDto extends createZodDto(CreateTestsTopicFrom
 export class ReorderTestsQuestionsDto extends createZodDto(ReorderTestsQuestionsSchema) {}
 export class PublishTestsTopicResponseDto extends createZodDto(PublishTestsTopicResponseSchema) {}
 export class DeleteTestsTopicResponseDto extends createZodDto(DeleteTestsTopicResponseSchema) {}
+export class UpdateTestsTopicArchiveStatusResponseDto extends createZodDto(
+  UpdateTestsTopicArchiveStatusResponseSchema,
+) {}

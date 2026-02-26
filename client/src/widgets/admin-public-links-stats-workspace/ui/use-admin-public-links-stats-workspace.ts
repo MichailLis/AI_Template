@@ -2,19 +2,19 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
 import {
-  getTestsControllerListPublicLinkAttemptsQueryOptions,
-  useTestsControllerGetAttemptDetail,
-  useTestsControllerListArchivedPublicLinks,
-  useTestsControllerListPublicLinkAttempts,
-  useTestsControllerListPublicLinks,
+  getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions,
+  useTestsAdminAttemptsControllerGetAttemptDetail,
+  useTestsAdminAttemptsControllerListPublicLinkAttempts,
+  useTestsAdminPublicLinksControllerListArchivedPublicLinks,
+  useTestsAdminPublicLinksControllerListPublicLinks,
 } from '@/shared/api/generated/tests/tests';
 
 type PublicLinksTab = 'active' | 'archived';
 type AttemptDetailView = 'analysis' | 'answers';
 
 export function useAdminPublicLinksStatsWorkspace() {
-  const listPublicLinksQuery = useTestsControllerListPublicLinks();
-  const listArchivedPublicLinksQuery = useTestsControllerListArchivedPublicLinks();
+  const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
+  const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
 
   const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
@@ -73,7 +73,7 @@ export function useAdminPublicLinksStatsWorkspace() {
 
   const linkAttemptsCountQueries = useQueries({
     queries: linksForTopic.map((link) => ({
-      ...getTestsControllerListPublicLinkAttemptsQueryOptions(link.id),
+      ...getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(link.id),
       staleTime: 30_000,
       select: (data: { attempts: unknown[] }) => data.attempts.length,
     })),
@@ -104,18 +104,21 @@ export function useAdminPublicLinksStatsWorkspace() {
   const selectedPublicLink =
     linksForTopic.find((link) => link.id === effectivePublicLinkId) ?? null;
 
-  const publicAttemptsQuery = useTestsControllerListPublicLinkAttempts(effectivePublicLinkId ?? 0, {
-    query: {
-      enabled: Boolean(effectivePublicLinkId),
+  const publicAttemptsQuery = useTestsAdminAttemptsControllerListPublicLinkAttempts(
+    effectivePublicLinkId ?? 0,
+    {
+      query: {
+        enabled: Boolean(effectivePublicLinkId),
+      },
     },
-  });
+  );
 
   const publicAttempts = useMemo(
     () => publicAttemptsQuery.data?.attempts ?? [],
     [publicAttemptsQuery.data?.attempts],
   );
 
-  const attemptDetailQuery = useTestsControllerGetAttemptDetail(detailAttemptId ?? 0, {
+  const attemptDetailQuery = useTestsAdminAttemptsControllerGetAttemptDetail(detailAttemptId ?? 0, {
     query: {
       enabled: Boolean(detailAttemptId),
     },

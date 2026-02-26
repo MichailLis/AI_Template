@@ -15,6 +15,14 @@ interface AdminTestsConfirmDialogsProps {
   isDeletingTopic: boolean;
   onConfirmDeleteTopic: () => void;
   onCloseDeleteTopic: () => void;
+  pendingArchiveTopic: TestTopicListItem | null;
+  isArchivingTopic: boolean;
+  onConfirmArchiveTopic: () => void;
+  onCloseArchiveTopic: () => void;
+  pendingRestoreTopic: TestTopicListItem | null;
+  isRestoringTopic: boolean;
+  onConfirmRestoreTopic: () => void;
+  onCloseRestoreTopic: () => void;
   pendingDeleteQuestion: PendingQuestion | null;
   isDeletingQuestion: boolean;
   onConfirmDeleteQuestion: () => void;
@@ -23,6 +31,9 @@ interface AdminTestsConfirmDialogsProps {
   isPublishing: boolean;
   onConfirmPublish: () => void;
   onClosePublish: () => void;
+  isNavigationConfirmOpen: boolean;
+  onConfirmNavigationLeave: () => void;
+  onConfirmNavigationStay: () => void;
 }
 
 export function AdminTestsConfirmDialogs({
@@ -36,6 +47,14 @@ export function AdminTestsConfirmDialogs({
   isDeletingTopic,
   onConfirmDeleteTopic,
   onCloseDeleteTopic,
+  pendingArchiveTopic,
+  isArchivingTopic,
+  onConfirmArchiveTopic,
+  onCloseArchiveTopic,
+  pendingRestoreTopic,
+  isRestoringTopic,
+  onConfirmRestoreTopic,
+  onCloseRestoreTopic,
   pendingDeleteQuestion,
   isDeletingQuestion,
   onConfirmDeleteQuestion,
@@ -44,6 +63,9 @@ export function AdminTestsConfirmDialogs({
   isPublishing,
   onConfirmPublish,
   onClosePublish,
+  isNavigationConfirmOpen,
+  onConfirmNavigationLeave,
+  onConfirmNavigationStay,
 }: AdminTestsConfirmDialogsProps) {
   return (
     <>
@@ -83,6 +105,34 @@ export function AdminTestsConfirmDialogs({
       />
 
       <ConfirmActionDialog
+        open={Boolean(pendingArchiveTopic)}
+        title="Архивировать тест?"
+        description={
+          pendingArchiveTopic
+            ? `Тест "${pendingArchiveTopic.draftTitle}" будет скрыт из активного списка и станет доступен во вкладке "Архив".`
+            : 'Тест будет перемещен в архив.'
+        }
+        confirmLabel="Архивировать"
+        isConfirming={isArchivingTopic}
+        onConfirm={onConfirmArchiveTopic}
+        onClose={onCloseArchiveTopic}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(pendingRestoreTopic)}
+        title="Восстановить тест из архива?"
+        description={
+          pendingRestoreTopic
+            ? `Тест "${pendingRestoreTopic.draftTitle}" снова появится во вкладке "Активные".`
+            : 'Тест будет восстановлен в активный список.'
+        }
+        confirmLabel="Восстановить"
+        isConfirming={isRestoringTopic}
+        onConfirm={onConfirmRestoreTopic}
+        onClose={onCloseRestoreTopic}
+      />
+
+      <ConfirmActionDialog
         open={Boolean(pendingDeleteQuestion)}
         title="Удалить вопрос?"
         description={
@@ -105,6 +155,17 @@ export function AdminTestsConfirmDialogs({
         isConfirming={isPublishing}
         onConfirm={onConfirmPublish}
         onClose={onClosePublish}
+      />
+
+      <ConfirmActionDialog
+        open={isNavigationConfirmOpen}
+        title="Уйти без сохранения?"
+        description="У текущего теста есть несохраненные изменения. Они будут потеряны при переходе."
+        confirmLabel="Уйти"
+        cancelLabel="Остаться"
+        variant="destructive"
+        onConfirm={onConfirmNavigationLeave}
+        onClose={onConfirmNavigationStay}
       />
     </>
   );

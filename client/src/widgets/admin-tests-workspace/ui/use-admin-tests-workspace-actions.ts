@@ -1,6 +1,8 @@
 import {
+  createHandleConfirmArchiveTopic,
   createHandleConfirmDeleteTopic,
   createHandleConfirmPublish,
+  createHandleConfirmRestoreTopic,
   createHandleConfirmTopicSwitch,
   createHandleCreateTest,
   createHandleCreateTestFromAi,
@@ -12,11 +14,13 @@ import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
 import type { useDraftAutosave, useQuestionEditor } from '@/features/tests';
 import type { TestTopicListItem } from '@/features/tests';
 import type {
+  useTestsControllerArchiveTopic,
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
+  useTestsControllerRestoreTopic,
 } from '@/shared/api/generated/tests/tests';
 
 type CreateTopicMutation = ReturnType<typeof useTestsControllerCreateTopic>;
@@ -24,6 +28,8 @@ type CreateTopicFromAiMutation = ReturnType<typeof useTestsControllerCreateTopic
 type DeleteTopicMutation = ReturnType<typeof useTestsControllerDeleteTopic>;
 type ReorderQuestionsMutation = ReturnType<typeof useTestsControllerReorderQuestions>;
 type PublishMutation = ReturnType<typeof useTestsControllerPublishTopic>;
+type ArchiveTopicMutation = ReturnType<typeof useTestsControllerArchiveTopic>;
+type RestoreTopicMutation = ReturnType<typeof useTestsControllerRestoreTopic>;
 type DraftAutosave = ReturnType<typeof useDraftAutosave>;
 type QuestionEditor = ReturnType<typeof useQuestionEditor>;
 
@@ -48,8 +54,8 @@ interface UseAdminTestsWorkspaceActionsParams {
   reorderQuestionsMutation: ReorderQuestionsMutation;
   publishMutation: PublishMutation;
   draftAutosave: DraftAutosave;
-  setSelectedTopicId: (value: number | null) => void;
   refetchTopicsOnly: () => void;
+
   refetchTestsData: () => void;
   effectiveSelectedTopicId: number | null;
   isDraftDirty: boolean;
@@ -65,6 +71,14 @@ interface UseAdminTestsWorkspaceActionsParams {
   setIsPublishConfirmOpen: (value: boolean) => void;
   detail: TestsDetail | undefined;
   refetchDetailOnly: () => void;
+  pendingArchiveTopic: TestTopicListItem | null;
+  setPendingArchiveTopic: (value: TestTopicListItem | null) => void;
+  pendingRestoreTopic: TestTopicListItem | null;
+  setPendingRestoreTopic: (value: TestTopicListItem | null) => void;
+  archiveTopicMutation: ArchiveTopicMutation;
+  restoreTopicMutation: RestoreTopicMutation;
+  setListMode: (value: 'active' | 'archived') => void;
+  navigateToTopic: (topicId: number) => void;
 }
 
 export function useAdminTestsWorkspaceActions({
@@ -81,7 +95,6 @@ export function useAdminTestsWorkspaceActions({
   reorderQuestionsMutation,
   publishMutation,
   draftAutosave,
-  setSelectedTopicId,
   refetchTopicsOnly,
   refetchTestsData,
   effectiveSelectedTopicId,
@@ -98,6 +111,14 @@ export function useAdminTestsWorkspaceActions({
   setIsPublishConfirmOpen,
   detail,
   refetchDetailOnly,
+  pendingArchiveTopic,
+  setPendingArchiveTopic,
+  pendingRestoreTopic,
+  setPendingRestoreTopic,
+  archiveTopicMutation,
+  restoreTopicMutation,
+  setListMode,
+  navigateToTopic,
 }: UseAdminTestsWorkspaceActionsParams) {
   const handleCreateTest = createHandleCreateTest({
     newTestTitle,
@@ -108,37 +129,33 @@ export function useAdminTestsWorkspaceActions({
     setNewTestDescription,
     createTopicMutation,
     draftAutosave,
-    setSelectedTopicId,
     refetchTopicsOnly,
+    navigateToTopic,
   });
-
   const handleCreateTestFromAi = createHandleCreateTestFromAi({
     createTopicFromAiMutation,
     setIsAiGeneratorOpen,
     draftAutosave,
-    setSelectedTopicId,
     refetchTestsData,
+    navigateToTopic,
   });
-
   const handleSelectTest = createHandleSelectTest({
     effectiveSelectedTopicId,
     isDraftDirty,
     setPendingTopicSwitchId,
     setIsSwitchConfirmOpen,
     draftAutosave,
-    setSelectedTopicId,
+    navigateToTopic,
   });
-
   const handleConfirmTopicSwitch = createHandleConfirmTopicSwitch({
     pendingTopicSwitchId,
     setIsSwitchConfirmOpen,
     draft,
     clearDraftEdits,
     draftAutosave,
-    setSelectedTopicId,
     setPendingTopicSwitchId,
+    navigateToTopic,
   });
-
   const handleConfirmDeleteTopic = createHandleConfirmDeleteTopic({
     pendingDeleteTopic,
     deleteTopicMutation,
@@ -146,9 +163,7 @@ export function useAdminTestsWorkspaceActions({
     draft,
     clearDraftEdits,
     topics,
-    setSelectedTopicId,
     questionEditor,
-    setIsPublishConfirmOpen,
     setPendingTopicSwitchId,
     setIsSwitchConfirmOpen,
     setPendingDeleteTopic,
@@ -175,6 +190,22 @@ export function useAdminTestsWorkspaceActions({
     refetchTestsData,
   });
 
+  const handleConfirmArchiveTopic = createHandleConfirmArchiveTopic({
+    pendingArchiveTopic,
+    archiveTopicMutation,
+    setPendingArchiveTopic,
+    setListMode,
+    refetchTopicsOnly,
+  });
+
+  const handleConfirmRestoreTopic = createHandleConfirmRestoreTopic({
+    pendingRestoreTopic,
+    restoreTopicMutation,
+    setPendingRestoreTopic,
+    setListMode,
+    refetchTopicsOnly,
+  });
+
   const autosaveHint = buildAutosaveHint(draftAutosave);
 
   return {
@@ -185,6 +216,8 @@ export function useAdminTestsWorkspaceActions({
     handleConfirmDeleteTopic,
     handleConfirmPublish,
     handleReorderQuestions,
+    handleConfirmArchiveTopic,
+    handleConfirmRestoreTopic,
     autosaveHint,
   };
 }

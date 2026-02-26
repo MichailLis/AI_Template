@@ -58,7 +58,7 @@ export const TransactionIsolationLevelSchema = z.enum(['ReadUncommitted','ReadCo
 
 export const UserScalarFieldEnumSchema = z.enum(['id','email','name','password','hashedRefreshToken','role','createdAt','updatedAt']);
 
-export const TestTopicScalarFieldEnumSchema = z.enum(['id','slug','createdAt','updatedAt','activeDraftVersionId','activePublishedVersionId']);
+export const TestTopicScalarFieldEnumSchema = z.enum(['id','slug','createdAt','updatedAt','archivedAt','activeDraftVersionId','activePublishedVersionId']);
 
 export const TestTopicVersionScalarFieldEnumSchema = z.enum(['id','topicId','versionNumber','status','title','description','createdAt','updatedAt']);
 
@@ -148,6 +148,7 @@ export const TestTopicSchema = z.object({
   slug: z.string(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  archivedAt: z.coerce.date().nullable(),
   activeDraftVersionId: z.number().int().nullable(),
   activePublishedVersionId: z.number().int().nullable(),
 })
@@ -398,6 +399,7 @@ export const TestTopicSelectSchema: z.ZodType<Prisma.TestTopicSelect> = z.object
   slug: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  archivedAt: z.boolean().optional(),
   activeDraftVersionId: z.boolean().optional(),
   activePublishedVersionId: z.boolean().optional(),
   versions: z.union([z.boolean(),z.lazy(() => TestTopicVersionFindManyArgsSchema)]).optional(),
@@ -830,6 +832,7 @@ export const TestTopicWhereInputSchema: z.ZodType<Prisma.TestTopicWhereInput> = 
   slug: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionListRelationFilterSchema).optional(),
@@ -842,6 +845,7 @@ export const TestTopicOrderByWithRelationInputSchema: z.ZodType<Prisma.TestTopic
   slug: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   activeDraftVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   activePublishedVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   versions: z.lazy(() => TestTopicVersionOrderByRelationAggregateInputSchema).optional(),
@@ -869,6 +873,7 @@ export const TestTopicWhereUniqueInputSchema: z.ZodType<Prisma.TestTopicWhereUni
   NOT: z.union([ z.lazy(() => TestTopicWhereInputSchema), z.lazy(() => TestTopicWhereInputSchema).array() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionListRelationFilterSchema).optional(),
@@ -881,6 +886,7 @@ export const TestTopicOrderByWithAggregationInputSchema: z.ZodType<Prisma.TestTo
   slug: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   activeDraftVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   activePublishedVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => TestTopicCountOrderByAggregateInputSchema).optional(),
@@ -898,6 +904,7 @@ export const TestTopicScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Tes
   slug: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
 });
@@ -1902,6 +1909,7 @@ export const TestTopicCreateInputSchema: z.ZodType<Prisma.TestTopicCreateInput> 
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutTopicInputSchema).optional(),
   activeDraftVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutDraftForTopicInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublishedForTopicInputSchema).optional(),
@@ -1912,6 +1920,7 @@ export const TestTopicUncheckedCreateInputSchema: z.ZodType<Prisma.TestTopicUnch
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersionId: z.number().int().optional().nullable(),
   activePublishedVersionId: z.number().int().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutTopicInputSchema).optional(),
@@ -1921,6 +1930,7 @@ export const TestTopicUpdateInputSchema: z.ZodType<Prisma.TestTopicUpdateInput> 
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUpdateManyWithoutTopicNestedInputSchema).optional(),
   activeDraftVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutDraftForTopicNestedInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutPublishedForTopicNestedInputSchema).optional(),
@@ -1931,6 +1941,7 @@ export const TestTopicUncheckedUpdateInputSchema: z.ZodType<Prisma.TestTopicUnch
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutTopicNestedInputSchema).optional(),
@@ -1941,6 +1952,7 @@ export const TestTopicCreateManyInputSchema: z.ZodType<Prisma.TestTopicCreateMan
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersionId: z.number().int().optional().nullable(),
   activePublishedVersionId: z.number().int().optional().nullable(),
 });
@@ -1949,6 +1961,7 @@ export const TestTopicUpdateManyMutationInputSchema: z.ZodType<Prisma.TestTopicU
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
 export const TestTopicUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TestTopicUncheckedUpdateManyInput> = z.strictObject({
@@ -1956,6 +1969,7 @@ export const TestTopicUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TestTopic
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
@@ -3028,6 +3042,17 @@ export const DateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeWithAg
   _max: z.lazy(() => NestedDateTimeFilterSchema).optional(),
 });
 
+export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.strictObject({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
+});
+
 export const IntNullableFilterSchema: z.ZodType<Prisma.IntNullableFilter> = z.strictObject({
   equals: z.number().optional().nullable(),
   in: z.number().array().optional().nullable(),
@@ -3059,6 +3084,7 @@ export const TestTopicCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestTop
   slug: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
   activeDraftVersionId: z.lazy(() => SortOrderSchema).optional(),
   activePublishedVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3074,6 +3100,7 @@ export const TestTopicMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TestTopic
   slug: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
   activeDraftVersionId: z.lazy(() => SortOrderSchema).optional(),
   activePublishedVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3083,6 +3110,7 @@ export const TestTopicMinOrderByAggregateInputSchema: z.ZodType<Prisma.TestTopic
   slug: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
   activeDraftVersionId: z.lazy(() => SortOrderSchema).optional(),
   activePublishedVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3091,6 +3119,20 @@ export const TestTopicSumOrderByAggregateInputSchema: z.ZodType<Prisma.TestTopic
   id: z.lazy(() => SortOrderSchema).optional(),
   activeDraftVersionId: z.lazy(() => SortOrderSchema).optional(),
   activePublishedVersionId: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.strictObject({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
 });
 
 export const IntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.IntNullableWithAggregatesFilter> = z.strictObject({
@@ -3462,17 +3504,6 @@ export const TestQuestionSliderBandSumOrderByAggregateInputSchema: z.ZodType<Pri
   order: z.lazy(() => SortOrderSchema).optional(),
 });
 
-export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.strictObject({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
-});
-
 export const EducationOrganizationNullableScalarRelationFilterSchema: z.ZodType<Prisma.EducationOrganizationNullableScalarRelationFilter> = z.strictObject({
   is: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
   isNot: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
@@ -3556,20 +3587,6 @@ export const TestPublicLinkSumOrderByAggregateInputSchema: z.ZodType<Prisma.Test
   maxAttemptsPerStudent: z.lazy(() => SortOrderSchema).optional(),
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
-});
-
-export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.strictObject({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
 });
 
 export const EnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.EnumGroupOrClassValidationModeFilter> = z.strictObject({
@@ -4013,6 +4030,10 @@ export const TestTopicVersionUncheckedCreateNestedManyWithoutTopicInputSchema: z
   connectOrCreate: z.union([ z.lazy(() => TestTopicVersionCreateOrConnectWithoutTopicInputSchema), z.lazy(() => TestTopicVersionCreateOrConnectWithoutTopicInputSchema).array() ]).optional(),
   createMany: z.lazy(() => TestTopicVersionCreateManyTopicInputEnvelopeSchema).optional(),
   connect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.strictObject({
+  set: z.coerce.date().optional().nullable(),
 });
 
 export const TestTopicVersionUpdateManyWithoutTopicNestedInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateManyWithoutTopicNestedInput> = z.strictObject({
@@ -4507,10 +4528,6 @@ export const TestStudentAttemptUncheckedCreateNestedManyWithoutPublicLinkInputSc
   connect: z.union([ z.lazy(() => TestStudentAttemptWhereUniqueInputSchema), z.lazy(() => TestStudentAttemptWhereUniqueInputSchema).array() ]).optional(),
 });
 
-export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.strictObject({
-  set: z.coerce.date().optional().nullable(),
-});
-
 export const TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInput> = z.strictObject({
   create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutPublicLinksInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutPublicLinksInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => TestTopicVersionCreateOrConnectWithoutPublicLinksInputSchema).optional(),
@@ -4922,6 +4939,31 @@ export const NestedDateTimeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDa
   _max: z.lazy(() => NestedDateTimeFilterSchema).optional(),
 });
 
+export const NestedDateTimeNullableFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableFilter> = z.strictObject({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
+});
+
+export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableWithAggregatesFilter> = z.strictObject({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+});
+
 export const NestedIntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedIntNullableWithAggregatesFilter> = z.strictObject({
   equals: z.number().optional().nullable(),
   in: z.number().array().optional().nullable(),
@@ -5011,31 +5053,6 @@ export const NestedJsonNullableFilterSchema: z.ZodType<Prisma.NestedJsonNullable
   gt: InputJsonValueSchema.optional(),
   gte: InputJsonValueSchema.optional(),
   not: InputJsonValueSchema.optional(),
-});
-
-export const NestedDateTimeNullableFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableFilter> = z.strictObject({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
-});
-
-export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableWithAggregatesFilter> = z.strictObject({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
 });
 
 export const NestedEnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.NestedEnumGroupOrClassValidationModeFilter> = z.strictObject({
@@ -5429,6 +5446,7 @@ export const TestTopicCreateWithoutVersionsInputSchema: z.ZodType<Prisma.TestTop
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutDraftForTopicInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublishedForTopicInputSchema).optional(),
 });
@@ -5438,6 +5456,7 @@ export const TestTopicUncheckedCreateWithoutVersionsInputSchema: z.ZodType<Prism
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersionId: z.number().int().optional().nullable(),
   activePublishedVersionId: z.number().int().optional().nullable(),
 });
@@ -5451,6 +5470,7 @@ export const TestTopicCreateWithoutActiveDraftVersionInputSchema: z.ZodType<Pris
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutTopicInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutPublishedForTopicInputSchema).optional(),
 });
@@ -5460,6 +5480,7 @@ export const TestTopicUncheckedCreateWithoutActiveDraftVersionInputSchema: z.Zod
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activePublishedVersionId: z.number().int().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutTopicInputSchema).optional(),
 });
@@ -5478,6 +5499,7 @@ export const TestTopicCreateWithoutActivePublishedVersionInputSchema: z.ZodType<
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutTopicInputSchema).optional(),
   activeDraftVersion: z.lazy(() => TestTopicVersionCreateNestedOneWithoutDraftForTopicInputSchema).optional(),
 });
@@ -5487,6 +5509,7 @@ export const TestTopicUncheckedCreateWithoutActivePublishedVersionInputSchema: z
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersionId: z.number().int().optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutTopicInputSchema).optional(),
 });
@@ -5661,6 +5684,7 @@ export const TestTopicUpdateWithoutVersionsInputSchema: z.ZodType<Prisma.TestTop
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutDraftForTopicNestedInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutPublishedForTopicNestedInputSchema).optional(),
 });
@@ -5670,6 +5694,7 @@ export const TestTopicUncheckedUpdateWithoutVersionsInputSchema: z.ZodType<Prism
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
@@ -5698,6 +5723,7 @@ export const TestTopicScalarWhereInputSchema: z.ZodType<Prisma.TestTopicScalarWh
   slug: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
 });
@@ -7237,6 +7263,7 @@ export const TestTopicCreateManyActiveDraftVersionInputSchema: z.ZodType<Prisma.
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activePublishedVersionId: z.number().int().optional().nullable(),
 });
 
@@ -7245,6 +7272,7 @@ export const TestTopicCreateManyActivePublishedVersionInputSchema: z.ZodType<Pri
   slug: z.string(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  archivedAt: z.coerce.date().optional().nullable(),
   activeDraftVersionId: z.number().int().optional().nullable(),
 });
 
@@ -7305,6 +7333,7 @@ export const TestTopicUpdateWithoutActiveDraftVersionInputSchema: z.ZodType<Pris
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUpdateManyWithoutTopicNestedInputSchema).optional(),
   activePublishedVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutPublishedForTopicNestedInputSchema).optional(),
 });
@@ -7314,6 +7343,7 @@ export const TestTopicUncheckedUpdateWithoutActiveDraftVersionInputSchema: z.Zod
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutTopicNestedInputSchema).optional(),
 });
@@ -7323,6 +7353,7 @@ export const TestTopicUncheckedUpdateManyWithoutActiveDraftVersionInputSchema: z
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activePublishedVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 
@@ -7330,6 +7361,7 @@ export const TestTopicUpdateWithoutActivePublishedVersionInputSchema: z.ZodType<
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUpdateManyWithoutTopicNestedInputSchema).optional(),
   activeDraftVersion: z.lazy(() => TestTopicVersionUpdateOneWithoutDraftForTopicNestedInputSchema).optional(),
 });
@@ -7339,6 +7371,7 @@ export const TestTopicUncheckedUpdateWithoutActivePublishedVersionInputSchema: z
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   versions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutTopicNestedInputSchema).optional(),
 });
@@ -7348,6 +7381,7 @@ export const TestTopicUncheckedUpdateManyWithoutActivePublishedVersionInputSchem
   slug: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   activeDraftVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 });
 

@@ -41,8 +41,10 @@ import type {
   DeleteTestsTopicResponseDto,
   PublishTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
+  TestsControllerListTopicsParams,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
+  UpdateTestsTopicArchiveStatusResponseDto,
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto
 } from '../../model';
@@ -55,903 +57,17 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * @summary Create short public link for published test version
- */
-export const testsControllerCreatePublicLink = (
-    adminCreatePublicLinkDto: AdminCreatePublicLinkDto,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinkDto>(
-      {url: `/admin/tests/public-links`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: adminCreatePublicLinkDto, signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerCreatePublicLinkMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext> => {
-
-const mutationKey = ['testsControllerCreatePublicLink'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, {data: AdminCreatePublicLinkDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  testsControllerCreatePublicLink(data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerCreatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>>
-    export type TestsControllerCreatePublicLinkMutationBody = AdminCreatePublicLinkDto
-    export type TestsControllerCreatePublicLinkMutationError = unknown
-
-    /**
- * @summary Create short public link for published test version
- */
-export const useTestsControllerCreatePublicLink = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerCreatePublicLink>>,
-        TError,
-        {data: AdminCreatePublicLinkDto},
-        TContext
-      > => {
-      return useMutation(getTestsControllerCreatePublicLinkMutationOptions(options), queryClient);
-    }
-    /**
- * @summary List short public links for tests
- */
-export const testsControllerListPublicLinks = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinksListResponseDto>(
-      {url: `/admin/tests/public-links`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getTestsControllerListPublicLinksQueryKey = () => {
-    return [
-    `/admin/tests/public-links`
-    ] as const;
-    }
-
-    
-export const getTestsControllerListPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListPublicLinksQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListPublicLinks>>> = ({ signal }) => testsControllerListPublicLinks(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TestsControllerListPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListPublicLinks>>>
-export type TestsControllerListPublicLinksQueryError = unknown
-
-
-export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListPublicLinks>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListPublicLinks>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListPublicLinks>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListPublicLinks>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List short public links for tests
- */
-
-export function useTestsControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTestsControllerListPublicLinksQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary List educational organizations for link binding
- */
-export const testsControllerListEducationOrganizations = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminEducationOrganizationsListResponseDto>(
-      {url: `/admin/tests/education-organizations`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getTestsControllerListEducationOrganizationsQueryKey = () => {
-    return [
-    `/admin/tests/education-organizations`
-    ] as const;
-    }
-
-    
-export const getTestsControllerListEducationOrganizationsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListEducationOrganizationsQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>> = ({ signal }) => testsControllerListEducationOrganizations(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TestsControllerListEducationOrganizationsQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>>
-export type TestsControllerListEducationOrganizationsQueryError = unknown
-
-
-export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List educational organizations for link binding
- */
-
-export function useTestsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTestsControllerListEducationOrganizationsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary Create educational organization for link binding
- */
-export const testsControllerCreateEducationOrganization = (
-    adminCreateEducationOrganizationDto: AdminCreateEducationOrganizationDto,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminEducationOrganizationDto>(
-      {url: `/admin/tests/education-organizations`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: adminCreateEducationOrganizationDto, signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerCreateEducationOrganizationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext> => {
-
-const mutationKey = ['testsControllerCreateEducationOrganization'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, {data: AdminCreateEducationOrganizationDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  testsControllerCreateEducationOrganization(data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerCreateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>>
-    export type TestsControllerCreateEducationOrganizationMutationBody = AdminCreateEducationOrganizationDto
-    export type TestsControllerCreateEducationOrganizationMutationError = unknown
-
-    /**
- * @summary Create educational organization for link binding
- */
-export const useTestsControllerCreateEducationOrganization = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerCreateEducationOrganization>>,
-        TError,
-        {data: AdminCreateEducationOrganizationDto},
-        TContext
-      > => {
-      return useMutation(getTestsControllerCreateEducationOrganizationMutationOptions(options), queryClient);
-    }
-    /**
- * @summary Update educational organization validation settings
- */
-export const testsControllerUpdateEducationOrganization = (
-    organizationId: number,
-    adminUpdateEducationOrganizationDto: AdminUpdateEducationOrganizationDto,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminEducationOrganizationDto>(
-      {url: `/admin/tests/education-organizations/${organizationId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: adminUpdateEducationOrganizationDto, signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerUpdateEducationOrganizationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext> => {
-
-const mutationKey = ['testsControllerUpdateEducationOrganization'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, {organizationId: number;data: AdminUpdateEducationOrganizationDto}> = (props) => {
-          const {organizationId,data} = props ?? {};
-
-          return  testsControllerUpdateEducationOrganization(organizationId,data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerUpdateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>>
-    export type TestsControllerUpdateEducationOrganizationMutationBody = AdminUpdateEducationOrganizationDto
-    export type TestsControllerUpdateEducationOrganizationMutationError = unknown
-
-    /**
- * @summary Update educational organization validation settings
- */
-export const useTestsControllerUpdateEducationOrganization = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerUpdateEducationOrganization>>,
-        TError,
-        {organizationId: number;data: AdminUpdateEducationOrganizationDto},
-        TContext
-      > => {
-      return useMutation(getTestsControllerUpdateEducationOrganizationMutationOptions(options), queryClient);
-    }
-    /**
- * @summary List archived public links for tests
- */
-export const testsControllerListArchivedPublicLinks = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinksListResponseDto>(
-      {url: `/admin/tests/public-links/archived`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getTestsControllerListArchivedPublicLinksQueryKey = () => {
-    return [
-    `/admin/tests/public-links/archived`
-    ] as const;
-    }
-
-    
-export const getTestsControllerListArchivedPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListArchivedPublicLinksQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>> = ({ signal }) => testsControllerListArchivedPublicLinks(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TestsControllerListArchivedPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>>
-export type TestsControllerListArchivedPublicLinksQueryError = unknown
-
-
-export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List archived public links for tests
- */
-
-export function useTestsControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTestsControllerListArchivedPublicLinksQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary Update short public link settings
- */
-export const testsControllerUpdatePublicLink = (
-    linkId: number,
-    adminUpdatePublicLinkDto: AdminUpdatePublicLinkDto,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinkDto>(
-      {url: `/admin/tests/public-links/${linkId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: adminUpdatePublicLinkDto, signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerUpdatePublicLinkMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext> => {
-
-const mutationKey = ['testsControllerUpdatePublicLink'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, {linkId: number;data: AdminUpdatePublicLinkDto}> = (props) => {
-          const {linkId,data} = props ?? {};
-
-          return  testsControllerUpdatePublicLink(linkId,data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerUpdatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>>
-    export type TestsControllerUpdatePublicLinkMutationBody = AdminUpdatePublicLinkDto
-    export type TestsControllerUpdatePublicLinkMutationError = unknown
-
-    /**
- * @summary Update short public link settings
- */
-export const useTestsControllerUpdatePublicLink = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerUpdatePublicLink>>,
-        TError,
-        {linkId: number;data: AdminUpdatePublicLinkDto},
-        TContext
-      > => {
-      return useMutation(getTestsControllerUpdatePublicLinkMutationOptions(options), queryClient);
-    }
-    /**
- * @summary Archive public link (disable access and hide from default list)
- */
-export const testsControllerDeletePublicLink = (
-    linkId: number,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminDeletePublicLinkResponseDto>(
-      {url: `/admin/tests/public-links/${linkId}`, method: 'DELETE', signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerDeletePublicLinkMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext> => {
-
-const mutationKey = ['testsControllerDeletePublicLink'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, {linkId: number}> = (props) => {
-          const {linkId} = props ?? {};
-
-          return  testsControllerDeletePublicLink(linkId,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerDeletePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>>
-    
-    export type TestsControllerDeletePublicLinkMutationError = unknown
-
-    /**
- * @summary Archive public link (disable access and hide from default list)
- */
-export const useTestsControllerDeletePublicLink = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerDeletePublicLink>>,
-        TError,
-        {linkId: number},
-        TContext
-      > => {
-      return useMutation(getTestsControllerDeletePublicLinkMutationOptions(options), queryClient);
-    }
-    /**
- * @summary Regenerate short code for public link
- */
-export const testsControllerRegeneratePublicLinkShortCode = (
-    linkId: number,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinkDto>(
-      {url: `/admin/tests/public-links/${linkId}/regenerate`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerRegeneratePublicLinkShortCodeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext> => {
-
-const mutationKey = ['testsControllerRegeneratePublicLinkShortCode'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, {linkId: number}> = (props) => {
-          const {linkId} = props ?? {};
-
-          return  testsControllerRegeneratePublicLinkShortCode(linkId,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerRegeneratePublicLinkShortCodeMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>>
-    
-    export type TestsControllerRegeneratePublicLinkShortCodeMutationError = unknown
-
-    /**
- * @summary Regenerate short code for public link
- */
-export const useTestsControllerRegeneratePublicLinkShortCode = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerRegeneratePublicLinkShortCode>>,
-        TError,
-        {linkId: number},
-        TContext
-      > => {
-      return useMutation(getTestsControllerRegeneratePublicLinkShortCodeMutationOptions(options), queryClient);
-    }
-    /**
- * @summary Restore archived public link
- */
-export const testsControllerRestorePublicLink = (
-    linkId: number,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicLinkDto>(
-      {url: `/admin/tests/public-links/${linkId}/restore`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getTestsControllerRestorePublicLinkMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext> => {
-
-const mutationKey = ['testsControllerRestorePublicLink'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, {linkId: number}> = (props) => {
-          const {linkId} = props ?? {};
-
-          return  testsControllerRestorePublicLink(linkId,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TestsControllerRestorePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>>
-    
-    export type TestsControllerRestorePublicLinkMutationError = unknown
-
-    /**
- * @summary Restore archived public link
- */
-export const useTestsControllerRestorePublicLink = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof testsControllerRestorePublicLink>>,
-        TError,
-        {linkId: number},
-        TContext
-      > => {
-      return useMutation(getTestsControllerRestorePublicLinkMutationOptions(options), queryClient);
-    }
-    /**
- * @summary List student attempts by public link
- */
-export const testsControllerListPublicLinkAttempts = (
-    linkId: number,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicAttemptsListResponseDto>(
-      {url: `/admin/tests/public-links/${linkId}/attempts`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getTestsControllerListPublicLinkAttemptsQueryKey = (linkId: number,) => {
-    return [
-    `/admin/tests/public-links/${linkId}/attempts`
-    ] as const;
-    }
-
-    
-export const getTestsControllerListPublicLinkAttemptsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListPublicLinkAttemptsQueryKey(linkId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>> = ({ signal }) => testsControllerListPublicLinkAttempts(linkId, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(linkId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TestsControllerListPublicLinkAttemptsQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>>
-export type TestsControllerListPublicLinkAttemptsQueryError = unknown
-
-
-export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List student attempts by public link
- */
-
-export function useTestsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTestsControllerListPublicLinkAttemptsQueryOptions(linkId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary Get student attempt details with answers and analysis
- */
-export const testsControllerGetAttemptDetail = (
-    attemptId: number,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<AdminPublicAttemptDetailResponseDto>(
-      {url: `/admin/tests/attempts/${attemptId}`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getTestsControllerGetAttemptDetailQueryKey = (attemptId: number,) => {
-    return [
-    `/admin/tests/attempts/${attemptId}`
-    ] as const;
-    }
-
-    
-export const getTestsControllerGetAttemptDetailQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerGetAttemptDetailQueryKey(attemptId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>> = ({ signal }) => testsControllerGetAttemptDetail(attemptId, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(attemptId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TestsControllerGetAttemptDetailQueryResult = NonNullable<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>>
-export type TestsControllerGetAttemptDetailQueryError = unknown
-
-
-export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
- attemptId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
- attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>,
-          TError,
-          Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
- attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get student attempt details with answers and analysis
- */
-
-export function useTestsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError = unknown>(
- attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTestsControllerGetAttemptDetailQueryOptions(attemptId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
  * @summary List test topics with draft and published snapshots
  */
 export const testsControllerListTopics = (
-    
+    params?: TestsControllerListTopicsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<TestsTopicListResponseDto>(
-      {url: `/admin/tests`, method: 'GET', signal
+      {url: `/admin/tests`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -959,23 +75,23 @@ export const testsControllerListTopics = (
 
 
 
-export const getTestsControllerListTopicsQueryKey = () => {
+export const getTestsControllerListTopicsQueryKey = (params?: TestsControllerListTopicsParams,) => {
     return [
-    `/admin/tests`
+    `/admin/tests`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getTestsControllerListTopicsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getTestsControllerListTopicsQueryOptions = <TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(params?: TestsControllerListTopicsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListTopicsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getTestsControllerListTopicsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListTopics>>> = ({ signal }) => testsControllerListTopics(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerListTopics>>> = ({ signal }) => testsControllerListTopics(params, requestOptions, signal);
 
       
 
@@ -989,7 +105,7 @@ export type TestsControllerListTopicsQueryError = unknown
 
 
 export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
+ params: undefined |  TestsControllerListTopicsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerListTopics>>,
           TError,
@@ -999,7 +115,7 @@ export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof t
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
+ params?: TestsControllerListTopicsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsControllerListTopics>>,
           TError,
@@ -1009,7 +125,7 @@ export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof t
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: TestsControllerListTopicsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1017,11 +133,11 @@ export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof t
  */
 
 export function useTestsControllerListTopics<TData = Awaited<ReturnType<typeof testsControllerListTopics>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: TestsControllerListTopicsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsControllerListTopics>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getTestsControllerListTopicsQueryOptions(options)
+  const queryOptions = getTestsControllerListTopicsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1093,6 +209,128 @@ export const useTestsControllerCreateTopic = <TError = unknown,
         TContext
       > => {
       return useMutation(getTestsControllerCreateTopicMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Archive test topic
+ */
+export const testsControllerArchiveTopic = (
+    topicId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<UpdateTestsTopicArchiveStatusResponseDto>(
+      {url: `/admin/tests/${topicId}/archive`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerArchiveTopicMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerArchiveTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerArchiveTopic>>, TError,{topicId: number}, TContext> => {
+
+const mutationKey = ['testsControllerArchiveTopic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerArchiveTopic>>, {topicId: number}> = (props) => {
+          const {topicId} = props ?? {};
+
+          return  testsControllerArchiveTopic(topicId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerArchiveTopicMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerArchiveTopic>>>
+    
+    export type TestsControllerArchiveTopicMutationError = unknown
+
+    /**
+ * @summary Archive test topic
+ */
+export const useTestsControllerArchiveTopic = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerArchiveTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerArchiveTopic>>,
+        TError,
+        {topicId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerArchiveTopicMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Restore archived test topic
+ */
+export const testsControllerRestoreTopic = (
+    topicId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<UpdateTestsTopicArchiveStatusResponseDto>(
+      {url: `/admin/tests/${topicId}/restore`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsControllerRestoreTopicMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestoreTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestoreTopic>>, TError,{topicId: number}, TContext> => {
+
+const mutationKey = ['testsControllerRestoreTopic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsControllerRestoreTopic>>, {topicId: number}> = (props) => {
+          const {topicId} = props ?? {};
+
+          return  testsControllerRestoreTopic(topicId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsControllerRestoreTopicMutationResult = NonNullable<Awaited<ReturnType<typeof testsControllerRestoreTopic>>>
+    
+    export type TestsControllerRestoreTopicMutationError = unknown
+
+    /**
+ * @summary Restore archived test topic
+ */
+export const useTestsControllerRestoreTopic = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsControllerRestoreTopic>>, TError,{topicId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsControllerRestoreTopic>>,
+        TError,
+        {topicId: number},
+        TContext
+      > => {
+      return useMutation(getTestsControllerRestoreTopicMutationOptions(options), queryClient);
     }
     /**
  * @summary Create test topic with generated questions in one transaction
@@ -1688,4 +926,890 @@ export const useTestsControllerPublishTopic = <TError = unknown,
       > => {
       return useMutation(getTestsControllerPublishTopicMutationOptions(options), queryClient);
     }
+    /**
+ * @summary Create short public link for published test version
+ */
+export const testsAdminPublicLinksControllerCreatePublicLink = (
+    adminCreatePublicLinkDto: AdminCreatePublicLinkDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreatePublicLinkDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminPublicLinksControllerCreatePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext> => {
+
+const mutationKey = ['testsAdminPublicLinksControllerCreatePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>, {data: AdminCreatePublicLinkDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsAdminPublicLinksControllerCreatePublicLink(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminPublicLinksControllerCreatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>>
+    export type TestsAdminPublicLinksControllerCreatePublicLinkMutationBody = AdminCreatePublicLinkDto
+    export type TestsAdminPublicLinksControllerCreatePublicLinkMutationError = unknown
+
+    /**
+ * @summary Create short public link for published test version
+ */
+export const useTestsAdminPublicLinksControllerCreatePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>, TError,{data: AdminCreatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerCreatePublicLink>>,
+        TError,
+        {data: AdminCreatePublicLinkDto},
+        TContext
+      > => {
+      return useMutation(getTestsAdminPublicLinksControllerCreatePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List short public links for tests
+ */
+export const testsAdminPublicLinksControllerListPublicLinks = (
     
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinksListResponseDto>(
+      {url: `/admin/tests/public-links`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsAdminPublicLinksControllerListPublicLinksQueryKey = () => {
+    return [
+    `/admin/tests/public-links`
+    ] as const;
+    }
+
+    
+export const getTestsAdminPublicLinksControllerListPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminPublicLinksControllerListPublicLinksQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>> = ({ signal }) => testsAdminPublicLinksControllerListPublicLinks(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsAdminPublicLinksControllerListPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>>
+export type TestsAdminPublicLinksControllerListPublicLinksQueryError = unknown
+
+
+export function useTestsAdminPublicLinksControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminPublicLinksControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminPublicLinksControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List short public links for tests
+ */
+
+export function useTestsAdminPublicLinksControllerListPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsAdminPublicLinksControllerListPublicLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary List archived public links for tests
+ */
+export const testsAdminPublicLinksControllerListArchivedPublicLinks = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinksListResponseDto>(
+      {url: `/admin/tests/public-links/archived`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey = () => {
+    return [
+    `/admin/tests/public-links/archived`
+    ] as const;
+    }
+
+    
+export const getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>> = ({ signal }) => testsAdminPublicLinksControllerListArchivedPublicLinks(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsAdminPublicLinksControllerListArchivedPublicLinksQueryResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>>
+export type TestsAdminPublicLinksControllerListArchivedPublicLinksQueryError = unknown
+
+
+export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List archived public links for tests
+ */
+
+export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Update short public link settings
+ */
+export const testsAdminPublicLinksControllerUpdatePublicLink = (
+    linkId: number,
+    adminUpdatePublicLinkDto: AdminUpdatePublicLinkDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdatePublicLinkDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminPublicLinksControllerUpdatePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext> => {
+
+const mutationKey = ['testsAdminPublicLinksControllerUpdatePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>, {linkId: number;data: AdminUpdatePublicLinkDto}> = (props) => {
+          const {linkId,data} = props ?? {};
+
+          return  testsAdminPublicLinksControllerUpdatePublicLink(linkId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminPublicLinksControllerUpdatePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>>
+    export type TestsAdminPublicLinksControllerUpdatePublicLinkMutationBody = AdminUpdatePublicLinkDto
+    export type TestsAdminPublicLinksControllerUpdatePublicLinkMutationError = unknown
+
+    /**
+ * @summary Update short public link settings
+ */
+export const useTestsAdminPublicLinksControllerUpdatePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>, TError,{linkId: number;data: AdminUpdatePublicLinkDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerUpdatePublicLink>>,
+        TError,
+        {linkId: number;data: AdminUpdatePublicLinkDto},
+        TContext
+      > => {
+      return useMutation(getTestsAdminPublicLinksControllerUpdatePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Archive public link (disable access and hide from default list)
+ */
+export const testsAdminPublicLinksControllerDeletePublicLink = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminDeletePublicLinkResponseDto>(
+      {url: `/admin/tests/public-links/${linkId}`, method: 'DELETE', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminPublicLinksControllerDeletePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsAdminPublicLinksControllerDeletePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsAdminPublicLinksControllerDeletePublicLink(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminPublicLinksControllerDeletePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>>
+    
+    export type TestsAdminPublicLinksControllerDeletePublicLinkMutationError = unknown
+
+    /**
+ * @summary Archive public link (disable access and hide from default list)
+ */
+export const useTestsAdminPublicLinksControllerDeletePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerDeletePublicLink>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsAdminPublicLinksControllerDeletePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Regenerate short code for public link
+ */
+export const testsAdminPublicLinksControllerRegeneratePublicLinkShortCode = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}/regenerate`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsAdminPublicLinksControllerRegeneratePublicLinkShortCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsAdminPublicLinksControllerRegeneratePublicLinkShortCode(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>>
+    
+    export type TestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationError = unknown
+
+    /**
+ * @summary Regenerate short code for public link
+ */
+export const useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerRegeneratePublicLinkShortCode>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Restore archived public link
+ */
+export const testsAdminPublicLinksControllerRestorePublicLink = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicLinkDto>(
+      {url: `/admin/tests/public-links/${linkId}/restore`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminPublicLinksControllerRestorePublicLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['testsAdminPublicLinksControllerRestorePublicLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  testsAdminPublicLinksControllerRestorePublicLink(linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminPublicLinksControllerRestorePublicLinkMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>>
+    
+    export type TestsAdminPublicLinksControllerRestorePublicLinkMutationError = unknown
+
+    /**
+ * @summary Restore archived public link
+ */
+export const useTestsAdminPublicLinksControllerRestorePublicLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerRestorePublicLink>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getTestsAdminPublicLinksControllerRestorePublicLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List educational organizations for link binding
+ */
+export const testsAdminEducationOrganizationsControllerListEducationOrganizations = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationsListResponseDto>(
+      {url: `/admin/tests/education-organizations`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey = () => {
+    return [
+    `/admin/tests/education-organizations`
+    ] as const;
+    }
+
+    
+export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>> = ({ signal }) => testsAdminEducationOrganizationsControllerListEducationOrganizations(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryResult = NonNullable<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>>
+export type TestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryError = unknown
+
+
+export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List educational organizations for link binding
+ */
+
+export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Create educational organization for link binding
+ */
+export const testsAdminEducationOrganizationsControllerCreateEducationOrganization = (
+    adminCreateEducationOrganizationDto: AdminCreateEducationOrganizationDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationDto>(
+      {url: `/admin/tests/education-organizations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateEducationOrganizationDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext> => {
+
+const mutationKey = ['testsAdminEducationOrganizationsControllerCreateEducationOrganization'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>, {data: AdminCreateEducationOrganizationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  testsAdminEducationOrganizationsControllerCreateEducationOrganization(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>>
+    export type TestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationBody = AdminCreateEducationOrganizationDto
+    export type TestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationError = unknown
+
+    /**
+ * @summary Create educational organization for link binding
+ */
+export const useTestsAdminEducationOrganizationsControllerCreateEducationOrganization = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>, TError,{data: AdminCreateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerCreateEducationOrganization>>,
+        TError,
+        {data: AdminCreateEducationOrganizationDto},
+        TContext
+      > => {
+      return useMutation(getTestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Update educational organization validation settings
+ */
+export const testsAdminEducationOrganizationsControllerUpdateEducationOrganization = (
+    organizationId: number,
+    adminUpdateEducationOrganizationDto: AdminUpdateEducationOrganizationDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminEducationOrganizationDto>(
+      {url: `/admin/tests/education-organizations/${organizationId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateEducationOrganizationDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getTestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext> => {
+
+const mutationKey = ['testsAdminEducationOrganizationsControllerUpdateEducationOrganization'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>, {organizationId: number;data: AdminUpdateEducationOrganizationDto}> = (props) => {
+          const {organizationId,data} = props ?? {};
+
+          return  testsAdminEducationOrganizationsControllerUpdateEducationOrganization(organizationId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>>
+    export type TestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationBody = AdminUpdateEducationOrganizationDto
+    export type TestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationError = unknown
+
+    /**
+ * @summary Update educational organization validation settings
+ */
+export const useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>, TError,{organizationId: number;data: AdminUpdateEducationOrganizationDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerUpdateEducationOrganization>>,
+        TError,
+        {organizationId: number;data: AdminUpdateEducationOrganizationDto},
+        TContext
+      > => {
+      return useMutation(getTestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List student attempts by public link
+ */
+export const testsAdminAttemptsControllerListPublicLinkAttempts = (
+    linkId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicAttemptsListResponseDto>(
+      {url: `/admin/tests/public-links/${linkId}/attempts`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey = (linkId: number,) => {
+    return [
+    `/admin/tests/public-links/${linkId}/attempts`
+    ] as const;
+    }
+
+    
+export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey(linkId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>> = ({ signal }) => testsAdminAttemptsControllerListPublicLinkAttempts(linkId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(linkId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsAdminAttemptsControllerListPublicLinkAttemptsQueryResult = NonNullable<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>>
+export type TestsAdminAttemptsControllerListPublicLinkAttemptsQueryError = unknown
+
+
+export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List student attempts by public link
+ */
+
+export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
+ linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(linkId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Get student attempt details with answers and analysis
+ */
+export const testsAdminAttemptsControllerGetAttemptDetail = (
+    attemptId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminPublicAttemptDetailResponseDto>(
+      {url: `/admin/tests/attempts/${attemptId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTestsAdminAttemptsControllerGetAttemptDetailQueryKey = (attemptId: number,) => {
+    return [
+    `/admin/tests/attempts/${attemptId}`
+    ] as const;
+    }
+
+    
+export const getTestsAdminAttemptsControllerGetAttemptDetailQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError = unknown>(attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminAttemptsControllerGetAttemptDetailQueryKey(attemptId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>> = ({ signal }) => testsAdminAttemptsControllerGetAttemptDetail(attemptId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(attemptId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TestsAdminAttemptsControllerGetAttemptDetailQueryResult = NonNullable<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>>
+export type TestsAdminAttemptsControllerGetAttemptDetailQueryError = unknown
+
+
+export function useTestsAdminAttemptsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminAttemptsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTestsAdminAttemptsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get student attempt details with answers and analysis
+ */
+
+export function useTestsAdminAttemptsControllerGetAttemptDetail<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError = unknown>(
+ attemptId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTestsAdminAttemptsControllerGetAttemptDetailQueryOptions(attemptId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+

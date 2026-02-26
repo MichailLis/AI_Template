@@ -2,8 +2,8 @@ import { toast } from 'sonner';
 
 import { parseApiError } from '@/features/tests';
 import {
-  useTestsControllerCreateEducationOrganization,
-  useTestsControllerUpdateEducationOrganization,
+  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
+  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
 } from '@/shared/api/generated/tests/tests';
 import {
   hasMissingGroupValidationPattern,
@@ -29,8 +29,10 @@ export function useEducationOrganizationActions(params: UseAdminPublicLinksActio
     refetchEducationOrganizations,
   } = params;
 
-  const createEducationOrganizationMutation = useTestsControllerCreateEducationOrganization();
-  const updateEducationOrganizationMutation = useTestsControllerUpdateEducationOrganization();
+  const createEducationOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
+  const updateEducationOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
 
   const handleCreateEducationOrganization = () => {
     const name = newEducationOrganizationName.trim();

@@ -107,6 +107,8 @@ function App() {
                 <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                 <Route path="/admin/prompts" element={<AdminPromptsPage />} />
                 <Route path="/admin/tests" element={<AdminTestsPage />} />
+                <Route path="/admin/tests/:topicId" element={<AdminTestsPage />} />
+                <Route path="/admin/tests/:topicId/settings" element={<AdminTestsPage />} />
                 <Route path="/admin/public-links" element={<AdminPublicLinksPage />} />
                 <Route
                   path="/admin/public-links/organizations"

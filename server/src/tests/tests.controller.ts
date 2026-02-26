@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Query,
   HttpCode,
   HttpStatus,
   Param,
@@ -21,8 +22,10 @@ import {
   DeleteTestsTopicResponseDto,
   PublishTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
+  TestsTopicListQueryDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
+  UpdateTestsTopicArchiveStatusResponseDto,
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
@@ -40,8 +43,30 @@ export class TestsController {
     summary: 'List test topics with draft and published snapshots',
   })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicListResponseDto })
-  listTopics(@GetCurrentUserId() userId: number) {
-    return this.testsService.listTopics(userId);
+  listTopics(@GetCurrentUserId() userId: number, @Query() query: TestsTopicListQueryDto) {
+    return this.testsService.listTopics(userId, query.archived);
+  }
+
+  @Post(':topicId/archive')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Archive test topic' })
+  @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
+  archiveTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.archiveTopic(userId, topicId);
+  }
+
+  @Post(':topicId/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore archived test topic' })
+  @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
+  restoreTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.restoreTopic(userId, topicId);
   }
 
   @Post()

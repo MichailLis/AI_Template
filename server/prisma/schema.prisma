@@ -74,6 +74,7 @@ model TestTopic {
   slug                     String   @unique
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
+  archivedAt               DateTime?
   activeDraftVersionId     Int?
   activePublishedVersionId Int?
 
@@ -81,6 +82,7 @@ model TestTopic {
   activeDraftVersion     TestTopicVersion?  @relation("ActiveDraftVersion", fields: [activeDraftVersionId], references: [id], onDelete: SetNull)
   activePublishedVersion TestTopicVersion?  @relation("ActivePublishedVersion", fields: [activePublishedVersionId], references: [id], onDelete: SetNull)
 
+  @@index([archivedAt])
   @@map("test_topics")
 }
 

@@ -2,11 +2,11 @@ import { toast } from 'sonner';
 
 import { parseApiError } from '@/features/tests';
 import {
-  useTestsControllerCreatePublicLink,
-  useTestsControllerDeletePublicLink,
-  useTestsControllerRegeneratePublicLinkShortCode,
-  useTestsControllerRestorePublicLink,
-  useTestsControllerUpdatePublicLink,
+  useTestsAdminPublicLinksControllerCreatePublicLink,
+  useTestsAdminPublicLinksControllerDeletePublicLink,
+  useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode,
+  useTestsAdminPublicLinksControllerRestorePublicLink,
+  useTestsAdminPublicLinksControllerUpdatePublicLink,
 } from '@/shared/api/generated/tests/tests';
 
 import {
@@ -35,7 +35,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     refetchPublicLinks,
   } = params;
 
-  const createPublicLinkMutation = useTestsControllerCreatePublicLink();
+  const createPublicLinkMutation = useTestsAdminPublicLinksControllerCreatePublicLink();
 
   const handleCreatePublicLink = () => {
     const validation = validateCreatePublicLinkInput({
@@ -94,10 +94,11 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
     refetchPublicLinks,
   } = params;
 
-  const updatePublicLinkMutation = useTestsControllerUpdatePublicLink();
-  const regeneratePublicLinkShortCodeMutation = useTestsControllerRegeneratePublicLinkShortCode();
-  const deletePublicLinkMutation = useTestsControllerDeletePublicLink();
-  const restorePublicLinkMutation = useTestsControllerRestorePublicLink();
+  const updatePublicLinkMutation = useTestsAdminPublicLinksControllerUpdatePublicLink();
+  const regeneratePublicLinkShortCodeMutation =
+    useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode();
+  const deletePublicLinkMutation = useTestsAdminPublicLinksControllerDeletePublicLink();
+  const restorePublicLinkMutation = useTestsAdminPublicLinksControllerRestorePublicLink();
 
   const handleTogglePublicLink = (linkId: number, nextActive: boolean) => {
     updatePublicLinkMutation.mutate(

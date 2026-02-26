@@ -9,6 +9,7 @@ import type {
   PublishTestsTopicResponseDto,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
+  UpdateTestsTopicArchiveStatusResponseDto,
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
@@ -71,10 +72,19 @@ export class TestsService {
     };
   }
 
-  async listTopics(userId: number): Promise<TestsTopicListResponseDto> {
+  async listTopics(userId: number, archived?: boolean): Promise<TestsTopicListResponseDto> {
     await ensureTestsAdminAccess(this.prisma, userId);
 
     const topics = await this.prisma.testTopic.findMany({
+      where: archived
+        ? {
+            archivedAt: {
+              not: null,
+            },
+          }
+        : {
+            archivedAt: null,
+          },
       include: {
         activeDraftVersion: {
           select: {
@@ -113,6 +123,77 @@ export class TestsService {
           publishedTitle: topic.activePublishedVersion?.title ?? null,
           updatedAt: topic.updatedAt.toISOString(),
         })),
+    };
+  }
+
+  async archiveTopic(
+    userId: number,
+    topicId: number,
+  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const existing = await this.prisma.testTopic.findUnique({
+      where: { id: topicId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Test topic not found');
+    }
+
+    if (existing.archivedAt) {
+      return {
+        topicId,
+        archivedAt: existing.archivedAt.toISOString(),
+      };
+    }
+
+    const archived = await this.prisma.testTopic.update({
+      where: { id: topicId },
+      data: {
+        archivedAt: new Date(),
+      },
+      select: { archivedAt: true },
+    });
+
+    return {
+      topicId,
+      archivedAt: archived.archivedAt ? archived.archivedAt.toISOString() : null,
+    };
+  }
+
+  async restoreTopic(
+    userId: number,
+    topicId: number,
+  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const existing = await this.prisma.testTopic.findUnique({
+      where: { id: topicId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Test topic not found');
+    }
+
+    if (!existing.archivedAt) {
+      return {
+        topicId,
+        archivedAt: null,
+      };
+    }
+
+    await this.prisma.testTopic.update({
+      where: { id: topicId },
+      data: {
+        archivedAt: null,
+      },
+    });
+
+    return {
+      topicId,
+      archivedAt: null,
     };
   }
 
