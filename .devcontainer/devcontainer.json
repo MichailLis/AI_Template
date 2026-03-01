@@ -1,0 +1,11 @@
+{
+  "name": "Fullstack AI Template Dev Container",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.devcontainer.yml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/AI_Template",
+  "runServices": ["workspace", "postgres", "adminer"],
+  "forwardPorts": [5173, 3000, 5432, 8080],
+  "postCreateCommand": "npm install && npm run install:all",
+  "remoteUser": "node",
+  "shutdownAction": "stopCompose"
+}

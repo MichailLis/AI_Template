@@ -51,6 +51,30 @@ URLs:
 - Swagger: `http://localhost:3000/api`
 - Adminer: `http://localhost:8080`
 
+## Dev Container
+
+1. Open the repository in a dev container (VS Code: "Dev Containers: Reopen in Container").
+2. Install dependencies in the container:
+
+```powershell
+npm install
+npm run install:all
+```
+
+3. Start frontend and backend from the workspace container:
+
+```powershell
+npm run dev:container
+```
+
+Exposed URLs from host:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api`
+- Postgres: `localhost:5432`
+- Adminer: `http://localhost:8080`
+
 Current UI note:
 
 - This branch exposes `/login` and a protected admin workspace under `/admin`.

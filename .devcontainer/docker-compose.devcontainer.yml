@@ -1,0 +1,16 @@
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+    volumes:
+      - .:/workspaces/AI_Template:cached
+    working_dir: /workspaces/AI_Template
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/my_app_db?schema=public
+      JWT_ACCESS_SECRET: secret123
+      JWT_REFRESH_SECRET: secret123
+    ports:
+      - '5173:5173'
+      - '3000:3000'
