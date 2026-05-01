@@ -14,3 +14,6 @@ README_tmp.html
 issues.md
 nul
 *.bak
+vectors.db
+vectors.db-shm
+vectors.db-wal
