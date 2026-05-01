@@ -1,3 +1,4 @@
+import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -50,8 +51,10 @@ export function AdminUsersWorkspace() {
   if (usersQuery.isLoading) {
     return (
       <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6 text-sm text-slate-500">
-          Загрузка пользователей... Пожалуйста, подождите.
+        <CardContent>
+          <AdminStateBlock className="p-0">
+            Загрузка пользователей... Пожалуйста, подождите.
+          </AdminStateBlock>
         </CardContent>
       </Card>
     );
@@ -60,11 +63,18 @@ export function AdminUsersWorkspace() {
   if (usersQuery.isError || !usersQuery.data) {
     return (
       <Card className="border-red-200 bg-red-50 shadow-sm">
-        <CardContent className="space-y-4 p-6 text-sm text-red-700">
-          <p>Не удалось загрузить пользователей. Проверьте подключение и повторите попытку.</p>
-          <Button variant="outline" size="sm" onClick={() => usersQuery.refetch()}>
-            Повторить
-          </Button>
+        <CardContent>
+          <AdminStateBlock
+            tone="danger"
+            className="p-0"
+            action={
+              <Button type="button" variant="outline" onClick={() => void usersQuery.refetch()}>
+                Повторить
+              </Button>
+            }
+          >
+            Не удалось загрузить пользователей. Проверьте подключение и повторите попытку.
+          </AdminStateBlock>
         </CardContent>
       </Card>
     );
