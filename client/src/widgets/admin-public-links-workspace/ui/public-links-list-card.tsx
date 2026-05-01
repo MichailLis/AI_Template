@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
+import { CardContent } from '@/shared/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 
 import { PublicLinkQuickActions } from './public-link-quick-actions';
@@ -309,7 +310,7 @@ export function PublicLinksListCard({
   }, [searchValue, visiblePublicLinks]);
 
   return (
-    <div className="border-t border-slate-200 bg-white">
+    <CardContent className="p-0">
       {publicLinksLoading ? (
         <div className="p-8 text-center text-sm text-slate-500">
           Загрузка публичных ссылок... Пожалуйста, подождите.
@@ -336,6 +337,6 @@ export function PublicLinksListCard({
       {filteredPublicLinks.map((link) => (
         <PublicLinkRow key={link.id} link={link} publicLinksTab={publicLinksTab} {...handlers} />
       ))}
-    </div>
+    </CardContent>
   );
 }

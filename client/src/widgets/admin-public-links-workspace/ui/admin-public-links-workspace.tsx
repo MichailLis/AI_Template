@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { ConfirmActionDialog } from '@/features/tests';
+import { Card } from '@/shared/ui/card';
 
 import { PublicLinkCreateDialog } from './public-link-create-card';
 import { PublicLinksListCard } from './public-links-list-card';
@@ -77,7 +78,7 @@ export function AdminPublicLinksWorkspace() {
 
   return (
     <>
-      <section className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+      <Card className="border-slate-200 shadow-sm">
         <PublicLinksListHeader
           publicLinksTab={workspaceState.publicLinksTab}
           searchValue={workspaceState.publicLinksSearch}
@@ -86,7 +87,7 @@ export function AdminPublicLinksWorkspace() {
           onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
         />
         <PublicLinksListCard {...listCardProps} />
-      </section>
+      </Card>
 
       <PublicLinkCreateDialog
         {...createCardProps}

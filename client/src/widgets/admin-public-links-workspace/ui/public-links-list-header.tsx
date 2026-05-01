@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/shared/ui/button';
+import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
@@ -21,11 +22,13 @@ export function PublicLinksListHeader({
   onOpenCreateDialog,
 }: PublicLinksListHeaderProps) {
   return (
-    <div className="space-y-4 p-6">
+    <CardHeader className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Публичные ссылки</h1>
-          <p className="text-sm text-slate-500">Публикация тестов и управление доступом</p>
+          <CardTitle>Публичные ссылки</CardTitle>
+          <CardDescription className="mt-1">
+            Публикация тестов и управление доступом
+          </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild type="button" variant="outline">
@@ -69,6 +72,6 @@ export function PublicLinksListHeader({
           />
         </div>
       </div>
-    </div>
+    </CardHeader>
   );
 }
