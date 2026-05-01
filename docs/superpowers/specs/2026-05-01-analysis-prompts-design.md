@@ -40,6 +40,40 @@ The repository already has the right foundations:
 
 The implementation should extend these surfaces instead of creating a parallel AI subsystem.
 
+## Reuse And Simplicity Guardrails
+
+Implementation must follow `CLAUDE.md` and `AI_GUIDE.md`.
+
+Assumptions to keep explicit:
+
+- The feature is an extension of the existing tests, prompt, public result, and admin stats
+  surfaces.
+- Prompt simulation in Prompt Studio is a testing tool only.
+- The first implementation should optimize for correctness and maintainability, not for a
+  speculative prompt marketplace or workflow engine.
+
+Reuse existing project pieces wherever possible:
+
+- Use the existing OpenRouter backend proxy and helpers instead of adding direct frontend
+  OpenRouter calls.
+- Extend the current prompt workspace instead of creating a second prompt UI.
+- Extend `TestStudentAnalysis` instead of creating a parallel result table.
+- Extend the existing public result and admin attempt detail screens instead of adding new routes.
+- Use existing generated API hooks, shadcn UI primitives, FSD boundaries, DTO style, and Prisma
+  service patterns.
+- Reuse current test version lifecycle semantics when freezing the selected prompt version.
+
+Avoid speculative work:
+
+- Do not introduce a new queue system unless the repository already has one or verification proves
+  in-process deferred execution is not enough for the MVP.
+- Do not add multiple prompts per test version.
+- Do not make the output schema admin-configurable in the MVP.
+- Do not store synthetic simulation runs unless a later requirement needs history.
+- Do not refactor unrelated prompt/test/public-link code while adding this feature.
+
+Every changed line in implementation should trace back to one of these requirements.
+
 ## Domain Model
 
 Add persisted prompt entities:
