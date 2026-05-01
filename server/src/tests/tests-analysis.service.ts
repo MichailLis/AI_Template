@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
 
-import { generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../admin/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './dto/tests-analysis.dto';
@@ -50,6 +50,20 @@ export class TestsAnalysisService {
 
   private toErrorMessage(error: unknown) {
     return error instanceof Error ? error.message : 'Analysis generation failed';
+  }
+
+  private async resolveStructuredModel(apiKey: string, savedModel: string) {
+    try {
+      const catalog = await fetchOpenRouterModels(this.config, apiKey);
+
+      if (catalog.models.some((model) => model.id === savedModel)) {
+        return savedModel;
+      }
+
+      return catalog.defaultModel || savedModel;
+    } catch {
+      return savedModel;
+    }
   }
 
   upsertStubAnalysis(
@@ -157,6 +171,7 @@ export class TestsAnalysisService {
 
     try {
       const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+      const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
       const questions = attempt.topicVersion.questions.map((question) => ({
         id: question.id,
         type: question.type,
@@ -186,7 +201,7 @@ export class TestsAnalysisService {
         answerPayload: answer.answerPayload,
       }));
       const response = await generateOpenRouterPrompt(this.config, apiKey, {
-        model: promptVersion.model,
+        model,
         prompt: this.buildAttemptAnalysisPrompt({
           prompt: promptVersion.prompt,
           questions,

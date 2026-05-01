@@ -8,7 +8,9 @@ import {
   useTestsPublicControllerSaveAnswers,
 } from '@/shared/api/generated/tests-public/tests-public';
 
-import type { PublicTestAnswerDraft } from './public-test-run.types';
+import { getSliderQuestionMeta } from './public-question-card.utils';
+
+import type { PublicTestAnswerDraft, PublicTestQuestion } from './public-test-run.types';
 
 const hasMeaningfulAnswer = (value: unknown) => {
   if (typeof value === 'string') {
@@ -21,6 +23,34 @@ const hasMeaningfulAnswer = (value: unknown) => {
 
   return value !== undefined && value !== null;
 };
+
+const getEffectiveQuestionAnswer = (
+  question: PublicTestQuestion,
+  mergedAnswers: PublicTestAnswerDraft,
+) => {
+  const answer = mergedAnswers[question.id];
+
+  if (answer !== undefined) {
+    return answer;
+  }
+
+  if (question.type === 'SLIDER') {
+    return getSliderQuestionMeta(question.settings, question.sliderBands, answer).value;
+  }
+
+  return answer;
+};
+
+const buildSessionAnswers = (
+  questions: PublicTestQuestion[],
+  mergedAnswers: PublicTestAnswerDraft,
+) =>
+  questions
+    .map((question) => ({
+      questionId: question.id,
+      answerPayload: getEffectiveQuestionAnswer(question, mergedAnswers),
+    }))
+    .filter((item) => item.answerPayload !== undefined);
 
 export function usePublicTestRunWorkspace() {
   const { code, sessionToken } = useParams<{ code: string; sessionToken: string }>();
@@ -76,12 +106,7 @@ export function usePublicTestRunWorkspace() {
       ...answerDraft,
     };
 
-    const answers = session.questions
-      .map((question) => ({
-        questionId: question.id,
-        answerPayload: mergedAnswers[question.id],
-      }))
-      .filter((item) => item.answerPayload !== undefined);
+    const answers = buildSessionAnswers(session.questions, mergedAnswers);
 
     if (answers.length === 0) {
       toast.error('Нет данных для сохранения');
@@ -109,12 +134,7 @@ export function usePublicTestRunWorkspace() {
       ...answerDraft,
     };
 
-    const answers = session.questions
-      .map((question) => ({
-        questionId: question.id,
-        answerPayload: mergedAnswers[question.id],
-      }))
-      .filter((item) => item.answerPayload !== undefined);
+    const answers = buildSessionAnswers(session.questions, mergedAnswers);
 
     try {
       if (answers.length > 0) {
@@ -132,9 +152,13 @@ export function usePublicTestRunWorkspace() {
   };
 
   const totalQuestionsCount = session?.questions.length ?? 0;
+  const effectiveAnswers = {
+    ...serverAnswerMap,
+    ...answerDraft,
+  };
   const answeredQuestionsCount =
     session?.questions.reduce((acc, question) => {
-      const answer = getCurrentAnswer(question.id);
+      const answer = getEffectiveQuestionAnswer(question, effectiveAnswers);
       return hasMeaningfulAnswer(answer) ? acc + 1 : acc;
     }, 0) ?? 0;
 

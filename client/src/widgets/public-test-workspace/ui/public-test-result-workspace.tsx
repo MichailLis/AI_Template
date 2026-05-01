@@ -99,6 +99,10 @@ export function PublicTestResultWorkspace() {
           <TestAnalysisResultView
             analysis={result.analysis}
             generatedAtLabel={`Сгенерировано: ${formatDateTime(result.analysis.generatedAt)}`}
+            showErrorDetails={false}
+            showProviderBadge={false}
+            showRawText={false}
+            showStructuredFallback={false}
           />
         </CardContent>
       </Card>

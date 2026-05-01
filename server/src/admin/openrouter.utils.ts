@@ -62,7 +62,9 @@ const toPromptModelResponse = (rawModel: unknown): PromptModelResponse | null =>
       completionPrice !== null &&
       promptPrice === 0 &&
       completionPrice === 0);
-  const supportsStructuredOutputs = normalizedSupportedParameters.includes('structured_outputs');
+  const supportsStructuredOutputs =
+    normalizedSupportedParameters.includes('structured_outputs') &&
+    normalizedSupportedParameters.includes('response_format');
 
   return {
     id,

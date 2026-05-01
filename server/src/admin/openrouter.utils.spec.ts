@@ -39,9 +39,15 @@ describe('openrouter utils', () => {
           pricing: { prompt: '0', completion: '0' },
         },
         {
-          id: 'paid/structured',
-          name: 'Paid structured',
+          id: 'paid/structured-only',
+          name: 'Paid structured only',
           supported_parameters: ['structured_outputs'],
+          pricing: { prompt: '0.1', completion: '0.1' },
+        },
+        {
+          id: 'paid/full-structured',
+          name: 'Paid full structured',
+          supported_parameters: ['response_format', 'structured_outputs'],
           pricing: { prompt: '0.1', completion: '0.1' },
         },
       ],
@@ -49,7 +55,10 @@ describe('openrouter utils', () => {
 
     const result = filterStructuredOutputPromptModels(models);
 
-    expect(result.map((model) => model.id)).toEqual(['openai/gpt-oss-20b:free', 'paid/structured']);
+    expect(result.map((model) => model.id)).toEqual([
+      'openai/gpt-oss-20b:free',
+      'paid/full-structured',
+    ]);
   });
 
   it('prefers free structured output models by default', () => {

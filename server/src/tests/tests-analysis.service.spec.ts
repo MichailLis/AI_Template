@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
-import { generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../admin/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
@@ -36,6 +36,7 @@ type AnalysisUpdateArgs = {
 };
 
 jest.mock('../admin/openrouter.client', () => ({
+  fetchOpenRouterModels: jest.fn(),
   generateOpenRouterPrompt: jest.fn(),
 }));
 
@@ -124,6 +125,31 @@ describe('TestsAnalysisService', () => {
       configMock as unknown as ConfigService,
       openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
     );
+    jest.mocked(fetchOpenRouterModels).mockResolvedValue({
+      defaultModel: 'google/gemini-2.0-flash-exp:free',
+      models: [
+        {
+          id: 'google/gemini-2.0-flash-exp:free',
+          label: 'Gemini',
+          provider: 'google',
+          isFree: true,
+          supportsStructuredOutputs: true,
+          contextLength: 1_000_000,
+          promptPrice: 0,
+          completionPrice: 0,
+        },
+        {
+          id: 'openai/gpt-4.1',
+          label: 'GPT-4.1',
+          provider: 'openai',
+          isFree: false,
+          supportsStructuredOutputs: true,
+          contextLength: 1_000_000,
+          promptPrice: 0.000002,
+          completionPrice: 0.000008,
+        },
+      ],
+    });
     jest.mocked(generateOpenRouterPrompt).mockReset();
   });
 
@@ -262,5 +288,55 @@ describe('TestsAnalysisService', () => {
       providerMode: 'LLM',
       status: 'FAILED',
     });
+  });
+
+  it('runAttemptAnalysis uses default structured model when saved prompt model is unavailable', async () => {
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 5,
+      topicVersion: {
+        analysisPromptVersion: {
+          id: 42,
+          model: 'baidu/qianfan-ocr-fast:free',
+          temperature: 0.2,
+          prompt: 'Analyze student answers',
+        },
+        questions: [
+          {
+            id: 100,
+            type: 'OPEN_TEXT',
+            title: 'Что вам легче всего дается?',
+            description: null,
+            required: true,
+            order: 1,
+            settings: null,
+            options: [],
+            sliderBands: [],
+          },
+        ],
+      },
+      answers: [
+        {
+          questionId: 100,
+          questionTitleSnapshot: 'Что вам легче всего дается?',
+          questionTypeSnapshot: 'OPEN_TEXT',
+          answerPayload: { text: 'Структурировать задачи' },
+        },
+      ],
+    });
+    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+      model: 'google/gemini-2.0-flash-exp:free',
+      output: JSON.stringify(validAnalysisResult),
+    });
+    prismaMock.testStudentAnalysis.update.mockResolvedValue({});
+
+    await service.runAttemptAnalysis(5);
+
+    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(
+      configMock,
+      'test-key',
+      expect.objectContaining({
+        model: 'google/gemini-2.0-flash-exp:free',
+      }),
+    );
   });
 });

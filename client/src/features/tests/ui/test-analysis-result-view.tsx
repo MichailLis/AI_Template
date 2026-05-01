@@ -23,6 +23,9 @@ interface TestAnalysisResultViewProps {
   analysis: AnalysisPayload | null;
   className?: string;
   showRawText?: boolean;
+  showProviderBadge?: boolean;
+  showErrorDetails?: boolean;
+  showStructuredFallback?: boolean;
   generatedAtLabel?: string;
 }
 
@@ -116,6 +119,9 @@ export function TestAnalysisResultView({
   analysis,
   className,
   showRawText = true,
+  showProviderBadge = true,
+  showErrorDetails = true,
+  showStructuredFallback = true,
   generatedAtLabel,
 }: TestAnalysisResultViewProps) {
   const parsed = parseAnalysisResult(analysis?.summary ?? null);
@@ -126,7 +132,9 @@ export function TestAnalysisResultView({
         <Badge variant={getStatusVariant(analysis?.status ?? 'PENDING')}>
           {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
         </Badge>
-        {analysis?.providerMode ? <Badge variant="outline">{analysis.providerMode}</Badge> : null}
+        {showProviderBadge && analysis?.providerMode ? (
+          <Badge variant="outline">{analysis.providerMode}</Badge>
+        ) : null}
         {generatedAtLabel ? <Badge variant="outline">{generatedAtLabel}</Badge> : null}
       </div>
 
@@ -223,12 +231,18 @@ export function TestAnalysisResultView({
         </div>
       ) : null}
 
-      {analysis?.status === 'READY' && !parsed ? (
+      {analysis?.status === 'READY' && !parsed && showStructuredFallback ? (
         <SectionCard icon={Sparkles} title="Структурированные данные анализа">
           <pre className="max-h-96 overflow-auto rounded-md bg-muted/45 p-3 text-xs text-foreground">
             {prettyJson(analysis.summary)}
           </pre>
         </SectionCard>
+      ) : null}
+
+      {analysis?.status === 'READY' && !parsed && !showStructuredFallback ? (
+        <div className="rounded-lg border border-border/60 bg-muted/35 p-4 text-sm text-muted-foreground">
+          Итог прохождения сохранен. Подробный анализ для этого теста пока не настроен.
+        </div>
       ) : null}
 
       {showRawText && analysis?.rawText ? (
@@ -239,7 +253,7 @@ export function TestAnalysisResultView({
         </SectionCard>
       ) : null}
 
-      {analysis?.errorMessage ? (
+      {showErrorDetails && analysis?.errorMessage ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
           {analysis.errorMessage}
         </div>
