@@ -1,9 +1,8 @@
 services:
-  # База данных PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: postgres
-    restart: always
+    container_name: ai_template_postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -12,14 +11,66 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d my_app_db']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # Веб-интерфейс для управления БД (http://localhost:8080)
   adminer:
     image: adminer
-    container_name: adminer
-    restart: always
+    container_name: ai_template_adminer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - '8080:8080'
 
+  backend:
+    image: node:22-bookworm
+    container_name: ai_template_backend
+    working_dir: /app
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/my_app_db?schema=public
+      JWT_ACCESS_SECRET: secret123
+      JWT_REFRESH_SECRET: secret123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./server:/app
+      - backend_node_modules:/app/node_modules
+    command: >
+      sh -lc "npm install &&
+      npm run prisma:generate &&
+      npm run prisma:push &&
+      npm run start:dev"
+
+  frontend:
+    image: node:22-bookworm
+    container_name: ai_template_frontend
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      VITE_PUBLIC_API_BASE_URL: http://localhost:3000
+    depends_on:
+      - backend
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./client:/app
+      - frontend_node_modules:/app/node_modules
+    command: >
+      sh -lc "npm install &&
+      npm run dev:container"
+
 volumes:
   postgres_data:
+  backend_node_modules:
+  frontend_node_modules:

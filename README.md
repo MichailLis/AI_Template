@@ -14,44 +14,51 @@ Current project state:
 
 - Backend: NestJS, Prisma 7, PostgreSQL, nestjs-zod, Swagger
 - Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
-- Infra: Docker Compose (`postgres`, `adminer`)
+- Infra: Docker Compose (`frontend`, `backend`, `postgres`, `adminer`)
 
 ## Quick Start
 
-1. Install dependencies:
+1. Start the full Docker stack:
 
 ```powershell
-npm install
-npm run install:all
+docker compose up -d
 ```
 
-2. Start database:
-
-```powershell
-docker-compose up -d
-```
-
-3. Sync Prisma schema:
-
-```powershell
-npm run prisma:generate
-npm run prisma:push
-```
-
-4. Run both apps:
-
-```powershell
-npm run dev
-```
-
-URLs:
+2. Open the app:
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3000`
 - Swagger: `http://localhost:3000/api`
 - Adminer: `http://localhost:8080`
+- Postgres: `localhost:5432`
+
+The `backend` container installs server dependencies, generates Prisma client, syncs the schema, and starts Nest in watch mode.
+The `frontend` container installs client dependencies and starts Vite.
+
+Useful commands:
+
+```powershell
+docker compose logs -f backend frontend
+docker compose down
+```
+
+## Local Node Development
+
+If you intentionally want to run the apps on the host instead of Docker:
+
+```powershell
+npm install
+npm run install:all
+docker compose up -d postgres adminer
+npm run prisma:generate
+npm run prisma:push
+npm run dev
+```
 
 ## Dev Container
+
+The dev container is only for VS Code "Dev Containers: Reopen in Container".
+Do not use it as the normal project Docker runtime.
 
 1. Open the repository in a dev container (VS Code: "Dev Containers: Reopen in Container").
 2. Install dependencies in the container:
@@ -69,11 +76,11 @@ npm run dev:container
 
 Exposed URLs from host:
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3000`
-- Swagger: `http://localhost:3000/api`
-- Postgres: `localhost:5432`
-- Adminer: `http://localhost:8080`
+- Frontend: `http://localhost:55173`
+- Backend: `http://localhost:53000`
+- Swagger: `http://localhost:53000/api`
+- Postgres: `localhost:55432`
+- Adminer: `http://localhost:58080`
 
 Current UI note:
 

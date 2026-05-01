@@ -17,7 +17,7 @@ Note:
 
 - Backend: NestJS, Prisma 7, PostgreSQL, JWT (Passport), nestjs-zod, Swagger
 - Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
-- Infra: Docker Compose (Postgres + Adminer)
+- Infra: Docker Compose (frontend + backend + Postgres + Adminer)
 - Frontend architecture: Strict FSD with template guardrails (enforced)
 
 ## AI Agent Operating Mode (Local Development)
@@ -31,6 +31,27 @@ Mandatory behavior for agents:
 3. Prefer small, reversible commits over broad refactors.
 4. Never bypass architecture/lint/test gates to "make it pass".
 5. Keep changes scoped to the user's request; no opportunistic rewrites.
+
+## Docker Runtime Contract
+
+For normal project startup, agents must use the root `docker-compose.yml` only.
+
+Required command:
+
+```powershell
+docker compose up -d
+```
+
+Expected runtime services:
+
+- `ai_template_frontend` on `http://localhost:5173`
+- `ai_template_backend` on `http://localhost:3000`
+- `ai_template_postgres` on `localhost:5432`
+- `ai_template_adminer` on `http://localhost:8080`
+
+Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project for the user.
+That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
+`workspace` container that runs frontend and backend together. It is not the project runtime topology.
 
 ## Search Mode (Exhaustive, For Non-Trivial Tasks)
 
