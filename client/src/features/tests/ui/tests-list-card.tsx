@@ -1,6 +1,7 @@
 import { Archive, MoreHorizontal, RotateCcw, Settings, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
@@ -66,29 +67,29 @@ export function TestsListCard({
   return (
     <CardContent className="p-0">
       {topicsLoading ? (
-        <div className="p-8 text-center text-sm text-slate-500">
-          Загрузка тестов... Пожалуйста, подождите.
-        </div>
+        <AdminStateBlock>Загрузка тестов... Пожалуйста, подождите.</AdminStateBlock>
       ) : null}
 
       {topicsError ? (
-        <div className="space-y-2 rounded-md border-t border-red-200 bg-red-50 p-6">
-          <p className="text-sm text-red-700">
-            {topicsErrorMessage ??
-              'Не удалось загрузить тесты. Проверьте подключение и повторите попытку.'}
-          </p>
-          <Button type="button" size="sm" variant="outline" onClick={onRetryTopics}>
-            Повторить
-          </Button>
-        </div>
+        <AdminStateBlock
+          tone="danger"
+          action={
+            <Button type="button" size="sm" variant="outline" onClick={onRetryTopics}>
+              Повторить
+            </Button>
+          }
+        >
+          {topicsErrorMessage ??
+            'Не удалось загрузить тесты. Проверьте подключение и повторите попытку.'}
+        </AdminStateBlock>
       ) : null}
 
       {!topicsLoading && !topicsError && filteredTopics.length === 0 ? (
-        <div className="p-8 text-center text-sm text-slate-500">
+        <AdminStateBlock>
           {searchValue.trim()
             ? 'По вашему запросу ничего не найдено.'
             : 'Нет тестов. Создайте первый тест.'}
-        </div>
+        </AdminStateBlock>
       ) : null}
 
       {filteredTopics.map((topic) => (

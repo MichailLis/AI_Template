@@ -2,6 +2,7 @@ import { Archive, MoreHorizontal, Power, PowerOff, RefreshCcw, RotateCcw } from 
 import { useMemo } from 'react';
 
 import { cn } from '@/shared/lib/utils';
+import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
@@ -312,26 +313,24 @@ export function PublicLinksListCard({
   return (
     <CardContent className="p-0">
       {publicLinksLoading ? (
-        <div className="p-8 text-center text-sm text-slate-500">
-          Загрузка публичных ссылок... Пожалуйста, подождите.
-        </div>
+        <AdminStateBlock>Загрузка публичных ссылок... Пожалуйста, подождите.</AdminStateBlock>
       ) : null}
 
       {publicLinksError ? (
-        <div className="space-y-2 rounded-md border-t border-red-200 bg-red-50 p-6">
-          <p className="text-sm text-red-700">
-            Не удалось загрузить публичные ссылки. Проверьте подключение и повторите попытку.
-          </p>
-          <Button type="button" size="sm" variant="outline" onClick={onRetryPublicLinks}>
-            Повторить
-          </Button>
-        </div>
+        <AdminStateBlock
+          tone="danger"
+          action={
+            <Button type="button" size="sm" variant="outline" onClick={onRetryPublicLinks}>
+              Повторить
+            </Button>
+          }
+        >
+          Не удалось загрузить публичные ссылки. Проверьте подключение и повторите попытку.
+        </AdminStateBlock>
       ) : null}
 
       {!publicLinksLoading && !publicLinksError && filteredPublicLinks.length === 0 ? (
-        <div className="p-8 text-center text-sm text-slate-500">
-          {getEmptyStateText(publicLinksTab, searchValue)}
-        </div>
+        <AdminStateBlock>{getEmptyStateText(publicLinksTab, searchValue)}</AdminStateBlock>
       ) : null}
 
       {filteredPublicLinks.map((link) => (
