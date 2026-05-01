@@ -1,10 +1,11 @@
-import { type DragEvent, type ReactNode, useState } from 'react';
+import { type ReactNode } from 'react';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { TestEditorDraftSection } from './test-editor-draft-section';
 import { TestEditorQuestionsSection } from './test-editor-questions-section';
+import { useQuestionReorderDnd } from './use-question-reorder-dnd';
 
 import type { TestDraftQuestion } from '../model/types';
 import type { TestsTopicDetailResponseDto } from '@/shared/api/model';
@@ -36,40 +37,9 @@ interface TestEditorProps {
   onRetryLoad: () => void;
 }
 
-type DropPosition = 'before' | 'after';
-
 interface TestEditorStateCardProps {
   content: ReactNode;
 }
-
-const buildReorderedQuestionIds = (
-  orderedQuestions: TestDraftQuestion[],
-  draggingQuestionId: number,
-  targetQuestionId: number,
-  dropPosition: DropPosition,
-) => {
-  const sourceIndex = orderedQuestions.findIndex((question) => question.id === draggingQuestionId);
-  const targetIndex = orderedQuestions.findIndex((question) => question.id === targetQuestionId);
-
-  if (sourceIndex < 0 || targetIndex < 0) {
-    return null;
-  }
-
-  let insertIndex = targetIndex + (dropPosition === 'after' ? 1 : 0);
-  if (sourceIndex < insertIndex) {
-    insertIndex -= 1;
-  }
-
-  if (insertIndex === sourceIndex) {
-    return null;
-  }
-
-  const reorderedQuestions = [...orderedQuestions];
-  const [movedQuestion] = reorderedQuestions.splice(sourceIndex, 1);
-  reorderedQuestions.splice(insertIndex, 0, movedQuestion);
-
-  return reorderedQuestions.map((question) => question.id);
-};
 
 function TestEditorStateCard({ content }: TestEditorStateCardProps) {
   return (
@@ -109,63 +79,10 @@ export function TestEditor({
   onReorderQuestions,
   onRetryLoad,
 }: TestEditorProps) {
-  const [draggingQuestionId, setDraggingQuestionId] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<{
-    questionId: number;
-    position: DropPosition;
-  } | null>(null);
-
-  const resetDragState = () => {
-    setDraggingQuestionId(null);
-    setDropTarget(null);
-  };
-
-  const handleQuestionDragOver = (questionId: number, event: DragEvent<HTMLDivElement>) => {
-    if (draggingQuestionId === null || draggingQuestionId === questionId) {
-      setDropTarget(null);
-      return;
-    }
-
-    event.preventDefault();
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const pointerOffset = event.clientY - bounds.top;
-    const position: DropPosition = pointerOffset < bounds.height / 2 ? 'before' : 'after';
-
-    setDropTarget((previous) => {
-      if (previous?.questionId === questionId && previous.position === position) {
-        return previous;
-      }
-
-      return {
-        questionId,
-        position,
-      };
-    });
-  };
-
-  const handleDropQuestion = (targetQuestionId: number) => {
-    if (!detail || draggingQuestionId === null || draggingQuestionId === targetQuestionId) {
-      resetDragState();
-      return;
-    }
-
-    const dropPosition: DropPosition =
-      dropTarget?.questionId === targetQuestionId ? dropTarget.position : 'after';
-    const reorderedQuestionIds = buildReorderedQuestionIds(
-      detail.draft.questions,
-      draggingQuestionId,
-      targetQuestionId,
-      dropPosition,
-    );
-
-    if (!reorderedQuestionIds) {
-      resetDragState();
-      return;
-    }
-
-    onReorderQuestions(reorderedQuestionIds);
-    resetDragState();
-  };
+  const questionDnd = useQuestionReorderDnd({
+    questions: detail?.draft.questions,
+    onReorderQuestions,
+  });
 
   if (!hasSelection) {
     return (
@@ -247,13 +164,13 @@ export function TestEditor({
           questions={detail.draft.questions}
           isReorderingQuestions={isReorderingQuestions}
           isDeletingQuestion={isDeletingQuestion}
-          draggingQuestionId={draggingQuestionId}
-          dropTarget={dropTarget}
+          draggingQuestionId={questionDnd.draggingQuestionId}
+          dropTarget={questionDnd.dropTarget}
           onCreateQuestion={onCreateQuestion}
-          onDragStart={(questionId) => setDraggingQuestionId(questionId)}
-          onDragOver={handleQuestionDragOver}
-          onDragEnd={resetDragState}
-          onDrop={handleDropQuestion}
+          onDragStart={questionDnd.handleDragStart}
+          onDragOver={questionDnd.handleDragOver}
+          onDragEnd={questionDnd.handleDragEnd}
+          onDrop={questionDnd.handleDrop}
           onEditQuestion={onEditQuestion}
           onRequestDeleteQuestion={onRequestDeleteQuestion}
         />
