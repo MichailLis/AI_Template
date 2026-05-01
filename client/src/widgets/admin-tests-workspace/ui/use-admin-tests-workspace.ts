@@ -1,36 +1,36 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useCallback } from 'react';
 
-import {
-  hasDraftEdits,
-  parseApiError,
-  useDraftAutosave,
-  useQuestionEditor,
-  type TestTopicListItem,
-} from '@/features/tests';
+import { useQuestionEditor } from '@/features/tests';
 import {
   useTestsControllerArchiveTopic,
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
-  useTestsControllerGetTopicDraft,
-  useTestsControllerListTopics,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
   useTestsControllerRestoreTopic,
 } from '@/shared/api/generated/tests/tests';
 
+import { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
+import { useAdminTestsDraft } from './use-admin-tests-draft';
+import { useAdminTestsTopics } from './use-admin-tests-topics';
 import { useAdminTestsWorkspaceActions } from './use-admin-tests-workspace-actions';
 
-export type ListMode = 'active' | 'archived';
-
 export function useAdminTestsWorkspace() {
-  const { topicId: topicIdParam } = useParams<{ topicId?: string }>();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const {
+    activeTopicsQuery,
+    archivedTopicsQuery,
+    topicsQuery,
+    topics,
+    topicsErrorMessage,
+    effectiveSelectedTopicId,
+    navigateToTopic,
+    listMode,
+    setListMode,
+    isSelectedTopicArchived,
+    refetchTopicsOnly,
+  } = useAdminTestsTopics();
 
-  const activeTopicsQuery = useTestsControllerListTopics();
-  const archivedTopicsQuery = useTestsControllerListTopics({ archived: true });
   const createTopicMutation = useTestsControllerCreateTopic();
   const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
   const deleteTopicMutation = useTestsControllerDeleteTopic();
@@ -39,131 +39,24 @@ export function useAdminTestsWorkspace() {
   const reorderQuestionsMutation = useTestsControllerReorderQuestions();
   const publishMutation = useTestsControllerPublishTopic();
 
-  const [draftEdits, setDraftEdits] = useState<
-    Record<number, { title: string; description: string }>
-  >({});
-
-  const [newTestTitle, setNewTestTitle] = useState('');
-  const [newTestSlug, setNewTestSlug] = useState('');
-  const [newTestDescription, setNewTestDescription] = useState('');
-  const [testSearch, setTestSearch] = useState('');
-  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
-
-  const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
-  const [pendingDeleteTopic, setPendingDeleteTopic] = useState<TestTopicListItem | null>(null);
-
-  const [pendingTopicSwitchId, setPendingTopicSwitchId] = useState<number | null>(null);
-  const [isSwitchConfirmOpen, setIsSwitchConfirmOpen] = useState(false);
-
-  const [isNavigationConfirmOpen, setIsNavigationConfirmOpen] = useState(false);
-  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
-
-  const [listMode, setListMode] = useState<ListMode>('active');
-  const [pendingArchiveTopic, setPendingArchiveTopic] = useState<TestTopicListItem | null>(null);
-  const [pendingRestoreTopic, setPendingRestoreTopic] = useState<TestTopicListItem | null>(null);
-
-  const topicsQuery = useMemo(
-    () => (listMode === 'active' ? activeTopicsQuery : archivedTopicsQuery),
-    [activeTopicsQuery, archivedTopicsQuery, listMode],
-  );
-
-  const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
-  const archivedTopics = useMemo(
-    () => archivedTopicsQuery.data?.topics ?? [],
-    [archivedTopicsQuery.data?.topics],
-  );
-
-  const routeSelectedTopicId = useMemo(() => {
-    if (!topicIdParam) {
-      return null;
-    }
-
-    const parsedTopicId = Number(topicIdParam);
-    if (!Number.isInteger(parsedTopicId) || parsedTopicId <= 0) {
-      return null;
-    }
-
-    return parsedTopicId;
-  }, [topicIdParam]);
-
-  const effectiveSelectedTopicId = useMemo(() => {
-    if (location.pathname === '/admin/tests') {
-      return null;
-    }
-
-    return routeSelectedTopicId;
-  }, [location.pathname, routeSelectedTopicId]);
-
-  const navigateToTopic = useCallback(
-    (topicId: number) => {
-      navigate(`/admin/tests/${topicId}`);
-    },
-    [navigate],
-  );
-
-  const detailQuery = useTestsControllerGetTopicDraft(effectiveSelectedTopicId ?? 0, {
-    query: {
-      enabled: Boolean(effectiveSelectedTopicId),
-    },
-  });
-
-  const detail = detailQuery.data;
-  const draft = detail?.draft;
-  const topicsErrorMessage = topicsQuery.isError ? parseApiError(topicsQuery.error) : null;
-  const detailErrorMessage = detailQuery.isError ? parseApiError(detailQuery.error) : null;
-
-  const isSelectedTopicArchived = useMemo(() => {
-    if (!effectiveSelectedTopicId) {
-      return false;
-    }
-
-    return archivedTopics.some((topic) => topic.id === effectiveSelectedTopicId);
-  }, [archivedTopics, effectiveSelectedTopicId]);
-
-  const draftForm = useMemo(() => {
-    if (!draft) {
-      return { id: 0, title: '', description: '' };
-    }
-
-    const edited = draftEdits[draft.id];
-    return {
-      id: draft.id,
-      title: edited?.title ?? draft.title,
-      description: edited?.description ?? draft.description ?? '',
-    };
-  }, [draft, draftEdits]);
-
-  const clearDraftEdits = useCallback((draftId: number) => {
-    setDraftEdits((previous) => {
-      const next = { ...previous };
-      delete next[draftId];
-      return next;
-    });
-  }, []);
-
-  const isDraftDirty = draft ? hasDraftEdits(draft, draftForm.title, draftForm.description) : false;
-  const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
-
-  const refetchTopicsOnly = useCallback(() => {
-    void Promise.all([activeTopicsQuery.refetch(), archivedTopicsQuery.refetch()]);
-  }, [activeTopicsQuery, archivedTopicsQuery]);
-
-  const refetchTestsData = useCallback(() => {
-    void Promise.all([
-      activeTopicsQuery.refetch(),
-      archivedTopicsQuery.refetch(),
-      detailQuery.refetch(),
-    ]);
-  }, [activeTopicsQuery, archivedTopicsQuery, detailQuery]);
-
-  const draftAutosave = useDraftAutosave({
-    topicId: effectiveSelectedTopicId,
+  const {
+    detailQuery,
+    detail,
     draft,
+    detailErrorMessage,
     draftForm,
     isDraftDirty,
-    publishIsPending: publishMutation.isPending,
+    canPublish,
+    draftAutosave,
     clearDraftEdits,
-    onAfterSave: refetchTestsData,
+    refetchTestsData,
+    updateCurrentDraftEdits,
+    discardCurrentDraftEditsAndResetAutosave,
+  } = useAdminTestsDraft({
+    effectiveSelectedTopicId,
+    activeTopicsQuery,
+    archivedTopicsQuery,
+    publishIsPending: publishMutation.isPending,
   });
 
   const questionEditor = useQuestionEditor({
@@ -171,13 +64,34 @@ export function useAdminTestsWorkspace() {
     onDataChanged: refetchTestsData,
   });
 
-  const discardCurrentDraftEditsAndResetAutosave = useCallback(() => {
-    if (draft) {
-      clearDraftEdits(draft.id);
-    }
-
-    draftAutosave.resetAutosaveMeta();
-  }, [clearDraftEdits, draft, draftAutosave]);
+  const {
+    newTestTitle,
+    setNewTestTitle,
+    newTestSlug,
+    setNewTestSlug,
+    newTestDescription,
+    setNewTestDescription,
+    testSearch,
+    setTestSearch,
+    isAiGeneratorOpen,
+    setIsAiGeneratorOpen,
+    isPublishConfirmOpen,
+    setIsPublishConfirmOpen,
+    pendingDeleteTopic,
+    setPendingDeleteTopic,
+    pendingTopicSwitchId,
+    setPendingTopicSwitchId,
+    isSwitchConfirmOpen,
+    setIsSwitchConfirmOpen,
+    isNavigationConfirmOpen,
+    setIsNavigationConfirmOpen,
+    pendingNavigationPath,
+    setPendingNavigationPath,
+    pendingArchiveTopic,
+    setPendingArchiveTopic,
+    pendingRestoreTopic,
+    setPendingRestoreTopic,
+  } = useAdminTestsDialogState();
 
   const handleAttemptNavigation = useCallback(
     (targetPath: string) => {
@@ -189,34 +103,23 @@ export function useAdminTestsWorkspace() {
 
       return true;
     },
-    [isDraftDirty],
+    [isDraftDirty, setIsNavigationConfirmOpen, setPendingNavigationPath],
   );
 
   const handleConfirmNavigationLeave = useCallback(() => {
     discardCurrentDraftEditsAndResetAutosave();
     setIsNavigationConfirmOpen(false);
     setPendingNavigationPath(null);
-  }, [discardCurrentDraftEditsAndResetAutosave]);
+  }, [
+    discardCurrentDraftEditsAndResetAutosave,
+    setIsNavigationConfirmOpen,
+    setPendingNavigationPath,
+  ]);
 
   const handleConfirmNavigationStay = useCallback(() => {
     setIsNavigationConfirmOpen(false);
     setPendingNavigationPath(null);
-  }, []);
-
-  const updateCurrentDraftEdits = (patch: Partial<{ title: string; description: string }>) => {
-    if (!draft) {
-      return;
-    }
-
-    setDraftEdits((previous) => ({
-      ...previous,
-      [draft.id]: {
-        title: patch.title ?? previous[draft.id]?.title ?? draft.title,
-        description:
-          patch.description ?? previous[draft.id]?.description ?? draft.description ?? '',
-      },
-    }));
-  };
+  }, [setIsNavigationConfirmOpen, setPendingNavigationPath]);
 
   const handleToggleTopicActive = useCallback(
     (nextActive: boolean) => {
@@ -235,7 +138,13 @@ export function useAdminTestsWorkspace() {
         },
       );
     },
-    [archiveTopicMutation, effectiveSelectedTopicId, refetchTestsData, restoreTopicMutation],
+    [
+      archiveTopicMutation,
+      effectiveSelectedTopicId,
+      refetchTestsData,
+      restoreTopicMutation,
+      setListMode,
+    ],
   );
 
   const {
