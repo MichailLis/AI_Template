@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
+import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
@@ -10,6 +11,10 @@ import {
   createPublicSessionStateResponse,
   type AccessibleLinkFixture,
 } from './tests.spec-fixtures';
+
+jest.mock('./tests-attempt-access', () => ({
+  getSessionAttemptByTokenOrThrow: jest.fn(),
+}));
 
 type AttemptHistoryItem = {
   id: number;
@@ -35,14 +40,41 @@ describe('TestsPublicSessionService', () => {
   let findManyMock: jest.Mock<Promise<AttemptHistoryItem[]>, [Record<string, unknown>]>;
   let createAttemptMock: jest.Mock<Promise<{ resumeToken: string }>, [AttemptCreateInput]>;
   let getAccessiblePublicLinkByCodeMock: jest.Mock<Promise<AccessibleLinkFixture>, [string]>;
+  let upsertStubAnalysisMock: jest.Mock;
+  let upsertPendingLlmAnalysisMock: jest.Mock;
+  let enqueueAttemptAnalysisMock: jest.Mock;
+  let toPublicAnalysisResponseMock: jest.Mock;
+  let transactionMock: jest.Mock;
+  let txMock: {
+    testStudentAnswer: {
+      count: jest.Mock;
+    };
+    testStudentAttempt: {
+      update: jest.Mock;
+    };
+  };
 
   beforeEach(() => {
     updateManyMock = jest.fn<Promise<{ count: number }>, [Record<string, unknown>]>();
     findManyMock = jest.fn<Promise<AttemptHistoryItem[]>, [Record<string, unknown>]>();
     createAttemptMock = jest.fn<Promise<{ resumeToken: string }>, [AttemptCreateInput]>();
     getAccessiblePublicLinkByCodeMock = jest.fn<Promise<AccessibleLinkFixture>, [string]>();
+    upsertStubAnalysisMock = jest.fn();
+    upsertPendingLlmAnalysisMock = jest.fn();
+    enqueueAttemptAnalysisMock = jest.fn();
+    toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
+    txMock = {
+      testStudentAnswer: {
+        count: jest.fn(),
+      },
+      testStudentAttempt: {
+        update: jest.fn(),
+      },
+    };
+    transactionMock = jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock));
 
     const prismaMock = {
+      $transaction: transactionMock,
       testStudentAttempt: {
         updateMany: updateManyMock,
         findMany: findManyMock,
@@ -56,7 +88,11 @@ describe('TestsPublicSessionService', () => {
 
     const analysisServiceMock = {
       enqueueAttemptAnalysis: jest.fn(),
+      upsertStubAnalysis: upsertStubAnalysisMock,
+      upsertPendingLlmAnalysis: upsertPendingLlmAnalysisMock,
+      toPublicAnalysisResponse: toPublicAnalysisResponseMock,
     };
+    analysisServiceMock.enqueueAttemptAnalysis = enqueueAttemptAnalysisMock;
 
     service = new TestsPublicSessionService(
       prismaMock as unknown as PrismaService,
@@ -147,5 +183,80 @@ describe('TestsPublicSessionService', () => {
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
     expect(result.session.sessionToken).toBe('resume-existing');
+  });
+
+  it('finishSession keeps stub analysis when test version has no prompt attached', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      topicVersion: {
+        analysisPromptVersionId: null,
+        questions: [{ id: 100 }],
+      },
+    } as never);
+    txMock.testStudentAttempt.update.mockResolvedValue({
+      id: 5,
+      finishedAt: new Date('2026-05-01T10:00:00.000Z'),
+    });
+    txMock.testStudentAnswer.count.mockResolvedValue(1);
+    upsertStubAnalysisMock.mockResolvedValue({
+      providerMode: 'STUB',
+      status: 'READY',
+    });
+
+    const result = await service.finishSession('session-token');
+
+    expect(upsertStubAnalysisMock).toHaveBeenCalledWith(txMock, {
+      attemptId: 5,
+      answeredQuestionsCount: 1,
+      totalQuestionsCount: 1,
+    });
+    expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
+    expect(enqueueAttemptAnalysisMock).not.toHaveBeenCalled();
+    expect(result.analysis).toEqual({
+      providerMode: 'STUB',
+      status: 'READY',
+    });
+  });
+
+  it('finishSession stores pending LLM analysis and enqueues async run after transaction', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      topicVersion: {
+        analysisPromptVersionId: 42,
+        questions: [{ id: 100 }],
+      },
+    } as never);
+    txMock.testStudentAttempt.update.mockResolvedValue({
+      id: 5,
+      finishedAt: new Date('2026-05-01T10:00:00.000Z'),
+    });
+    txMock.testStudentAnswer.count.mockResolvedValue(1);
+    upsertPendingLlmAnalysisMock.mockResolvedValue({
+      providerMode: 'LLM',
+      status: 'PENDING',
+      promptVersionId: 42,
+    });
+
+    const result = await service.finishSession('session-token');
+
+    expect(upsertPendingLlmAnalysisMock).toHaveBeenCalledWith(txMock, {
+      attemptId: 5,
+      promptVersionId: 42,
+    });
+    expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
+    expect(enqueueAttemptAnalysisMock).toHaveBeenCalledWith(5);
+    expect(result.analysis).toEqual({
+      providerMode: 'LLM',
+      status: 'PENDING',
+      promptVersionId: 42,
+    });
   });
 });

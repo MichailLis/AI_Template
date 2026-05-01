@@ -269,17 +269,28 @@ export class TestsPublicSessionService {
         },
       });
 
-      const analysis = await this.analysisService.upsertStubAnalysis(tx, {
-        attemptId: attempt.id,
-        answeredQuestionsCount: answersCount,
-        totalQuestionsCount: attempt.topicVersion.questions.length,
-      });
+      const promptVersionId = attempt.topicVersion.analysisPromptVersionId;
+      const analysis = promptVersionId
+        ? await this.analysisService.upsertPendingLlmAnalysis(tx, {
+            attemptId: attempt.id,
+            promptVersionId,
+          })
+        : await this.analysisService.upsertStubAnalysis(tx, {
+            attemptId: attempt.id,
+            answeredQuestionsCount: answersCount,
+            totalQuestionsCount: attempt.topicVersion.questions.length,
+          });
 
       return {
         updatedAttempt,
         analysis,
+        shouldEnqueueAnalysis: Boolean(promptVersionId),
       };
     });
+
+    if (finishedAttempt.shouldEnqueueAnalysis) {
+      this.analysisService.enqueueAttemptAnalysis(attempt.id);
+    }
 
     return {
       sessionToken,

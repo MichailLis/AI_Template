@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import type { Prisma, TestStudentAnalysis, TestStudentAttempt } from '@prisma/client';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
+
+import { generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { PrismaService } from '../prisma.service';
+import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './dto/tests-analysis.dto';
 
 interface StubAnalysisInput {
   attemptId: number;
@@ -7,8 +12,54 @@ interface StubAnalysisInput {
   totalQuestionsCount: number;
 }
 
+interface PendingLlmAnalysisInput {
+  attemptId: number;
+  promptVersionId: number;
+}
+
 @Injectable()
 export class TestsAnalysisService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
+
+  private getOpenRouterApiKey() {
+    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
+
+    if (!apiKey) {
+      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
+    }
+
+    return apiKey;
+  }
+
+  private buildAttemptAnalysisPrompt(input: {
+    prompt: string;
+    questions: unknown[];
+    answers: unknown[];
+  }) {
+    return [
+      input.prompt.trim(),
+      '',
+      'Данные завершенного тестирования студента:',
+      JSON.stringify(
+        {
+          questions: input.questions,
+          answers: input.answers,
+        },
+        null,
+        2,
+      ),
+      '',
+      'Сформируй анализ в JSON: текущий уровень базовых навыков, тип мышления, личностные особенности, рекомендации по карьерному и профессиональному развитию.',
+    ].join('\n');
+  }
+
+  private toErrorMessage(error: unknown) {
+    return error instanceof Error ? error.message : 'Analysis generation failed';
+  }
+
   upsertStubAnalysis(
     tx: Prisma.TransactionClient,
     input: StubAnalysisInput,
@@ -48,6 +99,139 @@ export class TestsAnalysisService {
         generatedAt: now,
       },
     });
+  }
+
+  upsertPendingLlmAnalysis(
+    tx: Prisma.TransactionClient,
+    input: PendingLlmAnalysisInput,
+  ): Promise<TestStudentAnalysis> {
+    return tx.testStudentAnalysis.upsert({
+      where: {
+        attemptId: input.attemptId,
+      },
+      create: {
+        attemptId: input.attemptId,
+        promptVersionId: input.promptVersionId,
+        providerMode: 'LLM',
+        status: 'PENDING',
+        summary: Prisma.JsonNull,
+        rawText: null,
+        errorMessage: null,
+        generatedAt: null,
+      },
+      update: {
+        promptVersionId: input.promptVersionId,
+        providerMode: 'LLM',
+        status: 'PENDING',
+        summary: Prisma.JsonNull,
+        rawText: null,
+        errorMessage: null,
+        generatedAt: null,
+      },
+    });
+  }
+
+  enqueueAttemptAnalysis(attemptId: number) {
+    void this.runAttemptAnalysis(attemptId).catch(() => undefined);
+  }
+
+  async runAttemptAnalysis(attemptId: number) {
+    const attempt = await this.prisma.testStudentAttempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        topicVersion: {
+          include: {
+            analysisPromptVersion: true,
+            questions: {
+              orderBy: { order: 'asc' },
+              include: {
+                options: { orderBy: { order: 'asc' } },
+                sliderBands: { orderBy: { order: 'asc' } },
+              },
+            },
+          },
+        },
+        answers: {
+          orderBy: { updatedAt: 'asc' },
+        },
+      },
+    });
+
+    const promptVersion = attempt?.topicVersion.analysisPromptVersion;
+
+    if (!attempt || !promptVersion) {
+      return;
+    }
+
+    try {
+      const apiKey = this.getOpenRouterApiKey();
+      const questions = attempt.topicVersion.questions.map((question) => ({
+        id: question.id,
+        type: question.type,
+        title: question.title,
+        description: question.description,
+        required: question.required,
+        order: question.order,
+        settings: question.settings,
+        options: question.options.map((option) => ({
+          id: option.id,
+          label: option.label,
+          value: option.value,
+          order: option.order,
+        })),
+        sliderBands: question.sliderBands.map((band) => ({
+          id: band.id,
+          minValue: band.minValue,
+          maxValue: band.maxValue,
+          label: band.label,
+          order: band.order,
+        })),
+      }));
+      const answers = attempt.answers.map((answer) => ({
+        questionId: answer.questionId,
+        questionTitle: answer.questionTitleSnapshot,
+        questionType: answer.questionTypeSnapshot,
+        answerPayload: answer.answerPayload,
+      }));
+      const response = await generateOpenRouterPrompt(this.config, apiKey, {
+        model: promptVersion.model,
+        prompt: this.buildAttemptAnalysisPrompt({
+          prompt: promptVersion.prompt,
+          questions,
+          answers,
+        }),
+        temperature: promptVersion.temperature,
+        responseFormat: 'json',
+        responseSchema: TestAnalysisResultJsonSchema,
+        requireParameters: true,
+        useResponseHealing: true,
+      });
+      const parsedOutput = TestAnalysisResultSchema.parse(JSON.parse(response.output));
+
+      await this.prisma.testStudentAnalysis.update({
+        where: { attemptId },
+        data: {
+          promptVersionId: promptVersion.id,
+          providerMode: 'LLM',
+          status: 'READY',
+          summary: parsedOutput as Prisma.InputJsonValue,
+          rawText: response.output,
+          errorMessage: null,
+          generatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      await this.prisma.testStudentAnalysis.update({
+        where: { attemptId },
+        data: {
+          promptVersionId: promptVersion.id,
+          providerMode: 'LLM',
+          status: 'FAILED',
+          errorMessage: this.toErrorMessage(error),
+          generatedAt: new Date(),
+        },
+      });
+    }
   }
 
   toPublicAnalysisResponse(analysis: TestStudentAnalysis | null) {
