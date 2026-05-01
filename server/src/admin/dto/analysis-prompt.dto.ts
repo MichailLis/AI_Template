@@ -31,6 +31,14 @@ export const AnalysisPromptListResponseSchema = z.object({
   prompts: z.array(AnalysisPromptSchema),
 });
 
+export const AnalysisPromptResponseSchema = z.object({
+  prompt: AnalysisPromptSchema,
+});
+
+export const AnalysisPromptVersionResponseSchema = z.object({
+  version: AnalysisPromptVersionSchema,
+});
+
 export const CreateAnalysisPromptSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).nullable().optional(),
@@ -62,9 +70,15 @@ export const PromptSimulationRequestSchema = z.object({
 export const PromptSimulationResponseSchema = z.object({
   model: z.string(),
   output: z.string(),
+  syntheticAnswers: z.unknown().nullable(),
+  questionCount: z.number().int().min(0),
 });
 
 export class AnalysisPromptListResponseDto extends createZodDto(AnalysisPromptListResponseSchema) {}
+export class AnalysisPromptResponseDto extends createZodDto(AnalysisPromptResponseSchema) {}
+export class AnalysisPromptVersionResponseDto extends createZodDto(
+  AnalysisPromptVersionResponseSchema,
+) {}
 export class CreateAnalysisPromptDto extends createZodDto(CreateAnalysisPromptSchema) {}
 export class UpdateAnalysisPromptVersionDto extends createZodDto(
   UpdateAnalysisPromptVersionSchema,
