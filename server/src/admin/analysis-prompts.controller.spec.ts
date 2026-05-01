@@ -6,6 +6,8 @@ describe('AnalysisPromptsController', () => {
   let serviceMock: {
     listPrompts: jest.Mock;
     createPrompt: jest.Mock;
+    updatePrompt: jest.Mock;
+    deletePrompt: jest.Mock;
     publishVersion: jest.Mock;
     simulatePrompt: jest.Mock;
     listTestQuestions: jest.Mock;
@@ -15,6 +17,8 @@ describe('AnalysisPromptsController', () => {
     serviceMock = {
       listPrompts: jest.fn(),
       createPrompt: jest.fn(),
+      updatePrompt: jest.fn(),
+      deletePrompt: jest.fn(),
       publishVersion: jest.fn(),
       simulatePrompt: jest.fn(),
       listTestQuestions: jest.fn(),
@@ -58,6 +62,28 @@ describe('AnalysisPromptsController', () => {
     expect(serviceMock.publishVersion).toHaveBeenCalledWith(7, 42);
   });
 
+  it('updatePrompt delegates to service with numeric route param', async () => {
+    const dto = {
+      title: 'Updated prompt',
+      model: 'openai/gpt-4.1',
+      temperature: 0.4,
+      prompt: 'Analyze updated answers',
+    };
+    const response = { prompt: { id: 7 } };
+    serviceMock.updatePrompt.mockResolvedValue(response);
+
+    await expect(controller.updatePrompt(7, 9, dto)).resolves.toEqual(response);
+    expect(serviceMock.updatePrompt).toHaveBeenCalledWith(7, 9, dto);
+  });
+
+  it('deletePrompt delegates to service with numeric route param', async () => {
+    const response = { prompt: { id: 9 } };
+    serviceMock.deletePrompt.mockResolvedValue(response);
+
+    await expect(controller.deletePrompt(7, 9)).resolves.toEqual(response);
+    expect(serviceMock.deletePrompt).toHaveBeenCalledWith(7, 9);
+  });
+
   it('simulatePrompt delegates to service', async () => {
     const dto = {
       prompt: 'Analyze selected answers',
@@ -74,7 +100,7 @@ describe('AnalysisPromptsController', () => {
   });
 
   it('listTestQuestions delegates to service', async () => {
-    const response = { questions: [] };
+    const response = { tests: [] };
     serviceMock.listTestQuestions.mockResolvedValue(response);
 
     await expect(controller.listTestQuestions(7)).resolves.toEqual(response);

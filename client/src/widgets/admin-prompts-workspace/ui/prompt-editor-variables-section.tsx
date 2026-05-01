@@ -28,7 +28,7 @@ export function PromptEditorVariablesSection({
         </p>
         <div className="flex items-center gap-2">
           <p className="text-xs text-slate-500">
-            Система вопросов пока не подключена, используются ручные значения.
+            Вопросы для проверки берутся из выбранного теста справа.
           </p>
           <Button type="button" size="sm" variant="outline" onClick={onAddVariable}>
             <Plus className="mr-2 h-4 w-4" />

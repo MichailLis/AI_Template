@@ -1,0 +1,192 @@
+import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+
+import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';
+
+interface PromptLibraryCardProps {
+  prompts: AnalysisPromptListResponseDtoPromptsItem[];
+  selectedPromptId: number | null;
+  isLoading: boolean;
+  isDeleting: boolean;
+  onCreateNewPrompt: () => void;
+  onSelectPrompt: (promptId: number) => void;
+  onDeletePrompt: (promptId: number) => void;
+}
+
+interface PromptLibraryItemProps {
+  prompt: AnalysisPromptListResponseDtoPromptsItem;
+  isSelected: boolean;
+  isDeleting: boolean;
+  onSelectPrompt: (promptId: number) => void;
+  onDeletePrompt: (promptId: number) => void;
+}
+
+const formatPromptDate = (value: string) =>
+  new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+
+function PromptLibraryItem({
+  prompt,
+  isSelected,
+  isDeleting,
+  onSelectPrompt,
+  onDeletePrompt,
+}: PromptLibraryItemProps) {
+  const latestVersion = prompt.versions[0];
+
+  return (
+    <div
+      className={
+        isSelected
+          ? 'flex min-w-0 gap-2 rounded-md border border-primary bg-primary/5 p-2'
+          : 'flex min-w-0 gap-2 rounded-md border border-slate-200 bg-white p-2'
+      }
+    >
+      <button
+        type="button"
+        aria-pressed={isSelected}
+        onClick={() => onSelectPrompt(prompt.id)}
+        className="min-w-0 flex-1 text-left"
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="truncate text-sm font-medium text-slate-900">{prompt.title}</span>
+          {latestVersion ? (
+            <>
+              <Badge variant="outline">v{latestVersion.versionNumber}</Badge>
+              <Badge
+                variant="outline"
+                className={
+                  latestVersion.status === 'PUBLISHED'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                }
+              >
+                {latestVersion.status}
+              </Badge>
+            </>
+          ) : null}
+        </div>
+
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+          {latestVersion ? <span className="min-w-0 truncate">{latestVersion.model}</span> : null}
+          <span>Обновлен {formatPromptDate(prompt.updatedAt)}</span>
+        </div>
+      </button>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isDeleting}
+            aria-label={`Удалить промпт ${prompt.title}`}
+            className="shrink-0 text-slate-500 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить промпт?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Промпт будет скрыт из конструктора. Уже созданные результаты анализа и версии
+              останутся в истории.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={() => onDeletePrompt(prompt.id)}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+export function PromptLibraryCard({
+  prompts,
+  selectedPromptId,
+  isLoading,
+  isDeleting,
+  onCreateNewPrompt,
+  onSelectPrompt,
+  onDeletePrompt,
+}: PromptLibraryCardProps) {
+  return (
+    <Card className="min-w-0 border-slate-200 shadow-sm">
+      <CardHeader className="border-b border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Сохраненные промпты
+            </CardTitle>
+            <CardDescription>
+              Выберите промпт для редактирования или создайте новый сценарий анализа.
+            </CardDescription>
+          </div>
+          <Button type="button" variant="outline" onClick={onCreateNewPrompt}>
+            <Plus className="mr-2 h-4 w-4" />
+            Новый промпт
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-4">
+        {isLoading ? (
+          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Загружаем промпты...
+          </div>
+        ) : null}
+
+        {!isLoading && prompts.length === 0 ? (
+          <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+            Сохраненных промптов пока нет.
+          </div>
+        ) : null}
+
+        {!isLoading && prompts.length > 0 ? (
+          <div className="grid gap-2 lg:grid-cols-2">
+            {prompts.map((prompt) => (
+              <PromptLibraryItem
+                key={prompt.id}
+                prompt={prompt}
+                isSelected={prompt.id === selectedPromptId}
+                isDeleting={isDeleting}
+                onSelectPrompt={onSelectPrompt}
+                onDeletePrompt={onDeletePrompt}
+              />
+            ))}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}

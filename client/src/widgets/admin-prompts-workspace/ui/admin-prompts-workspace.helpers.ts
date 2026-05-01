@@ -102,7 +102,7 @@ export const resolveSelectedPromptModel = (
 ) => {
   const defaultFreeModel = allModels.find((item) => item.isFree)?.id;
   const selectedModelCandidate =
-    selectedModel || defaultFreeModel || defaultModel || allModels[0]?.id || '';
+    selectedModel || defaultModel || defaultFreeModel || allModels[0]?.id || '';
 
   if (filteredModels.some((item) => item.id === selectedModelCandidate)) {
     return selectedModelCandidate;

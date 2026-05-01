@@ -5,8 +5,6 @@ import { Label } from '@/shared/ui/label';
 import type { ResponseFormat } from '../model/types';
 
 interface PromptEditorSettingsSectionProps {
-  promptTitle: string;
-  onPromptTitleChange: (value: string) => void;
   temperature: string;
   onTemperatureChange: (value: string) => void;
   systemRole: string;
@@ -18,8 +16,6 @@ interface PromptEditorSettingsSectionProps {
 }
 
 export function PromptEditorSettingsSection({
-  promptTitle,
-  onPromptTitleChange,
   temperature,
   onTemperatureChange,
   systemRole,
@@ -31,16 +27,6 @@ export function PromptEditorSettingsSection({
 }: PromptEditorSettingsSectionProps) {
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="prompt-title">Название промпта</Label>
-        <Input
-          id="prompt-title"
-          value={promptTitle}
-          onChange={(event) => onPromptTitleChange(event.target.value)}
-          placeholder="Например: Карьерный анализ по итогам теста"
-        />
-      </div>
-
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="prompt-temperature">

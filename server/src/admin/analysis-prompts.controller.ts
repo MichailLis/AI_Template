@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -21,6 +23,7 @@ import {
   PromptSimulationRequestDto,
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
+  UpdateAnalysisPromptVersionDto,
 } from './dto/analysis-prompt.dto';
 
 @ApiTags('admin')
@@ -49,6 +52,29 @@ export class AnalysisPromptsController {
   @ApiResponse({ status: HttpStatus.CREATED, type: AnalysisPromptResponseDto })
   createPrompt(@GetCurrentUserId() userId: number, @Body() dto: CreateAnalysisPromptDto) {
     return this.analysisPromptsService.createPrompt(userId, dto);
+  }
+
+  @Patch(':promptId')
+  @ApiOperation({ summary: 'Update analysis prompt and create next draft version' })
+  @ApiParam({ name: 'promptId', type: Number })
+  @ApiResponse({ status: HttpStatus.OK, type: AnalysisPromptResponseDto })
+  updatePrompt(
+    @GetCurrentUserId() userId: number,
+    @Param('promptId', ParseIntPipe) promptId: number,
+    @Body() dto: UpdateAnalysisPromptVersionDto,
+  ) {
+    return this.analysisPromptsService.updatePrompt(userId, promptId, dto);
+  }
+
+  @Delete(':promptId')
+  @ApiOperation({ summary: 'Archive analysis prompt' })
+  @ApiParam({ name: 'promptId', type: Number })
+  @ApiResponse({ status: HttpStatus.OK, type: AnalysisPromptResponseDto })
+  deletePrompt(
+    @GetCurrentUserId() userId: number,
+    @Param('promptId', ParseIntPipe) promptId: number,
+  ) {
+    return this.analysisPromptsService.deletePrompt(userId, promptId);
   }
 
   @Post('versions/:versionId/publish')

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../prisma.service';
@@ -27,12 +23,17 @@ describe('AnalysisPromptsService', () => {
   let service: AnalysisPromptsService;
   let prismaMock: {
     analysisPrompt: {
+      findUnique: jest.Mock;
       findMany: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
     };
     analysisPromptVersion: {
       findUnique: jest.Mock;
       update: jest.Mock;
+    };
+    testTopicVersion: {
+      findMany: jest.Mock;
     };
     testQuestion: {
       findMany: jest.Mock;
@@ -68,12 +69,17 @@ describe('AnalysisPromptsService', () => {
   beforeEach(() => {
     prismaMock = {
       analysisPrompt: {
+        findUnique: jest.fn(),
         findMany: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
       analysisPromptVersion: {
         findUnique: jest.fn(),
         update: jest.fn(),
+      },
+      testTopicVersion: {
+        findMany: jest.fn(),
       },
       testQuestion: {
         findMany: jest.fn(),
@@ -140,20 +146,136 @@ describe('AnalysisPromptsService', () => {
     );
   });
 
-  it('createPrompt rejects non-free models before persistence', async () => {
-    await expect(
-      service.createPrompt(3, {
-        title: 'Career guidance analysis',
-        description: 'Analyzes completed tests.',
-        model: 'openai/gpt-4.1',
-        temperature: 0.2,
-        prompt: 'Analyze {{answers}}',
-      }),
-    ).rejects.toThrow(BadRequestException);
+  it('createPrompt allows paid structured output models', async () => {
+    prismaMock.analysisPrompt.create.mockResolvedValue({
+      ...promptRecord,
+      versions: [
+        {
+          ...promptRecord.versions[0],
+          model: 'openai/gpt-4.1',
+        },
+      ],
+    });
 
-    expect(prismaMock.analysisPrompt.create).not.toHaveBeenCalled();
+    await service.createPrompt(3, {
+      title: 'Career guidance analysis',
+      description: 'Analyzes completed tests.',
+      model: 'openai/gpt-4.1',
+      temperature: 0.2,
+      prompt: 'Analyze {{answers}}',
+    });
+
+    const createCalls = prismaMock.analysisPrompt.create.mock.calls as unknown as Array<
+      [
+        {
+          data: {
+            versions: {
+              create: {
+                model: string;
+              };
+            };
+          };
+        },
+      ]
+    >;
+    const createArg = createCalls[0]?.[0];
+    expect(createArg?.data.versions.create.model).toBe('openai/gpt-4.1');
   });
 
+  it('updatePrompt creates the next draft version and updates prompt metadata', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.analysisPrompt.update.mockResolvedValue({
+      ...promptRecord,
+      title: 'Updated career analysis',
+      description: 'Updated description',
+      versions: [
+        {
+          ...promptRecord.versions[0],
+          id: 43,
+          versionNumber: 2,
+          model: 'openai/gpt-4.1',
+          temperature: 0.4,
+          prompt: 'Updated prompt',
+        },
+        promptRecord.versions[0],
+      ],
+    });
+
+    const result = await service.updatePrompt(3, 7, {
+      title: ' Updated career analysis ',
+      description: ' Updated description ',
+      model: ' openai/gpt-4.1 ',
+      temperature: 0.4,
+      prompt: ' Updated prompt ',
+    });
+
+    expect(result.prompt).toMatchObject({
+      id: 7,
+      title: 'Updated career analysis',
+    });
+    expect(result.prompt.versions[0]).toMatchObject({
+      versionNumber: 2,
+      model: 'openai/gpt-4.1',
+      prompt: 'Updated prompt',
+    });
+
+    expect(prismaMock.analysisPrompt.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 7 },
+        data: {
+          title: 'Updated career analysis',
+          description: 'Updated description',
+          versions: {
+            create: {
+              versionNumber: 2,
+              status: 'DRAFT',
+              model: 'openai/gpt-4.1',
+              temperature: 0.4,
+              prompt: 'Updated prompt',
+              outputSchema: TestAnalysisResultJsonSchema,
+            },
+          },
+        },
+      }),
+    );
+  });
+
+  it('updatePrompt throws NotFoundException when prompt is archived or missing', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.updatePrompt(3, 404, {
+        title: 'Updated career analysis',
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('deletePrompt archives an existing prompt without removing versions', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.analysisPrompt.update.mockResolvedValue({
+      ...promptRecord,
+      archivedAt: new Date('2026-05-01T11:00:00.000Z'),
+    });
+
+    await expect(service.deletePrompt(3, 7)).resolves.toMatchObject({
+      prompt: {
+        id: 7,
+        title: 'Career guidance analysis',
+      },
+    });
+
+    const updateCalls = prismaMock.analysisPrompt.update.mock.calls as unknown as Array<
+      [
+        {
+          data: { archivedAt: Date };
+          where: { id: number };
+        },
+      ]
+    >;
+    const updateArg = updateCalls[0]?.[0];
+    expect(updateArg?.where).toEqual({ id: 7 });
+    expect(updateArg?.data.archivedAt).toBeInstanceOf(Date);
+  });
   it('publishVersion marks an existing draft as published', async () => {
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
       id: 42,
@@ -239,17 +361,46 @@ describe('AnalysisPromptsService', () => {
     });
   });
 
-  it('simulatePrompt rejects non-free models before OpenRouter call', async () => {
-    await expect(
-      service.simulatePrompt(3, {
-        prompt: 'Analyze selected answers',
+  it('simulatePrompt allows paid structured output models', async () => {
+    prismaMock.testQuestion.findMany.mockResolvedValue([
+      {
+        id: 11,
+        type: 'OPEN_TEXT',
+        title: 'Что вам легче всего дается?',
+        description: null,
+        required: true,
+        order: 1,
+        settings: null,
+        options: [],
+        sliderBands: [],
+      },
+    ]);
+    jest
+      .mocked(generateOpenRouterPrompt)
+      .mockResolvedValueOnce({
         model: 'openai/gpt-4.1',
-        temperature: 0.2,
-        questionIds: [11],
-        generateAnswers: true,
-      }),
-    ).rejects.toThrow(BadRequestException);
-    expect(generateOpenRouterPrompt).not.toHaveBeenCalled();
+        output: JSON.stringify({
+          answers: [{ questionId: 11, answer: 'Мне легко структурировать задачи.' }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        model: 'openai/gpt-4.1',
+        output: JSON.stringify({ skillsLevel: { title: 'ok' } }),
+      });
+
+    await service.simulatePrompt(3, {
+      prompt: 'Analyze selected answers',
+      model: 'openai/gpt-4.1',
+      temperature: 0.2,
+      questionIds: [11],
+      generateAnswers: true,
+    });
+
+    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(generateOpenRouterPrompt).mock.calls[1]?.[2]).toMatchObject({
+      model: 'openai/gpt-4.1',
+      responseFormat: 'json',
+    });
   });
 
   it('simulatePrompt fails fast when OpenRouter key is missing', async () => {
@@ -266,33 +417,103 @@ describe('AnalysisPromptsService', () => {
     ).rejects.toThrow(ServiceUnavailableException);
   });
 
-  it('listTestQuestions returns selectable questions from test versions', async () => {
-    prismaMock.testQuestion.findMany.mockResolvedValue([
+  it('listTestQuestions returns selectable tests with all nested questions per version', async () => {
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
       {
-        id: 11,
-        type: 'OPEN_TEXT',
-        title: 'Что вам легче всего дается?',
+        id: 31,
+        topicId: 12,
+        title: 'Career skills',
+        description: 'Skills diagnostics',
+        versionNumber: 3,
+        status: 'DRAFT',
+        topic: { slug: 'career-skills' },
+        questions: [
+          {
+            id: 11,
+            type: 'OPEN_TEXT',
+            title: 'Что вам легче всего дается?',
+            description: null,
+          },
+          {
+            id: 12,
+            type: 'SINGLE_CHOICE',
+            title: 'Как вы реагируете на изменения?',
+            description: 'Выберите один вариант.',
+          },
+        ],
+      },
+      {
+        id: 32,
+        topicId: 13,
+        title: 'Soft skills',
         description: null,
-        version: {
-          versionNumber: 3,
-          status: 'DRAFT',
-          title: 'Career skills',
-        },
+        versionNumber: 1,
+        status: 'PUBLISHED',
+        topic: { slug: 'soft-skills' },
+        questions: [
+          {
+            id: 21,
+            type: 'SLIDER',
+            title: 'Насколько комфортна коммуникация?',
+            description: null,
+          },
+        ],
       },
     ]);
 
     const result = await service.listTestQuestions(3);
 
-    expect(prismaMock.testQuestion.findMany).toHaveBeenCalled();
-    expect(result.questions).toEqual([
+    expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: { in: ['DRAFT', 'PUBLISHED'] },
+          questions: { some: {} },
+        },
+      }),
+    );
+    expect(prismaMock.testQuestion.findMany).not.toHaveBeenCalled();
+    expect(result.tests).toEqual([
       {
-        id: 11,
-        type: 'OPEN_TEXT',
-        title: 'Что вам легче всего дается?',
-        description: null,
-        topicTitle: 'Career skills',
+        id: 31,
+        topicId: 12,
+        topicSlug: 'career-skills',
+        title: 'Career skills',
+        description: 'Skills diagnostics',
         versionNumber: 3,
         versionStatus: 'DRAFT',
+        questionCount: 2,
+        questions: [
+          {
+            id: 11,
+            type: 'OPEN_TEXT',
+            title: 'Что вам легче всего дается?',
+            description: null,
+          },
+          {
+            id: 12,
+            type: 'SINGLE_CHOICE',
+            title: 'Как вы реагируете на изменения?',
+            description: 'Выберите один вариант.',
+          },
+        ],
+      },
+      {
+        id: 32,
+        topicId: 13,
+        topicSlug: 'soft-skills',
+        title: 'Soft skills',
+        description: null,
+        versionNumber: 1,
+        versionStatus: 'PUBLISHED',
+        questionCount: 1,
+        questions: [
+          {
+            id: 21,
+            type: 'SLIDER',
+            title: 'Насколько комфортна коммуникация?',
+            description: null,
+          },
+        ],
       },
     ]);
   });

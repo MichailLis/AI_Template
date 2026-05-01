@@ -47,8 +47,10 @@ export function PromptEditorModelSection({
             id="prompt-model"
             value={selectedModel}
             onChange={(event) => onModelChange(event.target.value)}
+            disabled={filteredModels.length === 0}
             className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
+            {filteredModels.length === 0 ? <option value="">Нет моделей</option> : null}
             {filteredModels.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label}
@@ -104,6 +106,9 @@ export function PromptEditorModelSection({
           <span className="text-xs text-slate-600">
             Контекст: {selectedModelItem.contextLength ?? 'н/д'}
           </span>
+          <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+            STRUCTURED OUTPUTS
+          </Badge>
         </div>
       ) : null}
     </>

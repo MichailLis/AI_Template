@@ -5,8 +5,8 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import type { PromptTestQuestionsResponseDtoQuestionsItem } from './promptTestQuestionsResponseDtoQuestionsItem';
+import type { PromptTestQuestionsResponseDtoTestsItem } from './promptTestQuestionsResponseDtoTestsItem';
 
 export interface PromptTestQuestionsResponseDto {
-  questions: PromptTestQuestionsResponseDtoQuestionsItem[];
+  tests: PromptTestQuestionsResponseDtoTestsItem[];
 }

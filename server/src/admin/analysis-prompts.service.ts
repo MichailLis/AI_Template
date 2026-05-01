@@ -19,6 +19,8 @@ import type {
   CreateAnalysisPromptDto,
   PromptSimulationRequestDto,
   PromptSimulationResponseDto,
+  PromptTestQuestionsResponseDto,
+  UpdateAnalysisPromptVersionDto,
 } from './dto/analysis-prompt.dto';
 
 const analysisPromptInclude = {
@@ -116,10 +118,21 @@ export class AnalysisPromptsService {
     return apiKey;
   }
 
-  private ensureFreeOpenRouterModel(model: string) {
-    if (!model.endsWith(':free')) {
-      throw new BadRequestException('Analysis prompts require a free OpenRouter model');
+  private async getEditablePrompt(promptId: number) {
+    const prompt = await this.prisma.analysisPrompt.findUnique({
+      where: { id: promptId },
+      include: analysisPromptInclude,
+    });
+
+    if (!prompt || prompt.archivedAt) {
+      throw new NotFoundException('Analysis prompt not found');
     }
+
+    if (!prompt.versions[0]) {
+      throw new BadRequestException('Analysis prompt has no versions');
+    }
+
+    return prompt;
   }
 
   private buildSyntheticAnswersPrompt(questions: Array<Record<string, unknown>>) {
@@ -166,42 +179,53 @@ export class AnalysisPromptsService {
     };
   }
 
-  async listTestQuestions(userId: number) {
+  async listTestQuestions(userId: number): Promise<PromptTestQuestionsResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
-    const questions = await this.prisma.testQuestion.findMany({
+    const testVersions = await this.prisma.testTopicVersion.findMany({
       where: {
-        version: {
-          status: {
-            in: ['DRAFT', 'PUBLISHED'],
-          },
+        status: {
+          in: ['DRAFT', 'PUBLISHED'],
+        },
+        questions: {
+          some: {},
         },
       },
-      select: {
-        id: true,
-        type: true,
-        title: true,
-        description: true,
-        version: {
+      include: {
+        topic: {
           select: {
-            versionNumber: true,
-            status: true,
-            title: true,
+            slug: true,
           },
         },
+        questions: {
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            description: true,
+          },
+          orderBy: { order: 'asc' },
+        },
       },
-      orderBy: [{ versionId: 'desc' }, { order: 'asc' }],
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
     });
 
     return {
-      questions: questions.map((question) => ({
-        id: question.id,
-        type: question.type,
-        title: question.title,
-        description: question.description,
-        topicTitle: question.version.title,
-        versionNumber: question.version.versionNumber,
-        versionStatus: question.version.status,
+      tests: testVersions.map((testVersion) => ({
+        id: testVersion.id,
+        topicId: testVersion.topicId,
+        topicSlug: testVersion.topic.slug,
+        title: testVersion.title,
+        description: testVersion.description,
+        versionNumber: testVersion.versionNumber,
+        versionStatus: testVersion.status,
+        questionCount: testVersion.questions.length,
+        questions: testVersion.questions.map((question) => ({
+          id: question.id,
+          type: question.type,
+          title: question.title,
+          description: question.description,
+        })),
       })),
     };
   }
@@ -211,7 +235,6 @@ export class AnalysisPromptsService {
     dto: CreateAnalysisPromptDto,
   ): Promise<AnalysisPromptResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
-    this.ensureFreeOpenRouterModel(dto.model);
 
     const prompt = await this.prisma.analysisPrompt.create({
       data: {
@@ -227,6 +250,61 @@ export class AnalysisPromptsService {
             outputSchema: TestAnalysisResultJsonSchema as unknown as Prisma.InputJsonValue,
           },
         },
+      },
+      include: analysisPromptInclude,
+    });
+
+    return {
+      prompt: this.toPromptResponse(prompt),
+    };
+  }
+
+  async updatePrompt(
+    userId: number,
+    promptId: number,
+    dto: UpdateAnalysisPromptVersionDto,
+  ): Promise<AnalysisPromptResponseDto> {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const existingPrompt = await this.getEditablePrompt(promptId);
+    const latestVersion = existingPrompt.versions[0];
+
+    const prompt = await this.prisma.analysisPrompt.update({
+      where: { id: promptId },
+      data: {
+        title: dto.title === undefined ? existingPrompt.title : dto.title.trim(),
+        description:
+          dto.description === undefined
+            ? existingPrompt.description
+            : dto.description?.trim() || null,
+        versions: {
+          create: {
+            versionNumber: latestVersion.versionNumber + 1,
+            status: 'DRAFT',
+            model: dto.model?.trim() ?? latestVersion.model,
+            temperature: dto.temperature ?? latestVersion.temperature,
+            prompt: dto.prompt?.trim() ?? latestVersion.prompt,
+            outputSchema: TestAnalysisResultJsonSchema as unknown as Prisma.InputJsonValue,
+          },
+        },
+      },
+      include: analysisPromptInclude,
+    });
+
+    return {
+      prompt: this.toPromptResponse(prompt),
+    };
+  }
+
+  async deletePrompt(userId: number, promptId: number): Promise<AnalysisPromptResponseDto> {
+    await ensureAdminAccess(this.prisma, userId);
+
+    await this.getEditablePrompt(promptId);
+
+    const prompt = await this.prisma.analysisPrompt.update({
+      where: { id: promptId },
+      data: {
+        archivedAt: new Date(),
       },
       include: analysisPromptInclude,
     });
@@ -269,7 +347,6 @@ export class AnalysisPromptsService {
     dto: PromptSimulationRequestDto,
   ): Promise<PromptSimulationResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
-    this.ensureFreeOpenRouterModel(dto.model);
 
     const apiKey = this.getOpenRouterApiKey();
     const uniqueQuestionIds = Array.from(new Set(dto.questionIds));

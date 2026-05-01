@@ -23,6 +23,8 @@ const toNumberOrNull = (value: unknown) => {
   return null;
 };
 
+const OPENROUTER_ROUTING_MODEL_IDS = new Set(['openrouter/auto', 'openrouter/free']);
+
 const toPromptModelResponse = (rawModel: unknown): PromptModelResponse | null => {
   if (typeof rawModel !== 'object' || rawModel === null) {
     return null;
@@ -60,9 +62,7 @@ const toPromptModelResponse = (rawModel: unknown): PromptModelResponse | null =>
       completionPrice !== null &&
       promptPrice === 0 &&
       completionPrice === 0);
-  const supportsStructuredOutputs = normalizedSupportedParameters.some(
-    (parameter) => parameter === 'structured_outputs' || parameter === 'response_format',
-  );
+  const supportsStructuredOutputs = normalizedSupportedParameters.includes('structured_outputs');
 
   return {
     id,
@@ -100,6 +100,22 @@ export const parseOpenRouterModels = (payload: unknown): PromptModelResponse[] =
   return Array.from(uniqueModels.values()).sort((left, right) =>
     left.label.localeCompare(right.label),
   );
+};
+
+export const filterStructuredOutputPromptModels = (models: PromptModelResponse[]) =>
+  models.filter(
+    (model) => model.supportsStructuredOutputs && !OPENROUTER_ROUTING_MODEL_IDS.has(model.id),
+  );
+
+export const resolveDefaultPromptModel = (
+  models: PromptModelResponse[],
+  configuredDefaultModel?: string,
+) => {
+  if (configuredDefaultModel && models.some((model) => model.id === configuredDefaultModel)) {
+    return configuredDefaultModel;
+  }
+
+  return models.find((model) => model.isFree)?.id ?? models[0]?.id ?? '';
 };
 
 export const extractOpenRouterErrorMessage = (payload: unknown) => {

@@ -2,7 +2,9 @@ import {
   AnalysisPromptListResponseSchema,
   CreateAnalysisPromptSchema,
   PromptSimulationRequestSchema,
+  PromptTestQuestionsResponseSchema,
   PublishAnalysisPromptVersionSchema,
+  UpdateAnalysisPromptVersionSchema,
 } from './analysis-prompt.dto';
 
 describe('analysis prompt DTOs', () => {
@@ -60,9 +62,56 @@ describe('analysis prompt DTOs', () => {
     ).toThrow();
   });
 
+  it('accepts test question groups scoped to one test version', () => {
+    const result = PromptTestQuestionsResponseSchema.parse({
+      tests: [
+        {
+          id: 31,
+          topicId: 12,
+          topicSlug: 'career-skills',
+          title: 'Career skills',
+          description: null,
+          versionNumber: 3,
+          versionStatus: 'DRAFT',
+          questionCount: 2,
+          questions: [
+            {
+              id: 11,
+              type: 'OPEN_TEXT',
+              title: 'Что вам легче всего дается?',
+              description: null,
+            },
+            {
+              id: 12,
+              type: 'SINGLE_CHOICE',
+              title: 'Как вы реагируете на изменения?',
+              description: 'Выберите один вариант.',
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.tests[0]?.questions).toHaveLength(2);
+    expect(result.tests[0]?.questions.map((question) => question.id)).toEqual([11, 12]);
+  });
+
   it('accepts publish request with version id', () => {
     const result = PublishAnalysisPromptVersionSchema.parse({ versionId: 42 });
 
     expect(result.versionId).toBe(42);
+  });
+
+  it('accepts partial prompt update fields', () => {
+    const result = UpdateAnalysisPromptVersionSchema.parse({
+      title: 'Updated prompt',
+      model: 'openai/gpt-4.1',
+      prompt: 'Analyze updated {{answers}}',
+    });
+
+    expect(result).toMatchObject({
+      title: 'Updated prompt',
+      model: 'openai/gpt-4.1',
+    });
   });
 });

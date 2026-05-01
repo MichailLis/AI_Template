@@ -2,7 +2,12 @@ import { BadGatewayException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
-import { extractOpenRouterErrorMessage, parseOpenRouterModels } from './openrouter.utils';
+import {
+  extractOpenRouterErrorMessage,
+  filterStructuredOutputPromptModels,
+  parseOpenRouterModels,
+  resolveDefaultPromptModel,
+} from './openrouter.utils';
 
 const OPENROUTER_TIMEOUT_MS = 45_000;
 
@@ -119,17 +124,14 @@ export const fetchOpenRouterModels = async (config: ConfigService, apiKey: strin
       throw new BadGatewayException(errorMessage);
     }
 
-    const models = parseOpenRouterModels(payload);
+    const models = filterStructuredOutputPromptModels(parseOpenRouterModels(payload));
 
     if (models.length === 0) {
-      throw new BadGatewayException('OpenRouter returned empty model catalog');
+      throw new BadGatewayException('OpenRouter returned no structured output models');
     }
 
     const configuredDefaultModel = config.get<string>('OPENROUTER_DEFAULT_MODEL');
-    const firstFreeModelId = models.find((model) => model.isFree)?.id;
-    const defaultModel = models.some((model) => model.id === configuredDefaultModel)
-      ? configuredDefaultModel
-      : (firstFreeModelId ?? models[0].id);
+    const defaultModel = resolveDefaultPromptModel(models, configuredDefaultModel);
 
     return {
       defaultModel,

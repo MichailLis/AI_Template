@@ -6,13 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 
-export type PromptTestQuestionsResponseDtoQuestionsItem = {
+export type PromptTestQuestionsResponseDtoTestsItemQuestionsItem = {
   id: number;
   type: string;
   title: string;
   /** @nullable */
   description: string | null;
-  topicTitle: string;
-  versionNumber: number;
-  versionStatus: string;
 };

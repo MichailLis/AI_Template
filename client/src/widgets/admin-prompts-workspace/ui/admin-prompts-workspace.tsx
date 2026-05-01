@@ -1,14 +1,20 @@
 import { PromptEditorCard } from './prompt-editor-card';
+import { PromptLibraryCard } from './prompt-library-card';
 import { SimulationOutputCard } from './simulation-output-card';
 import { useAdminPromptsWorkspace } from './use-admin-prompts-workspace';
 
 export function AdminPromptsWorkspace() {
   const {
     modelsQuery,
+    promptsQuery,
     testQuestionsQuery,
     createPromptMutation,
+    updatePromptMutation,
+    deletePromptMutation,
     publishVersionMutation,
     simulateMutation,
+    selectedPromptId,
+    selectedPromptVersionNumber,
     promptTitle,
     temperature,
     responseFormat,
@@ -22,6 +28,10 @@ export function AdminPromptsWorkspace() {
     showMetrics,
     diffView,
     runs,
+    prompts,
+    testQuestionGroups,
+    selectedTest,
+    selectedTestId,
     allModels,
     filteredModels,
     selectedModel,
@@ -43,14 +53,15 @@ export function AdminPromptsWorkspace() {
     setShowMetrics,
     setDiffView,
     setRuns,
+    setSelectedTestId,
     updateVariable,
     addVariable,
     removeVariable,
     copyRunJson,
+    handleCreateNewPrompt,
+    handleSelectPrompt,
+    handleDeletePrompt,
     handleGenerate,
-    toggleSelectedQuestion,
-    selectAllQuestions,
-    clearSelectedQuestions,
     handleSavePromptVersion,
   } = useAdminPromptsWorkspace();
 
@@ -81,9 +92,19 @@ export function AdminPromptsWorkspace() {
 
   return (
     <div className="grid min-w-0 gap-4 xl:grid-cols-[2fr_3fr]">
+      <div className="xl:col-span-2">
+        <PromptLibraryCard
+          prompts={prompts}
+          selectedPromptId={selectedPromptId}
+          isLoading={promptsQuery.isLoading}
+          isDeleting={deletePromptMutation.isPending}
+          onCreateNewPrompt={handleCreateNewPrompt}
+          onSelectPrompt={handleSelectPrompt}
+          onDeletePrompt={handleDeletePrompt}
+        />
+      </div>
+
       <PromptEditorCard
-        promptTitle={promptTitle}
-        onPromptTitleChange={setPromptTitle}
         modelSearch={modelSearch}
         onModelSearchChange={setModelSearch}
         modelFilter={modelFilter}
@@ -115,10 +136,19 @@ export function AdminPromptsWorkspace() {
 
       <SimulationOutputCard
         runs={runs}
-        testQuestions={testQuestionsQuery.data?.questions ?? []}
+        testQuestionGroups={testQuestionGroups}
+        selectedTest={selectedTest}
+        selectedTestId={selectedTestId}
         selectedQuestionIds={selectedQuestionIds}
+        promptTitle={promptTitle}
+        selectedPromptId={selectedPromptId}
+        selectedPromptVersionNumber={selectedPromptVersionNumber}
         isLoadingQuestions={testQuestionsQuery.isLoading}
-        isSavingPromptVersion={createPromptMutation.isPending || publishVersionMutation.isPending}
+        isSavingPromptVersion={
+          createPromptMutation.isPending ||
+          updatePromptMutation.isPending ||
+          publishVersionMutation.isPending
+        }
         showMetrics={showMetrics}
         onShowMetricsChange={setShowMetrics}
         diffView={diffView}
@@ -128,15 +158,14 @@ export function AdminPromptsWorkspace() {
         isGenerating={simulateMutation.isPending}
         canRun={
           !!selectedModel &&
-          selectedModelItem?.isFree === true &&
+          selectedModelItem?.supportsStructuredOutputs === true &&
           selectedQuestionIds.length > 0 &&
           filteredModels.length > 0 &&
           duplicateVariableData.duplicateKeys.length === 0
         }
+        onPromptTitleChange={setPromptTitle}
+        onSelectedTestChange={setSelectedTestId}
         onRunSimulation={handleGenerate}
-        onToggleQuestion={toggleSelectedQuestion}
-        onSelectAllQuestions={selectAllQuestions}
-        onClearSelectedQuestions={clearSelectedQuestions}
         onSavePromptVersion={handleSavePromptVersion}
         onCopyRunJson={copyRunJson}
       />
