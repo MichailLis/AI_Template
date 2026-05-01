@@ -74,6 +74,21 @@ Avoid speculative work:
 
 Every changed line in implementation should trace back to one of these requirements.
 
+## OpenRouter Cost Guardrail
+
+Any OpenRouter call used for tests, prompt checks, simulations, or generated synthetic answers must
+prefer free models.
+
+Rules:
+
+- Default model filters in Prompt Studio simulation must show free models first.
+- AI-generated test answers must use a free structured-output-capable model by default.
+- Automated tests must not call real OpenRouter. Mock the backend OpenRouter client/helper instead.
+- If no free structured-output-capable model is available, the UI should make that visible before a
+  simulation run instead of silently choosing a paid model.
+- Real student analysis can use the prompt version's configured model, but the admin should see the
+  model choice before publishing the prompt version.
+
 ## Test-Driven Development Contract
 
 Development must be test-first.
