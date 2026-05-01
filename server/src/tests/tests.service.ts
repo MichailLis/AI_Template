@@ -31,12 +31,47 @@ export class TestsService {
     private readonly testsQuestionService: TestsQuestionService,
   ) {}
 
+  private toAnalysisPromptVersionSummary(
+    version: {
+      id: number;
+      promptId: number;
+      versionNumber: number;
+      model: string;
+      analysisPrompt: {
+        title: string;
+      };
+    } | null,
+  ) {
+    return version
+      ? {
+          id: version.id,
+          promptId: version.promptId,
+          promptTitle: version.analysisPrompt.title,
+          versionNumber: version.versionNumber,
+          model: version.model,
+        }
+      : null;
+  }
+
   private async getTopicSnapshot(topicId: number) {
     const topic = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       include: {
         activeDraftVersion: {
           include: {
+            analysisPromptVersion: {
+              select: {
+                id: true,
+                promptId: true,
+                versionNumber: true,
+                model: true,
+                analysisPrompt: {
+                  select: {
+                    title: true,
+                  },
+                },
+              },
+            },
             questions: {
               orderBy: { order: 'asc' },
               include: {
@@ -51,6 +86,19 @@ export class TestsService {
             id: true,
             versionNumber: true,
             title: true,
+            analysisPromptVersion: {
+              select: {
+                id: true,
+                promptId: true,
+                versionNumber: true,
+                model: true,
+                analysisPrompt: {
+                  select: {
+                    title: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -279,6 +327,7 @@ export class TestsService {
         versionNumber: draft.versionNumber,
         title: draft.title,
         description: draft.description,
+        analysisPromptVersion: this.toAnalysisPromptVersionSummary(draft.analysisPromptVersion),
         questions: draft.questions.map((question) => mapQuestion(question)),
       },
       published: topic.activePublishedVersion
@@ -286,6 +335,9 @@ export class TestsService {
             id: topic.activePublishedVersion.id,
             versionNumber: topic.activePublishedVersion.versionNumber,
             title: topic.activePublishedVersion.title,
+            analysisPromptVersion: this.toAnalysisPromptVersionSummary(
+              topic.activePublishedVersion.analysisPromptVersion,
+            ),
           }
         : null,
     };
@@ -300,13 +352,37 @@ export class TestsService {
 
     const topic = await this.getTopicSnapshot(topicId);
 
+    if (dto.analysisPromptVersionId !== undefined && dto.analysisPromptVersionId !== null) {
+      const promptVersion = await this.prisma.analysisPromptVersion.findFirst({
+        where: {
+          id: dto.analysisPromptVersionId,
+          status: 'PUBLISHED',
+        },
+        select: { id: true },
+      });
+
+      if (!promptVersion) {
+        throw new BadRequestException('Analysis prompt version must be published');
+      }
+    }
+
+    const updateData: {
+      title: string;
+      description: string | null;
+      analysisPromptVersionId?: number | null;
+    } = {
+      title: dto.title ?? topic.activeDraftVersion.title,
+      description:
+        dto.description !== undefined ? dto.description : topic.activeDraftVersion.description,
+    };
+
+    if (dto.analysisPromptVersionId !== undefined) {
+      updateData.analysisPromptVersionId = dto.analysisPromptVersionId;
+    }
+
     await this.prisma.testTopicVersion.update({
       where: { id: topic.activeDraftVersion.id },
-      data: {
-        title: dto.title ?? topic.activeDraftVersion.title,
-        description:
-          dto.description !== undefined ? dto.description : topic.activeDraftVersion.description,
-      },
+      data: updateData,
     });
 
     return this.getTopicDraft(userId, topicId);
@@ -393,6 +469,7 @@ export class TestsService {
           status: 'DRAFT',
           title: draft.title,
           description: draft.description,
+          analysisPromptVersionId: draft.analysisPromptVersionId,
         },
       });
 
