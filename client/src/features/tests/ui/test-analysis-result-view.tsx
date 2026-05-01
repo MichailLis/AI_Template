@@ -16,7 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { parseAnalysisResult, prettyJson } from '../lib/test-analysis-result-parser';
 
-import type { AnalysisPayload, AnalysisStatus } from '../lib/test-analysis-result-parser';
+import type {
+  AnalysisPayload,
+  AnalysisResult,
+  AnalysisStatus,
+} from '../lib/test-analysis-result-parser';
 import type { ReactNode } from 'react';
 
 interface TestAnalysisResultViewProps {
@@ -115,6 +119,141 @@ function StatusMessage({ analysis }: { analysis: AnalysisPayload | null }) {
   return null;
 }
 
+function AnalysisStatusBadges({
+  analysis,
+  showProviderBadge,
+  generatedAtLabel,
+}: {
+  analysis: AnalysisPayload | null;
+  showProviderBadge: boolean;
+  generatedAtLabel?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge variant={getStatusVariant(analysis?.status ?? 'PENDING')}>
+        {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
+      </Badge>
+      {showProviderBadge && analysis?.providerMode ? (
+        <Badge variant="outline">{analysis.providerMode}</Badge>
+      ) : null}
+      {generatedAtLabel ? <Badge variant="outline">{generatedAtLabel}</Badge> : null}
+    </div>
+  );
+}
+
+function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skillsLevel'] }) {
+  return (
+    <SectionCard icon={BrainCircuit} title={skillsLevel.title}>
+      <p className="text-sm leading-relaxed text-muted-foreground">{skillsLevel.summary}</p>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        {skillsLevel.items.map((item) => {
+          const score = typeof item.score === 'number' ? item.score : null;
+
+          return (
+            <div
+              key={`${item.name}-${item.level}`}
+              className="rounded-lg border border-border/60 p-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                <Badge variant="outline">{levelLabels[item.level]}</Badge>
+              </div>
+              {score !== null ? (
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.max(0, Math.min(100, score))}%` }}
+                  />
+                </div>
+              ) : null}
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {item.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+function ThinkingTypeSection({ thinkingType }: { thinkingType: AnalysisResult['thinkingType'] }) {
+  return (
+    <SectionCard icon={Lightbulb} title={thinkingType.title}>
+      <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
+        <p className="text-sm font-semibold text-sky-950">{thinkingType.type}</p>
+        <p className="mt-2 text-sm leading-relaxed text-sky-900">{thinkingType.description}</p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {thinkingType.strengths.map((strength) => (
+          <Badge key={strength} variant="outline">
+            {strength}
+          </Badge>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function PersonalityTraitsSection({
+  personalityTraits,
+}: {
+  personalityTraits: AnalysisResult['personalityTraits'];
+}) {
+  return (
+    <SectionCard icon={UserRound} title={personalityTraits.title}>
+      <div className="grid gap-3">
+        {personalityTraits.traits.map((trait) => (
+          <div key={trait.name} className="rounded-lg border border-border/60 p-3">
+            <p className="text-sm font-semibold text-foreground">{trait.name}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {trait.description}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-foreground">
+              <span className="font-medium">В карьере: </span>
+              {trait.careerImpact}
+            </p>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function CareerDevelopmentSection({
+  careerDevelopment,
+}: {
+  careerDevelopment: AnalysisResult['careerDevelopment'];
+}) {
+  return (
+    <SectionCard icon={BriefcaseBusiness} title="Карьера и профессиональное развитие">
+      <p className="text-sm leading-relaxed text-muted-foreground">{careerDevelopment.summary}</p>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <RecommendationColumn title="Направления" items={careerDevelopment.recommendedDirections} />
+        <RecommendationColumn
+          title="Развитие"
+          items={careerDevelopment.developmentRecommendations}
+        />
+        <RecommendationColumn
+          title="Следующие шаги"
+          items={careerDevelopment.professionalNextSteps}
+        />
+      </div>
+    </SectionCard>
+  );
+}
+
+function ReadyAnalysisSections({ parsed }: { parsed: AnalysisResult }) {
+  return (
+    <div className="grid gap-4">
+      <SkillsLevelSection skillsLevel={parsed.skillsLevel} />
+      <ThinkingTypeSection thinkingType={parsed.thinkingType} />
+      <PersonalityTraitsSection personalityTraits={parsed.personalityTraits} />
+      <CareerDevelopmentSection careerDevelopment={parsed.careerDevelopment} />
+    </div>
+  );
+}
+
 export function TestAnalysisResultView({
   analysis,
   className,
@@ -128,108 +267,15 @@ export function TestAnalysisResultView({
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={getStatusVariant(analysis?.status ?? 'PENDING')}>
-          {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
-        </Badge>
-        {showProviderBadge && analysis?.providerMode ? (
-          <Badge variant="outline">{analysis.providerMode}</Badge>
-        ) : null}
-        {generatedAtLabel ? <Badge variant="outline">{generatedAtLabel}</Badge> : null}
-      </div>
+      <AnalysisStatusBadges
+        analysis={analysis}
+        showProviderBadge={showProviderBadge}
+        generatedAtLabel={generatedAtLabel}
+      />
 
       <StatusMessage analysis={analysis} />
 
-      {analysis?.status === 'READY' && parsed ? (
-        <div className="grid gap-4">
-          <SectionCard icon={BrainCircuit} title={parsed.skillsLevel.title}>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {parsed.skillsLevel.summary}
-            </p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {parsed.skillsLevel.items.map((item) => {
-                const score = typeof item.score === 'number' ? item.score : null;
-
-                return (
-                  <div
-                    key={`${item.name}-${item.level}`}
-                    className="rounded-lg border border-border/60 p-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                      <Badge variant="outline">{levelLabels[item.level]}</Badge>
-                    </div>
-                    {score !== null ? (
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary"
-                          style={{ width: `${Math.max(0, Math.min(100, score))}%` }}
-                        />
-                      </div>
-                    ) : null}
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={Lightbulb} title={parsed.thinkingType.title}>
-            <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
-              <p className="text-sm font-semibold text-sky-950">{parsed.thinkingType.type}</p>
-              <p className="mt-2 text-sm leading-relaxed text-sky-900">
-                {parsed.thinkingType.description}
-              </p>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {parsed.thinkingType.strengths.map((strength) => (
-                <Badge key={strength} variant="outline">
-                  {strength}
-                </Badge>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={UserRound} title={parsed.personalityTraits.title}>
-            <div className="grid gap-3">
-              {parsed.personalityTraits.traits.map((trait) => (
-                <div key={trait.name} className="rounded-lg border border-border/60 p-3">
-                  <p className="text-sm font-semibold text-foreground">{trait.name}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {trait.description}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-foreground">
-                    <span className="font-medium">В карьере: </span>
-                    {trait.careerImpact}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={BriefcaseBusiness} title="Карьера и профессиональное развитие">
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {parsed.careerDevelopment.summary}
-            </p>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <RecommendationColumn
-                title="Направления"
-                items={parsed.careerDevelopment.recommendedDirections}
-              />
-              <RecommendationColumn
-                title="Развитие"
-                items={parsed.careerDevelopment.developmentRecommendations}
-              />
-              <RecommendationColumn
-                title="Следующие шаги"
-                items={parsed.careerDevelopment.professionalNextSteps}
-              />
-            </div>
-          </SectionCard>
-        </div>
-      ) : null}
+      {analysis?.status === 'READY' && parsed ? <ReadyAnalysisSections parsed={parsed} /> : null}
 
       {analysis?.status === 'READY' && !parsed && showStructuredFallback ? (
         <SectionCard icon={Sparkles} title="Структурированные данные анализа">

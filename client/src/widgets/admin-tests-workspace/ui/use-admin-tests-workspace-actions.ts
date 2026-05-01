@@ -81,143 +81,134 @@ interface UseAdminTestsWorkspaceActionsParams {
   navigateToTopic: (topicId: number) => void;
 }
 
-export function useAdminTestsWorkspaceActions({
-  newTestTitle,
-  newTestSlug,
-  newTestDescription,
-  setNewTestTitle,
-  setNewTestSlug,
-  setNewTestDescription,
-  setIsAiGeneratorOpen,
-  createTopicMutation,
-  createTopicFromAiMutation,
-  deleteTopicMutation,
-  reorderQuestionsMutation,
-  publishMutation,
-  draftAutosave,
-  refetchTopicsOnly,
-  refetchTestsData,
-  effectiveSelectedTopicId,
-  isDraftDirty,
-  setPendingTopicSwitchId,
-  setIsSwitchConfirmOpen,
-  pendingTopicSwitchId,
-  draft,
-  clearDraftEdits,
-  pendingDeleteTopic,
-  setPendingDeleteTopic,
-  topics,
-  questionEditor,
-  setIsPublishConfirmOpen,
-  detail,
-  refetchDetailOnly,
-  pendingArchiveTopic,
-  setPendingArchiveTopic,
-  pendingRestoreTopic,
-  setPendingRestoreTopic,
-  archiveTopicMutation,
-  restoreTopicMutation,
-  setListMode,
-  navigateToTopic,
-}: UseAdminTestsWorkspaceActionsParams) {
+function createCreationActions(params: UseAdminTestsWorkspaceActionsParams) {
   const handleCreateTest = createHandleCreateTest({
-    newTestTitle,
-    newTestSlug,
-    newTestDescription,
-    setNewTestTitle,
-    setNewTestSlug,
-    setNewTestDescription,
-    createTopicMutation,
-    draftAutosave,
-    refetchTopicsOnly,
-    navigateToTopic,
+    newTestTitle: params.newTestTitle,
+    newTestSlug: params.newTestSlug,
+    newTestDescription: params.newTestDescription,
+    setNewTestTitle: params.setNewTestTitle,
+    setNewTestSlug: params.setNewTestSlug,
+    setNewTestDescription: params.setNewTestDescription,
+    createTopicMutation: params.createTopicMutation,
+    draftAutosave: params.draftAutosave,
+    refetchTopicsOnly: params.refetchTopicsOnly,
+    navigateToTopic: params.navigateToTopic,
   });
   const handleCreateTestFromAi = createHandleCreateTestFromAi({
-    createTopicFromAiMutation,
-    setIsAiGeneratorOpen,
-    draftAutosave,
-    refetchTestsData,
-    navigateToTopic,
+    createTopicFromAiMutation: params.createTopicFromAiMutation,
+    setIsAiGeneratorOpen: params.setIsAiGeneratorOpen,
+    draftAutosave: params.draftAutosave,
+    refetchTestsData: params.refetchTestsData,
+    navigateToTopic: params.navigateToTopic,
   });
-  const handleSelectTest = createHandleSelectTest({
-    effectiveSelectedTopicId,
-    isDraftDirty,
-    setPendingTopicSwitchId,
-    setIsSwitchConfirmOpen,
-    draftAutosave,
-    navigateToTopic,
-  });
-  const handleConfirmTopicSwitch = createHandleConfirmTopicSwitch({
-    pendingTopicSwitchId,
-    setIsSwitchConfirmOpen,
-    draft,
-    clearDraftEdits,
-    draftAutosave,
-    setPendingTopicSwitchId,
-    navigateToTopic,
-  });
-  const handleConfirmDeleteTopic = createHandleConfirmDeleteTopic({
-    pendingDeleteTopic,
-    deleteTopicMutation,
-    effectiveSelectedTopicId,
-    draft,
-    clearDraftEdits,
-    topics,
-    questionEditor,
-    setPendingTopicSwitchId,
-    setIsSwitchConfirmOpen,
-    setPendingDeleteTopic,
-    draftAutosave,
-    refetchTestsData,
-  });
-
-  const handleConfirmPublish = createHandleConfirmPublish({
-    effectiveSelectedTopicId,
-    setIsPublishConfirmOpen,
-    publishMutation,
-    questionEditor,
-    draft,
-    clearDraftEdits,
-    draftAutosave,
-    refetchTestsData,
-  });
-
-  const handleReorderQuestions = createHandleReorderQuestions({
-    effectiveSelectedTopicId,
-    detail,
-    reorderQuestionsMutation,
-    refetchDetailOnly,
-    refetchTestsData,
-  });
-
-  const handleConfirmArchiveTopic = createHandleConfirmArchiveTopic({
-    pendingArchiveTopic,
-    archiveTopicMutation,
-    setPendingArchiveTopic,
-    setListMode,
-    refetchTopicsOnly,
-  });
-
-  const handleConfirmRestoreTopic = createHandleConfirmRestoreTopic({
-    pendingRestoreTopic,
-    restoreTopicMutation,
-    setPendingRestoreTopic,
-    setListMode,
-    refetchTopicsOnly,
-  });
-
-  const autosaveHint = buildAutosaveHint(draftAutosave);
 
   return {
     handleCreateTest,
     handleCreateTestFromAi,
+  };
+}
+
+function createSelectionActions(params: UseAdminTestsWorkspaceActionsParams) {
+  const handleSelectTest = createHandleSelectTest({
+    effectiveSelectedTopicId: params.effectiveSelectedTopicId,
+    isDraftDirty: params.isDraftDirty,
+    setPendingTopicSwitchId: params.setPendingTopicSwitchId,
+    setIsSwitchConfirmOpen: params.setIsSwitchConfirmOpen,
+    draftAutosave: params.draftAutosave,
+    navigateToTopic: params.navigateToTopic,
+  });
+  const handleConfirmTopicSwitch = createHandleConfirmTopicSwitch({
+    pendingTopicSwitchId: params.pendingTopicSwitchId,
+    setIsSwitchConfirmOpen: params.setIsSwitchConfirmOpen,
+    draft: params.draft,
+    clearDraftEdits: params.clearDraftEdits,
+    draftAutosave: params.draftAutosave,
+    setPendingTopicSwitchId: params.setPendingTopicSwitchId,
+    navigateToTopic: params.navigateToTopic,
+  });
+  const handleConfirmDeleteTopic = createHandleConfirmDeleteTopic({
+    pendingDeleteTopic: params.pendingDeleteTopic,
+    deleteTopicMutation: params.deleteTopicMutation,
+    effectiveSelectedTopicId: params.effectiveSelectedTopicId,
+    draft: params.draft,
+    clearDraftEdits: params.clearDraftEdits,
+    topics: params.topics,
+    questionEditor: params.questionEditor,
+    setPendingTopicSwitchId: params.setPendingTopicSwitchId,
+    setIsSwitchConfirmOpen: params.setIsSwitchConfirmOpen,
+    setPendingDeleteTopic: params.setPendingDeleteTopic,
+    draftAutosave: params.draftAutosave,
+    refetchTestsData: params.refetchTestsData,
+  });
+
+  return {
     handleSelectTest,
     handleConfirmTopicSwitch,
     handleConfirmDeleteTopic,
+  };
+}
+
+function createPublicationActions(params: UseAdminTestsWorkspaceActionsParams) {
+  const handleConfirmPublish = createHandleConfirmPublish({
+    effectiveSelectedTopicId: params.effectiveSelectedTopicId,
+    setIsPublishConfirmOpen: params.setIsPublishConfirmOpen,
+    publishMutation: params.publishMutation,
+    questionEditor: params.questionEditor,
+    draft: params.draft,
+    clearDraftEdits: params.clearDraftEdits,
+    draftAutosave: params.draftAutosave,
+    refetchTestsData: params.refetchTestsData,
+  });
+
+  const handleReorderQuestions = createHandleReorderQuestions({
+    effectiveSelectedTopicId: params.effectiveSelectedTopicId,
+    detail: params.detail,
+    reorderQuestionsMutation: params.reorderQuestionsMutation,
+    refetchDetailOnly: params.refetchDetailOnly,
+    refetchTestsData: params.refetchTestsData,
+  });
+
+  return {
     handleConfirmPublish,
     handleReorderQuestions,
+  };
+}
+
+function createArchiveActions(params: UseAdminTestsWorkspaceActionsParams) {
+  const handleConfirmArchiveTopic = createHandleConfirmArchiveTopic({
+    pendingArchiveTopic: params.pendingArchiveTopic,
+    archiveTopicMutation: params.archiveTopicMutation,
+    setPendingArchiveTopic: params.setPendingArchiveTopic,
+    setListMode: params.setListMode,
+    refetchTopicsOnly: params.refetchTopicsOnly,
+  });
+
+  const handleConfirmRestoreTopic = createHandleConfirmRestoreTopic({
+    pendingRestoreTopic: params.pendingRestoreTopic,
+    restoreTopicMutation: params.restoreTopicMutation,
+    setPendingRestoreTopic: params.setPendingRestoreTopic,
+    setListMode: params.setListMode,
+    refetchTopicsOnly: params.refetchTopicsOnly,
+  });
+
+  return {
     handleConfirmArchiveTopic,
     handleConfirmRestoreTopic,
+  };
+}
+
+export function useAdminTestsWorkspaceActions(params: UseAdminTestsWorkspaceActionsParams) {
+  const creationActions = createCreationActions(params);
+  const selectionActions = createSelectionActions(params);
+  const publicationActions = createPublicationActions(params);
+  const archiveActions = createArchiveActions(params);
+  const autosaveHint = buildAutosaveHint(params.draftAutosave);
+
+  return {
+    ...creationActions,
+    ...selectionActions,
+    ...publicationActions,
+    ...archiveActions,
     autosaveHint,
   };
 }

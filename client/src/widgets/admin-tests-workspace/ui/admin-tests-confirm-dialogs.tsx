@@ -36,6 +36,26 @@ interface AdminTestsConfirmDialogsProps {
   onConfirmNavigationStay: () => void;
 }
 
+const getDeleteTopicDescription = (topic: TestTopicListItem | null) =>
+  topic
+    ? `Тест "${topic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
+    : 'Тест будет удален вместе с черновиком и опубликованными версиями.';
+
+const getArchiveTopicDescription = (topic: TestTopicListItem | null) =>
+  topic
+    ? `Тест "${topic.draftTitle}" будет скрыт из активного списка и станет доступен во вкладке "Архив".`
+    : 'Тест будет перемещен в архив.';
+
+const getRestoreTopicDescription = (topic: TestTopicListItem | null) =>
+  topic
+    ? `Тест "${topic.draftTitle}" снова появится во вкладке "Активные".`
+    : 'Тест будет восстановлен в активный список.';
+
+const getDeleteQuestionDescription = (question: PendingQuestion | null) =>
+  question
+    ? `Вопрос "${question.title}" будет удален из версии в работе.`
+    : 'Вопрос будет удален из версии в работе.';
+
 export function AdminTestsConfirmDialogs({
   isSwitchConfirmOpen,
   onConfirmTopicSwitch,
@@ -92,11 +112,7 @@ export function AdminTestsConfirmDialogs({
       <ConfirmActionDialog
         open={Boolean(pendingDeleteTopic)}
         title="Удалить тест?"
-        description={
-          pendingDeleteTopic
-            ? `Тест "${pendingDeleteTopic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
-            : 'Тест будет удален вместе с черновиком и опубликованными версиями.'
-        }
+        description={getDeleteTopicDescription(pendingDeleteTopic)}
         confirmLabel="Удалить тест"
         variant="destructive"
         isConfirming={isDeletingTopic}
@@ -107,11 +123,7 @@ export function AdminTestsConfirmDialogs({
       <ConfirmActionDialog
         open={Boolean(pendingArchiveTopic)}
         title="Архивировать тест?"
-        description={
-          pendingArchiveTopic
-            ? `Тест "${pendingArchiveTopic.draftTitle}" будет скрыт из активного списка и станет доступен во вкладке "Архив".`
-            : 'Тест будет перемещен в архив.'
-        }
+        description={getArchiveTopicDescription(pendingArchiveTopic)}
         confirmLabel="Архивировать"
         isConfirming={isArchivingTopic}
         onConfirm={onConfirmArchiveTopic}
@@ -121,11 +133,7 @@ export function AdminTestsConfirmDialogs({
       <ConfirmActionDialog
         open={Boolean(pendingRestoreTopic)}
         title="Восстановить тест из архива?"
-        description={
-          pendingRestoreTopic
-            ? `Тест "${pendingRestoreTopic.draftTitle}" снова появится во вкладке "Активные".`
-            : 'Тест будет восстановлен в активный список.'
-        }
+        description={getRestoreTopicDescription(pendingRestoreTopic)}
         confirmLabel="Восстановить"
         isConfirming={isRestoringTopic}
         onConfirm={onConfirmRestoreTopic}
@@ -135,11 +143,7 @@ export function AdminTestsConfirmDialogs({
       <ConfirmActionDialog
         open={Boolean(pendingDeleteQuestion)}
         title="Удалить вопрос?"
-        description={
-          pendingDeleteQuestion
-            ? `Вопрос "${pendingDeleteQuestion.title}" будет удален из версии в работе.`
-            : 'Вопрос будет удален из версии в работе.'
-        }
+        description={getDeleteQuestionDescription(pendingDeleteQuestion)}
         confirmLabel="Удалить вопрос"
         variant="destructive"
         isConfirming={isDeletingQuestion}

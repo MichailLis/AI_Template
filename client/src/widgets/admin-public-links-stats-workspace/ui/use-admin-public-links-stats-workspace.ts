@@ -12,6 +12,56 @@ import {
 type PublicLinksTab = 'active' | 'archived';
 type AttemptDetailView = 'analysis' | 'answers';
 
+interface PublicLinkSummary {
+  id: number;
+  topicId: number;
+  title: string;
+}
+
+interface TopicOption {
+  id: number;
+  title: string;
+}
+
+const buildTopicOptions = (links: PublicLinkSummary[]): TopicOption[] => {
+  const options = new Map<number, string>();
+
+  for (const link of links) {
+    if (!options.has(link.topicId)) {
+      options.set(link.topicId, link.title);
+    }
+  }
+
+  return Array.from(options.entries()).map(([id, title]) => ({ id, title }));
+};
+
+const resolveEffectiveTopicId = (selectedTopicId: number | null, topicOptions: TopicOption[]) => {
+  if (topicOptions.length === 0) {
+    return null;
+  }
+
+  if (selectedTopicId && topicOptions.some((topic) => topic.id === selectedTopicId)) {
+    return selectedTopicId;
+  }
+
+  return topicOptions[0].id;
+};
+
+const resolveEffectivePublicLinkId = (
+  selectedPublicLinkId: number | null,
+  linksForTopic: PublicLinkSummary[],
+) => {
+  if (linksForTopic.length === 0) {
+    return null;
+  }
+
+  if (selectedPublicLinkId && linksForTopic.some((link) => link.id === selectedPublicLinkId)) {
+    return selectedPublicLinkId;
+  }
+
+  return linksForTopic[0].id;
+};
+
 export function useAdminPublicLinksStatsWorkspace() {
   const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
@@ -36,32 +86,11 @@ export function useAdminPublicLinksStatsWorkspace() {
     [activePublicLinks, archivedPublicLinks, publicLinksTab],
   );
 
-  const topicOptions = useMemo(() => {
-    const options = new Map<number, string>();
-
-    for (const link of visiblePublicLinks) {
-      if (!options.has(link.topicId)) {
-        options.set(link.topicId, link.title);
-      }
-    }
-
-    return Array.from(options.entries()).map(([id, title]) => ({
-      id,
-      title,
-    }));
-  }, [visiblePublicLinks]);
-
-  const effectiveTopicId = useMemo(() => {
-    if (topicOptions.length === 0) {
-      return null;
-    }
-
-    if (selectedTopicId && topicOptions.some((topic) => topic.id === selectedTopicId)) {
-      return selectedTopicId;
-    }
-
-    return topicOptions[0].id;
-  }, [selectedTopicId, topicOptions]);
+  const topicOptions = useMemo(() => buildTopicOptions(visiblePublicLinks), [visiblePublicLinks]);
+  const effectiveTopicId = useMemo(
+    () => resolveEffectiveTopicId(selectedTopicId, topicOptions),
+    [selectedTopicId, topicOptions],
+  );
 
   const linksForTopic = useMemo(() => {
     if (!effectiveTopicId) {
@@ -89,17 +118,10 @@ export function useAdminPublicLinksStatsWorkspace() {
     return result;
   }, [linkAttemptsCountQueries, linksForTopic]);
 
-  const effectivePublicLinkId = useMemo(() => {
-    if (linksForTopic.length === 0) {
-      return null;
-    }
-
-    if (selectedPublicLinkId && linksForTopic.some((link) => link.id === selectedPublicLinkId)) {
-      return selectedPublicLinkId;
-    }
-
-    return linksForTopic[0].id;
-  }, [linksForTopic, selectedPublicLinkId]);
+  const effectivePublicLinkId = useMemo(
+    () => resolveEffectivePublicLinkId(selectedPublicLinkId, linksForTopic),
+    [linksForTopic, selectedPublicLinkId],
+  );
 
   const selectedPublicLink =
     linksForTopic.find((link) => link.id === effectivePublicLinkId) ?? null;
