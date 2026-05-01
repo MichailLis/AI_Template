@@ -7,9 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Textarea } from '@/shared/ui/textarea';
+
+import { TestsTopicBaseFields } from './tests-topic-base-fields';
 
 interface TestsCreateModalProps {
   open: boolean;
@@ -47,39 +46,16 @@ export function TestsCreateModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="new-topic-title">Название теста *</Label>
-            <Input
-              id="new-topic-title"
-              value={newTestTitle}
-              onChange={(event) => onNewTestTitleChange(event.target.value)}
-              placeholder="Карьерная ориентация"
-              disabled={isCreating}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="new-topic-slug">Slug (служебный, необязательно)</Label>
-            <Input
-              id="new-topic-slug"
-              value={newTestSlug}
-              onChange={(event) => onNewTestSlugChange(event.target.value)}
-              placeholder="career-orientation"
-              disabled={isCreating}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="new-topic-description">Описание (необязательно)</Label>
-            <Textarea
-              id="new-topic-description"
-              value={newTestDescription}
-              onChange={(event) => onNewTestDescriptionChange(event.target.value)}
-              rows={3}
-              placeholder="Краткое описание для студентов..."
-              disabled={isCreating}
-            />
-          </div>
+          <TestsTopicBaseFields
+            title={newTestTitle}
+            slug={newTestSlug}
+            description={newTestDescription}
+            disabled={isCreating}
+            titleLabel="Название теста *"
+            onTitleChange={onNewTestTitleChange}
+            onSlugChange={onNewTestSlugChange}
+            onDescriptionChange={onNewTestDescriptionChange}
+          />
         </div>
 
         <DialogFooter>

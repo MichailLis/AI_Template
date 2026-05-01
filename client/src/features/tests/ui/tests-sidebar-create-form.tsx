@@ -1,7 +1,6 @@
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Textarea } from '@/shared/ui/textarea';
+
+import { TestsTopicBaseFields } from './tests-topic-base-fields';
 
 interface TestsSidebarCreateFormProps {
   newTestTitle: string;
@@ -30,36 +29,14 @@ export function TestsSidebarCreateForm({
 }: TestsSidebarCreateFormProps) {
   return (
     <div className="space-y-3">
-      <div>
-        <Label htmlFor="new-topic-title">Название теста</Label>
-        <Input
-          id="new-topic-title"
-          value={newTestTitle}
-          onChange={(event) => onNewTestTitleChange(event.target.value)}
-          placeholder="Карьерная ориентация"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="new-topic-slug">Slug (служебный, необязательно)</Label>
-        <Input
-          id="new-topic-slug"
-          value={newTestSlug}
-          onChange={(event) => onNewTestSlugChange(event.target.value)}
-          placeholder="career-orientation"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="new-topic-description">Описание (необязательно)</Label>
-        <Textarea
-          id="new-topic-description"
-          value={newTestDescription}
-          onChange={(event) => onNewTestDescriptionChange(event.target.value)}
-          rows={3}
-          placeholder="Краткое описание для студентов..."
-        />
-      </div>
+      <TestsTopicBaseFields
+        title={newTestTitle}
+        slug={newTestSlug}
+        description={newTestDescription}
+        onTitleChange={onNewTestTitleChange}
+        onSlugChange={onNewTestSlugChange}
+        onDescriptionChange={onNewTestDescriptionChange}
+      />
 
       <Button className="w-full" onClick={onCreateTest} disabled={isCreating}>
         {isCreating ? 'Создание...' : 'Создать тест'}
