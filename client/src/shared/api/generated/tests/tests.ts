@@ -41,6 +41,8 @@ import type {
   DeleteTestsTopicResponseDto,
   PublishTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
+  TestsAdminAttemptsControllerListPublicLinkAttemptsParams,
+  TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams,
   TestsControllerListTopicsParams,
   TestsTopicDetailResponseDto,
   TestsTopicListResponseDto,
@@ -1420,13 +1422,14 @@ export const useTestsAdminPublicLinksControllerRestorePublicLink = <TError = unk
  * @summary List educational organizations for link binding
  */
 export const testsAdminEducationOrganizationsControllerListEducationOrganizations = (
-    
+    params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<AdminEducationOrganizationsListResponseDto>(
-      {url: `/admin/tests/education-organizations`, method: 'GET', signal
+      {url: `/admin/tests/education-organizations`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -1434,23 +1437,23 @@ export const testsAdminEducationOrganizationsControllerListEducationOrganization
 
 
 
-export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey = () => {
+export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey = (params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams,) => {
     return [
-    `/admin/tests/education-organizations`
+    `/admin/tests/education-organizations`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>> = ({ signal }) => testsAdminEducationOrganizationsControllerListEducationOrganizations(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>> = ({ signal }) => testsAdminEducationOrganizationsControllerListEducationOrganizations(params, requestOptions, signal);
 
       
 
@@ -1464,7 +1467,7 @@ export type TestsAdminEducationOrganizationsControllerListEducationOrganizations
 
 
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+ params: undefined |  TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>,
           TError,
@@ -1474,7 +1477,7 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
+ params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>,
           TError,
@@ -1484,7 +1487,7 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1492,11 +1495,11 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
  */
 
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<TData = Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions(options)
+  const queryOptions = getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1638,12 +1641,14 @@ export const useTestsAdminEducationOrganizationsControllerUpdateEducationOrganiz
  */
 export const testsAdminAttemptsControllerListPublicLinkAttempts = (
     linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<AdminPublicAttemptsListResponseDto>(
-      {url: `/admin/tests/public-links/${linkId}/attempts`, method: 'GET', signal
+      {url: `/admin/tests/public-links/${linkId}/attempts`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -1651,23 +1656,25 @@ export const testsAdminAttemptsControllerListPublicLinkAttempts = (
 
 
 
-export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey = (linkId: number,) => {
+export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey = (linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams,) => {
     return [
-    `/admin/tests/public-links/${linkId}/attempts`
+    `/admin/tests/public-links/${linkId}/attempts`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions = <TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey(linkId);
+  const queryKey =  queryOptions?.queryKey ?? getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryKey(linkId,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>> = ({ signal }) => testsAdminAttemptsControllerListPublicLinkAttempts(linkId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>> = ({ signal }) => testsAdminAttemptsControllerListPublicLinkAttempts(linkId,params, requestOptions, signal);
 
       
 
@@ -1681,7 +1688,8 @@ export type TestsAdminAttemptsControllerListPublicLinkAttemptsQueryError = unkno
 
 
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+ linkId: number,
+    params: undefined |  TestsAdminAttemptsControllerListPublicLinkAttemptsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
           TError,
@@ -1691,7 +1699,8 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Aw
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
+ linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
           TError,
@@ -1701,7 +1710,8 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Aw
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1709,11 +1719,12 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Aw
  */
 
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError = unknown>(
- linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ linkId: number,
+    params?: TestsAdminAttemptsControllerListPublicLinkAttemptsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(linkId,options)
+  const queryOptions = getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(linkId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

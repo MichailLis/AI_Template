@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
+import type { AdminPublicAttemptsListQueryDto } from './dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from './tests-attempt.mapper';
 import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -12,7 +13,11 @@ export class TestsAdminAttemptService {
     private readonly analysisService: TestsAnalysisService,
   ) {}
 
-  async listAttemptsForLink(userId: number, linkId: number) {
+  async listAttemptsForLink(
+    userId: number,
+    linkId: number,
+    query: AdminPublicAttemptsListQueryDto,
+  ) {
     await ensureTestsAdminAccess(this.prisma, userId);
 
     const link = await this.prisma.testPublicLink.findUnique({
@@ -28,10 +33,18 @@ export class TestsAdminAttemptService {
       throw new NotFoundException('Public link not found');
     }
 
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const where = {
+      publicLinkId: linkId,
+    };
+    const total = await this.prisma.testStudentAttempt.count({ where });
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(page, totalPages);
+    const skip = (currentPage - 1) * limit;
+
     const attempts = await this.prisma.testStudentAttempt.findMany({
-      where: {
-        publicLinkId: linkId,
-      },
+      where,
       include: {
         analysis: {
           select: {
@@ -42,9 +55,15 @@ export class TestsAdminAttemptService {
       orderBy: {
         startedAt: 'desc',
       },
+      skip,
+      take: limit,
     });
 
     return {
+      page: currentPage,
+      limit,
+      total,
+      totalPages,
       attempts: attempts.map((attempt) =>
         mapAttemptListItem(attempt, (currentAttempt) =>
           this.analysisService.toAttemptStatus(currentAttempt),

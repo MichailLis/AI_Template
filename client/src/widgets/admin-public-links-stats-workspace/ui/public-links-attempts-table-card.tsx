@@ -1,7 +1,9 @@
+import { AdminDataTable } from '@/shared/ui/admin-data-table';
+import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
+import { TableCell } from '@/shared/ui/table';
 
 type AttemptDetailView = 'analysis' | 'answers';
 
@@ -28,25 +30,50 @@ interface PublicLinksAttemptsTableCardProps {
   selectedPublicLink: SelectedPublicLink | null;
   publicAttempts: PublicAttemptRow[];
   isLoading: boolean;
+  isFetching: boolean;
+  page: number;
+  total: number;
+  totalPages: number;
   formatDateTime: (value: string | null) => string;
   onOpenAttemptDetails: (attemptId: number, view: AttemptDetailView) => void;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
 }
+
+const PUBLIC_ATTEMPTS_COLUMNS = [
+  { id: 'id', header: 'ID' },
+  { id: 'number', header: '№' },
+  { id: 'status', header: 'Статус' },
+  { id: 'analysis', header: 'Анализ' },
+  { id: 'student', header: 'Студент' },
+  { id: 'initials', header: 'Инициалы' },
+  { id: 'organization', header: 'Учреждение' },
+  { id: 'group', header: 'Группа/класс' },
+  { id: 'started', header: 'Начало работы' },
+  { id: 'finished', header: 'Завершение работы' },
+  { id: 'expires', header: 'Истекает через' },
+  { id: 'view', header: 'Просмотр', className: 'text-right' },
+];
 
 export function PublicLinksAttemptsTableCard({
   selectedPublicLink,
   publicAttempts,
   isLoading,
+  isFetching,
+  page,
+  total,
+  totalPages,
   formatDateTime,
   onOpenAttemptDetails,
+  onPreviousPage,
+  onNextPage,
 }: PublicLinksAttemptsTableCardProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
-          {selectedPublicLink
-            ? `Тестов пройдено: ${publicAttempts.length}`
-            : 'Сначала выберите ссылку'}
+          {selectedPublicLink ? `Тестов пройдено: ${total}` : 'Сначала выберите ссылку'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -54,77 +81,70 @@ export function PublicLinksAttemptsTableCard({
           <p className="text-sm text-slate-500">Загружаем данные прохождений...</p>
         ) : null}
 
-        {!isLoading && publicAttempts.length === 0 ? (
+        {!isLoading && !selectedPublicLink ? (
           <p className="text-sm text-slate-500">
-            По выбранной ссылке пока нет прохождений.
-            {selectedPublicLink ? ' Студенты могут начать тестирование по ссылке.' : ''}
+            Сначала выберите ссылку, чтобы увидеть прохождения студентов.
           </p>
         ) : null}
 
-        {publicAttempts.length > 0 ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>№</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Анализ</TableHead>
-                  <TableHead>Студент</TableHead>
-                  <TableHead>Инициалы</TableHead>
-                  <TableHead>Учреждение</TableHead>
-                  <TableHead>Группа/класс</TableHead>
-                  <TableHead>Начало работы</TableHead>
-                  <TableHead>Завершение работы</TableHead>
-                  <TableHead>Истекает через</TableHead>
-                  <TableHead className="text-right">Просмотр</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {publicAttempts.map((attempt) => (
-                  <TableRow key={attempt.attemptId}>
-                    <TableCell>{attempt.attemptId}</TableCell>
-                    <TableCell>#{attempt.attemptNumber}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{attempt.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{attempt.analysisStatus ?? 'NONE'}</Badge>
-                    </TableCell>
-                    <TableCell>{attempt.studentName}</TableCell>
-                    <TableCell>
-                      {attempt.studentLastInitial}.{attempt.studentMiddleInitial}.
-                    </TableCell>
-                    <TableCell>{attempt.educationOrganization}</TableCell>
-                    <TableCell>{attempt.groupOrClass}</TableCell>
-                    <TableCell>{formatDateTime(attempt.startedAt)}</TableCell>
-                    <TableCell>{formatDateTime(attempt.finishedAt)}</TableCell>
-                    <TableCell>{formatDateTime(attempt.expiresAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onOpenAttemptDetails(attempt.attemptId, 'analysis')}
-                        >
-                          Анализ
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onOpenAttemptDetails(attempt.attemptId, 'answers')}
-                        >
-                          Ответы
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+        {selectedPublicLink ? (
+          <AdminDataTable
+            columns={PUBLIC_ATTEMPTS_COLUMNS}
+            items={publicAttempts}
+            getRowKey={(attempt) => attempt.attemptId}
+            emptyMessage="По выбранной ссылке пока нет прохождений. Студенты могут начать тестирование по ссылке."
+            renderRow={(attempt) => (
+              <>
+                <TableCell>{attempt.attemptId}</TableCell>
+                <TableCell>#{attempt.attemptNumber}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{attempt.status}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{attempt.analysisStatus ?? 'NONE'}</Badge>
+                </TableCell>
+                <TableCell>{attempt.studentName}</TableCell>
+                <TableCell>
+                  {attempt.studentLastInitial}.{attempt.studentMiddleInitial}.
+                </TableCell>
+                <TableCell>{attempt.educationOrganization}</TableCell>
+                <TableCell>{attempt.groupOrClass}</TableCell>
+                <TableCell>{formatDateTime(attempt.startedAt)}</TableCell>
+                <TableCell>{formatDateTime(attempt.finishedAt)}</TableCell>
+                <TableCell>{formatDateTime(attempt.expiresAt)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onOpenAttemptDetails(attempt.attemptId, 'analysis')}
+                    >
+                      Анализ
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onOpenAttemptDetails(attempt.attemptId, 'answers')}
+                    >
+                      Ответы
+                    </Button>
+                  </div>
+                </TableCell>
+              </>
+            )}
+          />
+        ) : null}
+
+        {selectedPublicLink && total > 0 ? (
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            isFetching={isFetching}
+            onPrevious={onPreviousPage}
+            onNext={onNextPage}
+          />
         ) : null}
       </CardContent>
     </Card>

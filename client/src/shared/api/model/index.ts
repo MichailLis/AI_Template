@@ -115,6 +115,8 @@ export * from './publishTestsTopicResponseDto';
 export * from './reorderTestsQuestionsDto';
 export * from './signinDto';
 export * from './signupDto';
+export * from './testsAdminAttemptsControllerListPublicLinkAttemptsParams';
+export * from './testsAdminEducationOrganizationsControllerListEducationOrganizationsParams';
 export * from './testsControllerListTopicsParams';
 export * from './testsTopicDetailResponseDto';
 export * from './testsTopicDetailResponseDtoDraft';

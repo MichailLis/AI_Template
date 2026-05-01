@@ -4,6 +4,7 @@ import type {
   PublicSessionSaveAnswersRequestDto,
   PublicSessionStartRequestDto,
 } from './dto/tests-public.dto';
+import type { AdminPublicAttemptsListQueryDto } from './dto/tests-links.dto';
 import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
 
@@ -34,8 +35,8 @@ export class TestsAttemptService {
     return this.publicSessionService.getSessionResult(sessionToken);
   }
 
-  listAttemptsForLink(userId: number, linkId: number) {
-    return this.adminAttemptService.listAttemptsForLink(userId, linkId);
+  listAttemptsForLink(userId: number, linkId: number, query: AdminPublicAttemptsListQueryDto) {
+    return this.adminAttemptService.listAttemptsForLink(userId, linkId, query);
   }
 
   getAttemptDetail(userId: number, attemptId: number) {

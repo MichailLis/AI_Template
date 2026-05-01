@@ -15,6 +15,10 @@ import {
 } from './admin-education-organizations-workspace.helpers';
 
 import type { ValidationMode } from './education-organizations-create-card';
+import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
+
+const ORGANIZATIONS_LIMIT = 10;
+type EducationOrganizationItem = AdminEducationOrganizationsListResponseDtoOrganizationsItem;
 
 interface CreateOrganizationValues {
   name: string;
@@ -41,47 +45,53 @@ const defaultEditOrganizationValues = (): OrganizationEditorValues => ({
   validationHint: '',
 });
 
-export function useAdminEducationOrganizationsWorkspace() {
+const usePaginatedEducationOrganizations = (page: number) => {
   const listOrganizationsQuery =
-    useTestsAdminEducationOrganizationsControllerListEducationOrganizations();
-  const createOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
-  const updateOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
+    useTestsAdminEducationOrganizationsControllerListEducationOrganizations(
+      {
+        page,
+        limit: ORGANIZATIONS_LIMIT,
+      },
+      {
+        query: {
+          placeholderData: (previousData) => previousData,
+        },
+      },
+    );
   const organizations = useMemo(
     () => listOrganizationsQuery.data?.organizations ?? [],
     [listOrganizationsQuery.data?.organizations],
   );
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState<number | null>(null);
-  const [createValues, setCreateValues] = useState<CreateOrganizationValues>(
-    defaultCreateOrganizationValues,
-  );
-  const [editValues, setEditValues] = useState<OrganizationEditorValues>(
-    defaultEditOrganizationValues,
-  );
-  const selectedOrganization = useMemo(
-    () => organizations.find((organization) => organization.id === selectedOrganizationId) ?? null,
-    [organizations, selectedOrganizationId],
-  );
 
-  const updateCreateValue = <K extends keyof CreateOrganizationValues>(
-    key: K,
-    value: CreateOrganizationValues[K],
-  ) => {
-    setCreateValues((previousValues) => ({ ...previousValues, [key]: value }));
+  return {
+    organizations,
+    listOrganizationsQuery,
+    organizationsPage: listOrganizationsQuery.data?.page ?? page,
+    organizationsTotal: listOrganizationsQuery.data?.total ?? 0,
+    organizationsTotalPages: listOrganizationsQuery.data?.totalPages ?? 1,
+    isFetchingOrganizations: listOrganizationsQuery.isFetching,
   };
+};
 
-  const updateEditValue = <K extends keyof OrganizationEditorValues>(
-    key: K,
-    value: OrganizationEditorValues[K],
-  ) => {
-    setEditValues((previousValues) => ({ ...previousValues, [key]: value }));
-  };
+interface EducationOrganizationsMutationParams {
+  createValues: CreateOrganizationValues;
+  editValues: OrganizationEditorValues;
+  selectedOrganizationId: number | null;
+  onCreated: (organization: EducationOrganizationItem) => void;
+  onUpdated: (organization: EducationOrganizationItem) => void;
+}
 
-  const handleSelectOrganization = (organization: (typeof organizations)[number]) => {
-    setSelectedOrganizationId(organization.id);
-    setEditValues(mapOrganizationToEditorValues(organization));
-  };
+const useEducationOrganizationsMutations = ({
+  createValues,
+  editValues,
+  selectedOrganizationId,
+  onCreated,
+  onUpdated,
+}: EducationOrganizationsMutationParams) => {
+  const createOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
+  const updateOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
 
   const handleCreateOrganization = () => {
     const name = createValues.name.trim();
@@ -105,10 +115,7 @@ export function useAdminEducationOrganizationsWorkspace() {
       {
         onSuccess: (organization) => {
           toast.success('Учебное заведение добавлено');
-          setCreateValues(defaultCreateOrganizationValues());
-          setSelectedOrganizationId(organization.id);
-          setEditValues(mapOrganizationToEditorValues(organization));
-          void listOrganizationsQuery.refetch();
+          onCreated(organization);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -147,8 +154,7 @@ export function useAdminEducationOrganizationsWorkspace() {
       {
         onSuccess: (organization) => {
           toast.success('Настройки учебного заведения сохранены');
-          setEditValues(mapOrganizationToEditorValues(organization));
-          void listOrganizationsQuery.refetch();
+          onUpdated(organization);
         },
         onError: (error) => {
           toast.error(parseApiError(error));
@@ -158,17 +164,111 @@ export function useAdminEducationOrganizationsWorkspace() {
   };
 
   return {
+    handleCreateOrganization,
+    handleSaveOrganization,
+    isCreating: createOrganizationMutation.isPending,
+    isSaving: updateOrganizationMutation.isPending,
+  };
+};
+
+export function useAdminEducationOrganizationsWorkspace() {
+  const [page, setPage] = useState(1);
+  const {
+    organizations,
+    listOrganizationsQuery,
+    organizationsPage,
+    organizationsTotal,
+    organizationsTotalPages,
+    isFetchingOrganizations,
+  } = usePaginatedEducationOrganizations(page);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<number | null>(null);
+  const [createValues, setCreateValues] = useState<CreateOrganizationValues>(
+    defaultCreateOrganizationValues,
+  );
+  const [editValues, setEditValues] = useState<OrganizationEditorValues>(
+    defaultEditOrganizationValues,
+  );
+  const selectedOrganization = useMemo(
+    () => organizations.find((organization) => organization.id === selectedOrganizationId) ?? null,
+    [organizations, selectedOrganizationId],
+  );
+
+  const updateCreateValue = <K extends keyof CreateOrganizationValues>(
+    key: K,
+    value: CreateOrganizationValues[K],
+  ) => {
+    setCreateValues((previousValues) => ({ ...previousValues, [key]: value }));
+  };
+
+  const updateEditValue = <K extends keyof OrganizationEditorValues>(
+    key: K,
+    value: OrganizationEditorValues[K],
+  ) => {
+    setEditValues((previousValues) => ({ ...previousValues, [key]: value }));
+  };
+
+  const handleSelectOrganization = (organization: (typeof organizations)[number]) => {
+    setSelectedOrganizationId(organization.id);
+    setEditValues(mapOrganizationToEditorValues(organization));
+  };
+
+  const clearSelectedOrganization = () => {
+    setSelectedOrganizationId(null);
+    setEditValues(defaultEditOrganizationValues());
+  };
+
+  const handleOrganizationCreated = (organization: EducationOrganizationItem) => {
+    setCreateValues(defaultCreateOrganizationValues());
+    setPage(1);
+    setSelectedOrganizationId(organization.id);
+    setEditValues(mapOrganizationToEditorValues(organization));
+    void listOrganizationsQuery.refetch();
+  };
+
+  const handleOrganizationUpdated = (organization: EducationOrganizationItem) => {
+    setEditValues(mapOrganizationToEditorValues(organization));
+    void listOrganizationsQuery.refetch();
+  };
+
+  const { handleCreateOrganization, handleSaveOrganization, isCreating, isSaving } =
+    useEducationOrganizationsMutations({
+      createValues,
+      editValues,
+      selectedOrganizationId,
+      onCreated: handleOrganizationCreated,
+      onUpdated: handleOrganizationUpdated,
+    });
+
+  const handlePreviousPage = () => {
+    clearSelectedOrganization();
+    setPage((previousPage) => Math.max(1, previousPage - 1));
+  };
+
+  const handleNextPage = () => {
+    clearSelectedOrganization();
+    setPage((previousPage) =>
+      Math.min(listOrganizationsQuery.data?.totalPages ?? previousPage + 1, previousPage + 1),
+    );
+  };
+
+  return {
     organizations,
     selectedOrganization,
     selectedOrganizationId,
+    organizationsPage,
+    organizationsTotal,
+    organizationsTotalPages,
+    isFetchingOrganizations,
     createValues,
     editValues,
-    isCreating: createOrganizationMutation.isPending,
-    isSaving: updateOrganizationMutation.isPending,
+    isCreating,
+    isSaving,
     updateCreateValue,
     updateEditValue,
     handleSelectOrganization,
     handleCreateOrganization,
     handleSaveOrganization,
+    handlePreviousPage,
+    handleNextPage,
   };
 }

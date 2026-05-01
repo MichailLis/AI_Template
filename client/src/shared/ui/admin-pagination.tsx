@@ -1,6 +1,6 @@
 import { Button } from '@/shared/ui/button';
 
-interface AdminUsersPaginationProps {
+interface AdminPaginationProps {
   page: number;
   totalPages: number;
   isFetching: boolean;
@@ -8,13 +8,13 @@ interface AdminUsersPaginationProps {
   onNext: () => void;
 }
 
-export function AdminUsersPagination({
+export function AdminPagination({
   page,
   totalPages,
   isFetching,
   onPrevious,
   onNext,
-}: AdminUsersPaginationProps) {
+}: AdminPaginationProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
       <p className="text-sm text-slate-500">

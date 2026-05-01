@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
   AdminCreatePublicLinkDto,
+  AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
 } from './dto/tests-links.dto';
@@ -351,8 +352,8 @@ export class TestsPublicLinkService {
     };
   }
 
-  listEducationOrganizations(userId: number) {
-    return this.educationOrganizationService.listEducationOrganizations(userId);
+  listEducationOrganizations(userId: number, query: AdminEducationOrganizationsListQueryDto = {}) {
+    return this.educationOrganizationService.listEducationOrganizations(userId, query);
   }
 
   createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {

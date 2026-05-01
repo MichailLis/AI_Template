@@ -1,9 +1,9 @@
+import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { AdminUsersFilters } from './admin-users-filters';
-import { AdminUsersPagination } from './admin-users-pagination';
 import { AdminUsersTable } from './admin-users-table';
 import { formatDateTime } from './admin-users-workspace.utils';
 import { useAdminUsersWorkspace } from './use-admin-users-workspace';
@@ -116,7 +116,7 @@ export function AdminUsersWorkspace() {
           getRoleLabel={roleLabel}
         />
 
-        <AdminUsersPagination
+        <AdminPagination
           page={usersQuery.data.page}
           totalPages={usersQuery.data.totalPages}
           isFetching={usersQuery.isFetching}

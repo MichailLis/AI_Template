@@ -111,11 +111,12 @@ describe('TestsAttemptService', () => {
 
   it('listAttemptsForLink delegates to admin attempt service', async () => {
     const response = { attempts: [] };
+    const query = { page: 2, limit: 10 };
 
     adminAttemptServiceMock.listAttemptsForLink.mockResolvedValue(response);
 
-    await expect(service.listAttemptsForLink(7, 11)).resolves.toEqual(response);
-    expect(adminAttemptServiceMock.listAttemptsForLink).toHaveBeenCalledWith(7, 11);
+    await expect(service.listAttemptsForLink(7, 11, query)).resolves.toEqual(response);
+    expect(adminAttemptServiceMock.listAttemptsForLink).toHaveBeenCalledWith(7, 11, query);
   });
 
   it('getAttemptDetail delegates to admin attempt service', async () => {

@@ -160,7 +160,16 @@ export const AdminEducationOrganizationSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const AdminEducationOrganizationsListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
 export const AdminEducationOrganizationsListResponseSchema = z.object({
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1),
+  total: z.number().int().min(0),
+  totalPages: z.number().int().min(1),
   organizations: z.array(AdminEducationOrganizationSchema),
 });
 
@@ -187,7 +196,16 @@ export const AdminPublicAttemptSummarySchema = z.object({
   analysisStatus: PublicSessionAnalysisStatusSchema.nullable(),
 });
 
+export const AdminPublicAttemptsListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
 export const AdminPublicAttemptsListResponseSchema = z.object({
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1),
+  total: z.number().int().min(0),
+  totalPages: z.number().int().min(1),
   attempts: z.array(AdminPublicAttemptSummarySchema),
 });
 
@@ -239,6 +257,9 @@ export class AdminPublicLinksListResponseDto extends createZodDto(
 export class AdminDeletePublicLinkResponseDto extends createZodDto(
   AdminDeletePublicLinkResponseSchema,
 ) {}
+export class AdminPublicAttemptsListQueryDto extends createZodDto(
+  AdminPublicAttemptsListQuerySchema,
+) {}
 export class AdminPublicAttemptsListResponseDto extends createZodDto(
   AdminPublicAttemptsListResponseSchema,
 ) {}
@@ -250,6 +271,9 @@ export class AdminCreateEducationOrganizationDto extends createZodDto(
 ) {}
 export class AdminUpdateEducationOrganizationDto extends createZodDto(
   AdminUpdateEducationOrganizationSchema,
+) {}
+export class AdminEducationOrganizationsListQueryDto extends createZodDto(
+  AdminEducationOrganizationsListQuerySchema,
 ) {}
 export class AdminEducationOrganizationsListResponseDto extends createZodDto(
   AdminEducationOrganizationsListResponseSchema,

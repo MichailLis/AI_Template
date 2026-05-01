@@ -1,10 +1,11 @@
-import { Controller, Get, HttpStatus, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import {
   AdminPublicAttemptDetailResponseDto,
+  AdminPublicAttemptsListQueryDto,
   AdminPublicAttemptsListResponseDto,
 } from './dto/tests-links.dto';
 import { TestsAttemptService } from './tests-attempt.service';
@@ -22,8 +23,9 @@ export class TestsAdminAttemptsController {
   listPublicLinkAttempts(
     @GetCurrentUserId() userId: number,
     @Param('linkId', ParseIntPipe) linkId: number,
+    @Query() query: AdminPublicAttemptsListQueryDto,
   ) {
-    return this.testsAttemptService.listAttemptsForLink(userId, linkId);
+    return this.testsAttemptService.listAttemptsForLink(userId, linkId, query);
   }
 
   @Get('attempts/:attemptId')

@@ -23,10 +23,11 @@ describe('TestsAdminAttemptsController', () => {
 
   it('listPublicLinkAttempts delegates to service', async () => {
     const response = { attempts: [] };
+    const query = { page: 2, limit: 10 };
     serviceMock.listAttemptsForLink.mockResolvedValue(response);
 
-    await expect(controller.listPublicLinkAttempts(7, 13)).resolves.toEqual(response);
-    expect(serviceMock.listAttemptsForLink).toHaveBeenCalledWith(7, 13);
+    await expect(controller.listPublicLinkAttempts(7, 13, query)).resolves.toEqual(response);
+    expect(serviceMock.listAttemptsForLink).toHaveBeenCalledWith(7, 13, query);
   });
 
   it('getAttemptDetail delegates to service', async () => {

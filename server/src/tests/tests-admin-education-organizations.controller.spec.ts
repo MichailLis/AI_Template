@@ -31,10 +31,18 @@ describe('TestsAdminEducationOrganizationsController', () => {
 
   it('listEducationOrganizations delegates to service', async () => {
     const response = { organizations: [] };
+    const query = { page: 2, limit: 10 };
     serviceMock.listEducationOrganizations.mockResolvedValue(response);
 
-    await expect(controller.listEducationOrganizations(7)).resolves.toEqual(response);
-    expect(serviceMock.listEducationOrganizations).toHaveBeenCalledWith(7);
+    await expect(
+      (
+        controller.listEducationOrganizations as (
+          userId: number,
+          query: typeof query,
+        ) => Promise<typeof response>
+      )(7, query),
+    ).resolves.toEqual(response);
+    expect(serviceMock.listEducationOrganizations).toHaveBeenCalledWith(7, query);
   });
 
   it('createEducationOrganization delegates to service', async () => {

@@ -12,6 +12,8 @@ import {
 type PublicLinksTab = 'active' | 'archived';
 type AttemptDetailView = 'analysis' | 'answers';
 
+const ATTEMPTS_LIMIT = 10;
+
 interface PublicLinkSummary {
   id: number;
   topicId: number;
@@ -62,6 +64,56 @@ const resolveEffectivePublicLinkId = (
   return linksForTopic[0].id;
 };
 
+const usePublicLinkAttemptCounts = (linksForTopic: PublicLinkSummary[]) => {
+  const linkAttemptsCountQueries = useQueries({
+    queries: linksForTopic.map((link) => ({
+      ...getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(link.id, {
+        limit: 1,
+      }),
+      staleTime: 30_000,
+      select: (data: { total: number }) => data.total,
+    })),
+  });
+
+  return useMemo(() => {
+    const result = new Map<number, number>();
+
+    linksForTopic.forEach((link, index) => {
+      result.set(link.id, linkAttemptsCountQueries[index]?.data ?? 0);
+    });
+
+    return result;
+  }, [linkAttemptsCountQueries, linksForTopic]);
+};
+
+const usePaginatedPublicAttempts = (effectivePublicLinkId: number | null, attemptsPage: number) => {
+  const publicAttemptsQuery = useTestsAdminAttemptsControllerListPublicLinkAttempts(
+    effectivePublicLinkId ?? 0,
+    {
+      page: attemptsPage,
+      limit: ATTEMPTS_LIMIT,
+    },
+    {
+      query: {
+        enabled: Boolean(effectivePublicLinkId),
+      },
+    },
+  );
+
+  const publicAttempts = useMemo(
+    () => publicAttemptsQuery.data?.attempts ?? [],
+    [publicAttemptsQuery.data?.attempts],
+  );
+
+  return {
+    publicAttempts,
+    publicAttemptsPage: publicAttemptsQuery.data?.page ?? attemptsPage,
+    publicAttemptsQuery,
+    publicAttemptsTotal: publicAttemptsQuery.data?.total ?? 0,
+    publicAttemptsTotalPages: publicAttemptsQuery.data?.totalPages ?? 1,
+  };
+};
+
 export function useAdminPublicLinksStatsWorkspace() {
   const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
@@ -69,6 +121,7 @@ export function useAdminPublicLinksStatsWorkspace() {
   const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [selectedPublicLinkId, setSelectedPublicLinkId] = useState<number | null>(null);
+  const [attemptsPage, setAttemptsPage] = useState(1);
   const [detailAttemptId, setDetailAttemptId] = useState<number | null>(null);
   const [detailView, setDetailView] = useState<AttemptDetailView | null>(null);
 
@@ -100,23 +153,7 @@ export function useAdminPublicLinksStatsWorkspace() {
     return visiblePublicLinks.filter((link) => link.topicId === effectiveTopicId);
   }, [effectiveTopicId, visiblePublicLinks]);
 
-  const linkAttemptsCountQueries = useQueries({
-    queries: linksForTopic.map((link) => ({
-      ...getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(link.id),
-      staleTime: 30_000,
-      select: (data: { attempts: unknown[] }) => data.attempts.length,
-    })),
-  });
-
-  const linkAttemptsCountById = useMemo(() => {
-    const result = new Map<number, number>();
-
-    linksForTopic.forEach((link, index) => {
-      result.set(link.id, linkAttemptsCountQueries[index]?.data ?? 0);
-    });
-
-    return result;
-  }, [linkAttemptsCountQueries, linksForTopic]);
+  const linkAttemptsCountById = usePublicLinkAttemptCounts(linksForTopic);
 
   const effectivePublicLinkId = useMemo(
     () => resolveEffectivePublicLinkId(selectedPublicLinkId, linksForTopic),
@@ -126,19 +163,13 @@ export function useAdminPublicLinksStatsWorkspace() {
   const selectedPublicLink =
     linksForTopic.find((link) => link.id === effectivePublicLinkId) ?? null;
 
-  const publicAttemptsQuery = useTestsAdminAttemptsControllerListPublicLinkAttempts(
-    effectivePublicLinkId ?? 0,
-    {
-      query: {
-        enabled: Boolean(effectivePublicLinkId),
-      },
-    },
-  );
-
-  const publicAttempts = useMemo(
-    () => publicAttemptsQuery.data?.attempts ?? [],
-    [publicAttemptsQuery.data?.attempts],
-  );
+  const {
+    publicAttempts,
+    publicAttemptsPage,
+    publicAttemptsQuery,
+    publicAttemptsTotal,
+    publicAttemptsTotalPages,
+  } = usePaginatedPublicAttempts(effectivePublicLinkId, attemptsPage);
 
   const attemptDetailQuery = useTestsAdminAttemptsControllerGetAttemptDetail(detailAttemptId ?? 0, {
     query: {
@@ -153,11 +184,18 @@ export function useAdminPublicLinksStatsWorkspace() {
     setPublicLinksTab(tab);
     setSelectedTopicId(null);
     setSelectedPublicLinkId(null);
+    setAttemptsPage(1);
   };
 
   const handleTopicChange = (topicId: number) => {
     setSelectedTopicId(topicId);
     setSelectedPublicLinkId(null);
+    setAttemptsPage(1);
+  };
+
+  const handlePublicLinkChange = (publicLinkId: number) => {
+    setSelectedPublicLinkId(publicLinkId);
+    setAttemptsPage(1);
   };
 
   const handleOpenAttemptDetails = (attemptId: number, view: AttemptDetailView) => {
@@ -170,6 +208,14 @@ export function useAdminPublicLinksStatsWorkspace() {
     setDetailAttemptId(null);
   };
 
+  const handlePreviousAttemptsPage = () => {
+    setAttemptsPage((previous) => Math.max(1, previous - 1));
+  };
+
+  const handleNextAttemptsPage = () => {
+    setAttemptsPage((previous) => Math.min(publicAttemptsTotalPages, previous + 1));
+  };
+
   return {
     publicLinksTab,
     topicOptions,
@@ -179,15 +225,20 @@ export function useAdminPublicLinksStatsWorkspace() {
     linkAttemptsCountById,
     selectedPublicLink,
     publicAttempts,
+    publicAttemptsPage,
+    publicAttemptsTotal,
+    publicAttemptsTotalPages,
     publicAttemptsQuery,
     detailView,
     detailAttempt,
     attemptDetailQuery,
     isDetailDialogOpen,
-    setSelectedPublicLinkId,
+    setSelectedPublicLinkId: handlePublicLinkChange,
     handleTabChange,
     handleTopicChange,
     handleOpenAttemptDetails,
     handleCloseAttemptDetails,
+    handlePreviousAttemptsPage,
+    handleNextAttemptsPage,
   };
 }

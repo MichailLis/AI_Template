@@ -9,6 +9,10 @@ export function AdminEducationOrganizationsWorkspace() {
     organizations,
     selectedOrganization,
     selectedOrganizationId,
+    organizationsPage,
+    organizationsTotal,
+    organizationsTotalPages,
+    isFetchingOrganizations,
     createValues,
     editValues,
     isCreating,
@@ -18,6 +22,8 @@ export function AdminEducationOrganizationsWorkspace() {
     handleSelectOrganization,
     handleCreateOrganization,
     handleSaveOrganization,
+    handlePreviousPage,
+    handleNextPage,
   } = useAdminEducationOrganizationsWorkspace();
 
   return (
@@ -28,7 +34,13 @@ export function AdminEducationOrganizationsWorkspace() {
         <EducationOrganizationsListCard
           organizations={organizations}
           selectedOrganizationId={selectedOrganizationId}
+          page={organizationsPage}
+          total={organizationsTotal}
+          totalPages={organizationsTotalPages}
+          isFetching={isFetchingOrganizations}
           onSelectOrganization={handleSelectOrganization}
+          onPreviousPage={handlePreviousPage}
+          onNextPage={handleNextPage}
         />
 
         <div className="space-y-4">

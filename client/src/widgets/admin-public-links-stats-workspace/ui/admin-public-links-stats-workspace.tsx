@@ -29,6 +29,9 @@ export function AdminPublicLinksStatsWorkspace() {
     linkAttemptsCountById,
     selectedPublicLink,
     publicAttempts,
+    publicAttemptsPage,
+    publicAttemptsTotal,
+    publicAttemptsTotalPages,
     publicAttemptsQuery,
     detailView,
     detailAttempt,
@@ -39,6 +42,8 @@ export function AdminPublicLinksStatsWorkspace() {
     handleTopicChange,
     handleOpenAttemptDetails,
     handleCloseAttemptDetails,
+    handlePreviousAttemptsPage,
+    handleNextAttemptsPage,
   } = useAdminPublicLinksStatsWorkspace();
 
   return (
@@ -59,8 +64,14 @@ export function AdminPublicLinksStatsWorkspace() {
         selectedPublicLink={selectedPublicLink}
         publicAttempts={publicAttempts}
         isLoading={publicAttemptsQuery.isLoading}
+        isFetching={publicAttemptsQuery.isFetching}
+        page={publicAttemptsPage}
+        total={publicAttemptsTotal}
+        totalPages={publicAttemptsTotalPages}
         formatDateTime={formatDateTime}
         onOpenAttemptDetails={handleOpenAttemptDetails}
+        onPreviousPage={handlePreviousAttemptsPage}
+        onNextPage={handleNextAttemptsPage}
       />
 
       <PublicLinksAttemptDetailDialog

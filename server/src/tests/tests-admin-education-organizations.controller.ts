@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import { AtGuard } from '../auth/guards';
 import {
   AdminCreateEducationOrganizationDto,
   AdminEducationOrganizationDto,
+  AdminEducationOrganizationsListQueryDto,
   AdminEducationOrganizationsListResponseDto,
   AdminUpdateEducationOrganizationDto,
 } from './dto/tests-links.dto';
@@ -31,8 +33,11 @@ export class TestsAdminEducationOrganizationsController {
   @Get('education-organizations')
   @ApiOperation({ summary: 'List educational organizations for link binding' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationsListResponseDto })
-  listEducationOrganizations(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listEducationOrganizations(userId);
+  listEducationOrganizations(
+    @GetCurrentUserId() userId: number,
+    @Query() query: AdminEducationOrganizationsListQueryDto,
+  ) {
+    return this.testsPublicLinkService.listEducationOrganizations(userId, query);
   }
 
   @Post('education-organizations')

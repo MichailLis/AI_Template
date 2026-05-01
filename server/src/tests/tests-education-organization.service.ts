@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { GroupOrClassValidationMode } from '@prisma/client';
+import type { GroupOrClassValidationMode, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
+  AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
 } from './dto/tests-links.dto';
 import { ensureTestsAdminAccess } from './tests-admin-access.utils';
@@ -156,18 +157,38 @@ export class TestsEducationOrganizationService {
     return organization.id;
   }
 
-  async listEducationOrganizations(userId: number) {
+  async listEducationOrganizations(
+    userId: number,
+    query: AdminEducationOrganizationsListQueryDto = {},
+  ) {
     await ensureTestsAdminAccess(this.prisma, userId);
 
-    const organizations = await this.prisma.educationOrganization.findMany({
+    const total = await this.prisma.educationOrganization.count();
+    const isPaginated = query.page !== undefined || query.limit !== undefined;
+    const page = query.page ?? 1;
+    const limit = query.limit ?? (isPaginated ? 10 : Math.max(total, 1));
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(page, totalPages);
+    const findManyArgs: Prisma.EducationOrganizationFindManyArgs = {
       orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
-    });
+    };
+
+    if (isPaginated) {
+      findManyArgs.skip = (currentPage - 1) * limit;
+      findManyArgs.take = limit;
+    }
+
+    const organizations = await this.prisma.educationOrganization.findMany(findManyArgs);
 
     const statsByOrganizationId = await this.getOrganizationStatsByIds(
       organizations.map((organization) => organization.id),
     );
 
     return {
+      page: currentPage,
+      limit,
+      total,
+      totalPages,
       organizations: organizations.map((organization) =>
         this.mapEducationOrganization(
           organization,

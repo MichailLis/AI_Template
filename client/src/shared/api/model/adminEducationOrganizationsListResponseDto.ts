@@ -8,5 +8,25 @@
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from './adminEducationOrganizationsListResponseDtoOrganizationsItem';
 
 export interface AdminEducationOrganizationsListResponseDto {
+  /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  page: number;
+  /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  limit: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  total: number;
+  /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  totalPages: number;
   organizations: AdminEducationOrganizationsListResponseDtoOrganizationsItem[];
 }
