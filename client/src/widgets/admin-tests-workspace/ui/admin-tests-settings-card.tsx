@@ -1,36 +1,24 @@
-import { useMemo } from 'react';
-
-import { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
-import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Textarea } from '@/shared/ui/textarea';
 
-interface DraftForm {
-  title: string;
-  description: string;
-  analysisPromptVersionId: number | null;
-}
-
-interface AnalysisPromptVersionSummary {
-  id: number;
-  promptId: number;
-  promptTitle: string;
-  versionNumber: number;
-  model: string;
-}
-
-interface PublishedVersion {
-  versionNumber: number;
-  title: string;
-  analysisPromptVersion: AnalysisPromptVersionSummary | null;
-}
+import {
+  AdminTestsAnalysisPromptSettingsSection,
+  type AnalysisPromptVersionSummary,
+} from './admin-tests-analysis-prompt-settings-section';
+import {
+  AdminTestsMetadataSettingsSection,
+  type AdminTestsDraftForm,
+} from './admin-tests-metadata-settings-section';
+import {
+  AdminTestsActivitySwitchSection,
+  AdminTestsPublishedSnapshotSection,
+  AdminTestsPublishSection,
+  type PublishedVersion,
+} from './admin-tests-publication-settings-section';
 
 interface AdminTestsSettingsCardProps {
   published: PublishedVersion | null;
   draftAnalysisPromptVersion: AnalysisPromptVersionSummary | null;
-  draftForm: DraftForm;
+  draftForm: AdminTestsDraftForm;
   isDraftDirty: boolean;
   isSelectedTopicArchived: boolean;
   canPublish: boolean;
@@ -47,294 +35,6 @@ interface AdminTestsSettingsCardProps {
   onSaveDraft: () => void;
   onRequestPublish: () => void;
   onToggleTopicActive: () => void;
-}
-
-interface MetadataSettingsSectionProps {
-  draftForm: DraftForm;
-  isDraftDirty: boolean;
-  isSelectedTopicArchived: boolean;
-  isSavingDraft: boolean;
-  autoSaveError?: string | null;
-  autosaveHint?: string | null;
-  onDraftTitleChange: (value: string) => void;
-  onDraftDescriptionChange: (value: string) => void;
-  onSaveDraft: () => void;
-}
-
-interface AnalysisPromptSettingsSectionProps {
-  selectedAnalysisPromptVersion: AnalysisPromptVersionSummary | null;
-  selectedAnalysisPromptVersionId: number | null;
-  isSelectedTopicArchived: boolean;
-  onDraftAnalysisPromptVersionChange: (value: number | null) => void;
-}
-
-interface PublishSectionProps {
-  published: PublishedVersion | null;
-  isSelectedTopicArchived: boolean;
-  canPublish: boolean;
-  isPublishing: boolean;
-  onRequestPublish: () => void;
-}
-
-interface ActivitySwitchSectionProps {
-  isSelectedTopicArchived: boolean;
-  isArchivingTopic: boolean;
-  isRestoringTopic: boolean;
-  onToggleTopicActive: () => void;
-}
-
-function getDraftStatusText(isSelectedTopicArchived: boolean, isDraftDirty: boolean) {
-  if (isSelectedTopicArchived) {
-    return 'Редактирование отключено: тест в архиве';
-  }
-  if (isDraftDirty) {
-    return 'Есть несохраненные изменения';
-  }
-  return 'Изменения сохранены';
-}
-
-function getPublishButtonLabel(isPublishing: boolean, published: PublishedVersion | null) {
-  if (isPublishing) {
-    return 'Публикация...';
-  }
-  if (published) {
-    return 'Опубликовать изменения';
-  }
-  return 'Опубликовать тест';
-}
-
-function getPublishHintText(isSelectedTopicArchived: boolean, canPublish: boolean) {
-  if (isSelectedTopicArchived) {
-    return 'Восстановите тест, чтобы открыть публикацию.';
-  }
-  if (!canPublish) {
-    return 'Для публикации сохраните изменения и добавьте хотя бы один вопрос.';
-  }
-  return null;
-}
-
-function MetadataSettingsSection({
-  draftForm,
-  isDraftDirty,
-  isSelectedTopicArchived,
-  isSavingDraft,
-  autoSaveError,
-  autosaveHint,
-  onDraftTitleChange,
-  onDraftDescriptionChange,
-  onSaveDraft,
-}: MetadataSettingsSectionProps) {
-  const draftStatusText = getDraftStatusText(isSelectedTopicArchived, isDraftDirty);
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Метаданные теста</p>
-      <p className="mt-1 text-sm text-slate-600">
-        Редактирование названия и описания версии в работе.
-      </p>
-      <div className="mt-3 space-y-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-draft-title">Название теста</Label>
-          <Input
-            id="settings-draft-title"
-            value={draftForm.title}
-            disabled={isSelectedTopicArchived}
-            onChange={(event) => onDraftTitleChange(event.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-draft-description">Описание теста</Label>
-          <Textarea
-            id="settings-draft-description"
-            rows={3}
-            value={draftForm.description}
-            disabled={isSelectedTopicArchived}
-            onChange={(event) => onDraftDescriptionChange(event.target.value)}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            onClick={onSaveDraft}
-            disabled={isSelectedTopicArchived || !isDraftDirty || isSavingDraft}
-          >
-            {isSavingDraft ? 'Сохранение...' : 'Сохранить изменения'}
-          </Button>
-          <p className="text-xs text-slate-500">{draftStatusText}</p>
-        </div>
-        {autosaveHint ? <p className="text-xs text-slate-500">{autosaveHint}</p> : null}
-        {autoSaveError ? (
-          <p className="text-xs text-red-700">Автосохранение не удалось: {autoSaveError}</p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function PublishedSnapshotSection({ published }: { published: PublishedVersion | null }) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Опубликованный срез</p>
-      {published ? (
-        <div className="mt-2 space-y-1 text-sm text-slate-700">
-          <p>
-            Версия: <span className="font-medium">v{published.versionNumber}</span>
-          </p>
-          <p>
-            Название: <span className="font-medium">{published.title}</span>
-          </p>
-          <p>
-            Анализ:{' '}
-            <span className="font-medium">
-              {published.analysisPromptVersion
-                ? `${published.analysisPromptVersion.promptTitle} v${published.analysisPromptVersion.versionNumber}`
-                : 'не подключен'}
-            </span>
-          </p>
-        </div>
-      ) : (
-        <p className="mt-1 text-sm text-slate-600">Тест еще не опубликован.</p>
-      )}
-    </div>
-  );
-}
-
-function AnalysisPromptSettingsSection({
-  selectedAnalysisPromptVersion,
-  selectedAnalysisPromptVersionId,
-  isSelectedTopicArchived,
-  onDraftAnalysisPromptVersionChange,
-}: AnalysisPromptSettingsSectionProps) {
-  const promptsQuery = useAnalysisPromptsControllerListPrompts();
-  const promptVersionOptions = useMemo(
-    () =>
-      (promptsQuery.data?.prompts ?? []).flatMap((prompt) =>
-        prompt.versions
-          .filter((version) => version.status === 'PUBLISHED')
-          .map((version) => ({
-            id: version.id,
-            label: `${prompt.title} · v${version.versionNumber}`,
-            model: version.model,
-          })),
-      ),
-    [promptsQuery.data?.prompts],
-  );
-  const selectedExists = promptVersionOptions.some(
-    (option) => option.id === selectedAnalysisPromptVersionId,
-  );
-  const options =
-    selectedAnalysisPromptVersion && !selectedExists
-      ? [
-          {
-            id: selectedAnalysisPromptVersion.id,
-            label: `${selectedAnalysisPromptVersion.promptTitle} · v${selectedAnalysisPromptVersion.versionNumber}`,
-            model: selectedAnalysisPromptVersion.model,
-          },
-          ...promptVersionOptions,
-        ]
-      : promptVersionOptions;
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Промпт анализа</p>
-      <p className="mt-1 text-sm text-slate-600">
-        Для версии теста можно подключить одну опубликованную версию промпта.
-      </p>
-      <div className="mt-3 space-y-2">
-        <Label htmlFor="settings-analysis-prompt">Активный промпт</Label>
-        <select
-          id="settings-analysis-prompt"
-          value={selectedAnalysisPromptVersionId ?? ''}
-          disabled={isSelectedTopicArchived || promptsQuery.isLoading}
-          onChange={(event) =>
-            onDraftAnalysisPromptVersionChange(
-              event.target.value ? Number(event.target.value) : null,
-            )
-          }
-          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        >
-          <option value="">Не подключать анализ</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label} · {option.model}
-            </option>
-          ))}
-        </select>
-        {promptsQuery.isError ? (
-          <p className="text-xs text-red-700">Не удалось загрузить промпты анализа.</p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function PublishSection({
-  published,
-  isSelectedTopicArchived,
-  canPublish,
-  isPublishing,
-  onRequestPublish,
-}: PublishSectionProps) {
-  const publishButtonLabel = getPublishButtonLabel(isPublishing, published);
-  const publishHintText = getPublishHintText(isSelectedTopicArchived, canPublish);
-
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Публикация</p>
-      <p className="mt-1 text-sm text-slate-600">
-        Публикация запускается через подтверждение и создает новый черновик для дальнейших правок.
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onRequestPublish}
-          disabled={isSelectedTopicArchived || !canPublish || isPublishing}
-        >
-          {publishButtonLabel}
-        </Button>
-        {publishHintText ? <p className="text-xs text-amber-700">{publishHintText}</p> : null}
-      </div>
-    </div>
-  );
-}
-
-function ActivitySwitchSection({
-  isSelectedTopicArchived,
-  isArchivingTopic,
-  isRestoringTopic,
-  onToggleTopicActive,
-}: ActivitySwitchSectionProps) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Переключатель активности</p>
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-slate-700">Активен для студентов</p>
-          <p className="text-xs text-slate-500">
-            Если выключить, тест уйдет в архив. Для возобновления включите обратно.
-          </p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={!isSelectedTopicArchived}
-          disabled={isArchivingTopic || isRestoringTopic}
-          aria-label="Переключатель активности теста"
-          onClick={onToggleTopicActive}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            isSelectedTopicArchived ? 'bg-slate-300' : 'bg-emerald-500'
-          }`}
-        >
-          <span
-            className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
-              isSelectedTopicArchived ? 'translate-x-1' : 'translate-x-5'
-            }`}
-          />
-        </button>
-      </div>
-    </div>
-  );
 }
 
 export function AdminTestsSettingsCard({
@@ -378,7 +78,7 @@ export function AdminTestsSettingsCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <MetadataSettingsSection
+        <AdminTestsMetadataSettingsSection
           draftForm={draftForm}
           isDraftDirty={isDraftDirty}
           isSelectedTopicArchived={isSelectedTopicArchived}
@@ -389,21 +89,21 @@ export function AdminTestsSettingsCard({
           onDraftDescriptionChange={onDraftDescriptionChange}
           onSaveDraft={onSaveDraft}
         />
-        <AnalysisPromptSettingsSection
+        <AdminTestsAnalysisPromptSettingsSection
           selectedAnalysisPromptVersion={draftAnalysisPromptVersion}
           selectedAnalysisPromptVersionId={draftForm.analysisPromptVersionId}
           isSelectedTopicArchived={isSelectedTopicArchived}
           onDraftAnalysisPromptVersionChange={onDraftAnalysisPromptVersionChange}
         />
-        <PublishedSnapshotSection published={published} />
-        <PublishSection
+        <AdminTestsPublishedSnapshotSection published={published} />
+        <AdminTestsPublishSection
           published={published}
           isSelectedTopicArchived={isSelectedTopicArchived}
           canPublish={canPublish}
           isPublishing={isPublishing}
           onRequestPublish={onRequestPublish}
         />
-        <ActivitySwitchSection
+        <AdminTestsActivitySwitchSection
           isSelectedTopicArchived={isSelectedTopicArchived}
           isArchivingTopic={isArchivingTopic}
           isRestoringTopic={isRestoringTopic}
