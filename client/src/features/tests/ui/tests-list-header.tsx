@@ -1,4 +1,5 @@
 import { Button } from '@/shared/ui/button';
+import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 
 interface TestsListHeaderProps {
@@ -19,11 +20,11 @@ export function TestsListHeader({
   onOpenAiGenerator,
 }: TestsListHeaderProps) {
   return (
-    <div className="mb-6 space-y-4">
+    <CardHeader className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Тесты</h1>
-          <p className="text-sm text-slate-500">Создание и управление тестами</p>
+          <CardTitle>Тесты</CardTitle>
+          <CardDescription className="mt-1">Создание и управление тестами</CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={onOpenAiGenerator}>
@@ -64,6 +65,6 @@ export function TestsListHeader({
           />
         </div>
       </div>
-    </div>
+    </CardHeader>
   );
 }

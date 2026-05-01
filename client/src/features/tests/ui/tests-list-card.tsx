@@ -2,6 +2,7 @@ import { Archive, MoreHorizontal, RotateCcw, Settings, Trash2 } from 'lucide-rea
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/shared/ui/button';
+import { CardContent } from '@/shared/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 
 import type { TestTopicListItem } from '../model/types';
@@ -63,7 +64,7 @@ export function TestsListCard({
   }, [searchValue, topics]);
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white shadow-sm">
+    <CardContent className="p-0">
       {topicsLoading ? (
         <div className="p-8 text-center text-sm text-slate-500">
           Загрузка тестов... Пожалуйста, подождите.
@@ -191,6 +192,6 @@ export function TestsListCard({
           </Popover>
         </div>
       ))}
-    </div>
+    </CardContent>
   );
 }

@@ -1,4 +1,5 @@
 import { TestsListCard, TestsListHeader, type TestTopicListItem } from '@/features/tests';
+import { Card } from '@/shared/ui/card';
 
 import type { ListMode } from './use-admin-tests-workspace';
 
@@ -52,7 +53,7 @@ export function AdminTestsListSection({
   onRetryTopics,
 }: AdminTestsListSectionProps) {
   return (
-    <div>
+    <Card className="border-slate-200 shadow-sm">
       <TestsListHeader
         searchValue={searchValue}
         listMode={listMode}
@@ -81,6 +82,6 @@ export function AdminTestsListSection({
         onRequestDeleteTest={onRequestDeleteTest}
         onRetryTopics={onRetryTopics}
       />
-    </div>
+    </Card>
   );
 }
