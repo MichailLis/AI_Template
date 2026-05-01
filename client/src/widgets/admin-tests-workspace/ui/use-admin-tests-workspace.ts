@@ -16,6 +16,8 @@ import { useAdminTestsDraft } from './use-admin-tests-draft';
 import { useAdminTestsTopics } from './use-admin-tests-topics';
 import { useAdminTestsWorkspaceActions } from './use-admin-tests-workspace-actions';
 
+export type { ListMode } from './use-admin-tests-topics';
+
 export function useAdminTestsWorkspace() {
   const {
     activeTopicsQuery,
