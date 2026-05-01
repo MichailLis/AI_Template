@@ -245,6 +245,7 @@ export function useAdminTestsWorkspace() {
     handleConfirmTopicSwitch,
     handleConfirmDeleteTopic,
     handleConfirmPublish,
+    handleReorderQuestions,
     handleConfirmArchiveTopic,
     handleConfirmRestoreTopic,
     autosaveHint,
@@ -289,39 +290,6 @@ export function useAdminTestsWorkspace() {
     setListMode,
     navigateToTopic,
   });
-
-  // Reorder questions handler (not provided by actions hook due to bug)
-  const handleReorderQuestions = useCallback(
-    (questionIds: number[]) => {
-      if (!effectiveSelectedTopicId || !detail || reorderQuestionsMutation.isPending) {
-        return;
-      }
-
-      const currentIds = detail.draft.questions.map((question) => question.id);
-      if (JSON.stringify(currentIds) === JSON.stringify(questionIds)) {
-        return;
-      }
-
-      reorderQuestionsMutation.mutate(
-        {
-          topicId: effectiveSelectedTopicId,
-          data: {
-            questionIds,
-          },
-        },
-        {
-          onSuccess: () => {
-            void refetchTestsData();
-          },
-          onError: (error) => {
-            console.error('Failed to reorder questions:', parseApiError(error));
-            void refetchTestsData();
-          },
-        },
-      );
-    },
-    [effectiveSelectedTopicId, detail, reorderQuestionsMutation, refetchTestsData],
-  );
 
   return {
     topics,
