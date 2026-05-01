@@ -21,7 +21,7 @@ export function useAdminTestsDraft({
   publishIsPending,
 }: UseAdminTestsDraftParams) {
   const [draftEdits, setDraftEdits] = useState<
-    Record<number, { title: string; description: string }>
+    Record<number, { title: string; description: string; analysisPromptVersionId: number | null }>
   >({});
 
   const detailQuery = useTestsControllerGetTopicDraft(effectiveSelectedTopicId ?? 0, {
@@ -36,7 +36,7 @@ export function useAdminTestsDraft({
 
   const draftForm = useMemo(() => {
     if (!draft) {
-      return { id: 0, title: '', description: '' };
+      return { id: 0, title: '', description: '', analysisPromptVersionId: null };
     }
 
     const edited = draftEdits[draft.id];
@@ -44,6 +44,8 @@ export function useAdminTestsDraft({
       id: draft.id,
       title: edited?.title ?? draft.title,
       description: edited?.description ?? draft.description ?? '',
+      analysisPromptVersionId:
+        edited?.analysisPromptVersionId ?? draft.analysisPromptVersion?.id ?? null,
     };
   }, [draft, draftEdits]);
 
@@ -55,7 +57,14 @@ export function useAdminTestsDraft({
     });
   }, []);
 
-  const isDraftDirty = draft ? hasDraftEdits(draft, draftForm.title, draftForm.description) : false;
+  const isDraftDirty = draft
+    ? hasDraftEdits(
+        draft,
+        draftForm.title,
+        draftForm.description,
+        draftForm.analysisPromptVersionId,
+      )
+    : false;
   const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
 
   const refetchTestsData = useCallback(() => {
@@ -84,10 +93,17 @@ export function useAdminTestsDraft({
     draftAutosave.resetAutosaveMeta();
   }, [clearDraftEdits, draft, draftAutosave]);
 
-  const updateCurrentDraftEdits = (patch: Partial<{ title: string; description: string }>) => {
+  const updateCurrentDraftEdits = (
+    patch: Partial<{ title: string; description: string; analysisPromptVersionId: number | null }>,
+  ) => {
     if (!draft) {
       return;
     }
+
+    const hasAnalysisPromptVersionPatch = Object.prototype.hasOwnProperty.call(
+      patch,
+      'analysisPromptVersionId',
+    );
 
     setDraftEdits((previous) => ({
       ...previous,
@@ -95,6 +111,11 @@ export function useAdminTestsDraft({
         title: patch.title ?? previous[draft.id]?.title ?? draft.title,
         description:
           patch.description ?? previous[draft.id]?.description ?? draft.description ?? '',
+        analysisPromptVersionId: hasAnalysisPromptVersionPatch
+          ? (patch.analysisPromptVersionId ?? null)
+          : (previous[draft.id]?.analysisPromptVersionId ??
+            draft.analysisPromptVersion?.id ??
+            null),
       },
     }));
   };

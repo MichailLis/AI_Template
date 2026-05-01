@@ -4,6 +4,7 @@ export { QuestionModal } from './ui/question-modal';
 export { TestsCreateModal } from './ui/tests-create-modal';
 export { TestsListCard } from './ui/tests-list-card';
 export { TestsListHeader } from './ui/tests-list-header';
+export { TestAnalysisResultView } from './ui/test-analysis-result-view';
 export { TestEditor } from './ui/test-editor';
 export { TestQuestionsOnlyView } from './ui/test-questions-only-view';
 export { TestsSidebar } from './ui/tests-sidebar';

@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { TestsTopicDetailResponseDtoDraftAnalysisPromptVersion } from './testsTopicDetailResponseDtoDraftAnalysisPromptVersion';
 import type { TestsTopicDetailResponseDtoDraftQuestionsItem } from './testsTopicDetailResponseDtoDraftQuestionsItem';
 
 export type TestsTopicDetailResponseDtoDraft = {
@@ -13,5 +14,7 @@ export type TestsTopicDetailResponseDtoDraft = {
   title: string;
   /** @nullable */
   description: string | null;
+  /** @nullable */
+  analysisPromptVersion: TestsTopicDetailResponseDtoDraftAnalysisPromptVersion;
   questions: TestsTopicDetailResponseDtoDraftQuestionsItem[];
 };

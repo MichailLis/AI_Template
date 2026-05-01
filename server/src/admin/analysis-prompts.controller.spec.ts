@@ -8,6 +8,7 @@ describe('AnalysisPromptsController', () => {
     createPrompt: jest.Mock;
     publishVersion: jest.Mock;
     simulatePrompt: jest.Mock;
+    listTestQuestions: jest.Mock;
   };
 
   beforeEach(() => {
@@ -16,6 +17,7 @@ describe('AnalysisPromptsController', () => {
       createPrompt: jest.fn(),
       publishVersion: jest.fn(),
       simulatePrompt: jest.fn(),
+      listTestQuestions: jest.fn(),
     };
 
     controller = new AnalysisPromptsController(serviceMock as unknown as AnalysisPromptsService);
@@ -69,5 +71,13 @@ describe('AnalysisPromptsController', () => {
 
     await expect(controller.simulatePrompt(7, dto)).resolves.toEqual(response);
     expect(serviceMock.simulatePrompt).toHaveBeenCalledWith(7, dto);
+  });
+
+  it('listTestQuestions delegates to service', async () => {
+    const response = { questions: [] };
+    serviceMock.listTestQuestions.mockResolvedValue(response);
+
+    await expect(controller.listTestQuestions(7)).resolves.toEqual(response);
+    expect(serviceMock.listTestQuestions).toHaveBeenCalledWith(7);
   });
 });

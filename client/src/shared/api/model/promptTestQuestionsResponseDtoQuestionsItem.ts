@@ -6,19 +6,13 @@
  * OpenAPI spec version: 1.0
  */
 
-/**
- * @nullable
- */
-export type TestsTopicDetailResponseDtoPublished = {
+export type PromptTestQuestionsResponseDtoQuestionsItem = {
   id: number;
-  versionNumber: number;
+  type: string;
   title: string;
   /** @nullable */
-  analysisPromptVersion: {
-  id: number;
-  promptId: number;
-  promptTitle: string;
+  description: string | null;
+  topicTitle: string;
   versionNumber: number;
-  model: string;
-} | null;
-} | null;
+  versionStatus: string;
+};

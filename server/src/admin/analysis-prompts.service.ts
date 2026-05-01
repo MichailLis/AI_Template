@@ -116,9 +116,9 @@ export class AnalysisPromptsService {
     return apiKey;
   }
 
-  private ensureFreeSimulationModel(model: string) {
+  private ensureFreeOpenRouterModel(model: string) {
     if (!model.endsWith(':free')) {
-      throw new BadRequestException('Prompt simulation requires a free OpenRouter model');
+      throw new BadRequestException('Analysis prompts require a free OpenRouter model');
     }
   }
 
@@ -166,11 +166,52 @@ export class AnalysisPromptsService {
     };
   }
 
+  async listTestQuestions(userId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const questions = await this.prisma.testQuestion.findMany({
+      where: {
+        version: {
+          status: {
+            in: ['DRAFT', 'PUBLISHED'],
+          },
+        },
+      },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        description: true,
+        version: {
+          select: {
+            versionNumber: true,
+            status: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: [{ versionId: 'desc' }, { order: 'asc' }],
+    });
+
+    return {
+      questions: questions.map((question) => ({
+        id: question.id,
+        type: question.type,
+        title: question.title,
+        description: question.description,
+        topicTitle: question.version.title,
+        versionNumber: question.version.versionNumber,
+        versionStatus: question.version.status,
+      })),
+    };
+  }
+
   async createPrompt(
     userId: number,
     dto: CreateAnalysisPromptDto,
   ): Promise<AnalysisPromptResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
+    this.ensureFreeOpenRouterModel(dto.model);
 
     const prompt = await this.prisma.analysisPrompt.create({
       data: {
@@ -228,7 +269,7 @@ export class AnalysisPromptsService {
     dto: PromptSimulationRequestDto,
   ): Promise<PromptSimulationResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
-    this.ensureFreeSimulationModel(dto.model);
+    this.ensureFreeOpenRouterModel(dto.model);
 
     const apiKey = this.getOpenRouterApiKey();
     const uniqueQuestionIds = Array.from(new Set(dto.questionIds));

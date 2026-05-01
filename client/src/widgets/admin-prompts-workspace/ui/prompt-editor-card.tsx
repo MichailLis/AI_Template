@@ -16,6 +16,8 @@ import type {
 import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
 
 interface PromptEditorCardProps {
+  promptTitle: string;
+  onPromptTitleChange: (value: string) => void;
   modelSearch: string;
   onModelSearchChange: (value: string) => void;
   modelFilter: ModelFilter;
@@ -46,6 +48,8 @@ interface PromptEditorCardProps {
 }
 
 export function PromptEditorCard({
+  promptTitle,
+  onPromptTitleChange,
   modelSearch,
   onModelSearchChange,
   modelFilter,
@@ -99,6 +103,8 @@ export function PromptEditorCard({
         />
 
         <PromptEditorSettingsSection
+          promptTitle={promptTitle}
+          onPromptTitleChange={onPromptTitleChange}
           temperature={temperature}
           onTemperatureChange={onTemperatureChange}
           systemRole={systemRole}

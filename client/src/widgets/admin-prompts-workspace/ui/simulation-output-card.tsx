@@ -1,14 +1,18 @@
-import { AlertTriangle, CheckCircle2, Copy, Loader2, Play } from 'lucide-react';
-import { toast } from 'sonner';
+import { AlertTriangle, CheckCircle2, Copy, Loader2, Play, Save } from 'lucide-react';
 
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import type { SimulationRun } from '../model/types';
+import type { PromptTestQuestionsResponseDtoQuestionsItem } from '@/shared/api/model';
 
 interface SimulationOutputCardProps {
   runs: SimulationRun[];
+  testQuestions: PromptTestQuestionsResponseDtoQuestionsItem[];
+  selectedQuestionIds: number[];
+  isLoadingQuestions: boolean;
+  isSavingPromptVersion: boolean;
   showMetrics: boolean;
   onShowMetricsChange: (value: boolean) => void;
   diffView: boolean;
@@ -18,11 +22,19 @@ interface SimulationOutputCardProps {
   isGenerating: boolean;
   canRun: boolean;
   onRunSimulation: () => void;
+  onToggleQuestion: (questionId: number) => void;
+  onSelectAllQuestions: () => void;
+  onClearSelectedQuestions: () => void;
+  onSavePromptVersion: () => void;
   onCopyRunJson: (run: SimulationRun) => Promise<void>;
 }
 
 export function SimulationOutputCard({
   runs,
+  testQuestions,
+  selectedQuestionIds,
+  isLoadingQuestions,
+  isSavingPromptVersion,
   showMetrics,
   onShowMetricsChange,
   diffView,
@@ -32,8 +44,14 @@ export function SimulationOutputCard({
   isGenerating,
   canRun,
   onRunSimulation,
+  onToggleQuestion,
+  onSelectAllQuestions,
+  onClearSelectedQuestions,
+  onSavePromptVersion,
   onCopyRunJson,
 }: SimulationOutputCardProps) {
+  const selectedQuestionsCount = selectedQuestionIds.length;
+
   return (
     <Card className="min-w-0 border-slate-200 shadow-sm">
       <CardHeader className="border-b border-slate-200">
@@ -69,6 +87,84 @@ export function SimulationOutputCard({
       </CardHeader>
 
       <CardContent className="flex flex-col p-0">
+        <div className="space-y-3 border-b border-slate-200 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Тестовые вопросы</p>
+              <p className="text-xs text-slate-500">
+                Выберите вопросы, по которым ИИ сгенерирует тестовые ответы и итоговый JSON.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onSelectAllQuestions}
+                disabled={isLoadingQuestions || testQuestions.length === 0}
+              >
+                Все
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={onClearSelectedQuestions}
+                disabled={selectedQuestionsCount === 0}
+              >
+                Снять
+              </Button>
+            </div>
+          </div>
+
+          {isLoadingQuestions ? (
+            <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Загружаем вопросы...
+            </div>
+          ) : null}
+
+          {!isLoadingQuestions && testQuestions.length === 0 ? (
+            <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+              Вопросы еще не найдены.
+            </div>
+          ) : null}
+
+          {!isLoadingQuestions && testQuestions.length > 0 ? (
+            <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-2">
+              {testQuestions.map((question) => {
+                const isChecked = selectedQuestionIds.includes(question.id);
+
+                return (
+                  <label
+                    key={question.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-md bg-white p-3 text-sm shadow-sm transition hover:bg-slate-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={isChecked}
+                      onChange={() => onToggleQuestion(question.id)}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium text-slate-900">{question.title}</span>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        {question.topicTitle} · версия {question.versionNumber} ·{' '}
+                        {question.versionStatus} · {question.type}
+                      </span>
+                      {question.description ? (
+                        <span className="mt-1 line-clamp-2 block text-xs text-slate-500">
+                          {question.description}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+
         <div className="max-h-[640px] flex-1 space-y-3 overflow-y-auto p-4">
           {runs.length === 0 ? (
             <div className="rounded-md border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
@@ -141,17 +237,23 @@ export function SimulationOutputCard({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 p-4">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Badge variant="outline">{detectedVariablesCount} variables detected</Badge>
-            <span>Ready to run</span>
+            <span>{selectedQuestionsCount} questions selected</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => toast.info('Draft persistence is planned in the next iteration')}
+              onClick={onSavePromptVersion}
+              disabled={isSavingPromptVersion}
             >
-              Save Draft
+              {isSavingPromptVersion ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Сохранить версию
             </Button>
-            <Button type="button" onClick={onRunSimulation} disabled={!canRun}>
+            <Button type="button" onClick={onRunSimulation} disabled={!canRun || isGenerating}>
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

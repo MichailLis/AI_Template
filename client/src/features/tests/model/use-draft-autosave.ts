@@ -13,6 +13,7 @@ interface UseDraftAutosaveParams {
   draftForm: {
     title: string;
     description: string;
+    analysisPromptVersionId: number | null;
   };
   isDraftDirty: boolean;
   publishIsPending: boolean;
@@ -58,6 +59,7 @@ export function useDraftAutosave({
           data: {
             title: draftForm.title.trim() || undefined,
             description: draftForm.description.trim() || null,
+            analysisPromptVersionId: draftForm.analysisPromptVersionId,
           },
         },
         {
@@ -96,6 +98,7 @@ export function useDraftAutosave({
       clearDraftEdits,
       draft,
       draftForm.description,
+      draftForm.analysisPromptVersionId,
       draftForm.title,
       onAfterSave,
       topicId,

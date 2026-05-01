@@ -9,16 +9,10 @@
 /**
  * @nullable
  */
-export type TestsTopicDetailResponseDtoPublished = {
-  id: number;
-  versionNumber: number;
-  title: string;
-  /** @nullable */
-  analysisPromptVersion: {
+export type TestsTopicDetailResponseDtoDraftAnalysisPromptVersion = {
   id: number;
   promptId: number;
   promptTitle: string;
   versionNumber: number;
   model: string;
-} | null;
 } | null;

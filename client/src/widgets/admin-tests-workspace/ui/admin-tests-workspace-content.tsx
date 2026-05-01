@@ -57,6 +57,7 @@ export function AdminTestsWorkspaceContent({
     return (
       <AdminTestsSettingsCard
         published={workspace.detail?.published ?? null}
+        draftAnalysisPromptVersion={workspace.draft?.analysisPromptVersion ?? null}
         draftForm={workspace.draftForm}
         isDraftDirty={workspace.isDraftDirty}
         isSelectedTopicArchived={workspace.isSelectedTopicArchived}
@@ -73,6 +74,9 @@ export function AdminTestsWorkspaceContent({
         onDraftTitleChange={(value) => workspace.updateCurrentDraftEdits({ title: value })}
         onDraftDescriptionChange={(value) =>
           workspace.updateCurrentDraftEdits({ description: value })
+        }
+        onDraftAnalysisPromptVersionChange={(value) =>
+          workspace.updateCurrentDraftEdits({ analysisPromptVersionId: value })
         }
         onSaveDraft={() => workspace.draftAutosave.saveDraft('manual')}
         onRequestPublish={() => workspace.setIsPublishConfirmOpen(true)}

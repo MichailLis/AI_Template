@@ -1,3 +1,6 @@
+import { useMemo } from 'react';
+
+import { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -7,15 +10,26 @@ import { Textarea } from '@/shared/ui/textarea';
 interface DraftForm {
   title: string;
   description: string;
+  analysisPromptVersionId: number | null;
+}
+
+interface AnalysisPromptVersionSummary {
+  id: number;
+  promptId: number;
+  promptTitle: string;
+  versionNumber: number;
+  model: string;
 }
 
 interface PublishedVersion {
   versionNumber: number;
   title: string;
+  analysisPromptVersion: AnalysisPromptVersionSummary | null;
 }
 
 interface AdminTestsSettingsCardProps {
   published: PublishedVersion | null;
+  draftAnalysisPromptVersion: AnalysisPromptVersionSummary | null;
   draftForm: DraftForm;
   isDraftDirty: boolean;
   isSelectedTopicArchived: boolean;
@@ -29,6 +43,7 @@ interface AdminTestsSettingsCardProps {
   onBackToQuestions: () => void;
   onDraftTitleChange: (value: string) => void;
   onDraftDescriptionChange: (value: string) => void;
+  onDraftAnalysisPromptVersionChange: (value: number | null) => void;
   onSaveDraft: () => void;
   onRequestPublish: () => void;
   onToggleTopicActive: () => void;
@@ -44,6 +59,13 @@ interface MetadataSettingsSectionProps {
   onDraftTitleChange: (value: string) => void;
   onDraftDescriptionChange: (value: string) => void;
   onSaveDraft: () => void;
+}
+
+interface AnalysisPromptSettingsSectionProps {
+  selectedAnalysisPromptVersion: AnalysisPromptVersionSummary | null;
+  selectedAnalysisPromptVersionId: number | null;
+  isSelectedTopicArchived: boolean;
+  onDraftAnalysisPromptVersionChange: (value: number | null) => void;
 }
 
 interface PublishSectionProps {
@@ -161,10 +183,87 @@ function PublishedSnapshotSection({ published }: { published: PublishedVersion |
           <p>
             Название: <span className="font-medium">{published.title}</span>
           </p>
+          <p>
+            Анализ:{' '}
+            <span className="font-medium">
+              {published.analysisPromptVersion
+                ? `${published.analysisPromptVersion.promptTitle} v${published.analysisPromptVersion.versionNumber}`
+                : 'не подключен'}
+            </span>
+          </p>
         </div>
       ) : (
         <p className="mt-1 text-sm text-slate-600">Тест еще не опубликован.</p>
       )}
+    </div>
+  );
+}
+
+function AnalysisPromptSettingsSection({
+  selectedAnalysisPromptVersion,
+  selectedAnalysisPromptVersionId,
+  isSelectedTopicArchived,
+  onDraftAnalysisPromptVersionChange,
+}: AnalysisPromptSettingsSectionProps) {
+  const promptsQuery = useAnalysisPromptsControllerListPrompts();
+  const promptVersionOptions = useMemo(
+    () =>
+      (promptsQuery.data?.prompts ?? []).flatMap((prompt) =>
+        prompt.versions
+          .filter((version) => version.status === 'PUBLISHED')
+          .map((version) => ({
+            id: version.id,
+            label: `${prompt.title} · v${version.versionNumber}`,
+            model: version.model,
+          })),
+      ),
+    [promptsQuery.data?.prompts],
+  );
+  const selectedExists = promptVersionOptions.some(
+    (option) => option.id === selectedAnalysisPromptVersionId,
+  );
+  const options =
+    selectedAnalysisPromptVersion && !selectedExists
+      ? [
+          {
+            id: selectedAnalysisPromptVersion.id,
+            label: `${selectedAnalysisPromptVersion.promptTitle} · v${selectedAnalysisPromptVersion.versionNumber}`,
+            model: selectedAnalysisPromptVersion.model,
+          },
+          ...promptVersionOptions,
+        ]
+      : promptVersionOptions;
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-sm font-medium text-slate-900">Промпт анализа</p>
+      <p className="mt-1 text-sm text-slate-600">
+        Для версии теста можно подключить одну опубликованную версию промпта.
+      </p>
+      <div className="mt-3 space-y-2">
+        <Label htmlFor="settings-analysis-prompt">Активный промпт</Label>
+        <select
+          id="settings-analysis-prompt"
+          value={selectedAnalysisPromptVersionId ?? ''}
+          disabled={isSelectedTopicArchived || promptsQuery.isLoading}
+          onChange={(event) =>
+            onDraftAnalysisPromptVersionChange(
+              event.target.value ? Number(event.target.value) : null,
+            )
+          }
+          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Не подключать анализ</option>
+          {options.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label} · {option.model}
+            </option>
+          ))}
+        </select>
+        {promptsQuery.isError ? (
+          <p className="text-xs text-red-700">Не удалось загрузить промпты анализа.</p>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -240,6 +339,7 @@ function ActivitySwitchSection({
 
 export function AdminTestsSettingsCard({
   published,
+  draftAnalysisPromptVersion,
   draftForm,
   isDraftDirty,
   isSelectedTopicArchived,
@@ -253,6 +353,7 @@ export function AdminTestsSettingsCard({
   onBackToQuestions,
   onDraftTitleChange,
   onDraftDescriptionChange,
+  onDraftAnalysisPromptVersionChange,
   onSaveDraft,
   onRequestPublish,
   onToggleTopicActive,
@@ -287,6 +388,12 @@ export function AdminTestsSettingsCard({
           onDraftTitleChange={onDraftTitleChange}
           onDraftDescriptionChange={onDraftDescriptionChange}
           onSaveDraft={onSaveDraft}
+        />
+        <AnalysisPromptSettingsSection
+          selectedAnalysisPromptVersion={draftAnalysisPromptVersion}
+          selectedAnalysisPromptVersionId={draftForm.analysisPromptVersionId}
+          isSelectedTopicArchived={isSelectedTopicArchived}
+          onDraftAnalysisPromptVersionChange={onDraftAnalysisPromptVersionChange}
         />
         <PublishedSnapshotSection published={published} />
         <PublishSection

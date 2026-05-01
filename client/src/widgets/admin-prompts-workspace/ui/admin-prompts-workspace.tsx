@@ -5,7 +5,11 @@ import { useAdminPromptsWorkspace } from './use-admin-prompts-workspace';
 export function AdminPromptsWorkspace() {
   const {
     modelsQuery,
-    generateMutation,
+    testQuestionsQuery,
+    createPromptMutation,
+    publishVersionMutation,
+    simulateMutation,
+    promptTitle,
     temperature,
     responseFormat,
     modelSearch,
@@ -25,6 +29,8 @@ export function AdminPromptsWorkspace() {
     promptLineCount,
     duplicateVariableData,
     detectedVariablesCount,
+    selectedQuestionIds,
+    setPromptTitle,
     setModel,
     setTemperature,
     setResponseFormat,
@@ -42,6 +48,10 @@ export function AdminPromptsWorkspace() {
     removeVariable,
     copyRunJson,
     handleGenerate,
+    toggleSelectedQuestion,
+    selectAllQuestions,
+    clearSelectedQuestions,
+    handleSavePromptVersion,
   } = useAdminPromptsWorkspace();
 
   if (modelsQuery.isLoading) {
@@ -72,6 +82,8 @@ export function AdminPromptsWorkspace() {
   return (
     <div className="grid min-w-0 gap-4 xl:grid-cols-[2fr_3fr]">
       <PromptEditorCard
+        promptTitle={promptTitle}
+        onPromptTitleChange={setPromptTitle}
         modelSearch={modelSearch}
         onModelSearchChange={setModelSearch}
         modelFilter={modelFilter}
@@ -103,19 +115,29 @@ export function AdminPromptsWorkspace() {
 
       <SimulationOutputCard
         runs={runs}
+        testQuestions={testQuestionsQuery.data?.questions ?? []}
+        selectedQuestionIds={selectedQuestionIds}
+        isLoadingQuestions={testQuestionsQuery.isLoading}
+        isSavingPromptVersion={createPromptMutation.isPending || publishVersionMutation.isPending}
         showMetrics={showMetrics}
         onShowMetricsChange={setShowMetrics}
         diffView={diffView}
         onDiffViewChange={setDiffView}
         onClearLogs={() => setRuns([])}
         detectedVariablesCount={detectedVariablesCount}
-        isGenerating={generateMutation.isPending}
+        isGenerating={simulateMutation.isPending}
         canRun={
           !!selectedModel &&
+          selectedModelItem?.isFree === true &&
+          selectedQuestionIds.length > 0 &&
           filteredModels.length > 0 &&
           duplicateVariableData.duplicateKeys.length === 0
         }
         onRunSimulation={handleGenerate}
+        onToggleQuestion={toggleSelectedQuestion}
+        onSelectAllQuestions={selectAllQuestions}
+        onClearSelectedQuestions={clearSelectedQuestions}
+        onSavePromptVersion={handleSavePromptVersion}
         onCopyRunJson={copyRunJson}
       />
     </div>

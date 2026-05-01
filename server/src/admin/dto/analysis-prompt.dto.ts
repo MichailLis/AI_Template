@@ -74,6 +74,20 @@ export const PromptSimulationResponseSchema = z.object({
   questionCount: z.number().int().min(0),
 });
 
+export const PromptTestQuestionSchema = z.object({
+  id: z.number(),
+  type: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  topicTitle: z.string(),
+  versionNumber: z.number(),
+  versionStatus: z.string(),
+});
+
+export const PromptTestQuestionsResponseSchema = z.object({
+  questions: z.array(PromptTestQuestionSchema),
+});
+
 export class AnalysisPromptListResponseDto extends createZodDto(AnalysisPromptListResponseSchema) {}
 export class AnalysisPromptResponseDto extends createZodDto(AnalysisPromptResponseSchema) {}
 export class AnalysisPromptVersionResponseDto extends createZodDto(
@@ -88,3 +102,6 @@ export class PublishAnalysisPromptVersionDto extends createZodDto(
 ) {}
 export class PromptSimulationRequestDto extends createZodDto(PromptSimulationRequestSchema) {}
 export class PromptSimulationResponseDto extends createZodDto(PromptSimulationResponseSchema) {}
+export class PromptTestQuestionsResponseDto extends createZodDto(
+  PromptTestQuestionsResponseSchema,
+) {}

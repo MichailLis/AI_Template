@@ -1,41 +1,34 @@
 import type { PromptVariable, SimulationRun } from '../model/types';
 
 export const INITIAL_PROMPT = `# SYSTEM PROMPT
-You are an AI Career Strategist specialized in {{target_industry}} transitions.
-Analyze the candidate's resume and profile.
+Ты аналитик профориентационного тестирования. Проанализируй ответы студента на выбранные вопросы.
 
-1. Identify top 3 transferable skills.
-2. Suggest 2 pivot roles with compatibility score above 80%.
-3. Draft a short LinkedIn bio summary.
+Верни строго JSON по схеме результата анализа:
+- skillsLevel: текущий уровень базовых навыков;
+- thinkingType: тип мышления;
+- personalityTraits: личностные особенности;
+- careerDevelopment: рекомендации для карьеры и профессионального развития.
 
 # USER CONTEXT
-Candidate Name: {{candidate_name}}
-Current Role: {{current_role}}
-Years of Experience: {{yoe}}
+Студент: {{student_name}}
+Контекст теста: {{test_context}}
 
-Resume Data:
+Ответы студента:
 """
-{{resume_text}}
+{{student_answers}}
 """`;
 
 export const INITIAL_VARIABLES: PromptVariable[] = [
-  { id: 'var-candidate-name', key: 'candidate_name', value: 'Sarah Jenkins' },
+  { id: 'var-student-name', key: 'student_name', value: 'Тестовый студент' },
   {
-    id: 'var-current-role',
-    key: 'current_role',
-    value: 'Senior Marketing Manager',
+    id: 'var-test-context',
+    key: 'test_context',
+    value: 'Диагностика базовых навыков, мышления и карьерных ориентиров',
   },
   {
-    id: 'var-target-industry',
-    key: 'target_industry',
-    value: 'FinTech Product Management',
-  },
-  { id: 'var-yoe', key: 'yoe', value: '8' },
-  {
-    id: 'var-resume-text',
-    key: 'resume_text',
-    value:
-      'Marketing leader with 8 years of experience in analytics, GTM strategy, and cross-functional execution.',
+    id: 'var-student-answers',
+    key: 'student_answers',
+    value: 'Система подставит сюда выбранные вопросы и тестовые ответы при проверке промпта.',
   },
 ];
 
@@ -44,10 +37,10 @@ export const INITIAL_RUNS: SimulationRun[] = [
     id: 'seed-success',
     createdAt: '14:23:05',
     status: 'success',
-    model: 'openai/gpt-4o-mini',
-    prompt: 'Seed simulation output',
+    model: 'deepseek/deepseek-chat-v3-0324:free',
+    prompt: 'Пример симуляции анализа',
     output:
-      'Top pivot roles: Growth Product Manager (92%) and Product Marketing Manager (88%).\nTransferable skills: Data-driven decision making, stakeholder management, GTM strategy.\nLinkedIn summary draft generated.',
+      '{"skillsLevel":{"title":"Базовые навыки","summary":"Студент уверенно справляется с анализом информации.","items":[{"name":"Самоорганизация","level":"medium","score":72,"description":"Есть устойчивые привычки планирования."}]},"thinkingType":{"title":"Тип мышления","type":"Аналитико-практический","description":"Склонен связывать факты с действиями.","strengths":["Структурирует информацию"]},"personalityTraits":{"title":"Личностные особенности","traits":[{"name":"Ответственность","description":"Доводит задачи до завершения.","careerImpact":"Подходит для ролей с понятной зоной результата."}]},"careerDevelopment":{"summary":"Стоит развивать проектное мышление.","recommendedDirections":["Аналитика"],"developmentRecommendations":["Практиковать декомпозицию задач"],"professionalNextSteps":["Собрать учебное портфолио"]}}',
     latencyMs: 840,
     totalTokens: 452,
   },
@@ -55,8 +48,8 @@ export const INITIAL_RUNS: SimulationRun[] = [
     id: 'seed-error',
     createdAt: '14:15:22',
     status: 'error',
-    model: 'openai/gpt-4o-mini',
-    prompt: 'Seed failed simulation',
-    errorMessage: 'Context limit exceeded for variable resume_text.',
+    model: 'deepseek/deepseek-chat-v3-0324:free',
+    prompt: 'Пример ошибки симуляции',
+    errorMessage: 'Для проверки промпта выберите хотя бы один вопрос.',
   },
 ];

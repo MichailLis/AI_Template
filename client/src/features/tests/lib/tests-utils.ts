@@ -237,7 +237,11 @@ export const hasDraftEdits = (
   draft: TestsTopicDetailResponseDtoDraft,
   title: string,
   description: string,
-) => title !== draft.title || description !== (draft.description ?? '');
+  analysisPromptVersionId: number | null,
+) =>
+  title !== draft.title ||
+  description !== (draft.description ?? '') ||
+  analysisPromptVersionId !== (draft.analysisPromptVersion?.id ?? null);
 
 export const hasQuestionFormChanges = (
   current: QuestionFormState,

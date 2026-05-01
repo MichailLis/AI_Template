@@ -1,3 +1,4 @@
+import { TestAnalysisResultView } from '@/features/tests';
 import { Badge } from '@/shared/ui/badge';
 import {
   Dialog,
@@ -77,33 +78,14 @@ export function PublicLinksAttemptDetailDialog({
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{detailAttempt.status}</Badge>
-              <Badge variant="secondary">{detailAttempt.analysis?.status ?? 'NONE'}</Badge>
-              <Badge variant="outline">{detailAttempt.analysis?.providerMode ?? 'NONE'}</Badge>
             </div>
 
-            <p className="text-sm text-slate-600">
-              Сгенерировано: {formatDateTime(detailAttempt.analysis?.generatedAt ?? null)}
-            </p>
-
-            <div>
-              <p className="mb-1 text-sm font-medium text-slate-800">Сводка</p>
-              <pre className="max-h-60 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-100">
-                {toPrettyJson(detailAttempt.analysis?.summary ?? null)}
-              </pre>
-            </div>
-
-            <div>
-              <p className="mb-1 text-sm font-medium text-slate-800">Исходный текст</p>
-              <pre className="max-h-60 overflow-auto rounded-md bg-slate-100 p-3 text-xs text-slate-900">
-                {detailAttempt.analysis?.rawText ?? '—'}
-              </pre>
-            </div>
-
-            {detailAttempt.analysis?.errorMessage ? (
-              <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {detailAttempt.analysis.errorMessage}
-              </p>
-            ) : null}
+            <TestAnalysisResultView
+              analysis={detailAttempt.analysis}
+              generatedAtLabel={`Сгенерировано: ${formatDateTime(
+                detailAttempt.analysis?.generatedAt ?? null,
+              )}`}
+            />
           </div>
         ) : null}
 

@@ -6,21 +6,27 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface UpdateTestsTopicDraftDto {
+export interface CreateAnalysisPromptDto {
   /**
    * @minLength 1
    * @maxLength 200
    */
-  title?: string;
+  title: string;
   /**
    * @maxLength 2000
    * @nullable
    */
   description?: string | null;
+  /** @minLength 1 */
+  model: string;
   /**
-   * @minimum 1
-   * @maximum 9007199254740991
-   * @nullable
+   * @minimum 0
+   * @maximum 2
    */
-  analysisPromptVersionId?: number | null;
+  temperature?: number;
+  /**
+   * @minLength 1
+   * @maxLength 12000
+   */
+  prompt: string;
 }

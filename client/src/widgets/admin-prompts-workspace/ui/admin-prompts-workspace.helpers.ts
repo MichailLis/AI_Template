@@ -1,7 +1,7 @@
 import type { DuplicateVariableData, SimulationRun } from '../model/types';
 import type {
   AdminPromptModelsResponseDtoModelsItem,
-  AdminPromptResponseDto,
+  PromptSimulationResponseDto,
 } from '@/shared/api/model';
 
 interface ValidateSimulationInputParams {
@@ -59,7 +59,7 @@ export const buildRunningSimulationRun = (
 export const applySimulationSuccess = (
   runs: SimulationRun[],
   runId: string,
-  result: AdminPromptResponseDto,
+  result: PromptSimulationResponseDto,
   latencyMs: number,
   totalTokens: number,
 ): SimulationRun[] => {

@@ -1,11 +1,13 @@
-import { BrainCircuit, CheckCircle2, ClipboardList } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
+import { TestAnalysisResultView } from '@/features/tests';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
-import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { PublicThemeLayout } from './public-theme-layout';
+
+import type { PublicSessionResultResponseDto } from '@/shared/api/model';
 
 const formatDateTime = (value: string | null) => {
   if (!value) {
@@ -15,30 +17,6 @@ const formatDateTime = (value: string | null) => {
   return new Date(value).toLocaleString();
 };
 
-const getAnalysisStatusLabel = (status: string) => {
-  switch (status) {
-    case 'READY':
-      return 'готов';
-    case 'PENDING':
-      return 'в обработке';
-    case 'FAILED':
-      return 'ошибка';
-    default:
-      return status;
-  }
-};
-
-const getAnalysisStatusVariant = (status: string): 'outline' | 'secondary' | 'destructive' => {
-  switch (status) {
-    case 'READY':
-      return 'secondary';
-    case 'FAILED':
-      return 'destructive';
-    default:
-      return 'outline';
-  }
-};
-
 export function PublicTestResultWorkspace() {
   const { sessionToken } = useParams<{ sessionToken: string }>();
 
@@ -46,6 +24,10 @@ export function PublicTestResultWorkspace() {
     query: {
       enabled: Boolean(sessionToken),
       retry: false,
+      refetchInterval: (query) => {
+        const data = query.state.data as PublicSessionResultResponseDto | undefined;
+        return data?.analysis.status === 'PENDING' ? 3000 : false;
+      },
     },
   });
 
@@ -97,12 +79,6 @@ export function PublicTestResultWorkspace() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={getAnalysisStatusVariant(result.analysis.status)}>
-              Анализ: {getAnalysisStatusLabel(result.analysis.status)}
-            </Badge>
-          </div>
-
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-border/60 bg-card px-3 py-2">
               <p className="text-xs text-muted-foreground">Завершено</p>
@@ -119,42 +95,11 @@ export function PublicTestResultWorkspace() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {result.analysis.rawText ? (
-            <div className="rounded-xl border border-border/60 bg-card p-4">
-              <p className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                <BrainCircuit className="h-4 w-4 text-primary" />
-                Краткий текст анализа
-              </p>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {result.analysis.rawText}
-              </p>
-            </div>
-          ) : null}
-
-          <div className="rounded-xl border border-border/60 bg-card p-4">
-            <p className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              Структурированные данные анализа
-            </p>
-            <pre className="max-h-96 overflow-auto rounded-md bg-muted/45 p-3 text-xs text-foreground">
-              {JSON.stringify(result.analysis.summary, null, 2)}
-            </pre>
-          </div>
-
-          {result.analysis.status === 'FAILED' ? (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-              <p>
-                Попробуйте обновить страницу через несколько секунд. Если проблема сохраняется,
-                свяжитесь с администратором.
-              </p>
-            </div>
-          ) : null}
-          {result.analysis.errorMessage ? (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              {result.analysis.errorMessage}
-            </div>
-          ) : null}
+        <CardContent>
+          <TestAnalysisResultView
+            analysis={result.analysis}
+            generatedAtLabel={`Сгенерировано: ${formatDateTime(result.analysis.generatedAt)}`}
+          />
         </CardContent>
       </Card>
     </PublicThemeLayout>

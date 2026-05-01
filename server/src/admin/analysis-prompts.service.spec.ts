@@ -140,6 +140,20 @@ describe('AnalysisPromptsService', () => {
     );
   });
 
+  it('createPrompt rejects non-free models before persistence', async () => {
+    await expect(
+      service.createPrompt(3, {
+        title: 'Career guidance analysis',
+        description: 'Analyzes completed tests.',
+        model: 'openai/gpt-4.1',
+        temperature: 0.2,
+        prompt: 'Analyze {{answers}}',
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(prismaMock.analysisPrompt.create).not.toHaveBeenCalled();
+  });
+
   it('publishVersion marks an existing draft as published', async () => {
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
       id: 42,
@@ -250,5 +264,36 @@ describe('AnalysisPromptsService', () => {
         generateAnswers: true,
       }),
     ).rejects.toThrow(ServiceUnavailableException);
+  });
+
+  it('listTestQuestions returns selectable questions from test versions', async () => {
+    prismaMock.testQuestion.findMany.mockResolvedValue([
+      {
+        id: 11,
+        type: 'OPEN_TEXT',
+        title: 'Что вам легче всего дается?',
+        description: null,
+        version: {
+          versionNumber: 3,
+          status: 'DRAFT',
+          title: 'Career skills',
+        },
+      },
+    ]);
+
+    const result = await service.listTestQuestions(3);
+
+    expect(prismaMock.testQuestion.findMany).toHaveBeenCalled();
+    expect(result.questions).toEqual([
+      {
+        id: 11,
+        type: 'OPEN_TEXT',
+        title: 'Что вам легче всего дается?',
+        description: null,
+        topicTitle: 'Career skills',
+        versionNumber: 3,
+        versionStatus: 'DRAFT',
+      },
+    ]);
   });
 });

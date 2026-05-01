@@ -20,6 +20,7 @@ import {
   CreateAnalysisPromptDto,
   PromptSimulationRequestDto,
   PromptSimulationResponseDto,
+  PromptTestQuestionsResponseDto,
 } from './dto/analysis-prompt.dto';
 
 @ApiTags('admin')
@@ -34,6 +35,13 @@ export class AnalysisPromptsController {
   @ApiResponse({ status: HttpStatus.OK, type: AnalysisPromptListResponseDto })
   listPrompts(@GetCurrentUserId() userId: number) {
     return this.analysisPromptsService.listPrompts(userId);
+  }
+
+  @Get('test-questions')
+  @ApiOperation({ summary: 'List test questions for prompt simulation' })
+  @ApiResponse({ status: HttpStatus.OK, type: PromptTestQuestionsResponseDto })
+  listTestQuestions(@GetCurrentUserId() userId: number) {
+    return this.analysisPromptsService.listTestQuestions(userId);
   }
 
   @Post()

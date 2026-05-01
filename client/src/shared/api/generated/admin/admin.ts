@@ -31,7 +31,14 @@ import type {
   AdminPromptResponseDto,
   AdminUserResponseDto,
   AdminUsersResponseDto,
+  AnalysisPromptListResponseDto,
+  AnalysisPromptResponseDto,
+  AnalysisPromptVersionResponseDto,
+  CreateAnalysisPromptDto,
   GeneratePromptDto,
+  PromptSimulationRequestDto,
+  PromptSimulationResponseDto,
+  PromptTestQuestionsResponseDto,
   UpdateUserRoleDto
 } from '../../model';
 
@@ -46,17 +53,17 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Get admin dashboard overview
  */
 export const adminControllerGetOverview = (
-    
+
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-      
-      
+
+
       return customInstance<AdminOverviewResponseDto>(
       {url: `/admin`, method: 'GET', signal
     },
       options);
     }
-  
+
 
 
 
@@ -66,7 +73,7 @@ export const getAdminControllerGetOverviewQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getAdminControllerGetOverviewQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetOverview>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetOverview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -74,13 +81,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetOverviewQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetOverview>>> = ({ signal }) => adminControllerGetOverview(requestOptions, signal);
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetOverview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -119,7 +126,7 @@ export function useAdminControllerGetOverview<TData = Awaited<ReturnType<typeof 
 
 export function useAdminControllerGetOverview<TData = Awaited<ReturnType<typeof adminControllerGetOverview>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetOverview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminControllerGetOverviewQueryOptions(options)
@@ -139,15 +146,15 @@ export const adminControllerGetUsers = (
     params?: AdminControllerGetUsersParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-      
-      
+
+
       return customInstance<AdminUsersResponseDto>(
       {url: `/admin/users`, method: 'GET',
         params, signal
     },
       options);
     }
-  
+
 
 
 
@@ -157,7 +164,7 @@ export const getAdminControllerGetUsersQueryKey = (params?: AdminControllerGetUs
     ] as const;
     }
 
-    
+
 export const getAdminControllerGetUsersQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetUsers>>, TError = unknown>(params?: AdminControllerGetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -165,13 +172,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetUsersQueryKey(params);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUsers>>> = ({ signal }) => adminControllerGetUsers(params, requestOptions, signal);
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -210,7 +217,7 @@ export function useAdminControllerGetUsers<TData = Awaited<ReturnType<typeof adm
 
 export function useAdminControllerGetUsers<TData = Awaited<ReturnType<typeof adminControllerGetUsers>>, TError = unknown>(
  params?: AdminControllerGetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminControllerGetUsersQueryOptions(params,options)
@@ -227,17 +234,17 @@ export function useAdminControllerGetUsers<TData = Awaited<ReturnType<typeof adm
  * @summary Get available OpenRouter models
  */
 export const adminControllerGetPromptModels = (
-    
+
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-      
-      
+
+
       return customInstance<AdminPromptModelsResponseDto>(
       {url: `/admin/prompts/models`, method: 'GET', signal
     },
       options);
     }
-  
+
 
 
 
@@ -247,7 +254,7 @@ export const getAdminControllerGetPromptModelsQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getAdminControllerGetPromptModelsQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -255,13 +262,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetPromptModelsQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetPromptModels>>> = ({ signal }) => adminControllerGetPromptModels(requestOptions, signal);
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -300,7 +307,7 @@ export function useAdminControllerGetPromptModels<TData = Awaited<ReturnType<typ
 
 export function useAdminControllerGetPromptModels<TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminControllerGetPromptModelsQueryOptions(options)
@@ -320,8 +327,8 @@ export const adminControllerGeneratePrompt = (
     generatePromptDto: GeneratePromptDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-      
-      
+
+
       return customInstance<AdminPromptResponseDto>(
       {url: `/admin/prompts/generate`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -329,7 +336,7 @@ export const adminControllerGeneratePrompt = (
     },
       options);
     }
-  
+
 
 
 export const getAdminControllerGeneratePromptMutationOptions = <TError = unknown,
@@ -343,7 +350,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerGeneratePrompt>>, {data: GeneratePromptDto}> = (props) => {
@@ -354,7 +361,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-        
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -384,8 +391,8 @@ export const adminControllerUpdateUserRole = (
     updateUserRoleDto: UpdateUserRoleDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-      
-      
+
+
       return customInstance<AdminUserResponseDto>(
       {url: `/admin/users/${id}/role`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
@@ -393,7 +400,7 @@ export const adminControllerUpdateUserRole = (
     },
       options);
     }
-  
+
 
 
 export const getAdminControllerUpdateUserRoleMutationOptions = <TError = unknown,
@@ -407,7 +414,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerUpdateUserRole>>, {id: number;data: UpdateUserRoleDto}> = (props) => {
@@ -418,7 +425,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-        
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -440,4 +447,370 @@ export const useAdminControllerUpdateUserRole = <TError = unknown,
       > => {
       return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
     }
-    
+    /**
+ * @summary List analysis prompts and versions
+ */
+export const analysisPromptsControllerListPrompts = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<AnalysisPromptListResponseDto>(
+      {url: `/admin/prompts`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getAnalysisPromptsControllerListPromptsQueryKey = () => {
+    return [
+    `/admin/prompts`
+    ] as const;
+    }
+
+
+export const getAnalysisPromptsControllerListPromptsQueryOptions = <TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAnalysisPromptsControllerListPromptsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>> = ({ signal }) => analysisPromptsControllerListPrompts(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AnalysisPromptsControllerListPromptsQueryResult = NonNullable<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>>
+export type AnalysisPromptsControllerListPromptsQueryError = unknown
+
+
+export function useAnalysisPromptsControllerListPrompts<TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnalysisPromptsControllerListPrompts<TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnalysisPromptsControllerListPrompts<TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List analysis prompts and versions
+ */
+
+export function useAnalysisPromptsControllerListPrompts<TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAnalysisPromptsControllerListPromptsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Create analysis prompt draft
+ */
+export const analysisPromptsControllerCreatePrompt = (
+    createAnalysisPromptDto: CreateAnalysisPromptDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<AnalysisPromptResponseDto>(
+      {url: `/admin/prompts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAnalysisPromptDto, signal
+    },
+      options);
+    }
+
+
+
+export const getAnalysisPromptsControllerCreatePromptMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>, TError,{data: CreateAnalysisPromptDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>, TError,{data: CreateAnalysisPromptDto}, TContext> => {
+
+const mutationKey = ['analysisPromptsControllerCreatePrompt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>, {data: CreateAnalysisPromptDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  analysisPromptsControllerCreatePrompt(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalysisPromptsControllerCreatePromptMutationResult = NonNullable<Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>>
+    export type AnalysisPromptsControllerCreatePromptMutationBody = CreateAnalysisPromptDto
+    export type AnalysisPromptsControllerCreatePromptMutationError = unknown
+
+    /**
+ * @summary Create analysis prompt draft
+ */
+export const useAnalysisPromptsControllerCreatePrompt = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>, TError,{data: CreateAnalysisPromptDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analysisPromptsControllerCreatePrompt>>,
+        TError,
+        {data: CreateAnalysisPromptDto},
+        TContext
+      > => {
+      return useMutation(getAnalysisPromptsControllerCreatePromptMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary List test questions for prompt simulation
+ */
+export const analysisPromptsControllerListTestQuestions = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PromptTestQuestionsResponseDto>(
+      {url: `/admin/prompts/test-questions`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getAnalysisPromptsControllerListTestQuestionsQueryKey = () => {
+    return [
+    `/admin/prompts/test-questions`
+    ] as const;
+    }
+
+
+export const getAnalysisPromptsControllerListTestQuestionsQueryOptions = <TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAnalysisPromptsControllerListTestQuestionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>> = ({ signal }) => analysisPromptsControllerListTestQuestions(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AnalysisPromptsControllerListTestQuestionsQueryResult = NonNullable<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>>
+export type AnalysisPromptsControllerListTestQuestionsQueryError = unknown
+
+
+export function useAnalysisPromptsControllerListTestQuestions<TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnalysisPromptsControllerListTestQuestions<TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnalysisPromptsControllerListTestQuestions<TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List test questions for prompt simulation
+ */
+
+export function useAnalysisPromptsControllerListTestQuestions<TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAnalysisPromptsControllerListTestQuestionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Publish analysis prompt version
+ */
+export const analysisPromptsControllerPublishVersion = (
+    versionId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<AnalysisPromptVersionResponseDto>(
+      {url: `/admin/prompts/versions/${versionId}/publish`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+export const getAnalysisPromptsControllerPublishVersionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>, TError,{versionId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>, TError,{versionId: number}, TContext> => {
+
+const mutationKey = ['analysisPromptsControllerPublishVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>, {versionId: number}> = (props) => {
+          const {versionId} = props ?? {};
+
+          return  analysisPromptsControllerPublishVersion(versionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalysisPromptsControllerPublishVersionMutationResult = NonNullable<Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>>
+
+    export type AnalysisPromptsControllerPublishVersionMutationError = unknown
+
+    /**
+ * @summary Publish analysis prompt version
+ */
+export const useAnalysisPromptsControllerPublishVersion = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>, TError,{versionId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analysisPromptsControllerPublishVersion>>,
+        TError,
+        {versionId: number},
+        TContext
+      > => {
+      return useMutation(getAnalysisPromptsControllerPublishVersionMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Simulate analysis prompt with selected test questions
+ */
+export const analysisPromptsControllerSimulatePrompt = (
+    promptSimulationRequestDto: PromptSimulationRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PromptSimulationResponseDto>(
+      {url: `/admin/prompts/simulate`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: promptSimulationRequestDto, signal
+    },
+      options);
+    }
+
+
+
+export const getAnalysisPromptsControllerSimulatePromptMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>, TError,{data: PromptSimulationRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>, TError,{data: PromptSimulationRequestDto}, TContext> => {
+
+const mutationKey = ['analysisPromptsControllerSimulatePrompt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>, {data: PromptSimulationRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  analysisPromptsControllerSimulatePrompt(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalysisPromptsControllerSimulatePromptMutationResult = NonNullable<Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>>
+    export type AnalysisPromptsControllerSimulatePromptMutationBody = PromptSimulationRequestDto
+    export type AnalysisPromptsControllerSimulatePromptMutationError = unknown
+
+    /**
+ * @summary Simulate analysis prompt with selected test questions
+ */
+export const useAnalysisPromptsControllerSimulatePrompt = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>, TError,{data: PromptSimulationRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analysisPromptsControllerSimulatePrompt>>,
+        TError,
+        {data: PromptSimulationRequestDto},
+        TContext
+      > => {
+      return useMutation(getAnalysisPromptsControllerSimulatePromptMutationOptions(options), queryClient);
+    }

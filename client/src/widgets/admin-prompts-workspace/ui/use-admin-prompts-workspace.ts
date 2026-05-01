@@ -2,8 +2,12 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  useAdminControllerGeneratePrompt,
   useAdminControllerGetPromptModels,
+  useAnalysisPromptsControllerCreatePrompt,
+  useAnalysisPromptsControllerListPrompts,
+  useAnalysisPromptsControllerListTestQuestions,
+  useAnalysisPromptsControllerPublishVersion,
+  useAnalysisPromptsControllerSimulatePrompt,
 } from '@/shared/api/generated/admin/admin';
 
 import { INITIAL_PROMPT, INITIAL_RUNS, INITIAL_VARIABLES } from '../lib/constants';
@@ -29,11 +33,16 @@ import type { ModelFilter, PromptVariable, ResponseFormat, SimulationRun } from 
 
 export function useAdminPromptsWorkspace() {
   const modelsQuery = useAdminControllerGetPromptModels();
-  const generateMutation = useAdminControllerGeneratePrompt();
+  const promptsQuery = useAnalysisPromptsControllerListPrompts();
+  const testQuestionsQuery = useAnalysisPromptsControllerListTestQuestions();
+  const createPromptMutation = useAnalysisPromptsControllerCreatePrompt();
+  const publishVersionMutation = useAnalysisPromptsControllerPublishVersion();
+  const simulateMutation = useAnalysisPromptsControllerSimulatePrompt();
 
+  const [promptTitle, setPromptTitle] = useState('Карьерный анализ по тесту');
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState('0.7');
-  const [responseFormat, setResponseFormat] = useState<ResponseFormat>('text');
+  const [responseFormat, setResponseFormat] = useState<ResponseFormat>('json');
   const [modelSearch, setModelSearch] = useState('');
   const [modelFilter, setModelFilter] = useState<ModelFilter>('free');
   const [systemRole, setSystemRole] = useState('Career Counselor Expert');
@@ -44,6 +53,7 @@ export function useAdminPromptsWorkspace() {
   const [showMetrics, setShowMetrics] = useState(true);
   const [diffView, setDiffView] = useState(false);
   const [runs, setRuns] = useState<SimulationRun[]>(INITIAL_RUNS);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<number[]>([]);
 
   const allModels = useMemo(() => modelsQuery.data?.models ?? [], [modelsQuery.data?.models]);
 
@@ -162,6 +172,16 @@ export function useAdminPromptsWorkspace() {
       return;
     }
 
+    if (selectedQuestionIds.length === 0) {
+      toast.error('Выберите вопросы для симуляции');
+      return;
+    }
+
+    if (!selectedModel.endsWith(':free')) {
+      toast.error('Для проверки промпта выберите free-модель OpenRouter');
+      return;
+    }
+
     const { parsedTemperature, preparedPrompt } = validation;
 
     const runId = generateRunId();
@@ -172,13 +192,14 @@ export function useAdminPromptsWorkspace() {
       ...prev,
     ]);
 
-    generateMutation.mutate(
+    simulateMutation.mutate(
       {
         data: {
           model: selectedModel,
           prompt: preparedPrompt,
           temperature: parsedTemperature,
-          responseFormat,
+          questionIds: selectedQuestionIds,
+          generateAnswers: true,
         },
       },
       {
@@ -197,9 +218,102 @@ export function useAdminPromptsWorkspace() {
     );
   };
 
+  const toggleSelectedQuestion = (questionId: number) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(questionId)
+        ? prev.filter((item) => item !== questionId)
+        : [...prev, questionId],
+    );
+  };
+
+  const selectAllQuestions = () => {
+    setSelectedQuestionIds(
+      (testQuestionsQuery.data?.questions ?? []).map((question) => question.id),
+    );
+  };
+
+  const clearSelectedQuestions = () => {
+    setSelectedQuestionIds([]);
+  };
+
+  const handleSavePromptVersion = () => {
+    const parsedTemperature = Number(temperature);
+    const preparedPrompt = promptTemplate.trim();
+    const title = promptTitle.trim();
+
+    if (!title) {
+      toast.error('Укажите название промпта');
+      return;
+    }
+
+    if (!selectedModel) {
+      toast.error('Выберите модель');
+      return;
+    }
+
+    if (!selectedModel.endsWith(':free')) {
+      toast.error('Для тестового анализа используйте free-модель OpenRouter');
+      return;
+    }
+
+    if (!preparedPrompt) {
+      toast.error('Шаблон промпта пуст');
+      return;
+    }
+
+    if (Number.isNaN(parsedTemperature) || parsedTemperature < 0 || parsedTemperature > 2) {
+      toast.error('Temperature must be between 0 and 2');
+      return;
+    }
+
+    createPromptMutation.mutate(
+      {
+        data: {
+          title,
+          description: 'Промпт анализа студенческих ответов',
+          model: selectedModel,
+          temperature: parsedTemperature,
+          prompt: preparedPrompt,
+        },
+      },
+      {
+        onSuccess: (data) => {
+          const draftVersionId = data.prompt.versions[0]?.id;
+
+          if (!draftVersionId) {
+            void promptsQuery.refetch();
+            toast.success('Версия промпта сохранена');
+            return;
+          }
+
+          publishVersionMutation.mutate(
+            { versionId: draftVersionId },
+            {
+              onSuccess: () => {
+                void promptsQuery.refetch();
+                toast.success('Версия промпта опубликована');
+              },
+              onError: (error: unknown) => {
+                toast.error(getApiErrorMessage(error));
+              },
+            },
+          );
+        },
+        onError: (error: unknown) => {
+          toast.error(getApiErrorMessage(error));
+        },
+      },
+    );
+  };
+
   return {
     modelsQuery,
-    generateMutation,
+    promptsQuery,
+    testQuestionsQuery,
+    createPromptMutation,
+    publishVersionMutation,
+    simulateMutation,
+    promptTitle,
     model,
     temperature,
     responseFormat,
@@ -213,6 +327,7 @@ export function useAdminPromptsWorkspace() {
     showMetrics,
     diffView,
     runs,
+    selectedQuestionIds,
     allModels,
     filteredModels,
     selectedModel,
@@ -221,6 +336,7 @@ export function useAdminPromptsWorkspace() {
     duplicateVariableData,
     detectedVariablesCount,
     setModel,
+    setPromptTitle,
     setTemperature,
     setResponseFormat,
     setModelSearch,
@@ -237,5 +353,9 @@ export function useAdminPromptsWorkspace() {
     removeVariable,
     copyRunJson,
     handleGenerate,
+    toggleSelectedQuestion,
+    selectAllQuestions,
+    clearSelectedQuestions,
+    handleSavePromptVersion,
   };
 }
