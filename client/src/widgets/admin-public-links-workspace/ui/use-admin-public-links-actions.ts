@@ -33,6 +33,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     setSelectedPublicLinkId,
     setNewPublicShortCode,
     refetchPublicLinks,
+    onPublicLinkCreated,
   } = params;
 
   const createPublicLinkMutation = useTestsAdminPublicLinksControllerCreatePublicLink();
@@ -70,6 +71,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
           setSelectedPublicLinkId(link.id);
           setNewPublicShortCode('');
           refetchPublicLinks();
+          onPublicLinkCreated?.();
         },
         onError: (error) => {
           toast.error(parseApiError(error));

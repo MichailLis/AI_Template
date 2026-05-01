@@ -1,7 +1,12 @@
-import { Link } from 'react-router-dom';
-
 import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog';
 
 import { PublicLinkAccessSettingsSection } from './public-link-access-settings-section';
 import { PublicLinkOrganizationSection } from './public-link-organization-section';
@@ -9,7 +14,14 @@ import { PublicLinkTopicSection } from './public-link-topic-section';
 
 import type { PublicLinkCreateCardProps } from './public-link-create-card.types';
 
-export function PublicLinkCreateCard({
+interface PublicLinkCreateDialogProps extends PublicLinkCreateCardProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function PublicLinkCreateDialog({
+  open,
+  onOpenChange,
   topics,
   educationOrganizations,
   effectiveSelectedTopicId,
@@ -45,80 +57,80 @@ export function PublicLinkCreateCard({
   onCreatePublicLink,
   isCreatingPublicLink,
   hasPublishedVersion,
-}: PublicLinkCreateCardProps) {
+}: PublicLinkCreateDialogProps) {
   return (
-    <Card className="h-full border-slate-200">
-      <CardHeader className="space-y-2">
-        <CardTitle className="text-base">Параметры новой ссылки</CardTitle>
-        <CardDescription>Выберите тест и настройте доступ для студентов.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <PublicLinkTopicSection
-          topics={topics}
-          effectiveSelectedTopicId={effectiveSelectedTopicId}
-          onSelectTopic={onSelectTopic}
-        />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Создать публичную ссылку</DialogTitle>
+          <DialogDescription>
+            Выберите опубликованный тест, привяжите заведение и настройте доступ.
+          </DialogDescription>
+        </DialogHeader>
 
-        <PublicLinkOrganizationSection
-          educationOrganizations={educationOrganizations}
-          newEducationOrganizationId={newEducationOrganizationId}
-          onEducationOrganizationSelect={onEducationOrganizationSelect}
-          newEducationOrganizationName={newEducationOrganizationName}
-          onEducationOrganizationNameChange={onEducationOrganizationNameChange}
-          groupValidationMode={groupValidationMode}
-          onGroupValidationModeChange={onGroupValidationModeChange}
-          groupValidationPattern={groupValidationPattern}
-          onGroupValidationPatternChange={onGroupValidationPatternChange}
-          groupValidationExample={groupValidationExample}
-          onGroupValidationExampleChange={onGroupValidationExampleChange}
-          groupValidationHint={groupValidationHint}
-          onGroupValidationHintChange={onGroupValidationHintChange}
-          onCreateEducationOrganization={onCreateEducationOrganization}
-          onUpdateEducationOrganization={onUpdateEducationOrganization}
-          isCreatingEducationOrganization={isCreatingEducationOrganization}
-          isUpdatingEducationOrganization={isUpdatingEducationOrganization}
-        />
-
-        <PublicLinkAccessSettingsSection
-          newPublicShortCode={newPublicShortCode}
-          onShortCodeChange={onShortCodeChange}
-          newPublicMaxAttempts={newPublicMaxAttempts}
-          onMaxAttemptsChange={onMaxAttemptsChange}
-          newPublicTimeLimit={newPublicTimeLimit}
-          onTimeLimitChange={onTimeLimitChange}
-          newPublicConsentVersion={newPublicConsentVersion}
-          onConsentVersionChange={onConsentVersionChange}
-          newPublicConsentText={newPublicConsentText}
-          onConsentTextChange={onConsentTextChange}
-        />
-
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={newPublicAllowResume}
-            onChange={(event) => onAllowResumeChange(event.target.checked)}
+        <div className="grid gap-4">
+          <PublicLinkTopicSection
+            topics={topics}
+            effectiveSelectedTopicId={effectiveSelectedTopicId}
+            onSelectTopic={onSelectTopic}
           />
-          Разрешить возобновление
-        </label>
 
-        <Button
-          type="button"
-          onClick={onCreatePublicLink}
-          disabled={isCreatingPublicLink || !hasPublishedVersion}
-          className="w-full"
-        >
-          {isCreatingPublicLink ? 'Создаем...' : 'Создать ссылку'}
-        </Button>
+          <PublicLinkOrganizationSection
+            educationOrganizations={educationOrganizations}
+            newEducationOrganizationId={newEducationOrganizationId}
+            onEducationOrganizationSelect={onEducationOrganizationSelect}
+            newEducationOrganizationName={newEducationOrganizationName}
+            onEducationOrganizationNameChange={onEducationOrganizationNameChange}
+            groupValidationMode={groupValidationMode}
+            onGroupValidationModeChange={onGroupValidationModeChange}
+            groupValidationPattern={groupValidationPattern}
+            onGroupValidationPatternChange={onGroupValidationPatternChange}
+            groupValidationExample={groupValidationExample}
+            onGroupValidationExampleChange={onGroupValidationExampleChange}
+            groupValidationHint={groupValidationHint}
+            onGroupValidationHintChange={onGroupValidationHintChange}
+            onCreateEducationOrganization={onCreateEducationOrganization}
+            onUpdateEducationOrganization={onUpdateEducationOrganization}
+            isCreatingEducationOrganization={isCreatingEducationOrganization}
+            isUpdatingEducationOrganization={isUpdatingEducationOrganization}
+          />
 
-        <div className="grid gap-2">
-          <Button asChild type="button" variant="outline" className="w-full">
-            <Link to="/admin/public-links/organizations">Учебные заведения</Link>
-          </Button>
-          <Button asChild type="button" variant="outline" className="w-full">
-            <Link to="/admin/public-links/stats">Открыть статистику</Link>
-          </Button>
+          <PublicLinkAccessSettingsSection
+            newPublicShortCode={newPublicShortCode}
+            onShortCodeChange={onShortCodeChange}
+            newPublicMaxAttempts={newPublicMaxAttempts}
+            onMaxAttemptsChange={onMaxAttemptsChange}
+            newPublicTimeLimit={newPublicTimeLimit}
+            onTimeLimitChange={onTimeLimitChange}
+            newPublicConsentVersion={newPublicConsentVersion}
+            onConsentVersionChange={onConsentVersionChange}
+            newPublicConsentText={newPublicConsentText}
+            onConsentTextChange={onConsentTextChange}
+            newPublicAllowResume={newPublicAllowResume}
+            onAllowResumeChange={onAllowResumeChange}
+          />
+
+          {!hasPublishedVersion ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              У выбранного теста нет опубликованной версии. Опубликуйте тест, чтобы создать
+              публичную ссылку.
+            </p>
+          ) : null}
         </div>
-      </CardContent>
-    </Card>
+
+        <DialogFooter className="gap-2 sm:space-x-0">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            onClick={onCreatePublicLink}
+            disabled={isCreatingPublicLink || !hasPublishedVersion}
+          >
+            {isCreatingPublicLink ? 'Создаем...' : 'Создать ссылку'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

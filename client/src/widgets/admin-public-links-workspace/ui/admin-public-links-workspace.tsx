@@ -1,7 +1,10 @@
+import { useState } from 'react';
+
 import { ConfirmActionDialog } from '@/features/tests';
 
-import { PublicLinkCreateCard } from './public-link-create-card';
+import { PublicLinkCreateDialog } from './public-link-create-card';
 import { PublicLinksListCard } from './public-links-list-card';
+import { PublicLinksListHeader } from './public-links-list-header';
 import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace';
 
 type AdminPublicLinksWorkspaceState = ReturnType<typeof useAdminPublicLinksWorkspace>;
@@ -46,10 +49,11 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
 
 const buildListCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   publicLinksTab: state.publicLinksTab,
-  onSwitchPublicLinksTab: state.handleSwitchPublicLinksTab,
   visiblePublicLinks: state.visiblePublicLinks,
-  effectivePublicLinkId: state.effectivePublicLinkId,
-  onSelectPublicLink: state.setSelectedPublicLinkId,
+  publicLinksLoading: state.publicLinksLoading,
+  publicLinksError: state.publicLinksError,
+  searchValue: state.publicLinksSearch,
+  onRetryPublicLinks: state.refetchPublicLinks,
   onCopyShortLink: state.handleCopyShortLink,
   onOpenShortLink: state.handleOpenShortLink,
   onOpenQr: state.handleOpenShortLinkQr,
@@ -64,16 +68,31 @@ const buildListCardProps = (state: AdminPublicLinksWorkspaceState) => ({
 });
 
 export function AdminPublicLinksWorkspace() {
-  const workspaceState = useAdminPublicLinksWorkspace();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const workspaceState = useAdminPublicLinksWorkspace({
+    onPublicLinkCreated: () => setIsCreateDialogOpen(false),
+  });
   const createCardProps = buildCreateCardProps(workspaceState);
   const listCardProps = buildListCardProps(workspaceState);
 
   return (
     <>
-      <div className="grid min-h-[calc(100vh-11rem)] gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <PublicLinkCreateCard {...createCardProps} />
+      <section className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+        <PublicLinksListHeader
+          publicLinksTab={workspaceState.publicLinksTab}
+          searchValue={workspaceState.publicLinksSearch}
+          onSwitchPublicLinksTab={workspaceState.handleSwitchPublicLinksTab}
+          onSearchChange={workspaceState.setPublicLinksSearch}
+          onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+        />
         <PublicLinksListCard {...listCardProps} />
-      </div>
+      </section>
+
+      <PublicLinkCreateDialog
+        {...createCardProps}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
 
       <ConfirmActionDialog
         open={Boolean(workspaceState.pendingDeletePublicLinkId)}

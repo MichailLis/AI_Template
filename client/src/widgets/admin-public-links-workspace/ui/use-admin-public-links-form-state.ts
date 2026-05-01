@@ -32,6 +32,7 @@ export function useAdminPublicLinksFormState() {
   const [selectedPublicLinkId, setSelectedPublicLinkId] = useState<number | null>(null);
   const [pendingDeletePublicLinkId, setPendingDeletePublicLinkId] = useState<number | null>(null);
   const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
+  const [publicLinksSearch, setPublicLinksSearch] = useState('');
 
   const applyEducationOrganizationSelection = (
     value: number | null,
@@ -88,6 +89,8 @@ export function useAdminPublicLinksFormState() {
     setPendingDeletePublicLinkId,
     publicLinksTab,
     setPublicLinksTab,
+    publicLinksSearch,
+    setPublicLinksSearch,
     applyEducationOrganizationSelection,
   };
 }

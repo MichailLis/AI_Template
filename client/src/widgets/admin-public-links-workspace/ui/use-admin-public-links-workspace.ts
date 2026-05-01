@@ -15,7 +15,13 @@ import {
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import { useAdminPublicLinksFormState } from './use-admin-public-links-form-state';
 
-export function useAdminPublicLinksWorkspace() {
+interface UseAdminPublicLinksWorkspaceParams {
+  onPublicLinkCreated?: () => void;
+}
+
+export function useAdminPublicLinksWorkspace({
+  onPublicLinkCreated,
+}: UseAdminPublicLinksWorkspaceParams = {}) {
   const topicsQuery = useTestsControllerListTopics();
   const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
@@ -51,6 +57,8 @@ export function useAdminPublicLinksWorkspace() {
     () => (formState.publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
     [activePublicLinks, archivedPublicLinks, formState.publicLinksTab],
   );
+  const currentPublicLinksQuery =
+    formState.publicLinksTab === 'active' ? listPublicLinksQuery : listArchivedPublicLinksQuery;
   const effectivePublicLinkId = useMemo(
     () => resolveEffectivePublicLinkId(formState.selectedPublicLinkId, visiblePublicLinks),
     [formState.selectedPublicLinkId, visiblePublicLinks],
@@ -95,6 +103,7 @@ export function useAdminPublicLinksWorkspace() {
     setGroupValidationHint: formState.setGroupValidationHint,
     refetchPublicLinks,
     refetchEducationOrganizations,
+    onPublicLinkCreated,
   });
 
   return {
@@ -103,7 +112,10 @@ export function useAdminPublicLinksWorkspace() {
     effectiveSelectedTopicId,
     detailQuery,
     visiblePublicLinks,
+    publicLinksLoading: currentPublicLinksQuery.isLoading,
+    publicLinksError: currentPublicLinksQuery.isError,
     effectivePublicLinkId,
+    refetchPublicLinks,
     ...formState,
     ...actions,
     setNewEducationOrganizationId,

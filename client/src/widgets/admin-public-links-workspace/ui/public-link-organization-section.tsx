@@ -6,34 +6,51 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import type { PublicLinkOrganizationSectionProps } from './public-link-create-card.types';
+import type {
+  EducationOrganizationOption,
+  PublicLinkOrganizationSectionProps,
+} from './public-link-create-card.types';
+import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
-export function PublicLinkOrganizationSection({
+interface EducationOrganizationSelectProps {
+  educationOrganizations: EducationOrganizationOption[];
+  newEducationOrganizationId: number | null;
+  onEducationOrganizationSelect: (organizationId: number | null) => void;
+}
+
+interface EducationOrganizationCreateRowProps {
+  newEducationOrganizationName: string;
+  onEducationOrganizationNameChange: (value: string) => void;
+  onCreateEducationOrganization: () => void;
+  isCreatingEducationOrganization: boolean;
+}
+
+interface GroupValidationDetailsProps {
+  newEducationOrganizationId: number | null;
+  groupValidationMode: GroupValidationMode;
+  onGroupValidationModeChange: (value: GroupValidationMode) => void;
+  groupValidationPattern: string;
+  onGroupValidationPatternChange: (value: string) => void;
+  groupValidationExample: string;
+  onGroupValidationExampleChange: (value: string) => void;
+  groupValidationHint: string;
+  onGroupValidationHintChange: (value: string) => void;
+  onUpdateEducationOrganization: () => void;
+  isUpdatingEducationOrganization: boolean;
+}
+
+function EducationOrganizationSelect({
   educationOrganizations,
   newEducationOrganizationId,
   onEducationOrganizationSelect,
-  newEducationOrganizationName,
-  onEducationOrganizationNameChange,
-  groupValidationMode,
-  onGroupValidationModeChange,
-  groupValidationPattern,
-  onGroupValidationPatternChange,
-  groupValidationExample,
-  onGroupValidationExampleChange,
-  groupValidationHint,
-  onGroupValidationHintChange,
-  onCreateEducationOrganization,
-  onUpdateEducationOrganization,
-  isCreatingEducationOrganization,
-  isUpdatingEducationOrganization,
-}: PublicLinkOrganizationSectionProps) {
+}: EducationOrganizationSelectProps) {
   const activeEducationOrganizations = educationOrganizations.filter(
     (organization) => organization.isActive,
   );
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="education-organization">Учебное заведение (опционально)</Label>
+      <Label htmlFor="education-organization">Заведение для ссылки</Label>
       <select
         id="education-organization"
         value={newEducationOrganizationId ? String(newEducationOrganizationId) : ''}
@@ -50,25 +67,60 @@ export function PublicLinkOrganizationSection({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
 
-      <div className="flex gap-2">
-        <Input
-          value={newEducationOrganizationName}
-          onChange={(event) => onEducationOrganizationNameChange(event.target.value)}
-          placeholder="Добавить новое заведение"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCreateEducationOrganization}
-          disabled={isCreatingEducationOrganization}
-        >
-          {isCreatingEducationOrganization ? 'Добавляем...' : 'Добавить'}
-        </Button>
-      </div>
+function EducationOrganizationCreateRow({
+  newEducationOrganizationName,
+  onEducationOrganizationNameChange,
+  onCreateEducationOrganization,
+  isCreatingEducationOrganization,
+}: EducationOrganizationCreateRowProps) {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <Input
+        value={newEducationOrganizationName}
+        onChange={(event) => onEducationOrganizationNameChange(event.target.value)}
+        placeholder="Добавить новое заведение"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onCreateEducationOrganization}
+        disabled={isCreatingEducationOrganization}
+        className="sm:w-32"
+      >
+        {isCreatingEducationOrganization ? 'Добавляем...' : 'Добавить'}
+      </Button>
+    </div>
+  );
+}
 
-      <div className="space-y-2 rounded-md border border-slate-200 p-3">
-        <Label htmlFor="group-validation-mode">Проверка поля «Группа / класс»</Label>
+function GroupValidationDetails({
+  newEducationOrganizationId,
+  groupValidationMode,
+  onGroupValidationModeChange,
+  groupValidationPattern,
+  onGroupValidationPatternChange,
+  groupValidationExample,
+  onGroupValidationExampleChange,
+  groupValidationHint,
+  onGroupValidationHintChange,
+  onUpdateEducationOrganization,
+  isUpdatingEducationOrganization,
+}: GroupValidationDetailsProps) {
+  return (
+    <details className="mt-3 rounded-md border border-slate-200 bg-white p-3">
+      <summary className="cursor-pointer text-sm font-medium text-slate-900">
+        Настройки поля «Группа / класс»
+      </summary>
+      <div className="mt-3 space-y-2">
+        <p className="text-xs text-slate-500">
+          Эти правила применяются к выбранному заведению и помогают привести ответы к одному
+          формату.
+        </p>
+        <Label htmlFor="group-validation-mode">Проверка поля</Label>
         <select
           id="group-validation-mode"
           value={groupValidationMode}
@@ -126,6 +178,63 @@ export function PublicLinkOrganizationSection({
           {isUpdatingEducationOrganization ? 'Сохраняем...' : 'Сохранить настройки заведения'}
         </Button>
       </div>
+    </details>
+  );
+}
+
+export function PublicLinkOrganizationSection({
+  educationOrganizations,
+  newEducationOrganizationId,
+  onEducationOrganizationSelect,
+  newEducationOrganizationName,
+  onEducationOrganizationNameChange,
+  groupValidationMode,
+  onGroupValidationModeChange,
+  groupValidationPattern,
+  onGroupValidationPatternChange,
+  groupValidationExample,
+  onGroupValidationExampleChange,
+  groupValidationHint,
+  onGroupValidationHintChange,
+  onCreateEducationOrganization,
+  onUpdateEducationOrganization,
+  isCreatingEducationOrganization,
+  isUpdatingEducationOrganization,
+}: PublicLinkOrganizationSectionProps) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-sm font-medium text-slate-900">Учебное заведение</p>
+      <p className="mt-1 text-sm text-slate-600">
+        Привяжите ссылку к заведению, если студентам не нужно вводить его вручную.
+      </p>
+
+      <div className="mt-3 space-y-3">
+        <EducationOrganizationSelect
+          educationOrganizations={educationOrganizations}
+          newEducationOrganizationId={newEducationOrganizationId}
+          onEducationOrganizationSelect={onEducationOrganizationSelect}
+        />
+        <EducationOrganizationCreateRow
+          newEducationOrganizationName={newEducationOrganizationName}
+          onEducationOrganizationNameChange={onEducationOrganizationNameChange}
+          onCreateEducationOrganization={onCreateEducationOrganization}
+          isCreatingEducationOrganization={isCreatingEducationOrganization}
+        />
+      </div>
+
+      <GroupValidationDetails
+        newEducationOrganizationId={newEducationOrganizationId}
+        groupValidationMode={groupValidationMode}
+        onGroupValidationModeChange={onGroupValidationModeChange}
+        groupValidationPattern={groupValidationPattern}
+        onGroupValidationPatternChange={onGroupValidationPatternChange}
+        groupValidationExample={groupValidationExample}
+        onGroupValidationExampleChange={onGroupValidationExampleChange}
+        groupValidationHint={groupValidationHint}
+        onGroupValidationHintChange={onGroupValidationHintChange}
+        onUpdateEducationOrganization={onUpdateEducationOrganization}
+        isUpdatingEducationOrganization={isUpdatingEducationOrganization}
+      />
     </div>
   );
 }

@@ -29,4 +29,5 @@ export interface UseAdminPublicLinksActionsParams {
   setGroupValidationHint: (value: string) => void;
   refetchPublicLinks: () => void;
   refetchEducationOrganizations: () => void;
+  onPublicLinkCreated?: () => void;
 }

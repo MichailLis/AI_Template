@@ -86,4 +86,6 @@ export interface PublicLinkAccessSettingsSectionProps {
   onConsentVersionChange: (value: string) => void;
   newPublicConsentText: string;
   onConsentTextChange: (value: string) => void;
+  newPublicAllowResume: boolean;
+  onAllowResumeChange: (checked: boolean) => void;
 }
