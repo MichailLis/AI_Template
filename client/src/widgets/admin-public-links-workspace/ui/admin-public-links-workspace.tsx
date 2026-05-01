@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { ConfirmActionDialog } from '@/features/tests';
 import { Card } from '@/shared/ui/card';
+import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 import { PublicLinkCreateDialog } from './public-link-create-card';
 import { PublicLinksListCard } from './public-links-list-card';

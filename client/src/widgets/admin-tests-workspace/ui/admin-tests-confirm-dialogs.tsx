@@ -1,4 +1,5 @@
-import { ConfirmActionDialog, type TestTopicListItem } from '@/features/tests';
+import { type TestTopicListItem } from '@/features/tests';
+import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 interface PendingQuestion {
   title: string;
