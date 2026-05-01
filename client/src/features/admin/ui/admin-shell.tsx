@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquareText,
+  Settings,
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -80,6 +81,13 @@ const navItems = [
     href: '/admin/public-links/stats',
     group: 'analytics',
   },
+  {
+    id: 'settings',
+    label: 'Настройки',
+    icon: Settings,
+    href: '/admin/settings',
+    group: 'system',
+  },
 ];
 
 const navGroups = [
@@ -98,6 +106,10 @@ const navGroups = [
   {
     id: 'analytics',
     label: 'Аналитика',
+  },
+  {
+    id: 'system',
+    label: 'Система',
   },
 ];
 

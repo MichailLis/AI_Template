@@ -1,6 +1,7 @@
 import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from './admin-access.utils';
@@ -41,6 +42,9 @@ describe('AnalysisPromptsService', () => {
   };
   let configMock: {
     get: jest.Mock;
+  };
+  let openRouterApiKeyServiceMock: {
+    getOpenRouterApiKey: jest.Mock;
   };
 
   const promptRecord = {
@@ -88,10 +92,14 @@ describe('AnalysisPromptsService', () => {
     configMock = {
       get: jest.fn((key: string) => (key === 'OPENROUTER_API_KEY' ? 'test-key' : undefined)),
     };
+    openRouterApiKeyServiceMock = {
+      getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
+    };
 
     service = new AnalysisPromptsService(
       prismaMock as unknown as PrismaService,
       configMock as unknown as ConfigService,
+      openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
     jest.mocked(generateOpenRouterPrompt).mockReset();
@@ -404,7 +412,9 @@ describe('AnalysisPromptsService', () => {
   });
 
   it('simulatePrompt fails fast when OpenRouter key is missing', async () => {
-    configMock.get.mockReturnValue(undefined);
+    openRouterApiKeyServiceMock.getOpenRouterApiKey.mockRejectedValue(
+      new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server'),
+    );
 
     await expect(
       service.simulatePrompt(3, {

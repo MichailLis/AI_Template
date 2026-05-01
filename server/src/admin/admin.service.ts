@@ -1,13 +1,9 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import type { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import type { UpdateUserRoleDto } from './dto/update-user-role.dto';
@@ -18,6 +14,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
   ) {}
 
   private async ensureAdminAccess(userId: number) {
@@ -167,11 +164,7 @@ export class AdminService {
   async getPromptModels(userId: number) {
     await this.ensureAdminAccess(userId);
 
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-
-    if (!apiKey) {
-      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
-    }
+    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
     return fetchOpenRouterModels(this.config, apiKey);
   }
@@ -179,11 +172,7 @@ export class AdminService {
   async generatePrompt(userId: number, dto: GeneratePromptDto) {
     await this.ensureAdminAccess(userId);
 
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-
-    if (!apiKey) {
-      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
-    }
+    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
     return generateOpenRouterPrompt(this.config, apiKey, dto);
   }

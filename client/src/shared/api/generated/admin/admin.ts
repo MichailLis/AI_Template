@@ -26,6 +26,7 @@ import type {
 
 import type {
   AdminControllerGetUsersParams,
+  AdminOpenRouterSettingsResponseDto,
   AdminOverviewResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
@@ -40,6 +41,7 @@ import type {
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
   UpdateAnalysisPromptVersionDto,
+  UpdateOpenRouterApiKeyDto,
   UpdateUserRoleDto
 } from '../../model';
 
@@ -447,6 +449,159 @@ export const useAdminControllerUpdateUserRole = <TError = unknown,
         TContext
       > => {
       return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Get OpenRouter settings
+ */
+export const adminSettingsControllerGetOpenRouterSettings = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminOpenRouterSettingsResponseDto>(
+      {url: `/admin/settings/openrouter`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getAdminSettingsControllerGetOpenRouterSettingsQueryKey = () => {
+    return [
+    `/admin/settings/openrouter`
+    ] as const;
+    }
+
+    
+export const getAdminSettingsControllerGetOpenRouterSettingsQueryOptions = <TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminSettingsControllerGetOpenRouterSettingsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>> = ({ signal }) => adminSettingsControllerGetOpenRouterSettings(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminSettingsControllerGetOpenRouterSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>>
+export type AdminSettingsControllerGetOpenRouterSettingsQueryError = unknown
+
+
+export function useAdminSettingsControllerGetOpenRouterSettings<TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminSettingsControllerGetOpenRouterSettings<TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminSettingsControllerGetOpenRouterSettings<TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get OpenRouter settings
+ */
+
+export function useAdminSettingsControllerGetOpenRouterSettings<TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminSettingsControllerGetOpenRouterSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Update OpenRouter API key
+ */
+export const adminSettingsControllerUpdateOpenRouterApiKey = (
+    updateOpenRouterApiKeyDto: UpdateOpenRouterApiKeyDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AdminOpenRouterSettingsResponseDto>(
+      {url: `/admin/settings/openrouter/api-key`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOpenRouterApiKeyDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getAdminSettingsControllerUpdateOpenRouterApiKeyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>, TError,{data: UpdateOpenRouterApiKeyDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>, TError,{data: UpdateOpenRouterApiKeyDto}, TContext> => {
+
+const mutationKey = ['adminSettingsControllerUpdateOpenRouterApiKey'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>, {data: UpdateOpenRouterApiKeyDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminSettingsControllerUpdateOpenRouterApiKey(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>>
+    export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationBody = UpdateOpenRouterApiKeyDto
+    export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationError = unknown
+
+    /**
+ * @summary Update OpenRouter API key
+ */
+export const useAdminSettingsControllerUpdateOpenRouterApiKey = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>, TError,{data: UpdateOpenRouterApiKeyDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
+        TError,
+        {data: UpdateOpenRouterApiKeyDto},
+        TContext
+      > => {
+      return useMutation(getAdminSettingsControllerUpdateOpenRouterApiKeyMutationOptions(options), queryClient);
     }
     /**
  * @summary List analysis prompts and versions

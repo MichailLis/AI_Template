@@ -1,12 +1,8 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Prisma } from '@prisma/client';
 
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 import { ensureAdminAccess } from './admin-access.utils';
@@ -80,6 +76,7 @@ export class AnalysisPromptsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
   ) {}
 
   private toVersionResponse(version: AnalysisPromptVersionRecord) {
@@ -106,16 +103,6 @@ export class AnalysisPromptsService {
       updatedAt: prompt.updatedAt.toISOString(),
       versions: prompt.versions.map((version) => this.toVersionResponse(version)),
     };
-  }
-
-  private getOpenRouterApiKey() {
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-
-    if (!apiKey) {
-      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
-    }
-
-    return apiKey;
   }
 
   private async getEditablePrompt(promptId: number) {
@@ -348,7 +335,7 @@ export class AnalysisPromptsService {
   ): Promise<PromptSimulationResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
-    const apiKey = this.getOpenRouterApiKey();
+    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
     const uniqueQuestionIds = Array.from(new Set(dto.questionIds));
     const questions = await this.prisma.testQuestion.findMany({
       where: { id: { in: uniqueQuestionIds } },

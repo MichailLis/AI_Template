@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 
 import { generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -93,6 +94,9 @@ describe('TestsAnalysisService', () => {
   let configMock: {
     get: jest.Mock;
   };
+  let openRouterApiKeyServiceMock: {
+    getOpenRouterApiKey: jest.Mock;
+  };
 
   beforeEach(() => {
     prismaMock = {
@@ -111,10 +115,14 @@ describe('TestsAnalysisService', () => {
     configMock = {
       get: jest.fn((key: string) => (key === 'OPENROUTER_API_KEY' ? 'test-key' : undefined)),
     };
+    openRouterApiKeyServiceMock = {
+      getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
+    };
 
     service = new TestsAnalysisService(
       prismaMock as unknown as PrismaService,
       configMock as unknown as ConfigService,
+      openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
     );
     jest.mocked(generateOpenRouterPrompt).mockReset();
   });

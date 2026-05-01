@@ -327,3 +327,12 @@ model AnalysisPromptVersion {
   @@index([status])
   @@map("analysis_prompt_versions")
 }
+
+model AppSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}

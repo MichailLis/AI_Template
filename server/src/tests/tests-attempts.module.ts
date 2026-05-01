@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { OpenRouterModule } from '../openrouter/openrouter.module';
 import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { TestsAdminAttemptsController } from './tests-admin-attempts.controller';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -9,7 +10,7 @@ import { TestsPublicLinksModule } from './tests-public-links.module';
 import { TestsPublicSessionService } from './tests-public-session.service';
 
 @Module({
-  imports: [TestsPublicLinksModule],
+  imports: [OpenRouterModule, TestsPublicLinksModule],
   controllers: [TestsPublicController, TestsAdminAttemptsController],
   providers: [
     TestsAnalysisService,

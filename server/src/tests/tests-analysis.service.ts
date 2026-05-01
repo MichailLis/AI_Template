@@ -1,8 +1,9 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
 
 import { generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './dto/tests-analysis.dto';
 
@@ -22,17 +23,8 @@ export class TestsAnalysisService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
   ) {}
-
-  private getOpenRouterApiKey() {
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-
-    if (!apiKey) {
-      throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
-    }
-
-    return apiKey;
-  }
 
   private buildAttemptAnalysisPrompt(input: {
     prompt: string;
@@ -164,7 +156,7 @@ export class TestsAnalysisService {
     }
 
     try {
-      const apiKey = this.getOpenRouterApiKey();
+      const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
       const questions = attempt.topicVersion.questions.map((question) => ({
         id: question.id,
         type: question.type,

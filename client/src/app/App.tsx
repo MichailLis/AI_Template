@@ -18,6 +18,7 @@ const AdminPublicLinksOrganizationsPage = lazy(
   () => import('@/pages/admin/admin-public-links-organizations-page'),
 );
 const AdminPublicLinksStatsPage = lazy(() => import('@/pages/admin/admin-public-links-stats-page'));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/admin-settings-page'));
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/admin-users-page'));
 const LoginPage = lazy(() => import('@/pages/login'));
@@ -106,6 +107,7 @@ function App() {
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                 <Route path="/admin/prompts" element={<AdminPromptsPage />} />
+                <Route path="/admin/settings" element={<AdminSettingsPage />} />
                 <Route path="/admin/tests" element={<AdminTestsPage />} />
                 <Route path="/admin/tests/:topicId" element={<AdminTestsPage />} />
                 <Route path="/admin/tests/:topicId/settings" element={<AdminTestsPage />} />
