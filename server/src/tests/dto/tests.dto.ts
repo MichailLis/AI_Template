@@ -52,8 +52,24 @@ export const TestsTopicListResponseSchema = z.object({
   topics: z.array(TestsTopicSummarySchema),
 });
 
+const QueryBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+  if (normalizedValue === 'true') {
+    return true;
+  }
+  if (normalizedValue === 'false') {
+    return false;
+  }
+
+  return value;
+}, z.boolean());
+
 export const TestsTopicListQuerySchema = z.object({
-  archived: z.coerce.boolean().optional(),
+  archived: QueryBooleanSchema.optional(),
 });
 
 export const TestsTopicDraftSchema = z.object({
