@@ -24,7 +24,9 @@
         "server/src/admin/dto/admin-user-response.dto.ts",
         "server/src/admin/dto/admin-users-response.dto.ts",
         "server/src/admin/dto/generate-prompt.dto.ts",
-        "server/src/admin/dto/update-user-role.dto.ts"
+        "server/src/admin/dto/update-user-role.dto.ts",
+        "server/src/openrouter/openrouter.module.ts",
+        "server/src/openrouter/openrouter-api-key.service.ts"
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-page.tsx",
