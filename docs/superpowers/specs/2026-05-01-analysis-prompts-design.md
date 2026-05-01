@@ -151,7 +151,6 @@ Add persisted prompt entities:
   - promptText
   - model
   - temperature
-  - responseSchema
   - createdAt
   - updatedAt
 
@@ -166,10 +165,10 @@ Extend existing analysis storage:
 - `TestStudentAnalysis`
   - keep `providerMode`, `status`, `summary`, `rawText`, `errorMessage`, `generatedAt`
   - add nullable `promptVersionId`
-  - optionally add `model` if useful for debugging/reproducibility
 
 The `summary` field stores the parsed structured JSON returned by the LLM.
 The `rawText` field stores the raw model response for troubleshooting.
+The prompt version relation provides the model and prompt metadata used for the run.
 
 ## Structured Analysis JSON
 
@@ -330,23 +329,23 @@ This lets admins inspect exactly what the student saw and troubleshoot bad promp
 
 ## Backend API Sketch
 
-Prompt management:
+Prompt management should extend the existing `/admin/prompts` backend surface:
 
-- `GET /admin/analysis-prompts`
-- `POST /admin/analysis-prompts`
-- `GET /admin/analysis-prompts/:promptId`
-- `PATCH /admin/analysis-prompts/:promptId`
-- `POST /admin/analysis-prompts/:promptId/archive`
-- `POST /admin/analysis-prompts/:promptId/restore`
-- `PATCH /admin/analysis-prompts/:promptId/draft`
-- `POST /admin/analysis-prompts/:promptId/publish`
+- `GET /admin/prompts`
+- `POST /admin/prompts`
+- `GET /admin/prompts/:promptId`
+- `PATCH /admin/prompts/:promptId`
+- `POST /admin/prompts/:promptId/archive`
+- `POST /admin/prompts/:promptId/restore`
+- `PATCH /admin/prompts/:promptId/draft`
+- `POST /admin/prompts/:promptId/publish`
 
 Prompt simulation:
 
-- `GET /admin/analysis-prompts/test-question-sources`
-- `GET /admin/analysis-prompts/test-question-sources/:sourceId/questions`
-- `POST /admin/analysis-prompts/simulate-answers`
-- `POST /admin/analysis-prompts/simulate-analysis`
+- `GET /admin/prompts/test-question-sources`
+- `GET /admin/prompts/test-question-sources/:sourceId/questions`
+- `POST /admin/prompts/simulate-answers`
+- `POST /admin/prompts/simulate-analysis`
 
 Test attachment:
 
