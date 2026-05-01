@@ -60,7 +60,7 @@ export const UserScalarFieldEnumSchema = z.enum(['id','email','name','password',
 
 export const TestTopicScalarFieldEnumSchema = z.enum(['id','slug','createdAt','updatedAt','archivedAt','activeDraftVersionId','activePublishedVersionId']);
 
-export const TestTopicVersionScalarFieldEnumSchema = z.enum(['id','topicId','versionNumber','status','title','description','createdAt','updatedAt']);
+export const TestTopicVersionScalarFieldEnumSchema = z.enum(['id','topicId','versionNumber','status','title','description','analysisPromptVersionId','createdAt','updatedAt']);
 
 export const TestQuestionScalarFieldEnumSchema = z.enum(['id','versionId','type','title','description','required','order','settings','createdAt','updatedAt']);
 
@@ -76,7 +76,11 @@ export const TestStudentAttemptScalarFieldEnumSchema = z.enum(['id','publicLinkI
 
 export const TestStudentAnswerScalarFieldEnumSchema = z.enum(['id','attemptId','questionId','questionTypeSnapshot','questionTitleSnapshot','answerPayload','createdAt','updatedAt']);
 
-export const TestStudentAnalysisScalarFieldEnumSchema = z.enum(['id','attemptId','providerMode','status','summary','rawText','errorMessage','generatedAt','createdAt','updatedAt']);
+export const TestStudentAnalysisScalarFieldEnumSchema = z.enum(['id','attemptId','promptVersionId','providerMode','status','summary','rawText','errorMessage','generatedAt','createdAt','updatedAt']);
+
+export const AnalysisPromptScalarFieldEnumSchema = z.enum(['id','title','description','archivedAt','createdAt','updatedAt']);
+
+export const AnalysisPromptVersionScalarFieldEnumSchema = z.enum(['id','promptId','versionNumber','status','model','temperature','prompt','outputSchema','publishedAt','createdAt','updatedAt']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
@@ -113,6 +117,10 @@ export type TestStudentAnalysisStatusType = `${z.infer<typeof TestStudentAnalysi
 export const TestStudentAnalysisProviderModeSchema = z.enum(['STUB','LLM']);
 
 export type TestStudentAnalysisProviderModeType = `${z.infer<typeof TestStudentAnalysisProviderModeSchema>}`
+
+export const AnalysisPromptVersionStatusSchema = z.enum(['DRAFT','PUBLISHED','ARCHIVED']);
+
+export type AnalysisPromptVersionStatusType = `${z.infer<typeof AnalysisPromptVersionStatusSchema>}`
 
 export const GroupOrClassValidationModeSchema = z.enum(['NONE','HINT','STRICT']);
 
@@ -166,6 +174,7 @@ export const TestTopicVersionSchema = z.object({
   versionNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
+  analysisPromptVersionId: z.number().int().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -323,6 +332,7 @@ export const TestStudentAnalysisSchema = z.object({
   status: TestStudentAnalysisStatusSchema,
   id: z.number().int(),
   attemptId: z.number().int(),
+  promptVersionId: z.number().int().nullable(),
   summary: JsonValueSchema.nullable(),
   rawText: z.string().nullable(),
   errorMessage: z.string().nullable(),
@@ -332,6 +342,41 @@ export const TestStudentAnalysisSchema = z.object({
 })
 
 export type TestStudentAnalysis = z.infer<typeof TestStudentAnalysisSchema>
+
+/////////////////////////////////////////
+// ANALYSIS PROMPT SCHEMA
+/////////////////////////////////////////
+
+export const AnalysisPromptSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  description: z.string().nullable(),
+  archivedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type AnalysisPrompt = z.infer<typeof AnalysisPromptSchema>
+
+/////////////////////////////////////////
+// ANALYSIS PROMPT VERSION SCHEMA
+/////////////////////////////////////////
+
+export const AnalysisPromptVersionSchema = z.object({
+  status: AnalysisPromptVersionStatusSchema,
+  id: z.number().int(),
+  promptId: z.number().int(),
+  versionNumber: z.number().int(),
+  model: z.string(),
+  temperature: z.number(),
+  prompt: z.string(),
+  outputSchema: JsonValueSchema.nullable(),
+  publishedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type AnalysisPromptVersion = z.infer<typeof AnalysisPromptVersionSchema>
 
 /////////////////////////////////////////
 // SELECT & INCLUDE
@@ -415,6 +460,7 @@ export const TestTopicVersionIncludeSchema: z.ZodType<Prisma.TestTopicVersionInc
   topic: z.union([z.boolean(),z.lazy(() => TestTopicArgsSchema)]).optional(),
   draftForTopic: z.union([z.boolean(),z.lazy(() => TestTopicFindManyArgsSchema)]).optional(),
   publishedForTopic: z.union([z.boolean(),z.lazy(() => TestTopicFindManyArgsSchema)]).optional(),
+  analysisPromptVersion: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionArgsSchema)]).optional(),
   questions: z.union([z.boolean(),z.lazy(() => TestQuestionFindManyArgsSchema)]).optional(),
   publicLinks: z.union([z.boolean(),z.lazy(() => TestPublicLinkFindManyArgsSchema)]).optional(),
   studentAttempts: z.union([z.boolean(),z.lazy(() => TestStudentAttemptFindManyArgsSchema)]).optional(),
@@ -445,11 +491,13 @@ export const TestTopicVersionSelectSchema: z.ZodType<Prisma.TestTopicVersionSele
   status: z.boolean().optional(),
   title: z.boolean().optional(),
   description: z.boolean().optional(),
+  analysisPromptVersionId: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   topic: z.union([z.boolean(),z.lazy(() => TestTopicArgsSchema)]).optional(),
   draftForTopic: z.union([z.boolean(),z.lazy(() => TestTopicFindManyArgsSchema)]).optional(),
   publishedForTopic: z.union([z.boolean(),z.lazy(() => TestTopicFindManyArgsSchema)]).optional(),
+  analysisPromptVersion: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionArgsSchema)]).optional(),
   questions: z.union([z.boolean(),z.lazy(() => TestQuestionFindManyArgsSchema)]).optional(),
   publicLinks: z.union([z.boolean(),z.lazy(() => TestPublicLinkFindManyArgsSchema)]).optional(),
   studentAttempts: z.union([z.boolean(),z.lazy(() => TestStudentAttemptFindManyArgsSchema)]).optional(),
@@ -714,6 +762,7 @@ export const TestStudentAnswerSelectSchema: z.ZodType<Prisma.TestStudentAnswerSe
 
 export const TestStudentAnalysisIncludeSchema: z.ZodType<Prisma.TestStudentAnalysisInclude> = z.object({
   attempt: z.union([z.boolean(),z.lazy(() => TestStudentAttemptArgsSchema)]).optional(),
+  promptVersion: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionArgsSchema)]).optional(),
 }).strict();
 
 export const TestStudentAnalysisArgsSchema: z.ZodType<Prisma.TestStudentAnalysisDefaultArgs> = z.object({
@@ -724,6 +773,7 @@ export const TestStudentAnalysisArgsSchema: z.ZodType<Prisma.TestStudentAnalysis
 export const TestStudentAnalysisSelectSchema: z.ZodType<Prisma.TestStudentAnalysisSelect> = z.object({
   id: z.boolean().optional(),
   attemptId: z.boolean().optional(),
+  promptVersionId: z.boolean().optional(),
   providerMode: z.boolean().optional(),
   status: z.boolean().optional(),
   summary: z.boolean().optional(),
@@ -733,6 +783,81 @@ export const TestStudentAnalysisSelectSchema: z.ZodType<Prisma.TestStudentAnalys
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   attempt: z.union([z.boolean(),z.lazy(() => TestStudentAttemptArgsSchema)]).optional(),
+  promptVersion: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionArgsSchema)]).optional(),
+}).strict()
+
+// ANALYSIS PROMPT
+//------------------------------------------------------
+
+export const AnalysisPromptIncludeSchema: z.ZodType<Prisma.AnalysisPromptInclude> = z.object({
+  versions: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => AnalysisPromptCountOutputTypeArgsSchema)]).optional(),
+}).strict();
+
+export const AnalysisPromptArgsSchema: z.ZodType<Prisma.AnalysisPromptDefaultArgs> = z.object({
+  select: z.lazy(() => AnalysisPromptSelectSchema).optional(),
+  include: z.lazy(() => AnalysisPromptIncludeSchema).optional(),
+}).strict();
+
+export const AnalysisPromptCountOutputTypeArgsSchema: z.ZodType<Prisma.AnalysisPromptCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => AnalysisPromptCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const AnalysisPromptCountOutputTypeSelectSchema: z.ZodType<Prisma.AnalysisPromptCountOutputTypeSelect> = z.object({
+  versions: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptSelectSchema: z.ZodType<Prisma.AnalysisPromptSelect> = z.object({
+  id: z.boolean().optional(),
+  title: z.boolean().optional(),
+  description: z.boolean().optional(),
+  archivedAt: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  versions: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => AnalysisPromptCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+// ANALYSIS PROMPT VERSION
+//------------------------------------------------------
+
+export const AnalysisPromptVersionIncludeSchema: z.ZodType<Prisma.AnalysisPromptVersionInclude> = z.object({
+  analysisPrompt: z.union([z.boolean(),z.lazy(() => AnalysisPromptArgsSchema)]).optional(),
+  testVersions: z.union([z.boolean(),z.lazy(() => TestTopicVersionFindManyArgsSchema)]).optional(),
+  studentAnalyses: z.union([z.boolean(),z.lazy(() => TestStudentAnalysisFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionCountOutputTypeArgsSchema)]).optional(),
+}).strict();
+
+export const AnalysisPromptVersionArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionDefaultArgs> = z.object({
+  select: z.lazy(() => AnalysisPromptVersionSelectSchema).optional(),
+  include: z.lazy(() => AnalysisPromptVersionIncludeSchema).optional(),
+}).strict();
+
+export const AnalysisPromptVersionCountOutputTypeArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => AnalysisPromptVersionCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const AnalysisPromptVersionCountOutputTypeSelectSchema: z.ZodType<Prisma.AnalysisPromptVersionCountOutputTypeSelect> = z.object({
+  testVersions: z.boolean().optional(),
+  studentAnalyses: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptVersionSelectSchema: z.ZodType<Prisma.AnalysisPromptVersionSelect> = z.object({
+  id: z.boolean().optional(),
+  promptId: z.boolean().optional(),
+  versionNumber: z.boolean().optional(),
+  status: z.boolean().optional(),
+  model: z.boolean().optional(),
+  temperature: z.boolean().optional(),
+  prompt: z.boolean().optional(),
+  outputSchema: z.boolean().optional(),
+  publishedAt: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  analysisPrompt: z.union([z.boolean(),z.lazy(() => AnalysisPromptArgsSchema)]).optional(),
+  testVersions: z.union([z.boolean(),z.lazy(() => TestTopicVersionFindManyArgsSchema)]).optional(),
+  studentAnalyses: z.union([z.boolean(),z.lazy(() => TestStudentAnalysisFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => AnalysisPromptVersionCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
 
@@ -919,11 +1044,13 @@ export const TestTopicVersionWhereInputSchema: z.ZodType<Prisma.TestTopicVersion
   status: z.union([ z.lazy(() => EnumTestTopicVersionStatusFilterSchema), z.lazy(() => TestTopicVersionStatusSchema) ]).optional(),
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   topic: z.union([ z.lazy(() => TestTopicScalarRelationFilterSchema), z.lazy(() => TestTopicWhereInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicListRelationFilterSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicListRelationFilterSchema).optional(),
+  analysisPromptVersion: z.union([ z.lazy(() => AnalysisPromptVersionNullableScalarRelationFilterSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional().nullable(),
   questions: z.lazy(() => TestQuestionListRelationFilterSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
@@ -936,11 +1063,13 @@ export const TestTopicVersionOrderByWithRelationInputSchema: z.ZodType<Prisma.Te
   status: z.lazy(() => SortOrderSchema).optional(),
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  analysisPromptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   topic: z.lazy(() => TestTopicOrderByWithRelationInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicOrderByRelationAggregateInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicOrderByRelationAggregateInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionOrderByWithRelationInputSchema).optional(),
   questions: z.lazy(() => TestQuestionOrderByRelationAggregateInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkOrderByRelationAggregateInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptOrderByRelationAggregateInputSchema).optional(),
@@ -969,11 +1098,13 @@ export const TestTopicVersionWhereUniqueInputSchema: z.ZodType<Prisma.TestTopicV
   status: z.union([ z.lazy(() => EnumTestTopicVersionStatusFilterSchema), z.lazy(() => TestTopicVersionStatusSchema) ]).optional(),
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   topic: z.union([ z.lazy(() => TestTopicScalarRelationFilterSchema), z.lazy(() => TestTopicWhereInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicListRelationFilterSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicListRelationFilterSchema).optional(),
+  analysisPromptVersion: z.union([ z.lazy(() => AnalysisPromptVersionNullableScalarRelationFilterSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional().nullable(),
   questions: z.lazy(() => TestQuestionListRelationFilterSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkListRelationFilterSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptListRelationFilterSchema).optional(),
@@ -986,6 +1117,7 @@ export const TestTopicVersionOrderByWithAggregationInputSchema: z.ZodType<Prisma
   status: z.lazy(() => SortOrderSchema).optional(),
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  analysisPromptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => TestTopicVersionCountOrderByAggregateInputSchema).optional(),
@@ -1005,6 +1137,7 @@ export const TestTopicVersionScalarWhereWithAggregatesInputSchema: z.ZodType<Pri
   status: z.union([ z.lazy(() => EnumTestTopicVersionStatusWithAggregatesFilterSchema), z.lazy(() => TestTopicVersionStatusSchema) ]).optional(),
   title: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -1739,6 +1872,7 @@ export const TestStudentAnalysisWhereInputSchema: z.ZodType<Prisma.TestStudentAn
   NOT: z.union([ z.lazy(() => TestStudentAnalysisWhereInputSchema), z.lazy(() => TestStudentAnalysisWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
   attemptId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  promptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => EnumTestStudentAnalysisProviderModeFilterSchema), z.lazy(() => TestStudentAnalysisProviderModeSchema) ]).optional(),
   status: z.union([ z.lazy(() => EnumTestStudentAnalysisStatusFilterSchema), z.lazy(() => TestStudentAnalysisStatusSchema) ]).optional(),
   summary: z.lazy(() => JsonNullableFilterSchema).optional(),
@@ -1748,11 +1882,13 @@ export const TestStudentAnalysisWhereInputSchema: z.ZodType<Prisma.TestStudentAn
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   attempt: z.union([ z.lazy(() => TestStudentAttemptScalarRelationFilterSchema), z.lazy(() => TestStudentAttemptWhereInputSchema) ]).optional(),
+  promptVersion: z.union([ z.lazy(() => AnalysisPromptVersionNullableScalarRelationFilterSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional().nullable(),
 });
 
 export const TestStudentAnalysisOrderByWithRelationInputSchema: z.ZodType<Prisma.TestStudentAnalysisOrderByWithRelationInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   providerMode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   summary: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1762,6 +1898,7 @@ export const TestStudentAnalysisOrderByWithRelationInputSchema: z.ZodType<Prisma
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   attempt: z.lazy(() => TestStudentAttemptOrderByWithRelationInputSchema).optional(),
+  promptVersion: z.lazy(() => AnalysisPromptVersionOrderByWithRelationInputSchema).optional(),
 });
 
 export const TestStudentAnalysisWhereUniqueInputSchema: z.ZodType<Prisma.TestStudentAnalysisWhereUniqueInput> = z.union([
@@ -1782,6 +1919,7 @@ export const TestStudentAnalysisWhereUniqueInputSchema: z.ZodType<Prisma.TestStu
   AND: z.union([ z.lazy(() => TestStudentAnalysisWhereInputSchema), z.lazy(() => TestStudentAnalysisWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => TestStudentAnalysisWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TestStudentAnalysisWhereInputSchema), z.lazy(() => TestStudentAnalysisWhereInputSchema).array() ]).optional(),
+  promptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => EnumTestStudentAnalysisProviderModeFilterSchema), z.lazy(() => TestStudentAnalysisProviderModeSchema) ]).optional(),
   status: z.union([ z.lazy(() => EnumTestStudentAnalysisStatusFilterSchema), z.lazy(() => TestStudentAnalysisStatusSchema) ]).optional(),
   summary: z.lazy(() => JsonNullableFilterSchema).optional(),
@@ -1791,11 +1929,13 @@ export const TestStudentAnalysisWhereUniqueInputSchema: z.ZodType<Prisma.TestStu
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   attempt: z.union([ z.lazy(() => TestStudentAttemptScalarRelationFilterSchema), z.lazy(() => TestStudentAttemptWhereInputSchema) ]).optional(),
+  promptVersion: z.union([ z.lazy(() => AnalysisPromptVersionNullableScalarRelationFilterSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional().nullable(),
 }));
 
 export const TestStudentAnalysisOrderByWithAggregationInputSchema: z.ZodType<Prisma.TestStudentAnalysisOrderByWithAggregationInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   providerMode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   summary: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1817,12 +1957,184 @@ export const TestStudentAnalysisScalarWhereWithAggregatesInputSchema: z.ZodType<
   NOT: z.union([ z.lazy(() => TestStudentAnalysisScalarWhereWithAggregatesInputSchema), z.lazy(() => TestStudentAnalysisScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
   attemptId: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  promptVersionId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => EnumTestStudentAnalysisProviderModeWithAggregatesFilterSchema), z.lazy(() => TestStudentAnalysisProviderModeSchema) ]).optional(),
   status: z.union([ z.lazy(() => EnumTestStudentAnalysisStatusWithAggregatesFilterSchema), z.lazy(() => TestStudentAnalysisStatusSchema) ]).optional(),
   summary: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
   rawText: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   errorMessage: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   generatedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+});
+
+export const AnalysisPromptWhereInputSchema: z.ZodType<Prisma.AnalysisPromptWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AnalysisPromptWhereInputSchema), z.lazy(() => AnalysisPromptWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptWhereInputSchema), z.lazy(() => AnalysisPromptWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  versions: z.lazy(() => AnalysisPromptVersionListRelationFilterSchema).optional(),
+});
+
+export const AnalysisPromptOrderByWithRelationInputSchema: z.ZodType<Prisma.AnalysisPromptOrderByWithRelationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  title: z.lazy(() => SortOrderSchema).optional(),
+  description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  versions: z.lazy(() => AnalysisPromptVersionOrderByRelationAggregateInputSchema).optional(),
+});
+
+export const AnalysisPromptWhereUniqueInputSchema: z.ZodType<Prisma.AnalysisPromptWhereUniqueInput> = z.object({
+  id: z.number().int(),
+})
+.and(z.strictObject({
+  id: z.number().int().optional(),
+  AND: z.union([ z.lazy(() => AnalysisPromptWhereInputSchema), z.lazy(() => AnalysisPromptWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptWhereInputSchema), z.lazy(() => AnalysisPromptWhereInputSchema).array() ]).optional(),
+  title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  versions: z.lazy(() => AnalysisPromptVersionListRelationFilterSchema).optional(),
+}));
+
+export const AnalysisPromptOrderByWithAggregationInputSchema: z.ZodType<Prisma.AnalysisPromptOrderByWithAggregationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  title: z.lazy(() => SortOrderSchema).optional(),
+  description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  archivedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => AnalysisPromptCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => AnalysisPromptAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => AnalysisPromptMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => AnalysisPromptMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => AnalysisPromptSumOrderByAggregateInputSchema).optional(),
+});
+
+export const AnalysisPromptScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.AnalysisPromptScalarWhereWithAggregatesInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AnalysisPromptScalarWhereWithAggregatesInputSchema), z.lazy(() => AnalysisPromptScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptScalarWhereWithAggregatesInputSchema), z.lazy(() => AnalysisPromptScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  title: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  description: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  archivedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
+});
+
+export const AnalysisPromptVersionWhereInputSchema: z.ZodType<Prisma.AnalysisPromptVersionWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AnalysisPromptVersionWhereInputSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptVersionWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptVersionWhereInputSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  promptId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  status: z.union([ z.lazy(() => EnumAnalysisPromptVersionStatusFilterSchema), z.lazy(() => AnalysisPromptVersionStatusSchema) ]).optional(),
+  model: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  temperature: z.union([ z.lazy(() => FloatFilterSchema), z.number() ]).optional(),
+  prompt: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  outputSchema: z.lazy(() => JsonNullableFilterSchema).optional(),
+  publishedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  analysisPrompt: z.union([ z.lazy(() => AnalysisPromptScalarRelationFilterSchema), z.lazy(() => AnalysisPromptWhereInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionListRelationFilterSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisListRelationFilterSchema).optional(),
+});
+
+export const AnalysisPromptVersionOrderByWithRelationInputSchema: z.ZodType<Prisma.AnalysisPromptVersionOrderByWithRelationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  status: z.lazy(() => SortOrderSchema).optional(),
+  model: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+  prompt: z.lazy(() => SortOrderSchema).optional(),
+  outputSchema: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  publishedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptOrderByWithRelationInputSchema).optional(),
+  testVersions: z.lazy(() => TestTopicVersionOrderByRelationAggregateInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisOrderByRelationAggregateInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionWhereUniqueInputSchema: z.ZodType<Prisma.AnalysisPromptVersionWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    promptId_versionNumber: z.lazy(() => AnalysisPromptVersionPromptIdVersionNumberCompoundUniqueInputSchema),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    promptId_versionNumber: z.lazy(() => AnalysisPromptVersionPromptIdVersionNumberCompoundUniqueInputSchema),
+  }),
+])
+.and(z.strictObject({
+  id: z.number().int().optional(),
+  promptId_versionNumber: z.lazy(() => AnalysisPromptVersionPromptIdVersionNumberCompoundUniqueInputSchema).optional(),
+  AND: z.union([ z.lazy(() => AnalysisPromptVersionWhereInputSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptVersionWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptVersionWhereInputSchema), z.lazy(() => AnalysisPromptVersionWhereInputSchema).array() ]).optional(),
+  promptId: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
+  status: z.union([ z.lazy(() => EnumAnalysisPromptVersionStatusFilterSchema), z.lazy(() => AnalysisPromptVersionStatusSchema) ]).optional(),
+  model: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  temperature: z.union([ z.lazy(() => FloatFilterSchema), z.number() ]).optional(),
+  prompt: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  outputSchema: z.lazy(() => JsonNullableFilterSchema).optional(),
+  publishedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  analysisPrompt: z.union([ z.lazy(() => AnalysisPromptScalarRelationFilterSchema), z.lazy(() => AnalysisPromptWhereInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionListRelationFilterSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisListRelationFilterSchema).optional(),
+}));
+
+export const AnalysisPromptVersionOrderByWithAggregationInputSchema: z.ZodType<Prisma.AnalysisPromptVersionOrderByWithAggregationInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  status: z.lazy(() => SortOrderSchema).optional(),
+  model: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+  prompt: z.lazy(() => SortOrderSchema).optional(),
+  outputSchema: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  publishedAt: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => AnalysisPromptVersionCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => AnalysisPromptVersionAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => AnalysisPromptVersionMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => AnalysisPromptVersionMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => AnalysisPromptVersionSumOrderByAggregateInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionScalarWhereWithAggregatesInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereWithAggregatesInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptVersionScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereWithAggregatesInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  promptId: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  status: z.union([ z.lazy(() => EnumAnalysisPromptVersionStatusWithAggregatesFilterSchema), z.lazy(() => AnalysisPromptVersionStatusSchema) ]).optional(),
+  model: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  temperature: z.union([ z.lazy(() => FloatWithAggregatesFilterSchema), z.number() ]).optional(),
+  prompt: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
+  outputSchema: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
+  publishedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema), z.coerce.date() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -1984,6 +2296,7 @@ export const TestTopicVersionCreateInputSchema: z.ZodType<Prisma.TestTopicVersio
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
@@ -1996,6 +2309,7 @@ export const TestTopicVersionUncheckedCreateInputSchema: z.ZodType<Prisma.TestTo
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -2015,6 +2329,7 @@ export const TestTopicVersionUpdateInputSchema: z.ZodType<Prisma.TestTopicVersio
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
@@ -2027,6 +2342,7 @@ export const TestTopicVersionUncheckedUpdateInputSchema: z.ZodType<Prisma.TestTo
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -2043,6 +2359,7 @@ export const TestTopicVersionCreateManyInputSchema: z.ZodType<Prisma.TestTopicVe
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -2063,6 +2380,7 @@ export const TestTopicVersionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Te
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -2774,11 +3092,13 @@ export const TestStudentAnalysisCreateInputSchema: z.ZodType<Prisma.TestStudentA
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   attempt: z.lazy(() => TestStudentAttemptCreateNestedOneWithoutAnalysisInputSchema),
+  promptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutStudentAnalysesInputSchema).optional(),
 });
 
 export const TestStudentAnalysisUncheckedCreateInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedCreateInput> = z.strictObject({
   id: z.number().int().optional(),
   attemptId: z.number().int(),
+  promptVersionId: z.number().int().optional().nullable(),
   providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
   status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
@@ -2799,11 +3119,13 @@ export const TestStudentAnalysisUpdateInputSchema: z.ZodType<Prisma.TestStudentA
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   attempt: z.lazy(() => TestStudentAttemptUpdateOneRequiredWithoutAnalysisNestedInputSchema).optional(),
+  promptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutStudentAnalysesNestedInputSchema).optional(),
 });
 
 export const TestStudentAnalysisUncheckedUpdateInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   attemptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
@@ -2817,6 +3139,7 @@ export const TestStudentAnalysisUncheckedUpdateInputSchema: z.ZodType<Prisma.Tes
 export const TestStudentAnalysisCreateManyInputSchema: z.ZodType<Prisma.TestStudentAnalysisCreateManyInput> = z.strictObject({
   id: z.number().int().optional(),
   attemptId: z.number().int(),
+  promptVersionId: z.number().int().optional().nullable(),
   providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
   status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
@@ -2841,12 +3164,179 @@ export const TestStudentAnalysisUpdateManyMutationInputSchema: z.ZodType<Prisma.
 export const TestStudentAnalysisUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateManyInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   attemptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   rawText: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   errorMessage: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   generatedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptCreateInputSchema: z.ZodType<Prisma.AnalysisPromptCreateInput> = z.strictObject({
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  versions: z.lazy(() => AnalysisPromptVersionCreateNestedManyWithoutAnalysisPromptInputSchema).optional(),
+});
+
+export const AnalysisPromptUncheckedCreateInputSchema: z.ZodType<Prisma.AnalysisPromptUncheckedCreateInput> = z.strictObject({
+  id: z.number().int().optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  versions: z.lazy(() => AnalysisPromptVersionUncheckedCreateNestedManyWithoutAnalysisPromptInputSchema).optional(),
+});
+
+export const AnalysisPromptUpdateInputSchema: z.ZodType<Prisma.AnalysisPromptUpdateInput> = z.strictObject({
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  versions: z.lazy(() => AnalysisPromptVersionUpdateManyWithoutAnalysisPromptNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptUncheckedUpdateInputSchema: z.ZodType<Prisma.AnalysisPromptUncheckedUpdateInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  versions: z.lazy(() => AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptCreateManyInputSchema: z.ZodType<Prisma.AnalysisPromptCreateManyInput> = z.strictObject({
+  id: z.number().int().optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const AnalysisPromptUpdateManyMutationInputSchema: z.ZodType<Prisma.AnalysisPromptUpdateManyMutationInput> = z.strictObject({
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptUncheckedUpdateManyInputSchema: z.ZodType<Prisma.AnalysisPromptUncheckedUpdateManyInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptVersionCreateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateInput> = z.strictObject({
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptCreateNestedOneWithoutVersionsInputSchema),
+  testVersions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedCreateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedCreateInput> = z.strictObject({
+  id: z.number().int().optional(),
+  promptId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUpdateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionCreateManyInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateManyInput> = z.strictObject({
+  id: z.number().int().optional(),
+  promptId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const AnalysisPromptVersionUpdateManyMutationInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateManyMutationInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateManyInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -3169,6 +3659,11 @@ export const TestTopicListRelationFilterSchema: z.ZodType<Prisma.TestTopicListRe
   none: z.lazy(() => TestTopicWhereInputSchema).optional(),
 });
 
+export const AnalysisPromptVersionNullableScalarRelationFilterSchema: z.ZodType<Prisma.AnalysisPromptVersionNullableScalarRelationFilter> = z.strictObject({
+  is: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional().nullable(),
+});
+
 export const TestQuestionListRelationFilterSchema: z.ZodType<Prisma.TestQuestionListRelationFilter> = z.strictObject({
   every: z.lazy(() => TestQuestionWhereInputSchema).optional(),
   some: z.lazy(() => TestQuestionWhereInputSchema).optional(),
@@ -3205,6 +3700,7 @@ export const TestTopicVersionCountOrderByAggregateInputSchema: z.ZodType<Prisma.
   status: z.lazy(() => SortOrderSchema).optional(),
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
+  analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3213,6 +3709,7 @@ export const TestTopicVersionAvgOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   id: z.lazy(() => SortOrderSchema).optional(),
   topicId: z.lazy(() => SortOrderSchema).optional(),
   versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const TestTopicVersionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TestTopicVersionMaxOrderByAggregateInput> = z.strictObject({
@@ -3222,6 +3719,7 @@ export const TestTopicVersionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   status: z.lazy(() => SortOrderSchema).optional(),
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
+  analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3233,6 +3731,7 @@ export const TestTopicVersionMinOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   status: z.lazy(() => SortOrderSchema).optional(),
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
+  analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3241,6 +3740,7 @@ export const TestTopicVersionSumOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   id: z.lazy(() => SortOrderSchema).optional(),
   topicId: z.lazy(() => SortOrderSchema).optional(),
   versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const EnumTestTopicVersionStatusWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTestTopicVersionStatusWithAggregatesFilter> = z.strictObject({
@@ -3876,6 +4376,7 @@ export const EnumTestStudentAnalysisStatusFilterSchema: z.ZodType<Prisma.EnumTes
 export const TestStudentAnalysisCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisCountOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.lazy(() => SortOrderSchema).optional(),
   providerMode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   summary: z.lazy(() => SortOrderSchema).optional(),
@@ -3889,11 +4390,13 @@ export const TestStudentAnalysisCountOrderByAggregateInputSchema: z.ZodType<Pris
 export const TestStudentAnalysisAvgOrderByAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisAvgOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const TestStudentAnalysisMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisMaxOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.lazy(() => SortOrderSchema).optional(),
   providerMode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   rawText: z.lazy(() => SortOrderSchema).optional(),
@@ -3906,6 +4409,7 @@ export const TestStudentAnalysisMaxOrderByAggregateInputSchema: z.ZodType<Prisma
 export const TestStudentAnalysisMinOrderByAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisMinOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.lazy(() => SortOrderSchema).optional(),
   providerMode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   rawText: z.lazy(() => SortOrderSchema).optional(),
@@ -3918,6 +4422,7 @@ export const TestStudentAnalysisMinOrderByAggregateInputSchema: z.ZodType<Prisma
 export const TestStudentAnalysisSumOrderByAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisSumOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   attemptId: z.lazy(() => SortOrderSchema).optional(),
+  promptVersionId: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export const EnumTestStudentAnalysisProviderModeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTestStudentAnalysisProviderModeWithAggregatesFilter> = z.strictObject({
@@ -3938,6 +4443,169 @@ export const EnumTestStudentAnalysisStatusWithAggregatesFilterSchema: z.ZodType<
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTestStudentAnalysisStatusFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTestStudentAnalysisStatusFilterSchema).optional(),
+});
+
+export const AnalysisPromptVersionListRelationFilterSchema: z.ZodType<Prisma.AnalysisPromptVersionListRelationFilter> = z.strictObject({
+  every: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+  some: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+  none: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionOrderByRelationAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionOrderByRelationAggregateInput> = z.strictObject({
+  _count: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptCountOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptCountOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  title: z.lazy(() => SortOrderSchema).optional(),
+  description: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptAvgOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptAvgOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptMaxOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptMaxOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  title: z.lazy(() => SortOrderSchema).optional(),
+  description: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptMinOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptMinOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  title: z.lazy(() => SortOrderSchema).optional(),
+  description: z.lazy(() => SortOrderSchema).optional(),
+  archivedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptSumOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptSumOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EnumAnalysisPromptVersionStatusFilterSchema: z.ZodType<Prisma.EnumAnalysisPromptVersionStatusFilter> = z.strictObject({
+  equals: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  in: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  notIn: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema) ]).optional(),
+});
+
+export const FloatFilterSchema: z.ZodType<Prisma.FloatFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedFloatFilterSchema) ]).optional(),
+});
+
+export const AnalysisPromptScalarRelationFilterSchema: z.ZodType<Prisma.AnalysisPromptScalarRelationFilter> = z.strictObject({
+  is: z.lazy(() => AnalysisPromptWhereInputSchema).optional(),
+  isNot: z.lazy(() => AnalysisPromptWhereInputSchema).optional(),
+});
+
+export const TestStudentAnalysisListRelationFilterSchema: z.ZodType<Prisma.TestStudentAnalysisListRelationFilter> = z.strictObject({
+  every: z.lazy(() => TestStudentAnalysisWhereInputSchema).optional(),
+  some: z.lazy(() => TestStudentAnalysisWhereInputSchema).optional(),
+  none: z.lazy(() => TestStudentAnalysisWhereInputSchema).optional(),
+});
+
+export const TestStudentAnalysisOrderByRelationAggregateInputSchema: z.ZodType<Prisma.TestStudentAnalysisOrderByRelationAggregateInput> = z.strictObject({
+  _count: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptVersionPromptIdVersionNumberCompoundUniqueInputSchema: z.ZodType<Prisma.AnalysisPromptVersionPromptIdVersionNumberCompoundUniqueInput> = z.strictObject({
+  promptId: z.number(),
+  versionNumber: z.number(),
+});
+
+export const AnalysisPromptVersionCountOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCountOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  status: z.lazy(() => SortOrderSchema).optional(),
+  model: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+  prompt: z.lazy(() => SortOrderSchema).optional(),
+  outputSchema: z.lazy(() => SortOrderSchema).optional(),
+  publishedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptVersionAvgOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionAvgOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptVersionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionMaxOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  status: z.lazy(() => SortOrderSchema).optional(),
+  model: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+  prompt: z.lazy(() => SortOrderSchema).optional(),
+  publishedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptVersionMinOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionMinOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  status: z.lazy(() => SortOrderSchema).optional(),
+  model: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+  prompt: z.lazy(() => SortOrderSchema).optional(),
+  publishedAt: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const AnalysisPromptVersionSumOrderByAggregateInputSchema: z.ZodType<Prisma.AnalysisPromptVersionSumOrderByAggregateInput> = z.strictObject({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  promptId: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  temperature: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const EnumAnalysisPromptVersionStatusWithAggregatesFilterSchema: z.ZodType<Prisma.EnumAnalysisPromptVersionStatusWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  in: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  notIn: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => NestedEnumAnalysisPromptVersionStatusWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema).optional(),
+});
+
+export const FloatWithAggregatesFilterSchema: z.ZodType<Prisma.FloatWithAggregatesFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedFloatWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _sum: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _min: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _max: z.lazy(() => NestedFloatFilterSchema).optional(),
 });
 
 export const TestPublicLinkCreateNestedManyWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkCreateNestedManyWithoutCreatedByUserInput> = z.strictObject({
@@ -4112,6 +4780,12 @@ export const TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema: 
   connect: z.union([ z.lazy(() => TestTopicWhereUniqueInputSchema), z.lazy(() => TestTopicWhereUniqueInputSchema).array() ]).optional(),
 });
 
+export const AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutTestVersionsInputSchema).optional(),
+  connect: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).optional(),
+});
+
 export const TestQuestionCreateNestedManyWithoutVersionInputSchema: z.ZodType<Prisma.TestQuestionCreateNestedManyWithoutVersionInput> = z.strictObject({
   create: z.union([ z.lazy(() => TestQuestionCreateWithoutVersionInputSchema), z.lazy(() => TestQuestionCreateWithoutVersionInputSchema).array(), z.lazy(() => TestQuestionUncheckedCreateWithoutVersionInputSchema), z.lazy(() => TestQuestionUncheckedCreateWithoutVersionInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => TestQuestionCreateOrConnectWithoutVersionInputSchema), z.lazy(() => TestQuestionCreateOrConnectWithoutVersionInputSchema).array() ]).optional(),
@@ -4206,6 +4880,16 @@ export const TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema: 
   update: z.union([ z.lazy(() => TestTopicUpdateWithWhereUniqueWithoutActivePublishedVersionInputSchema), z.lazy(() => TestTopicUpdateWithWhereUniqueWithoutActivePublishedVersionInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => TestTopicUpdateManyWithWhereWithoutActivePublishedVersionInputSchema), z.lazy(() => TestTopicUpdateManyWithWhereWithoutActivePublishedVersionInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => TestTopicScalarWhereInputSchema), z.lazy(() => TestTopicScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutTestVersionsInputSchema).optional(),
+  upsert: z.lazy(() => AnalysisPromptVersionUpsertWithoutTestVersionsInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateToOneWithWhereWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUpdateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutTestVersionsInputSchema) ]).optional(),
 });
 
 export const TestQuestionUpdateManyWithoutVersionNestedInputSchema: z.ZodType<Prisma.TestQuestionUpdateManyWithoutVersionNestedInput> = z.strictObject({
@@ -4770,6 +5454,12 @@ export const TestStudentAttemptCreateNestedOneWithoutAnalysisInputSchema: z.ZodT
   connect: z.lazy(() => TestStudentAttemptWhereUniqueInputSchema).optional(),
 });
 
+export const AnalysisPromptVersionCreateNestedOneWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateNestedOneWithoutStudentAnalysesInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutStudentAnalysesInputSchema).optional(),
+  connect: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).optional(),
+});
+
 export const EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInput> = z.strictObject({
   set: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
 });
@@ -4784,6 +5474,168 @@ export const TestStudentAttemptUpdateOneRequiredWithoutAnalysisNestedInputSchema
   upsert: z.lazy(() => TestStudentAttemptUpsertWithoutAnalysisInputSchema).optional(),
   connect: z.lazy(() => TestStudentAttemptWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => TestStudentAttemptUpdateToOneWithWhereWithoutAnalysisInputSchema), z.lazy(() => TestStudentAttemptUpdateWithoutAnalysisInputSchema), z.lazy(() => TestStudentAttemptUncheckedUpdateWithoutAnalysisInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptVersionUpdateOneWithoutStudentAnalysesNestedInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateOneWithoutStudentAnalysesNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutStudentAnalysesInputSchema).optional(),
+  upsert: z.lazy(() => AnalysisPromptVersionUpsertWithoutStudentAnalysesInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => AnalysisPromptVersionWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateToOneWithWhereWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUpdateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutStudentAnalysesInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptVersionCreateNestedManyWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateNestedManyWithoutAnalysisPromptInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema).array(), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedCreateNestedManyWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedCreateNestedManyWithoutAnalysisPromptInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema).array(), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const AnalysisPromptVersionUpdateManyWithoutAnalysisPromptNestedInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateManyWithoutAnalysisPromptNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema).array(), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptNestedInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema).array(), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema), z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const AnalysisPromptCreateNestedOneWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptCreateNestedOneWithoutVersionsInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptCreateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedCreateWithoutVersionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptCreateOrConnectWithoutVersionsInputSchema).optional(),
+  connect: z.lazy(() => AnalysisPromptWhereUniqueInputSchema).optional(),
+});
+
+export const TestTopicVersionCreateNestedManyWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionCreateNestedManyWithoutAnalysisPromptVersionInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema).array(), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const TestStudentAnalysisCreateNestedManyWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisCreateNestedManyWithoutPromptVersionInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema).array(), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const TestTopicVersionUncheckedCreateNestedManyWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUncheckedCreateNestedManyWithoutAnalysisPromptVersionInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema).array(), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const TestStudentAnalysisUncheckedCreateNestedManyWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedCreateNestedManyWithoutPromptVersionInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema).array(), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+});
+
+export const EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumAnalysisPromptVersionStatusFieldUpdateOperationsInput> = z.strictObject({
+  set: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+});
+
+export const FloatFieldUpdateOperationsInputSchema: z.ZodType<Prisma.FloatFieldUpdateOperationsInput> = z.strictObject({
+  set: z.number().optional(),
+  increment: z.number().optional(),
+  decrement: z.number().optional(),
+  multiply: z.number().optional(),
+  divide: z.number().optional(),
+});
+
+export const AnalysisPromptUpdateOneRequiredWithoutVersionsNestedInputSchema: z.ZodType<Prisma.AnalysisPromptUpdateOneRequiredWithoutVersionsNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => AnalysisPromptCreateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedCreateWithoutVersionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => AnalysisPromptCreateOrConnectWithoutVersionsInputSchema).optional(),
+  upsert: z.lazy(() => AnalysisPromptUpsertWithoutVersionsInputSchema).optional(),
+  connect: z.lazy(() => AnalysisPromptWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => AnalysisPromptUpdateToOneWithWhereWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUpdateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedUpdateWithoutVersionsInputSchema) ]).optional(),
+});
+
+export const TestTopicVersionUpdateManyWithoutAnalysisPromptVersionNestedInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateManyWithoutAnalysisPromptVersionNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema).array(), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestTopicVersionScalarWhereInputSchema), z.lazy(() => TestTopicVersionScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const TestStudentAnalysisUpdateManyWithoutPromptVersionNestedInputSchema: z.ZodType<Prisma.TestStudentAnalysisUpdateManyWithoutPromptVersionNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema).array(), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestStudentAnalysisScalarWhereInputSchema), z.lazy(() => TestStudentAnalysisScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionNestedInputSchema: z.ZodType<Prisma.TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema).array(), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestTopicVersionWhereUniqueInputSchema), z.lazy(() => TestTopicVersionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestTopicVersionScalarWhereInputSchema), z.lazy(() => TestTopicVersionScalarWhereInputSchema).array() ]).optional(),
+});
+
+export const TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionNestedInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionNestedInput> = z.strictObject({
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema).array(), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema), z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => TestStudentAnalysisScalarWhereInputSchema), z.lazy(() => TestStudentAnalysisScalarWhereInputSchema).array() ]).optional(),
 });
 
 export const NestedIntFilterSchema: z.ZodType<Prisma.NestedIntFilter> = z.strictObject({
@@ -5140,6 +5992,39 @@ export const NestedEnumTestStudentAnalysisStatusWithAggregatesFilterSchema: z.Zo
   _max: z.lazy(() => NestedEnumTestStudentAnalysisStatusFilterSchema).optional(),
 });
 
+export const NestedEnumAnalysisPromptVersionStatusFilterSchema: z.ZodType<Prisma.NestedEnumAnalysisPromptVersionStatusFilter> = z.strictObject({
+  equals: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  in: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  notIn: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema) ]).optional(),
+});
+
+export const NestedEnumAnalysisPromptVersionStatusWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumAnalysisPromptVersionStatusWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  in: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  notIn: z.lazy(() => AnalysisPromptVersionStatusSchema).array().optional(),
+  not: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => NestedEnumAnalysisPromptVersionStatusWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumAnalysisPromptVersionStatusFilterSchema).optional(),
+});
+
+export const NestedFloatWithAggregatesFilterSchema: z.ZodType<Prisma.NestedFloatWithAggregatesFilter> = z.strictObject({
+  equals: z.number().optional(),
+  in: z.number().array().optional(),
+  notIn: z.number().array().optional(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedFloatWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _sum: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _min: z.lazy(() => NestedFloatFilterSchema).optional(),
+  _max: z.lazy(() => NestedFloatFilterSchema).optional(),
+});
+
 export const TestPublicLinkCreateWithoutCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkCreateWithoutCreatedByUserInput> = z.strictObject({
   shortCode: z.string(),
   isActive: z.boolean().optional(),
@@ -5234,6 +6119,7 @@ export const TestTopicVersionCreateWithoutTopicInputSchema: z.ZodType<Prisma.Tes
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
@@ -5245,6 +6131,7 @@ export const TestTopicVersionUncheckedCreateWithoutTopicInputSchema: z.ZodType<P
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -5273,6 +6160,7 @@ export const TestTopicVersionCreateWithoutDraftForTopicInputSchema: z.ZodType<Pr
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
@@ -5285,6 +6173,7 @@ export const TestTopicVersionUncheckedCreateWithoutDraftForTopicInputSchema: z.Z
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   publishedForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
@@ -5307,6 +6196,7 @@ export const TestTopicVersionCreateWithoutPublishedForTopicInputSchema: z.ZodTyp
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
@@ -5319,6 +6209,7 @@ export const TestTopicVersionUncheckedCreateWithoutPublishedForTopicInputSchema:
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -5358,6 +6249,7 @@ export const TestTopicVersionScalarWhereInputSchema: z.ZodType<Prisma.TestTopicV
   status: z.union([ z.lazy(() => EnumTestTopicVersionStatusFilterSchema), z.lazy(() => TestTopicVersionStatusSchema) ]).optional(),
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -5382,6 +6274,7 @@ export const TestTopicVersionUpdateWithoutDraftForTopicInputSchema: z.ZodType<Pr
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
@@ -5394,6 +6287,7 @@ export const TestTopicVersionUncheckedUpdateWithoutDraftForTopicInputSchema: z.Z
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   publishedForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
@@ -5422,6 +6316,7 @@ export const TestTopicVersionUpdateWithoutPublishedForTopicInputSchema: z.ZodTyp
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
@@ -5434,6 +6329,7 @@ export const TestTopicVersionUncheckedUpdateWithoutPublishedForTopicInputSchema:
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -5522,6 +6418,40 @@ export const TestTopicCreateOrConnectWithoutActivePublishedVersionInputSchema: z
 export const TestTopicCreateManyActivePublishedVersionInputEnvelopeSchema: z.ZodType<Prisma.TestTopicCreateManyActivePublishedVersionInputEnvelope> = z.strictObject({
   data: z.union([ z.lazy(() => TestTopicCreateManyActivePublishedVersionInputSchema), z.lazy(() => TestTopicCreateManyActivePublishedVersionInputSchema).array() ]),
   skipDuplicates: z.boolean().optional(),
+});
+
+export const AnalysisPromptVersionCreateWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateWithoutTestVersionsInput> = z.strictObject({
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptCreateNestedOneWithoutVersionsInputSchema),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInput> = z.strictObject({
+  id: z.number().int().optional(),
+  promptId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionCreateOrConnectWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateOrConnectWithoutTestVersionsInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInputSchema) ]),
 });
 
 export const TestQuestionCreateWithoutVersionInputSchema: z.ZodType<Prisma.TestQuestionCreateWithoutVersionInput> = z.strictObject({
@@ -5744,6 +6674,46 @@ export const TestTopicUpdateManyWithWhereWithoutActivePublishedVersionInputSchem
   data: z.union([ z.lazy(() => TestTopicUpdateManyMutationInputSchema), z.lazy(() => TestTopicUncheckedUpdateManyWithoutActivePublishedVersionInputSchema) ]),
 });
 
+export const AnalysisPromptVersionUpsertWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpsertWithoutTestVersionsInput> = z.strictObject({
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutTestVersionsInputSchema) ]),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutTestVersionsInputSchema) ]),
+  where: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUpdateToOneWithWhereWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateToOneWithWhereWithoutTestVersionsInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutTestVersionsInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutTestVersionsInputSchema) ]),
+});
+
+export const AnalysisPromptVersionUpdateWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateWithoutTestVersionsInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateWithoutTestVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateWithoutTestVersionsInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
 export const TestQuestionUpsertWithWhereUniqueWithoutVersionInputSchema: z.ZodType<Prisma.TestQuestionUpsertWithWhereUniqueWithoutVersionInput> = z.strictObject({
   where: z.lazy(() => TestQuestionWhereUniqueInputSchema),
   update: z.union([ z.lazy(() => TestQuestionUpdateWithoutVersionInputSchema), z.lazy(() => TestQuestionUncheckedUpdateWithoutVersionInputSchema) ]),
@@ -5845,6 +6815,7 @@ export const TestTopicVersionCreateWithoutQuestionsInputSchema: z.ZodType<Prisma
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
 });
@@ -5856,6 +6827,7 @@ export const TestTopicVersionUncheckedCreateWithoutQuestionsInputSchema: z.ZodTy
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -5975,6 +6947,7 @@ export const TestTopicVersionUpdateWithoutQuestionsInputSchema: z.ZodType<Prisma
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
 });
@@ -5986,6 +6959,7 @@ export const TestTopicVersionUncheckedUpdateWithoutQuestionsInputSchema: z.ZodTy
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -6241,6 +7215,7 @@ export const TestTopicVersionCreateWithoutPublicLinksInputSchema: z.ZodType<Pris
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
 });
@@ -6252,6 +7227,7 @@ export const TestTopicVersionUncheckedCreateWithoutPublicLinksInputSchema: z.Zod
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -6399,6 +7375,7 @@ export const TestTopicVersionUpdateWithoutPublicLinksInputSchema: z.ZodType<Pris
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
 });
@@ -6410,6 +7387,7 @@ export const TestTopicVersionUncheckedUpdateWithoutPublicLinksInputSchema: z.Zod
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -6615,6 +7593,7 @@ export const TestTopicVersionCreateWithoutStudentAttemptsInputSchema: z.ZodType<
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutTestVersionsInputSchema).optional(),
   questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
 });
@@ -6626,6 +7605,7 @@ export const TestTopicVersionUncheckedCreateWithoutStudentAttemptsInputSchema: z
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -6677,10 +7657,12 @@ export const TestStudentAnalysisCreateWithoutAttemptInputSchema: z.ZodType<Prism
   generatedAt: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  promptVersion: z.lazy(() => AnalysisPromptVersionCreateNestedOneWithoutStudentAnalysesInputSchema).optional(),
 });
 
 export const TestStudentAnalysisUncheckedCreateWithoutAttemptInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedCreateWithoutAttemptInput> = z.strictObject({
   id: z.number().int().optional(),
+  promptVersionId: z.number().int().optional().nullable(),
   providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
   status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
@@ -6765,6 +7747,7 @@ export const TestTopicVersionUpdateWithoutStudentAttemptsInputSchema: z.ZodType<
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
 });
@@ -6776,6 +7759,7 @@ export const TestTopicVersionUncheckedUpdateWithoutStudentAttemptsInputSchema: z
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -6820,10 +7804,12 @@ export const TestStudentAnalysisUpdateWithoutAttemptInputSchema: z.ZodType<Prism
   generatedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  promptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutStudentAnalysesNestedInputSchema).optional(),
 });
 
 export const TestStudentAnalysisUncheckedUpdateWithoutAttemptInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateWithoutAttemptInput> = z.strictObject({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
   summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
@@ -7076,6 +8062,40 @@ export const TestStudentAttemptCreateOrConnectWithoutAnalysisInputSchema: z.ZodT
   create: z.union([ z.lazy(() => TestStudentAttemptCreateWithoutAnalysisInputSchema), z.lazy(() => TestStudentAttemptUncheckedCreateWithoutAnalysisInputSchema) ]),
 });
 
+export const AnalysisPromptVersionCreateWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateWithoutStudentAnalysesInput> = z.strictObject({
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptCreateNestedOneWithoutVersionsInputSchema),
+  testVersions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInput> = z.strictObject({
+  id: z.number().int().optional(),
+  promptId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionCreateOrConnectWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateOrConnectWithoutStudentAnalysesInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInputSchema) ]),
+});
+
 export const TestStudentAttemptUpsertWithoutAnalysisInputSchema: z.ZodType<Prisma.TestStudentAttemptUpsertWithoutAnalysisInput> = z.strictObject({
   update: z.union([ z.lazy(() => TestStudentAttemptUpdateWithoutAnalysisInputSchema), z.lazy(() => TestStudentAttemptUncheckedUpdateWithoutAnalysisInputSchema) ]),
   create: z.union([ z.lazy(() => TestStudentAttemptCreateWithoutAnalysisInputSchema), z.lazy(() => TestStudentAttemptUncheckedCreateWithoutAnalysisInputSchema) ]),
@@ -7134,6 +8154,293 @@ export const TestStudentAttemptUncheckedUpdateWithoutAnalysisInputSchema: z.ZodT
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   answers: z.lazy(() => TestStudentAnswerUncheckedUpdateManyWithoutAttemptNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUpsertWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpsertWithoutStudentAnalysesInput> = z.strictObject({
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutStudentAnalysesInputSchema) ]),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutStudentAnalysesInputSchema) ]),
+  where: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUpdateToOneWithWhereWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateToOneWithWhereWithoutStudentAnalysesInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutStudentAnalysesInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutStudentAnalysesInputSchema) ]),
+});
+
+export const AnalysisPromptVersionUpdateWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateWithoutStudentAnalysesInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  analysisPrompt: z.lazy(() => AnalysisPromptUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateWithoutStudentAnalysesInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateWithoutStudentAnalysesInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  promptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateWithoutAnalysisPromptInput> = z.strictObject({
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  testVersions: z.lazy(() => TestTopicVersionCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInput> = z.strictObject({
+  id: z.number().int().optional(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedCreateNestedManyWithoutAnalysisPromptVersionInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedCreateNestedManyWithoutPromptVersionInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateOrConnectWithoutAnalysisPromptInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema) ]),
+});
+
+export const AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelopeSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateManyAnalysisPromptInputEnvelope> = z.strictObject({
+  data: z.union([ z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionCreateManyAnalysisPromptInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional(),
+});
+
+export const AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpsertWithWhereUniqueWithoutAnalysisPromptInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutAnalysisPromptInputSchema) ]),
+  create: z.union([ z.lazy(() => AnalysisPromptVersionCreateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedCreateWithoutAnalysisPromptInputSchema) ]),
+});
+
+export const AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateWithWhereUniqueWithoutAnalysisPromptInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => AnalysisPromptVersionUpdateWithoutAnalysisPromptInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateWithoutAnalysisPromptInputSchema) ]),
+});
+
+export const AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateManyWithWhereWithoutAnalysisPromptInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => AnalysisPromptVersionUpdateManyMutationInputSchema), z.lazy(() => AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptInputSchema) ]),
+});
+
+export const AnalysisPromptVersionScalarWhereInputSchema: z.ZodType<Prisma.AnalysisPromptVersionScalarWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema), z.lazy(() => AnalysisPromptVersionScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  promptId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  status: z.union([ z.lazy(() => EnumAnalysisPromptVersionStatusFilterSchema), z.lazy(() => AnalysisPromptVersionStatusSchema) ]).optional(),
+  model: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  temperature: z.union([ z.lazy(() => FloatFilterSchema), z.number() ]).optional(),
+  prompt: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  outputSchema: z.lazy(() => JsonNullableFilterSchema).optional(),
+  publishedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+});
+
+export const AnalysisPromptCreateWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptCreateWithoutVersionsInput> = z.strictObject({
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const AnalysisPromptUncheckedCreateWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptUncheckedCreateWithoutVersionsInput> = z.strictObject({
+  id: z.number().int().optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  archivedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const AnalysisPromptCreateOrConnectWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptCreateOrConnectWithoutVersionsInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => AnalysisPromptCreateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedCreateWithoutVersionsInputSchema) ]),
+});
+
+export const TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionCreateWithoutAnalysisPromptVersionInput> = z.strictObject({
+  versionNumber: z.number().int(),
+  status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
+  draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
+  publishedForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  questions: z.lazy(() => TestQuestionCreateNestedManyWithoutVersionInputSchema).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkCreateNestedManyWithoutTopicVersionInputSchema).optional(),
+  studentAttempts: z.lazy(() => TestStudentAttemptCreateNestedManyWithoutTopicVersionInputSchema).optional(),
+});
+
+export const TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInput> = z.strictObject({
+  id: z.number().int().optional(),
+  topicId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
+  publishedForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
+  questions: z.lazy(() => TestQuestionUncheckedCreateNestedManyWithoutVersionInputSchema).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUncheckedCreateNestedManyWithoutTopicVersionInputSchema).optional(),
+  studentAttempts: z.lazy(() => TestStudentAttemptUncheckedCreateNestedManyWithoutTopicVersionInputSchema).optional(),
+});
+
+export const TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionCreateOrConnectWithoutAnalysisPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestTopicVersionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema) ]),
+});
+
+export const TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelopeSchema: z.ZodType<Prisma.TestTopicVersionCreateManyAnalysisPromptVersionInputEnvelope> = z.strictObject({
+  data: z.union([ z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionCreateManyAnalysisPromptVersionInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional(),
+});
+
+export const TestStudentAnalysisCreateWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisCreateWithoutPromptVersionInput> = z.strictObject({
+  providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
+  status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.string().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  generatedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  attempt: z.lazy(() => TestStudentAttemptCreateNestedOneWithoutAnalysisInputSchema),
+});
+
+export const TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedCreateWithoutPromptVersionInput> = z.strictObject({
+  id: z.number().int().optional(),
+  attemptId: z.number().int(),
+  providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
+  status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.string().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  generatedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const TestStudentAnalysisCreateOrConnectWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisCreateOrConnectWithoutPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema) ]),
+});
+
+export const TestStudentAnalysisCreateManyPromptVersionInputEnvelopeSchema: z.ZodType<Prisma.TestStudentAnalysisCreateManyPromptVersionInputEnvelope> = z.strictObject({
+  data: z.union([ z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisCreateManyPromptVersionInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional(),
+});
+
+export const AnalysisPromptUpsertWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptUpsertWithoutVersionsInput> = z.strictObject({
+  update: z.union([ z.lazy(() => AnalysisPromptUpdateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedUpdateWithoutVersionsInputSchema) ]),
+  create: z.union([ z.lazy(() => AnalysisPromptCreateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedCreateWithoutVersionsInputSchema) ]),
+  where: z.lazy(() => AnalysisPromptWhereInputSchema).optional(),
+});
+
+export const AnalysisPromptUpdateToOneWithWhereWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptUpdateToOneWithWhereWithoutVersionsInput> = z.strictObject({
+  where: z.lazy(() => AnalysisPromptWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => AnalysisPromptUpdateWithoutVersionsInputSchema), z.lazy(() => AnalysisPromptUncheckedUpdateWithoutVersionsInputSchema) ]),
+});
+
+export const AnalysisPromptUpdateWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptUpdateWithoutVersionsInput> = z.strictObject({
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptUncheckedUpdateWithoutVersionsInputSchema: z.ZodType<Prisma.AnalysisPromptUncheckedUpdateWithoutVersionsInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  archivedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUpsertWithWhereUniqueWithoutAnalysisPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestTopicVersionWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => TestTopicVersionUpdateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedUpdateWithoutAnalysisPromptVersionInputSchema) ]),
+  create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSchema) ]),
+});
+
+export const TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateWithWhereUniqueWithoutAnalysisPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestTopicVersionWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => TestTopicVersionUpdateWithoutAnalysisPromptVersionInputSchema), z.lazy(() => TestTopicVersionUncheckedUpdateWithoutAnalysisPromptVersionInputSchema) ]),
+});
+
+export const TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateManyWithWhereWithoutAnalysisPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestTopicVersionScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => TestTopicVersionUpdateManyMutationInputSchema), z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionInputSchema) ]),
+});
+
+export const TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUpsertWithWhereUniqueWithoutPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => TestStudentAnalysisUpdateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedUpdateWithoutPromptVersionInputSchema) ]),
+  create: z.union([ z.lazy(() => TestStudentAnalysisCreateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedCreateWithoutPromptVersionInputSchema) ]),
+});
+
+export const TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUpdateWithWhereUniqueWithoutPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestStudentAnalysisWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => TestStudentAnalysisUpdateWithoutPromptVersionInputSchema), z.lazy(() => TestStudentAnalysisUncheckedUpdateWithoutPromptVersionInputSchema) ]),
+});
+
+export const TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUpdateManyWithWhereWithoutPromptVersionInput> = z.strictObject({
+  where: z.lazy(() => TestStudentAnalysisScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => TestStudentAnalysisUpdateManyMutationInputSchema), z.lazy(() => TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionInputSchema) ]),
+});
+
+export const TestStudentAnalysisScalarWhereInputSchema: z.ZodType<Prisma.TestStudentAnalysisScalarWhereInput> = z.strictObject({
+  AND: z.union([ z.lazy(() => TestStudentAnalysisScalarWhereInputSchema), z.lazy(() => TestStudentAnalysisScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => TestStudentAnalysisScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => TestStudentAnalysisScalarWhereInputSchema), z.lazy(() => TestStudentAnalysisScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  attemptId: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  promptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
+  providerMode: z.union([ z.lazy(() => EnumTestStudentAnalysisProviderModeFilterSchema), z.lazy(() => TestStudentAnalysisProviderModeSchema) ]).optional(),
+  status: z.union([ z.lazy(() => EnumTestStudentAnalysisStatusFilterSchema), z.lazy(() => TestStudentAnalysisStatusSchema) ]).optional(),
+  summary: z.lazy(() => JsonNullableFilterSchema).optional(),
+  rawText: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  errorMessage: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  generatedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema), z.coerce.date() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
 });
 
 export const TestPublicLinkCreateManyCreatedByUserInputSchema: z.ZodType<Prisma.TestPublicLinkCreateManyCreatedByUserInput> = z.strictObject({
@@ -7215,6 +8522,7 @@ export const TestTopicVersionCreateManyTopicInputSchema: z.ZodType<Prisma.TestTo
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  analysisPromptVersionId: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -7228,6 +8536,7 @@ export const TestTopicVersionUpdateWithoutTopicInputSchema: z.ZodType<Prisma.Tes
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
   publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  analysisPromptVersion: z.lazy(() => AnalysisPromptVersionUpdateOneWithoutTestVersionsNestedInputSchema).optional(),
   questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
   publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
   studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
@@ -7239,6 +8548,7 @@ export const TestTopicVersionUncheckedUpdateWithoutTopicInputSchema: z.ZodType<P
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -7254,6 +8564,7 @@ export const TestTopicVersionUncheckedUpdateManyWithoutTopicInputSchema: z.ZodTy
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -7869,6 +9180,165 @@ export const TestStudentAnswerUncheckedUpdateManyWithoutAttemptInputSchema: z.Zo
   questionTypeSnapshot: z.union([ z.lazy(() => TestQuestionTypeSchema), z.lazy(() => EnumTestQuestionTypeFieldUpdateOperationsInputSchema) ]).optional(),
   questionTitleSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   answerPayload: z.union([ z.lazy(() => JsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const AnalysisPromptVersionCreateManyAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateManyAnalysisPromptInput> = z.strictObject({
+  id: z.number().int().optional(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => AnalysisPromptVersionStatusSchema).optional(),
+  model: z.string(),
+  temperature: z.number().optional(),
+  prompt: z.string(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const AnalysisPromptVersionUpdateWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateWithoutAnalysisPromptInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateWithoutAnalysisPromptInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  testVersions: z.lazy(() => TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionNestedInputSchema).optional(),
+  studentAnalyses: z.lazy(() => TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionNestedInputSchema).optional(),
+});
+
+export const AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptInputSchema: z.ZodType<Prisma.AnalysisPromptVersionUncheckedUpdateManyWithoutAnalysisPromptInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => AnalysisPromptVersionStatusSchema), z.lazy(() => EnumAnalysisPromptVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  model: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  temperature: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
+  prompt: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  outputSchema: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  publishedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const TestTopicVersionCreateManyAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionCreateManyAnalysisPromptVersionInput> = z.strictObject({
+  id: z.number().int().optional(),
+  topicId: z.number().int(),
+  versionNumber: z.number().int(),
+  status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const TestStudentAnalysisCreateManyPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisCreateManyPromptVersionInput> = z.strictObject({
+  id: z.number().int().optional(),
+  attemptId: z.number().int(),
+  providerMode: z.lazy(() => TestStudentAnalysisProviderModeSchema).optional(),
+  status: z.lazy(() => TestStudentAnalysisStatusSchema).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.string().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  generatedAt: z.coerce.date().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const TestTopicVersionUpdateWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateWithoutAnalysisPromptVersionInput> = z.strictObject({
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
+  draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
+  publishedForTopic: z.lazy(() => TestTopicUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  questions: z.lazy(() => TestQuestionUpdateManyWithoutVersionNestedInputSchema).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
+  studentAttempts: z.lazy(() => TestStudentAttemptUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
+});
+
+export const TestTopicVersionUncheckedUpdateWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUncheckedUpdateWithoutAnalysisPromptVersionInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  topicId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
+  publishedForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
+  questions: z.lazy(() => TestQuestionUncheckedUpdateManyWithoutVersionNestedInputSchema).optional(),
+  publicLinks: z.lazy(() => TestPublicLinkUncheckedUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
+  studentAttempts: z.lazy(() => TestStudentAttemptUncheckedUpdateManyWithoutTopicVersionNestedInputSchema).optional(),
+});
+
+export const TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionInputSchema: z.ZodType<Prisma.TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  topicId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const TestStudentAnalysisUpdateWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUpdateWithoutPromptVersionInput> = z.strictObject({
+  providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  errorMessage: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  generatedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attempt: z.lazy(() => TestStudentAttemptUpdateOneRequiredWithoutAnalysisNestedInputSchema).optional(),
+});
+
+export const TestStudentAnalysisUncheckedUpdateWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateWithoutPromptVersionInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  attemptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  errorMessage: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  generatedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+});
+
+export const TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionInputSchema: z.ZodType<Prisma.TestStudentAnalysisUncheckedUpdateManyWithoutPromptVersionInput> = z.strictObject({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  attemptId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  providerMode: z.union([ z.lazy(() => TestStudentAnalysisProviderModeSchema), z.lazy(() => EnumTestStudentAnalysisProviderModeFieldUpdateOperationsInputSchema) ]).optional(),
+  status: z.union([ z.lazy(() => TestStudentAnalysisStatusSchema), z.lazy(() => EnumTestStudentAnalysisStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  summary: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  rawText: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  errorMessage: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  generatedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -8559,6 +10029,130 @@ export const TestStudentAnalysisFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.Te
   where: TestStudentAnalysisWhereUniqueInputSchema, 
 }).strict();
 
+export const AnalysisPromptFindFirstArgsSchema: z.ZodType<Prisma.AnalysisPromptFindFirstArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptOrderByWithRelationInputSchema.array(), AnalysisPromptOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptScalarFieldEnumSchema, AnalysisPromptScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptFindFirstOrThrowArgsSchema: z.ZodType<Prisma.AnalysisPromptFindFirstOrThrowArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptOrderByWithRelationInputSchema.array(), AnalysisPromptOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptScalarFieldEnumSchema, AnalysisPromptScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptFindManyArgsSchema: z.ZodType<Prisma.AnalysisPromptFindManyArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptOrderByWithRelationInputSchema.array(), AnalysisPromptOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptScalarFieldEnumSchema, AnalysisPromptScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptAggregateArgsSchema: z.ZodType<Prisma.AnalysisPromptAggregateArgs> = z.object({
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptOrderByWithRelationInputSchema.array(), AnalysisPromptOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptGroupByArgsSchema: z.ZodType<Prisma.AnalysisPromptGroupByArgs> = z.object({
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptOrderByWithAggregationInputSchema.array(), AnalysisPromptOrderByWithAggregationInputSchema ]).optional(),
+  by: AnalysisPromptScalarFieldEnumSchema.array(), 
+  having: AnalysisPromptScalarWhereWithAggregatesInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptFindUniqueArgsSchema: z.ZodType<Prisma.AnalysisPromptFindUniqueArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.AnalysisPromptFindUniqueOrThrowArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptVersionFindFirstArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionFindFirstArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptVersionOrderByWithRelationInputSchema.array(), AnalysisPromptVersionOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptVersionWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptVersionScalarFieldEnumSchema, AnalysisPromptVersionScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptVersionFindFirstOrThrowArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionFindFirstOrThrowArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptVersionOrderByWithRelationInputSchema.array(), AnalysisPromptVersionOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptVersionWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptVersionScalarFieldEnumSchema, AnalysisPromptVersionScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptVersionFindManyArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionFindManyArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptVersionOrderByWithRelationInputSchema.array(), AnalysisPromptVersionOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptVersionWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ AnalysisPromptVersionScalarFieldEnumSchema, AnalysisPromptVersionScalarFieldEnumSchema.array() ]).optional(),
+}).strict();
+
+export const AnalysisPromptVersionAggregateArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionAggregateArgs> = z.object({
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptVersionOrderByWithRelationInputSchema.array(), AnalysisPromptVersionOrderByWithRelationInputSchema ]).optional(),
+  cursor: AnalysisPromptVersionWhereUniqueInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptVersionGroupByArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionGroupByArgs> = z.object({
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  orderBy: z.union([ AnalysisPromptVersionOrderByWithAggregationInputSchema.array(), AnalysisPromptVersionOrderByWithAggregationInputSchema ]).optional(),
+  by: AnalysisPromptVersionScalarFieldEnumSchema.array(), 
+  having: AnalysisPromptVersionScalarWhereWithAggregatesInputSchema.optional(), 
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptVersionFindUniqueArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionFindUniqueArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptVersionFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionFindUniqueOrThrowArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereUniqueInputSchema, 
+}).strict();
+
 export const UserCreateArgsSchema: z.ZodType<Prisma.UserCreateArgs> = z.object({
   select: UserSelectSchema.optional(),
   include: UserIncludeSchema.optional(),
@@ -9150,5 +10744,113 @@ export const TestStudentAnalysisUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.
 
 export const TestStudentAnalysisDeleteManyArgsSchema: z.ZodType<Prisma.TestStudentAnalysisDeleteManyArgs> = z.object({
   where: TestStudentAnalysisWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptCreateArgsSchema: z.ZodType<Prisma.AnalysisPromptCreateArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  data: z.union([ AnalysisPromptCreateInputSchema, AnalysisPromptUncheckedCreateInputSchema ]),
+}).strict();
+
+export const AnalysisPromptUpsertArgsSchema: z.ZodType<Prisma.AnalysisPromptUpsertArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereUniqueInputSchema, 
+  create: z.union([ AnalysisPromptCreateInputSchema, AnalysisPromptUncheckedCreateInputSchema ]),
+  update: z.union([ AnalysisPromptUpdateInputSchema, AnalysisPromptUncheckedUpdateInputSchema ]),
+}).strict();
+
+export const AnalysisPromptCreateManyArgsSchema: z.ZodType<Prisma.AnalysisPromptCreateManyArgs> = z.object({
+  data: z.union([ AnalysisPromptCreateManyInputSchema, AnalysisPromptCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptCreateManyAndReturnArgsSchema: z.ZodType<Prisma.AnalysisPromptCreateManyAndReturnArgs> = z.object({
+  data: z.union([ AnalysisPromptCreateManyInputSchema, AnalysisPromptCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptDeleteArgsSchema: z.ZodType<Prisma.AnalysisPromptDeleteArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  where: AnalysisPromptWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptUpdateArgsSchema: z.ZodType<Prisma.AnalysisPromptUpdateArgs> = z.object({
+  select: AnalysisPromptSelectSchema.optional(),
+  include: AnalysisPromptIncludeSchema.optional(),
+  data: z.union([ AnalysisPromptUpdateInputSchema, AnalysisPromptUncheckedUpdateInputSchema ]),
+  where: AnalysisPromptWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptUpdateManyArgsSchema: z.ZodType<Prisma.AnalysisPromptUpdateManyArgs> = z.object({
+  data: z.union([ AnalysisPromptUpdateManyMutationInputSchema, AnalysisPromptUncheckedUpdateManyInputSchema ]),
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.AnalysisPromptUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ AnalysisPromptUpdateManyMutationInputSchema, AnalysisPromptUncheckedUpdateManyInputSchema ]),
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptDeleteManyArgsSchema: z.ZodType<Prisma.AnalysisPromptDeleteManyArgs> = z.object({
+  where: AnalysisPromptWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptVersionCreateArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  data: z.union([ AnalysisPromptVersionCreateInputSchema, AnalysisPromptVersionUncheckedCreateInputSchema ]),
+}).strict();
+
+export const AnalysisPromptVersionUpsertArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionUpsertArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereUniqueInputSchema, 
+  create: z.union([ AnalysisPromptVersionCreateInputSchema, AnalysisPromptVersionUncheckedCreateInputSchema ]),
+  update: z.union([ AnalysisPromptVersionUpdateInputSchema, AnalysisPromptVersionUncheckedUpdateInputSchema ]),
+}).strict();
+
+export const AnalysisPromptVersionCreateManyArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateManyArgs> = z.object({
+  data: z.union([ AnalysisPromptVersionCreateManyInputSchema, AnalysisPromptVersionCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptVersionCreateManyAndReturnArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionCreateManyAndReturnArgs> = z.object({
+  data: z.union([ AnalysisPromptVersionCreateManyInputSchema, AnalysisPromptVersionCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict();
+
+export const AnalysisPromptVersionDeleteArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionDeleteArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  where: AnalysisPromptVersionWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptVersionUpdateArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateArgs> = z.object({
+  select: AnalysisPromptVersionSelectSchema.optional(),
+  include: AnalysisPromptVersionIncludeSchema.optional(),
+  data: z.union([ AnalysisPromptVersionUpdateInputSchema, AnalysisPromptVersionUncheckedUpdateInputSchema ]),
+  where: AnalysisPromptVersionWhereUniqueInputSchema, 
+}).strict();
+
+export const AnalysisPromptVersionUpdateManyArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateManyArgs> = z.object({
+  data: z.union([ AnalysisPromptVersionUpdateManyMutationInputSchema, AnalysisPromptVersionUncheckedUpdateManyInputSchema ]),
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptVersionUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ AnalysisPromptVersionUpdateManyMutationInputSchema, AnalysisPromptVersionUncheckedUpdateManyInputSchema ]),
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
+  limit: z.number().optional(),
+}).strict();
+
+export const AnalysisPromptVersionDeleteManyArgsSchema: z.ZodType<Prisma.AnalysisPromptVersionDeleteManyArgs> = z.object({
+  where: AnalysisPromptVersionWhereInputSchema.optional(), 
   limit: z.number().optional(),
 }).strict();

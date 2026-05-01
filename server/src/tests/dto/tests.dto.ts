@@ -72,11 +72,22 @@ export const TestsTopicListQuerySchema = z.object({
   archived: QueryBooleanSchema.optional(),
 });
 
+export const AnalysisPromptVersionSummarySchema = z
+  .object({
+    id: z.number(),
+    promptId: z.number(),
+    promptTitle: z.string(),
+    versionNumber: z.number(),
+    model: z.string(),
+  })
+  .nullable();
+
 export const TestsTopicDraftSchema = z.object({
   id: z.number(),
   versionNumber: z.number(),
   title: z.string(),
   description: z.string().nullable(),
+  analysisPromptVersion: AnalysisPromptVersionSummarySchema,
   questions: z.array(TestQuestionSchema),
 });
 
@@ -85,6 +96,7 @@ export const TestsTopicPublishedSchema = z
     id: z.number(),
     versionNumber: z.number(),
     title: z.string(),
+    analysisPromptVersion: AnalysisPromptVersionSummarySchema,
   })
   .nullable();
 
@@ -104,6 +116,7 @@ export const CreateTestsTopicSchema = z.object({
 export const UpdateTestsTopicDraftSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
+  analysisPromptVersionId: z.number().int().min(1).nullable().optional(),
 });
 
 export const UpsertTestQuestionOptionSchema = z.object({

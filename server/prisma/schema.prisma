@@ -47,6 +47,12 @@ enum TestStudentAnalysisProviderMode {
   LLM
 }
 
+enum AnalysisPromptVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 enum GroupOrClassValidationMode {
   NONE
   HINT
@@ -87,24 +93,27 @@ model TestTopic {
 }
 
 model TestTopicVersion {
-  id            Int                    @id @default(autoincrement())
-  topicId       Int
-  versionNumber Int
-  status        TestTopicVersionStatus @default(DRAFT)
-  title         String
-  description   String?
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
+  id                      Int                    @id @default(autoincrement())
+  topicId                 Int
+  versionNumber           Int
+  status                  TestTopicVersionStatus @default(DRAFT)
+  title                   String
+  description             String?
+  analysisPromptVersionId Int?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
 
-  topic             TestTopic            @relation("TestTopicVersions", fields: [topicId], references: [id], onDelete: Cascade)
-  draftForTopic     TestTopic[]          @relation("ActiveDraftVersion")
-  publishedForTopic TestTopic[]          @relation("ActivePublishedVersion")
-  questions         TestQuestion[]
-  publicLinks       TestPublicLink[]
-  studentAttempts   TestStudentAttempt[]
+  topic                 TestTopic              @relation("TestTopicVersions", fields: [topicId], references: [id], onDelete: Cascade)
+  draftForTopic         TestTopic[]            @relation("ActiveDraftVersion")
+  publishedForTopic     TestTopic[]            @relation("ActivePublishedVersion")
+  analysisPromptVersion AnalysisPromptVersion? @relation(fields: [analysisPromptVersionId], references: [id], onDelete: SetNull)
+  questions             TestQuestion[]
+  publicLinks           TestPublicLink[]
+  studentAttempts       TestStudentAttempt[]
 
   @@unique([topicId, versionNumber])
   @@index([topicId, status])
+  @@index([analysisPromptVersionId])
   @@map("test_topic_versions")
 }
 
@@ -262,19 +271,59 @@ model TestStudentAnswer {
 }
 
 model TestStudentAnalysis {
-  id           Int                             @id @default(autoincrement())
-  attemptId    Int                             @unique
-  providerMode TestStudentAnalysisProviderMode @default(STUB)
-  status       TestStudentAnalysisStatus       @default(PENDING)
-  summary      Json?
-  rawText      String?
-  errorMessage String?
-  generatedAt  DateTime?
-  createdAt    DateTime                        @default(now())
-  updatedAt    DateTime                        @updatedAt
+  id              Int                             @id @default(autoincrement())
+  attemptId       Int                             @unique
+  promptVersionId Int?
+  providerMode    TestStudentAnalysisProviderMode @default(STUB)
+  status          TestStudentAnalysisStatus       @default(PENDING)
+  summary         Json?
+  rawText         String?
+  errorMessage    String?
+  generatedAt     DateTime?
+  createdAt       DateTime                        @default(now())
+  updatedAt       DateTime                        @updatedAt
 
-  attempt TestStudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attempt       TestStudentAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  promptVersion AnalysisPromptVersion? @relation(fields: [promptVersionId], references: [id], onDelete: SetNull)
 
   @@index([status, generatedAt])
+  @@index([promptVersionId])
   @@map("test_student_analyses")
+}
+
+model AnalysisPrompt {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  versions AnalysisPromptVersion[]
+
+  @@index([archivedAt])
+  @@map("analysis_prompts")
+}
+
+model AnalysisPromptVersion {
+  id            Int                         @id @default(autoincrement())
+  promptId      Int
+  versionNumber Int
+  status        AnalysisPromptVersionStatus @default(DRAFT)
+  model         String
+  temperature   Float                       @default(0.2)
+  prompt        String
+  outputSchema  Json?
+  publishedAt   DateTime?
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+
+  analysisPrompt  AnalysisPrompt        @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  testVersions    TestTopicVersion[]
+  studentAnalyses TestStudentAnalysis[]
+
+  @@unique([promptId, versionNumber])
+  @@index([promptId, status])
+  @@index([status])
+  @@map("analysis_prompt_versions")
 }

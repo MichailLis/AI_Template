@@ -1,0 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+describe('Prisma analysis prompt schema', () => {
+  const schema = readFileSync(join(__dirname, '../../prisma/schema.prisma'), 'utf8');
+
+  it('declares versioned analysis prompt models', () => {
+    expect(schema).toContain('model AnalysisPrompt');
+    expect(schema).toContain('model AnalysisPromptVersion');
+    expect(schema).toContain('enum AnalysisPromptVersionStatus');
+  });
+
+  it('connects prompt versions to test versions and stored student analyses', () => {
+    expect(schema).toContain('analysisPromptVersionId Int?');
+    expect(schema).toContain('promptVersionId Int?');
+  });
+});
