@@ -74,6 +74,46 @@ Avoid speculative work:
 
 Every changed line in implementation should trace back to one of these requirements.
 
+## Test-Driven Development Contract
+
+Development must be test-first.
+
+Rule:
+
+- No production code for this feature is written before a failing test exists.
+- The failing test must be run and must fail for the expected reason.
+- Implementation then adds the smallest code needed to make that test pass.
+- Refactoring happens only after the relevant tests are green.
+
+Required test-first slices:
+
+- Prisma/domain contracts
+  - test prompt version status transitions and one-prompt-per-test-version behavior before
+    implementing service logic
+- Prompt DTOs and fixed analysis schema
+  - test valid and invalid JSON analysis payloads before wiring OpenRouter execution
+- Prompt lifecycle backend
+  - test create draft, update draft, publish, archive, and published-version listing before
+    implementing controller/service behavior
+- Prompt simulation
+  - test loading all questions from a selected test source before implementing the source endpoint
+  - test synthetic answer payload shape before implementing answer generation
+  - test analysis simulation validates structured output before implementing the simulation call
+- Test version attachment
+  - test attaching and clearing a published prompt version on a draft before implementation
+  - test publish preserves the selected prompt version on the published version
+- Student analysis execution
+  - test completion creates `PENDING` LLM analysis when a prompt is configured before replacing the
+    current stub path
+  - test successful LLM JSON stores `summary`, `rawText`, prompt version, and `READY`
+  - test invalid or failed LLM output stores `FAILED` and a safe error message
+- Student/admin rendering helpers
+  - test adapter behavior from stored JSON to public UI view model before replacing raw rendering
+
+Frontend UI changes should also be driven by existing test patterns where present. If a UI area has
+no practical test harness yet, first extract/test pure adapters and state helpers, then keep the JSX
+change minimal and verify with build/lint and browser smoke checks.
+
 ## Domain Model
 
 Add persisted prompt entities:
