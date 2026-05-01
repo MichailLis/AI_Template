@@ -8,7 +8,14 @@ interface InterceptorRuntimeHooks {
   onAuthRefreshFailed?: () => void;
 }
 
+interface RefreshTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 let runtimeHooks: InterceptorRuntimeHooks = {};
+let refreshPromise: Promise<RefreshTokens> | null = null;
+let isAuthRefreshRedirecting = false;
 
 export const configureInterceptorsRuntime = (hooks: InterceptorRuntimeHooks) => {
   runtimeHooks = hooks;
@@ -20,6 +27,29 @@ export const setupInterceptors = (api: AxiosInstance) => {
   }
 
   configuredApis.add(api);
+
+  const refreshTokens = async (): Promise<RefreshTokens> => {
+    const refreshToken = safeStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token');
+    }
+
+    // We need to use the same baseURL
+    const baseURL = api.defaults.baseURL || '';
+    const response = await fetch(`${baseURL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Refresh failed');
+    }
+
+    return (await response.json()) as RefreshTokens;
+  };
 
   api.interceptors.request.use((config) => {
     const token = safeStorage.getItem('accessToken');
@@ -37,21 +67,14 @@ export const setupInterceptors = (api: AxiosInstance) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        const refreshToken = safeStorage.getItem('refreshToken');
         try {
-          // We need to use the same baseURL
-          const baseURL = api.defaults.baseURL || '';
-          const response = await fetch(`${baseURL}/auth/refresh`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${refreshToken}`,
-            },
-          });
+          if (!refreshPromise) {
+            refreshPromise = refreshTokens().finally(() => {
+              refreshPromise = null;
+            });
+          }
 
-          if (!response.ok) throw new Error('Refresh failed');
-
-          const tokens = await response.json();
+          const tokens = await refreshPromise;
 
           safeStorage.setItem('accessToken', tokens.accessToken);
           safeStorage.setItem('refreshToken', tokens.refreshToken);
@@ -59,6 +82,12 @@ export const setupInterceptors = (api: AxiosInstance) => {
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
+          if (isAuthRefreshRedirecting) {
+            return Promise.reject(refreshError);
+          }
+
+          isAuthRefreshRedirecting = true;
+
           safeStorage.removeItem('accessToken');
           safeStorage.removeItem('refreshToken');
 
