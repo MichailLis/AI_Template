@@ -1,19 +1,10 @@
 import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/shared/ui/alert-dialog';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';
 
@@ -52,6 +43,12 @@ function PromptLibraryItem({
   onDeletePrompt,
 }: PromptLibraryItemProps) {
   const latestVersion = prompt.versions[0];
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleConfirmDelete = () => {
+    onDeletePrompt(prompt.id);
+    setIsDeleteDialogOpen(false);
+  };
 
   return (
     <div
@@ -92,39 +89,28 @@ function PromptLibraryItem({
         </div>
       </button>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={isDeleting}
-            aria-label={`Удалить промпт ${prompt.title}`}
-            className="shrink-0 text-slate-500 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удалить промпт?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Промпт будет скрыт из конструктора. Уже созданные результаты анализа и версии
-              останутся в истории.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeleting}
-              onClick={() => onDeletePrompt(prompt.id)}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              Удалить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={isDeleting}
+        aria-label={`Удалить промпт ${prompt.title}`}
+        className="shrink-0 text-slate-500 hover:text-red-700"
+        onClick={() => setIsDeleteDialogOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        title="Удалить промпт?"
+        description="Промпт будет скрыт из конструктора. Уже созданные результаты анализа и версии останутся в истории."
+        confirmLabel="Удалить"
+        variant="destructive"
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
     </div>
   );
 }
