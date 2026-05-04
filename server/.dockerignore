@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+openapi.json
+*.log
+.env
+.env.*
+Dockerfile

@@ -42,6 +42,14 @@ docker compose logs -f backend frontend
 docker compose down
 ```
 
+## Production Docker Hub Deployment
+
+Production deployment uses separate Docker Hub images for backend and frontend. The frontend
+image includes Nginx, serves the React SPA, and proxies `/api/*` to the backend container.
+
+See [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md) for build, push, and
+Linux/Windows deployment commands.
+
 ## Local Node Development
 
 If you intentionally want to run the apps on the host instead of Docker:

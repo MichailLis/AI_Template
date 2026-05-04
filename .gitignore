@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+.env.*
+!.env.deploy.example
 *.log
 .prisma/
 client/dist/

@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: ${DOCKERHUB_NAMESPACE:?Set DOCKERHUB_NAMESPACE in .env}/ai-template-backend:${APP_IMAGE_TAG:-latest}
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    image: ${DOCKERHUB_NAMESPACE:?Set DOCKERHUB_NAMESPACE in .env}/ai-template-frontend:${APP_IMAGE_TAG:-latest}
