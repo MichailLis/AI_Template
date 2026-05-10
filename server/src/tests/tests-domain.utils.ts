@@ -190,7 +190,7 @@ export const validateDraftForPublish = (draft: {
       }
 
       for (const band of question.sliderBands) {
-        if (band.maxValue < band.minValue) {
+        if (band.maxValue <= band.minValue) {
           throw new BadRequestException(
             `Slider question "${question.title}" has invalid score range`,
           );
@@ -214,10 +214,8 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
   const sliderBands =
     dto.type === 'SLIDER'
       ? (dto.sliderBands ?? []).map((band, index) => {
-          if (band.maxValue < band.minValue) {
-            throw new BadRequestException(
-              'Slider band maxValue must be greater than or equal to minValue',
-            );
+          if (band.maxValue <= band.minValue) {
+            throw new BadRequestException('Slider band maxValue must be greater than minValue');
           }
 
           return {

@@ -73,8 +73,8 @@ export const createEmptyOptionDraft = (): QuestionOptionDraft => ({
 
 export const createEmptySliderBandDraft = (): QuestionSliderBandDraft => ({
   id: createDraftId(),
-  minValue: '0',
-  maxValue: '0',
+  minValue: '1',
+  maxValue: '10',
   label: '',
   weight: '0',
 });
@@ -170,6 +170,10 @@ const parseSliderBandsDraft = (drafts: QuestionSliderBandDraft[]) => {
 
     if (Number.isNaN(minValue) || Number.isNaN(maxValue)) {
       throw new Error(`Диапазон ${index + 1}: min и max должны быть целыми числами`);
+    }
+
+    if (maxValue <= minValue) {
+      throw new Error(`Диапазон ${index + 1}: max должен быть больше min`);
     }
 
     if (!label) {
