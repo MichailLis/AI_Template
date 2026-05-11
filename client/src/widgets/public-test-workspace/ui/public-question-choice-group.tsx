@@ -8,6 +8,7 @@ interface PublicQuestionChoiceGroupProps {
   options: PublicTestQuestionOption[];
   currentAnswer: unknown;
   onAnswerChange: (questionId: number, value: unknown) => void;
+  onSingleSelect?: (value: string) => void;
 }
 
 export function PublicQuestionChoiceGroup({
@@ -16,11 +17,12 @@ export function PublicQuestionChoiceGroup({
   options,
   currentAnswer,
   onAnswerChange,
+  onSingleSelect,
 }: PublicQuestionChoiceGroupProps) {
   const selectedValues = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
 
   return (
-    <div className="space-y-2">
+    <div className={mode === 'multi' ? 'grid gap-3 md:grid-cols-2' : 'space-y-3'}>
       {options.map((option) => {
         const checked =
           mode === 'single'
@@ -30,7 +32,7 @@ export function PublicQuestionChoiceGroup({
         return (
           <label
             key={option.id}
-            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${getChoiceOptionClass(checked)}`}
+            className={`public-choice-option group flex min-h-14 cursor-pointer items-center gap-4 rounded-2xl border px-5 py-3 text-sm transition-[border-color,background-color,box-shadow,transform,color] duration-200 active:scale-[0.99] ${getChoiceOptionClass(checked)}`}
           >
             <input
               type={mode === 'single' ? 'radio' : 'checkbox'}
@@ -39,6 +41,7 @@ export function PublicQuestionChoiceGroup({
               onChange={(event) => {
                 if (mode === 'single') {
                   onAnswerChange(questionId, option.value);
+                  onSingleSelect?.(option.value);
                   return;
                 }
 
@@ -51,9 +54,9 @@ export function PublicQuestionChoiceGroup({
                   );
                 }
               }}
-              className="h-4 w-4 border-border text-primary"
+              className="sr-only"
             />
-            {option.label}
+            <span className="min-w-0 text-base leading-relaxed">{option.label}</span>
           </label>
         );
       })}

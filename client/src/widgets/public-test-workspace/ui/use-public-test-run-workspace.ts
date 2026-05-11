@@ -12,6 +12,11 @@ import { getSliderQuestionMeta } from './public-question-card.utils';
 
 import type { PublicTestAnswerDraft, PublicTestQuestion } from './public-test-run.types';
 
+interface AnswerOverride {
+  questionId: number;
+  value: unknown;
+}
+
 const hasMeaningfulAnswer = (value: unknown) => {
   if (typeof value === 'string') {
     return value.trim().length > 0;
@@ -124,7 +129,7 @@ export function usePublicTestRunWorkspace() {
     }
   };
 
-  const handleFinish = async () => {
+  const handleFinish = async (answerOverride?: AnswerOverride) => {
     if (!sessionToken || !code || !session) {
       return;
     }
@@ -132,6 +137,7 @@ export function usePublicTestRunWorkspace() {
     const mergedAnswers = {
       ...serverAnswerMap,
       ...answerDraft,
+      ...(answerOverride ? { [answerOverride.questionId]: answerOverride.value } : {}),
     };
 
     const answers = buildSessionAnswers(session.questions, mergedAnswers);

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
 import { PublicQuestionCard } from './public-question-card';
-import { PublicTestRunActionBar } from './public-test-run-action-bar';
+import { PublicTestRunProgress } from './public-test-run-progress';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
-import { PublicTestRunSummaryCard } from './public-test-run-summary-card';
 import { PublicThemeLayout } from './public-theme-layout';
 import { usePublicTestRunWorkspace } from './use-public-test-run-workspace';
+import { useQuestionTransition } from './use-question-transition';
 
 export function PublicTestRunWorkspace() {
   const {
@@ -16,12 +16,16 @@ export function PublicTestRunWorkspace() {
     finishMutation,
     session,
     totalQuestionsCount,
-    answeredQuestionsCount,
     getCurrentAnswer,
     setQuestionAnswer,
     handleFinish,
   } = usePublicTestRunWorkspace();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { goToQuestionIndex, questionTransitionClass } = useQuestionTransition({
+    currentQuestionIndex,
+    questionCount: session?.questions.length ?? 0,
+    onQuestionIndexChange: setCurrentQuestionIndex,
+  });
 
   if (!code || !sessionToken) {
     return (
@@ -59,44 +63,38 @@ export function PublicTestRunWorkspace() {
   }
 
   return (
-    <PublicThemeLayout containerClassName="max-w-4xl">
-      <PublicTestRunSummaryCard
-        session={session}
-        totalQuestionsCount={totalQuestionsCount}
-        answeredQuestionsCount={answeredQuestionsCount}
-      />
+    <PublicThemeLayout containerClassName="grid min-h-screen max-w-3xl place-items-center py-5 md:py-7">
+      <div className="w-full space-y-5">
+        <div className="px-1">
+          <PublicTestRunProgress
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestionsCount={totalQuestionsCount}
+          />
+        </div>
 
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        Переходите между вопросами и нажмите «Завершить тест» на последнем шаге.
-      </p>
-
-      <div className="space-y-4">
         {(() => {
           const currentQuestion = session.questions[currentQuestionIndex];
           const currentAnswer = getCurrentAnswer(currentQuestion.id);
           return (
-            <PublicQuestionCard
+            <div
               key={currentQuestion.id}
-              question={currentQuestion}
-              currentAnswer={currentAnswer}
-              onAnswerChange={setQuestionAnswer}
-            />
+              className={`public-question-transition ${questionTransitionClass}`}
+            >
+              <PublicQuestionCard
+                question={currentQuestion}
+                currentAnswer={currentAnswer}
+                isLastQuestion={currentQuestionIndex === session.questions.length - 1}
+                isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
+                canGoBack={currentQuestionIndex > 0}
+                onAnswerChange={setQuestionAnswer}
+                onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
+                onNext={() => goToQuestionIndex(currentQuestionIndex + 1)}
+                onFinish={handleFinish}
+              />
+            </div>
           );
         })()}
       </div>
-
-      <PublicTestRunActionBar
-        finishIsPending={saveAnswersMutation.isPending || finishMutation.isPending}
-        sessionStatus={session.status}
-        totalQuestionsCount={totalQuestionsCount}
-        currentQuestionIndex={currentQuestionIndex}
-        canGoBack={currentQuestionIndex > 0}
-        canGoNext={currentQuestionIndex < session.questions.length - 1}
-        isLastQuestion={currentQuestionIndex === session.questions.length - 1}
-        onFinish={handleFinish}
-        onBack={() => setCurrentQuestionIndex((i) => i - 1)}
-        onNext={() => setCurrentQuestionIndex((i) => i + 1)}
-      />
     </PublicThemeLayout>
   );
 }
