@@ -26,6 +26,9 @@ export interface QuestionFormState {
   description: string;
   required: boolean;
   settingsText: string;
+  sliderMin: string;
+  sliderMax: string;
+  sliderStep: string;
   options: QuestionOptionDraft[];
   sliderBands: QuestionSliderBandDraft[];
 }

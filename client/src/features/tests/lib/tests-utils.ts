@@ -21,6 +21,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
 
+const DEFAULT_SLIDER_MIN = '1';
+const DEFAULT_SLIDER_MAX = '10';
+const DEFAULT_SLIDER_STEP = '1';
+
 const extractErrorMessage = (data: Record<string, unknown>) => {
   const nestedError = data.error;
 
@@ -71,12 +75,15 @@ export const createEmptyOptionDraft = (): QuestionOptionDraft => ({
   weight: '0',
 });
 
-export const createEmptySliderBandDraft = (): QuestionSliderBandDraft => ({
+export const createEmptySliderBandDraft = (
+  values: Partial<Omit<QuestionSliderBandDraft, 'id'>> = {},
+): QuestionSliderBandDraft => ({
   id: createDraftId(),
   minValue: '1',
   maxValue: '10',
   label: '',
   weight: '0',
+  ...values,
 });
 
 export const createEmptyQuestionFormState = (): QuestionFormState => ({
@@ -85,6 +92,9 @@ export const createEmptyQuestionFormState = (): QuestionFormState => ({
   description: '',
   required: true,
   settingsText: '',
+  sliderMin: DEFAULT_SLIDER_MIN,
+  sliderMax: DEFAULT_SLIDER_MAX,
+  sliderStep: DEFAULT_SLIDER_STEP,
   options: [createEmptyOptionDraft(), createEmptyOptionDraft()],
   sliderBands: [createEmptySliderBandDraft()],
 });
@@ -99,6 +109,80 @@ const parseSettings = (raw: string) => {
   }
 
   return JSON.parse(value) as unknown;
+};
+
+const getSliderSettingsNumber = (
+  settings: Record<string, unknown> | null,
+  key: 'min' | 'max' | 'step',
+  fallback: string,
+) => {
+  const value = settings?.[key];
+
+  return typeof value === 'number' && Number.isFinite(value) ? String(value) : fallback;
+};
+
+const getSettingsTextWithoutSliderScale = (settings: unknown) => {
+  if (settings === null || settings === undefined) {
+    return '';
+  }
+
+  if (!isRecord(settings)) {
+    return JSON.stringify(settings, null, 2);
+  }
+
+  const restSettings = { ...settings };
+  delete restSettings.min;
+  delete restSettings.max;
+  delete restSettings.step;
+
+  return Object.keys(restSettings).length > 0 ? JSON.stringify(restSettings, null, 2) : '';
+};
+
+const parseIntegerField = (value: string, label: string) => {
+  const normalizedValue = value.trim();
+  const parsedValue = Number(normalizedValue);
+
+  if (!normalizedValue || !Number.isInteger(parsedValue)) {
+    throw new Error(`${label} должно быть целым числом`);
+  }
+
+  return parsedValue;
+};
+
+const parseSliderScale = (form: QuestionFormState) => {
+  const min = parseIntegerField(form.sliderMin, 'Минимум шкалы');
+  const max = parseIntegerField(form.sliderMax, 'Максимум шкалы');
+  const step = parseIntegerField(form.sliderStep, 'Шаг шкалы');
+
+  if (max <= min) {
+    throw new Error('Максимум шкалы должен быть больше минимума');
+  }
+
+  if (step <= 0) {
+    throw new Error('Шаг шкалы должен быть больше нуля');
+  }
+
+  return { min, max, step };
+};
+
+const parseSliderSettings = (
+  form: QuestionFormState,
+  sliderScale: { min: number; max: number; step: number },
+) => {
+  const settings = parseSettings(form.settingsText);
+
+  if (settings === undefined) {
+    return sliderScale;
+  }
+
+  if (!isRecord(settings)) {
+    throw new Error('Дополнительные настройки слайдера должны быть JSON-объектом');
+  }
+
+  return {
+    ...settings,
+    ...sliderScale,
+  };
 };
 
 const normalizeOptionValue = (label: string) =>
@@ -152,7 +236,10 @@ const parseOptionsDraft = (drafts: QuestionOptionDraft[]) => {
   });
 };
 
-const parseSliderBandsDraft = (drafts: QuestionSliderBandDraft[]) => {
+const parseSliderBandsDraft = (
+  drafts: QuestionSliderBandDraft[],
+  scale: { min: number; max: number },
+) => {
   const nonEmptyDrafts = drafts.filter(
     (band) =>
       band.minValue.trim() || band.maxValue.trim() || band.label.trim() || band.weight.trim(),
@@ -169,11 +256,15 @@ const parseSliderBandsDraft = (drafts: QuestionSliderBandDraft[]) => {
     const label = band.label.trim();
 
     if (Number.isNaN(minValue) || Number.isNaN(maxValue)) {
-      throw new Error(`Диапазон ${index + 1}: min и max должны быть целыми числами`);
+      throw new Error(`Диапазон ${index + 1}: границы должны быть целыми числами`);
     }
 
     if (maxValue <= minValue) {
-      throw new Error(`Диапазон ${index + 1}: max должен быть больше min`);
+      throw new Error(`Диапазон ${index + 1}: значение "До" должно быть больше "От"`);
+    }
+
+    if (minValue < scale.min || maxValue > scale.max) {
+      throw new Error(`Диапазон ${index + 1}: границы должны быть внутри шкалы`);
     }
 
     if (!label) {
@@ -188,54 +279,78 @@ const parseSliderBandsDraft = (drafts: QuestionSliderBandDraft[]) => {
   });
 };
 
+const getQuestionSettingsText = (question: TestsTopicDetailResponseDtoDraftQuestionsItem) => {
+  if (question.type === 'SLIDER') {
+    return getSettingsTextWithoutSliderScale(question.settings);
+  }
+
+  if (question.settings === null || question.settings === undefined) {
+    return '';
+  }
+
+  return JSON.stringify(question.settings, null, 2);
+};
+
 export const createQuestionPayload = (form: QuestionFormState): UpsertTestsQuestionDto => {
   const title = form.title.trim();
   if (!title) {
     throw new Error('Укажите заголовок вопроса');
   }
 
+  const sliderScale = form.type === 'SLIDER' ? parseSliderScale(form) : null;
+
   return {
     type: form.type,
     title,
     description: form.description.trim() || null,
     required: form.required,
-    settings: parseSettings(form.settingsText),
+    settings:
+      form.type === 'SLIDER' && sliderScale
+        ? parseSliderSettings(form, sliderScale)
+        : parseSettings(form.settingsText),
     options: isChoiceType(form.type) ? parseOptionsDraft(form.options) : undefined,
-    sliderBands: form.type === 'SLIDER' ? parseSliderBandsDraft(form.sliderBands) : undefined,
+    sliderBands:
+      form.type === 'SLIDER' && sliderScale
+        ? parseSliderBandsDraft(form.sliderBands, sliderScale)
+        : undefined,
   };
 };
 
 export const buildQuestionFormFromQuestion = (
   question: TestsTopicDetailResponseDtoDraftQuestionsItem,
-): QuestionFormState => ({
-  type: question.type as QuestionType,
-  title: question.title,
-  description: question.description ?? '',
-  required: question.required,
-  settingsText:
-    question.settings === null || question.settings === undefined
-      ? ''
-      : JSON.stringify(question.settings, null, 2),
-  options:
-    question.options.length > 0
-      ? question.options.map((option) => ({
-          id: createDraftId(),
-          label: option.label,
-          value: option.value,
-          weight: String(option.weight),
-        }))
-      : [createEmptyOptionDraft(), createEmptyOptionDraft()],
-  sliderBands:
-    question.sliderBands.length > 0
-      ? question.sliderBands.map((band) => ({
-          id: createDraftId(),
-          minValue: String(band.minValue),
-          maxValue: String(band.maxValue),
-          label: band.label,
-          weight: String(band.weight),
-        }))
-      : [createEmptySliderBandDraft()],
-});
+) => {
+  const settingsRecord = isRecord(question.settings) ? question.settings : null;
+
+  return {
+    type: question.type as QuestionType,
+    title: question.title,
+    description: question.description ?? '',
+    required: question.required,
+    settingsText: getQuestionSettingsText(question),
+    sliderMin: getSliderSettingsNumber(settingsRecord, 'min', DEFAULT_SLIDER_MIN),
+    sliderMax: getSliderSettingsNumber(settingsRecord, 'max', DEFAULT_SLIDER_MAX),
+    sliderStep: getSliderSettingsNumber(settingsRecord, 'step', DEFAULT_SLIDER_STEP),
+    options:
+      question.options.length > 0
+        ? question.options.map((option) => ({
+            id: createDraftId(),
+            label: option.label,
+            value: option.value,
+            weight: String(option.weight),
+          }))
+        : [createEmptyOptionDraft(), createEmptyOptionDraft()],
+    sliderBands:
+      question.sliderBands.length > 0
+        ? question.sliderBands.map((band) => ({
+            id: createDraftId(),
+            minValue: String(band.minValue),
+            maxValue: String(band.maxValue),
+            label: band.label,
+            weight: String(band.weight),
+          }))
+        : [createEmptySliderBandDraft()],
+  };
+};
 
 export const hasDraftEdits = (
   draft: TestsTopicDetailResponseDtoDraft,

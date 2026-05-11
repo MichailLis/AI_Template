@@ -80,10 +80,35 @@ export const withUpdatedSliderBand = (
   };
 };
 
-export const withAddedSliderBand = (form: QuestionFormState) => {
+export const withUpdatedSliderScale = (
+  form: QuestionFormState,
+  field: 'sliderMin' | 'sliderMax' | 'sliderStep',
+  value: string,
+) => {
   return {
     ...form,
-    sliderBands: [...form.sliderBands, createEmptySliderBandDraft()],
+    [field]: value,
+  };
+};
+
+export const withAddedSliderBand = (form: QuestionFormState) => {
+  const lastBand = form.sliderBands[form.sliderBands.length - 1];
+  const scaleMax = Number(form.sliderMax.trim());
+  const lastMax = Number(lastBand?.maxValue.trim());
+  const nextMin = Number.isFinite(lastMax) ? lastMax + 1 : Number(form.sliderMin.trim());
+  const canSuggestRange =
+    Number.isFinite(nextMin) && Number.isFinite(scaleMax) && nextMin <= scaleMax;
+
+  return {
+    ...form,
+    sliderBands: [
+      ...form.sliderBands,
+      createEmptySliderBandDraft(
+        canSuggestRange
+          ? { minValue: String(nextMin), maxValue: String(scaleMax) }
+          : { minValue: '', maxValue: '' },
+      ),
+    ],
   };
 };
 

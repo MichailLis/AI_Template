@@ -1,29 +1,22 @@
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import {
   useAdminControllerGeneratePrompt,
   useAdminControllerGetPromptModels,
 } from '@/shared/api/generated/admin/admin';
 
-import {
-  AI_QUESTION_TYPES,
-  buildAiQuestionGenerationPrompt,
-  buildAiQuestionJsonSchema,
-  parseAiQuestionsOutput,
-} from '../lib/ai-generator-utils';
-import { parseApiError } from '../lib/tests-utils';
+import { AI_QUESTION_TYPES } from '../lib/ai-generator-utils';
 
 import {
-  buildCreatePayloadResult,
+  buildCreatePayload,
+  handleGeneration,
+  handleTypeToggle,
   DEFAULT_SELECTED_TYPES,
   resolveEffectiveModel,
-  validateGenerationInput,
 } from './use-ai-test-generation.helpers';
 
 import type {
   AdminPromptModelsResponseDtoModelsItem,
-  CreateTestsTopicFromAiDto,
   CreateTestsTopicFromAiDtoQuestionsItem,
   CreateTestsTopicFromAiDtoQuestionsItemType,
 } from '@/shared/api/model';
@@ -99,102 +92,27 @@ export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
     [selectedTypes],
   );
 
-  const handleTypeToggle = (type: CreateTestsTopicFromAiDtoQuestionsItemType) => {
-    setSelectedTypes((previous) => ({
-      ...previous,
-      [type]: !previous[type],
-    }));
-  };
-
   const handleGenerate = () => {
-    const validation = validateGenerationInput({
+    handleGeneration({
       topicTitle,
+      topicDescription,
       generationTask,
+      questionCount,
       effectiveModel,
       allowedTypes,
-      questionCount,
+      setGenerationError,
+      setPreviewQuestions,
+      mutate: generateMutation.mutate,
     });
-
-    if (!validation.ok) {
-      setGenerationError(validation.error);
-      return;
-    }
-
-    const parsedQuestionCount = validation.parsedQuestionCount;
-
-    setGenerationError(null);
-
-    const prompt = buildAiQuestionGenerationPrompt({
-      topicTitle: topicTitle.trim(),
-      topicDescription: topicDescription.trim(),
-      generationTask: generationTask.trim(),
-      questionCount: parsedQuestionCount,
-      allowedTypes,
-    });
-    const responseSchema = buildAiQuestionJsonSchema({
-      questionCount: parsedQuestionCount,
-      allowedTypes,
-    });
-
-    generateMutation.mutate(
-      {
-        data: {
-          model: effectiveModel,
-          prompt,
-          temperature: 0.2,
-          responseFormat: 'json',
-          responseSchema: {
-            name: 'generated_test_questions',
-            strict: true,
-            schema: responseSchema,
-          },
-          requireParameters: true,
-          useResponseHealing: true,
-        },
-      },
-      {
-        onSuccess: (result) => {
-          try {
-            const questions = parseAiQuestionsOutput({
-              rawOutput: result.output,
-              expectedQuestionCount: parsedQuestionCount,
-              allowedTypes,
-            });
-
-            setPreviewQuestions(questions);
-            setGenerationError(null);
-            toast.success('Вопросы сгенерированы. Проверьте результат перед созданием теста.');
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : 'Не удалось разобрать ответ ИИ';
-            setPreviewQuestions([]);
-            setGenerationError(message);
-          }
-        },
-        onError: (error) => {
-          const message = parseApiError(error);
-          setPreviewQuestions([]);
-          setGenerationError(message);
-          toast.error(message);
-        },
-      },
-    );
   };
 
-  const buildCreatePayload = (): CreateTestsTopicFromAiDto | null => {
-    const payloadResult = buildCreatePayloadResult({
+  const buildCreatePayloadHandler = () =>
+    buildCreatePayload({
       topicTitle,
       topicDescription,
       previewQuestions,
+      setGenerationError,
     });
-
-    if (!payloadResult.ok) {
-      setGenerationError(payloadResult.error);
-      return null;
-    }
-
-    return payloadResult.payload;
-  };
 
   return {
     modelsQuery,
@@ -218,9 +136,13 @@ export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
     setQuestionCount,
     setModelFilter,
     setSelectedModel,
-    handleTypeToggle,
+    handleTypeToggle: (type: CreateTestsTopicFromAiDtoQuestionsItemType) =>
+      handleTypeToggle({
+        type,
+        setSelectedTypes,
+      }),
     handleGenerate,
-    buildCreatePayload,
+    buildCreatePayload: buildCreatePayloadHandler,
   };
 }
 

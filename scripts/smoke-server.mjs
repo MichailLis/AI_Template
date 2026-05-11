@@ -2,7 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-const port = '3105';
+const port = process.env.SMOKE_SERVER_PORT ?? process.env.PORT ?? '3000';
 const targetUrl = `http://127.0.0.1:${port}/api-json`;
 const authApiPaths = ['/auth/signup', '/auth/signin', '/auth/logout', '/auth/refresh'];
 
@@ -67,32 +67,45 @@ const stopProcess = (child) =>
     }, 3000);
   });
 
-const server = spawn(
-  npmExecutable,
-  process.platform === 'win32'
-    ? [npmCliPath, 'run', 'start', '--prefix', 'server']
-    : ['run', 'start', '--prefix', 'server'],
-  {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: {
-      ...process.env,
-      PORT: port,
+const startServer = () =>
+  spawn(
+    npmExecutable,
+    process.platform === 'win32'
+      ? [npmCliPath, 'run', 'start', '--prefix', 'server']
+      : ['run', 'start', '--prefix', 'server'],
+    {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        PORT: port,
+      },
     },
-  },
-);
+  );
 
+let server = null;
 let serverLogs = '';
 
-server.stdout.on('data', (chunk) => {
-  serverLogs += chunk.toString();
-});
+const captureServerLogs = (child) => {
+  child.stdout.on('data', (chunk) => {
+    serverLogs += chunk.toString();
+  });
 
-server.stderr.on('data', (chunk) => {
-  serverLogs += chunk.toString();
-});
+  child.stderr.on('data', (chunk) => {
+    serverLogs += chunk.toString();
+  });
+};
 
 try {
-  const swaggerDoc = await waitForSwagger(targetUrl, 45000);
+  let swaggerDoc;
+
+  try {
+    swaggerDoc = await waitForSwagger(targetUrl, 1500);
+  } catch {
+    server = startServer();
+    captureServerLogs(server);
+    swaggerDoc = await waitForSwagger(targetUrl, 45000);
+  }
+
   const actualPaths = new Set(Object.keys(swaggerDoc.paths ?? {}));
   const missingPaths = requiredPaths.filter((path) => !actualPaths.has(path));
 
@@ -105,8 +118,12 @@ try {
   console.error('Server smoke check failed.');
   console.error(error instanceof Error ? error.message : String(error));
   console.error(serverLogs);
-  await stopProcess(server);
+  if (server) {
+    await stopProcess(server);
+  }
   process.exit(1);
 }
 
-await stopProcess(server);
+if (server) {
+  await stopProcess(server);
+}

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import {
   useTestsControllerCreateQuestion,
@@ -10,10 +9,10 @@ import {
 import {
   buildQuestionFormFromQuestion,
   createEmptyQuestionFormState,
-  createQuestionPayload,
   hasQuestionFormChanges,
-  parseApiError,
 } from '../lib/tests-utils';
+
+import { confirmDeleteQuestion, submitQuestion } from './use-question-editor.helpers';
 
 import type { QuestionFormState, TestDraftQuestion } from './types';
 
@@ -90,90 +89,28 @@ export function useQuestionEditor({ topicId, onDataChanged }: UseQuestionEditorP
   };
 
   const handleSubmitQuestion = () => {
-    if (!topicId) {
-      return;
-    }
-
-    let payload: ReturnType<typeof createQuestionPayload>;
-    try {
-      payload = createQuestionPayload(questionForm);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Некорректные данные вопроса';
-      setQuestionSubmitError(message);
-      return;
-    }
-
-    setQuestionSubmitError(null);
-
-    if (editingQuestionId) {
-      updateQuestionMutation.mutate(
-        {
-          topicId,
-          questionId: editingQuestionId,
-          data: payload,
-        },
-        {
-          onSuccess: () => {
-            toast.success('Вопрос обновлен');
-            closeQuestionModalDirect();
-            onDataChanged();
-          },
-          onError: (error) => {
-            const message = parseApiError(error);
-            setQuestionSubmitError(message);
-            toast.error(message);
-          },
-        },
-      );
-
-      return;
-    }
-
-    createQuestionMutation.mutate(
-      {
-        topicId,
-        data: payload,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Вопрос добавлен');
-          closeQuestionModalDirect();
-          onDataChanged();
-        },
-        onError: (error) => {
-          const message = parseApiError(error);
-          setQuestionSubmitError(message);
-          toast.error(message);
-        },
-      },
-    );
+    submitQuestion({
+      topicId,
+      editingQuestionId,
+      questionForm,
+      createQuestionMutation,
+      updateQuestionMutation,
+      closeQuestionModalDirect,
+      onDataChanged,
+      setQuestionSubmitError,
+    });
   };
 
   const handleConfirmDeleteQuestion = () => {
-    if (!topicId || !pendingDeleteQuestion) {
-      setPendingDeleteQuestion(null);
-      return;
-    }
-
-    deleteQuestionMutation.mutate(
-      {
-        topicId,
-        questionId: pendingDeleteQuestion.id,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Вопрос удален');
-          if (editingQuestionId === pendingDeleteQuestion.id) {
-            closeQuestionModalDirect();
-          }
-          setPendingDeleteQuestion(null);
-          onDataChanged();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
+    confirmDeleteQuestion({
+      topicId,
+      editingQuestionId,
+      pendingDeleteQuestion,
+      deleteQuestionMutation,
+      closeQuestionModalDirect,
+      setPendingDeleteQuestion,
+      onDataChanged,
+    });
   };
 
   return {

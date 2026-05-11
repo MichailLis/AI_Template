@@ -22,6 +22,7 @@ import {
   withUpdatedOption,
   withUpdatedQuestionType,
   withUpdatedSliderBand,
+  withUpdatedSliderScale,
 } from './question-modal.form';
 
 import type { QuestionFormState, QuestionType } from '../model/types';
@@ -73,6 +74,10 @@ export function QuestionModal({
     onFormChange(withUpdatedSliderBand(form, bandId, field, value));
   };
 
+  const updateSliderScale = (field: 'sliderMin' | 'sliderMax' | 'sliderStep', value: string) => {
+    onFormChange(withUpdatedSliderScale(form, field, value));
+  };
+
   const addSliderBand = () => {
     onFormChange(withAddedSliderBand(form));
   };
@@ -106,11 +111,6 @@ export function QuestionModal({
             onRequiredChange={(required) => onFormChange({ ...form, required })}
           />
 
-          <QuestionModalSettingsSection
-            settingsText={form.settingsText}
-            onSettingsTextChange={(settingsText) => onFormChange({ ...form, settingsText })}
-          />
-
           {isChoiceType(form.type) ? (
             <QuestionModalChoiceSection
               options={form.options}
@@ -122,12 +122,21 @@ export function QuestionModal({
 
           {form.type === 'SLIDER' ? (
             <QuestionModalSliderSection
+              sliderMin={form.sliderMin}
+              sliderMax={form.sliderMax}
+              sliderStep={form.sliderStep}
               sliderBands={form.sliderBands}
+              onUpdateSliderScale={updateSliderScale}
               onAddSliderBand={addSliderBand}
               onUpdateSliderBand={updateSliderBand}
               onRemoveSliderBand={removeSliderBand}
             />
           ) : null}
+
+          <QuestionModalSettingsSection
+            settingsText={form.settingsText}
+            onSettingsTextChange={(settingsText) => onFormChange({ ...form, settingsText })}
+          />
 
           {submitError ? (
             <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

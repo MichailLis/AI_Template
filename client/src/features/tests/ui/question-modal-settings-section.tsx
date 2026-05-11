@@ -20,7 +20,7 @@ export function QuestionModalSettingsSection({
         <Textarea
           id="question-settings-modal"
           rows={4}
-          placeholder='{"min":0,"max":10,"step":1}'
+          placeholder='{"hint":"Пояснение для внутренней логики"}'
           value={settingsText}
           onChange={(event) => onSettingsTextChange(event.target.value)}
         />

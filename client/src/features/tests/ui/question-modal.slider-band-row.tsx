@@ -28,10 +28,10 @@ export function QuestionModalSliderBandRow({
   const fieldPrefix = `slider-band-${band.id}`;
 
   return (
-    <div className="grid items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 md:grid-cols-[8rem_8rem_minmax(0,1fr)_8rem_2.25rem]">
+    <div className="grid items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 md:grid-cols-[6rem_6rem_minmax(0,1fr)_6rem_2.25rem]">
       <div className="space-y-1">
         <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-min`}>
-          Мин
+          От
         </Label>
         <Input
           id={`${fieldPrefix}-min`}
@@ -39,12 +39,12 @@ export function QuestionModalSliderBandRow({
           step={1}
           value={band.minValue}
           onChange={(event) => onUpdateSliderBand(band.id, 'minValue', event.target.value)}
-          placeholder="Мин"
+          placeholder="1"
         />
       </div>
       <div className="space-y-1">
         <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-max`}>
-          Макс
+          До
         </Label>
         <Input
           id={`${fieldPrefix}-max`}
@@ -52,18 +52,18 @@ export function QuestionModalSliderBandRow({
           step={1}
           value={band.maxValue}
           onChange={(event) => onUpdateSliderBand(band.id, 'maxValue', event.target.value)}
-          placeholder="Макс"
+          placeholder="3"
         />
       </div>
       <div className="space-y-1">
         <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-label`}>
-          Название
+          Подпись на экране
         </Label>
         <Input
           id={`${fieldPrefix}-label`}
           value={band.label}
           onChange={(event) => onUpdateSliderBand(band.id, 'label', event.target.value)}
-          placeholder={`Название диапазона ${index + 1}`}
+          placeholder="Например: низкий комфорт"
         />
       </div>
       <div className="space-y-1">
@@ -87,7 +87,7 @@ export function QuestionModalSliderBandRow({
         disabled={!canRemove}
         aria-label={`Удалить диапазон ${index + 1}`}
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
       </Button>
     </div>
   );

@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -23,6 +24,92 @@ interface TestQuestionsOnlyViewProps {
   onReorderQuestions: (questionIds: number[]) => void;
 }
 
+interface TestQuestionsOnlyHeaderProps {
+  topicId: number;
+  loadingStatus?: string;
+}
+
+function TestQuestionsOnlyHeader({ topicId, loadingStatus }: TestQuestionsOnlyHeaderProps) {
+  const navigate = useNavigate();
+
+  return (
+    <CardHeader>
+      <div className="flex items-center justify-between">
+        <div>
+          <CardTitle>Редактор теста</CardTitle>
+          <CardDescription>Изменение вопросов теста</CardDescription>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/tests')}
+            className="hover:text-slate-900"
+          >
+            ← К списку тестов
+          </button>
+          <span className="text-slate-300">|</span>
+          <button
+            type="button"
+            onClick={() => navigate(`/admin/tests/${topicId}/settings`)}
+            className="hover:text-slate-900"
+          >
+            Настройки
+          </button>
+          {loadingStatus ? <span className="animate-pulse">{loadingStatus}</span> : null}
+        </div>
+      </div>
+    </CardHeader>
+  );
+}
+
+interface TestQuestionsOnlyViewCardProps {
+  topicId: number;
+  loadingStatus?: string;
+  children: ReactNode;
+}
+
+function TestQuestionsOnlyViewCard({
+  topicId,
+  loadingStatus,
+  children,
+}: TestQuestionsOnlyViewCardProps) {
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <TestQuestionsOnlyHeader topicId={topicId} loadingStatus={loadingStatus} />
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+interface TestQuestionsOnlyViewErrorProps {
+  topicId: number;
+  errorMessage?: string | null;
+  onRetryLoad: () => void;
+}
+
+function TestQuestionsOnlyViewError({
+  topicId,
+  errorMessage,
+  onRetryLoad,
+}: TestQuestionsOnlyViewErrorProps) {
+  return (
+    <TestQuestionsOnlyViewCard topicId={topicId}>
+      <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
+        <p className="text-sm text-red-700">
+          {errorMessage ?? 'Не удалось загрузить тест. Проверьте подключение и повторите попытку.'}
+        </p>
+        <button
+          type="button"
+          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+          onClick={onRetryLoad}
+        >
+          Повторить
+        </button>
+      </div>
+    </TestQuestionsOnlyViewCard>
+  );
+}
+
 export function TestQuestionsOnlyView({
   loading,
   error,
@@ -37,7 +124,6 @@ export function TestQuestionsOnlyView({
   onRequestDeleteQuestion,
   onReorderQuestions,
 }: TestQuestionsOnlyViewProps) {
-  const navigate = useNavigate();
   const questionDnd = useQuestionReorderDnd({
     questions: detail?.draft.questions,
     onReorderQuestions,
@@ -45,133 +131,38 @@ export function TestQuestionsOnlyView({
 
   if (loading) {
     return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Редактор теста</CardTitle>
-              <CardDescription>Изменение вопросов теста</CardDescription>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <button
-                type="button"
-                onClick={() => navigate('/admin/tests')}
-                className="hover:text-slate-900"
-              >
-                ← К списку тестов
-              </button>
-              <span className="text-slate-300">|</span>
-              <button
-                type="button"
-                onClick={() => navigate(`/admin/tests/${topicId}/settings`)}
-                className="hover:text-slate-900"
-              >
-                Настройки
-              </button>
-              <span className="animate-pulse">Загрузка...</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-500">
-            Загрузка версии в работе... Пожалуйста, подождите.
-          </p>
-        </CardContent>
-      </Card>
+      <TestQuestionsOnlyViewCard topicId={topicId} loadingStatus="Загрузка...">
+        <p className="text-sm text-slate-500">Загрузка версии в работе... Пожалуйста, подождите.</p>
+      </TestQuestionsOnlyViewCard>
     );
   }
 
   if (error || !detail) {
     return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Редактор теста</CardTitle>
-              <CardDescription>Изменение вопросов теста</CardDescription>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <button
-                type="button"
-                onClick={() => navigate('/admin/tests')}
-                className="hover:text-slate-900"
-              >
-                ← К списку тестов
-              </button>
-              <span className="text-slate-300">|</span>
-              <button
-                type="button"
-                onClick={() => navigate(`/admin/tests/${topicId}/settings`)}
-                className="hover:text-slate-900"
-              >
-                Настройки
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
-            <p className="text-sm text-red-700">
-              {errorMessage ??
-                'Не удалось загрузить тест. Проверьте подключение и повторите попытку.'}
-            </p>
-            <button
-              type="button"
-              className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-              onClick={onRetryLoad}
-            >
-              Повторить
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      <TestQuestionsOnlyViewError
+        topicId={topicId}
+        errorMessage={errorMessage}
+        onRetryLoad={onRetryLoad}
+      />
     );
   }
 
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Редактор теста</CardTitle>
-            <CardDescription>Изменение вопросов теста</CardDescription>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-slate-600">
-            <button
-              type="button"
-              onClick={() => navigate('/admin/tests')}
-              className="hover:text-slate-900"
-            >
-              ← К списку тестов
-            </button>
-            <span className="text-slate-300">|</span>
-            <button
-              type="button"
-              onClick={() => navigate(`/admin/tests/${topicId}/settings`)}
-              className="hover:text-slate-900"
-            >
-              Настройки
-            </button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <TestEditorQuestionsSection
-          questions={detail.draft.questions}
-          isReorderingQuestions={isReorderingQuestions}
-          isDeletingQuestion={isDeletingQuestion}
-          draggingQuestionId={questionDnd.draggingQuestionId}
-          dropTarget={questionDnd.dropTarget}
-          onCreateQuestion={onCreateQuestion}
-          onDragStart={questionDnd.handleDragStart}
-          onDragOver={questionDnd.handleDragOver}
-          onDragEnd={questionDnd.handleDragEnd}
-          onDrop={questionDnd.handleDrop}
-          onEditQuestion={onEditQuestion}
-          onRequestDeleteQuestion={onRequestDeleteQuestion}
-        />
-      </CardContent>
-    </Card>
+    <TestQuestionsOnlyViewCard topicId={topicId}>
+      <TestEditorQuestionsSection
+        questions={detail.draft.questions}
+        isReorderingQuestions={isReorderingQuestions}
+        isDeletingQuestion={isDeletingQuestion}
+        draggingQuestionId={questionDnd.draggingQuestionId}
+        dropTarget={questionDnd.dropTarget}
+        onCreateQuestion={onCreateQuestion}
+        onDragStart={questionDnd.handleDragStart}
+        onDragOver={questionDnd.handleDragOver}
+        onDragEnd={questionDnd.handleDragEnd}
+        onDrop={questionDnd.handleDrop}
+        onEditQuestion={onEditQuestion}
+        onRequestDeleteQuestion={onRequestDeleteQuestion}
+      />
+    </TestQuestionsOnlyViewCard>
   );
 }
