@@ -104,6 +104,7 @@ Prompt Studio is available at `"/admin/prompts"` and currently includes:
 - safe default to free models when available
 - prompt editor with line numbers
 - editable test variables (add/remove) with duplicate-key validation
+- prompt simulation area with test source selector, selected question preview, run history, metrics, and JSON view
 - response format switch (`text` / `json`)
 - strict structured JSON support for generation (`response_format: json_schema`) when schema is provided
 - provider parameter strictness support (`provider.require_parameters`) for schema-compatible routing
@@ -141,8 +142,10 @@ Current UX baseline for question editing:
 
 - add/edit question via modal (avoids long inline page growth)
 - choice options are edited with structured rows (text + integer weight), no manual service code input
-- slider bands are edited with structured rows (`min`, `max`, `label`, `weight`)
-- optional JSON settings are hidden under "Advanced settings"
+- slider scale is edited with dedicated `min`, `max`, and `step` fields
+- slider bands are edited with structured rows (`min`, `max`, `label`, `weight`) and must stay inside the scale
+- slider range validation rejects invalid ranges such as `max <= min` or values outside the scale
+- optional JSON settings stay separate from core slider scale fields and are hidden under "Advanced settings"
 - test list cards in sidebar handle long titles/slugs with safe wrapping
 
 AI generation safety rules in tests workspace:
@@ -176,6 +179,15 @@ Public student routes:
 - `"/t/:code"`: registration/entry screen
 - `"/t/:code/session/:sessionToken"`: test run workspace
 - `"/t/:code/result/:sessionToken"`: result and analysis screen
+
+Current public run UX:
+
+- the run screen uses a centered question card with compact progress (`current / total` + percent)
+- single-choice questions auto-advance after selection
+- multi-choice, slider, and open-text questions use in-card navigation controls
+- question transitions are animated to reduce abrupt content jumps
+- open-text answers use a higher-contrast textarea for bright screens
+- slider questions show the current value with the matching label and avoid duplicate range numbers in helper copy
 
 UI/theming contract for public pages:
 
@@ -269,6 +281,13 @@ npm run verify:template
 `verify:template` is the release-level full pipeline (including Prisma sync, API regeneration, architecture/smoke checks).
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json` and runs mandatory server unit/e2e tests.
+
+Server smoke details:
+
+- `npm run verify:smoke:server` targets `SMOKE_SERVER_PORT`, then `PORT`, then `3000`
+- if a compatible server is already running on the selected port, the smoke check reuses it
+- if no compatible server responds, the smoke check starts the backend itself and stops only the process it started
+- the smoke check validates the Swagger document and required routes instead of relying on a fixed unrelated port
 
 ## PR-Ready Checklist
 
