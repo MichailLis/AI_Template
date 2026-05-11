@@ -184,7 +184,7 @@ export function PublicQuestionCard({
                 value={typeof currentAnswer === 'string' ? currentAnswer : ''}
                 onChange={(event) => onAnswerChange(question.id, event.target.value)}
                 placeholder="Введите ответ"
-                className="min-h-40 rounded-2xl border-white/70 bg-white/70 px-5 py-4 text-base shadow-inner placeholder:text-muted-foreground/60 focus-visible:ring-primary/35"
+                className="public-text-answer min-h-40 rounded-2xl px-5 py-4 text-base leading-relaxed placeholder:text-muted-foreground/70 focus-visible:ring-0"
               />
             ) : null}
 
