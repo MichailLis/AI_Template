@@ -154,6 +154,7 @@ describe('TestsAnalysisService', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
@@ -188,6 +189,27 @@ describe('TestsAnalysisService', () => {
       providerMode: 'LLM',
       status: 'PENDING',
     });
+  });
+
+  it('toAttemptStatus treats expired in-progress attempts as expired without updating storage', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+
+    expect(
+      service.toAttemptStatus({
+        status: 'IN_PROGRESS',
+        finishedAt: null,
+        expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      } as never),
+    ).toBe('EXPIRED');
+    expect(
+      service.toAttemptStatus({
+        status: 'IN_PROGRESS',
+        finishedAt: null,
+        expiresAt: new Date('2026-05-12T12:01:00.000Z'),
+      } as never),
+    ).toBe('IN_PROGRESS');
+
+    jest.useRealTimers();
   });
 
   it('runAttemptAnalysis stores structured ready analysis from OpenRouter', async () => {

@@ -14,4 +14,9 @@ describe('Prisma analysis prompt schema', () => {
     expect(schema).toContain('analysisPromptVersionId Int?');
     expect(schema).toContain('promptVersionId Int?');
   });
+
+  it('enforces unique order values for ordered test child collections', () => {
+    expect(schema).toContain('@@unique([versionId, order])');
+    expect(schema.match(/@@unique\(\[questionId, order\]\)/g)).toHaveLength(2);
+  });
 });

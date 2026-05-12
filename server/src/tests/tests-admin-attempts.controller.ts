@@ -9,9 +9,11 @@ import {
   AdminPublicAttemptsListResponseDto,
 } from './dto/tests-links.dto';
 import { TestsAttemptService } from './tests-attempt.service';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('tests')
 @ApiBearerAuth()
+@ApiErrorResponses()
 @UseGuards(AtGuard)
 @Controller('admin/tests')
 export class TestsAdminAttemptsController {

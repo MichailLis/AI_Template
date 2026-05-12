@@ -221,7 +221,7 @@ export class TestsAnalysisService {
           promptVersionId: promptVersion.id,
           providerMode: 'LLM',
           status: 'READY',
-          summary: parsedOutput as Prisma.InputJsonValue,
+          summary: parsedOutput,
           rawText: response.output,
           errorMessage: null,
           generatedAt: new Date(),
@@ -263,7 +263,7 @@ export class TestsAnalysisService {
     };
   }
 
-  toAttemptStatus(attempt: Pick<TestStudentAttempt, 'status' | 'finishedAt'>) {
+  toAttemptStatus(attempt: Pick<TestStudentAttempt, 'status' | 'finishedAt' | 'expiresAt'>) {
     if (attempt.status === 'COMPLETED') {
       return 'COMPLETED' as const;
     }
@@ -278,6 +278,10 @@ export class TestsAnalysisService {
 
     if (attempt.finishedAt) {
       return 'COMPLETED' as const;
+    }
+
+    if (attempt.status === 'IN_PROGRESS' && attempt.expiresAt && new Date() > attempt.expiresAt) {
+      return 'EXPIRED' as const;
     }
 
     return 'IN_PROGRESS' as const;

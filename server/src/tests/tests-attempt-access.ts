@@ -16,18 +16,5 @@ export const getSessionAttemptByTokenOrThrow = async (
     throw new NotFoundException('Test session not found');
   }
 
-  const now = new Date();
-
-  if (attempt.status === 'IN_PROGRESS' && attempt.expiresAt && now > attempt.expiresAt) {
-    return prisma.testStudentAttempt.update({
-      where: { id: attempt.id },
-      data: {
-        status: 'EXPIRED',
-        finishedAt: attempt.finishedAt ?? now,
-      },
-      include: attemptWithSessionInclude,
-    });
-  }
-
   return attempt;
 };

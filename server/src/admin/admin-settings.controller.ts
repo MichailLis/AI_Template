@@ -8,9 +8,11 @@ import {
   AdminOpenRouterSettingsResponseDto,
   UpdateOpenRouterApiKeyDto,
 } from './dto/admin-settings.dto';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('admin')
 @ApiBearerAuth()
+@ApiErrorResponses()
 @UseGuards(AtGuard)
 @Controller('admin/settings')
 export class AdminSettingsController {

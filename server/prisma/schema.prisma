@@ -76,10 +76,10 @@ model User {
 }
 
 model TestTopic {
-  id                       Int      @id @default(autoincrement())
-  slug                     String   @unique
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id                       Int       @id @default(autoincrement())
+  slug                     String    @unique
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
   archivedAt               DateTime?
   activeDraftVersionId     Int?
   activePublishedVersionId Int?
@@ -134,7 +134,7 @@ model TestQuestion {
   sliderBands    TestQuestionSliderBand[]
   studentAnswers TestStudentAnswer[]
 
-  @@index([versionId, order])
+  @@unique([versionId, order])
   @@map("test_questions")
 }
 
@@ -150,7 +150,7 @@ model TestQuestionOption {
 
   question TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@index([questionId, order])
+  @@unique([questionId, order])
   @@map("test_question_options")
 }
 
@@ -165,7 +165,7 @@ model TestQuestionSliderBand {
 
   question TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@index([questionId, order])
+  @@unique([questionId, order])
   @@map("test_question_slider_bands")
 }
 
@@ -200,15 +200,15 @@ model TestPublicLink {
 }
 
 model EducationOrganization {
-  id                       Int                        @id @default(autoincrement())
-  name                     String                     @unique
-  isActive                 Boolean                    @default(true)
-  groupValidationMode      GroupOrClassValidationMode @default(NONE)
-  groupValidationPattern   String?
-  groupValidationExample   String?
-  groupValidationHint      String?
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
+  id                     Int                        @id @default(autoincrement())
+  name                   String                     @unique
+  isActive               Boolean                    @default(true)
+  groupValidationMode    GroupOrClassValidationMode @default(NONE)
+  groupValidationPattern String?
+  groupValidationExample String?
+  groupValidationHint    String?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
 
   publicLinks TestPublicLink[]
 
@@ -283,7 +283,7 @@ model TestStudentAnalysis {
   createdAt       DateTime                        @default(now())
   updatedAt       DateTime                        @updatedAt
 
-  attempt       TestStudentAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attempt       TestStudentAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   promptVersion AnalysisPromptVersion? @relation(fields: [promptVersionId], references: [id], onDelete: SetNull)
 
   @@index([status, generatedAt])

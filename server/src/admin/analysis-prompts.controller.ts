@@ -25,9 +25,11 @@ import {
   PromptTestQuestionsResponseDto,
   UpdateAnalysisPromptVersionDto,
 } from './dto/analysis-prompt.dto';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('admin')
 @ApiBearerAuth()
+@ApiErrorResponses()
 @UseGuards(AtGuard)
 @Controller('admin/prompts')
 export class AnalysisPromptsController {

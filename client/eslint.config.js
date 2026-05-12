@@ -142,4 +142,10 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'off',
     },
   },
+  {
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'max-lines-per-function': 'off',
+    },
+  },
 );

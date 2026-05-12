@@ -32,8 +32,8 @@ docker compose up -d
 - Adminer: `http://localhost:8080`
 - Postgres: `localhost:5432`
 
-The `backend` container installs server dependencies, generates Prisma client, syncs the schema, and starts Nest in watch mode.
-The `frontend` container installs client dependencies and starts Vite.
+The `backend` container restores server dependencies with `npm ci`, generates Prisma client, syncs the schema, and starts Nest in watch mode.
+The `frontend` container restores client dependencies with `npm ci` and starts Vite.
 
 Useful commands:
 
@@ -110,10 +110,13 @@ Prompt Studio is available at `"/admin/prompts"` and currently includes:
 - provider parameter strictness support (`provider.require_parameters`) for schema-compatible routing
 - optional response-healing plugin support for malformed JSON repair
 
-Required backend environment variables (`server/.env`):
+Required backend environment variables:
+
+- Local host development: copy `server/.env.example` to `server/.env`.
+- Root Docker Compose: copy `.env.example` to `.env` or export the variables in the shell.
 
 ```env
-OPENROUTER_API_KEY="sk-or-v1-..."
+OPENROUTER_API_KEY=
 # optional
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
 OPENROUTER_HTTP_REFERER="http://localhost:5173"
@@ -123,6 +126,7 @@ OPENROUTER_APP_NAME="AI Template Admin"
 Security note:
 
 - Never expose OpenRouter API key in frontend code.
+- If a real OpenRouter key is ever printed, committed, or shared through `docker compose config`, rotate it in OpenRouter before reuse.
 - All OpenRouter requests must go through backend (`/admin/prompts/*`).
 
 ## Tests Module (Draft/Publish Baseline)

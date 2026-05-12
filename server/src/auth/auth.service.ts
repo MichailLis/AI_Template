@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service';
 import { SigninDto, SignupDto } from './dto/auth.dto';
 import * as argon2 from 'argon2';
@@ -109,7 +110,7 @@ export class AuthService {
         },
       ),
       this.jwtService.signAsync(
-        { sub: userId, email },
+        { sub: userId, email, refreshNonce: randomUUID() },
         {
           secret: this.config.get<string>('JWT_REFRESH_SECRET'),
           expiresIn: '7d',

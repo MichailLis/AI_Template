@@ -3,10 +3,13 @@ import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation } from '@nestjs/swagg
 import { AuthService } from './auth.service';
 import { SigninDto, SignupDto } from './dto/auth.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { AtGuard, RtGuard } from './guards';
 import { GetCurrentUserId, GetCurrentUser } from './decorators';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('auth')
+@ApiErrorResponses()
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -41,7 +44,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Refresh tokens' })
-  @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, type: RefreshResponseDto })
   refreshTokens(
     @GetCurrentUserId() userId: number,
     @GetCurrentUser('refreshToken') refreshToken: string,

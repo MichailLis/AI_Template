@@ -47,6 +47,22 @@
       "backendModule": "TestsModule",
       "prismaModel": "TestTopic",
       "schema": "testsTopicCreateSchema",
+      "verification": {
+        "requireOwnedRoots": true,
+        "requireOpenApiOperations": true
+      },
+      "ownedRoots": {
+        "backend": ["server/src/tests"],
+        "frontend": [
+          "client/src/features/tests",
+          "client/src/widgets/admin-tests-workspace",
+          "client/src/widgets/admin-public-links-workspace",
+          "client/src/widgets/admin-public-links-stats-workspace",
+          "client/src/widgets/admin-education-organizations-workspace",
+          "client/src/widgets/public-test-workspace",
+          "client/src/pages/t"
+        ]
+      },
       "backendFiles": [
         "server/src/tests/tests.module.ts",
         "server/src/tests/tests.controller.ts",
@@ -55,9 +71,139 @@
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-tests-page.tsx",
+        "client/src/pages/admin/admin-public-links-page.tsx",
+        "client/src/pages/admin/admin-public-links-stats-page.tsx",
+        "client/src/pages/admin/admin-public-links-organizations-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx"
       ],
-      "generatedApiFile": "client/src/shared/api/generated/tests/tests.ts"
+      "generatedApiFile": "client/src/shared/api/generated/tests/tests.ts",
+      "openApiOperations": [
+        {
+          "path": "/admin/tests",
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}",
+          "methods": ["delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/archive",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/restore",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/ai/create",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/draft",
+          "methods": ["get", "patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/draft/questions",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/draft/questions/reorder",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/draft/questions/{questionId}",
+          "methods": ["patch", "delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/{topicId}/publish",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links",
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/archived",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}",
+          "methods": ["patch", "delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/regenerate",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/restore",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/education-organizations",
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/education-organizations/{organizationId}",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/attempts",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/attempts/{attemptId}",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/tests/public/links/{code}",
+          "methods": ["get"],
+          "errorStatuses": ["400", "404"]
+        },
+        {
+          "path": "/tests/public/links/{code}/start",
+          "methods": ["post"],
+          "errorStatuses": ["400", "404"]
+        },
+        {
+          "path": "/tests/public/sessions/{sessionToken}",
+          "methods": ["get"],
+          "errorStatuses": ["400", "404"]
+        },
+        {
+          "path": "/tests/public/sessions/{sessionToken}/answers",
+          "methods": ["put"],
+          "errorStatuses": ["400", "404"]
+        },
+        {
+          "path": "/tests/public/sessions/{sessionToken}/finish",
+          "methods": ["post"],
+          "errorStatuses": ["400", "404"]
+        },
+        {
+          "path": "/tests/public/sessions/{sessionToken}/result",
+          "methods": ["get"],
+          "errorStatuses": ["400", "404"]
+        }
+      ]
     }
   ]
 }
