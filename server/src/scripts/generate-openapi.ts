@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
-import { createSwaggerDocument } from '../swagger';
+import { setupApp } from '../setup-app';
 
 const outputPath = resolve(process.cwd(), 'openapi.json');
 
@@ -14,7 +14,7 @@ async function generateOpenApi() {
   });
 
   try {
-    const document = createSwaggerDocument(app);
+    const document = setupApp(app);
     await mkdir(dirname(outputPath), { recursive: true });
     await writeFile(outputPath, JSON.stringify(document, null, 2), 'utf-8');
   } finally {

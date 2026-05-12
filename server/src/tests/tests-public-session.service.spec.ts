@@ -44,6 +44,7 @@ describe('TestsPublicSessionService', () => {
   let upsertPendingLlmAnalysisMock: jest.Mock;
   let enqueueAttemptAnalysisMock: jest.Mock;
   let toPublicAnalysisResponseMock: jest.Mock;
+  let toAttemptStatusMock: jest.Mock;
   let transactionMock: jest.Mock;
   let txMock: {
     testStudentAnswer: {
@@ -63,6 +64,7 @@ describe('TestsPublicSessionService', () => {
     upsertPendingLlmAnalysisMock = jest.fn();
     enqueueAttemptAnalysisMock = jest.fn();
     toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
+    toAttemptStatusMock = jest.fn((attempt: { status: string }) => attempt.status);
     txMock = {
       testStudentAnswer: {
         count: jest.fn(),
@@ -91,6 +93,7 @@ describe('TestsPublicSessionService', () => {
       upsertStubAnalysis: upsertStubAnalysisMock,
       upsertPendingLlmAnalysis: upsertPendingLlmAnalysisMock,
       toPublicAnalysisResponse: toPublicAnalysisResponseMock,
+      toAttemptStatus: toAttemptStatusMock,
     };
     analysisServiceMock.enqueueAttemptAnalysis = enqueueAttemptAnalysisMock;
 
@@ -102,6 +105,7 @@ describe('TestsPublicSessionService', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
@@ -183,6 +187,109 @@ describe('TestsPublicSessionService', () => {
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
     expect(result.session.sessionToken).toBe('resume-existing');
+  });
+
+  it('getSessionByToken can report an expired status without mutating the attempt', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      resumeToken: 'session-token',
+      publicLink: {
+        shortCode: 'ABC123',
+        timeLimitMinutes: 30,
+      },
+      attemptNumber: 1,
+      status: 'IN_PROGRESS',
+      startedAt: new Date('2026-05-12T11:30:00.000Z'),
+      expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      finishedAt: null,
+      topicVersion: {
+        questions: [],
+      },
+      answers: [],
+    } as never);
+    toAttemptStatusMock.mockReturnValue('EXPIRED');
+
+    const result = await service.getSessionByToken('session-token');
+
+    expect(result.session.status).toBe('EXPIRED');
+    expect(toAttemptStatusMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'IN_PROGRESS',
+        expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      }),
+    );
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('saveAnswers rejects attempts already marked expired', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'EXPIRED',
+      expiresAt: null,
+      finishedAt: new Date('2026-05-12T12:00:00.000Z'),
+      topicVersion: {
+        questions: [],
+      },
+    } as never);
+
+    await expect(
+      service.saveAnswers('session-token', {
+        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('saveAnswers rejects in-progress attempts whose time limit has expired', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      finishedAt: null,
+      topicVersion: {
+        questions: [{ id: 100 }],
+      },
+    } as never);
+
+    await expect(
+      service.saveAnswers('session-token', {
+        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('finishSession rejects attempts already marked expired', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'EXPIRED',
+      expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      finishedAt: new Date('2026-05-12T12:00:00.000Z'),
+      analysis: null,
+    } as never);
+
+    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    expect(toPublicAnalysisResponseMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('finishSession rejects in-progress attempts whose time limit has expired', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: new Date('2026-05-12T11:59:00.000Z'),
+      finishedAt: null,
+      analysis: null,
+      topicVersion: {
+        questions: [{ id: 100 }],
+      },
+    } as never);
+
+    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    expect(toPublicAnalysisResponseMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
   });
 
   it('finishSession keeps stub analysis when test version has no prompt attached', async () => {

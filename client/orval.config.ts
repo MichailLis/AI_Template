@@ -9,6 +9,7 @@ export default defineConfig({
       schemas: 'src/shared/api/model',
       client: 'react-query',
       httpClient: 'axios', // Явно указываем axios
+      formatter: 'prettier',
       override: {
         mutator: {
           path: './src/shared/api/api.ts',

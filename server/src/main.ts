@@ -3,8 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { createServer } from 'node:net';
 
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { setupSwagger } from './swagger';
+import { setupApp } from './setup-app';
 
 const DEFAULT_PORT = 3000;
 const HOST = '0.0.0.0';
@@ -74,9 +73,7 @@ const resolveListenPort = async (requestedPort: number, allowFallback: boolean) 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
-  app.useGlobalFilters(new AllExceptionsFilter());
-  setupSwagger(app);
-  app.enableCors();
+  setupApp(app);
 
   const requestedPort = parsePort(process.env.PORT);
   const hasExplicitPort = Boolean(process.env.PORT?.trim());

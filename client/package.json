@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:api": "node -e \"const fs=require('node:fs');fs.rmSync('src/shared/api/generated',{recursive:true,force:true});fs.rmSync('src/shared/api/model',{recursive:true,force:true});\" && orval",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -40,6 +42,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.10.12",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -52,15 +57,17 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
-    "eslint-plugin-sonarjs": "^3.0.5",
+    "eslint-plugin-sonarjs": "^4.0.3",
     "eslint-plugin-unicorn": "^61.0.2",
     "globals": "^16.5.0",
+    "jsdom": "^29.1.1",
     "orval": "^8.2.0",
     "postcss": "^8.5.6",
     "prettier": "^3.4.2",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.6"
   }
 }

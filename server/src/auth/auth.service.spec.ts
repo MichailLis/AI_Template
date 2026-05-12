@@ -259,7 +259,11 @@ describe('AuthService', () => {
     );
     expect(jwtServiceMock.signAsync).toHaveBeenNthCalledWith(
       2,
-      { sub: 99, email: 'tokens@example.com' },
+      {
+        sub: 99,
+        email: 'tokens@example.com',
+        refreshNonce: expect.any(String) as string,
+      },
       { secret: 'rt-secret', expiresIn: '7d' },
     );
     expect(result).toEqual({

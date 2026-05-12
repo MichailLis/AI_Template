@@ -20,7 +20,8 @@
     "prisma:push": "npx prisma db push --schema prisma/schema.prisma",
     "prisma:seed": "node prisma/seed.cjs",
     "prisma:studio": "npx prisma studio --schema prisma/schema.prisma",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -80,6 +81,11 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.20.0",
     "zod-prisma-types": "^3.3.11"
+  },
+  "overrides": {
+    "@prisma/dev": {
+      "@hono/node-server": "1.19.13"
+    }
   },
   "jest": {
     "moduleFileExtensions": [

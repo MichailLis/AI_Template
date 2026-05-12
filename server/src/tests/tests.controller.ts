@@ -30,9 +30,11 @@ import {
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
 import { TestsService } from './tests.service';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('tests')
 @ApiBearerAuth()
+@ApiErrorResponses()
 @UseGuards(AtGuard)
 @Controller('admin/tests')
 export class TestsController {

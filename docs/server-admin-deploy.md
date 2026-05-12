@@ -79,6 +79,10 @@ OPENROUTER_TIMEOUT_MS=120000
 - `admin@example.com`
 - `CHANGE_ADMIN_PASSWORD`
 
+Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
+`docker compose config` или чат, поверните его у провайдера перед повторным
+использованием.
+
 ## 4. Запустить
 
 ```bash

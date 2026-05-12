@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 
 // -----------------------------------------------------------------------------
 // WARN: DO NOT ADD BROWSER-SPECIFIC CODE HERE (localStorage, window, import.meta, etc.)
@@ -19,6 +19,8 @@ export const configureApiBaseUrl = (baseUrl?: string) => {
     api.defaults.baseURL = baseUrl;
   }
 };
+
+export type ErrorType<Error> = AxiosError<Error>;
 
 export const customInstance = <T>(
   config: AxiosRequestConfig,

@@ -4,6 +4,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { setupApp } from '../src/setup-app';
 
 describe('Tests Archive/Restore (e2e)', () => {
   let app: INestApplication;
@@ -114,6 +115,7 @@ describe('Tests Archive/Restore (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app);
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -263,11 +265,10 @@ describe('Tests Archive/Restore (e2e)', () => {
       .set('Authorization', `Bearer ${memberToken}`)
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin area only');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
   });
 
   it('should reject restore action for non-admin user', async () => {
@@ -282,11 +283,10 @@ describe('Tests Archive/Restore (e2e)', () => {
       .set('Authorization', `Bearer ${memberToken}`)
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin area only');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
   });
 
   it('should reject archived list query for non-admin user', async () => {
@@ -296,11 +296,10 @@ describe('Tests Archive/Restore (e2e)', () => {
       .set('Authorization', `Bearer ${memberToken}`)
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin area only');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
   });
 
   it('should support full archive/restore lifecycle in sequence', async () => {

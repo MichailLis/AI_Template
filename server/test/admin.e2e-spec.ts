@@ -4,6 +4,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { setupApp } from '../src/setup-app';
 
 describe('Admin (e2e)', () => {
   let app: INestApplication;
@@ -70,6 +71,7 @@ describe('Admin (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app);
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -133,11 +135,10 @@ describe('Admin (e2e)', () => {
       .set('Authorization', `Bearer ${viewerToken}`)
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin area only');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
   });
 
   it('PATCH /admin/users/:id/role should update target role', async () => {
@@ -162,11 +163,10 @@ describe('Admin (e2e)', () => {
       .send({ role: 'USER' })
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin cannot revoke own admin role');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin cannot revoke own admin role' },
+    });
   });
 
   it('tests module should reject non-admin token', async () => {
@@ -177,11 +177,10 @@ describe('Admin (e2e)', () => {
       .set('Authorization', `Bearer ${viewerToken}`)
       .expect(403);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toBe('Admin area only');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
   });
 
   it('tests module should support create, reorder, and publish flow for admin', async () => {
@@ -390,11 +389,12 @@ describe('Admin (e2e)', () => {
       })
       .expect(400);
 
-    const message = Array.isArray(response.body.message)
-      ? response.body.message[0]
-      : response.body.message;
-
-    expect(message).toContain('requires at least two options');
+    expect(response.body).toMatchObject({
+      success: false,
+      error: {
+        message: expect.stringContaining('requires at least two options'),
+      },
+    });
 
     const createdTopic = await prisma.testTopic.findUnique({
       where: {

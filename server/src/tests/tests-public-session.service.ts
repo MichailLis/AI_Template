@@ -55,6 +55,24 @@ export class TestsPublicSessionService {
     }
   }
 
+  private toSessionResultAnalysisResponse(
+    status: ReturnType<TestsAnalysisService['toAttemptStatus']>,
+    analysis: Parameters<TestsAnalysisService['toPublicAnalysisResponse']>[0],
+  ) {
+    if (status === 'EXPIRED' && !analysis) {
+      return {
+        providerMode: 'STUB' as const,
+        status: 'FAILED' as const,
+        summary: null,
+        rawText: null,
+        errorMessage: 'Test session expired before completion',
+        generatedAt: null,
+      };
+    }
+
+    return this.analysisService.toPublicAnalysisResponse(analysis);
+  }
+
   async startSessionByCode(
     shortCode: string,
     dto: PublicSessionStartRequestDto,
@@ -232,15 +250,6 @@ export class TestsPublicSessionService {
   async finishSession(sessionToken: string) {
     const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
 
-    if (attempt.status === 'EXPIRED') {
-      return {
-        sessionToken,
-        status: 'EXPIRED',
-        finishedAt: toOptionalIsoString(attempt.finishedAt),
-        analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
-      };
-    }
-
     if (attempt.status === 'COMPLETED') {
       return {
         sessionToken,
@@ -302,16 +311,17 @@ export class TestsPublicSessionService {
 
   async getSessionResult(sessionToken: string) {
     const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
+    const status = this.analysisService.toAttemptStatus(attempt);
 
-    if (attempt.status === 'IN_PROGRESS') {
+    if (status === 'IN_PROGRESS') {
       throw new BadRequestException('Test session is still in progress');
     }
 
     return {
       sessionToken,
-      status: this.analysisService.toAttemptStatus(attempt),
+      status,
       finishedAt: toOptionalIsoString(attempt.finishedAt),
-      analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
+      analysis: this.toSessionResultAnalysisResponse(status, attempt.analysis),
     };
   }
 }

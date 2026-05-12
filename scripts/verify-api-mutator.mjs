@@ -5,11 +5,22 @@ const root = process.cwd();
 const apiMutatorPath = join(root, 'client', 'src', 'shared', 'api', 'api.ts');
 const interceptorsPath = join(root, 'client', 'src', 'shared', 'api', 'interceptors.ts');
 const appPath = join(root, 'client', 'src', 'app', 'App.tsx');
+const generatedAuthPath = join(
+  root,
+  'client',
+  'src',
+  'shared',
+  'api',
+  'generated',
+  'auth',
+  'auth.ts',
+);
 
-const [apiMutatorSource, interceptorsSource, appSource] = await Promise.all([
+const [apiMutatorSource, interceptorsSource, appSource, generatedAuthSource] = await Promise.all([
   readFile(apiMutatorPath, 'utf-8'),
   readFile(interceptorsPath, 'utf-8'),
   readFile(appPath, 'utf-8'),
+  readFile(generatedAuthPath, 'utf-8'),
 ]);
 
 const stripComments = (source) => {
@@ -54,6 +65,16 @@ if (!/export\s+const\s+configureApiBaseUrl\s*=/.test(apiMutatorSource)) {
   );
 }
 
+if (
+  !/export\s+type\s+ErrorType\s*<\s*Error\s*>\s*=\s*AxiosError\s*<\s*Error\s*>\s*;/.test(
+    apiMutatorSource,
+  )
+) {
+  errors.push(
+    'client/src/shared/api/api.ts must export `ErrorType<Error> = AxiosError<Error>` so Orval React Query errors match Axios runtime rejections.',
+  );
+}
+
 if (!/export\s+default\s+api\s*;/.test(apiMutatorSource)) {
   errors.push('client/src/shared/api/api.ts must default export the Axios instance as `api`.');
 }
@@ -70,6 +91,12 @@ if (!/configureApiBaseUrl\(import\.meta\.env\.VITE_API_URL\)/.test(appSource)) {
 
 if (!/setupInterceptors\(api\)/.test(appSource)) {
   errors.push('client/src/app/App.tsx must call setupInterceptors(api).');
+}
+
+if (!/ErrorType\s*<\s*ErrorResponseDto\s*>/.test(generatedAuthSource)) {
+  errors.push(
+    'client/src/shared/api/generated/auth/auth.ts must type generated React Query errors as ErrorType<ErrorResponseDto>.',
+  );
 }
 
 if (errors.length > 0) {

@@ -47,6 +47,218 @@ const hasToken = (source, token) => new RegExp(`\\b${token}\\b`).test(source);
 
 const toPosixPath = (value) => value.replace(/\\/g, '/');
 
+const normalizeManifestPath = (value) => toPosixPath(value).replace(/\/+$/, '');
+
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const broadOwnedRoots = new Set([
+  'client/src',
+  'client/src/features',
+  'client/src/pages',
+  'client/src/pages/admin',
+  'client/src/widgets',
+  'server/src',
+]);
+
+const validateOwnedRoot = async (errors, featurePrefix, scope, ownedRoot) => {
+  if (typeof ownedRoot !== 'string' || ownedRoot.trim().length === 0) {
+    errors.push(`${featurePrefix}: ${scope} owned root must be a non-empty string`);
+    return;
+  }
+
+  const normalizedRoot = normalizeManifestPath(ownedRoot);
+
+  if (normalizedRoot.includes('*')) {
+    errors.push(`${featurePrefix}: ${scope} owned root ${ownedRoot} must not use globs`);
+    return;
+  }
+
+  if (broadOwnedRoots.has(normalizedRoot)) {
+    errors.push(`${featurePrefix}: ${scope} owned root ${ownedRoot} is too broad`);
+    return;
+  }
+
+  if (!(await existsFromRoot(normalizedRoot))) {
+    errors.push(`${featurePrefix}: missing ${scope} owned root ${ownedRoot}`);
+  }
+};
+
+const getFeatureVerification = (errors, feature, featurePrefix) => {
+  if (feature.verification === undefined) {
+    return {};
+  }
+
+  if (!isObject(feature.verification)) {
+    errors.push(`${featurePrefix}: verification must be an object`);
+    return {};
+  }
+
+  return feature.verification;
+};
+
+const verifyOwnedRoots = async (errors, feature, featurePrefix) => {
+  if (feature.ownedRoots !== undefined && !isObject(feature.ownedRoots)) {
+    errors.push(`${featurePrefix}: ownedRoots must be an object with backend/frontend arrays`);
+    return;
+  }
+
+  const verification = getFeatureVerification(errors, feature, featurePrefix);
+  const ownedRoots = feature.ownedRoots ?? {};
+
+  if (ownedRoots.backend !== undefined && !Array.isArray(ownedRoots.backend)) {
+    errors.push(`${featurePrefix}: ownedRoots.backend must be an array`);
+  }
+
+  if (ownedRoots.frontend !== undefined && !Array.isArray(ownedRoots.frontend)) {
+    errors.push(`${featurePrefix}: ownedRoots.frontend must be an array`);
+  }
+
+  const backendOwnedRoots = asArray(ownedRoots.backend);
+  const frontendOwnedRoots = asArray(ownedRoots.frontend);
+
+  if (verification.requireOwnedRoots === true) {
+    if (backendOwnedRoots.length === 0) {
+      errors.push(`${featurePrefix}: expected backend ownedRoots`);
+    }
+
+    if (frontendOwnedRoots.length === 0) {
+      errors.push(`${featurePrefix}: expected frontend ownedRoots`);
+    }
+  }
+
+  for (const ownedRoot of backendOwnedRoots) {
+    await validateOwnedRoot(errors, featurePrefix, 'backend', ownedRoot);
+  }
+
+  for (const ownedRoot of frontendOwnedRoots) {
+    await validateOwnedRoot(errors, featurePrefix, 'frontend', ownedRoot);
+  }
+};
+
+const schemaReferencesErrorResponseDto = (schema) => {
+  if (!isObject(schema)) {
+    return false;
+  }
+
+  if (schema.$ref === '#/components/schemas/ErrorResponseDto') {
+    return true;
+  }
+
+  for (const key of ['allOf', 'anyOf', 'oneOf']) {
+    if (
+      Array.isArray(schema[key]) &&
+      schema[key].some((nestedSchema) => schemaReferencesErrorResponseDto(nestedSchema))
+    ) {
+      return true;
+    }
+  }
+
+  return schemaReferencesErrorResponseDto(schema.items);
+};
+
+const hasErrorResponseDto = (operation, status) => {
+  const content = operation.responses?.[status]?.content ?? {};
+
+  return Object.values(content).some((mediaType) =>
+    schemaReferencesErrorResponseDto(mediaType?.schema),
+  );
+};
+
+const verifyErrorResponseDto = (errors, featurePrefix, operationContext, operation, status) => {
+  if (!hasErrorResponseDto(operation, status)) {
+    errors.push(`${featurePrefix}: ${operationContext} must document ${status} ErrorResponseDto`);
+  }
+};
+
+const verifyOpenApiOperations = (errors, openApiDoc, feature, featurePrefix) => {
+  const verification = getFeatureVerification(errors, feature, featurePrefix);
+
+  if (feature.openApiOperations !== undefined && !Array.isArray(feature.openApiOperations)) {
+    errors.push(`${featurePrefix}: openApiOperations must be an array`);
+    return;
+  }
+
+  const openApiOperations = asArray(feature.openApiOperations);
+
+  if (verification.requireOpenApiOperations === true && openApiOperations.length === 0) {
+    errors.push(`${featurePrefix}: expected openApiOperations`);
+    return;
+  }
+
+  if (openApiOperations.length === 0) {
+    return;
+  }
+
+  if (!openApiDoc) {
+    errors.push(`${featurePrefix}: server/openapi.json is required for openApiOperations`);
+    return;
+  }
+
+  for (const [index, expectedOperation] of openApiOperations.entries()) {
+    if (!isObject(expectedOperation)) {
+      errors.push(`${featurePrefix}: openApiOperations[${index}] must be an object`);
+      continue;
+    }
+
+    const operationPath = expectedOperation.path;
+
+    if (typeof operationPath !== 'string' || operationPath.length === 0) {
+      errors.push(`${featurePrefix}: openApiOperations entries need a path`);
+      continue;
+    }
+
+    if (!Array.isArray(expectedOperation.methods) || expectedOperation.methods.length === 0) {
+      errors.push(`${featurePrefix}: ${operationPath} must declare at least one method`);
+      continue;
+    }
+
+    const methods = [];
+    for (const method of expectedOperation.methods) {
+      if (typeof method !== 'string' || method.length === 0) {
+        errors.push(`${featurePrefix}: ${operationPath} methods must be non-empty strings`);
+        continue;
+      }
+
+      methods.push(method.toLowerCase());
+    }
+
+    if (
+      expectedOperation.errorStatuses !== undefined &&
+      !Array.isArray(expectedOperation.errorStatuses)
+    ) {
+      errors.push(`${featurePrefix}: ${operationPath} errorStatuses must be an array`);
+      continue;
+    }
+
+    const pathItem = openApiDoc.paths?.[operationPath];
+
+    if (!pathItem) {
+      errors.push(`${featurePrefix}: OpenAPI path ${operationPath} is missing`);
+      continue;
+    }
+
+    for (const method of methods) {
+      const operation = pathItem[method];
+      const operationContext = `${method.toUpperCase()} ${operationPath}`;
+
+      if (!operation) {
+        errors.push(`${featurePrefix}: ${operationContext} is missing in server/openapi.json`);
+        continue;
+      }
+
+      if (expectedOperation.protected === true) {
+        verifyErrorResponseDto(errors, featurePrefix, operationContext, operation, '401');
+      }
+
+      for (const status of asArray(expectedOperation.errorStatuses).map(String)) {
+        verifyErrorResponseDto(errors, featurePrefix, operationContext, operation, status);
+      }
+    }
+  }
+};
+
 const collectClientSourceFiles = async (relativePath) => {
   const entries = await readDirFromRoot(relativePath, true);
   const files = [];
@@ -219,7 +431,21 @@ const verify = async () => {
 
   const manifestRaw = await readFromRoot('template/features.manifest.json');
   const manifest = JSON.parse(manifestRaw);
-  const features = manifest.features ?? [];
+  const manifestFeatures = manifest.features ?? [];
+  const features = [];
+
+  if (!Array.isArray(manifestFeatures)) {
+    errors.push('template/features.manifest.json: features must be an array');
+  } else {
+    for (const [index, feature] of manifestFeatures.entries()) {
+      if (!isObject(feature)) {
+        errors.push(`template/features.manifest.json: features[${index}] must be an object`);
+        continue;
+      }
+
+      features.push(feature);
+    }
+  }
 
   const appModule = await readFromRoot('server/src/app.module.ts');
   const appRoutes = await readFromRoot('client/src/app/App.tsx');
@@ -384,6 +610,9 @@ const verify = async () => {
 
   for (const feature of features) {
     const featurePrefix = `feature:${feature.name}`;
+
+    await verifyOwnedRoots(errors, feature, featurePrefix);
+    verifyOpenApiOperations(errors, openApiDoc, feature, featurePrefix);
 
     ensureIncludes(errors, appModule, feature.backendModule, 'server/src/app.module.ts');
     ensureIncludes(errors, appRoutes, `path="${feature.route}"`, 'client/src/app/App.tsx');

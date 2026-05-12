@@ -9,8 +9,8 @@ services:
       - postgres
     environment:
       DATABASE_URL: postgresql://user:password@postgres:5432/my_app_db?schema=public
-      JWT_ACCESS_SECRET: secret123
-      JWT_REFRESH_SECRET: secret123
+      JWT_ACCESS_SECRET: dev-access-secret-change-me
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-me
     ports:
       - '5173:5173'
       - '3000:3000'

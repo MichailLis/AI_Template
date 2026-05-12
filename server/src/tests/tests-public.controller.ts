@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import {
@@ -13,8 +13,10 @@ import {
 } from './dto/tests-public.dto';
 import { TestsAttemptService } from './tests-attempt.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
+import { ApiPublicErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('tests-public')
+@ApiPublicErrorResponses()
 @Controller('tests/public')
 export class TestsPublicController {
   constructor(
@@ -54,6 +56,7 @@ export class TestsPublicController {
   }
 
   @Post('sessions/:sessionToken/finish')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Finish public test session and compute analysis' })
   @ApiResponse({ status: 200, type: PublicSessionFinishResponseDto })
   finishSession(@Param('sessionToken') sessionToken: string) {

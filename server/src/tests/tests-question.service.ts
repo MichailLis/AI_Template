@@ -182,6 +182,13 @@ export class TestsQuestionService {
       for (const [index, questionId] of dto.questionIds.entries()) {
         await tx.testQuestion.update({
           where: { id: questionId },
+          data: { order: -(index + 1) },
+        });
+      }
+
+      for (const [index, questionId] of dto.questionIds.entries()) {
+        await tx.testQuestion.update({
+          where: { id: questionId },
           data: { order: index + 1 },
         });
       }

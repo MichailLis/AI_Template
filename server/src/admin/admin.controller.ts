@@ -23,9 +23,11 @@ import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import { AdminPromptModelsResponseDto } from './dto/admin-prompt-models-response.dto';
 import { GeneratePromptDto } from './dto/generate-prompt.dto';
 import { AdminPromptResponseDto } from './dto/admin-prompt-response.dto';
+import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('admin')
 @ApiBearerAuth()
+@ApiErrorResponses()
 @UseGuards(AtGuard)
 @Controller('admin')
 export class AdminController {

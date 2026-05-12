@@ -90,6 +90,9 @@ OPENROUTER_TIMEOUT_MS=120000
 
 - `POSTGRES_PASSWORD` и пароль внутри `DATABASE_URL` должны совпадать.
 - Значения `change-this-*` обязательно замените перед реальным продакшеном.
+- Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
+  `docker compose config` или чат, поверните его у провайдера перед повторным
+  использованием.
 - В образе нет захардкоженного админа. Первый админ создается только если заданы
   `BOOTSTRAP_ADMIN_EMAIL` и `BOOTSTRAP_ADMIN_PASSWORD`.
 - Если пользователь с таким email уже существует, bootstrap только выдаст ему роль

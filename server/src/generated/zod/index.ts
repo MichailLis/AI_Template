@@ -1204,11 +1204,21 @@ export const TestQuestionOrderByWithRelationInputSchema: z.ZodType<Prisma.TestQu
   studentAnswers: z.lazy(() => TestStudentAnswerOrderByRelationAggregateInputSchema).optional(),
 });
 
-export const TestQuestionWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionWhereUniqueInput> = z.object({
-  id: z.number().int(),
-})
+export const TestQuestionWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    versionId_order: z.lazy(() => TestQuestionVersionIdOrderCompoundUniqueInputSchema),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    versionId_order: z.lazy(() => TestQuestionVersionIdOrderCompoundUniqueInputSchema),
+  }),
+])
 .and(z.strictObject({
   id: z.number().int().optional(),
+  versionId_order: z.lazy(() => TestQuestionVersionIdOrderCompoundUniqueInputSchema).optional(),
   AND: z.union([ z.lazy(() => TestQuestionWhereInputSchema), z.lazy(() => TestQuestionWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => TestQuestionWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TestQuestionWhereInputSchema), z.lazy(() => TestQuestionWhereInputSchema).array() ]).optional(),
@@ -1288,11 +1298,21 @@ export const TestQuestionOptionOrderByWithRelationInputSchema: z.ZodType<Prisma.
   question: z.lazy(() => TestQuestionOrderByWithRelationInputSchema).optional(),
 });
 
-export const TestQuestionOptionWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionOptionWhereUniqueInput> = z.object({
-  id: z.number().int(),
-})
+export const TestQuestionOptionWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionOptionWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    questionId_order: z.lazy(() => TestQuestionOptionQuestionIdOrderCompoundUniqueInputSchema),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    questionId_order: z.lazy(() => TestQuestionOptionQuestionIdOrderCompoundUniqueInputSchema),
+  }),
+])
 .and(z.strictObject({
   id: z.number().int().optional(),
+  questionId_order: z.lazy(() => TestQuestionOptionQuestionIdOrderCompoundUniqueInputSchema).optional(),
   AND: z.union([ z.lazy(() => TestQuestionOptionWhereInputSchema), z.lazy(() => TestQuestionOptionWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => TestQuestionOptionWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TestQuestionOptionWhereInputSchema), z.lazy(() => TestQuestionOptionWhereInputSchema).array() ]).optional(),
@@ -1361,11 +1381,21 @@ export const TestQuestionSliderBandOrderByWithRelationInputSchema: z.ZodType<Pri
   question: z.lazy(() => TestQuestionOrderByWithRelationInputSchema).optional(),
 });
 
-export const TestQuestionSliderBandWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionSliderBandWhereUniqueInput> = z.object({
-  id: z.number().int(),
-})
+export const TestQuestionSliderBandWhereUniqueInputSchema: z.ZodType<Prisma.TestQuestionSliderBandWhereUniqueInput> = z.union([
+  z.object({
+    id: z.number().int(),
+    questionId_order: z.lazy(() => TestQuestionSliderBandQuestionIdOrderCompoundUniqueInputSchema),
+  }),
+  z.object({
+    id: z.number().int(),
+  }),
+  z.object({
+    questionId_order: z.lazy(() => TestQuestionSliderBandQuestionIdOrderCompoundUniqueInputSchema),
+  }),
+])
 .and(z.strictObject({
   id: z.number().int().optional(),
+  questionId_order: z.lazy(() => TestQuestionSliderBandQuestionIdOrderCompoundUniqueInputSchema).optional(),
   AND: z.union([ z.lazy(() => TestQuestionSliderBandWhereInputSchema), z.lazy(() => TestQuestionSliderBandWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => TestQuestionSliderBandWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TestQuestionSliderBandWhereInputSchema), z.lazy(() => TestQuestionSliderBandWhereInputSchema).array() ]).optional(),
@@ -3941,6 +3971,11 @@ export const TestStudentAnswerOrderByRelationAggregateInputSchema: z.ZodType<Pri
   _count: z.lazy(() => SortOrderSchema).optional(),
 });
 
+export const TestQuestionVersionIdOrderCompoundUniqueInputSchema: z.ZodType<Prisma.TestQuestionVersionIdOrderCompoundUniqueInput> = z.strictObject({
+  versionId: z.number(),
+  order: z.number(),
+});
+
 export const TestQuestionCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestQuestionCountOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   versionId: z.lazy(() => SortOrderSchema).optional(),
@@ -4033,6 +4068,11 @@ export const TestQuestionScalarRelationFilterSchema: z.ZodType<Prisma.TestQuesti
   isNot: z.lazy(() => TestQuestionWhereInputSchema).optional(),
 });
 
+export const TestQuestionOptionQuestionIdOrderCompoundUniqueInputSchema: z.ZodType<Prisma.TestQuestionOptionQuestionIdOrderCompoundUniqueInput> = z.strictObject({
+  questionId: z.number(),
+  order: z.number(),
+});
+
 export const TestQuestionOptionCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestQuestionOptionCountOrderByAggregateInput> = z.strictObject({
   id: z.lazy(() => SortOrderSchema).optional(),
   questionId: z.lazy(() => SortOrderSchema).optional(),
@@ -4078,6 +4118,11 @@ export const TestQuestionOptionSumOrderByAggregateInputSchema: z.ZodType<Prisma.
   questionId: z.lazy(() => SortOrderSchema).optional(),
   weight: z.lazy(() => SortOrderSchema).optional(),
   order: z.lazy(() => SortOrderSchema).optional(),
+});
+
+export const TestQuestionSliderBandQuestionIdOrderCompoundUniqueInputSchema: z.ZodType<Prisma.TestQuestionSliderBandQuestionIdOrderCompoundUniqueInput> = z.strictObject({
+  questionId: z.number(),
+  order: z.number(),
 });
 
 export const TestQuestionSliderBandCountOrderByAggregateInputSchema: z.ZodType<Prisma.TestQuestionSliderBandCountOrderByAggregateInput> = z.strictObject({
