@@ -83,6 +83,7 @@ OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL=
 OPENROUTER_HTTP_REFERER=
 OPENROUTER_APP_NAME=AI Template Admin
+OPENROUTER_TIMEOUT_MS=120000
 ```
 
 Важно:
@@ -223,16 +224,50 @@ docker compose --project-name ai_template_clean --env-file .env.deploy.clean -f 
 - Login: `http://localhost:18080/login`
 - Adminer: `http://localhost:18081`
 
-## 8. Обновление версии
+## 8. Обновление контейнеров на сервере
 
-Если опубликован новый tag:
+Перед обновлением проверьте, что `.env.deploy` указывает на нужные образы:
+
+```env
+DOCKERHUB_NAMESPACE=morro665065
+APP_IMAGE_TAG=prod
+```
+
+Если сервер использует git checkout с deploy-файлами, сначала подтяните актуальные
+`docker-compose.deploy.yml` и `.env.deploy.example`:
+
+```bash
+git fetch origin
+git checkout prod
+git pull --ff-only origin prod
+```
+
+Сделайте резервную копию базы перед обновлением, если данные важны:
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
+  sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backup-$(date +%Y%m%d-%H%M%S).sql"
+```
+
+Затем подтяните новые образы и пересоздайте только изменившиеся контейнеры:
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+```
+
+Проверьте HTTP и логи backend:
+
+```bash
+curl -f http://localhost:${APP_HTTP_PORT:-8080}/health
+curl -f http://localhost:${APP_HTTP_PORT:-8080}/api/api-json
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 backend
 ```
 
 Для отката укажите предыдущий `APP_IMAGE_TAG` и снова выполните `pull` + `up -d`.
+Если используется переиспользуемый tag `prod`, откат возможен только если предыдущий
+образ дополнительно опубликован под отдельным immutable tag.
 
 ## 9. Сборка и публикация своих образов
 
@@ -254,6 +289,20 @@ docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t y
 
 ## 10. Важное про существующую базу
 
+`docker compose pull` и `up -d` не удаляют PostgreSQL volume. Данные сохраняются в
+volume `POSTGRES_VOLUME_NAME` или, по умолчанию, `ai_template_postgres_data`.
+Опасные команды для данных: `docker compose down -v`, ручное удаление volume и
+пересоздание стека с другим `POSTGRES_VOLUME_NAME`.
+
+При старте production backend выполняет:
+
+```bash
+npx prisma migrate deploy --schema prisma/schema.prisma
+```
+
+если `RUN_DB_MIGRATIONS=true`. Это применяет только миграции из `server/prisma/migrations`
+и не делает destructive reset.
+
 На чистой базе backend применяет Prisma migrations автоматически.
 
 Если подключить старую непустую базу, созданную через `prisma db push`, Prisma может
@@ -265,3 +314,13 @@ docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t y
 - либо перенести данные в новую базу, созданную через migrations.
 
 Не удаляйте volume с продакшен-данными без backup.
+
+Перед будущими релизами со schema change проверяйте наличие истории миграций:
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec postgres \
+  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT migration_name, finished_at FROM \"_prisma_migrations\" ORDER BY finished_at DESC LIMIT 5;"'
+```
+
+Текущий релиз меняет поведение анализа и UI, но не меняет `schema.prisma`, поэтому
+новых таблиц/колонок и миграций для серверной БД не добавляет.

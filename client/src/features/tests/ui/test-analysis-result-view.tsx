@@ -146,12 +146,12 @@ function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skil
     <SectionCard icon={BrainCircuit} title={skillsLevel.title}>
       <p className="text-sm leading-relaxed text-muted-foreground">{skillsLevel.summary}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {skillsLevel.items.map((item) => {
+        {skillsLevel.items.map((item, index) => {
           const score = typeof item.score === 'number' ? item.score : null;
 
           return (
             <div
-              key={`${item.name}-${item.level}`}
+              key={`${item.name}-${item.level}-${index}`}
               className="rounded-lg border border-border/60 p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -185,8 +185,8 @@ function ThinkingTypeSection({ thinkingType }: { thinkingType: AnalysisResult['t
         <p className="mt-2 text-sm leading-relaxed text-sky-900">{thinkingType.description}</p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {thinkingType.strengths.map((strength) => (
-          <Badge key={strength} variant="outline">
+        {thinkingType.strengths.map((strength, index) => (
+          <Badge key={`${strength}-${index}`} variant="outline">
             {strength}
           </Badge>
         ))}
@@ -203,8 +203,8 @@ function PersonalityTraitsSection({
   return (
     <SectionCard icon={UserRound} title={personalityTraits.title}>
       <div className="grid gap-3">
-        {personalityTraits.traits.map((trait) => (
-          <div key={trait.name} className="rounded-lg border border-border/60 p-3">
+        {personalityTraits.traits.map((trait, index) => (
+          <div key={`${trait.name}-${index}`} className="rounded-lg border border-border/60 p-3">
             <p className="text-sm font-semibold text-foreground">{trait.name}</p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {trait.description}
@@ -313,8 +313,8 @@ function RecommendationColumn({ title, items }: { title: string; items: string[]
     <div className="rounded-lg border border-border/60 p-3">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <ul className="mt-2 space-y-2 text-sm leading-relaxed text-muted-foreground">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2">
+        {items.map((item, index) => (
+          <li key={`${item}-${index}`} className="flex gap-2">
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
             <span>{item}</span>
           </li>

@@ -62,6 +62,22 @@ describe('TestAnalysisResultSchema', () => {
     ).toThrow();
   });
 
+  it('rejects overlong noisy trait lists', () => {
+    expect(() =>
+      TestAnalysisResultSchema.parse({
+        ...validAnalysisResult,
+        personalityTraits: {
+          ...validAnalysisResult.personalityTraits,
+          traits: Array.from({ length: 7 }, (_, index) => ({
+            name: `Черта ${index + 1}`,
+            description: 'Короткое описание текущего учебного проявления.',
+            careerImpact: 'Влияет на выбор инженерных задач.',
+          })),
+        },
+      }),
+    ).toThrow();
+  });
+
   it('exposes a strict OpenRouter json schema for structured outputs', () => {
     expect(TestAnalysisResultJsonSchema.name).toBe('student_test_analysis');
     expect(TestAnalysisResultJsonSchema.strict).toBe(true);
@@ -71,5 +87,12 @@ describe('TestAnalysisResultSchema', () => {
       'personalityTraits',
       'careerDevelopment',
     ]);
+    expect(
+      TestAnalysisResultJsonSchema.schema.properties.personalityTraits.properties.traits.maxItems,
+    ).toBe(6);
+    expect(
+      TestAnalysisResultJsonSchema.schema.properties.careerDevelopment.properties
+        .professionalNextSteps.maxItems,
+    ).toBe(3);
   });
 });

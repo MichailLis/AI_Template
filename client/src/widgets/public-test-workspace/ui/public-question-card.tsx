@@ -6,6 +6,7 @@ import { Textarea } from '@/shared/ui/textarea';
 import { getSliderQuestionMeta } from './public-question-card.utils';
 import { PublicQuestionChoiceGroup } from './public-question-choice-group';
 import { PublicQuestionSliderField } from './public-question-slider-field';
+import { hasMeaningfulQuestionAnswer } from './public-test-run-answer.helpers';
 
 import type { PublicTestQuestion } from './public-test-run.types';
 
@@ -35,30 +36,6 @@ interface PublicQuestionCardProps {
   onBack: () => void;
   onNext: () => void;
   onFinish: (answerOverride?: AnswerOverride) => Promise<void>;
-}
-
-function hasMeaningfulAnswer(
-  questionType: PublicTestQuestion['type'],
-  sliderMeta: ReturnType<typeof getSliderQuestionMeta> | null,
-  currentAnswer: unknown,
-) {
-  if (questionType === 'SLIDER') {
-    return Boolean(sliderMeta);
-  }
-
-  if (currentAnswer === undefined || currentAnswer === null) {
-    return false;
-  }
-
-  if (Array.isArray(currentAnswer)) {
-    return currentAnswer.length > 0;
-  }
-
-  if (typeof currentAnswer === 'string') {
-    return currentAnswer.trim().length > 0;
-  }
-
-  return true;
 }
 
 function QuestionNavigation({
@@ -147,7 +124,7 @@ export function PublicQuestionCard({
     question.type === 'SLIDER'
       ? getSliderQuestionMeta(question.settings, question.sliderBands, currentAnswer)
       : null;
-  const hasAnswer = hasMeaningfulAnswer(question.type, sliderMeta, currentAnswer);
+  const hasAnswer = hasMeaningfulQuestionAnswer(question.type, currentAnswer);
   const needsInlineAction = question.type !== 'SINGLE_CHOICE';
   const inlineActionIsDisabled = isSubmitting || (question.required && !hasAnswer);
   const handleSingleSelect = (value: string) => {
@@ -216,6 +193,7 @@ export function PublicQuestionCard({
                 max={sliderMeta.max}
                 step={sliderMeta.step}
                 value={sliderMeta.value}
+                hasAnswer={hasAnswer}
                 activeLabel={sliderMeta.activeLabel}
                 minLabel={sliderMeta.minLabel}
                 maxLabel={sliderMeta.maxLabel}

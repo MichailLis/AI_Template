@@ -44,6 +44,13 @@ export interface AnalysisResult {
   };
 }
 
+const MAX_SKILLS_COUNT = 6;
+const MAX_THINKING_STRENGTHS_COUNT = 4;
+const MAX_TRAITS_COUNT = 6;
+const MAX_RECOMMENDED_DIRECTIONS_COUNT = 6;
+const MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT = 6;
+const MAX_PROFESSIONAL_NEXT_STEPS_COUNT = 3;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -52,14 +59,37 @@ const getString = (record: Record<string, unknown>, key: string) => {
   return typeof value === 'string' && value.trim() ? value : null;
 };
 
-const getStringArray = (record: Record<string, unknown>, key: string) => {
+const normalizeListKey = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+
+const uniqueBy = <T>(items: T[], getKey: (item: T) => string) => {
+  const seen = new Set<string>();
+  const result: T[] = [];
+
+  for (const item of items) {
+    const key = getKey(item);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(item);
+  }
+
+  return result;
+};
+
+const getStringArray = (record: Record<string, unknown>, key: string, maxItems: number) => {
   const value = record[key];
 
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+  return uniqueBy(
+    value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0),
+    normalizeListKey,
+  ).slice(0, maxItems);
 };
 
 export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
@@ -97,9 +127,17 @@ export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
           return { name, description, level, score };
         })
         .filter((item): item is SkillItem => item !== null)
+        .slice(0, MAX_SKILLS_COUNT)
     : [];
 
-  const traits = Array.isArray(personalityTraits.traits)
+  const metaTraitNames = new Set([
+    'дополнительные склонности',
+    'общие выводы',
+    'оценка по шкалам (1-5)',
+    'оценка по шкалам',
+    'рекомендации по развитию',
+  ]);
+  const parsedTraits = Array.isArray(personalityTraits.traits)
     ? personalityTraits.traits
         .filter(isRecord)
         .map((item) => {
@@ -116,7 +154,12 @@ export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
         .filter(
           (item): item is AnalysisResult['personalityTraits']['traits'][number] => item !== null,
         )
+        .filter((item) => !metaTraitNames.has(normalizeListKey(item.name)))
     : [];
+  const traits = uniqueBy(parsedTraits, (item) => normalizeListKey(item.name)).slice(
+    0,
+    MAX_TRAITS_COUNT,
+  );
 
   const result: AnalysisResult = {
     skillsLevel: {
@@ -128,7 +171,7 @@ export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
       title: getString(thinkingType, 'title') ?? 'Тип мышления',
       type: getString(thinkingType, 'type') ?? '',
       description: getString(thinkingType, 'description') ?? '',
-      strengths: getStringArray(thinkingType, 'strengths'),
+      strengths: getStringArray(thinkingType, 'strengths', MAX_THINKING_STRENGTHS_COUNT),
     },
     personalityTraits: {
       title: getString(personalityTraits, 'title') ?? 'Личностные особенности',
@@ -136,9 +179,21 @@ export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
     },
     careerDevelopment: {
       summary: getString(careerDevelopment, 'summary') ?? '',
-      recommendedDirections: getStringArray(careerDevelopment, 'recommendedDirections'),
-      developmentRecommendations: getStringArray(careerDevelopment, 'developmentRecommendations'),
-      professionalNextSteps: getStringArray(careerDevelopment, 'professionalNextSteps'),
+      recommendedDirections: getStringArray(
+        careerDevelopment,
+        'recommendedDirections',
+        MAX_RECOMMENDED_DIRECTIONS_COUNT,
+      ),
+      developmentRecommendations: getStringArray(
+        careerDevelopment,
+        'developmentRecommendations',
+        MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT,
+      ),
+      professionalNextSteps: getStringArray(
+        careerDevelopment,
+        'professionalNextSteps',
+        MAX_PROFESSIONAL_NEXT_STEPS_COUNT,
+      ),
     },
   };
 

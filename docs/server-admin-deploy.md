@@ -68,6 +68,7 @@ OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL=
 OPENROUTER_HTTP_REFERER=
 OPENROUTER_APP_NAME=AI Template Admin
+OPENROUTER_TIMEOUT_MS=120000
 ```
 
 Заменить:
@@ -118,10 +119,41 @@ curl -f http://localhost/api/api-json
 
 ## 6. Обновить
 
+Перед обновлением, если данные важны, сделать backup:
+
 ```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
+  sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backup-$(date +%Y%m%d-%H%M%S).sql"
 ```
+
+Подтянуть свежие deploy-файлы и образы:
+
+```bash
+git fetch origin
+git checkout prod
+git pull --ff-only origin prod
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+```
+
+Проверить:
+
+```bash
+curl -f http://localhost/health
+curl -f http://localhost/api/api-json
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 backend
+```
+
+Что будет с базой:
+
+- `pull` и `up -d` не удаляют PostgreSQL volume.
+- Данные удаляются только при `docker compose down -v`, ручном удалении volume или смене
+  `POSTGRES_VOLUME_NAME` на пустой volume.
+- Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy`.
+- Если серверная база была создана через `prisma db push` и не содержит таблицу
+  `_prisma_migrations`, будущий релиз со schema change может остановиться с `P3005`.
+- Текущий релиз не меняет `schema.prisma`, поэтому новых миграций для БД не добавляет.
 
 ## 7. Остановить
 

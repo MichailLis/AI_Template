@@ -2,6 +2,12 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 const NonEmptyStringSchema = z.string().trim().min(1);
+const MAX_SKILLS_COUNT = 6;
+const MAX_THINKING_STRENGTHS_COUNT = 4;
+const MAX_TRAITS_COUNT = 6;
+const MAX_RECOMMENDED_DIRECTIONS_COUNT = 6;
+const MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT = 6;
+const MAX_PROFESSIONAL_NEXT_STEPS_COUNT = 3;
 
 export const TestAnalysisSkillLevelSchema = z.enum(['low', 'medium', 'high']);
 
@@ -16,13 +22,13 @@ export const TestAnalysisResultSchema = z.object({
   skillsLevel: z.object({
     title: NonEmptyStringSchema,
     summary: NonEmptyStringSchema,
-    items: z.array(TestAnalysisSkillItemSchema).min(1),
+    items: z.array(TestAnalysisSkillItemSchema).min(1).max(MAX_SKILLS_COUNT),
   }),
   thinkingType: z.object({
     title: NonEmptyStringSchema,
     type: NonEmptyStringSchema,
     description: NonEmptyStringSchema,
-    strengths: z.array(NonEmptyStringSchema).min(1),
+    strengths: z.array(NonEmptyStringSchema).min(1).max(MAX_THINKING_STRENGTHS_COUNT),
   }),
   personalityTraits: z.object({
     title: NonEmptyStringSchema,
@@ -34,13 +40,23 @@ export const TestAnalysisResultSchema = z.object({
           careerImpact: NonEmptyStringSchema,
         }),
       )
-      .min(1),
+      .min(1)
+      .max(MAX_TRAITS_COUNT),
   }),
   careerDevelopment: z.object({
     summary: NonEmptyStringSchema,
-    recommendedDirections: z.array(NonEmptyStringSchema).min(1),
-    developmentRecommendations: z.array(NonEmptyStringSchema).min(1),
-    professionalNextSteps: z.array(NonEmptyStringSchema).min(1),
+    recommendedDirections: z
+      .array(NonEmptyStringSchema)
+      .min(1)
+      .max(MAX_RECOMMENDED_DIRECTIONS_COUNT),
+    developmentRecommendations: z
+      .array(NonEmptyStringSchema)
+      .min(1)
+      .max(MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT),
+    professionalNextSteps: z
+      .array(NonEmptyStringSchema)
+      .min(1)
+      .max(MAX_PROFESSIONAL_NEXT_STEPS_COUNT),
   }),
 });
 
@@ -49,11 +65,13 @@ const stringProperty = {
   minLength: 1,
 } as const;
 
-const stringArrayProperty = {
-  type: 'array',
-  minItems: 1,
-  items: stringProperty,
-} as const;
+const stringArrayProperty = (maxItems: number) =>
+  ({
+    type: 'array',
+    minItems: 1,
+    maxItems,
+    items: stringProperty,
+  }) as const;
 
 export const TestAnalysisResultJsonSchema = {
   name: 'student_test_analysis',
@@ -73,6 +91,7 @@ export const TestAnalysisResultJsonSchema = {
           items: {
             type: 'array',
             minItems: 1,
+            maxItems: MAX_SKILLS_COUNT,
             items: {
               type: 'object',
               additionalProperties: false,
@@ -102,7 +121,7 @@ export const TestAnalysisResultJsonSchema = {
           title: stringProperty,
           type: stringProperty,
           description: stringProperty,
-          strengths: stringArrayProperty,
+          strengths: stringArrayProperty(MAX_THINKING_STRENGTHS_COUNT),
         },
       },
       personalityTraits: {
@@ -114,6 +133,7 @@ export const TestAnalysisResultJsonSchema = {
           traits: {
             type: 'array',
             minItems: 1,
+            maxItems: MAX_TRAITS_COUNT,
             items: {
               type: 'object',
               additionalProperties: false,
@@ -138,9 +158,9 @@ export const TestAnalysisResultJsonSchema = {
         ],
         properties: {
           summary: stringProperty,
-          recommendedDirections: stringArrayProperty,
-          developmentRecommendations: stringArrayProperty,
-          professionalNextSteps: stringArrayProperty,
+          recommendedDirections: stringArrayProperty(MAX_RECOMMENDED_DIRECTIONS_COUNT),
+          developmentRecommendations: stringArrayProperty(MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT),
+          professionalNextSteps: stringArrayProperty(MAX_PROFESSIONAL_NEXT_STEPS_COUNT),
         },
       },
     },

@@ -8,54 +8,18 @@ import {
   useTestsPublicControllerSaveAnswers,
 } from '@/shared/api/generated/tests-public/tests-public';
 
-import { getSliderQuestionMeta } from './public-question-card.utils';
+import {
+  buildSessionAnswers,
+  getEffectiveQuestionAnswer,
+  hasMeaningfulQuestionAnswer,
+} from './public-test-run-answer.helpers';
 
-import type { PublicTestAnswerDraft, PublicTestQuestion } from './public-test-run.types';
+import type { PublicTestAnswerDraft } from './public-test-run.types';
 
 interface AnswerOverride {
   questionId: number;
   value: unknown;
 }
-
-const hasMeaningfulAnswer = (value: unknown) => {
-  if (typeof value === 'string') {
-    return value.trim().length > 0;
-  }
-
-  if (Array.isArray(value)) {
-    return value.length > 0;
-  }
-
-  return value !== undefined && value !== null;
-};
-
-const getEffectiveQuestionAnswer = (
-  question: PublicTestQuestion,
-  mergedAnswers: PublicTestAnswerDraft,
-) => {
-  const answer = mergedAnswers[question.id];
-
-  if (answer !== undefined) {
-    return answer;
-  }
-
-  if (question.type === 'SLIDER') {
-    return getSliderQuestionMeta(question.settings, question.sliderBands, answer).value;
-  }
-
-  return answer;
-};
-
-const buildSessionAnswers = (
-  questions: PublicTestQuestion[],
-  mergedAnswers: PublicTestAnswerDraft,
-) =>
-  questions
-    .map((question) => ({
-      questionId: question.id,
-      answerPayload: getEffectiveQuestionAnswer(question, mergedAnswers),
-    }))
-    .filter((item) => item.answerPayload !== undefined);
 
 export function usePublicTestRunWorkspace() {
   const { code, sessionToken } = useParams<{ code: string; sessionToken: string }>();
@@ -165,7 +129,7 @@ export function usePublicTestRunWorkspace() {
   const answeredQuestionsCount =
     session?.questions.reduce((acc, question) => {
       const answer = getEffectiveQuestionAnswer(question, effectiveAnswers);
-      return hasMeaningfulAnswer(answer) ? acc + 1 : acc;
+      return hasMeaningfulQuestionAnswer(question.type, answer) ? acc + 1 : acc;
     }, 0) ?? 0;
 
   return {

@@ -44,6 +44,7 @@ services:
       OPENROUTER_DEFAULT_MODEL: ${OPENROUTER_DEFAULT_MODEL:-}
       OPENROUTER_HTTP_REFERER: ${OPENROUTER_HTTP_REFERER:-}
       OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-AI Template Admin}
+      OPENROUTER_TIMEOUT_MS: ${OPENROUTER_TIMEOUT_MS:-120000}
     depends_on:
       postgres:
         condition: service_healthy

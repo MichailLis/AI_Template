@@ -13,5 +13,7 @@ export { useDraftAutosave } from './model/use-draft-autosave';
 export { useQuestionEditor } from './model/use-question-editor';
 
 export { hasDraftEdits, parseApiError } from './lib/tests-utils';
+export { parseAnalysisResult } from './lib/test-analysis-result-parser';
 
+export type { AnalysisPayload, AnalysisResult } from './lib/test-analysis-result-parser';
 export type { TestTopicListItem } from './model/types';

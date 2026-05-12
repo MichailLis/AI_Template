@@ -9,7 +9,17 @@ import {
   resolveDefaultPromptModel,
 } from './openrouter.utils';
 
-const OPENROUTER_TIMEOUT_MS = 45_000;
+const DEFAULT_OPENROUTER_TIMEOUT_MS = 120_000;
+
+export const resolveOpenRouterTimeoutMs = (config: ConfigService) => {
+  const rawValue = config.get<string | number>('OPENROUTER_TIMEOUT_MS');
+  const parsedValue =
+    typeof rawValue === 'number' ? rawValue : typeof rawValue === 'string' ? Number(rawValue) : NaN;
+
+  return Number.isFinite(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : DEFAULT_OPENROUTER_TIMEOUT_MS;
+};
 
 const buildHeaders = (config: ConfigService, apiKey: string) => {
   return {
@@ -109,7 +119,7 @@ const extractCompletionOutput = (payload: {
 
 export const fetchOpenRouterModels = async (config: ConfigService, apiKey: string) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), resolveOpenRouterTimeoutMs(config));
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
@@ -154,7 +164,7 @@ export const generateOpenRouterPrompt = async (
   dto: GeneratePromptDto,
 ) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), resolveOpenRouterTimeoutMs(config));
   const { body, responseFormat } = buildPromptRequestBody(dto);
 
   try {
