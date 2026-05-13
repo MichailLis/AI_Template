@@ -1,6 +1,11 @@
 import { Sparkles } from 'lucide-react';
 
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -44,8 +49,8 @@ interface AiGeneratorFooterProps {
 
 function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="ai-test-title">Тема теста</Label>
         <Input
           id="ai-test-title"
@@ -55,7 +60,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="ai-test-description">Описание теста (сохранится в карточке теста)</Label>
         <Textarea
           id="ai-test-description"
@@ -66,7 +71,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="ai-generation-task">Что нужно сгенерировать</Label>
         <Textarea
           id="ai-generation-task"
@@ -78,7 +83,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="ai-question-count">Количество вопросов</Label>
           <Input
             id="ai-question-count"
@@ -107,7 +112,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className={`flex flex-col gap-2 ${adminClassNames.panel.mutedSection}`}>
         <Label>Типы вопросов</Label>
         <div className="flex flex-wrap gap-2">
           {AI_QUESTION_TYPES.map((type) => (
@@ -116,6 +121,9 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
               type="button"
               size="sm"
               variant={generation.selectedTypes[type] ? 'secondary' : 'outline'}
+              className={
+                generation.selectedTypes[type] ? adminToneClassNames.info.active : undefined
+              }
               onClick={() => generation.handleTypeToggle(type)}
             >
               {AI_QUESTION_TYPE_LABELS[type]}
@@ -133,7 +141,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
 
 function AiGeneratorFooter({ generation, isCreating, onClose, onCreate }: AiGeneratorFooterProps) {
   return (
-    <DialogFooter>
+    <DialogFooter className="gap-2 sm:justify-between">
       <Button type="button" variant="outline" onClick={onClose}>
         Закрыть
       </Button>
@@ -179,14 +187,25 @@ export function AiTestGeneratorModal({
         className={`max-h-[92vh] max-w-4xl overflow-y-auto ${adminClassNames.dialog.content}`}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Создать тест с ИИ
-          </DialogTitle>
-          <DialogDescription>
-            Укажите тему и задачу. ИИ сгенерирует список вопросов, который можно сразу сохранить как
-            новый тест.
-          </DialogDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div
+                className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
+              >
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle>Создать тест с ИИ</DialogTitle>
+                <DialogDescription>
+                  Укажите тему и задачу. ИИ сгенерирует список вопросов, который можно сразу
+                  сохранить как новый тест.
+                </DialogDescription>
+              </div>
+            </div>
+            <Badge variant="outline" className={adminBadgeClassNames.notice}>
+              Черновик перед сохранением
+            </Badge>
+          </div>
         </DialogHeader>
 
         <div className="grid gap-4 xl:grid-cols-[1.1fr_minmax(0,1fr)]">

@@ -11,7 +11,11 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
-import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -46,16 +50,16 @@ const statusLabels: Record<string, string> = {
   FAILED: 'ошибка анализа',
 };
 
-const getStatusVariant = (status: AnalysisStatus): 'outline' | 'secondary' | 'destructive' => {
+const getStatusBadgeClassName = (status: AnalysisStatus) => {
   if (status === 'READY') {
-    return 'secondary';
+    return adminBadgeClassNames.success;
   }
 
   if (status === 'FAILED') {
-    return 'destructive';
+    return adminBadgeClassNames.danger;
   }
 
-  return 'outline';
+  return adminBadgeClassNames.warning;
 };
 
 function SectionCard({
@@ -68,10 +72,10 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="border-border/60 bg-card shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="h-4 w-4 text-primary" />
+          <Icon className={`size-4 ${adminToneClassNames.accent.textAccent}`} />
           {title}
         </CardTitle>
       </CardHeader>
@@ -82,17 +86,13 @@ function SectionCard({
 
 function StatusMessage({ analysis }: { analysis: AnalysisPayload | null }) {
   if (!analysis) {
-    return (
-      <div className="rounded-lg border border-border/60 bg-muted/35 p-4 text-sm text-muted-foreground">
-        Анализ пока не создан.
-      </div>
-    );
+    return <div className={adminClassNames.panel.empty}>Анализ пока не создан.</div>;
   }
 
   if (analysis.status === 'PENDING') {
     return (
       <div className={`flex items-start gap-3 p-4 ${adminClassNames.panel.warningInline}`}>
-        <Clock3 className="mt-0.5 h-4 w-4" />
+        <Clock3 className="mt-0.5 size-4" />
         <div>
           <p className="font-medium">Анализ выполняется</p>
           <p className={`mt-1 ${adminToneClassNames.warning.text}`}>
@@ -105,8 +105,8 @@ function StatusMessage({ analysis }: { analysis: AnalysisPayload | null }) {
 
   if (analysis.status === 'FAILED') {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        <AlertTriangle className="mt-0.5 h-4 w-4" />
+      <div className={`flex items-start gap-3 p-4 ${adminClassNames.panel.dangerInline}`}>
+        <AlertTriangle className="mt-0.5 size-4" />
         <div>
           <p className="font-medium">Не удалось сформировать анализ</p>
           <p className="mt-1">
@@ -131,7 +131,7 @@ function AnalysisStatusBadges({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Badge variant={getStatusVariant(analysis?.status ?? 'PENDING')}>
+      <Badge variant="outline" className={getStatusBadgeClassName(analysis?.status ?? 'PENDING')}>
         {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
       </Badge>
       {showProviderBadge && analysis?.providerMode ? (
@@ -145,7 +145,9 @@ function AnalysisStatusBadges({
 function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skillsLevel'] }) {
   return (
     <SectionCard icon={BrainCircuit} title={skillsLevel.title}>
-      <p className="text-sm leading-relaxed text-muted-foreground">{skillsLevel.summary}</p>
+      <p className={`text-sm leading-relaxed ${adminClassNames.text.body}`}>
+        {skillsLevel.summary}
+      </p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {skillsLevel.items.map((item, index) => {
           const score = typeof item.score === 'number' ? item.score : null;
@@ -153,21 +155,25 @@ function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skil
           return (
             <div
               key={`${item.name}-${item.level}-${index}`}
-              className="rounded-lg border border-border/60 p-3"
+              className={adminClassNames.panel.compactCard}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                <p className={`text-sm font-semibold ${adminClassNames.text.heading}`}>
+                  {item.name}
+                </p>
                 <Badge variant="outline">{levelLabels[item.level]}</Badge>
               </div>
               {score !== null ? (
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={`mt-3 h-2 overflow-hidden rounded-full ${adminClassNames.panel.mutedBar}`}
+                >
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className={`h-full rounded-full ${adminClassNames.switch.active}`}
                     style={{ width: `${Math.max(0, Math.min(100, score))}%` }}
                   />
                 </div>
               ) : null}
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className={`mt-3 text-sm leading-relaxed ${adminClassNames.text.body}`}>
                 {item.description}
               </p>
             </div>
@@ -209,12 +215,12 @@ function PersonalityTraitsSection({
     <SectionCard icon={UserRound} title={personalityTraits.title}>
       <div className="grid gap-3">
         {personalityTraits.traits.map((trait, index) => (
-          <div key={`${trait.name}-${index}`} className="rounded-lg border border-border/60 p-3">
-            <p className="text-sm font-semibold text-foreground">{trait.name}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <div key={`${trait.name}-${index}`} className={adminClassNames.panel.compactCard}>
+            <p className={`text-sm font-semibold ${adminClassNames.text.heading}`}>{trait.name}</p>
+            <p className={`mt-2 text-sm leading-relaxed ${adminClassNames.text.body}`}>
               {trait.description}
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-foreground">
+            <p className={`mt-2 text-sm leading-relaxed ${adminClassNames.text.heading}`}>
               <span className="font-medium">В карьере: </span>
               {trait.careerImpact}
             </p>
@@ -232,7 +238,9 @@ function CareerDevelopmentSection({
 }) {
   return (
     <SectionCard icon={BriefcaseBusiness} title="Карьера и профессиональное развитие">
-      <p className="text-sm leading-relaxed text-muted-foreground">{careerDevelopment.summary}</p>
+      <p className={`text-sm leading-relaxed ${adminClassNames.text.body}`}>
+        {careerDevelopment.summary}
+      </p>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <RecommendationColumn title="Направления" items={careerDevelopment.recommendedDirections} />
         <RecommendationColumn
@@ -284,30 +292,28 @@ export function TestAnalysisResultView({
 
       {analysis?.status === 'READY' && !parsed && showStructuredFallback ? (
         <SectionCard icon={Sparkles} title="Структурированные данные анализа">
-          <pre className="max-h-96 overflow-auto rounded-md bg-muted/45 p-3 text-xs text-foreground">
-            {prettyJson(analysis.summary)}
-          </pre>
+          <pre className={adminClassNames.code.softBlock}>{prettyJson(analysis.summary)}</pre>
         </SectionCard>
       ) : null}
 
       {analysis?.status === 'READY' && !parsed && !showStructuredFallback ? (
-        <div className="rounded-lg border border-border/60 bg-muted/35 p-4 text-sm text-muted-foreground">
+        <div className={adminClassNames.panel.empty}>
           Итог прохождения сохранен. Подробный анализ для этого теста пока не настроен.
         </div>
       ) : null}
 
       {showRawText && analysis?.rawText ? (
         <SectionCard icon={CheckCircle2} title="Текст анализа">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          <p
+            className={`whitespace-pre-wrap text-sm leading-relaxed ${adminClassNames.text.heading}`}
+          >
             {analysis.rawText}
           </p>
         </SectionCard>
       ) : null}
 
       {showErrorDetails && analysis?.errorMessage ? (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          {analysis.errorMessage}
-        </div>
+        <div className={adminClassNames.panel.dangerInline}>{analysis.errorMessage}</div>
       ) : null}
     </div>
   );
@@ -315,12 +321,14 @@ export function TestAnalysisResultView({
 
 function RecommendationColumn({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-lg border border-border/60 p-3">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-muted-foreground">
+    <div className={adminClassNames.panel.compactCard}>
+      <p className={`text-sm font-semibold ${adminClassNames.text.heading}`}>{title}</p>
+      <ul className={`mt-2 space-y-2 text-sm leading-relaxed ${adminClassNames.text.body}`}>
         {items.map((item, index) => (
           <li key={`${item}-${index}`} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+            <span
+              className={`mt-2 size-1.5 shrink-0 rounded-full ${adminClassNames.switch.active}`}
+            />
             <span>{item}</span>
           </li>
         ))}

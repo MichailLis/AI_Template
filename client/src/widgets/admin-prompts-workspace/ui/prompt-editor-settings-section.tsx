@@ -29,7 +29,7 @@ export function PromptEditorSettingsSection({
   return (
     <>
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="prompt-temperature">
             Температура <span className={adminClassNames.text.muted}>({temperature})</span>
           </Label>
@@ -44,7 +44,7 @@ export function PromptEditorSettingsSection({
             className={adminClassNames.form.range}
           />
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="prompt-max-tokens">Макс. токенов</Label>
           <Input
             id="prompt-max-tokens"
@@ -55,7 +55,7 @@ export function PromptEditorSettingsSection({
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="prompt-system-role">Системная роль</Label>
           <Input
             id="prompt-system-role"
@@ -63,9 +63,9 @@ export function PromptEditorSettingsSection({
             onChange={(event) => onSystemRoleChange(event.target.value)}
           />
         </div>
-        <div className="space-y-2">
+        <div className={`flex flex-col gap-2 ${adminClassNames.panel.mutedSection}`}>
           <Label>Формат ответа</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               size="sm"

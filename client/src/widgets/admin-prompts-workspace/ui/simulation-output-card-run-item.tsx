@@ -1,6 +1,11 @@
 import { AlertTriangle, CheckCircle2, Copy, Loader2 } from 'lucide-react';
 
-import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 
 import type { SimulationRun } from '../model/types';
@@ -25,15 +30,15 @@ export function SimulationRunItem({
   return (
     <div className={adminClassNames.panel.frame}>
       <div
-        className={`flex items-center justify-between px-4 py-2 text-xs ${adminClassNames.border.bottom} ${adminClassNames.text.muted}`}
+        className={`flex flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between ${adminClassNames.border.bottom} ${adminClassNames.text.muted}`}
       >
-        <span>
+        <span className="font-mono">
           INPUT #{String(totalRuns - runIndex).padStart(3, '0')} - {run.createdAt}
         </span>
-        <span>{run.model}</span>
+        <span className="min-w-0 truncate">{run.model}</span>
       </div>
 
-      <div className="space-y-3 px-4 py-3">
+      <div className="flex flex-col gap-3 px-4 py-3">
         {run.status === 'running' ? (
           <div className={`flex items-center gap-2 text-sm ${adminClassNames.text.body}`}>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -49,10 +54,12 @@ export function SimulationRunItem({
         ) : null}
 
         {run.status === 'success' ? (
-          <div className="space-y-2">
-            <div className={`flex items-center gap-2 text-xs ${adminToneClassNames.success.text}`}>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
-              Completed
+              <Badge variant="outline" className={adminBadgeClassNames.success}>
+                Completed
+              </Badge>
             </div>
             {diffView ? (
               <pre className={adminClassNames.code.softBlock}>{run.output}</pre>
@@ -67,9 +74,9 @@ export function SimulationRunItem({
 
       {showMetrics && run.status === 'success' ? (
         <div
-          className={`flex items-center justify-between px-4 py-2 text-xs ${adminClassNames.panel.mutedBar} ${adminClassNames.border.top} ${adminClassNames.text.muted}`}
+          className={`flex flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between ${adminClassNames.panel.mutedBar} ${adminClassNames.border.top} ${adminClassNames.text.muted}`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span>Latency: {run.latencyMs ?? '-'}ms</span>
             <span>Tokens: {run.totalTokens ?? '-'}</span>
           </div>

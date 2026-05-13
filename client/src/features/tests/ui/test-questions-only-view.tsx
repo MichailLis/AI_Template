@@ -36,12 +36,12 @@ function TestQuestionsOnlyHeader({ topicId, loadingStatus }: TestQuestionsOnlyHe
 
   return (
     <CardHeader>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <CardTitle>Редактор теста</CardTitle>
           <CardDescription>Изменение вопросов теста</CardDescription>
         </div>
-        <div className={`flex items-center gap-3 text-sm ${adminClassNames.text.body}`}>
+        <div className={`flex flex-wrap items-center gap-2 text-sm ${adminClassNames.text.body}`}>
           <button
             type="button"
             onClick={() => navigate('/admin/tests')}
@@ -49,7 +49,7 @@ function TestQuestionsOnlyHeader({ topicId, loadingStatus }: TestQuestionsOnlyHe
           >
             ← К списку тестов
           </button>
-          <span className={adminClassNames.border.separatorText}>|</span>
+          <span className={adminClassNames.border.separatorText}>/</span>
           <button
             type="button"
             onClick={() => navigate(`/admin/tests/${topicId}/settings`)}

@@ -12,7 +12,7 @@ export function TestsSidebarSearchSection({
   onSearchChange,
 }: TestsSidebarSearchSectionProps) {
   return (
-    <div className={`space-y-2 pt-4 ${adminClassNames.border.top}`}>
+    <div className={`flex flex-col gap-2 pt-4 ${adminClassNames.border.top}`}>
       <Label htmlFor="tests-search">Поиск теста</Label>
       <Input
         id="tests-search"

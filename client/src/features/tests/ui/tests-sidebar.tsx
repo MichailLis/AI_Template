@@ -79,7 +79,7 @@ export function TestsSidebar({
         <CardTitle>Тесты</CardTitle>
         <CardDescription>Создание и управление тестами.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <TestsSidebarCreateForm
           newTestTitle={newTestTitle}
           newTestSlug={newTestSlug}

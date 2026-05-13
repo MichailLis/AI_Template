@@ -55,8 +55,9 @@ function PromptLibraryItem({
   return (
     <div
       className={cn(
-        'flex min-w-0 gap-2 rounded-md border p-2',
-        isSelected ? 'border-primary bg-primary/5' : adminClassNames.panel.frame,
+        'flex min-w-0 gap-2 p-2',
+        adminClassNames.panel.selectableItem,
+        isSelected ? adminClassNames.panel.selectedItem : null,
       )}
     >
       <button

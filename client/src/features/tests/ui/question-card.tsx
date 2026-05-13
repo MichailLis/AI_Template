@@ -1,7 +1,7 @@
 import { GripVertical, Pencil, Trash2 } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
@@ -71,39 +71,48 @@ export function QuestionCard({
           className={`pointer-events-none absolute -bottom-1 left-3 right-3 h-1 rounded-full ${adminClassNames.drag.indicator}`}
         />
       ) : null}
-      <CardContent className="space-y-2 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+      <CardContent className="p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-start gap-2">
               <span className={`cursor-grab active:cursor-grabbing ${adminClassNames.text.muted}`}>
                 <GripVertical className="h-4 w-4" />
               </span>
-              <p className="text-sm font-semibold">
+              <p className={`min-w-0 text-sm font-semibold ${adminClassNames.text.heading}`}>
                 #{question.order} {question.title}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-1">
-              <Badge variant="outline">{QUESTION_TYPE_LABELS[question.type]}</Badge>
-              {question.required ? <Badge variant="outline">Обязательный</Badge> : null}
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              <Badge variant="outline" className={adminBadgeClassNames.info}>
+                {QUESTION_TYPE_LABELS[question.type]}
+              </Badge>
+              {question.required ? (
+                <Badge variant="outline" className={adminBadgeClassNames.warning}>
+                  Обязательный
+                </Badge>
+              ) : null}
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onEditQuestion(question)}
               disabled={isReorderingQuestions || isAnyDragging}
             >
-              <Pencil className="mr-1 h-4 w-4" /> Изменить
+              <Pencil className="mr-1 h-4 w-4" />
+              Изменить
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
+              className={adminClassNames.actionMenu.dangerItem}
               onClick={() => onRequestDeleteQuestion(question)}
               disabled={isDeletingQuestion || isReorderingQuestions || isAnyDragging}
             >
-              <Trash2 className="mr-1 h-4 w-4" /> Удалить
+              <Trash2 className="mr-1 h-4 w-4" />
+              Удалить
             </Button>
           </div>
         </div>

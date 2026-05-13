@@ -1,6 +1,7 @@
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
+import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
@@ -44,10 +45,19 @@ export function EducationOrganizationsListCard({
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Список заведений</CardTitle>
-        <CardDescription>
-          Всего: {total}. Нажмите на строку, чтобы открыть настройки.
-        </CardDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="text-base">Список заведений</CardTitle>
+            <CardDescription>
+              Всего: {total}. Нажмите на строку, чтобы открыть настройки.
+            </CardDescription>
+          </div>
+          {isFetching ? (
+            <Badge variant="outline" className={adminBadgeClassNames.info}>
+              Обновляем
+            </Badge>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <AdminDataTable
@@ -63,7 +73,11 @@ export function EducationOrganizationsListCard({
           emptyMessage="Пока нет учебных заведений"
           renderRow={(organization) => (
             <>
-              <TableCell className="font-medium">{organization.name}</TableCell>
+              <TableCell
+                className={`max-w-56 truncate font-medium ${adminClassNames.text.heading}`}
+              >
+                {organization.name}
+              </TableCell>
               <TableCell>{modeLabel[organization.groupValidationMode]}</TableCell>
               <TableCell>{`${organization.activeLinksCount}/${organization.linksCount}`}</TableCell>
               <TableCell>{organization.attemptsCount}</TableCell>

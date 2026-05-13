@@ -165,8 +165,8 @@ function ApiKeyForm({
   onSubmit,
 }: ApiKeyFormProps) {
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="space-y-2">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <div className="flex flex-col gap-2">
         <Label htmlFor="openrouter-api-key">Новый API key</Label>
         <Input
           id="openrouter-api-key"
@@ -215,8 +215,8 @@ function ProfessionAtlasForm({
   onUrlChange,
 }: ProfessionAtlasFormProps) {
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="space-y-2">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <div className="flex flex-col gap-2">
         <Label htmlFor="profession-atlas-url">Ссылка на Атлас профессий</Label>
         <Input
           id="profession-atlas-url"
@@ -265,22 +265,26 @@ export function OpenRouterSettingsCard({
 }: OpenRouterSettingsCardProps) {
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
-      <CardHeader className="space-y-2">
+      <CardHeader className={adminClassNames.border.bottom}>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <KeyRound className={`h-5 w-5 ${adminClassNames.text.muted}`} />
-              OpenRouter API key
-            </CardTitle>
-            <CardDescription>
-              Новый ключ сохранится в настройках проекта и будет иметь приоритет над `.env`.
-            </CardDescription>
+          <div className="flex min-w-0 items-start gap-3">
+            <div
+              className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.info.icon}`}
+            >
+              <KeyRound className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-lg">OpenRouter API key</CardTitle>
+              <CardDescription>
+                Новый ключ сохранится в настройках проекта и будет иметь приоритет над `.env`.
+              </CardDescription>
+            </div>
           </div>
           {openRouter ? <OpenRouterStateBadge openRouter={openRouter} /> : null}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6 p-4">
         {isLoading ? (
           <div className={adminClassNames.panel.loading}>Загружаем текущие настройки...</div>
         ) : null}
@@ -332,19 +336,23 @@ export function ProfessionAtlasSettingsCard({
 }: ProfessionAtlasSettingsCardProps) {
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
-      <CardHeader className="space-y-2">
-        <div className="space-y-1">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Link2 className={`h-5 w-5 ${adminClassNames.text.muted}`} />
-            Атлас профессий
-          </CardTitle>
-          <CardDescription>
-            Ссылка будет показана студенту на странице результата теста.
-          </CardDescription>
+      <CardHeader className={adminClassNames.border.bottom}>
+        <div className="flex min-w-0 items-start gap-3">
+          <div
+            className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
+          >
+            <Link2 className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <CardTitle className="text-lg">Атлас профессий</CardTitle>
+            <CardDescription>
+              Ссылка будет показана студенту на странице результата теста.
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6 p-4">
         {isLoading ? (
           <div className={adminClassNames.panel.loading}>Загружаем текущую ссылку...</div>
         ) : null}

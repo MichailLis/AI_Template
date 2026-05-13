@@ -167,8 +167,21 @@ export const adminClassNames = {
     selectedRow: 'bg-admin-panel-muted',
     inlineItem: 'flex items-start gap-3 rounded-md bg-admin-panel p-3 text-sm shadow-sm',
     mutedBar: 'bg-admin-panel-muted',
+    selectableItem:
+      'rounded-md border border-l-4 border-l-transparent border-admin-border bg-admin-panel transition-[border-color,background-color,box-shadow]',
+    selectedItem:
+      'border-admin-accent-border border-l-admin-accent bg-admin-accent-soft text-admin-accent-foreground shadow-sm',
     interactive:
       'rounded-xl border border-admin-border bg-admin-panel-muted/60 shadow-sm transition-[border-color,background-color,box-shadow] hover:border-admin-border hover:bg-admin-panel hover:shadow-md',
+  },
+  metric: {
+    card: 'relative min-w-0 overflow-hidden border-admin-border/80 bg-admin-panel shadow-sm',
+    rail: 'absolute inset-x-0 top-0 h-1 bg-gradient-to-r',
+    icon: 'grid size-9 place-items-center rounded-lg',
+    value: 'text-3xl font-semibold text-admin-foreground',
+    sparkTrack: 'flex h-10 items-end gap-1',
+    sparkBar: 'w-full rounded-t-sm',
+    caption: 'text-sm text-admin-muted',
   },
   editor: {
     shell:

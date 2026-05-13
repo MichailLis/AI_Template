@@ -1,4 +1,5 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
 import type { PublicLinkTopicSectionProps } from './public-link-create-card.types';
@@ -10,11 +11,18 @@ export function PublicLinkTopicSection({
 }: PublicLinkTopicSectionProps) {
   return (
     <div className={adminClassNames.panel.compactSection}>
-      <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Тест</p>
-      <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
-        Ссылка будет вести на опубликованную версию выбранного теста.
-      </p>
-      <div className="mt-3 space-y-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Тест</p>
+          <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
+            Ссылка будет вести на опубликованную версию выбранного теста.
+          </p>
+        </div>
+        <Badge variant="outline" className={adminBadgeClassNames.info}>
+          {topics.length} доступно
+        </Badge>
+      </div>
+      <div className="mt-3 flex flex-col gap-2">
         <Label htmlFor="public-topic">Тест для публикации</Label>
         <select
           id="public-topic"

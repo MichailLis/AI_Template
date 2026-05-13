@@ -1,4 +1,5 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -42,10 +43,17 @@ export function EducationOrganizationsCreateCard({
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Добавить заведение</CardTitle>
-        <CardDescription>
-          Создайте новое заведение и сразу настройте формат группы/класса.
-        </CardDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="text-base">Добавить заведение</CardTitle>
+            <CardDescription>
+              Создайте новое заведение и сразу настройте формат группы/класса.
+            </CardDescription>
+          </div>
+          <Badge variant="outline" className={adminBadgeClassNames.notice}>
+            Новая запись
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">

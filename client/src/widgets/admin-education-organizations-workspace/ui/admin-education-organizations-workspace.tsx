@@ -27,7 +27,7 @@ export function AdminEducationOrganizationsWorkspace() {
   } = useAdminEducationOrganizationsWorkspace();
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <EducationOrganizationsNavigationCard />
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -43,7 +43,7 @@ export function AdminEducationOrganizationsWorkspace() {
           onNextPage={handleNextPage}
         />
 
-        <div className="min-w-0 space-y-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <EducationOrganizationsCreateCard
             newOrganizationName={createValues.name}
             onNewOrganizationNameChange={(value) => updateCreateValue('name', value)}

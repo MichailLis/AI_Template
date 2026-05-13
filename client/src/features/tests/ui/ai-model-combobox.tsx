@@ -36,6 +36,73 @@ interface AiModelComboboxProps {
   onRetryModels: () => void;
 }
 
+function ModelFilterButtons({
+  modelFilter,
+  onModelFilterChange,
+}: {
+  modelFilter: ModelFilter;
+  onModelFilterChange: (nextFilter: ModelFilter) => void;
+}) {
+  return (
+    <div className={`flex items-center gap-2 p-2 ${adminClassNames.border.bottom}`}>
+      <Button
+        type="button"
+        size="sm"
+        variant={modelFilter === 'free' ? 'secondary' : 'outline'}
+        className={modelFilter === 'free' ? adminToneClassNames.success.active : undefined}
+        onClick={() => onModelFilterChange('free')}
+      >
+        Только free
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={modelFilter === 'all' ? 'secondary' : 'outline'}
+        className={modelFilter === 'all' ? adminToneClassNames.info.active : undefined}
+        onClick={() => onModelFilterChange('all')}
+      >
+        Все
+      </Button>
+    </div>
+  );
+}
+
+function ModelOptionItem({
+  model,
+  selectedModelId,
+  onSelect,
+}: {
+  model: AiModelOption;
+  selectedModelId: string;
+  onSelect: (modelId: string) => void;
+}) {
+  return (
+    <CommandItem
+      value={`${model.label} ${model.id} ${model.provider}`}
+      onSelect={() => onSelect(model.id)}
+      className="gap-2"
+    >
+      <Check
+        className={cn(
+          'h-4 w-4 shrink-0',
+          selectedModelId === model.id ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm">{model.label}</span>
+        <span className={`truncate text-xs ${adminClassNames.text.muted}`}>
+          {model.provider} · {model.id}
+        </span>
+      </div>
+      {model.isFree ? (
+        <Badge variant="outline" className={`shrink-0 ${adminBadgeClassNames.success}`}>
+          Free
+        </Badge>
+      ) : null}
+    </CommandItem>
+  );
+}
+
 export function AiModelCombobox({
   allModelsCount,
   modelOptionsCount,
@@ -53,7 +120,7 @@ export function AiModelCombobox({
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   return (
-    <div className="space-y-2" ref={setContainer}>
+    <div className="flex flex-col gap-2" ref={setContainer}>
       <Label htmlFor="ai-model-selector">Модель ИИ</Label>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -75,64 +142,29 @@ export function AiModelCombobox({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[420px] max-w-[calc(100vw-3rem)] p-0"
+          className={`w-[420px] max-w-[calc(100vw-3rem)] p-0 ${adminClassNames.dialog.content}`}
           align="start"
           container={container}
         >
           <Command>
-            <div className="flex items-center gap-2 border-b p-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={modelFilter === 'free' ? 'secondary' : 'outline'}
-                onClick={() => onModelFilterChange('free')}
-              >
-                Только free
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={modelFilter === 'all' ? 'secondary' : 'outline'}
-                onClick={() => onModelFilterChange('all')}
-              >
-                Все
-              </Button>
-            </div>
+            <ModelFilterButtons
+              modelFilter={modelFilter}
+              onModelFilterChange={onModelFilterChange}
+            />
             <CommandInput placeholder="Поиск модели по названию, id или провайдеру" />
             <CommandList>
               <CommandEmpty>Модели не найдены</CommandEmpty>
               <CommandGroup heading={`Доступные модели (${visibleModelOptions.length})`}>
                 {visibleModelOptions.map((model) => (
-                  <CommandItem
+                  <ModelOptionItem
                     key={model.id}
-                    value={`${model.label} ${model.id} ${model.provider}`}
-                    onSelect={() => {
-                      onSelectModel(model.id);
+                    model={model}
+                    selectedModelId={selectedModelId}
+                    onSelect={(modelId) => {
+                      onSelectModel(modelId);
                       setIsOpen(false);
                     }}
-                    className="gap-2"
-                  >
-                    <Check
-                      className={cn(
-                        'h-4 w-4 shrink-0',
-                        selectedModelId === model.id ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm">{model.label}</span>
-                      <span className={`truncate text-xs ${adminClassNames.text.muted}`}>
-                        {model.provider} · {model.id}
-                      </span>
-                    </div>
-                    {model.isFree ? (
-                      <Badge
-                        variant="outline"
-                        className={`shrink-0 ${adminBadgeClassNames.success}`}
-                      >
-                        Free
-                      </Badge>
-                    ) : null}
-                  </CommandItem>
+                  />
                 ))}
               </CommandGroup>
             </CommandList>

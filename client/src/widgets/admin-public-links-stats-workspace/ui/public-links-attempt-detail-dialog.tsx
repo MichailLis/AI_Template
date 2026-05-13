@@ -58,7 +58,7 @@ export function PublicLinksAttemptDetailDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className={`max-h-[calc(100vh-2rem)] max-w-4xl overflow-hidden p-0 ${adminClassNames.dialog.content}`}
+        className={`left-4 right-4 top-4 max-h-[calc(100vh-2rem)] w-auto max-w-none translate-x-0 translate-y-0 overflow-hidden p-0 sm:left-[50%] sm:right-auto sm:w-[calc(100vw-2rem)] sm:max-w-4xl sm:translate-x-[-50%] ${adminClassNames.dialog.content}`}
       >
         <div className="max-h-[calc(100vh-2rem)] overflow-y-auto p-6 pr-10">
           <DialogHeader>

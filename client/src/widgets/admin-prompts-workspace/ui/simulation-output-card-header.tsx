@@ -1,4 +1,6 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { RotateCcw, SlidersHorizontal } from 'lucide-react';
+
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -19,14 +21,23 @@ export function SimulationOutputCardHeader({
 }: SimulationOutputCardHeaderProps) {
   return (
     <CardHeader className={adminClassNames.border.bottom}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <CardTitle>Проверка промпта</CardTitle>
-          <CardDescription>
-            Сгенерируйте тестовые ответы ИИ и сохраните готовый промпт для анализа.
-          </CardDescription>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div
+            className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
+          >
+            <SlidersHorizontal className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <CardTitle>Проверка промпта</CardTitle>
+            <CardDescription>
+              Сгенерируйте тестовые ответы ИИ и сохраните готовый промпт для анализа.
+            </CardDescription>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+        <div
+          className={`flex flex-wrap items-center gap-3 text-xs ${adminClassNames.panel.mutedSection}`}
+        >
           <label className={adminClassNames.form.checkboxLabel}>
             <input
               type="checkbox"
@@ -44,6 +55,7 @@ export function SimulationOutputCardHeader({
             JSON-view
           </label>
           <Button type="button" size="sm" variant="ghost" onClick={onClearLogs}>
+            <RotateCcw className="mr-2 size-4" />
             Очистить
           </Button>
         </div>

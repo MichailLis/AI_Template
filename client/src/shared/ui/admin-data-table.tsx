@@ -34,7 +34,7 @@ export function AdminDataTable<TItem>({
   onRowClick,
 }: AdminDataTableProps<TItem>) {
   return (
-    <div className={cn(adminClassNames.table.container, className)}>
+    <div className={cn(adminClassNames.table.container, 'overflow-x-auto', className)}>
       <Table>
         <TableHeader className={adminClassNames.table.header}>
           <TableRow>

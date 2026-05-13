@@ -1,6 +1,7 @@
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
+import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -42,19 +43,47 @@ interface PublicLinksAttemptsTableCardProps {
 }
 
 const PUBLIC_ATTEMPTS_COLUMNS = [
-  { id: 'id', header: 'ID' },
-  { id: 'number', header: '№' },
-  { id: 'status', header: 'Статус' },
-  { id: 'analysis', header: 'Анализ' },
-  { id: 'student', header: 'Студент' },
-  { id: 'initials', header: 'Инициалы' },
-  { id: 'organization', header: 'Учреждение' },
-  { id: 'group', header: 'Группа/класс' },
-  { id: 'started', header: 'Начало работы' },
-  { id: 'finished', header: 'Завершение работы' },
-  { id: 'expires', header: 'Истекает через' },
-  { id: 'view', header: 'Просмотр', className: 'text-right' },
+  { id: 'id', header: 'ID', className: 'whitespace-nowrap' },
+  { id: 'number', header: '№', className: 'whitespace-nowrap' },
+  { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
+  { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
+  { id: 'student', header: 'Студент', className: 'min-w-32' },
+  { id: 'initials', header: 'Инициалы', className: 'whitespace-nowrap' },
+  { id: 'organization', header: 'Учреждение', className: 'min-w-44' },
+  { id: 'group', header: 'Группа/класс', className: 'whitespace-nowrap' },
+  { id: 'started', header: 'Начало работы', className: 'whitespace-nowrap' },
+  { id: 'finished', header: 'Завершение работы', className: 'whitespace-nowrap' },
+  { id: 'expires', header: 'Истекает через', className: 'whitespace-nowrap' },
+  { id: 'view', header: 'Просмотр', className: 'min-w-36 text-right' },
 ];
+
+const getAttemptStatusBadgeClassName = (status: string) => {
+  if (status === 'COMPLETED' || status === 'FINISHED') {
+    return adminBadgeClassNames.success;
+  }
+
+  if (status === 'EXPIRED' || status === 'FAILED') {
+    return adminBadgeClassNames.danger;
+  }
+
+  return adminBadgeClassNames.info;
+};
+
+const getAnalysisStatusBadgeClassName = (status: string | null) => {
+  if (status === 'READY') {
+    return adminBadgeClassNames.success;
+  }
+
+  if (status === 'FAILED') {
+    return adminBadgeClassNames.danger;
+  }
+
+  if (status === 'PENDING') {
+    return adminBadgeClassNames.warning;
+  }
+
+  return adminBadgeClassNames.neutral;
+};
 
 export function PublicLinksAttemptsTableCard({
   selectedPublicLink,
@@ -78,43 +107,60 @@ export function PublicLinksAttemptsTableCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? (
-          <p className={`text-sm ${adminClassNames.text.muted}`}>Загружаем данные прохождений...</p>
-        ) : null}
+        {isLoading ? <AdminStateBlock>Загружаем данные прохождений...</AdminStateBlock> : null}
 
         {!isLoading && !selectedPublicLink ? (
-          <p className={`text-sm ${adminClassNames.text.muted}`}>
+          <AdminStateBlock>
             Сначала выберите ссылку, чтобы увидеть прохождения студентов.
-          </p>
+          </AdminStateBlock>
         ) : null}
 
-        {selectedPublicLink ? (
+        {!isLoading && selectedPublicLink ? (
           <AdminDataTable
             columns={PUBLIC_ATTEMPTS_COLUMNS}
             items={publicAttempts}
             getRowKey={(attempt) => attempt.attemptId}
             emptyMessage="По выбранной ссылке пока нет прохождений. Студенты могут начать тестирование по ссылке."
+            className="overflow-x-auto"
             renderRow={(attempt) => (
               <>
-                <TableCell>{attempt.attemptId}</TableCell>
-                <TableCell>#{attempt.attemptNumber}</TableCell>
+                <TableCell className="whitespace-nowrap">{attempt.attemptId}</TableCell>
+                <TableCell className="whitespace-nowrap">#{attempt.attemptNumber}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{attempt.status}</Badge>
+                  <Badge
+                    variant="outline"
+                    className={getAttemptStatusBadgeClassName(attempt.status)}
+                  >
+                    {attempt.status}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{attempt.analysisStatus ?? 'NONE'}</Badge>
+                  <Badge
+                    variant="outline"
+                    className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
+                  >
+                    {attempt.analysisStatus ?? 'NONE'}
+                  </Badge>
                 </TableCell>
-                <TableCell>{attempt.studentName}</TableCell>
-                <TableCell>
+                <TableCell className="min-w-32 max-w-48 truncate">{attempt.studentName}</TableCell>
+                <TableCell className="whitespace-nowrap">
                   {attempt.studentLastInitial}.{attempt.studentMiddleInitial}.
                 </TableCell>
-                <TableCell>{attempt.educationOrganization}</TableCell>
-                <TableCell>{attempt.groupOrClass}</TableCell>
-                <TableCell>{formatDateTime(attempt.startedAt)}</TableCell>
-                <TableCell>{formatDateTime(attempt.finishedAt)}</TableCell>
-                <TableCell>{formatDateTime(attempt.expiresAt)}</TableCell>
+                <TableCell className="min-w-44 max-w-64 truncate">
+                  {attempt.educationOrganization}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">{attempt.groupOrClass}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatDateTime(attempt.startedAt)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatDateTime(attempt.finishedAt)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatDateTime(attempt.expiresAt)}
+                </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     <Button
                       type="button"
                       size="sm"

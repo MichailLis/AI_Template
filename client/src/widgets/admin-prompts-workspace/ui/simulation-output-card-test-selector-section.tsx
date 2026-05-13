@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
@@ -26,8 +26,8 @@ export function PromptTestSelectorSection({
   const selectedQuestionsCount = selectedQuestionIds.length;
 
   return (
-    <div className={`space-y-3 p-4 ${adminClassNames.border.bottom}`}>
-      <div className="space-y-2">
+    <div className={`flex flex-col gap-3 p-4 ${adminClassNames.border.bottom}`}>
+      <div className="flex flex-col gap-2">
         <Label htmlFor="prompt-test-group">Тест для проверки промпта</Label>
         <select
           id="prompt-test-group"
@@ -63,21 +63,28 @@ export function PromptTestSelectorSection({
       ) : null}
 
       {!isLoadingQuestions && selectedTest ? (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <div
             className={`flex flex-wrap items-center gap-2 text-xs ${adminClassNames.text.muted}`}
           >
-            <Badge variant="outline">{selectedQuestionsCount} вопросов в проверке</Badge>
+            <Badge variant="outline" className={adminBadgeClassNames.info}>
+              {selectedQuestionsCount} вопросов в проверке
+            </Badge>
             <span>
               {selectedTest.topicSlug} · версия {selectedTest.versionNumber} ·{' '}
               {selectedTest.versionStatus}
             </span>
           </div>
 
-          <div className={`max-h-56 space-y-2 overflow-y-auto p-2 ${adminClassNames.panel.frame}`}>
+          <div
+            className={`flex max-h-56 flex-col gap-2 overflow-y-auto p-2 ${adminClassNames.panel.frame}`}
+          >
             {selectedTest.questions.map((question, index) => (
               <div key={question.id} className={adminClassNames.panel.inlineItem}>
-                <Badge variant="outline" className="mt-0.5 shrink-0">
+                <Badge
+                  variant="outline"
+                  className={`mt-0.5 shrink-0 ${adminBadgeClassNames.neutral}`}
+                >
                   {index + 1}
                 </Badge>
                 <div className="min-w-0 flex-1">

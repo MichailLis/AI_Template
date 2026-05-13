@@ -34,13 +34,13 @@ export function PublicLinksListHeader({
       ]}
       actions={
         <>
-          <Button asChild type="button" variant="outline">
+          <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
             <Link to="/admin/public-links/organizations">Учебные заведения</Link>
           </Button>
-          <Button asChild type="button" variant="outline">
+          <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
             <Link to="/admin/public-links/stats">Статистика</Link>
           </Button>
-          <Button type="button" onClick={onOpenCreateDialog}>
+          <Button type="button" size="sm" className="w-full sm:w-auto" onClick={onOpenCreateDialog}>
             Создать
           </Button>
         </>

@@ -1,4 +1,8 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { ArrowLeft, Settings2 } from 'lucide-react';
+
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import {
@@ -61,24 +65,50 @@ export function AdminTestsSettingsCard({
 }: AdminTestsSettingsCardProps) {
   return (
     <Card className={adminClassNames.panel.card}>
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <CardTitle>Настройки теста</CardTitle>
-            <CardDescription>
-              Изменение метаданных черновика и управление публикацией
-            </CardDescription>
+      <CardHeader className={adminClassNames.border.bottom}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 gap-3">
+            <div
+              className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminClassNames.panel.compactSection}`}
+            >
+              <Settings2 className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle>Настройки теста</CardTitle>
+                <Badge
+                  variant="outline"
+                  className={
+                    isSelectedTopicArchived
+                      ? adminBadgeClassNames.neutral
+                      : adminBadgeClassNames.success
+                  }
+                >
+                  {isSelectedTopicArchived ? 'В архиве' : 'Активен'}
+                </Badge>
+                {isDraftDirty ? (
+                  <Badge variant="outline" className={adminBadgeClassNames.warning}>
+                    Есть правки
+                  </Badge>
+                ) : null}
+              </div>
+              <CardDescription>
+                Метаданные, промпт анализа, публикация и доступность теста.
+              </CardDescription>
+            </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={onBackToQuestions}
-            className={`text-sm ${adminClassNames.iconButton.muted}`}
+            className="shrink-0"
           >
-            ← К вопросам
-          </button>
+            <ArrowLeft className="mr-2 size-4" />К вопросам
+          </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4 p-4">
         <AdminTestsMetadataSettingsSection
           draftForm={draftForm}
           isDraftDirty={isDraftDirty}

@@ -29,7 +29,7 @@ export function TestsSidebarCreateForm({
   onOpenAiGenerator,
 }: TestsSidebarCreateFormProps) {
   return (
-    <div className="space-y-3">
+    <div className={`flex flex-col gap-3 ${adminClassNames.panel.compactSection}`}>
       <TestsTopicBaseFields
         title={newTestTitle}
         slug={newTestSlug}
@@ -43,7 +43,7 @@ export function TestsSidebarCreateForm({
         {isCreating ? 'Создание...' : 'Создать тест'}
       </Button>
 
-      <p className={`pt-1 text-center ${adminClassNames.form.fieldHint}`}>или</p>
+      <p className={`text-center ${adminClassNames.form.fieldHint}`}>или</p>
 
       <Button
         type="button"

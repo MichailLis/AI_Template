@@ -1,4 +1,5 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -49,14 +50,36 @@ export function EducationOrganizationsEditCard({
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Настройки выбранного заведения</CardTitle>
-        <CardDescription>
-          {selectedOrganization
-            ? `Редактирование: ${selectedOrganization.name}`
-            : 'Выберите заведение в таблице слева'}
-        </CardDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="text-base">Настройки выбранного заведения</CardTitle>
+            <CardDescription>
+              {selectedOrganization
+                ? `Редактирование: ${selectedOrganization.name}`
+                : 'Выберите заведение в таблице слева'}
+            </CardDescription>
+          </div>
+          {selectedOrganization ? (
+            <Badge
+              variant="outline"
+              className={
+                selectedOrganization.isActive
+                  ? adminBadgeClassNames.success
+                  : adminBadgeClassNames.neutral
+              }
+            >
+              {selectedOrganization.isActive ? 'Активно' : 'Отключено'}
+            </Badge>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {!selectedOrganization ? (
+          <div className={adminClassNames.panel.empty}>
+            Выберите строку в таблице, чтобы отредактировать заведение.
+          </div>
+        ) : null}
+
         <div className="space-y-2">
           <Label htmlFor="edit-organization-name">Название</Label>
           <Input

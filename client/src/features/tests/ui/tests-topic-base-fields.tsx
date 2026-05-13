@@ -25,7 +25,7 @@ export function TestsTopicBaseFields({
 }: TestsTopicBaseFieldsProps) {
   return (
     <>
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="new-topic-title">{titleLabel}</Label>
         <Input
           id="new-topic-title"
@@ -36,7 +36,7 @@ export function TestsTopicBaseFields({
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="new-topic-slug">Slug (служебный, необязательно)</Label>
         <Input
           id="new-topic-slug"
@@ -47,7 +47,7 @@ export function TestsTopicBaseFields({
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="new-topic-description">Описание (необязательно)</Label>
         <Textarea
           id="new-topic-description"

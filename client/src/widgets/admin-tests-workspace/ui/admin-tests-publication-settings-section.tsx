@@ -1,5 +1,10 @@
 import { cn } from '@/shared/lib/utils';
-import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
@@ -55,21 +60,23 @@ export function AdminTestsPublishedSnapshotSection({
   return (
     <AdminTestsSettingsPanel title="Опубликованный срез">
       {published ? (
-        <div className={`mt-2 space-y-1 text-sm ${adminClassNames.text.body}`}>
-          <p>
-            Версия: <span className="font-medium">v{published.versionNumber}</span>
-          </p>
-          <p>
-            Название: <span className="font-medium">{published.title}</span>
-          </p>
-          <p>
-            Анализ:{' '}
-            <span className="font-medium">
+        <div
+          className={`mt-3 grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] ${adminClassNames.panel.mutedSection}`}
+        >
+          <Badge variant="outline" className={adminBadgeClassNames.success}>
+            v{published.versionNumber}
+          </Badge>
+          <div className="min-w-0 text-sm">
+            <p className={`truncate font-medium ${adminClassNames.text.heading}`}>
+              {published.title}
+            </p>
+            <p className={`mt-1 truncate ${adminClassNames.text.body}`}>
+              Анализ:{' '}
               {published.analysisPromptVersion
                 ? `${published.analysisPromptVersion.promptTitle} v${published.analysisPromptVersion.versionNumber}`
                 : 'не подключен'}
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
       ) : (
         <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>Тест еще не опубликован.</p>
@@ -93,7 +100,9 @@ export function AdminTestsPublishSection({
       title="Публикация"
       description="Публикация запускается через подтверждение и создает новый черновик для дальнейших правок."
     >
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div
+        className={`mt-3 flex flex-wrap items-center justify-between gap-2 ${adminClassNames.panel.mutedSection}`}
+      >
         <Button
           type="button"
           variant="secondary"
@@ -118,8 +127,10 @@ export function AdminTestsActivitySwitchSection({
 }: AdminTestsActivitySwitchSectionProps) {
   return (
     <AdminTestsSettingsPanel title="Переключатель активности">
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <div>
+      <div
+        className={`mt-3 flex flex-wrap items-center justify-between gap-3 ${adminClassNames.panel.mutedSection}`}
+      >
+        <div className="min-w-0">
           <p className={`text-sm ${adminClassNames.text.body}`}>Активен для студентов</p>
           <p className={adminClassNames.form.fieldHint}>
             Если выключить, тест уйдет в архив. Для возобновления включите обратно.

@@ -61,7 +61,7 @@ export function AdminTestsAnalysisPromptSettingsSection({
       title="Промпт анализа"
       description="Для версии теста можно подключить одну опубликованную версию промпта."
     >
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 flex flex-col gap-2">
         <Label htmlFor="settings-analysis-prompt">Активный промпт</Label>
         <select
           id="settings-analysis-prompt"
@@ -85,6 +85,18 @@ export function AdminTestsAnalysisPromptSettingsSection({
           <p className={`text-xs ${adminToneClassNames.danger.text}`}>
             Не удалось загрузить промпты анализа.
           </p>
+        ) : null}
+        {selectedAnalysisPromptVersion ? (
+          <div className={adminClassNames.panel.mutedSection}>
+            <p className={`text-xs ${adminClassNames.text.muted}`}>Сейчас подключен</p>
+            <p className={`mt-1 text-sm font-medium ${adminClassNames.text.heading}`}>
+              {selectedAnalysisPromptVersion.promptTitle} v
+              {selectedAnalysisPromptVersion.versionNumber}
+            </p>
+            <p className={`mt-1 truncate text-xs ${adminClassNames.text.body}`}>
+              {selectedAnalysisPromptVersion.model}
+            </p>
+          </div>
         ) : null}
       </div>
     </AdminTestsSettingsPanel>

@@ -23,7 +23,7 @@ export function PromptEditorVariablesSection({
   onRemoveVariable,
 }: PromptEditorVariablesSectionProps) {
   return (
-    <div className={`space-y-2 ${adminClassNames.panel.compactSection}`}>
+    <div className={`flex flex-col gap-2 ${adminClassNames.panel.compactSection}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className={`text-xs font-semibold uppercase ${adminClassNames.text.body}`}>
           Тестовые переменные ({variables.length})
@@ -90,6 +90,7 @@ export function PromptEditorVariablesSection({
               type="button"
               size="icon"
               variant="ghost"
+              className={adminClassNames.iconButton.danger}
               onClick={() => onRemoveVariable(variable.id)}
               aria-label={`Удалить переменную ${variable.key}`}
             >

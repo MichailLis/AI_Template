@@ -18,7 +18,7 @@ export function SimulationRunsList({
   onCopyRunJson,
 }: SimulationRunsListProps) {
   return (
-    <div className="max-h-[640px] flex-1 space-y-3 overflow-y-auto p-4">
+    <div className="flex max-h-[640px] flex-1 flex-col gap-3 overflow-y-auto p-4">
       {runs.length === 0 ? (
         <div className={adminClassNames.panel.emptyCenter}>Запусков пока нет.</div>
       ) : null}

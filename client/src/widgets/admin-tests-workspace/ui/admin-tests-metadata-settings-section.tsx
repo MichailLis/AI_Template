@@ -52,8 +52,8 @@ export function AdminTestsMetadataSettingsSection({
       title="Метаданные теста"
       description="Редактирование названия и описания версии в работе."
     >
-      <div className="mt-3 space-y-3">
-        <div className="space-y-1.5">
+      <div className="mt-3 flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="settings-draft-title">Название теста</Label>
           <Input
             id="settings-draft-title"
@@ -62,7 +62,7 @@ export function AdminTestsMetadataSettingsSection({
             onChange={(event) => onDraftTitleChange(event.target.value)}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="settings-draft-description">Описание теста</Label>
           <Textarea
             id="settings-draft-description"
@@ -72,7 +72,9 @@ export function AdminTestsMetadataSettingsSection({
             onChange={(event) => onDraftDescriptionChange(event.target.value)}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={`flex flex-wrap items-center justify-between gap-2 ${adminClassNames.panel.mutedSection}`}
+        >
           <Button
             type="button"
             onClick={onSaveDraft}

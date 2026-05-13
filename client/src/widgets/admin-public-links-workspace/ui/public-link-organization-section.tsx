@@ -2,7 +2,8 @@ import {
   GROUP_VALIDATION_MODE_OPTIONS,
   parseGroupValidationMode,
 } from '@/shared/lib/group-validation';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -50,7 +51,7 @@ function EducationOrganizationSelect({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <Label htmlFor="education-organization">Заведение для ссылки</Label>
       <select
         id="education-organization"
@@ -116,7 +117,7 @@ function GroupValidationDetails({
       <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
         Настройки поля «Группа / класс»
       </summary>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 flex flex-col gap-2">
         <p className={adminClassNames.form.fieldHint}>
           Эти правила применяются к выбранному заведению и помогают привести ответы к одному
           формату.
@@ -139,7 +140,7 @@ function GroupValidationDetails({
 
         {groupValidationMode !== 'NONE' ? (
           <>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label htmlFor="group-validation-pattern">Шаблон (RegExp)</Label>
               <Input
                 id="group-validation-pattern"
@@ -148,7 +149,7 @@ function GroupValidationDetails({
                 placeholder="Например: ^[А-ЯA-Z]{2,4}-?\\d{1,3}[А-ЯA-Z]?$"
               />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label htmlFor="group-validation-example">Пример</Label>
               <Input
                 id="group-validation-example"
@@ -157,7 +158,7 @@ function GroupValidationDetails({
                 placeholder="Например: ИС-21"
               />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label htmlFor="group-validation-hint">Подсказка/ошибка</Label>
               <Input
                 id="group-validation-hint"
@@ -204,12 +205,19 @@ export function PublicLinkOrganizationSection({
 }: PublicLinkOrganizationSectionProps) {
   return (
     <div className={adminClassNames.panel.compactSection}>
-      <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Учебное заведение</p>
-      <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
-        Привяжите ссылку к заведению, если студентам не нужно вводить его вручную.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Учебное заведение</p>
+          <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
+            Привяжите ссылку к заведению, если студентам не нужно вводить его вручную.
+          </p>
+        </div>
+        <Badge variant="outline" className={adminBadgeClassNames.success}>
+          Валидация групп
+        </Badge>
+      </div>
 
-      <div className="mt-3 space-y-3">
+      <div className="mt-3 flex flex-col gap-3">
         <EducationOrganizationSelect
           educationOrganizations={educationOrganizations}
           newEducationOrganizationId={newEducationOrganizationId}

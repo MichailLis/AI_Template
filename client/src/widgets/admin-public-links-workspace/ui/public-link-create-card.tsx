@@ -1,4 +1,6 @@
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Link2 } from 'lucide-react';
+
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -18,6 +20,26 @@ import type { PublicLinkCreateCardProps } from './public-link-create-card.types'
 interface PublicLinkCreateDialogProps extends PublicLinkCreateCardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function PublicLinkCreateHeader() {
+  return (
+    <DialogHeader>
+      <div className="flex items-start gap-3">
+        <div
+          className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.info.icon}`}
+        >
+          <Link2 className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <DialogTitle>Создать публичную ссылку</DialogTitle>
+          <DialogDescription>
+            Выберите опубликованный тест, привяжите заведение и настройте доступ.
+          </DialogDescription>
+        </div>
+      </div>
+    </DialogHeader>
+  );
 }
 
 export function PublicLinkCreateDialog({
@@ -62,14 +84,9 @@ export function PublicLinkCreateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`max-h-[85vh] max-w-2xl overflow-y-auto ${adminClassNames.dialog.content}`}
+        className={`left-4 right-4 top-4 max-h-[calc(100vh-2rem)] w-auto max-w-none translate-x-0 translate-y-0 overflow-y-auto p-4 sm:left-[50%] sm:right-auto sm:w-[calc(100vw-2rem)] sm:max-w-2xl sm:translate-x-[-50%] sm:p-6 ${adminClassNames.dialog.content}`}
       >
-        <DialogHeader>
-          <DialogTitle>Создать публичную ссылку</DialogTitle>
-          <DialogDescription>
-            Выберите опубликованный тест, привяжите заведение и настройте доступ.
-          </DialogDescription>
-        </DialogHeader>
+        <PublicLinkCreateHeader />
 
         <div className="grid gap-4">
           <PublicLinkTopicSection
@@ -121,7 +138,7 @@ export function PublicLinkCreateDialog({
           ) : null}
         </div>
 
-        <DialogFooter className="gap-2 sm:space-x-0">
+        <DialogFooter className="gap-2 sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Отмена
           </Button>

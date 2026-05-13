@@ -1,6 +1,6 @@
 import { Loader2, Play, Save } from 'lucide-react';
 
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -36,11 +36,11 @@ export function PromptSaveRunFooter({
   const selectedQuestionsCount = selectedQuestionIds.length;
 
   return (
-    <div className={`space-y-4 p-4 ${adminClassNames.border.top}`}>
+    <div className={`flex flex-col gap-4 p-4 ${adminClassNames.border.top}`}>
       <div
         className={`grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end ${adminClassNames.panel.compactSection}`}
       >
-        <div className="space-y-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="prompt-title">Название промпта</Label>
           <Input
             id="prompt-title"
@@ -53,13 +53,17 @@ export function PromptSaveRunFooter({
           >
             {selectedPromptId ? (
               <>
-                <Badge variant="outline">Редактируется #{selectedPromptId}</Badge>
+                <Badge variant="outline" className={adminBadgeClassNames.info}>
+                  Редактируется #{selectedPromptId}
+                </Badge>
                 {selectedPromptVersionNumber ? (
                   <span>Текущая версия v{selectedPromptVersionNumber}</span>
                 ) : null}
               </>
             ) : (
-              <Badge variant="outline">Новый промпт</Badge>
+              <Badge variant="outline" className={adminBadgeClassNames.notice}>
+                Новый промпт
+              </Badge>
             )}
           </div>
         </div>
@@ -80,8 +84,12 @@ export function PromptSaveRunFooter({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className={`flex items-center gap-2 text-xs ${adminClassNames.text.muted}`}>
-          <Badge variant="outline">{detectedVariablesCount} переменные</Badge>
+        <div
+          className={`flex min-w-0 flex-wrap items-center gap-2 text-xs ${adminClassNames.text.muted}`}
+        >
+          <Badge variant="outline" className={adminBadgeClassNames.neutral}>
+            {detectedVariablesCount} переменные
+          </Badge>
           <span>{selectedQuestionsCount} вопросов выбранного теста</span>
         </div>
         <Button type="button" onClick={onRunSimulation} disabled={!canRun || isGenerating}>

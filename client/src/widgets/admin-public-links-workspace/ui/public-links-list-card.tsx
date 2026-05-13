@@ -312,13 +312,17 @@ export function PublicLinksListCard({
     return visiblePublicLinks.filter((link) => buildLinkSearchText(link).includes(query));
   }, [searchValue, visiblePublicLinks]);
 
-  return (
-    <CardContent className="p-0">
-      {publicLinksLoading ? (
+  if (publicLinksLoading) {
+    return (
+      <CardContent className="p-0">
         <AdminStateBlock>Загрузка публичных ссылок... Пожалуйста, подождите.</AdminStateBlock>
-      ) : null}
+      </CardContent>
+    );
+  }
 
-      {publicLinksError ? (
+  if (publicLinksError) {
+    return (
+      <CardContent className="p-0">
         <AdminStateBlock
           tone="danger"
           action={
@@ -329,12 +333,20 @@ export function PublicLinksListCard({
         >
           Не удалось загрузить публичные ссылки. Проверьте подключение и повторите попытку.
         </AdminStateBlock>
-      ) : null}
+      </CardContent>
+    );
+  }
 
-      {!publicLinksLoading && !publicLinksError && filteredPublicLinks.length === 0 ? (
+  if (filteredPublicLinks.length === 0) {
+    return (
+      <CardContent className="p-0">
         <AdminStateBlock>{getEmptyStateText(publicLinksTab, searchValue)}</AdminStateBlock>
-      ) : null}
+      </CardContent>
+    );
+  }
 
+  return (
+    <CardContent className="p-0">
       {filteredPublicLinks.map((link) => (
         <PublicLinkRow key={link.id} link={link} publicLinksTab={publicLinksTab} {...handlers} />
       ))}

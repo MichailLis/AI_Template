@@ -1,6 +1,11 @@
 import { Sparkles } from 'lucide-react';
 
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
+import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { PromptEditorModelSection } from './prompt-editor-model-section';
@@ -77,16 +82,27 @@ export function PromptEditorCard({
 }: PromptEditorCardProps) {
   return (
     <Card className={`min-w-0 ${adminClassNames.panel.card}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          Редактор промптов
-        </CardTitle>
-        <CardDescription>
-          Черновой сценарий для навигации по студенческим карьерным траекториям.
-        </CardDescription>
+      <CardHeader className={adminClassNames.border.bottom}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <div
+              className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.info.icon}`}
+            >
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle>Редактор промптов</CardTitle>
+              <CardDescription>
+                Черновой сценарий для студенческих карьерных траекторий.
+              </CardDescription>
+            </div>
+          </div>
+          <Badge variant="outline" className={adminBadgeClassNames.info}>
+            Structured outputs
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4 p-4">
         <PromptEditorModelSection
           modelSearch={modelSearch}
           onModelSearchChange={onModelSearchChange}

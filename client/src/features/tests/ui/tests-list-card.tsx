@@ -1,11 +1,12 @@
-import { Archive, MoreHorizontal, RotateCcw, Settings, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
+
+import { TestsListItemActions } from './tests-list-card-actions';
 
 import type { TestTopicListItem } from '../model/types';
 
@@ -100,6 +101,22 @@ interface TestListRowProps {
   onSetPendingDelete: (topicId: number) => void;
 }
 
+const formatTopicUpdatedAt = (value: string) =>
+  new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+
+const getPublishLabel = (topic: TestTopicListItem) => {
+  if (topic.publishedVersionNumber) {
+    return `Опубликован v${topic.publishedVersionNumber}`;
+  }
+
+  return 'Только черновик';
+};
+
 function TestsListItemRow({
   topic,
   listMode,
@@ -117,104 +134,56 @@ function TestsListItemRow({
   onRequestDeleteTest,
   onSetPendingDelete,
 }: TestListRowProps) {
-  const isDeleteConfirming = pendingPermanentDeleteTopicId === topic.id;
-  const isArchiveBusy = isArchivingTopic && archivingTopicId === topic.id;
-  const isRestoreBusy = isRestoringTopic && restoringTopicId === topic.id;
-  const isDeleteBusy = isDeletingTopic && deletingTopicId === topic.id;
-
   return (
-    <div className={adminClassNames.panel.listRow}>
-      <button type="button" onClick={() => onSelectTest(topic.id)} className="flex-1 text-left">
-        <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>{topic.draftTitle}</p>
+    <div className={`${adminClassNames.panel.listRow} flex items-start gap-3`}>
+      <button
+        type="button"
+        onClick={() => onSelectTest(topic.id)}
+        className="group min-w-0 flex-1 text-left"
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p
+            className={`min-w-0 truncate text-sm font-semibold ${adminClassNames.text.heading} group-hover:underline`}
+          >
+            {topic.draftTitle}
+          </p>
+          <Badge
+            variant="outline"
+            className={
+              topic.publishedVersionNumber
+                ? adminBadgeClassNames.success
+                : adminBadgeClassNames.warning
+            }
+          >
+            {getPublishLabel(topic)}
+          </Badge>
+        </div>
+        <div
+          className={`mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${adminClassNames.text.body}`}
+        >
+          <span>Черновик v{topic.draftVersionNumber}</span>
+          <span>{topic.draftQuestionCount} вопросов</span>
+          <span>Обновлен {formatTopicUpdatedAt(topic.updatedAt)}</span>
+        </div>
       </button>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
-            aria-label="Действия"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="end">
-          <div className="flex flex-col">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 justify-start px-2 text-left text-sm"
-              onClick={() => onSelectTest(topic.id)}
-            >
-              Открыть
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 justify-start px-2 text-left text-sm"
-              onClick={() => onOpenSettings(topic.id)}
-            >
-              <Settings className="mr-2 h-3.5 w-3.5" />
-              Настройки
-            </Button>
-            {listMode === 'active' ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 justify-start px-2 text-left text-sm"
-                onClick={() => onRequestArchiveTest(topic)}
-                disabled={isArchiveBusy}
-              >
-                <Archive className="mr-2 h-3.5 w-3.5" />
-                Архивировать
-              </Button>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 justify-start px-2 text-left text-sm"
-                  onClick={() => onRequestRestoreTest(topic)}
-                  disabled={isRestoreBusy}
-                >
-                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                  Восстановить
-                </Button>
-                {isDeleteConfirming ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={adminClassNames.actionMenu.dangerItem}
-                    onClick={() => onRequestDeleteTest(topic)}
-                    disabled={isDeleteBusy}
-                  >
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Подтвердить удаление
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={adminClassNames.actionMenu.dangerItem}
-                    onClick={() => onSetPendingDelete(topic.id)}
-                  >
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    Удалить навсегда...
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+      <TestsListItemActions
+        topic={topic}
+        listMode={listMode}
+        isArchivingTopic={isArchivingTopic}
+        archivingTopicId={archivingTopicId}
+        isRestoringTopic={isRestoringTopic}
+        restoringTopicId={restoringTopicId}
+        isDeletingTopic={isDeletingTopic}
+        deletingTopicId={deletingTopicId}
+        pendingPermanentDeleteTopicId={pendingPermanentDeleteTopicId}
+        onSelectTest={onSelectTest}
+        onOpenSettings={onOpenSettings}
+        onRequestArchiveTest={onRequestArchiveTest}
+        onRequestRestoreTest={onRequestRestoreTest}
+        onRequestDeleteTest={onRequestDeleteTest}
+        onSetPendingDelete={onSetPendingDelete}
+      />
     </div>
   );
 }
@@ -257,17 +226,23 @@ export function TestsListCard({
     [searchValue, topics],
   );
 
+  if (topicsLoading || topicsError || filteredTopics.length === 0) {
+    return (
+      <CardContent className="p-0">
+        <TestsListStateBlock
+          topicsLoading={topicsLoading}
+          topicsError={topicsError}
+          topicsErrorMessage={topicsErrorMessage}
+          searchValue={searchValue}
+          topicsEmpty={filteredTopics.length === 0}
+          onRetryTopics={onRetryTopics}
+        />
+      </CardContent>
+    );
+  }
+
   return (
     <CardContent className="p-0">
-      <TestsListStateBlock
-        topicsLoading={topicsLoading}
-        topicsError={topicsError}
-        topicsErrorMessage={topicsErrorMessage}
-        searchValue={searchValue}
-        topicsEmpty={filteredTopics.length === 0}
-        onRetryTopics={onRetryTopics}
-      />
-
       {filteredTopics.map((topic) => (
         <TestsListItemRow
           key={topic.id}
