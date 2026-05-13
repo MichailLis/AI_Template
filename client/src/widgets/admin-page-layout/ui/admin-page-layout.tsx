@@ -42,11 +42,9 @@ export function AdminPageLayout() {
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <Card className="border-slate-200">
-          <CardContent>
-            <AdminStateBlock className="p-0">
-              Загрузка админ-панели... Пожалуйста, подождите
-            </AdminStateBlock>
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-4">
+            <AdminStateBlock>Загрузка админ-панели… Пожалуйста, подождите</AdminStateBlock>
           </CardContent>
         </Card>
       </AdminShell>
@@ -61,11 +59,10 @@ export function AdminPageLayout() {
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <Card className="border-red-200 bg-red-50">
-          <CardContent>
+        <Card className="border-red-200 bg-red-50 shadow-sm">
+          <CardContent className="p-4">
             <AdminStateBlock
               tone="danger"
-              className="p-0"
               action={
                 <Button type="button" variant="outline" onClick={() => void adminQuery.refetch()}>
                   Повторить загрузку

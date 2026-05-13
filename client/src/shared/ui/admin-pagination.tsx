@@ -1,3 +1,5 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { Button } from '@/shared/ui/button';
 
 interface AdminPaginationProps {
@@ -16,12 +18,13 @@ export function AdminPagination({
   onNext,
 }: AdminPaginationProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-      <p className="text-sm text-slate-500">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+      <p className="rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground">
         Страница {page} из {totalPages}
       </p>
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={onPrevious} disabled={page <= 1 || isFetching}>
+          <ChevronLeft />
           Назад
         </Button>
         <Button
@@ -31,6 +34,7 @@ export function AdminPagination({
           disabled={page >= totalPages || isFetching}
         >
           Далее
+          <ChevronRight />
         </Button>
       </div>
     </div>

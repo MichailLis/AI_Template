@@ -33,9 +33,11 @@ export function AdminDataTable<TItem>({
   onRowClick,
 }: AdminDataTableProps<TItem>) {
   return (
-    <div className={cn('rounded-md border', className)}>
+    <div
+      className={cn('overflow-hidden rounded-lg border border-border bg-card shadow-sm', className)}
+    >
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/50">
           <TableRow>
             {columns.map((column) => (
               <TableHead key={column.id} className={column.className}>
@@ -49,7 +51,7 @@ export function AdminDataTable<TItem>({
             <TableRow>
               <TableCell
                 colSpan={columns.length}
-                className={cn('py-8 text-center text-sm text-slate-500', emptyClassName)}
+                className={cn('py-12 text-center text-sm text-muted-foreground', emptyClassName)}
               >
                 {emptyMessage}
               </TableCell>
@@ -58,7 +60,10 @@ export function AdminDataTable<TItem>({
           {items.map((item) => (
             <TableRow
               key={getRowKey(item)}
-              className={getRowClassName?.(item)}
+              className={cn(
+                onRowClick ? 'cursor-pointer hover:bg-muted/40' : undefined,
+                getRowClassName?.(item),
+              )}
               onClick={() => onRowClick?.(item)}
             >
               {renderRow(item)}

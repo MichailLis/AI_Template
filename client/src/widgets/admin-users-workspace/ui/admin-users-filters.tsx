@@ -19,6 +19,8 @@ interface AdminUsersFiltersProps {
   onSortOrderToggle: () => void;
 }
 
+const formatTotal = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
+
 export function AdminUsersFilters({
   searchInput,
   roleFilter,
@@ -39,8 +41,9 @@ export function AdminUsersFilters({
         <Input
           value={searchInput}
           onChange={(event) => onSearchInputChange(event.target.value)}
-          placeholder="Поиск по email или имени"
-          className="w-full max-w-sm"
+          placeholder="Поиск по email или имени…"
+          aria-label="Поиск по email или имени"
+          className="w-full max-w-sm bg-white shadow-sm"
         />
         <Button type="submit" size="sm" variant="secondary">
           Применить
@@ -52,6 +55,7 @@ export function AdminUsersFilters({
 
       <div className="flex flex-wrap items-center gap-2">
         <Button
+          type="button"
           size="sm"
           variant={roleFilter === 'ALL' ? 'secondary' : 'outline'}
           onClick={() => onRoleFilterChange('ALL')}
@@ -59,6 +63,7 @@ export function AdminUsersFilters({
           Все
         </Button>
         <Button
+          type="button"
           size="sm"
           variant={roleFilter === 'ADMIN' ? 'secondary' : 'outline'}
           onClick={() => onRoleFilterChange('ADMIN')}
@@ -66,6 +71,7 @@ export function AdminUsersFilters({
           Администраторы
         </Button>
         <Button
+          type="button"
           size="sm"
           variant={roleFilter === 'USER' ? 'secondary' : 'outline'}
           onClick={() => onRoleFilterChange('USER')}
@@ -73,6 +79,7 @@ export function AdminUsersFilters({
           Пользователи
         </Button>
         <Button
+          type="button"
           size="sm"
           variant={sortBy === 'updatedAt' ? 'secondary' : 'outline'}
           onClick={() => onSortByChange('updatedAt')}
@@ -80,6 +87,7 @@ export function AdminUsersFilters({
           Сортировка: Обновлены
         </Button>
         <Button
+          type="button"
           size="sm"
           variant={sortBy === 'createdAt' ? 'secondary' : 'outline'}
           onClick={() => onSortByChange('createdAt')}
@@ -89,8 +97,8 @@ export function AdminUsersFilters({
         <Button size="sm" variant="outline" onClick={onSortOrderToggle}>
           Порядок: {sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
         </Button>
-        <p className="ml-auto text-sm text-slate-500">
-          Всего: {total} {isFetching ? '(обновление...)' : ''}
+        <p className="ml-auto rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-500 shadow-sm">
+          Всего: {formatTotal(total)} {isFetching ? '(обновление…)' : ''}
         </p>
       </div>
     </>

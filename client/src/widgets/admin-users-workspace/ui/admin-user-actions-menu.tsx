@@ -70,7 +70,7 @@ export function AdminUserActionsMenu({
               }
               onClick={() => onToggleRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')}
             >
-              {pendingUserId === user.id ? 'Обновление...' : getRoleToggleLabel(user.role)}
+              {pendingUserId === user.id ? 'Обновление…' : getRoleToggleLabel(user.role)}
             </Button>
             <Button
               variant="outline"

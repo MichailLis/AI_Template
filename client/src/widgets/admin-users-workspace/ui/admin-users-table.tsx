@@ -1,3 +1,4 @@
+import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { Badge } from '@/shared/ui/badge';
 import { TableCell } from '@/shared/ui/table';
@@ -28,12 +29,24 @@ interface AdminUsersTableProps {
 }
 
 const ADMIN_USERS_COLUMNS = [
-  { id: 'user', header: 'Пользователь' },
-  { id: 'role', header: 'Роль' },
-  { id: 'created', header: 'Создан' },
-  { id: 'updated', header: 'Обновлен' },
-  { id: 'actions', header: 'Действия', className: 'text-right' },
+  { id: 'user', header: 'Пользователь', className: 'w-32 sm:min-w-48' },
+  { id: 'role', header: 'Роль', className: 'w-20 sm:w-36' },
+  { id: 'created', header: 'Создан', className: 'hidden lg:table-cell' },
+  { id: 'updated', header: 'Обновлен', className: 'hidden lg:table-cell' },
+  {
+    id: 'actions',
+    header: 'Действия',
+    className: 'w-10 text-right text-[0px] sm:w-12 sm:text-sm',
+  },
 ];
+
+const getMobileRoleLabel = (role: string) => {
+  if (role === 'ADMIN') {
+    return 'Админ';
+  }
+
+  return 'Польз.';
+};
 
 export function AdminUsersTable({
   users,
@@ -56,21 +69,32 @@ export function AdminUsersTable({
       emptyMessage="По текущим фильтрам пользователи не найдены."
       renderRow={(user) => (
         <>
-          <TableCell>
+          <TableCell className="w-32 sm:min-w-48">
             <div>
-              <p className="font-medium text-slate-900">{user.email}</p>
+              <p className="break-all font-medium text-foreground">{user.email}</p>
               <p className="text-xs text-slate-500">ID: {user.id}</p>
               {user.name ? <p className="text-xs text-slate-500">{user.name}</p> : null}
             </div>
           </TableCell>
-          <TableCell>
-            <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
-              {getRoleLabel(user.role)}
+          <TableCell className="w-20 sm:w-36">
+            <Badge
+              variant="outline"
+              className={cn(
+                'max-w-full justify-center whitespace-normal text-center leading-5',
+                getRoleBadgeClass(user.role),
+              )}
+            >
+              <span className="hidden sm:inline">{getRoleLabel(user.role)}</span>
+              <span className="sm:hidden">{getMobileRoleLabel(user.role)}</span>
             </Badge>
           </TableCell>
-          <TableCell className="text-slate-600">{formatDateTime(user.createdAt)}</TableCell>
-          <TableCell className="text-slate-600">{formatDateTime(user.updatedAt)}</TableCell>
-          <TableCell>
+          <TableCell className="hidden text-slate-600 lg:table-cell">
+            {formatDateTime(user.createdAt)}
+          </TableCell>
+          <TableCell className="hidden text-slate-600 lg:table-cell">
+            {formatDateTime(user.updatedAt)}
+          </TableCell>
+          <TableCell className="w-10 text-right sm:w-12">
             <AdminUserActionsMenu
               user={{ id: user.id, email: user.email, role: user.role }}
               currentUserId={currentUserId}

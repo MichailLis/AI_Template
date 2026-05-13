@@ -50,11 +50,9 @@ export function AdminUsersWorkspace() {
 
   if (usersQuery.isLoading) {
     return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent>
-          <AdminStateBlock className="p-0">
-            Загрузка пользователей... Пожалуйста, подождите.
-          </AdminStateBlock>
+      <Card className="border-slate-200/80 bg-white shadow-sm">
+        <CardContent className="p-4">
+          <AdminStateBlock>Загрузка пользователей… Пожалуйста, подождите.</AdminStateBlock>
         </CardContent>
       </Card>
     );
@@ -63,10 +61,9 @@ export function AdminUsersWorkspace() {
   if (usersQuery.isError || !usersQuery.data) {
     return (
       <Card className="border-red-200 bg-red-50 shadow-sm">
-        <CardContent>
+        <CardContent className="p-4">
           <AdminStateBlock
             tone="danger"
-            className="p-0"
             action={
               <Button type="button" variant="outline" onClick={() => void usersQuery.refetch()}>
                 Повторить
@@ -81,7 +78,7 @@ export function AdminUsersWorkspace() {
   }
 
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className="border-slate-200/80 bg-white shadow-sm">
       <CardHeader>
         <CardTitle>Пользователи</CardTitle>
         <CardDescription>Поиск, фильтры, пагинация и управление ролями.</CardDescription>
