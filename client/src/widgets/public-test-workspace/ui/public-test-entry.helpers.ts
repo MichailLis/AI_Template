@@ -14,7 +14,7 @@ export const initialFormState: StudentFormState = {
   studentMiddleInitial: '',
   educationOrganization: '',
   groupOrClass: '',
-  consentAccepted: false,
+  consentAccepted: true,
 };
 
 export const normalizeInitial = (value: string) => value.trim().slice(0, 1).toUpperCase();

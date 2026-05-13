@@ -14,4 +14,6 @@ export interface PublicSessionResultResponseDto {
   /** @nullable */
   finishedAt: string | null;
   analysis: PublicSessionResultResponseDtoAnalysis;
+  /** @nullable */
+  professionAtlasUrl: string | null;
 }

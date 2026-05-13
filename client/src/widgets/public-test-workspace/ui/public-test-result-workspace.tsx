@@ -1,4 +1,4 @@
-import { Download, Gauge, Route, Target } from 'lucide-react';
+import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
 import { parseAnalysisResult } from '@/features/tests';
@@ -112,6 +112,36 @@ function ResultHero() {
   );
 }
 
+function ProfessionAtlasLink({ url }: { url: string }) {
+  return (
+    <aside className="rounded-2xl border border-border/70 bg-white/85 p-5 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <p className="text-base font-bold text-foreground">Атлас профессий</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Вы можете ознакомиться с профессиями и спросом на них в Атласе профессий.
+            </p>
+          </div>
+        </div>
+
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+        >
+          Открыть Атлас профессий
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
+      </div>
+    </aside>
+  );
+}
+
 export function PublicTestResultWorkspace() {
   const { sessionToken } = useParams<{ sessionToken: string }>();
 
@@ -182,6 +212,12 @@ export function PublicTestResultWorkspace() {
         <div className="mt-8 md:mt-9">
           <PublicTestResultAnalysisView analysis={result.analysis} />
         </div>
+
+        {result.professionAtlasUrl ? (
+          <div className="mt-8">
+            <ProfessionAtlasLink url={result.professionAtlasUrl} />
+          </div>
+        ) : null}
 
         <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
           <ResultPdfButton className="rounded-xl px-5 shadow-sm" />

@@ -14,8 +14,21 @@ export const AdminOpenRouterSettingsResponseSchema = z.object({
   openRouter: OpenRouterApiKeySettingsSchema,
 });
 
+export const ProfessionAtlasSettingsSchema = z.object({
+  url: z.string().url().nullable(),
+  updatedAt: z.string().datetime().nullable(),
+});
+
+export const AdminProfessionAtlasSettingsResponseSchema = z.object({
+  professionAtlas: ProfessionAtlasSettingsSchema,
+});
+
 export const UpdateOpenRouterApiKeySchema = z.object({
   apiKey: z.string().trim().min(1).max(500),
+});
+
+export const UpdateProfessionAtlasUrlSchema = z.object({
+  url: z.string().trim().url().max(2048),
 });
 
 export class AdminOpenRouterSettingsResponseDto extends createZodDto(
@@ -23,3 +36,9 @@ export class AdminOpenRouterSettingsResponseDto extends createZodDto(
 ) {}
 
 export class UpdateOpenRouterApiKeyDto extends createZodDto(UpdateOpenRouterApiKeySchema) {}
+
+export class AdminProfessionAtlasSettingsResponseDto extends createZodDto(
+  AdminProfessionAtlasSettingsResponseSchema,
+) {}
+
+export class UpdateProfessionAtlasUrlDto extends createZodDto(UpdateProfessionAtlasUrlSchema) {}

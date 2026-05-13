@@ -21,8 +21,6 @@ interface PublicTestRegistrationCardProps {
   groupValidationExample: string | null;
   groupValidationHint: string | null;
   groupValidationWarning: string | null;
-  consentVersion: string;
-  consentText: string;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFieldChange: FormFieldChangeHandler;
@@ -182,43 +180,6 @@ function GroupField({
   );
 }
 
-interface ConsentSectionProps {
-  consentVersion: string;
-  consentText: string;
-  consentAccepted: boolean;
-  onFieldChange: FormFieldChangeHandler;
-}
-
-function ConsentSection({
-  consentVersion,
-  consentText,
-  consentAccepted,
-  onFieldChange,
-}: ConsentSectionProps) {
-  return (
-    <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-4 text-sm">
-      <div className="flex items-center justify-between">
-        <p className="font-semibold text-foreground">Согласие на обработку данных</p>
-        <span className="text-xs text-muted-foreground">{consentVersion}</span>
-      </div>
-      <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
-        {consentText}
-      </p>
-      <label className="mt-3 flex cursor-pointer items-center gap-3 text-sm">
-        <input
-          type="checkbox"
-          checked={consentAccepted}
-          onChange={(event) => onFieldChange('consentAccepted', event.target.checked)}
-          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-        />
-        <span className="font-medium text-foreground">
-          Согласен(а) с условиями обработки данных
-        </span>
-      </label>
-    </div>
-  );
-}
-
 interface SubmitButtonProps {
   isSubmitting: boolean;
 }
@@ -252,8 +213,6 @@ export function PublicTestRegistrationCard({
   groupValidationExample,
   groupValidationHint,
   groupValidationWarning,
-  consentVersion,
-  consentText,
   isSubmitting,
   onSubmit,
   onFieldChange,
@@ -282,13 +241,6 @@ export function PublicTestRegistrationCard({
                 onFieldChange={onFieldChange}
               />
             </div>
-
-            <ConsentSection
-              consentVersion={consentVersion}
-              consentText={consentText}
-              consentAccepted={formState.consentAccepted}
-              onFieldChange={onFieldChange}
-            />
 
             <SubmitButton isSubmitting={isSubmitting} />
 

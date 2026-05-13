@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -54,6 +55,9 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
+      {
+        getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
+      } as unknown as ProfessionAtlasSettingsService,
     );
 
     const result = await service.getSessionByToken('session-token');
@@ -89,6 +93,9 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
+      {
+        getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
+      } as unknown as ProfessionAtlasSettingsService,
     );
 
     const result = await service.getSessionResult('session-token');
@@ -97,5 +104,51 @@ describe('TestsPublicSessionService read paths', () => {
     expect(result.analysis.status).toBe('FAILED');
     expect(result.analysis.errorMessage).toBe('Test session expired before completion');
     expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('getSessionResult includes the configured profession atlas URL', async () => {
+    const attempt = {
+      id: 5,
+      status: 'COMPLETED',
+      expiresAt: null,
+      finishedAt: new Date('2026-05-12T12:00:00.000Z'),
+      analysis: {
+        providerMode: 'STUB',
+        status: 'READY',
+        summary: null,
+        rawText: null,
+        errorMessage: null,
+        generatedAt: new Date('2026-05-12T12:00:01.000Z'),
+      },
+    };
+    const prismaMock = {
+      appSetting: {
+        findUnique: jest.fn().mockResolvedValue({
+          key: 'professionAtlas.url',
+          value: ' https://atlas.example/professions ',
+          updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+        }),
+      },
+      testStudentAttempt: {
+        findUnique: jest.fn().mockResolvedValue(attempt),
+      },
+    } as unknown as PrismaService;
+    const analysisService = new TestsAnalysisService(
+      prismaMock,
+      {} as ConfigService,
+      {} as OpenRouterApiKeyService,
+    );
+    const service = new TestsPublicSessionService(
+      prismaMock,
+      {} as TestsPublicLinkService,
+      analysisService,
+      new ProfessionAtlasSettingsService(prismaMock),
+    );
+
+    const result = await service.getSessionResult('session-token');
+
+    expect(result).toMatchObject({
+      professionAtlasUrl: 'https://atlas.example/professions',
+    });
   });
 });

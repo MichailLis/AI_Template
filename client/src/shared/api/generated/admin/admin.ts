@@ -25,6 +25,7 @@ import type {
   AdminControllerGetUsersParams,
   AdminOpenRouterSettingsResponseDto,
   AdminOverviewResponseDto,
+  AdminProfessionAtlasSettingsResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
   AdminUserResponseDto,
@@ -40,6 +41,7 @@ import type {
   PromptTestQuestionsResponseDto,
   UpdateAnalysisPromptVersionDto,
   UpdateOpenRouterApiKeyDto,
+  UpdateProfessionAtlasUrlDto,
   UpdateUserRoleDto,
 } from '../../model';
 
@@ -832,6 +834,243 @@ export const useAdminSettingsControllerUpdateOpenRouterApiKey = <
 > => {
   return useMutation(
     getAdminSettingsControllerUpdateOpenRouterApiKeyMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Get profession atlas settings
+ */
+export const adminSettingsControllerGetProfessionAtlasSettings = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminProfessionAtlasSettingsResponseDto>(
+    { url: `/admin/settings/profession-atlas`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey = () => {
+  return [`/admin/settings/profession-atlas`] as const;
+};
+
+export const getAdminSettingsControllerGetProfessionAtlasSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>
+  > = ({ signal }) => adminSettingsControllerGetProfessionAtlasSettings(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminSettingsControllerGetProfessionAtlasSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>
+>;
+export type AdminSettingsControllerGetProfessionAtlasSettingsQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useAdminSettingsControllerGetProfessionAtlasSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetProfessionAtlasSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetProfessionAtlasSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get profession atlas settings
+ */
+
+export function useAdminSettingsControllerGetProfessionAtlasSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminSettingsControllerGetProfessionAtlasSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update profession atlas URL
+ */
+export const adminSettingsControllerUpdateProfessionAtlasUrl = (
+  updateProfessionAtlasUrlDto: UpdateProfessionAtlasUrlDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminProfessionAtlasSettingsResponseDto>(
+    {
+      url: `/admin/settings/profession-atlas`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateProfessionAtlasUrlDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerUpdateProfessionAtlasUrlMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>,
+    TError,
+    { data: UpdateProfessionAtlasUrlDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>,
+  TError,
+  { data: UpdateProfessionAtlasUrlDto },
+  TContext
+> => {
+  const mutationKey = ['adminSettingsControllerUpdateProfessionAtlasUrl'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>,
+    { data: UpdateProfessionAtlasUrlDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminSettingsControllerUpdateProfessionAtlasUrl(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerUpdateProfessionAtlasUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>
+>;
+export type AdminSettingsControllerUpdateProfessionAtlasUrlMutationBody =
+  UpdateProfessionAtlasUrlDto;
+export type AdminSettingsControllerUpdateProfessionAtlasUrlMutationError =
+  ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Update profession atlas URL
+ */
+export const useAdminSettingsControllerUpdateProfessionAtlasUrl = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>,
+      TError,
+      { data: UpdateProfessionAtlasUrlDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateProfessionAtlasUrl>>,
+  TError,
+  { data: UpdateProfessionAtlasUrlDto },
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerUpdateProfessionAtlasUrlMutationOptions(options),
     queryClient,
   );
 };

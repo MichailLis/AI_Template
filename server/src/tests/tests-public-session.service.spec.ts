@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -45,6 +46,7 @@ describe('TestsPublicSessionService', () => {
   let enqueueAttemptAnalysisMock: jest.Mock;
   let toPublicAnalysisResponseMock: jest.Mock;
   let toAttemptStatusMock: jest.Mock;
+  let getProfessionAtlasUrlMock: jest.Mock;
   let transactionMock: jest.Mock;
   let txMock: {
     testStudentAnswer: {
@@ -65,6 +67,7 @@ describe('TestsPublicSessionService', () => {
     enqueueAttemptAnalysisMock = jest.fn();
     toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
     toAttemptStatusMock = jest.fn((attempt: { status: string }) => attempt.status);
+    getProfessionAtlasUrlMock = jest.fn().mockResolvedValue(null);
     txMock = {
       testStudentAnswer: {
         count: jest.fn(),
@@ -101,6 +104,9 @@ describe('TestsPublicSessionService', () => {
       prismaMock as unknown as PrismaService,
       publicLinkServiceMock as unknown as TestsPublicLinkService,
       analysisServiceMock as unknown as TestsAnalysisService,
+      {
+        getProfessionAtlasUrl: getProfessionAtlasUrlMock,
+      } as unknown as ProfessionAtlasSettingsService,
     );
   });
 

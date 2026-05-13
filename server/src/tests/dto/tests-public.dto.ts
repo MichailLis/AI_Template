@@ -135,6 +135,7 @@ export const PublicSessionResultResponseSchema = z.object({
   status: PublicSessionStatusSchema,
   finishedAt: z.string().nullable(),
   analysis: PublicSessionAnalysisSchema,
+  professionAtlasUrl: z.string().url().nullable(),
 });
 
 export class PublicLinkAccessResponseDto extends createZodDto(PublicLinkAccessResponseSchema) {}

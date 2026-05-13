@@ -115,8 +115,6 @@ export function PublicTestEntryWorkspace() {
           groupValidationExample={link.groupValidationExample}
           groupValidationHint={link.groupValidationHint}
           groupValidationWarning={currentGroupValidationWarning}
-          consentVersion={link.consentVersion}
-          consentText={link.consentText}
           isSubmitting={startMutation.isPending}
           onSubmit={handleStart}
           onFieldChange={updateField}

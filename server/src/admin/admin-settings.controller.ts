@@ -3,10 +3,13 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import {
+  AdminProfessionAtlasSettingsResponseDto,
   AdminOpenRouterSettingsResponseDto,
   UpdateOpenRouterApiKeyDto,
+  UpdateProfessionAtlasUrlDto,
 } from './dto/admin-settings.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
@@ -16,7 +19,10 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 @UseGuards(AtGuard)
 @Controller('admin/settings')
 export class AdminSettingsController {
-  constructor(private readonly openRouterApiKeyService: OpenRouterApiKeyService) {}
+  constructor(
+    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
+    private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
+  ) {}
 
   @Get('openrouter')
   @ApiOperation({ summary: 'Get OpenRouter settings' })
@@ -33,5 +39,22 @@ export class AdminSettingsController {
     @Body() dto: UpdateOpenRouterApiKeyDto,
   ) {
     return this.openRouterApiKeyService.updateOpenRouterApiKey(userId, dto.apiKey);
+  }
+
+  @Get('profession-atlas')
+  @ApiOperation({ summary: 'Get profession atlas settings' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminProfessionAtlasSettingsResponseDto })
+  getProfessionAtlasSettings(@GetCurrentUserId() userId: number) {
+    return this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
+  }
+
+  @Patch('profession-atlas')
+  @ApiOperation({ summary: 'Update profession atlas URL' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminProfessionAtlasSettingsResponseDto })
+  updateProfessionAtlasUrl(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: UpdateProfessionAtlasUrlDto,
+  ) {
+    return this.professionAtlasSettingsService.updateProfessionAtlasUrl(userId, dto.url);
   }
 }

@@ -13,6 +13,7 @@ import {
   createRandomToken,
   toPrismaRequiredJsonInput,
 } from './tests-domain.utils';
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 
@@ -26,6 +27,7 @@ export class TestsPublicSessionService {
     private readonly prisma: PrismaService,
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
+    private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
   ) {}
 
   private matchesGroupPattern(groupOrClass: string, pattern: string) {
@@ -322,6 +324,7 @@ export class TestsPublicSessionService {
       status,
       finishedAt: toOptionalIsoString(attempt.finishedAt),
       analysis: this.toSessionResultAnalysisResponse(status, attempt.analysis),
+      professionAtlasUrl: await this.professionAtlasSettingsService.getProfessionAtlasUrl(),
     };
   }
 }

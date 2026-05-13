@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { OpenRouterModule } from '../openrouter/openrouter.module';
 import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { TestsAdminAttemptsController } from './tests-admin-attempts.controller';
@@ -17,6 +18,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsPublicSessionService,
     TestsAdminAttemptService,
     TestsAttemptService,
+    ProfessionAtlasSettingsService,
   ],
   exports: [
     TestsAnalysisService,
