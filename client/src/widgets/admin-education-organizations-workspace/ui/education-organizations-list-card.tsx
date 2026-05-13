@@ -1,4 +1,5 @@
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
@@ -41,7 +42,7 @@ export function EducationOrganizationsListCard({
   onNextPage,
 }: EducationOrganizationsListCardProps) {
   return (
-    <Card className="border-slate-200">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Список заведений</CardTitle>
         <CardDescription>
@@ -54,7 +55,9 @@ export function EducationOrganizationsListCard({
           items={organizations}
           getRowKey={(organization) => organization.id}
           getRowClassName={(organization) =>
-            selectedOrganizationId === organization.id ? 'bg-slate-100' : undefined
+            selectedOrganizationId === organization.id
+              ? adminClassNames.panel.selectedRow
+              : undefined
           }
           onRowClick={onSelectOrganization}
           emptyMessage="Пока нет учебных заведений"
@@ -66,13 +69,9 @@ export function EducationOrganizationsListCard({
               <TableCell>{organization.attemptsCount}</TableCell>
               <TableCell>
                 {organization.isActive ? (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
-                    Активно
-                  </span>
+                  <span className={adminBadgeClassNames.pillSuccess}>Активно</span>
                 ) : (
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700">
-                    Отключено
-                  </span>
+                  <span className={adminBadgeClassNames.pillNeutral}>Отключено</span>
                 )}
               </TableCell>
             </>

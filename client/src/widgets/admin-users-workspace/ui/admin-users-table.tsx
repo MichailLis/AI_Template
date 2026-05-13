@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { TableCell } from '@/shared/ui/table';
 
@@ -72,8 +73,10 @@ export function AdminUsersTable({
           <TableCell className="w-32 sm:min-w-48">
             <div>
               <p className="break-all font-medium text-foreground">{user.email}</p>
-              <p className="text-xs text-slate-500">ID: {user.id}</p>
-              {user.name ? <p className="text-xs text-slate-500">{user.name}</p> : null}
+              <p className={cn('text-xs', adminClassNames.text.muted)}>ID: {user.id}</p>
+              {user.name ? (
+                <p className={cn('text-xs', adminClassNames.text.muted)}>{user.name}</p>
+              ) : null}
             </div>
           </TableCell>
           <TableCell className="w-20 sm:w-36">
@@ -88,10 +91,10 @@ export function AdminUsersTable({
               <span className="sm:hidden">{getMobileRoleLabel(user.role)}</span>
             </Badge>
           </TableCell>
-          <TableCell className="hidden text-slate-600 lg:table-cell">
+          <TableCell className={cn('hidden lg:table-cell', adminClassNames.table.mutedCell)}>
             {formatDateTime(user.createdAt)}
           </TableCell>
-          <TableCell className="hidden text-slate-600 lg:table-cell">
+          <TableCell className={cn('hidden lg:table-cell', adminClassNames.table.mutedCell)}>
             {formatDateTime(user.updatedAt)}
           </TableCell>
           <TableCell className="w-10 text-right sm:w-12">

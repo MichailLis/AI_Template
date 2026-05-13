@@ -2,6 +2,11 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '@/shared/lib/utils';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {
@@ -115,14 +120,14 @@ export function AiModelCombobox({
                     />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-sm">{model.label}</span>
-                      <span className="truncate text-xs text-slate-500">
+                      <span className={`truncate text-xs ${adminClassNames.text.muted}`}>
                         {model.provider} · {model.id}
                       </span>
                     </div>
                     {model.isFree ? (
                       <Badge
                         variant="outline"
-                        className="shrink-0 border-emerald-200 text-emerald-700"
+                        className={`shrink-0 ${adminBadgeClassNames.success}`}
                       >
                         Free
                       </Badge>
@@ -135,16 +140,18 @@ export function AiModelCombobox({
         </PopoverContent>
       </Popover>
 
-      <p className="text-xs text-slate-500">
+      <p className={adminClassNames.form.fieldHint}>
         Показано {visibleModelOptions.length} из {modelOptionsCount} моделей с поддержкой structured
         outputs
       </p>
 
       {!isLoading && modelOptionsCount === 0 ? (
-        <p className="text-xs text-amber-700">Нет моделей с поддержкой structured outputs.</p>
+        <p className={`text-xs ${adminToneClassNames.warning.text}`}>
+          Нет моделей с поддержкой structured outputs.
+        </p>
       ) : null}
 
-      <p className="text-xs text-slate-500">Всего в каталоге: {allModelsCount}</p>
+      <p className={adminClassNames.form.fieldHint}>Всего в каталоге: {allModelsCount}</p>
 
       {isError ? (
         <Button type="button" variant="outline" size="sm" onClick={onRetryModels}>

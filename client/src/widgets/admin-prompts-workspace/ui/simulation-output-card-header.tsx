@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -17,7 +18,7 @@ export function SimulationOutputCardHeader({
   onClearLogs,
 }: SimulationOutputCardHeaderProps) {
   return (
-    <CardHeader className="border-b border-slate-200">
+    <CardHeader className={adminClassNames.border.bottom}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <CardTitle>Проверка промпта</CardTitle>
@@ -26,7 +27,7 @@ export function SimulationOutputCardHeader({
           </CardDescription>
         </div>
         <div className="flex items-center gap-3 text-xs">
-          <label className="flex items-center gap-2">
+          <label className={adminClassNames.form.checkboxLabel}>
             <input
               type="checkbox"
               checked={showMetrics}
@@ -34,7 +35,7 @@ export function SimulationOutputCardHeader({
             />
             Метрики
           </label>
-          <label className="flex items-center gap-2">
+          <label className={adminClassNames.form.checkboxLabel}>
             <input
               type="checkbox"
               checked={diffView}

@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -43,7 +44,7 @@ interface TestEditorStateCardProps {
 
 function TestEditorStateCard({ content }: TestEditorStateCardProps) {
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Редактор теста</CardTitle>
         <CardDescription>Изменение данных теста, вопросов и публикация версии.</CardDescription>
@@ -88,7 +89,7 @@ export function TestEditor({
     return (
       <TestEditorStateCard
         content={
-          <p className="text-sm text-slate-500">
+          <p className={`text-sm ${adminClassNames.text.muted}`}>
             Выберите тест из списка или создайте новый для начала работы.
           </p>
         }
@@ -100,7 +101,7 @@ export function TestEditor({
     return (
       <TestEditorStateCard
         content={
-          <p className="text-sm text-slate-500">
+          <p className={`text-sm ${adminClassNames.text.muted}`}>
             Загрузка версии в работе... Пожалуйста, подождите.
           </p>
         }
@@ -112,8 +113,8 @@ export function TestEditor({
     return (
       <TestEditorStateCard
         content={
-          <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
-            <p className="text-sm text-red-700">
+          <div className={`space-y-2 ${adminClassNames.panel.dangerInline}`}>
+            <p className={`text-sm ${adminToneClassNames.danger.text}`}>
               {errorMessage ??
                 'Не удалось загрузить тест. Проверьте подключение и повторите попытку.'}
             </p>
@@ -134,7 +135,7 @@ export function TestEditor({
   }
 
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Редактор теста</CardTitle>
         <CardDescription>Изменение данных теста, вопросов и публикация версии.</CardDescription>

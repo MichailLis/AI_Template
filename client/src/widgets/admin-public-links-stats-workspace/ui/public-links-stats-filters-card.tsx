@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Label } from '@/shared/ui/label';
@@ -40,7 +41,7 @@ export function PublicLinksStatsFiltersCard({
   linkAttemptsCountById,
 }: PublicLinksStatsFiltersCardProps) {
   return (
-    <Card className="border-slate-200">
+    <Card className={adminClassNames.panel.card}>
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-40 space-y-2">
@@ -51,7 +52,7 @@ export function PublicLinksStatsFiltersCard({
               onChange={(event) => {
                 onTabChange(event.target.value as PublicLinksTab);
               }}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={`flex ${adminClassNames.form.select}`}
             >
               <option value="active">Активные</option>
               <option value="archived">Архив</option>
@@ -66,7 +67,7 @@ export function PublicLinksStatsFiltersCard({
               onChange={(event) => {
                 onTopicChange(Number.parseInt(event.target.value, 10));
               }}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={`flex ${adminClassNames.form.select}`}
               disabled={topicOptions.length === 0}
             >
               {topicOptions.length === 0 ? (
@@ -88,7 +89,7 @@ export function PublicLinksStatsFiltersCard({
               onChange={(event) => {
                 onPublicLinkChange(Number.parseInt(event.target.value, 10));
               }}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={`flex ${adminClassNames.form.select}`}
               disabled={linksForTopic.length === 0}
             >
               {linksForTopic.length === 0 ? (

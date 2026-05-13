@@ -1,3 +1,4 @@
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -53,15 +54,15 @@ export function TestEditorDraftSection({
         </Badge>
       </div>
 
-      <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+      <div className={adminClassNames.panel.infoInline}>
         Вы редактируете версию в работе. Пользователи видят только опубликованную версию.
       </div>
 
-      <div className="sticky top-2 z-10 rounded-md border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur">
+      <div className={`sticky top-2 z-10 p-3 backdrop-blur ${adminClassNames.panel.card}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-sm font-medium text-slate-900">Действия</p>
-            <p className="text-xs text-slate-500">
+            <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Действия</p>
+            <p className={adminClassNames.form.fieldHint}>
               {draftDirty
                 ? 'Есть несохраненные изменения'
                 : 'Изменения сохранены, можно публиковать'}
@@ -81,14 +82,18 @@ export function TestEditorDraftSection({
           </div>
         </div>
         {!canPublish ? (
-          <p className="mt-2 text-xs text-amber-700">
+          <p className={`mt-2 text-xs ${adminToneClassNames.warning.text}`}>
             Для публикации сохраните изменения и добавьте хотя бы один вопрос.
           </p>
         ) : null}
 
-        {autosaveHint ? <p className="mt-2 text-xs text-slate-500">{autosaveHint}</p> : null}
+        {autosaveHint ? (
+          <p className={`mt-2 ${adminClassNames.form.fieldHint}`}>{autosaveHint}</p>
+        ) : null}
         {autosaveError ? (
-          <p className="mt-2 text-xs text-red-700">Автосохранение не удалось: {autosaveError}</p>
+          <p className={`mt-2 text-xs ${adminToneClassNames.danger.text}`}>
+            Автосохранение не удалось: {autosaveError}
+          </p>
         ) : null}
       </div>
 

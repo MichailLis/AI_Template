@@ -1,4 +1,5 @@
 import { TestAnalysisResultView } from '@/features/tests';
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import {
   Dialog,
@@ -56,7 +57,9 @@ export function PublicLinksAttemptDetailDialog({
 }: PublicLinksAttemptDetailDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] max-w-4xl overflow-hidden p-0">
+      <DialogContent
+        className={`max-h-[calc(100vh-2rem)] max-w-4xl overflow-hidden p-0 ${adminClassNames.dialog.content}`}
+      >
         <div className="max-h-[calc(100vh-2rem)] overflow-y-auto p-6 pr-10">
           <DialogHeader>
             <DialogTitle>
@@ -69,10 +72,14 @@ export function PublicLinksAttemptDetailDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {isLoading ? <p className="text-sm text-slate-500">Загрузка...</p> : null}
+          {isLoading ? (
+            <p className={`text-sm ${adminClassNames.text.muted}`}>Загрузка...</p>
+          ) : null}
 
           {!isLoading && !detailAttempt ? (
-            <p className="text-sm text-red-600">Не удалось получить детали прохождения.</p>
+            <p className={`text-sm ${adminToneClassNames.danger.textAccent}`}>
+              Не удалось получить детали прохождения.
+            </p>
           ) : null}
 
           {!isLoading && detailAttempt && detailView === 'analysis' ? (
@@ -93,19 +100,21 @@ export function PublicLinksAttemptDetailDialog({
           {!isLoading && detailAttempt && detailView === 'answers' ? (
             <div className="space-y-3">
               {detailAttempt.answers.length === 0 ? (
-                <p className="text-sm text-slate-500">Ответы не найдены.</p>
+                <p className={`text-sm ${adminClassNames.text.muted}`}>Ответы не найдены.</p>
               ) : (
                 detailAttempt.answers.map((answer) => (
                   <div
                     key={`${answer.questionId}-${answer.updatedAt}`}
-                    className="rounded-md border p-3"
+                    className={adminClassNames.panel.compactCard}
                   >
-                    <p className="text-sm font-medium text-slate-900">{answer.questionTitle}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>
+                      {answer.questionTitle}
+                    </p>
+                    <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
                       #{answer.questionId} • {answer.questionType} •{' '}
                       {formatDateTime(answer.updatedAt)}
                     </p>
-                    <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-100">
+                    <pre className={`mt-2 ${adminClassNames.code.block}`}>
                       {toPrettyJson(answer.answerPayload)}
                     </pre>
                   </div>

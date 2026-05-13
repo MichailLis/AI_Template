@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/utils';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 
 import type { ReactNode } from 'react';
 
@@ -10,8 +11,8 @@ interface AdminStateBlockProps {
 }
 
 const toneClassName = {
-  muted: 'border-border bg-muted/30 text-muted-foreground',
-  danger: 'border-red-200 bg-red-50 text-red-700',
+  muted: adminClassNames.stateBlock.muted,
+  danger: adminClassNames.stateBlock.danger,
 } as const;
 
 export function AdminStateBlock({
@@ -21,15 +22,9 @@ export function AdminStateBlock({
   className,
 }: AdminStateBlockProps) {
   return (
-    <div
-      className={cn(
-        'flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm',
-        toneClassName[tone],
-        className,
-      )}
-    >
+    <div className={cn(adminClassNames.stateBlock.base, toneClassName[tone], className)}>
       <div>{children}</div>
-      {action ? <div className="mt-4">{action}</div> : null}
+      {action ? <div className={adminClassNames.stateBlock.action}>{action}</div> : null}
     </div>
   );
 }

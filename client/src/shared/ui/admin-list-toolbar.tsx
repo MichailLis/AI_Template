@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -45,7 +46,7 @@ export function AdminListToolbar<T extends string>({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex w-fit flex-wrap rounded-lg border border-border bg-muted p-1">
+        <div className={adminClassNames.toolbar.tabs}>
           {tabs.map((tab) => (
             <Button
               key={tab.value}
@@ -54,8 +55,8 @@ export function AdminListToolbar<T extends string>({
               variant={activeTab === tab.value ? 'secondary' : 'ghost'}
               className={
                 activeTab === tab.value
-                  ? 'bg-background shadow-sm hover:bg-background'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? adminClassNames.toolbar.activeTab
+                  : adminClassNames.toolbar.inactiveTab
               }
               onClick={() => onTabChange(tab.value)}
             >
@@ -71,7 +72,7 @@ export function AdminListToolbar<T extends string>({
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
-            className="bg-background"
+            className={adminClassNames.toolbar.input}
           />
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
@@ -43,7 +44,7 @@ export function AdminUsersFilters({
           onChange={(event) => onSearchInputChange(event.target.value)}
           placeholder="Поиск по email или имени…"
           aria-label="Поиск по email или имени"
-          className="w-full max-w-sm bg-white shadow-sm"
+          className={adminClassNames.filters.input}
         />
         <Button type="submit" size="sm" variant="secondary">
           Применить
@@ -97,7 +98,7 @@ export function AdminUsersFilters({
         <Button size="sm" variant="outline" onClick={onSortOrderToggle}>
           Порядок: {sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
         </Button>
-        <p className="ml-auto rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-500 shadow-sm">
+        <p className={adminClassNames.filters.total}>
           Всего: {formatTotal(total)} {isFetching ? '(обновление…)' : ''}
         </p>
       </div>

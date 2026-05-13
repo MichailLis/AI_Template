@@ -1,3 +1,4 @@
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -79,11 +80,13 @@ export function AdminTestsMetadataSettingsSection({
           >
             {isSavingDraft ? 'Сохранение...' : 'Сохранить изменения'}
           </Button>
-          <p className="text-xs text-slate-500">{draftStatusText}</p>
+          <p className={adminClassNames.form.fieldHint}>{draftStatusText}</p>
         </div>
-        {autosaveHint ? <p className="text-xs text-slate-500">{autosaveHint}</p> : null}
+        {autosaveHint ? <p className={adminClassNames.form.fieldHint}>{autosaveHint}</p> : null}
         {autoSaveError ? (
-          <p className="text-xs text-red-700">Автосохранение не удалось: {autoSaveError}</p>
+          <p className={`text-xs ${adminToneClassNames.danger.text}`}>
+            Автосохранение не удалось: {autoSaveError}
+          </p>
         ) : null}
       </div>
     </AdminTestsSettingsPanel>

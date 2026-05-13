@@ -8,6 +8,11 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -49,8 +54,8 @@ const formatUpdatedAt = (value: string | null) => {
 
 function OpenRouterStateBadge({ openRouter }: { openRouter: OpenRouterSettings }) {
   const className = openRouter.isConfigured
-    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-    : 'border-amber-200 bg-amber-50 text-amber-700';
+    ? adminBadgeClassNames.success
+    : adminBadgeClassNames.warning;
 
   return (
     <Badge variant="outline" className={className}>
@@ -61,7 +66,9 @@ function OpenRouterStateBadge({ openRouter }: { openRouter: OpenRouterSettings }
 
 function SettingsLoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    <div
+      className={`flex flex-wrap items-center justify-between gap-3 p-4 ${adminClassNames.panel.dangerInline}`}
+    >
       <span className="flex items-center gap-2">
         <TriangleAlert className="h-4 w-4" />
         {message}
@@ -70,7 +77,7 @@ function SettingsLoadError({ message, onRetry }: { message: string; onRetry: () 
         type="button"
         variant="outline"
         size="sm"
-        className="border-red-200 bg-white text-red-700 hover:bg-red-50"
+        className={adminToneClassNames.danger.active}
         onClick={onRetry}
       >
         <RefreshCcw className="h-4 w-4" />
@@ -82,18 +89,24 @@ function SettingsLoadError({ message, onRetry }: { message: string; onRetry: () 
 
 function OpenRouterStatusPanel({ openRouter }: { openRouter: OpenRouterSettings }) {
   return (
-    <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-3">
+    <div className={`grid gap-3 text-sm sm:grid-cols-3 ${adminClassNames.panel.loading}`}>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Источник</p>
-        <p className="mt-1 font-medium text-slate-900">{sourceLabels[openRouter.source]}</p>
+        <p className={adminClassNames.text.kicker}>Источник</p>
+        <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>
+          {sourceLabels[openRouter.source]}
+        </p>
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Текущий ключ</p>
-        <p className="mt-1 font-mono text-slate-900">{openRouter.maskedValue ?? 'не задан'}</p>
+        <p className={adminClassNames.text.kicker}>Текущий ключ</p>
+        <p className={`mt-1 font-mono ${adminClassNames.text.heading}`}>
+          {openRouter.maskedValue ?? 'не задан'}
+        </p>
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Обновлен</p>
-        <p className="mt-1 font-medium text-slate-900">{formatUpdatedAt(openRouter.updatedAt)}</p>
+        <p className={adminClassNames.text.kicker}>Обновлен</p>
+        <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>
+          {formatUpdatedAt(openRouter.updatedAt)}
+        </p>
       </div>
     </div>
   );
@@ -105,26 +118,28 @@ function ProfessionAtlasStatusPanel({
   professionAtlas: ProfessionAtlasSettings;
 }) {
   return (
-    <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-[minmax(0,1fr)_12rem]">
+    <div
+      className={`grid gap-3 text-sm sm:grid-cols-[minmax(0,1fr)_12rem] ${adminClassNames.panel.loading}`}
+    >
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Текущая ссылка</p>
+        <p className={adminClassNames.text.kicker}>Текущая ссылка</p>
         {professionAtlas.url ? (
           <a
             href={professionAtlas.url}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-flex max-w-full items-center gap-1 break-all font-medium text-sky-700 hover:text-sky-800"
+            className={`mt-1 inline-flex max-w-full items-center gap-1 break-all font-medium ${adminClassNames.text.linkInfo}`}
           >
             {professionAtlas.url}
             <ExternalLink className="h-3.5 w-3.5 shrink-0" />
           </a>
         ) : (
-          <p className="mt-1 font-medium text-slate-900">не задана</p>
+          <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>не задана</p>
         )}
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Обновлена</p>
-        <p className="mt-1 font-medium text-slate-900">
+        <p className={adminClassNames.text.kicker}>Обновлена</p>
+        <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>
           {formatUpdatedAt(professionAtlas.updatedAt)}
         </p>
       </div>
@@ -163,7 +178,7 @@ function ApiKeyForm({
           spellCheck={false}
           className="font-mono"
         />
-        <p className="text-xs text-slate-500">
+        <p className={adminClassNames.form.fieldHint}>
           После сохранения поле очищается, а ключ отображается только в маскированном виде.
         </p>
       </div>
@@ -174,7 +189,7 @@ function ApiKeyForm({
           {isSaving ? 'Сохраняем...' : 'Сохранить ключ'}
         </Button>
         {openRouter?.source === 'ENV' ? (
-          <span className="flex items-center gap-2 text-xs text-slate-500">
+          <span className={`flex items-center gap-2 ${adminClassNames.form.fieldHint}`}>
             <ShieldCheck className="h-4 w-4" />
             Сейчас используется ключ из окружения сервера.
           </span>
@@ -212,7 +227,7 @@ function ProfessionAtlasForm({
           autoComplete="off"
           spellCheck={false}
         />
-        <p className="text-xs text-slate-500">
+        <p className={adminClassNames.form.fieldHint}>
           Эта ссылка появится на странице результата после завершения теста.
         </p>
       </div>
@@ -249,12 +264,12 @@ export function OpenRouterSettingsCard({
   onSubmit,
 }: OpenRouterSettingsCardProps) {
   return (
-    <Card className="rounded-lg border-slate-200 shadow-sm">
+    <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <KeyRound className="h-5 w-5 text-slate-700" />
+              <KeyRound className={`h-5 w-5 ${adminClassNames.text.muted}`} />
               OpenRouter API key
             </CardTitle>
             <CardDescription>
@@ -267,9 +282,7 @@ export function OpenRouterSettingsCard({
 
       <CardContent className="space-y-6">
         {isLoading ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Загружаем текущие настройки...
-          </div>
+          <div className={adminClassNames.panel.loading}>Загружаем текущие настройки...</div>
         ) : null}
 
         {isError ? (
@@ -318,11 +331,11 @@ export function ProfessionAtlasSettingsCard({
   onUrlChange,
 }: ProfessionAtlasSettingsCardProps) {
   return (
-    <Card className="rounded-lg border-slate-200 shadow-sm">
+    <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className="space-y-2">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Link2 className="h-5 w-5 text-slate-700" />
+            <Link2 className={`h-5 w-5 ${adminClassNames.text.muted}`} />
             Атлас профессий
           </CardTitle>
           <CardDescription>
@@ -333,9 +346,7 @@ export function ProfessionAtlasSettingsCard({
 
       <CardContent className="space-y-6">
         {isLoading ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Загружаем текущую ссылку...
-          </div>
+          <div className={adminClassNames.panel.loading}>Загружаем текущую ссылку...</div>
         ) : null}
 
         {isError ? (

@@ -10,6 +10,7 @@ import {
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
   useAdminSettingsControllerUpdateOpenRouterApiKey,
 } from '@/shared/api/generated/admin/admin';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 
 import { OpenRouterSettingsCard, ProfessionAtlasSettingsCard } from './admin-settings-cards';
 
@@ -126,8 +127,10 @@ export function AdminSettingsWorkspace() {
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-normal text-slate-900">Настройки</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className={`text-2xl font-semibold tracking-normal ${adminClassNames.text.heading}`}>
+          Настройки
+        </h1>
+        <p className={`text-sm ${adminClassNames.text.body}`}>
           OpenRouter используется для анализа ответов. Атлас профессий показывается на публичной
           странице результата.
         </p>

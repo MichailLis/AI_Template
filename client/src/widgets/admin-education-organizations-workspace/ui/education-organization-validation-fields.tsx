@@ -3,6 +3,7 @@ import {
   parseGroupValidationMode,
   type GroupValidationMode,
 } from '@/shared/lib/group-validation';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
@@ -41,7 +42,7 @@ export function EducationOrganizationValidationFields({
           id={`${idPrefix}-organization-mode`}
           value={validationMode}
           onChange={(event) => onValidationModeChange(parseGroupValidationMode(event.target.value))}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={`flex ${adminClassNames.form.select}`}
           disabled={disabled}
         >
           {GROUP_VALIDATION_MODE_OPTIONS.map((option) => (

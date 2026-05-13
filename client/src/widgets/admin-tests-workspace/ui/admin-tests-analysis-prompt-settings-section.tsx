@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Label } from '@/shared/ui/label';
 
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
@@ -71,7 +72,7 @@ export function AdminTestsAnalysisPromptSettingsSection({
               event.target.value ? Number(event.target.value) : null,
             )
           }
-          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={adminClassNames.form.select}
         >
           <option value="">Не подключать анализ</option>
           {options.map((option) => (
@@ -81,7 +82,9 @@ export function AdminTestsAnalysisPromptSettingsSection({
           ))}
         </select>
         {promptsQuery.isError ? (
-          <p className="text-xs text-red-700">Не удалось загрузить промпты анализа.</p>
+          <p className={`text-xs ${adminToneClassNames.danger.text}`}>
+            Не удалось загрузить промпты анализа.
+          </p>
         ) : null}
       </div>
     </AdminTestsSettingsPanel>

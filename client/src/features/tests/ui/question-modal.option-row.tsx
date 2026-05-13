@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
@@ -21,7 +22,9 @@ export function QuestionModalOptionRow({
   onRemoveOption,
 }: QuestionModalOptionRowProps) {
   return (
-    <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
+    <div
+      className={`grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem] ${adminClassNames.panel.compactSection}`}
+    >
       <Input
         value={option.label}
         onChange={(event) => onUpdateOption(option.id, 'label', event.target.value)}

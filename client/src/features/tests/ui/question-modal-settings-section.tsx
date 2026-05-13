@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
@@ -11,11 +12,13 @@ export function QuestionModalSettingsSection({
   onSettingsTextChange,
 }: QuestionModalSettingsSectionProps) {
   return (
-    <details className="rounded-md border border-slate-200 bg-slate-50">
-      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-slate-700">
+    <details className={adminClassNames.panel.frame}>
+      <summary
+        className={`cursor-pointer select-none px-3 py-2 text-sm font-medium ${adminClassNames.text.body}`}
+      >
         Расширенные настройки
       </summary>
-      <div className="space-y-2 border-t border-slate-200 p-3">
+      <div className={`space-y-2 p-3 ${adminClassNames.border.top}`}>
         <Label htmlFor="question-settings-modal">Настройки JSON (необязательно)</Label>
         <Textarea
           id="question-settings-modal"
@@ -24,7 +27,7 @@ export function QuestionModalSettingsSection({
           value={settingsText}
           onChange={(event) => onSettingsTextChange(event.target.value)}
         />
-        <p className="text-xs text-slate-500">
+        <p className={adminClassNames.form.fieldHint}>
           Используйте только для редких дополнительных параметров вопроса.
         </p>
       </div>

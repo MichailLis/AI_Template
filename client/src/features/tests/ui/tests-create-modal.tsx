@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -37,7 +38,7 @@ export function TestsCreateModal({
 }: TestsCreateModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200">
+      <DialogContent className={adminClassNames.dialog.content}>
         <DialogHeader>
           <DialogTitle>Создать тест</DialogTitle>
           <DialogDescription>

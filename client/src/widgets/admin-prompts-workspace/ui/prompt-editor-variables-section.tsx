@@ -1,5 +1,7 @@
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 
+import { cn } from '@/shared/lib/utils';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
@@ -21,16 +23,22 @@ export function PromptEditorVariablesSection({
   onRemoveVariable,
 }: PromptEditorVariablesSectionProps) {
   return (
-    <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase text-slate-600">
+    <div className={`space-y-2 ${adminClassNames.panel.compactSection}`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className={`text-xs font-semibold uppercase ${adminClassNames.text.body}`}>
           Тестовые переменные ({variables.length})
         </p>
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-slate-500">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className={`min-w-0 ${adminClassNames.form.fieldHint}`}>
             Вопросы для проверки берутся из выбранного теста справа.
           </p>
-          <Button type="button" size="sm" variant="outline" onClick={onAddVariable}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={onAddVariable}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Добавить переменную
           </Button>
@@ -39,13 +47,15 @@ export function PromptEditorVariablesSection({
 
       <div className="grid gap-2">
         {variables.length === 0 ? (
-          <div className="rounded-md border border-dashed border-slate-300 p-3 text-xs text-slate-500">
+          <div className={`p-3 text-xs ${adminClassNames.panel.empty}`}>
             Нет тестовых переменных. Добавьте одну для подстановки.
           </div>
         ) : null}
 
         {duplicateVariableData.duplicateKeys.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <div
+            className={`flex items-start gap-2 p-3 text-xs ${adminClassNames.panel.warningInline}`}
+          >
             <AlertTriangle className="mt-0.5 h-4 w-4" />
             <span>
               Обнаружены дубликаты ключей: {duplicateVariableData.duplicateKeys.join(', ')}. Каждому
@@ -62,11 +72,12 @@ export function PromptEditorVariablesSection({
             <Input
               value={variable.key}
               onChange={(event) => onVariableChange(variable.id, 'key', event.target.value)}
-              className={`font-mono text-xs ${
+              className={cn(
+                'font-mono text-xs',
                 duplicateVariableData.duplicateIds.has(variable.id)
-                  ? 'border-amber-300 bg-amber-50 focus-visible:ring-amber-400'
-                  : ''
-              }`}
+                  ? adminClassNames.form.warningInput
+                  : '',
+              )}
               placeholder="ключ_переменной"
             />
             <Input

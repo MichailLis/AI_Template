@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -60,7 +61,9 @@ export function PublicLinkCreateDialog({
 }: PublicLinkCreateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className={`max-h-[85vh] max-w-2xl overflow-y-auto ${adminClassNames.dialog.content}`}
+      >
         <DialogHeader>
           <DialogTitle>Создать публичную ссылку</DialogTitle>
           <DialogDescription>
@@ -111,7 +114,7 @@ export function PublicLinkCreateDialog({
           />
 
           {!hasPublishedVersion ? (
-            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <p className={adminClassNames.panel.warningInline}>
               У выбранного теста нет опубликованной версии. Опубликуйте тест, чтобы создать
               публичную ссылку.
             </p>

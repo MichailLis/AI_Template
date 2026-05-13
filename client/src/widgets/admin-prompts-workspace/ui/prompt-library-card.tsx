@@ -1,6 +1,8 @@
 import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { cn } from '@/shared/lib/utils';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -52,11 +54,10 @@ function PromptLibraryItem({
 
   return (
     <div
-      className={
-        isSelected
-          ? 'flex min-w-0 gap-2 rounded-md border border-primary bg-primary/5 p-2'
-          : 'flex min-w-0 gap-2 rounded-md border border-slate-200 bg-white p-2'
-      }
+      className={cn(
+        'flex min-w-0 gap-2 rounded-md border p-2',
+        isSelected ? 'border-primary bg-primary/5' : adminClassNames.panel.frame,
+      )}
     >
       <button
         type="button"
@@ -65,7 +66,9 @@ function PromptLibraryItem({
         className="min-w-0 flex-1 text-left"
       >
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-medium text-slate-900">{prompt.title}</span>
+          <span className={`truncate text-sm font-medium ${adminClassNames.text.heading}`}>
+            {prompt.title}
+          </span>
           {latestVersion ? (
             <>
               <Badge variant="outline">v{latestVersion.versionNumber}</Badge>
@@ -73,8 +76,8 @@ function PromptLibraryItem({
                 variant="outline"
                 className={
                   latestVersion.status === 'PUBLISHED'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                    ? adminBadgeClassNames.success
+                    : adminBadgeClassNames.warning
                 }
               >
                 {latestVersion.status}
@@ -83,7 +86,9 @@ function PromptLibraryItem({
           ) : null}
         </div>
 
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+        <div
+          className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${adminClassNames.text.muted}`}
+        >
           {latestVersion ? <span className="min-w-0 truncate">{latestVersion.model}</span> : null}
           <span>Обновлен {formatPromptDate(prompt.updatedAt)}</span>
         </div>
@@ -95,7 +100,7 @@ function PromptLibraryItem({
         variant="ghost"
         disabled={isDeleting}
         aria-label={`Удалить промпт ${prompt.title}`}
-        className="shrink-0 text-slate-500 hover:text-red-700"
+        className={`shrink-0 ${adminClassNames.iconButton.danger}`}
         onClick={() => setIsDeleteDialogOpen(true)}
       >
         <Trash2 className="h-4 w-4" />
@@ -125,8 +130,8 @@ export function PromptLibraryCard({
   onDeletePrompt,
 }: PromptLibraryCardProps) {
   return (
-    <Card className="min-w-0 border-slate-200 shadow-sm">
-      <CardHeader className="border-b border-slate-200">
+    <Card className={`min-w-0 ${adminClassNames.panel.card}`}>
+      <CardHeader className={adminClassNames.border.bottom}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -146,16 +151,14 @@ export function PromptLibraryCard({
 
       <CardContent className="p-4">
         {isLoading ? (
-          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+          <div className={`flex items-center gap-2 p-3 text-sm ${adminClassNames.panel.loading}`}>
             <Loader2 className="h-4 w-4 animate-spin" />
             Загружаем промпты...
           </div>
         ) : null}
 
         {!isLoading && prompts.length === 0 ? (
-          <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Сохраненных промптов пока нет.
-          </div>
+          <div className={adminClassNames.panel.empty}>Сохраненных промптов пока нет.</div>
         ) : null}
 
         {!isLoading && prompts.length > 0 ? (

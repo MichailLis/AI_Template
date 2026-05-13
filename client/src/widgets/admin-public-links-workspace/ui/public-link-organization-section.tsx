@@ -2,6 +2,7 @@ import {
   GROUP_VALIDATION_MODE_OPTIONS,
   parseGroupValidationMode,
 } from '@/shared/lib/group-validation';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -58,7 +59,7 @@ function EducationOrganizationSelect({
           const value = event.target.value;
           onEducationOrganizationSelect(value ? Number.parseInt(value, 10) : null);
         }}
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        className={`flex ${adminClassNames.form.select}`}
       >
         <option value="">Не привязывать (студент заполнит сам)</option>
         {activeEducationOrganizations.map((organization) => (
@@ -111,12 +112,12 @@ function GroupValidationDetails({
   isUpdatingEducationOrganization,
 }: GroupValidationDetailsProps) {
   return (
-    <details className="mt-3 rounded-md border border-slate-200 bg-white p-3">
-      <summary className="cursor-pointer text-sm font-medium text-slate-900">
+    <details className={`mt-3 ${adminClassNames.panel.compactCard}`}>
+      <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
         Настройки поля «Группа / класс»
       </summary>
       <div className="mt-3 space-y-2">
-        <p className="text-xs text-slate-500">
+        <p className={adminClassNames.form.fieldHint}>
           Эти правила применяются к выбранному заведению и помогают привести ответы к одному
           формату.
         </p>
@@ -127,7 +128,7 @@ function GroupValidationDetails({
           onChange={(event) =>
             onGroupValidationModeChange(parseGroupValidationMode(event.target.value))
           }
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={`flex ${adminClassNames.form.select}`}
         >
           {GROUP_VALIDATION_MODE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -202,9 +203,9 @@ export function PublicLinkOrganizationSection({
   isUpdatingEducationOrganization,
 }: PublicLinkOrganizationSectionProps) {
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Учебное заведение</p>
-      <p className="mt-1 text-sm text-slate-600">
+    <div className={adminClassNames.panel.compactSection}>
+      <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Учебное заведение</p>
+      <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
         Привяжите ссылку к заведению, если студентам не нужно вводить его вручную.
       </p>
 

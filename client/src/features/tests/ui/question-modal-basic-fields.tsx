@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
@@ -24,7 +25,7 @@ export function QuestionModalBasicFields({
       <Label htmlFor="question-type-modal">Тип</Label>
       <select
         id="question-type-modal"
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+        className={adminClassNames.form.select}
         value={form.type}
         onChange={(event) => onTypeChange(event.target.value as QuestionType)}
       >
@@ -50,7 +51,7 @@ export function QuestionModalBasicFields({
         onChange={(event) => onDescriptionChange(event.target.value)}
       />
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className={adminClassNames.form.checkboxLabel}>
         <input
           type="checkbox"
           checked={form.required}

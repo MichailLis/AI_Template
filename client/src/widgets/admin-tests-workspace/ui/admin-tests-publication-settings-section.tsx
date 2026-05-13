@@ -1,3 +1,5 @@
+import { cn } from '@/shared/lib/utils';
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
@@ -53,7 +55,7 @@ export function AdminTestsPublishedSnapshotSection({
   return (
     <AdminTestsSettingsPanel title="Опубликованный срез">
       {published ? (
-        <div className="mt-2 space-y-1 text-sm text-slate-700">
+        <div className={`mt-2 space-y-1 text-sm ${adminClassNames.text.body}`}>
           <p>
             Версия: <span className="font-medium">v{published.versionNumber}</span>
           </p>
@@ -70,7 +72,7 @@ export function AdminTestsPublishedSnapshotSection({
           </p>
         </div>
       ) : (
-        <p className="mt-1 text-sm text-slate-600">Тест еще не опубликован.</p>
+        <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>Тест еще не опубликован.</p>
       )}
     </AdminTestsSettingsPanel>
   );
@@ -100,7 +102,9 @@ export function AdminTestsPublishSection({
         >
           {publishButtonLabel}
         </Button>
-        {publishHintText ? <p className="text-xs text-amber-700">{publishHintText}</p> : null}
+        {publishHintText ? (
+          <p className={`text-xs ${adminToneClassNames.warning.text}`}>{publishHintText}</p>
+        ) : null}
       </div>
     </AdminTestsSettingsPanel>
   );
@@ -116,8 +120,8 @@ export function AdminTestsActivitySwitchSection({
     <AdminTestsSettingsPanel title="Переключатель активности">
       <div className="mt-2 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-slate-700">Активен для студентов</p>
-          <p className="text-xs text-slate-500">
+          <p className={`text-sm ${adminClassNames.text.body}`}>Активен для студентов</p>
+          <p className={adminClassNames.form.fieldHint}>
             Если выключить, тест уйдет в архив. Для возобновления включите обратно.
           </p>
         </div>
@@ -128,12 +132,15 @@ export function AdminTestsActivitySwitchSection({
           disabled={isArchivingTopic || isRestoringTopic}
           aria-label="Переключатель активности теста"
           onClick={onToggleTopicActive}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            isSelectedTopicArchived ? 'bg-slate-300' : 'bg-emerald-500'
-          }`}
+          className={cn(
+            'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+            isSelectedTopicArchived
+              ? adminClassNames.switch.inactive
+              : adminClassNames.switch.active,
+          )}
         >
           <span
-            className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
+            className={`${adminClassNames.switch.thumb} ${
               isSelectedTopicArchived ? 'translate-x-1' : 'translate-x-5'
             }`}
           />

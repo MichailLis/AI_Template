@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -30,7 +31,7 @@ export function PromptEditorSettingsSection({
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="prompt-temperature">
-            Температура <span className="text-slate-500">({temperature})</span>
+            Температура <span className={adminClassNames.text.muted}>({temperature})</span>
           </Label>
           <input
             id="prompt-temperature"
@@ -40,7 +41,7 @@ export function PromptEditorSettingsSection({
             step={0.1}
             value={temperature}
             onChange={(event) => onTemperatureChange(event.target.value)}
-            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-primary"
+            className={adminClassNames.form.range}
           />
         </div>
         <div className="space-y-2">

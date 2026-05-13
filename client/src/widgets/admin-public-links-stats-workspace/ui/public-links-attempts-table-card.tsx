@@ -1,4 +1,5 @@
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -69,7 +70,7 @@ export function PublicLinksAttemptsTableCard({
   onNextPage,
 }: PublicLinksAttemptsTableCardProps) {
   return (
-    <Card>
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
@@ -78,11 +79,11 @@ export function PublicLinksAttemptsTableCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <p className="text-sm text-slate-500">Загружаем данные прохождений...</p>
+          <p className={`text-sm ${adminClassNames.text.muted}`}>Загружаем данные прохождений...</p>
         ) : null}
 
         {!isLoading && !selectedPublicLink ? (
-          <p className="text-sm text-slate-500">
+          <p className={`text-sm ${adminClassNames.text.muted}`}>
             Сначала выберите ссылку, чтобы увидеть прохождения студентов.
           </p>
         ) : null}

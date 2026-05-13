@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 interface AdminPaginationProps {
@@ -18,8 +19,8 @@ export function AdminPagination({
   onNext,
 }: AdminPaginationProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-      <p className="rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground">
+    <div className={adminClassNames.pagination.root}>
+      <p className={adminClassNames.pagination.badge}>
         Страница {page} из {totalPages}
       </p>
       <div className="flex items-center gap-2">

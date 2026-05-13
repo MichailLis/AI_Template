@@ -1,4 +1,5 @@
 import { TestsListCard, TestsListHeader, type TestTopicListItem } from '@/features/tests';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 
 import type { ListMode } from './use-admin-tests-workspace';
@@ -53,7 +54,7 @@ export function AdminTestsListSection({
   onRetryTopics,
 }: AdminTestsListSectionProps) {
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <TestsListHeader
         searchValue={searchValue}
         listMode={listMode}

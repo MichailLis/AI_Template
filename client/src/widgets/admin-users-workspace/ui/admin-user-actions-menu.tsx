@@ -1,5 +1,6 @@
 import { Copy, MoreHorizontal, ShieldCheck, ShieldOff } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
@@ -59,8 +60,8 @@ export function AdminUserActionsMenu({
       </Button>
 
       {isOpen ? (
-        <Card className="absolute right-0 top-10 z-20 w-48 border-slate-200 shadow-md">
-          <CardContent className="space-y-2 p-2">
+        <Card className={adminClassNames.actionMenu.card}>
+          <CardContent className={adminClassNames.actionMenu.content}>
             <Button
               variant="secondary"
               size="sm"

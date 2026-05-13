@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -90,11 +91,11 @@ function StatusMessage({ analysis }: { analysis: AnalysisPayload | null }) {
 
   if (analysis.status === 'PENDING') {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <div className={`flex items-start gap-3 p-4 ${adminClassNames.panel.warningInline}`}>
         <Clock3 className="mt-0.5 h-4 w-4" />
         <div>
           <p className="font-medium">Анализ выполняется</p>
-          <p className="mt-1 text-amber-800">
+          <p className={`mt-1 ${adminToneClassNames.warning.text}`}>
             Мы обрабатываем ответы. Страница обновится автоматически через несколько секунд.
           </p>
         </div>
@@ -180,9 +181,13 @@ function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skil
 function ThinkingTypeSection({ thinkingType }: { thinkingType: AnalysisResult['thinkingType'] }) {
   return (
     <SectionCard icon={Lightbulb} title={thinkingType.title}>
-      <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
-        <p className="text-sm font-semibold text-sky-950">{thinkingType.type}</p>
-        <p className="mt-2 text-sm leading-relaxed text-sky-900">{thinkingType.description}</p>
+      <div className={`p-4 ${adminClassNames.panel.infoInline}`}>
+        <p className={`text-sm font-semibold ${adminToneClassNames.info.text}`}>
+          {thinkingType.type}
+        </p>
+        <p className={`mt-2 text-sm leading-relaxed ${adminToneClassNames.info.text}`}>
+          {thinkingType.description}
+        </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {thinkingType.strengths.map((strength, index) => (

@@ -13,6 +13,11 @@ import {
 import { Link } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -39,38 +44,13 @@ interface AdminOverviewProps {
 }
 
 const metricToneClassNames = [
-  {
-    icon: Users,
-    bar: 'from-sky-400 to-cyan-300',
-    iconClassName: 'bg-sky-100 text-sky-700',
-    surfaceClassName: 'bg-sky-50/30',
-  },
-  {
-    icon: ShieldCheck,
-    bar: 'from-emerald-400 to-lime-300',
-    iconClassName: 'bg-emerald-100 text-emerald-700',
-    surfaceClassName: 'bg-emerald-50/30',
-  },
-  {
-    icon: FileText,
-    bar: 'from-amber-400 to-orange-300',
-    iconClassName: 'bg-amber-100 text-amber-700',
-    surfaceClassName: 'bg-amber-50/30',
-  },
-  {
-    icon: Link2,
-    bar: 'from-rose-400 to-pink-300',
-    iconClassName: 'bg-rose-100 text-rose-700',
-    surfaceClassName: 'bg-rose-50/30',
-  },
+  { icon: Users, tone: 'info' },
+  { icon: ShieldCheck, tone: 'success' },
+  { icon: FileText, tone: 'warning' },
+  { icon: Link2, tone: 'danger' },
 ] as const;
 
-const shortcutToneClassNames = [
-  'border-sky-200 bg-sky-50/50 text-sky-700',
-  'border-indigo-200 bg-indigo-50/50 text-indigo-700',
-  'border-emerald-200 bg-emerald-50/50 text-emerald-700',
-  'border-amber-200 bg-amber-50/50 text-amber-700',
-] as const;
+const shortcutToneClassNames = ['info', 'accent', 'success', 'warning'] as const;
 
 const readinessItems = [
   {
@@ -78,21 +58,21 @@ const readinessItems = [
     label: 'Защита доступа включена',
     value: 'ОК',
     icon: CircleCheckBig,
-    className: 'text-emerald-700',
+    tone: 'success',
   },
   {
     id: 'api',
     label: 'API-контракт сгенерирован',
     value: 'ОК',
     icon: CircleCheckBig,
-    className: 'text-emerald-700',
+    tone: 'success',
   },
   {
     id: 'modules',
     label: 'Расширенные модули',
     value: 'Запланировано',
     icon: Clock3,
-    className: 'text-amber-700',
+    tone: 'warning',
   },
 ] as const;
 
@@ -107,13 +87,13 @@ function HeroActionRow({
 }) {
   return (
     <div className="mt-6 flex flex-wrap items-center gap-3">
-      <Button asChild size="sm" className="bg-slate-950 text-white hover:bg-slate-800">
+      <Button asChild size="sm" className={adminClassNames.overview.primaryButton}>
         <Link to={primaryShortcut?.path ?? '/admin/users'}>
           Открыть работу
           <ArrowRight />
         </Link>
       </Button>
-      <span className="text-sm text-slate-500">
+      <span className={cn('text-sm', adminClassNames.text.muted)}>
         {formatMetricValue(totalTracked)} сущностей под наблюдением
       </span>
     </div>
@@ -122,24 +102,37 @@ function HeroActionRow({
 
 function HeroPulsePanel({ totalTracked }: { totalTracked: number }) {
   return (
-    <div className="border-t border-slate-200 bg-slate-50/80 p-5 lg:border-l lg:border-t-0">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Пульс системы</p>
+    <div className={adminClassNames.overview.heroPulsePanel}>
+      <p
+        className={cn('text-xs font-semibold uppercase tracking-wide', adminClassNames.text.label)}
+      >
+        Пульс системы
+      </p>
       <div className="mt-4 grid gap-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className={adminClassNames.panel.section}>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-slate-600">Всего объектов</span>
-            <Gauge className="size-4 text-sky-600" />
+            <span className={cn('text-sm', adminClassNames.text.body)}>Всего объектов</span>
+            <Gauge className={cn('size-4', adminToneClassNames.info.textAccent)} />
           </div>
-          <p className="mt-1 text-2xl font-semibold text-slate-950">
+          <p className={cn('mt-1 text-2xl font-semibold', adminClassNames.text.heading)}>
             {formatMetricValue(totalTracked)}
           </p>
         </div>
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-900">
+        <div
+          className={cn(
+            'rounded-xl border p-3 text-sm',
+            adminToneClassNames.success.border,
+            adminToneClassNames.success.softSurface,
+            adminToneClassNames.success.text,
+          )}
+        >
           <div className="flex items-center gap-2 font-medium">
             <Activity className="size-4" />
             Рабочая зона активна
           </div>
-          <p className="mt-1 text-emerald-800">Навигация, роли и публикации доступны.</p>
+          <p className={cn('mt-1', adminToneClassNames.success.text)}>
+            Навигация, роли и публикации доступны.
+          </p>
         </div>
       </div>
     </div>
@@ -158,27 +151,29 @@ function OverviewHero({
   primaryShortcut?: AdminShortcutItem;
 }) {
   return (
-    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm">
+    <Card className={adminClassNames.panel.hero}>
       <CardHeader className="p-0">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="relative p-6 md:p-7">
-            <div className="absolute inset-y-6 left-0 w-1 rounded-r-full bg-gradient-to-b from-sky-400 via-emerald-400 to-amber-300" />
+            <div className={adminClassNames.overview.heroRail} />
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className="gap-2 border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-50 [&_svg]:size-3.5"
-              >
+              <Badge variant="outline" className={adminBadgeClassNames.protected}>
                 <ShieldCheck />
                 Доступ защищен
               </Badge>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-                Рабочее пространство
-              </span>
+              <span className={adminBadgeClassNames.workspace}>Рабочее пространство</span>
             </div>
-            <CardTitle className="max-w-3xl text-2xl leading-tight text-slate-950 md:text-3xl">
+            <CardTitle
+              className={cn(
+                'max-w-3xl text-2xl leading-tight md:text-3xl',
+                adminClassNames.text.heading,
+              )}
+            >
               {title}
             </CardTitle>
-            <CardDescription className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+            <CardDescription
+              className={cn('mt-3 max-w-2xl text-base leading-7', adminClassNames.text.body)}
+            >
               {subtitle}
             </CardDescription>
             <HeroActionRow totalTracked={totalTracked} primaryShortcut={primaryShortcut} />
@@ -194,36 +189,32 @@ function MetricGrid({ cards }: { cards: AdminCardItem[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
       {cards.map((item, index) => {
-        const tone = metricToneClassNames[index % metricToneClassNames.length];
-        const Icon = tone.icon;
+        const metric = metricToneClassNames[index % metricToneClassNames.length];
+        const tone = adminToneClassNames[metric.tone];
+        const Icon = metric.icon;
 
         return (
           <Card
             key={item.id}
-            className={cn(
-              'overflow-hidden border-slate-200/80 bg-white shadow-sm',
-              tone.surfaceClassName,
-            )}
+            className={cn('overflow-hidden', adminClassNames.panel.card, tone.surface)}
           >
-            <div className={`h-1 bg-gradient-to-r ${tone.bar}`} />
+            <div className={cn('h-1 bg-gradient-to-r', tone.gradient)} />
             <CardHeader className="pb-3">
               <div className="mb-4 flex items-start justify-between gap-4">
-                <span
-                  className={cn('grid size-10 place-items-center rounded-xl', tone.iconClassName)}
-                >
+                <span className={cn('grid size-10 place-items-center rounded-xl', tone.icon)}>
                   <Icon className="size-5" />
                 </span>
-                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
-                  актуально
-                </span>
+                <span className={adminBadgeClassNames.fresh}>актуально</span>
               </div>
-              <CardDescription className="font-medium text-slate-600">{item.label}</CardDescription>
-              <CardTitle className="mt-1 text-3xl text-slate-950">
+              <CardDescription className={cn('font-medium', adminClassNames.text.body)}>
+                {item.label}
+              </CardDescription>
+              <CardTitle className={cn('mt-1 text-3xl', adminClassNames.text.heading)}>
                 {formatMetricValue(item.value)}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-6 text-slate-600">{item.trend}</p>
+              <p className={cn('text-sm leading-6', adminClassNames.text.body)}>{item.trend}</p>
             </CardContent>
           </Card>
         );
@@ -234,38 +225,53 @@ function MetricGrid({ cards }: { cards: AdminCardItem[] }) {
 
 function ShortcutPanel({ shortcuts }: { shortcuts: AdminShortcutItem[] }) {
   return (
-    <Card className="border-slate-200/80 bg-white shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
-        <CardTitle className="text-slate-950">Быстрые действия</CardTitle>
+        <CardTitle className={adminClassNames.text.heading}>Быстрые действия</CardTitle>
         <CardDescription>Быстрый доступ к основным разделам управления.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2">
-        {shortcuts.map((item, index) => (
-          <Link
-            key={item.id}
-            to={item.path}
-            className="group flex min-h-32 flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm transition-[border-color,background-color,box-shadow] hover:border-slate-300 hover:bg-white hover:shadow-md"
-          >
-            <span>
+        {shortcuts.map((item, index) => {
+          const tone =
+            adminToneClassNames[shortcutToneClassNames[index % shortcutToneClassNames.length]];
+
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={cn(
+                'group flex min-h-32 flex-col justify-between p-4',
+                adminClassNames.panel.interactive,
+              )}
+            >
+              <span>
+                <span
+                  className={cn(
+                    'mb-4 grid size-9 place-items-center rounded-xl border',
+                    tone.active,
+                  )}
+                >
+                  <ArrowRight className="size-4" />
+                </span>
+                <span className={cn('font-medium', adminClassNames.text.heading)}>
+                  {item.label}
+                </span>
+                <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                  {item.hint}
+                </span>
+              </span>
               <span
                 className={cn(
-                  'mb-4 grid size-9 place-items-center rounded-xl border',
-                  shortcutToneClassNames[index % shortcutToneClassNames.length],
+                  'mt-4 inline-flex items-center text-sm font-medium',
+                  adminClassNames.text.body,
                 )}
               >
-                <ArrowRight className="size-4" />
+                {item.path}
+                <ArrowRight className="ml-2 transition-transform group-hover:translate-x-0.5" />
               </span>
-              <span className="font-medium text-slate-950">{item.label}</span>
-              <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                {item.hint}
-              </span>
-            </span>
-            <span className="mt-4 inline-flex items-center text-sm font-medium text-slate-700">
-              {item.path}
-              <ArrowRight className="ml-2 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </CardContent>
     </Card>
   );
@@ -273,30 +279,38 @@ function ShortcutPanel({ shortcuts }: { shortcuts: AdminShortcutItem[] }) {
 
 function ReadinessPanel({ totalTracked }: { totalTracked: number }) {
   return (
-    <Card className="border-slate-200/80 bg-white shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
-        <CardTitle className="text-slate-950">Готовность</CardTitle>
+        <CardTitle className={adminClassNames.text.heading}>Готовность</CardTitle>
         <CardDescription>Базовые проверки для рабочего пространства.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 text-sm">
         {readinessItems.map((item) => {
           const Icon = item.icon;
+          const tone = adminToneClassNames[item.tone];
 
           return (
             <div
               key={item.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2"
+              className={cn(
+                'flex items-center justify-between gap-3',
+                adminClassNames.panel.mutedSection,
+              )}
             >
               <span className="flex min-w-0 items-center gap-2 text-foreground [&_svg]:size-4">
-                <Icon className={cn('shrink-0', item.className)} />
+                <Icon className={cn('shrink-0', tone.textAccent)} />
                 <span className="truncate">{item.label}</span>
               </span>
-              <span className={`shrink-0 text-xs font-medium ${item.className}`}>{item.value}</span>
+              <span className={cn('shrink-0 text-xs font-medium', tone.textAccent)}>
+                {item.value}
+              </span>
             </div>
           );
         })}
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Отслеживаемых сущностей</p>
+        <div className={cn(adminClassNames.panel.section, 'px-3 py-3')}>
+          <p className={cn('text-xs uppercase tracking-wide', adminClassNames.text.label)}>
+            Отслеживаемых сущностей
+          </p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatMetricValue(totalTracked)}
           </p>
@@ -308,13 +322,13 @@ function ReadinessPanel({ totalTracked }: { totalTracked: number }) {
 
 function OverviewNotice() {
   return (
-    <Card className="border-sky-200 bg-sky-50/80 shadow-none">
-      <CardContent className="flex flex-col gap-3 p-4 text-sky-950 sm:flex-row sm:items-center">
+    <Card className={adminClassNames.overview.noticeCard}>
+      <CardContent className={adminClassNames.overview.noticeContent}>
         <div className="flex items-center gap-3">
           <Sparkles />
           <span>Фокус на сегодня: держать роли, публикации и тестовые сценарии в порядке.</span>
         </div>
-        <span className="flex items-center gap-2 text-sm text-sky-800">
+        <span className={cn('flex items-center gap-2 text-sm', adminToneClassNames.info.text)}>
           <ArrowRight />
           Разделы слева ведут прямо к рабочим операциям.
         </span>

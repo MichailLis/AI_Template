@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/utils';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 
 import type { Key, ReactNode } from 'react';
@@ -33,11 +34,9 @@ export function AdminDataTable<TItem>({
   onRowClick,
 }: AdminDataTableProps<TItem>) {
   return (
-    <div
-      className={cn('overflow-hidden rounded-lg border border-border bg-card shadow-sm', className)}
-    >
+    <div className={cn(adminClassNames.table.container, className)}>
       <Table>
-        <TableHeader className="bg-muted/50">
+        <TableHeader className={adminClassNames.table.header}>
           <TableRow>
             {columns.map((column) => (
               <TableHead key={column.id} className={column.className}>
@@ -51,7 +50,7 @@ export function AdminDataTable<TItem>({
             <TableRow>
               <TableCell
                 colSpan={columns.length}
-                className={cn('py-12 text-center text-sm text-muted-foreground', emptyClassName)}
+                className={cn(adminClassNames.table.emptyCell, emptyClassName)}
               >
                 {emptyMessage}
               </TableCell>
@@ -61,7 +60,7 @@ export function AdminDataTable<TItem>({
             <TableRow
               key={getRowKey(item)}
               className={cn(
-                onRowClick ? 'cursor-pointer hover:bg-muted/40' : undefined,
+                onRowClick ? adminClassNames.table.clickableRow : undefined,
                 getRowClassName?.(item),
               )}
               onClick={() => onRowClick?.(item)}

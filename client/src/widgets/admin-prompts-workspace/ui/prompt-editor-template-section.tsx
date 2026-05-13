@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
@@ -19,10 +20,10 @@ export function PromptEditorTemplateSection({
   return (
     <div className="space-y-2">
       <Label htmlFor="prompt-template">Шаблон промпта</Label>
-      <div className="grid grid-cols-[44px_minmax(0,1fr)] overflow-hidden rounded-md border border-input">
-        <div className="overflow-hidden border-r border-slate-200 bg-slate-50 text-right">
+      <div className={adminClassNames.editor.shell}>
+        <div className={adminClassNames.editor.rail}>
           <div
-            className="py-2 pr-2 font-mono text-[11px] leading-5 text-slate-400"
+            className={`py-2 pr-2 font-mono text-[11px] leading-5 ${adminClassNames.text.muted}`}
             style={{ transform: `translateY(-${promptEditorScrollTop}px)` }}
           >
             {Array.from({ length: promptLineCount }, (_, index) => (

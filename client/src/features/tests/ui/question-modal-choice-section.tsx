@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
 
@@ -27,9 +28,13 @@ export function QuestionModalChoiceSection({
         </Button>
       </div>
 
-      <p className="text-xs text-slate-500">Заполните текст и вес. Вес влияет на итоговый балл.</p>
+      <p className={adminClassNames.form.fieldHint}>
+        Заполните текст и вес. Вес влияет на итоговый балл.
+      </p>
 
-      <div className="hidden items-center gap-2 px-1 text-xs font-medium text-slate-500 md:grid md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
+      <div
+        className={`hidden items-center gap-2 px-1 text-xs font-medium md:grid md:grid-cols-[minmax(0,1fr)_8rem_2.25rem] ${adminClassNames.text.muted}`}
+      >
         <span>Текст варианта</span>
         <span>Вес (целое)</span>
         <span />

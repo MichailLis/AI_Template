@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -39,7 +40,7 @@ export function EducationOrganizationsCreateCard({
   onCreate,
 }: EducationOrganizationsCreateCardProps) {
   return (
-    <Card className="border-slate-200">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Добавить заведение</CardTitle>
         <CardDescription>

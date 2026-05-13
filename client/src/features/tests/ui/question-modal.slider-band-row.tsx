@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -28,9 +29,11 @@ export function QuestionModalSliderBandRow({
   const fieldPrefix = `slider-band-${band.id}`;
 
   return (
-    <div className="grid items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 md:grid-cols-[6rem_6rem_minmax(0,1fr)_6rem_2.25rem]">
+    <div
+      className={`grid items-end gap-2 md:grid-cols-[6rem_6rem_minmax(0,1fr)_6rem_2.25rem] ${adminClassNames.panel.compactSection}`}
+    >
       <div className="space-y-1">
-        <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-min`}>
+        <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor={`${fieldPrefix}-min`}>
           От
         </Label>
         <Input
@@ -43,7 +46,7 @@ export function QuestionModalSliderBandRow({
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-max`}>
+        <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor={`${fieldPrefix}-max`}>
           До
         </Label>
         <Input
@@ -56,7 +59,7 @@ export function QuestionModalSliderBandRow({
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-label`}>
+        <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor={`${fieldPrefix}-label`}>
           Подпись на экране
         </Label>
         <Input
@@ -67,7 +70,7 @@ export function QuestionModalSliderBandRow({
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-slate-600" htmlFor={`${fieldPrefix}-weight`}>
+        <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor={`${fieldPrefix}-weight`}>
           Вес
         </Label>
         <Input

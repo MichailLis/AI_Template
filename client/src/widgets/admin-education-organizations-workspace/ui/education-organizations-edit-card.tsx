@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -46,7 +47,7 @@ export function EducationOrganizationsEditCard({
   onSave,
 }: EducationOrganizationsEditCardProps) {
   return (
-    <Card className="border-slate-200">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Настройки выбранного заведения</CardTitle>
         <CardDescription>
@@ -67,7 +68,7 @@ export function EducationOrganizationsEditCard({
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className={adminClassNames.form.checkboxLabel}>
           <input
             type="checkbox"
             checked={editIsActive}
@@ -91,7 +92,9 @@ export function EducationOrganizationsEditCard({
         />
 
         {selectedOrganization ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          <div
+            className={`text-xs ${adminClassNames.panel.compactSection} ${adminClassNames.text.body}`}
+          >
             <p>{`Ссылки: ${selectedOrganization.activeLinksCount}/${selectedOrganization.linksCount}`}</p>
             <p>{`Попытки: ${selectedOrganization.attemptsCount}`}</p>
           </div>

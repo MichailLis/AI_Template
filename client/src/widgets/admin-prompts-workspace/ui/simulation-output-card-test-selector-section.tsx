@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
@@ -25,7 +26,7 @@ export function PromptTestSelectorSection({
   const selectedQuestionsCount = selectedQuestionIds.length;
 
   return (
-    <div className="space-y-3 border-b border-slate-200 p-4">
+    <div className={`space-y-3 p-4 ${adminClassNames.border.bottom}`}>
       <div className="space-y-2">
         <Label htmlFor="prompt-test-group">Тест для проверки промпта</Label>
         <select
@@ -36,7 +37,7 @@ export function PromptTestSelectorSection({
             onSelectedTestChange(Number.isFinite(nextValue) ? nextValue : null);
           }}
           disabled={isLoadingQuestions || testQuestionGroups.length === 0}
-          className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+          className={adminClassNames.form.select}
         >
           {testQuestionGroups.length === 0 ? (
             <option value="">Нет тестов с вопросами</option>
@@ -51,21 +52,21 @@ export function PromptTestSelectorSection({
       </div>
 
       {isLoadingQuestions ? (
-        <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+        <div className={`flex items-center gap-2 p-3 text-sm ${adminClassNames.panel.loading}`}>
           <Loader2 className="h-4 w-4 animate-spin" />
           Загружаем тесты...
         </div>
       ) : null}
 
       {!isLoadingQuestions && testQuestionGroups.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-          Тесты с вопросами еще не найдены.
-        </div>
+        <div className={adminClassNames.panel.empty}>Тесты с вопросами еще не найдены.</div>
       ) : null}
 
       {!isLoadingQuestions && selectedTest ? (
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div
+            className={`flex flex-wrap items-center gap-2 text-xs ${adminClassNames.text.muted}`}
+          >
             <Badge variant="outline">{selectedQuestionsCount} вопросов в проверке</Badge>
             <span>
               {selectedTest.topicSlug} · версия {selectedTest.versionNumber} ·{' '}
@@ -73,20 +74,21 @@ export function PromptTestSelectorSection({
             </span>
           </div>
 
-          <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-2">
+          <div className={`max-h-56 space-y-2 overflow-y-auto p-2 ${adminClassNames.panel.frame}`}>
             {selectedTest.questions.map((question, index) => (
-              <div
-                key={question.id}
-                className="flex items-start gap-3 rounded-md bg-white p-3 text-sm shadow-sm"
-              >
+              <div key={question.id} className={adminClassNames.panel.inlineItem}>
                 <Badge variant="outline" className="mt-0.5 shrink-0">
                   {index + 1}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-slate-900">{question.title}</div>
-                  <div className="mt-1 text-xs text-slate-500">{question.type}</div>
+                  <div className={`font-medium ${adminClassNames.text.heading}`}>
+                    {question.title}
+                  </div>
+                  <div className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
+                    {question.type}
+                  </div>
                   {question.description ? (
-                    <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                    <div className={`mt-1 line-clamp-2 text-xs ${adminClassNames.text.muted}`}>
                       {question.description}
                     </div>
                   ) : null}

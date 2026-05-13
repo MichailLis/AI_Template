@@ -3,6 +3,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
@@ -54,18 +55,13 @@ function AdminNavButton({
       variant="ghost"
       size="sm"
       className={cn(
-        'h-9 w-full justify-start gap-2 rounded-lg border border-transparent px-2.5 text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-950 hover:shadow-sm',
-        mobile && 'h-8 bg-white/80 shadow-sm',
+        adminClassNames.nav.button,
+        mobile && adminClassNames.nav.mobileButton,
         isActive && tone.active,
       )}
     >
       <Link to={item.href} aria-current={isActive ? 'page' : undefined}>
-        <span
-          className={cn(
-            'grid size-6 place-items-center rounded-md bg-slate-100 text-slate-500',
-            isActive && tone.icon,
-          )}
-        >
+        <span className={cn(adminClassNames.nav.icon, isActive && tone.icon)}>
           <Icon aria-hidden="true" />
         </span>
         <span className="truncate">{item.label}</span>
@@ -89,8 +85,8 @@ function AdminNavGroups({ activeNavHref, mobile = false }: AdminNavGroupsProps) 
             <p
               className={
                 mobile
-                  ? 'mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500'
-                  : 'mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500'
+                  ? adminClassNames.nav.groupLabelMobile
+                  : adminClassNames.nav.groupLabelDesktop
               }
             >
               {group.label}
@@ -114,30 +110,28 @@ function AdminNavGroups({ activeNavHref, mobile = false }: AdminNavGroupsProps) 
 
 function DesktopSidebar({ activeNavHref }: { activeNavHref: string }) {
   return (
-    <aside className="hidden overflow-hidden border-r border-slate-200/80 bg-white/90 text-slate-900 shadow-[1px_0_0_rgba(15,23,42,0.03)] backdrop-blur md:sticky md:top-0 md:flex md:h-screen md:flex-col">
-      <div className="flex h-16 items-center border-b border-slate-200/80 px-5">
+    <aside className={adminClassNames.sidebar.desktop}>
+      <div className={adminClassNames.sidebar.header}>
         <Button asChild variant="ghost" className="h-auto p-0 text-left hover:bg-transparent">
           <Link to="/admin" className="flex items-center gap-2">
-            <span className="rounded-lg bg-gradient-to-br from-sky-500 via-cyan-400 to-emerald-400 px-2 py-1 text-xs font-semibold text-white shadow-sm">
-              AI
-            </span>
+            <span className={adminClassNames.sidebar.brandMark}>AI</span>
             <span>
-              <span className="block text-sm font-semibold text-slate-950">Админка</span>
-              <span className="block text-xs text-slate-500">AI Template</span>
+              <span className={adminClassNames.sidebar.brandTitle}>Админка</span>
+              <span className={adminClassNames.sidebar.brandSubtitle}>AI Template</span>
             </span>
           </Link>
         </Button>
       </div>
-      <nav className="flex-1 overflow-hidden p-3">
+      <nav className={adminClassNames.sidebar.nav}>
         <AdminNavGroups activeNavHref={activeNavHref} />
       </nav>
-      <div className="border-t border-slate-200/80 p-4">
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/80 p-3">
-          <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-emerald-800">
-            <span className="size-2 rounded-full bg-emerald-500" />
+      <div className={adminClassNames.sidebar.footer}>
+        <div className={adminClassNames.sidebar.workspaceCard}>
+          <p className={adminClassNames.sidebar.workspaceLabel}>
+            <span className={adminClassNames.sidebar.workspaceDot} />
             Workspace
           </p>
-          <p className="mt-1 text-sm font-medium text-slate-900">Панель управления</p>
+          <p className={adminClassNames.sidebar.workspaceTitle}>Панель управления</p>
         </div>
       </div>
     </aside>
@@ -162,15 +156,13 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
   };
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <header className={adminClassNames.header.root}>
       <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-3 md:px-6">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className={adminClassNames.header.eyebrow}>
             {activeNavItem?.description ?? 'Операции'}
           </p>
-          <p className="text-sm font-semibold text-foreground">
-            {activeNavItem?.label ?? 'Админ-панель'}
-          </p>
+          <p className={adminClassNames.header.title}>{activeNavItem?.label ?? 'Админ-панель'}</p>
         </div>
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <form className="hidden items-center gap-2 md:flex" onSubmit={handleSearchSubmit}>
@@ -178,7 +170,7 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
               list="admin-search-options"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              className="w-64 border-slate-200 bg-slate-50/80 shadow-sm lg:w-80"
+              className={adminClassNames.header.input}
               placeholder="Найти раздел"
               aria-label="Найти раздел админки"
             />
@@ -191,20 +183,18 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
               type="submit"
               variant="outline"
               size="icon"
-              className="bg-white shadow-sm"
+              className={adminClassNames.header.button}
               disabled={normalizeSearchValue(searchValue).length > 0 && !searchSuggestion}
               aria-label="Перейти к разделу"
             >
               <Search />
             </Button>
           </form>
-          <span className="max-w-48 truncate rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm">
-            {userLabel}
-          </span>
+          <span className={adminClassNames.header.userBadge}>{userLabel}</span>
           <Button
             variant="outline"
             size="sm"
-            className="bg-white shadow-sm"
+            className={adminClassNames.header.button}
             onClick={onLogout}
             disabled={isLoggingOut}
           >
@@ -213,7 +203,7 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
           </Button>
         </div>
       </div>
-      <div className="border-t border-slate-200/80 bg-slate-50/80 px-4 py-3 md:hidden">
+      <div className={adminClassNames.header.mobileNav}>
         <AdminNavGroups activeNavHref={activeNavHref} mobile />
       </div>
     </header>
@@ -230,11 +220,11 @@ export const AdminShell = ({
   const activeNavHref = resolveActiveNavHref(activePath);
 
   return (
-    <div className="min-h-screen w-full bg-[linear-gradient(180deg,#f8fbff_0%,#f4f7fb_48%,#eef6f3_100%)] text-slate-900">
-      <div className="grid min-h-screen w-full md:grid-cols-[18rem_minmax(0,1fr)]">
+    <div className={adminClassNames.shell.root}>
+      <div className={adminClassNames.shell.layout}>
         <DesktopSidebar activeNavHref={activeNavHref} />
 
-        <div className="flex min-w-0 flex-col">
+        <div className={adminClassNames.shell.content}>
           <AdminHeader
             userLabel={userLabel}
             activeNavHref={activeNavHref}
@@ -242,7 +232,7 @@ export const AdminShell = ({
             isLoggingOut={isLoggingOut}
           />
 
-          <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+          <main className={adminClassNames.shell.main}>{children}</main>
         </div>
       </div>
     </div>

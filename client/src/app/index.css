@@ -24,6 +24,34 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    --admin-canvas: 210 100% 99%;
+    --admin-canvas-soft: 214 45% 97%;
+    --admin-canvas-warm: 158 35% 96%;
+    --admin-panel: 0 0% 100%;
+    --admin-panel-muted: 210 40% 98%;
+    --admin-border: 214 32% 91%;
+    --admin-foreground: 222.2 84% 4.9%;
+    --admin-muted: 215.4 16.3% 46.9%;
+    --admin-info: 199 89% 48%;
+    --admin-info-soft: 204 100% 97%;
+    --admin-info-border: 199 89% 86%;
+    --admin-info-foreground: 202 80% 24%;
+    --admin-success: 158 64% 42%;
+    --admin-success-soft: 151 81% 96%;
+    --admin-success-border: 152 62% 83%;
+    --admin-success-foreground: 155 78% 21%;
+    --admin-warning: 38 92% 50%;
+    --admin-warning-soft: 48 100% 96%;
+    --admin-warning-border: 43 96% 80%;
+    --admin-warning-foreground: 32 95% 26%;
+    --admin-danger: 346 77% 50%;
+    --admin-danger-soft: 355 100% 97%;
+    --admin-danger-border: 351 89% 87%;
+    --admin-danger-foreground: 344 75% 31%;
+    --admin-accent: 188 86% 46%;
+    --admin-accent-soft: 183 100% 96%;
+    --admin-accent-border: 185 70% 82%;
+    --admin-accent-foreground: 186 80% 24%;
   }
 }
 

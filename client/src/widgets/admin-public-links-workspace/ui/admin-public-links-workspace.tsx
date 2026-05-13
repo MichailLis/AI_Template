@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
@@ -78,7 +79,7 @@ export function AdminPublicLinksWorkspace() {
 
   return (
     <>
-      <Card className="border-slate-200 shadow-sm">
+      <Card className={adminClassNames.panel.card}>
         <PublicLinksListHeader
           publicLinksTab={workspaceState.publicLinksTab}
           searchValue={workspaceState.publicLinksSearch}

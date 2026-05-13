@@ -1,3 +1,4 @@
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 import { QuestionCard } from './question-card';
@@ -41,30 +42,36 @@ export function TestEditorQuestionsSection({
 }: TestEditorQuestionsSectionProps) {
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+      <div
+        className={`flex flex-wrap items-center justify-between gap-3 pt-4 ${adminClassNames.border.top}`}
+      >
         <div>
           <p className="text-sm font-semibold">Вопросы теста</p>
-          <p className="text-xs text-slate-500">
+          <p className={adminClassNames.form.fieldHint}>
             Добавляйте и редактируйте вопросы в версии в работе через модальное окно.
           </p>
         </div>
         <Button onClick={onCreateQuestion}>Добавить вопрос</Button>
       </div>
 
-      <div className="space-y-3 border-t border-slate-200 pt-4">
+      <div className={`space-y-3 pt-4 ${adminClassNames.border.top}`}>
         <p className="text-sm font-semibold">Вопросы теста (в работе): {questions.length}</p>
 
         {questions.length > 1 ? (
-          <p className="text-xs text-slate-500">
+          <p className={adminClassNames.form.fieldHint}>
             Перетаскивайте карточки за иконку слева. Подсветка покажет точное место вставки.
           </p>
         ) : null}
         {isReorderingQuestions ? (
-          <p className="text-xs text-sky-700">Сохраняем новый порядок вопросов...</p>
+          <p className={`text-xs ${adminToneClassNames.info.text}`}>
+            Сохраняем новый порядок вопросов...
+          </p>
         ) : null}
 
         {questions.length === 0 ? (
-          <p className="text-sm text-slate-500">Пока нет вопросов. Добавьте первый вопрос.</p>
+          <p className={`text-sm ${adminClassNames.text.muted}`}>
+            Пока нет вопросов. Добавьте первый вопрос.
+          </p>
         ) : null}
 
         {questions.map((question) => (

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { TestsSidebarCreateForm } from './tests-sidebar-create-form';
@@ -73,7 +74,7 @@ export function TestsSidebar({
   }, [searchValue, topics]);
 
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Тесты</CardTitle>
         <CardDescription>Создание и управление тестами.</CardDescription>

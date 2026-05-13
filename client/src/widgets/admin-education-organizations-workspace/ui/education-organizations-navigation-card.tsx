@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 export function EducationOrganizationsNavigationCard() {
   return (
-    <Card className="border-slate-200">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Учебные заведения</CardTitle>
         <CardDescription>

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/entities/session';
 import { AdminShell } from '@/features/admin';
 import { useAdminControllerGetOverview } from '@/shared/api/generated/admin/admin';
 import { useAuthControllerLogout } from '@/shared/api/generated/auth/auth';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
@@ -42,7 +43,7 @@ export function AdminPageLayout() {
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <Card className="border-border shadow-sm">
+        <Card className={adminClassNames.panel.card}>
           <CardContent className="p-4">
             <AdminStateBlock>Загрузка админ-панели… Пожалуйста, подождите</AdminStateBlock>
           </CardContent>
@@ -59,7 +60,7 @@ export function AdminPageLayout() {
         onLogout={handleLogout}
         isLoggingOut={logoutMutation.isPending}
       >
-        <Card className="border-red-200 bg-red-50 shadow-sm">
+        <Card className={adminClassNames.panel.errorCard}>
           <CardContent className="p-4">
             <AdminStateBlock
               tone="danger"

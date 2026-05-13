@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent } from '@/shared/ui/card';
 
 import { PromptSaveRunFooter } from './simulation-output-card-footer';
@@ -60,7 +61,7 @@ export function SimulationOutputCard({
   onCopyRunJson,
 }: SimulationOutputCardProps) {
   return (
-    <Card className="min-w-0 border-slate-200 shadow-sm">
+    <Card className={`min-w-0 ${adminClassNames.panel.card}`}>
       <SimulationOutputCardHeader
         showMetrics={showMetrics}
         onShowMetricsChange={onShowMetricsChange}

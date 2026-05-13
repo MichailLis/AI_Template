@@ -2,6 +2,7 @@ import { Archive, MoreHorizontal, Power, PowerOff, RefreshCcw, RotateCcw } from 
 import { useMemo } from 'react';
 
 import { cn } from '@/shared/lib/utils';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
@@ -85,26 +86,26 @@ const getLinkStateLabel = (link: PublicLinkListItem) => {
 
 const getLinkStateClassName = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
-    return 'border-slate-200 bg-slate-100 text-slate-600';
+    return adminBadgeClassNames.archived;
   }
 
   if (link.isActive) {
-    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    return adminBadgeClassNames.success;
   }
 
-  return 'border-amber-200 bg-amber-50 text-amber-700';
+  return adminBadgeClassNames.warning;
 };
 
 const getLinkRowClassName = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
-    return 'border-l-slate-300 bg-white text-slate-500 hover:bg-slate-50';
+    return adminClassNames.publicLinks.rowArchived;
   }
 
   if (!link.isActive) {
-    return 'border-l-amber-400 bg-white text-slate-900 hover:bg-amber-50/40';
+    return adminClassNames.publicLinks.rowInactive;
   }
 
-  return 'border-l-transparent bg-white text-slate-900 hover:bg-slate-50';
+  return adminClassNames.publicLinks.rowActive;
 };
 
 const getEmptyStateText = (publicLinksTab: PublicLinksTab, searchValue: string) => {
@@ -166,7 +167,7 @@ function ActivePublicLinkActions({
         type="button"
         variant="ghost"
         size="sm"
-        className="h-8 justify-start px-2 text-left text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+        className={adminClassNames.actionMenu.dangerItem}
         onClick={() => onArchivePublicLink(link.id)}
         disabled={isArchivingPublicLink}
       >
@@ -205,7 +206,7 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
           type="button"
           size="icon"
           variant="ghost"
-          className="h-8 w-8 text-slate-500 hover:text-slate-900"
+          className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
           aria-label="Действия публичной ссылки"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -230,19 +231,16 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
 
 function PublicLinkRow({ link, publicLinksTab, onOpenShortLink, ...handlers }: PublicLinkRowProps) {
   return (
-    <div
-      className={cn(
-        'flex flex-col justify-between gap-3 border-b border-l-2 border-slate-100 p-4 transition-colors last:border-b-0 sm:flex-row sm:items-center',
-        getLinkRowClassName(link),
-      )}
-    >
+    <div className={cn(adminClassNames.publicLinks.rowBase, getLinkRowClassName(link))}>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             className={cn(
               'text-left text-sm font-semibold underline-offset-2 hover:underline',
-              link.archivedAt || !link.isActive ? 'text-slate-700' : 'text-slate-900',
+              link.archivedAt || !link.isActive
+                ? adminClassNames.text.muted
+                : adminClassNames.text.heading,
             )}
             onClick={() => onOpenShortLink(link.shortCode)}
           >
@@ -256,19 +254,23 @@ function PublicLinkRow({ link, publicLinksTab, onOpenShortLink, ...handlers }: P
             {getLinkStateLabel(link)}
           </span>
         </div>
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-sm text-slate-600">
+        <div
+          className={`mt-1 flex min-w-0 flex-wrap items-center gap-2 text-sm ${adminClassNames.text.body}`}
+        >
           <span className="min-w-0 truncate">{link.title}</span>
           {link.educationOrganizationName ? (
             <>
-              <span className="text-slate-300">/</span>
-              <span className="min-w-0 truncate text-slate-500">
+              <span className={adminClassNames.publicLinks.divider}>/</span>
+              <span className={`min-w-0 truncate ${adminClassNames.text.muted}`}>
                 {link.educationOrganizationName}
               </span>
             </>
           ) : null}
         </div>
         {!link.archivedAt && !link.isActive ? (
-          <p className="mt-1 text-xs font-medium text-amber-700">Доступ закрыт для участников</p>
+          <p className={`mt-1 text-xs font-medium ${adminClassNames.publicLinks.inactiveNotice}`}>
+            Доступ закрыт для участников
+          </p>
         ) : null}
       </div>
 

@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -124,9 +125,7 @@ function AiGeneratorForm({ generation }: AiGeneratorFormProps) {
       </div>
 
       {generation.generationError ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {generation.generationError}
-        </p>
+        <p className={adminClassNames.panel.dangerInline}>{generation.generationError}</p>
       ) : null}
     </div>
   );
@@ -176,7 +175,9 @@ export function AiTestGeneratorModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto border-slate-200">
+      <DialogContent
+        className={`max-h-[92vh] max-w-4xl overflow-y-auto ${adminClassNames.dialog.content}`}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />

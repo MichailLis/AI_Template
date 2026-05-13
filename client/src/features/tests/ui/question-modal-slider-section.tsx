@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -33,10 +34,12 @@ export function QuestionModalSliderSection({
 }: QuestionModalSliderSectionProps) {
   return (
     <div className="space-y-3">
-      <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+      <div className={`space-y-3 ${adminClassNames.panel.compactSection}`}>
         <div>
-          <Label className="text-sm font-medium text-slate-700">Шкала слайдера</Label>
-          <p className="mt-1 text-xs text-slate-500">
+          <Label className={`text-sm font-medium ${adminClassNames.text.body}`}>
+            Шкала слайдера
+          </Label>
+          <p className={`mt-1 ${adminClassNames.form.fieldHint}`}>
             Эти значения задают сам ползунок. Подписи ниже показываются участнику, когда оценка
             попадает в диапазон.
           </p>
@@ -44,7 +47,7 @@ export function QuestionModalSliderSection({
 
         <div className="grid gap-2 md:grid-cols-3">
           <div className="space-y-1">
-            <Label className="text-xs text-slate-600" htmlFor="slider-scale-min">
+            <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor="slider-scale-min">
               Минимум
             </Label>
             <Input
@@ -58,7 +61,7 @@ export function QuestionModalSliderSection({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-slate-600" htmlFor="slider-scale-max">
+            <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor="slider-scale-max">
               Максимум
             </Label>
             <Input
@@ -72,7 +75,7 @@ export function QuestionModalSliderSection({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-slate-600" htmlFor="slider-scale-step">
+            <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor="slider-scale-step">
               Шаг
             </Label>
             <Input
@@ -91,7 +94,7 @@ export function QuestionModalSliderSection({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <Label>Подписи и веса диапазонов</Label>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className={`mt-1 ${adminClassNames.form.fieldHint}`}>
             Например: 1-3 {'->'} низкий комфорт, 4-7 {'->'} средний, 8-10 {'->'} высокий.
           </p>
         </div>

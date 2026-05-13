@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
@@ -19,10 +20,10 @@ export function PublicLinkAccessSettingsSection({
   onAllowResumeChange,
 }: PublicLinkAccessSettingsSectionProps) {
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+    <div className={adminClassNames.panel.compactSection}>
       <div>
-        <p className="text-sm font-medium text-slate-900">Доступ</p>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Доступ</p>
+        <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
           Базовые ограничения для прохождения по публичной ссылке.
         </p>
       </div>
@@ -59,7 +60,7 @@ export function PublicLinkAccessSettingsSection({
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className={adminClassNames.form.checkboxLabel}>
           <input
             type="checkbox"
             checked={newPublicAllowResume}
@@ -68,8 +69,8 @@ export function PublicLinkAccessSettingsSection({
           Разрешить студенту вернуться к незавершенной попытке
         </label>
 
-        <details className="rounded-md border border-slate-200 bg-white p-3">
-          <summary className="cursor-pointer text-sm font-medium text-slate-900">
+        <details className={adminClassNames.panel.compactCard}>
+          <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
             Согласие на обработку данных
           </summary>
           <div className="mt-3 grid gap-3">

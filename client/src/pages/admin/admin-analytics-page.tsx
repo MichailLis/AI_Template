@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
@@ -49,38 +50,42 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-slate-200 shadow-sm">
+        <Card className={adminClassNames.panel.card}>
           <CardHeader className="pb-2">
             <CardDescription>События за сегодня</CardDescription>
             <CardTitle className="text-3xl">124</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">
+            <p className={`text-sm ${adminClassNames.text.muted}`}>
               Операционные события, зафиксированные в этом пространстве.
             </p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm">
+        <Card className={adminClassNames.panel.card}>
           <CardHeader className="pb-2">
             <CardDescription>Высокий приоритет</CardDescription>
             <CardTitle className="text-3xl">8</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Действия, требующие проверки и согласования.</p>
+            <p className={`text-sm ${adminClassNames.text.muted}`}>
+              Действия, требующие проверки и согласования.
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm">
+        <Card className={adminClassNames.panel.card}>
           <CardHeader className="pb-2">
             <CardDescription>Среднее время реакции</CardDescription>
             <CardTitle className="text-3xl">11m</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Целевой SLA: менее 15 минут для админ-событий.</p>
+            <p className={`text-sm ${adminClassNames.text.muted}`}>
+              Целевой SLA: менее 15 минут для админ-событий.
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm">
+      <Card className={adminClassNames.panel.card}>
         <CardHeader>
           <CardTitle>Последние события админки</CardTitle>
           <CardDescription>Таблица потока событий для операционной аналитики.</CardDescription>
@@ -99,13 +104,17 @@ export default function AdminAnalyticsPage() {
             <TableBody>
               {events.map((event) => (
                 <TableRow key={event.id}>
-                  <TableCell className="font-medium text-slate-900">{event.id}</TableCell>
+                  <TableCell className={`font-medium ${adminClassNames.text.heading}`}>
+                    {event.id}
+                  </TableCell>
                   <TableCell>{event.area}</TableCell>
-                  <TableCell className="text-slate-600">{event.actor}</TableCell>
+                  <TableCell className={adminClassNames.text.body}>{event.actor}</TableCell>
                   <TableCell>
                     <Badge variant={impactVariant(event.impact)}>{event.impact}</Badge>
                   </TableCell>
-                  <TableCell className="text-right text-slate-500">{event.time}</TableCell>
+                  <TableCell className={`text-right ${adminClassNames.text.muted}`}>
+                    {event.time}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

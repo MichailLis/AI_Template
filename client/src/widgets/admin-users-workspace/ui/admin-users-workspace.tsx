@@ -1,3 +1,4 @@
+import { adminClassNames, getAdminRoleBadgeClassName } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
@@ -7,14 +8,6 @@ import { AdminUsersFilters } from './admin-users-filters';
 import { AdminUsersTable } from './admin-users-table';
 import { formatDateTime } from './admin-users-workspace.utils';
 import { useAdminUsersWorkspace } from './use-admin-users-workspace';
-
-const roleBadgeClass = (role: string) => {
-  if (role === 'ADMIN') {
-    return 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100';
-  }
-
-  return 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100';
-};
 
 const roleLabel = (role: string) => {
   if (role === 'ADMIN') {
@@ -50,7 +43,7 @@ export function AdminUsersWorkspace() {
 
   if (usersQuery.isLoading) {
     return (
-      <Card className="border-slate-200/80 bg-white shadow-sm">
+      <Card className={adminClassNames.panel.card}>
         <CardContent className="p-4">
           <AdminStateBlock>Загрузка пользователей… Пожалуйста, подождите.</AdminStateBlock>
         </CardContent>
@@ -60,7 +53,7 @@ export function AdminUsersWorkspace() {
 
   if (usersQuery.isError || !usersQuery.data) {
     return (
-      <Card className="border-red-200 bg-red-50 shadow-sm">
+      <Card className={adminClassNames.panel.errorCard}>
         <CardContent className="p-4">
           <AdminStateBlock
             tone="danger"
@@ -78,12 +71,12 @@ export function AdminUsersWorkspace() {
   }
 
   return (
-    <Card className="border-slate-200/80 bg-white shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Пользователи</CardTitle>
         <CardDescription>Поиск, фильтры, пагинация и управление ролями.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <AdminUsersFilters
           searchInput={searchInput}
           roleFilter={roleFilter}
@@ -109,7 +102,7 @@ export function AdminUsersWorkspace() {
           onToggleRole={handleRoleToggle}
           onCopyEmail={handleCopyEmail}
           formatDateTime={formatDateTime}
-          getRoleBadgeClass={roleBadgeClass}
+          getRoleBadgeClass={getAdminRoleBadgeClassName}
           getRoleLabel={roleLabel}
         />
 

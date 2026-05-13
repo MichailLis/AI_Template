@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react';
 
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 
@@ -31,13 +32,15 @@ export function TestsSidebarTopicsList({
   onRetryTopics,
 }: TestsSidebarTopicsListProps) {
   return (
-    <div className="space-y-2 border-t border-slate-200 pt-4">
+    <div className={`space-y-2 pt-4 ${adminClassNames.border.top}`}>
       {topicsLoading ? (
-        <p className="text-sm text-slate-500">Загрузка тестов... Пожалуйста, подождите.</p>
+        <p className={`text-sm ${adminClassNames.text.muted}`}>
+          Загрузка тестов... Пожалуйста, подождите.
+        </p>
       ) : null}
       {topicsError ? (
-        <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3">
-          <p className="text-sm text-red-700">
+        <div className={`space-y-2 ${adminClassNames.panel.dangerInline}`}>
+          <p className={`text-sm ${adminToneClassNames.danger.text}`}>
             {topicsErrorMessage ??
               'Не удалось загрузить тесты. Проверьте подключение и повторите попытку.'}
           </p>
@@ -48,7 +51,7 @@ export function TestsSidebarTopicsList({
       ) : null}
 
       {!topicsLoading && !topicsError && filteredTopics.length === 0 ? (
-        <p className="text-sm text-slate-500">
+        <p className={`text-sm ${adminClassNames.text.muted}`}>
           Ничего не найдено. Измените фильтры или создайте новый тест.
         </p>
       ) : null}
@@ -62,7 +65,7 @@ export function TestsSidebarTopicsList({
           >
             <div className="min-w-0 w-full space-y-1 text-left">
               <p className="break-words text-sm font-semibold leading-snug">{topic.draftTitle}</p>
-              <p className="break-all text-xs text-slate-500">{topic.slug}</p>
+              <p className={`break-all text-xs ${adminClassNames.text.muted}`}>{topic.slug}</p>
               <div className="flex flex-wrap items-center gap-1">
                 <Badge variant="outline">В работе v{topic.draftVersionNumber}</Badge>
                 <Badge variant="outline">
@@ -78,7 +81,7 @@ export function TestsSidebarTopicsList({
             type="button"
             size="icon"
             variant="ghost"
-            className="absolute right-1 top-1 h-7 w-7 text-slate-500 hover:text-red-600"
+            className={`absolute right-1 top-1 h-7 w-7 ${adminClassNames.iconButton.danger}`}
             onClick={() => onRequestDeleteTest(topic)}
             disabled={isDeletingTopic && deletingTopicId === topic.id}
             aria-label={`Удалить тест ${topic.draftTitle}`}

@@ -1,3 +1,4 @@
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -48,7 +49,7 @@ export function PromptEditorModelSection({
             value={selectedModel}
             onChange={(event) => onModelChange(event.target.value)}
             disabled={filteredModels.length === 0}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={adminClassNames.form.select}
           >
             {filteredModels.length === 0 ? <option value="">Нет моделей</option> : null}
             {filteredModels.map((item) => (
@@ -85,28 +86,30 @@ export function PromptEditorModelSection({
         >
           Платные
         </Button>
-        <p className="ml-auto text-xs text-slate-500">
+        <p className={`ml-auto ${adminClassNames.form.fieldHint}`}>
           Показано {filteredModels.length} из {allModelsCount}
         </p>
       </div>
 
       {selectedModelItem ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+        <div
+          className={`flex flex-wrap items-center gap-2 p-2 ${adminClassNames.panel.compactSection}`}
+        >
           <Badge
             variant="outline"
             className={
-              selectedModelItem.isFree
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-slate-300'
+              selectedModelItem.isFree ? adminBadgeClassNames.success : adminBadgeClassNames.neutral
             }
           >
             {selectedModelItem.isFree ? 'FREE' : 'PAID'}
           </Badge>
-          <span className="text-xs text-slate-600">Поставщик: {selectedModelItem.provider}</span>
-          <span className="text-xs text-slate-600">
+          <span className={`text-xs ${adminClassNames.text.body}`}>
+            Поставщик: {selectedModelItem.provider}
+          </span>
+          <span className={`text-xs ${adminClassNames.text.body}`}>
             Контекст: {selectedModelItem.contextLength ?? 'н/д'}
           </span>
-          <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+          <Badge variant="outline" className={adminBadgeClassNames.info}>
             STRUCTURED OUTPUTS
           </Badge>
         </div>

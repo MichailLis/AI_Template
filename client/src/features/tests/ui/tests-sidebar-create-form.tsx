@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 import { TestsTopicBaseFields } from './tests-topic-base-fields';
@@ -42,7 +43,7 @@ export function TestsSidebarCreateForm({
         {isCreating ? 'Создание...' : 'Создать тест'}
       </Button>
 
-      <p className="text-xs text-slate-500 text-center pt-1">или</p>
+      <p className={`pt-1 text-center ${adminClassNames.form.fieldHint}`}>или</p>
 
       <Button
         type="button"

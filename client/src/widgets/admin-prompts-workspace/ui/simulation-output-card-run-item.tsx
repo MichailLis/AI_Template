@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Copy, Loader2 } from 'lucide-react';
 
+import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 import type { SimulationRun } from '../model/types';
@@ -22,8 +23,10 @@ export function SimulationRunItem({
   runIndex,
 }: SimulationRunItemProps) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white">
-      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2 text-xs text-slate-500">
+    <div className={adminClassNames.panel.frame}>
+      <div
+        className={`flex items-center justify-between px-4 py-2 text-xs ${adminClassNames.border.bottom} ${adminClassNames.text.muted}`}
+      >
         <span>
           INPUT #{String(totalRuns - runIndex).padStart(3, '0')} - {run.createdAt}
         </span>
@@ -32,14 +35,14 @@ export function SimulationRunItem({
 
       <div className="space-y-3 px-4 py-3">
         {run.status === 'running' ? (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className={`flex items-center gap-2 text-sm ${adminClassNames.text.body}`}>
             <Loader2 className="h-4 w-4 animate-spin" />
             Генерируем тестовые ответы и анализ...
           </div>
         ) : null}
 
         {run.status === 'error' ? (
-          <div className="flex items-start gap-2 text-sm text-red-700">
+          <div className={`flex items-start gap-2 text-sm ${adminToneClassNames.danger.text}`}>
             <AlertTriangle className="mt-0.5 h-4 w-4" />
             <span>{run.errorMessage ?? 'Unknown error'}</span>
           </div>
@@ -47,23 +50,25 @@ export function SimulationRunItem({
 
         {run.status === 'success' ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-emerald-700">
+            <div className={`flex items-center gap-2 text-xs ${adminToneClassNames.success.text}`}>
               <CheckCircle2 className="h-4 w-4" />
               Completed
             </div>
             {diffView ? (
-              <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-md bg-slate-50 p-3 text-xs text-slate-700">
-                {run.output}
-              </pre>
+              <pre className={adminClassNames.code.softBlock}>{run.output}</pre>
             ) : (
-              <div className="whitespace-pre-wrap text-sm text-slate-700">{run.output}</div>
+              <div className={`whitespace-pre-wrap text-sm ${adminClassNames.text.body}`}>
+                {run.output}
+              </div>
             )}
           </div>
         ) : null}
       </div>
 
       {showMetrics && run.status === 'success' ? (
-        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-2 text-xs text-slate-500">
+        <div
+          className={`flex items-center justify-between px-4 py-2 text-xs ${adminClassNames.panel.mutedBar} ${adminClassNames.border.top} ${adminClassNames.text.muted}`}
+        >
           <div className="flex items-center gap-3">
             <span>Latency: {run.latencyMs ?? '-'}ms</span>
             <span>Tokens: {run.totalTokens ?? '-'}</span>

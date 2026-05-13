@@ -1,5 +1,6 @@
 import { Copy, ExternalLink, QrCode } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
 interface PublicLinkQuickActionsProps {
@@ -21,7 +22,7 @@ export function PublicLinkQuickActions({
         type="button"
         size="icon"
         variant="ghost"
-        className="h-8 w-8 text-slate-500 hover:text-slate-900"
+        className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
         onClick={() => onOpenShortLink(shortCode)}
         aria-label={`Открыть ссылку ${shortCode}`}
         title="Открыть"
@@ -32,7 +33,7 @@ export function PublicLinkQuickActions({
         type="button"
         size="icon"
         variant="ghost"
-        className="h-8 w-8 text-slate-500 hover:text-slate-900"
+        className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
         onClick={() => void onCopyShortLink(shortCode)}
         aria-label={`Копировать ссылку ${shortCode}`}
         title="Копировать"
@@ -43,7 +44,7 @@ export function PublicLinkQuickActions({
         type="button"
         size="icon"
         variant="ghost"
-        className="h-8 w-8 text-slate-500 hover:text-slate-900"
+        className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
         onClick={() => onOpenQr(shortCode)}
         aria-label={`Показать QR-код для ${shortCode}`}
         title="QR-код"

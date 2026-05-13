@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
@@ -11,7 +12,7 @@ export function TestsSidebarSearchSection({
   onSearchChange,
 }: TestsSidebarSearchSectionProps) {
   return (
-    <div className="space-y-2 border-t border-slate-200 pt-4">
+    <div className={`space-y-2 pt-4 ${adminClassNames.border.top}`}>
       <Label htmlFor="tests-search">Поиск теста</Label>
       <Input
         id="tests-search"

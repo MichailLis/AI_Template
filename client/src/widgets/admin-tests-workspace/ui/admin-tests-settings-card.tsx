@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import {
@@ -59,7 +60,7 @@ export function AdminTestsSettingsCard({
   onToggleTopicActive,
 }: AdminTestsSettingsCardProps) {
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -71,7 +72,7 @@ export function AdminTestsSettingsCard({
           <button
             type="button"
             onClick={onBackToQuestions}
-            className="text-sm text-slate-600 hover:text-slate-900"
+            className={`text-sm ${adminClassNames.iconButton.muted}`}
           >
             ← К вопросам
           </button>

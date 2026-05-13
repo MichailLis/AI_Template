@@ -10,6 +10,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { adminToneClassNames, type AdminTone } from '@/shared/ui/admin-design-tokens';
+
 type AdminNavGroupId = 'overview' | 'content' | 'publication' | 'analytics' | 'system';
 
 export interface AdminNavItem {
@@ -119,28 +121,23 @@ export const navGroups: Array<{ id: AdminNavGroupId; label: string }> = [
   },
 ];
 
-export const navToneClassNames = {
-  overview: {
-    active: 'border-sky-200 bg-sky-50 text-sky-950 shadow-sm',
-    icon: 'bg-sky-100 text-sky-700',
-  },
-  content: {
-    active: 'border-indigo-200 bg-indigo-50 text-indigo-950 shadow-sm',
-    icon: 'bg-indigo-100 text-indigo-700',
-  },
-  publication: {
-    active: 'border-emerald-200 bg-emerald-50 text-emerald-950 shadow-sm',
-    icon: 'bg-emerald-100 text-emerald-700',
-  },
-  analytics: {
-    active: 'border-amber-200 bg-amber-50 text-amber-950 shadow-sm',
-    icon: 'bg-amber-100 text-amber-700',
-  },
-  system: {
-    active: 'border-slate-200 bg-slate-100 text-slate-950 shadow-sm',
-    icon: 'bg-slate-200 text-slate-700',
-  },
-} as const;
+const navGroupTones = {
+  overview: 'info',
+  content: 'accent',
+  publication: 'success',
+  analytics: 'warning',
+  system: 'neutral',
+} satisfies Record<AdminNavGroupId, AdminTone>;
+
+export const navToneClassNames = Object.fromEntries(
+  Object.entries(navGroupTones).map(([group, tone]) => [
+    group,
+    {
+      active: adminToneClassNames[tone].active,
+      icon: adminToneClassNames[tone].icon,
+    },
+  ]),
+) as Record<AdminNavGroupId, { active: string; icon: string }>;
 
 export const resolveActiveNavHref = (currentPath: string) => {
   if (currentPath === '/admin') {

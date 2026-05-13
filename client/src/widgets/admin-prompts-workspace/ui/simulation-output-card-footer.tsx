@@ -1,5 +1,6 @@
 import { Loader2, Play, Save } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -35,8 +36,10 @@ export function PromptSaveRunFooter({
   const selectedQuestionsCount = selectedQuestionIds.length;
 
   return (
-    <div className="space-y-4 border-t border-slate-200 p-4">
-      <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+    <div className={`space-y-4 p-4 ${adminClassNames.border.top}`}>
+      <div
+        className={`grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end ${adminClassNames.panel.compactSection}`}
+      >
         <div className="space-y-2">
           <Label htmlFor="prompt-title">Название промпта</Label>
           <Input
@@ -45,7 +48,9 @@ export function PromptSaveRunFooter({
             onChange={(event) => onPromptTitleChange(event.target.value)}
             placeholder="Например: Карьерный анализ по итогам теста"
           />
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div
+            className={`flex flex-wrap items-center gap-2 text-xs ${adminClassNames.text.muted}`}
+          >
             {selectedPromptId ? (
               <>
                 <Badge variant="outline">Редактируется #{selectedPromptId}</Badge>
@@ -75,7 +80,7 @@ export function PromptSaveRunFooter({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className={`flex items-center gap-2 text-xs ${adminClassNames.text.muted}`}>
           <Badge variant="outline">{detectedVariablesCount} переменные</Badge>
           <span>{selectedQuestionsCount} вопросов выбранного теста</span>
         </div>

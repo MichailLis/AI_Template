@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { PromptEditorModelSection } from './prompt-editor-model-section';
@@ -75,7 +76,7 @@ export function PromptEditorCard({
   onRemoveVariable,
 }: PromptEditorCardProps) {
   return (
-    <Card className="min-w-0 border-slate-200 shadow-sm">
+    <Card className={`min-w-0 ${adminClassNames.panel.card}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />

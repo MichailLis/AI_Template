@@ -1,6 +1,7 @@
 import { Archive, MoreHorizontal, RotateCcw, Settings, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
@@ -122,9 +123,9 @@ function TestsListItemRow({
   const isDeleteBusy = isDeletingTopic && deletingTopicId === topic.id;
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0 hover:bg-slate-50 transition-colors">
+    <div className={adminClassNames.panel.listRow}>
       <button type="button" onClick={() => onSelectTest(topic.id)} className="flex-1 text-left">
-        <p className="text-sm font-medium text-slate-900">{topic.draftTitle}</p>
+        <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>{topic.draftTitle}</p>
       </button>
 
       <Popover>
@@ -133,7 +134,7 @@ function TestsListItemRow({
             type="button"
             size="icon"
             variant="ghost"
-            className="h-8 w-8 text-slate-500 hover:text-slate-900"
+            className={`h-8 w-8 ${adminClassNames.iconButton.muted}`}
             aria-label="Действия"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -190,7 +191,7 @@ function TestsListItemRow({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 justify-start px-2 text-left text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className={adminClassNames.actionMenu.dangerItem}
                     onClick={() => onRequestDeleteTest(topic)}
                     disabled={isDeleteBusy}
                   >
@@ -202,7 +203,7 @@ function TestsListItemRow({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 justify-start px-2 text-left text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className={adminClassNames.actionMenu.dangerItem}
                     onClick={() => onSetPendingDelete(topic.id)}
                   >
                     <Trash2 className="mr-2 h-3.5 w-3.5" />

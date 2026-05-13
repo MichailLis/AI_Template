@@ -1,3 +1,4 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -94,7 +95,9 @@ export function QuestionModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto border-slate-200">
+      <DialogContent
+        className={`max-h-[92vh] max-w-2xl overflow-y-auto ${adminClassNames.dialog.content}`}
+      >
         <DialogHeader>
           <DialogTitle>{mode === 'edit' ? 'Изменить вопрос' : 'Добавить вопрос'}</DialogTitle>
           <DialogDescription>
@@ -138,11 +141,7 @@ export function QuestionModal({
             onSettingsTextChange={(settingsText) => onFormChange({ ...form, settingsText })}
           />
 
-          {submitError ? (
-            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {submitError}
-            </p>
-          ) : null}
+          {submitError ? <p className={adminClassNames.panel.dangerInline}>{submitError}</p> : null}
 
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={onSubmit} disabled={isSubmitting}>
