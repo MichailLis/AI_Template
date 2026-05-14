@@ -9,6 +9,7 @@ import { mapSessionState, toOptionalIsoString } from './tests-attempt.mapper';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
 import {
+  buildAnonymousAttemptKeyHash,
   buildStudentKeyHash,
   createRandomToken,
   toPrismaRequiredJsonInput,
@@ -20,6 +21,10 @@ import { TestsPublicLinkService } from './tests-public-link.service';
 type SessionStateResponse = {
   session: ReturnType<typeof mapSessionState>;
 };
+
+type AccessiblePublicLink = Awaited<
+  ReturnType<TestsPublicLinkService['getAccessiblePublicLinkByCode']>
+>;
 
 @Injectable()
 export class TestsPublicSessionService {
@@ -38,10 +43,7 @@ export class TestsPublicSessionService {
     }
   }
 
-  private validateGroupOrClassForLink(
-    groupOrClass: string,
-    link: Awaited<ReturnType<TestsPublicLinkService['getAccessiblePublicLinkByCode']>>,
-  ) {
+  private validateGroupOrClassForLink(groupOrClass: string, link: AccessiblePublicLink) {
     const validationMode = link.educationOrganization?.groupValidationMode ?? 'NONE';
     const validationPattern = link.educationOrganization?.groupValidationPattern;
 
@@ -54,6 +56,22 @@ export class TestsPublicSessionService {
         link.educationOrganization?.groupValidationHint ||
           'Формат поля "Группа / класс" не соответствует требованиям учебного заведения',
       );
+    }
+  }
+
+  private normalizeRequiredString(value: string | undefined, message: string) {
+    const normalizedValue = value?.trim() ?? '';
+
+    if (!normalizedValue) {
+      throw new BadRequestException(message);
+    }
+
+    return normalizedValue;
+  }
+
+  private validateEntryProfileMode(link: AccessiblePublicLink, dto: PublicSessionStartRequestDto) {
+    if (dto.entryProfileMode && dto.entryProfileMode !== link.entryProfileMode) {
+      throw new BadRequestException('Анкета не соответствует настройкам ссылки');
     }
   }
 
@@ -80,18 +98,38 @@ export class TestsPublicSessionService {
     dto: PublicSessionStartRequestDto,
   ): Promise<SessionStateResponse> {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
-    const resolvedEducationOrganization =
-      link.educationOrganization?.name ?? dto.educationOrganization?.trim() ?? '';
+    this.validateEntryProfileMode(link, dto);
 
-    if (!resolvedEducationOrganization) {
-      throw new BadRequestException('Учебное заведение обязательно для начала теста');
+    if (link.entryProfileMode === 'DEMOGRAPHIC') {
+      return this.startDemographicSession(link, dto);
     }
 
-    const normalizedGroupOrClass = dto.groupOrClass.trim();
+    const resolvedEducationOrganization =
+      link.educationOrganization?.name ??
+      this.normalizeRequiredString(
+        dto.educationOrganization,
+        'Учебное заведение обязательно для начала теста',
+      );
+    const studentName = this.normalizeRequiredString(dto.studentName, 'Укажите имя участника');
+    const studentLastInitial = this.normalizeRequiredString(
+      dto.studentLastInitial,
+      'Укажите первую букву фамилии',
+    );
+    const studentMiddleInitial = this.normalizeRequiredString(
+      dto.studentMiddleInitial,
+      'Укажите первую букву отчества',
+    );
+    const normalizedGroupOrClass = this.normalizeRequiredString(
+      dto.groupOrClass,
+      'Укажите группу или класс',
+    );
+
     this.validateGroupOrClassForLink(normalizedGroupOrClass, link);
 
     const studentKeyHash = buildStudentKeyHash({
-      ...dto,
+      studentName,
+      studentLastInitial,
+      studentMiddleInitial,
       educationOrganization: resolvedEducationOrganization,
       groupOrClass: normalizedGroupOrClass,
     });
@@ -157,16 +195,83 @@ export class TestsPublicSessionService {
         topicVersionId: link.topicVersionId,
         attemptNumber: nextAttemptNumber,
         status: 'IN_PROGRESS',
-        studentName: dto.studentName,
-        studentLastInitial: dto.studentLastInitial,
-        studentMiddleInitial: dto.studentMiddleInitial,
+        studentName,
+        studentLastInitial,
+        studentMiddleInitial,
         educationOrganization: resolvedEducationOrganization,
         groupOrClass: normalizedGroupOrClass,
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
         studentKeyHash,
         consentAcceptedAt: now,
         consentVersion: link.consentVersion,
         consentTextSnapshot: link.consentTextSnapshot,
         resumeToken: createRandomToken(24),
+        startedAt: now,
+        expiresAt,
+      },
+    });
+
+    return this.getSessionByToken(createdAttempt.resumeToken);
+  }
+
+  private async startDemographicSession(
+    link: AccessiblePublicLink,
+    dto: PublicSessionStartRequestDto,
+  ): Promise<SessionStateResponse> {
+    if (!dto.gender) {
+      throw new BadRequestException('Укажите пол');
+    }
+
+    const studentAge = dto.age;
+
+    if (
+      !Number.isInteger(studentAge) ||
+      studentAge === undefined ||
+      studentAge < 1 ||
+      studentAge > 120
+    ) {
+      throw new BadRequestException('Укажите корректный возраст');
+    }
+
+    const studentResidence = this.normalizeRequiredString(
+      dto.residence,
+      'Укажите место жительства',
+    );
+
+    if (!dto.educationLevel) {
+      throw new BadRequestException('Укажите уровень образования');
+    }
+
+    const now = new Date();
+    const resumeToken = createRandomToken(24);
+    const expiresAt =
+      link.timeLimitMinutes !== null
+        ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
+        : null;
+
+    const createdAttempt = await this.prisma.testStudentAttempt.create({
+      data: {
+        publicLinkId: link.id,
+        topicVersionId: link.topicVersionId,
+        attemptNumber: 1,
+        status: 'IN_PROGRESS',
+        studentName: null,
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: null,
+        groupOrClass: null,
+        studentGender: dto.gender,
+        studentAge,
+        studentResidence,
+        studentEducationLevel: dto.educationLevel,
+        studentKeyHash: buildAnonymousAttemptKeyHash(resumeToken),
+        consentAcceptedAt: now,
+        consentVersion: link.consentVersion,
+        consentTextSnapshot: link.consentTextSnapshot,
+        resumeToken,
         startedAt: now,
         expiresAt,
       },

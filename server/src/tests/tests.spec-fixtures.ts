@@ -1,10 +1,12 @@
 import type { PublicSessionStartRequestDto } from './dto/tests-public.dto';
 
 export type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
+export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION';
 
 export type AccessibleLinkFixture = {
   id: number;
   topicVersionId: number;
+  entryProfileMode: EntryProfileMode;
   allowResume: boolean;
   maxAttemptsPerStudent: number;
   timeLimitMinutes: number | null;
@@ -23,6 +25,7 @@ export const createAccessibleLinkFixture = (
 ): AccessibleLinkFixture => ({
   id: 100,
   topicVersionId: 200,
+  entryProfileMode: 'EDUCATION',
   allowResume: false,
   maxAttemptsPerStudent: 3,
   timeLimitMinutes: 30,
@@ -40,11 +43,24 @@ export const createAccessibleLinkFixture = (
 export const createPublicSessionStartDto = (
   overrides: Partial<PublicSessionStartRequestDto> = {},
 ): PublicSessionStartRequestDto => ({
+  entryProfileMode: 'EDUCATION',
   studentName: 'Иван',
   studentLastInitial: 'И',
   studentMiddleInitial: 'О',
   educationOrganization: 'Ввод из формы',
   groupOrClass: ' ИС-21 ',
+  consentAccepted: true,
+  ...overrides,
+});
+
+export const createPublicSessionDemographicStartDto = (
+  overrides: Partial<PublicSessionStartRequestDto> = {},
+): PublicSessionStartRequestDto => ({
+  entryProfileMode: 'DEMOGRAPHIC',
+  gender: 'FEMALE',
+  age: 17,
+  residence: 'Казань',
+  educationLevel: 'SECONDARY_GENERAL',
   consentAccepted: true,
   ...overrides,
 });

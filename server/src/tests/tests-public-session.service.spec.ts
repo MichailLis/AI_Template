@@ -8,6 +8,7 @@ import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
 import {
   createAccessibleLinkFixture,
+  createPublicSessionDemographicStartDto,
   createPublicSessionStartDto,
   createPublicSessionStateResponse,
   type AccessibleLinkFixture,
@@ -26,11 +27,7 @@ type AttemptHistoryItem = {
 };
 
 type AttemptCreateInput = {
-  data: {
-    educationOrganization: string;
-    groupOrClass: string;
-    [key: string]: unknown;
-  };
+  data: Record<string, unknown>;
   [key: string]: unknown;
 };
 
@@ -167,6 +164,72 @@ describe('TestsPublicSessionService', () => {
     expect(createCall?.data.groupOrClass).toBe('ИС-21');
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-new');
     expect(result.session.sessionToken).toBe('resume-new');
+  });
+
+  it('startSessionByCode creates a DEMOGRAPHIC attempt with profile data and attempt number 1', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({
+        entryProfileMode: 'DEMOGRAPHIC',
+        educationOrganization: null,
+        allowResume: true,
+        maxAttemptsPerStudent: 1,
+      }),
+    );
+    createAttemptMock.mockResolvedValue({ resumeToken: 'resume-demo' });
+
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-demo'));
+
+    const result = await service.startSessionByCode(
+      'DEMO2026',
+      createPublicSessionDemographicStartDto({
+        gender: 'MALE',
+        age: 18,
+        residence: '  Казань  ',
+        educationLevel: 'SECONDARY_SPECIAL',
+      }),
+    );
+
+    const createCall = createAttemptMock.mock.calls[0]?.[0];
+
+    expect(updateManyMock).not.toHaveBeenCalled();
+    expect(findManyMock).not.toHaveBeenCalled();
+    expect(createCall?.data).toMatchObject({
+      publicLinkId: 100,
+      topicVersionId: 200,
+      attemptNumber: 1,
+      studentName: null,
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: null,
+      groupOrClass: null,
+      studentGender: 'MALE',
+      studentAge: 18,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_SPECIAL',
+    });
+    expect(createCall?.data.studentKeyHash).toEqual(expect.any(String));
+    expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-demo');
+    expect(result.session.sessionToken).toBe('resume-demo');
+  });
+
+  it('startSessionByCode rejects incomplete DEMOGRAPHIC profile data', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({
+        entryProfileMode: 'DEMOGRAPHIC',
+        educationOrganization: null,
+        maxAttemptsPerStudent: 1,
+      }),
+    );
+
+    await expect(
+      service.startSessionByCode(
+        'DEMO2026',
+        createPublicSessionDemographicStartDto({ age: undefined }),
+      ),
+    ).rejects.toThrow(BadRequestException);
+    expect(createAttemptMock).not.toHaveBeenCalled();
   });
 
   it('startSessionByCode returns resumable session when allowResume is enabled', async () => {

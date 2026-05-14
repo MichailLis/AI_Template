@@ -83,6 +83,10 @@ export const buildStudentKeyHash = (input: {
   return createHash('sha256').update(fingerprint).digest('hex');
 };
 
+export const buildAnonymousAttemptKeyHash = (resumeToken: string) => {
+  return createHash('sha256').update(`anonymous|${resumeToken}`).digest('hex');
+};
+
 export const createRandomToken = (size = 24) => randomBytes(size).toString('hex');
 
 export const createShortCodeCandidate = (length = 8) => {
