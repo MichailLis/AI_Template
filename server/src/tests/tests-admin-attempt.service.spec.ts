@@ -12,6 +12,7 @@ type PrismaMock = {
   testStudentAttempt: {
     count: jest.Mock;
     findMany: jest.Mock;
+    findUnique: jest.Mock;
   };
 };
 
@@ -33,6 +34,7 @@ describe('TestsAdminAttemptService', () => {
       testStudentAttempt: {
         count: jest.fn(),
         findMany: jest.fn(),
+        findUnique: jest.fn(),
       },
     };
     analysisServiceMock = {
@@ -67,6 +69,10 @@ describe('TestsAdminAttemptService', () => {
         studentMiddleInitial: 'С',
         educationOrganization: 'Лицей',
         groupOrClass: '10А',
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
         startedAt,
         finishedAt,
         expiresAt,
@@ -98,17 +104,70 @@ describe('TestsAdminAttemptService', () => {
           attemptId: 101,
           attemptNumber: 21,
           status: 'COMPLETED',
+          entryProfileMode: 'EDUCATION',
           studentName: 'Иван',
           studentLastInitial: 'П',
           studentMiddleInitial: 'С',
           educationOrganization: 'Лицей',
           groupOrClass: '10А',
+          studentGender: null,
+          studentAge: null,
+          studentResidence: null,
+          studentEducationLevel: null,
           startedAt: startedAt.toISOString(),
           finishedAt: finishedAt.toISOString(),
           expiresAt: expiresAt.toISOString(),
           analysisStatus: 'READY',
         },
       ],
+    });
+  });
+
+  it('returns demographic profile fields in attempt detail', async () => {
+    const startedAt = new Date('2026-01-02T10:00:00.000Z');
+    const consentAcceptedAt = new Date('2026-01-02T09:59:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 202,
+      status: 'COMPLETED',
+      publicLink: {
+        id: 13,
+        shortCode: 'DEMO2026',
+      },
+      attemptNumber: 1,
+      studentName: null,
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: null,
+      groupOrClass: null,
+      studentGender: 'FEMALE',
+      studentAge: 17,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_GENERAL',
+      consentAcceptedAt,
+      consentVersion: 'v1',
+      startedAt,
+      finishedAt: null,
+      expiresAt: null,
+      answers: [],
+      analysis: null,
+    });
+
+    const response = await service.getAttemptDetail(7, 202);
+
+    expect(response).toMatchObject({
+      attemptId: 202,
+      entryProfileMode: 'DEMOGRAPHIC',
+      studentName: null,
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: null,
+      groupOrClass: null,
+      studentGender: 'FEMALE',
+      studentAge: 17,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_GENERAL',
     });
   });
 });

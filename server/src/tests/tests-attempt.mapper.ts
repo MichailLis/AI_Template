@@ -1,4 +1,9 @@
-import type { Prisma, TestStudentAttemptStatus } from '@prisma/client';
+import type {
+  Prisma,
+  TestStudentAttemptStatus,
+  TestStudentEducationLevel,
+  TestStudentGender,
+} from '@prisma/client';
 
 import type { AttemptWithSessionData } from './tests-attempt.query';
 
@@ -41,11 +46,15 @@ interface AttemptDetailRecord {
     shortCode: string;
   };
   attemptNumber: number;
-  studentName: string;
-  studentLastInitial: string;
-  studentMiddleInitial: string;
-  educationOrganization: string;
-  groupOrClass: string;
+  studentName: string | null;
+  studentLastInitial: string | null;
+  studentMiddleInitial: string | null;
+  educationOrganization: string | null;
+  groupOrClass: string | null;
+  studentGender: TestStudentGender | null;
+  studentAge: number | null;
+  studentResidence: string | null;
+  studentEducationLevel: TestStudentEducationLevel | null;
   consentAcceptedAt: Date;
   consentVersion: string;
   startedAt: Date;
@@ -72,11 +81,15 @@ interface AttemptListRecord {
   id: number;
   status: TestStudentAttemptStatus;
   attemptNumber: number;
-  studentName: string;
-  studentLastInitial: string;
-  studentMiddleInitial: string;
-  educationOrganization: string;
-  groupOrClass: string;
+  studentName: string | null;
+  studentLastInitial: string | null;
+  studentMiddleInitial: string | null;
+  educationOrganization: string | null;
+  groupOrClass: string | null;
+  studentGender: TestStudentGender | null;
+  studentAge: number | null;
+  studentResidence: string | null;
+  studentEducationLevel: TestStudentEducationLevel | null;
   startedAt: Date;
   finishedAt: Date | null;
   expiresAt: Date | null;
@@ -84,6 +97,42 @@ interface AttemptListRecord {
     status: string;
   } | null;
 }
+
+type AttemptProfileRecord = Pick<
+  AttemptDetailRecord,
+  | 'studentName'
+  | 'studentLastInitial'
+  | 'studentMiddleInitial'
+  | 'educationOrganization'
+  | 'groupOrClass'
+  | 'studentGender'
+  | 'studentAge'
+  | 'studentResidence'
+  | 'studentEducationLevel'
+>;
+
+const mapAttemptProfile = (attempt: AttemptProfileRecord) => {
+  const entryProfileMode =
+    attempt.studentGender ||
+    attempt.studentAge !== null ||
+    attempt.studentResidence ||
+    attempt.studentEducationLevel
+      ? 'DEMOGRAPHIC'
+      : 'EDUCATION';
+
+  return {
+    entryProfileMode,
+    studentName: attempt.studentName,
+    studentLastInitial: attempt.studentLastInitial,
+    studentMiddleInitial: attempt.studentMiddleInitial,
+    educationOrganization: attempt.educationOrganization,
+    groupOrClass: attempt.groupOrClass,
+    studentGender: attempt.studentGender,
+    studentAge: attempt.studentAge,
+    studentResidence: attempt.studentResidence,
+    studentEducationLevel: attempt.studentEducationLevel,
+  };
+};
 
 export const mapSessionState = (
   attempt: AttemptWithSessionData,
@@ -115,11 +164,7 @@ export const mapAttemptListItem = (
     attemptId: attempt.id,
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
-    studentName: attempt.studentName,
-    studentLastInitial: attempt.studentLastInitial,
-    studentMiddleInitial: attempt.studentMiddleInitial,
-    educationOrganization: attempt.educationOrganization,
-    groupOrClass: attempt.groupOrClass,
+    ...mapAttemptProfile(attempt),
     startedAt: attempt.startedAt.toISOString(),
     finishedAt: toIso(attempt.finishedAt),
     expiresAt: toIso(attempt.expiresAt),
@@ -137,11 +182,7 @@ export const mapAttemptDetail = (
     shortCode: attempt.publicLink.shortCode,
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
-    studentName: attempt.studentName,
-    studentLastInitial: attempt.studentLastInitial,
-    studentMiddleInitial: attempt.studentMiddleInitial,
-    educationOrganization: attempt.educationOrganization,
-    groupOrClass: attempt.groupOrClass,
+    ...mapAttemptProfile(attempt),
     consentAcceptedAt: attempt.consentAcceptedAt.toISOString(),
     consentVersion: attempt.consentVersion,
     startedAt: attempt.startedAt.toISOString(),
