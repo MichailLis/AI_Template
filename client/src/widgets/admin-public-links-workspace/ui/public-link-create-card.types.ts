@@ -1,5 +1,7 @@
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
+export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION';
+
 export interface TopicOption {
   id: number;
   draftTitle: string;
@@ -34,6 +36,8 @@ export interface PublicLinkCreateCardProps {
   isUpdatingEducationOrganization: boolean;
   newPublicShortCode: string;
   onShortCodeChange: (value: string) => void;
+  newPublicEntryProfileMode: PublicLinkEntryProfileMode;
+  onEntryProfileModeChange: (value: PublicLinkEntryProfileMode) => void;
   newPublicMaxAttempts: string;
   onMaxAttemptsChange: (value: string) => void;
   newPublicTimeLimit: string;
@@ -78,6 +82,8 @@ export interface PublicLinkOrganizationSectionProps {
 export interface PublicLinkAccessSettingsSectionProps {
   newPublicShortCode: string;
   onShortCodeChange: (value: string) => void;
+  newPublicEntryProfileMode: PublicLinkEntryProfileMode;
+  onEntryProfileModeChange: (value: PublicLinkEntryProfileMode) => void;
   newPublicMaxAttempts: string;
   onMaxAttemptsChange: (value: string) => void;
   newPublicTimeLimit: string;

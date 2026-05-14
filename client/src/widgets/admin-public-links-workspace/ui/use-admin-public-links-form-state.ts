@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
+import type { PublicLinkEntryProfileMode } from './public-link-create-card.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 interface EducationOrganizationValidationSnapshot {
@@ -22,6 +23,8 @@ export function useAdminPublicLinksFormState() {
   const [groupValidationPattern, setGroupValidationPattern] = useState('');
   const [groupValidationExample, setGroupValidationExample] = useState('');
   const [groupValidationHint, setGroupValidationHint] = useState('');
+  const [newPublicEntryProfileMode, setNewPublicEntryProfileMode] =
+    useState<PublicLinkEntryProfileMode>('DEMOGRAPHIC');
   const [newPublicMaxAttempts, setNewPublicMaxAttempts] = useState('3');
   const [newPublicTimeLimit, setNewPublicTimeLimit] = useState('30');
   const [newPublicAllowResume, setNewPublicAllowResume] = useState(true);
@@ -73,6 +76,8 @@ export function useAdminPublicLinksFormState() {
     setGroupValidationExample,
     groupValidationHint,
     setGroupValidationHint,
+    newPublicEntryProfileMode,
+    setNewPublicEntryProfileMode,
     newPublicMaxAttempts,
     setNewPublicMaxAttempts,
     newPublicTimeLimit,

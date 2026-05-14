@@ -34,6 +34,8 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   isUpdatingEducationOrganization: state.updateEducationOrganizationMutation.isPending,
   newPublicShortCode: state.newPublicShortCode,
   onShortCodeChange: state.setNewPublicShortCode,
+  newPublicEntryProfileMode: state.newPublicEntryProfileMode,
+  onEntryProfileModeChange: state.setNewPublicEntryProfileMode,
   newPublicMaxAttempts: state.newPublicMaxAttempts,
   onMaxAttemptsChange: state.setNewPublicMaxAttempts,
   newPublicTimeLimit: state.newPublicTimeLimit,

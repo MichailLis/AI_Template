@@ -9,6 +9,8 @@ import type { PublicLinkAccessSettingsSectionProps } from './public-link-create-
 export function PublicLinkAccessSettingsSection({
   newPublicShortCode,
   onShortCodeChange,
+  newPublicEntryProfileMode,
+  onEntryProfileModeChange,
   newPublicMaxAttempts,
   onMaxAttemptsChange,
   newPublicTimeLimit,
@@ -44,14 +46,32 @@ export function PublicLinkAccessSettingsSection({
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
+            <select
+              id="public-entry-profile-mode"
+              value={newPublicEntryProfileMode}
+              onChange={(event) =>
+                onEntryProfileModeChange(event.target.value as typeof newPublicEntryProfileMode)
+              }
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="DEMOGRAPHIC">Демографическая анкета</option>
+              <option value="EDUCATION">Анкета по учебным данным</option>
+            </select>
+            <p className={`text-xs ${adminClassNames.text.muted}`}>
+              Для демографической анкеты лимит попыток устанавливается равным 1.
+            </p>
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="public-max-attempts">Лимит попыток</Label>
             <Input
               id="public-max-attempts"
               type="number"
               min={1}
-              value={newPublicMaxAttempts}
+              value={newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts}
               onChange={(event) => onMaxAttemptsChange(event.target.value)}
+              disabled={newPublicEntryProfileMode === 'DEMOGRAPHIC'}
             />
           </div>
           <div className="flex flex-col gap-2">

@@ -67,6 +67,8 @@ export function PublicLinkCreateDialog({
   isUpdatingEducationOrganization,
   newPublicShortCode,
   onShortCodeChange,
+  newPublicEntryProfileMode,
+  onEntryProfileModeChange,
   newPublicMaxAttempts,
   onMaxAttemptsChange,
   newPublicTimeLimit,
@@ -118,6 +120,8 @@ export function PublicLinkCreateDialog({
           <PublicLinkAccessSettingsSection
             newPublicShortCode={newPublicShortCode}
             onShortCodeChange={onShortCodeChange}
+            newPublicEntryProfileMode={newPublicEntryProfileMode}
+            onEntryProfileModeChange={onEntryProfileModeChange}
             newPublicMaxAttempts={newPublicMaxAttempts}
             onMaxAttemptsChange={onMaxAttemptsChange}
             newPublicTimeLimit={newPublicTimeLimit}

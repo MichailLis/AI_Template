@@ -24,6 +24,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     publishedVersionId,
     newPublicShortCode,
     newEducationOrganizationId,
+    newPublicEntryProfileMode,
     newPublicMaxAttempts,
     newPublicTimeLimit,
     newPublicAllowResume,
@@ -42,7 +43,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
       educationOrganizationId: newEducationOrganizationId,
-      maxAttemptsRaw: newPublicMaxAttempts,
+      maxAttemptsRaw: newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts,
       timeLimitRaw: newPublicTimeLimit,
     });
 
@@ -57,7 +58,9 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
           publishedVersionId: validation.publishedVersionId,
           educationOrganizationId: validation.educationOrganizationId,
           shortCode: newPublicShortCode.trim() || undefined,
-          maxAttemptsPerStudent: validation.maxAttemptsPerStudent,
+          entryProfileMode: newPublicEntryProfileMode,
+          maxAttemptsPerStudent:
+            newPublicEntryProfileMode === 'DEMOGRAPHIC' ? 1 : validation.maxAttemptsPerStudent,
           timeLimitMinutes: validation.timeLimitMinutes,
           allowResume: newPublicAllowResume,
           consentVersion: newPublicConsentVersion.trim() || 'v1',
