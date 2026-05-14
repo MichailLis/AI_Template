@@ -1,5 +1,7 @@
 import {
+  AdminCreatePublicLinkSchema,
   AdminCreateEducationOrganizationSchema,
+  AdminPublicLinkSchema,
   AdminUpdateEducationOrganizationSchema,
 } from './tests-links.dto';
 
@@ -49,5 +51,46 @@ describe('tests-links dto group validation schemas', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe('tests link DTO profile mode fields', () => {
+  it('accepts DEMOGRAPHIC public link creation input', () => {
+    const result = AdminCreatePublicLinkSchema.parse({
+      publishedVersionId: 10,
+      entryProfileMode: 'DEMOGRAPHIC',
+      maxAttemptsPerStudent: 3,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(result.entryProfileMode).toBe('DEMOGRAPHIC');
+  });
+
+  it('returns entry profile mode in admin public link response', () => {
+    const result = AdminPublicLinkSchema.parse({
+      id: 1,
+      publishedVersionId: 10,
+      topicId: 2,
+      educationOrganizationId: null,
+      educationOrganizationName: null,
+      entryProfileMode: 'EDUCATION',
+      shortCode: 'CODE2026',
+      shortUrl: '/t/CODE2026',
+      isActive: true,
+      archivedAt: null,
+      startsAt: null,
+      endsAt: null,
+      maxAttemptsPerStudent: 1,
+      timeLimitMinutes: null,
+      allowResume: true,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+      title: 'Тест',
+      updatedAt: '2026-05-14T10:00:00.000Z',
+      createdAt: '2026-05-14T10:00:00.000Z',
+    });
+
+    expect(result.entryProfileMode).toBe('EDUCATION');
   });
 });

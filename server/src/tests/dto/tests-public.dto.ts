@@ -18,12 +18,29 @@ export const PublicQuestionSliderBandSchema = z.object({
   order: z.number(),
 });
 
+export const EntryProfileModeSchema = z.enum(['DEMOGRAPHIC', 'EDUCATION']);
+
+export const PublicStudentGenderSchema = z.enum(['MALE', 'FEMALE']);
+
+export const PublicStudentEducationLevelSchema = z.enum([
+  'BASIC_GENERAL',
+  'SECONDARY_GENERAL',
+  'SECONDARY_SPECIAL',
+  'INCOMPLETE_HIGHER_FROM_YEAR_3',
+  'HIGHER',
+]);
+
 export const PublicStudentProfileSchema = z.object({
-  studentName: z.string().trim().min(1).max(200),
-  studentLastInitial: z.string().trim().min(1).max(1),
-  studentMiddleInitial: z.string().trim().min(1).max(1),
+  entryProfileMode: EntryProfileModeSchema.optional(),
+  studentName: z.string().trim().min(1).max(200).optional(),
+  studentLastInitial: z.string().trim().min(1).max(1).optional(),
+  studentMiddleInitial: z.string().trim().min(1).max(1).optional(),
   educationOrganization: z.string().trim().min(1).max(300).optional(),
-  groupOrClass: z.string().trim().min(1).max(120),
+  groupOrClass: z.string().trim().min(1).max(120).optional(),
+  gender: PublicStudentGenderSchema.optional(),
+  age: z.number().int().min(1).max(120).optional(),
+  residence: z.string().trim().min(1).max(300).optional(),
+  educationLevel: PublicStudentEducationLevelSchema.optional(),
   consentAccepted: z.literal(true),
 });
 
@@ -58,6 +75,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   shortCode: z.string(),
   title: z.string(),
   description: z.string().nullable(),
+  entryProfileMode: EntryProfileModeSchema,
   educationOrganization: z.string().nullable(),
   groupValidationMode: PublicGroupValidationModeSchema,
   groupValidationPattern: z.string().nullable(),
