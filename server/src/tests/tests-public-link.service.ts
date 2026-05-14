@@ -22,6 +22,20 @@ import {
 
 const DEFAULT_MAX_ATTEMPTS = 1;
 const DEFAULT_ALLOW_RESUME = true;
+const DEFAULT_ENTRY_PROFILE_MODE = 'EDUCATION';
+
+type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION';
+
+const resolveMaxAttemptsForEntryProfileMode = (
+  entryProfileMode: EntryProfileMode,
+  requestedMaxAttempts: number | undefined,
+) => {
+  if (entryProfileMode === 'DEMOGRAPHIC') {
+    return 1;
+  }
+
+  return requestedMaxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+};
 
 @Injectable()
 export class TestsPublicLinkService {
@@ -90,6 +104,11 @@ export class TestsPublicLinkService {
       );
 
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
+    const entryProfileMode = dto.entryProfileMode ?? DEFAULT_ENTRY_PROFILE_MODE;
+    const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
+      entryProfileMode,
+      dto.maxAttemptsPerStudent,
+    );
 
     const created = await this.prisma.testPublicLink.create({
       data: {
@@ -98,7 +117,8 @@ export class TestsPublicLinkService {
         isActive: dto.isActive ?? true,
         startsAt: parseDateOrNull(dto.startsAt),
         endsAt: parseDateOrNull(dto.endsAt),
-        maxAttemptsPerStudent: dto.maxAttemptsPerStudent ?? DEFAULT_MAX_ATTEMPTS,
+        entryProfileMode,
+        maxAttemptsPerStudent,
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
         educationOrganizationId,
@@ -162,7 +182,7 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true, archivedAt: true },
+      select: { id: true, archivedAt: true, entryProfileMode: true, maxAttemptsPerStudent: true },
     });
 
     if (!existing) {
@@ -173,15 +193,20 @@ export class TestsPublicLinkService {
       throw new NotFoundException('Public link not found');
     }
 
+    const entryProfileMode = dto.entryProfileMode ?? existing.entryProfileMode;
+    const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
+      entryProfileMode,
+      dto.maxAttemptsPerStudent ?? existing.maxAttemptsPerStudent,
+    );
+
     const updated = await this.prisma.testPublicLink.update({
       where: { id: linkId },
       data: {
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
         ...(dto.startsAt !== undefined ? { startsAt: parseDateOrNull(dto.startsAt) } : {}),
         ...(dto.endsAt !== undefined ? { endsAt: parseDateOrNull(dto.endsAt) } : {}),
-        ...(dto.maxAttemptsPerStudent !== undefined
-          ? { maxAttemptsPerStudent: dto.maxAttemptsPerStudent }
-          : {}),
+        ...(dto.entryProfileMode !== undefined ? { entryProfileMode } : {}),
+        maxAttemptsPerStudent,
         ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
         ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
         ...(educationOrganizationId !== undefined ? { educationOrganizationId } : {}),
@@ -336,6 +361,7 @@ export class TestsPublicLinkService {
       shortCode: link.shortCode,
       title: link.topicVersion.title,
       description: link.topicVersion.description,
+      entryProfileMode: link.entryProfileMode,
       educationOrganization: link.educationOrganization?.name ?? null,
       groupValidationMode: link.educationOrganization?.groupValidationMode ?? 'NONE',
       groupValidationPattern: link.educationOrganization?.groupValidationPattern ?? null,
