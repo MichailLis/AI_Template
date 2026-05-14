@@ -7,7 +7,7 @@ Current project state:
 - Auth is fully wired (JWT access/refresh)
 - Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio foundation, and Tests module workspace
 - Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/stats`)
-- Public student flow (`/t/*`) is product-ready and uses a scoped theme isolated from admin screens
+- Public student flow (`/t/*`) is product-ready, supports selectable entry profile modes, and uses a scoped theme isolated from admin screens
 - Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
 
 ## Stack
@@ -174,15 +174,23 @@ Admin routes:
 Admin capabilities baseline:
 
 - archive/restore lifecycle for public links (archive disables access without losing historical data)
+- entry profile mode selection for new public links:
+  - `DEMOGRAPHIC`: demographic profile before the test, with attempt limit forced to `1`
+  - `EDUCATION`: current education-based profile before the test
 - filters by test + public link on stats page
 - table actions for student-level details (analysis and submitted answers)
 - link selector copy uses business language (`тестов пройдено`)
 
 Public student routes:
 
-- `"/t/:code"`: registration/entry screen
+- `"/t/:code"`: registration/entry screen, branched by public link entry profile mode
 - `"/t/:code/session/:sessionToken"`: test run workspace
 - `"/t/:code/result/:sessionToken"`: result and analysis screen
+
+Entry profile modes:
+
+- `DEMOGRAPHIC`: collects gender, age, residence, and education level before starting the test
+- `EDUCATION`: collects the current education-based profile before starting the test
 
 Current public run UX:
 

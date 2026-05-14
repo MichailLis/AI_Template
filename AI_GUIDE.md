@@ -252,6 +252,10 @@ Behavior baseline:
 4. Filters must support both test and public link selection.
 5. Link labels in selectors should use business copy (`тестов пройдено`).
 6. Student row actions must provide direct access to analysis and answers.
+7. Public links have an entry profile mode:
+   - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`.
+   - `EDUCATION` -> collect the current education-based profile before the test.
+8. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
 
 ## Public Student UX Contract (`/t/*`)
 
@@ -269,6 +273,9 @@ UI/theming rules:
 4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
 5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
 6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
+7. Entry page must branch by the link `entryProfileMode` without changing public routes:
+   - `DEMOGRAPHIC` shows the demographic profile form.
+   - `EDUCATION` shows the education profile form.
 
 ## Reference Example For AI Agents (Illustrative)
 
