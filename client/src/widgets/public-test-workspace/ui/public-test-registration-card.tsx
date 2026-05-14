@@ -40,7 +40,7 @@ function RegistrationCardHeader() {
             Регистрация
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Заполните данные и начните тест
+            Заполните учебные данные и начните тест
           </CardDescription>
         </div>
         <div className="ml-4 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent p-3 shadow-md">

@@ -1,4 +1,4 @@
-import type { StudentFormState } from './public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 interface GroupValidationWarningParams {
@@ -14,6 +14,14 @@ export const initialFormState: StudentFormState = {
   studentMiddleInitial: '',
   educationOrganization: '',
   groupOrClass: '',
+  consentAccepted: true,
+};
+
+export const initialDemographicFormState: DemographicFormState = {
+  gender: '',
+  age: '',
+  residence: '',
+  educationLevel: '',
   consentAccepted: true,
 };
 

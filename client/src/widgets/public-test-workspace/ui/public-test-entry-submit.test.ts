@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
 
-import type { StudentFormState } from './public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
 import type { FormEvent } from 'react';
 
 vi.mock('sonner', () => ({
@@ -27,6 +27,14 @@ const validFormState: StudentFormState = {
   consentAccepted: true,
 };
 
+const validDemographicFormState: DemographicFormState = {
+  gender: 'FEMALE',
+  age: '17',
+  residence: 'Казань',
+  educationLevel: 'SECONDARY_GENERAL',
+  consentAccepted: true,
+};
+
 describe('createPublicTestEntryStartHandler', () => {
   it('submits normalized student data and navigates to the returned session', async () => {
     const startSession = vi.fn().mockResolvedValue({
@@ -39,7 +47,9 @@ describe('createPublicTestEntryStartHandler', () => {
 
     await createPublicTestEntryStartHandler({
       code: 'CODE1',
-      formState: validFormState,
+      entryProfileMode: 'EDUCATION',
+      educationFormState: validFormState,
+      demographicFormState: validDemographicFormState,
       linkData: undefined,
       startSession,
       navigate,
@@ -49,6 +59,7 @@ describe('createPublicTestEntryStartHandler', () => {
     expect(startSession).toHaveBeenCalledWith({
       code: 'CODE1',
       data: {
+        entryProfileMode: 'EDUCATION',
         studentName: 'Иван',
         studentLastInitial: 'И',
         studentMiddleInitial: 'О',
@@ -66,10 +77,12 @@ describe('createPublicTestEntryStartHandler', () => {
 
     await createPublicTestEntryStartHandler({
       code: 'CODE1',
-      formState: {
+      entryProfileMode: 'EDUCATION',
+      educationFormState: {
         ...validFormState,
         groupOrClass: 'БИ-21',
       },
+      demographicFormState: validDemographicFormState,
       linkData: {
         educationOrganization: null,
         groupValidationMode: 'STRICT',
@@ -94,11 +107,13 @@ describe('createPublicTestEntryStartHandler', () => {
 
     await createPublicTestEntryStartHandler({
       code: 'CODE1',
-      formState: {
+      entryProfileMode: 'EDUCATION',
+      educationFormState: {
         ...validFormState,
         educationOrganization: '',
         groupOrClass: 'БИ-21',
       },
+      demographicFormState: validDemographicFormState,
       linkData: {
         educationOrganization: 'Лицей из ссылки',
         groupValidationMode: 'HINT',
@@ -119,5 +134,65 @@ describe('createPublicTestEntryStartHandler', () => {
     );
     expect(toast.warning).toHaveBeenCalledWith('Use ИС-21');
     expect(navigate).toHaveBeenCalledWith('/t/CODE1/session/session-token');
+  });
+
+  it('submits normalized demographic data and navigates to the returned session', async () => {
+    const startSession = vi.fn().mockResolvedValue({
+      session: {
+        sessionToken: 'session-token',
+      },
+    });
+    const navigate = vi.fn();
+    const event = createSubmitEvent();
+
+    await createPublicTestEntryStartHandler({
+      code: 'CODE1',
+      entryProfileMode: 'DEMOGRAPHIC',
+      educationFormState: validFormState,
+      demographicFormState: {
+        gender: 'MALE',
+        age: ' 18 ',
+        residence: ' Казань ',
+        educationLevel: 'SECONDARY_SPECIAL',
+        consentAccepted: true,
+      },
+      linkData: undefined,
+      startSession,
+      navigate,
+    })(event);
+
+    expect(startSession).toHaveBeenCalledWith({
+      code: 'CODE1',
+      data: {
+        entryProfileMode: 'DEMOGRAPHIC',
+        gender: 'MALE',
+        age: 18,
+        residence: 'Казань',
+        educationLevel: 'SECONDARY_SPECIAL',
+        consentAccepted: true,
+      },
+    });
+    expect(navigate).toHaveBeenCalledWith('/t/CODE1/session/session-token');
+  });
+
+  it('blocks incomplete demographic data before starting a session', async () => {
+    const startSession = vi.fn();
+    const navigate = vi.fn();
+
+    await createPublicTestEntryStartHandler({
+      code: 'CODE1',
+      entryProfileMode: 'DEMOGRAPHIC',
+      educationFormState: validFormState,
+      demographicFormState: {
+        ...validDemographicFormState,
+        age: '',
+      },
+      linkData: undefined,
+      startSession,
+      navigate,
+    })(createSubmitEvent());
+
+    expect(startSession).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

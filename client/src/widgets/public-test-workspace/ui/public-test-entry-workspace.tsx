@@ -8,18 +8,41 @@ import {
 } from '@/shared/api/generated/tests-public/tests-public';
 
 import { PublicEntryStateCard } from './public-entry-state-card';
+import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
-import { initialFormState, resolveGroupValidationWarning } from './public-test-entry.helpers';
+import {
+  initialDemographicFormState,
+  initialFormState,
+  resolveGroupValidationWarning,
+} from './public-test-entry.helpers';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
 
-import type { StudentFormState } from './public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
+
+function PublicEntryLoadingState() {
+  return (
+    <PublicEntryStateCard
+      title="Загрузка параметров теста"
+      description="Пожалуйста, подождите..."
+      accentClassName="bg-gradient-to-r from-primary via-accent to-secondary"
+      icon={
+        <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-4 shadow-md">
+          <GraduationCap className="h-8 w-8 animate-pulse text-white" />
+        </div>
+      }
+    />
+  );
+}
 
 export function PublicTestEntryWorkspace() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [formState, setFormState] = useState<StudentFormState>(initialFormState);
+  const [educationFormState, setEducationFormState] = useState<StudentFormState>(initialFormState);
+  const [demographicFormState, setDemographicFormState] = useState<DemographicFormState>(
+    initialDemographicFormState,
+  );
 
   const linkQuery = useTestsPublicControllerGetLinkAccess(code ?? '', {
     query: {
@@ -29,27 +52,25 @@ export function PublicTestEntryWorkspace() {
   });
   const startMutation = useTestsPublicControllerStartSession();
 
-  const updateField = <K extends keyof StudentFormState>(key: K, value: StudentFormState[K]) => {
-    setFormState((previousState) => ({
+  const updateEducationField = <K extends keyof StudentFormState>(
+    key: K,
+    value: StudentFormState[K],
+  ) => {
+    setEducationFormState((previousState) => ({
       ...previousState,
       [key]: value,
     }));
   };
 
-  const handleStart = createPublicTestEntryStartHandler({
-    code,
-    formState,
-    linkData: linkQuery.data
-      ? {
-          educationOrganization: linkQuery.data.educationOrganization,
-          groupValidationMode: linkQuery.data.groupValidationMode,
-          groupValidationPattern: linkQuery.data.groupValidationPattern,
-          groupValidationHint: linkQuery.data.groupValidationHint,
-        }
-      : undefined,
-    startSession: startMutation.mutateAsync,
-    navigate,
-  });
+  const updateDemographicField = <K extends keyof DemographicFormState>(
+    key: K,
+    value: DemographicFormState[K],
+  ) => {
+    setDemographicFormState((previousState) => ({
+      ...previousState,
+      [key]: value,
+    }));
+  };
 
   if (!code) {
     return (
@@ -61,18 +82,7 @@ export function PublicTestEntryWorkspace() {
   }
 
   if (linkQuery.isLoading) {
-    return (
-      <PublicEntryStateCard
-        title="Загрузка параметров теста"
-        description="Пожалуйста, подождите..."
-        accentClassName="bg-gradient-to-r from-primary via-accent to-secondary"
-        icon={
-          <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-4 shadow-md">
-            <GraduationCap className="h-8 w-8 animate-pulse text-white" />
-          </div>
-        }
-      />
-    );
+    return <PublicEntryLoadingState />;
   }
 
   if (linkQuery.isError || !linkQuery.data) {
@@ -86,15 +96,33 @@ export function PublicTestEntryWorkspace() {
   }
 
   const link = linkQuery.data;
+  const entryProfileMode = link.entryProfileMode;
   const registrationFormState = {
-    ...formState,
-    educationOrganization: link.educationOrganization ?? formState.educationOrganization,
+    ...educationFormState,
+    educationOrganization: link.educationOrganization ?? educationFormState.educationOrganization,
   };
   const currentGroupValidationWarning = resolveGroupValidationWarning({
-    groupValue: formState.groupOrClass.trim(),
+    groupValue: educationFormState.groupOrClass.trim(),
     groupValidationMode: link.groupValidationMode,
     groupValidationPattern: link.groupValidationPattern,
     groupValidationHint: link.groupValidationHint,
+  });
+  const handleStart = createPublicTestEntryStartHandler({
+    code,
+    entryProfileMode,
+    educationFormState,
+    demographicFormState,
+    linkData:
+      entryProfileMode === 'EDUCATION'
+        ? {
+            educationOrganization: link.educationOrganization,
+            groupValidationMode: link.groupValidationMode,
+            groupValidationPattern: link.groupValidationPattern,
+            groupValidationHint: link.groupValidationHint,
+          }
+        : undefined,
+    startSession: startMutation.mutateAsync,
+    navigate,
   });
 
   return (
@@ -108,17 +136,26 @@ export function PublicTestEntryWorkspace() {
           timeLimitMinutes={link.timeLimitMinutes}
         />
 
-        <PublicTestRegistrationCard
-          formState={registrationFormState}
-          lockedEducationOrganization={link.educationOrganization}
-          groupValidationMode={link.groupValidationMode}
-          groupValidationExample={link.groupValidationExample}
-          groupValidationHint={link.groupValidationHint}
-          groupValidationWarning={currentGroupValidationWarning}
-          isSubmitting={startMutation.isPending}
-          onSubmit={handleStart}
-          onFieldChange={updateField}
-        />
+        {entryProfileMode === 'DEMOGRAPHIC' ? (
+          <PublicTestDemographicProfileCard
+            formState={demographicFormState}
+            isSubmitting={startMutation.isPending}
+            onSubmit={handleStart}
+            onFieldChange={updateDemographicField}
+          />
+        ) : (
+          <PublicTestRegistrationCard
+            formState={registrationFormState}
+            lockedEducationOrganization={link.educationOrganization}
+            groupValidationMode={link.groupValidationMode}
+            groupValidationExample={link.groupValidationExample}
+            groupValidationHint={link.groupValidationHint}
+            groupValidationWarning={currentGroupValidationWarning}
+            isSubmitting={startMutation.isPending}
+            onSubmit={handleStart}
+            onFieldChange={updateEducationField}
+          />
+        )}
       </div>
     </PublicThemeLayout>
   );
