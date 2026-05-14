@@ -18,6 +18,33 @@ vi.mock('@/features/tests', () => ({
 }));
 
 describe('PublicTestResultWorkspace', () => {
+  it('shows a full processing screen while analysis is still pending', () => {
+    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        sessionToken: 'session-token',
+        status: 'COMPLETED',
+        finishedAt: '2026-05-12T12:00:00.000Z',
+        professionAtlasUrl: null,
+        analysis: {
+          providerMode: 'LLM',
+          status: 'PENDING',
+          summary: null,
+          rawText: null,
+          errorMessage: null,
+          generatedAt: null,
+        },
+      },
+    } as never);
+
+    render(<PublicTestResultWorkspace />);
+
+    expect(screen.getByRole('heading', { name: /формируем отчет/i })).toBeInTheDocument();
+    expect(screen.getByText(/может занять около минуты/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /результат теста/i })).not.toBeInTheDocument();
+  });
+
   it('shows the configured profession atlas link with student-facing explanation', () => {
     vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
       isLoading: false,

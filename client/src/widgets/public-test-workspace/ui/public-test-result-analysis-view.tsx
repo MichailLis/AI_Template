@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock3,
   Lightbulb,
+  Sparkles,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
@@ -113,6 +114,16 @@ function SkillTile({ item }: { item: AnalysisResult['skillsLevel']['items'][numb
       ) : null}
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
     </article>
+  );
+}
+
+function IntroductionSection({ introduction }: { introduction: string }) {
+  return (
+    <ResultSection icon={Sparkles} title="Введение">
+      <div className="public-glass-soft public-introduction-card rounded-2xl p-4">
+        <p className="text-sm leading-relaxed text-foreground">{introduction}</p>
+      </div>
+    </ResultSection>
   );
 }
 
@@ -252,6 +263,7 @@ export function PublicTestResultAnalysisView({ analysis }: { analysis: AnalysisP
 
   return (
     <div className="space-y-6">
+      <IntroductionSection introduction={parsed.introduction} />
       <SkillsSection skillsLevel={parsed.skillsLevel} />
       <ThinkingSection thinkingType={parsed.thinkingType} />
       <TraitsSection personalityTraits={parsed.personalityTraits} />

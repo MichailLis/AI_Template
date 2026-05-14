@@ -2,6 +2,8 @@ import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './tests-
 
 describe('TestAnalysisResultSchema', () => {
   const validAnalysisResult = {
+    introduction:
+      'По результатам теста виден устойчивый интерес к практическим задачам и постепенному развитию профессиональных навыков.',
     skillsLevel: {
       title: 'Текущий уровень базовых навыков',
       summary: 'Базовые навыки выражены неравномерно.',
@@ -41,8 +43,16 @@ describe('TestAnalysisResultSchema', () => {
   it('accepts the fixed formatted student analysis structure', () => {
     const result = TestAnalysisResultSchema.parse(validAnalysisResult);
 
+    expect(result.introduction).toContain('практическим задачам');
     expect(result.skillsLevel.items[0]?.level).toBe('medium');
     expect(result.careerDevelopment.recommendedDirections).toContain('аналитика данных');
+  });
+
+  it('rejects analysis without an introduction', () => {
+    const analysisWithoutIntroduction: Record<string, unknown> = { ...validAnalysisResult };
+    delete analysisWithoutIntroduction.introduction;
+
+    expect(() => TestAnalysisResultSchema.parse(analysisWithoutIntroduction)).toThrow();
   });
 
   it('rejects unknown skill levels', () => {
@@ -82,6 +92,7 @@ describe('TestAnalysisResultSchema', () => {
     expect(TestAnalysisResultJsonSchema.name).toBe('student_test_analysis');
     expect(TestAnalysisResultJsonSchema.strict).toBe(true);
     expect(TestAnalysisResultJsonSchema.schema.required).toEqual([
+      'introduction',
       'skillsLevel',
       'thinkingType',
       'personalityTraits',

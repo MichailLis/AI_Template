@@ -19,6 +19,7 @@ export const TestAnalysisSkillItemSchema = z.object({
 });
 
 export const TestAnalysisResultSchema = z.object({
+  introduction: NonEmptyStringSchema,
   skillsLevel: z.object({
     title: NonEmptyStringSchema,
     summary: NonEmptyStringSchema,
@@ -79,8 +80,15 @@ export const TestAnalysisResultJsonSchema = {
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['skillsLevel', 'thinkingType', 'personalityTraits', 'careerDevelopment'],
+    required: [
+      'introduction',
+      'skillsLevel',
+      'thinkingType',
+      'personalityTraits',
+      'careerDevelopment',
+    ],
     properties: {
+      introduction: stringProperty,
       skillsLevel: {
         type: 'object',
         additionalProperties: false,

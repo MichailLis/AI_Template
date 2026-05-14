@@ -6,24 +6,12 @@ import { PublicThemeLayout } from './public-theme-layout';
 
 import type { ReactNode } from 'react';
 
-const stepDurationMs = 1600;
+const stepDurationMs = 12_000;
 
 interface PublicTestAnalysisProcessingScreenProps {
   startedAt: string | null;
   phase?: 'processing' | 'ready';
 }
-
-const getStepStatusPrefix = (isCompleted: boolean, isCurrent: boolean) => {
-  if (isCompleted) {
-    return '[done]';
-  }
-
-  if (isCurrent) {
-    return '[run]';
-  }
-
-  return '[wait]';
-};
 
 export function PublicTestAnalysisProcessingScreen({
   startedAt,
@@ -80,12 +68,12 @@ export function PublicTestAnalysisProcessingScreen({
 
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
-            {isReadyPhase ? 'Анализ готов' : 'Формируем ваш отчет'}
+            {isReadyPhase ? 'Анализ готов' : 'Формируем отчет'}
           </h1>
           <p className="text-sm text-muted-foreground md:text-base">
             {isReadyPhase
               ? 'Открываем персональный отчет по результатам теста.'
-              : 'Подготавливаем персональный анализ по результатам прохождения теста.'}
+              : 'Это может занять около минуты. Страница обновится автоматически, когда анализ будет готов.'}
           </p>
         </div>
 
@@ -105,9 +93,9 @@ export function PublicTestAnalysisProcessingScreen({
         </div>
 
         <div className="w-full rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            analysis-pipeline
+            Этапы подготовки
           </div>
 
           <div className="space-y-3">
@@ -129,9 +117,9 @@ export function PublicTestAnalysisProcessingScreen({
               return (
                 <div key={step.id} className="flex items-start gap-3 text-sm">
                   <span className="mt-0.5 shrink-0 text-primary">{statusIcon}</span>
-                  <span
-                    className={isCurrent ? 'text-foreground' : 'text-muted-foreground'}
-                  >{`${getStepStatusPrefix(isCompleted, isCurrent)} ${step.text}`}</span>
+                  <span className={isCurrent ? 'text-foreground' : 'text-muted-foreground'}>
+                    {step.text}
+                  </span>
                 </div>
               );
             })}

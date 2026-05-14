@@ -4,6 +4,7 @@ export const INITIAL_PROMPT = `# SYSTEM PROMPT
 Ты аналитик профориентационного тестирования. Проанализируй ответы студента на выбранные вопросы.
 
 Верни строго JSON по схеме результата анализа:
+- introduction: короткое введение к результату на 2-4 предложения;
 - skillsLevel: текущий уровень базовых навыков;
 - thinkingType: тип мышления;
 - personalityTraits: личностные особенности;
@@ -40,7 +41,7 @@ export const INITIAL_RUNS: SimulationRun[] = [
     model: 'deepseek/deepseek-chat-v3-0324:free',
     prompt: 'Пример симуляции анализа',
     output:
-      '{"skillsLevel":{"title":"Базовые навыки","summary":"Студент уверенно справляется с анализом информации.","items":[{"name":"Самоорганизация","level":"medium","score":72,"description":"Есть устойчивые привычки планирования."}]},"thinkingType":{"title":"Тип мышления","type":"Аналитико-практический","description":"Склонен связывать факты с действиями.","strengths":["Структурирует информацию"]},"personalityTraits":{"title":"Личностные особенности","traits":[{"name":"Ответственность","description":"Доводит задачи до завершения.","careerImpact":"Подходит для ролей с понятной зоной результата."}]},"careerDevelopment":{"summary":"Стоит развивать проектное мышление.","recommendedDirections":["Аналитика"],"developmentRecommendations":["Практиковать декомпозицию задач"],"professionalNextSteps":["Собрать учебное портфолио"]}}',
+      '{"introduction":"По результатам теста видно, что студент уверенно связывает учебные задачи с практическими действиями. Такой профиль хорошо раскрывается там, где нужно анализировать информацию и доводить решение до результата.","skillsLevel":{"title":"Базовые навыки","summary":"Студент уверенно справляется с анализом информации.","items":[{"name":"Самоорганизация","level":"medium","score":72,"description":"Есть устойчивые привычки планирования."}]},"thinkingType":{"title":"Тип мышления","type":"Аналитико-практический","description":"Склонен связывать факты с действиями.","strengths":["Структурирует информацию"]},"personalityTraits":{"title":"Личностные особенности","traits":[{"name":"Ответственность","description":"Доводит задачи до завершения.","careerImpact":"Подходит для ролей с понятной зоной результата."}]},"careerDevelopment":{"summary":"Стоит развивать проектное мышление.","recommendedDirections":["Аналитика"],"developmentRecommendations":["Практиковать декомпозицию задач"],"professionalNextSteps":["Собрать учебное портфолио"]}}',
     latencyMs: 840,
     totalTokens: 452,
   },

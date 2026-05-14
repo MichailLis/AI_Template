@@ -142,6 +142,14 @@ function AnalysisStatusBadges({
   );
 }
 
+function IntroductionSection({ introduction }: { introduction: string }) {
+  return (
+    <SectionCard icon={Sparkles} title="Введение">
+      <p className={`text-sm leading-relaxed ${adminClassNames.text.body}`}>{introduction}</p>
+    </SectionCard>
+  );
+}
+
 function SkillsLevelSection({ skillsLevel }: { skillsLevel: AnalysisResult['skillsLevel'] }) {
   return (
     <SectionCard icon={BrainCircuit} title={skillsLevel.title}>
@@ -259,6 +267,7 @@ function CareerDevelopmentSection({
 function ReadyAnalysisSections({ parsed }: { parsed: AnalysisResult }) {
   return (
     <div className="grid gap-4">
+      <IntroductionSection introduction={parsed.introduction} />
       <SkillsLevelSection skillsLevel={parsed.skillsLevel} />
       <ThinkingTypeSection thinkingType={parsed.thinkingType} />
       <PersonalityTraitsSection personalityTraits={parsed.personalityTraits} />

@@ -462,6 +462,7 @@
   .theme-public .public-glass,
   .theme-public .public-glass-soft,
   .theme-public .public-result-signal,
+  .theme-public .public-introduction-card,
   .theme-public .public-skill-tile,
   .theme-public .public-trait-card,
   .theme-public .public-route-card {
@@ -529,6 +530,8 @@
 
   .theme-public .public-result-section {
     padding-top: 16px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .theme-public .public-result-section:first-child {
@@ -554,6 +557,7 @@
 
   .theme-public .public-result-hero p,
   .theme-public .public-result-signal p,
+  .theme-public .public-introduction-card p,
   .theme-public .public-skill-tile p,
   .theme-public .public-trait-card p,
   .theme-public .public-route-card li {
@@ -562,6 +566,7 @@
   }
 
   .theme-public .public-result-signal,
+  .theme-public .public-introduction-card,
   .theme-public .public-skill-tile,
   .theme-public .public-trait-card,
   .theme-public .public-route-card,

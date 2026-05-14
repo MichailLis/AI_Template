@@ -5,6 +5,7 @@ import { parseAnalysisResult } from '@/features/tests';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
+import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-processing-screen';
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
 import { PublicThemeLayout } from './public-theme-layout';
 
@@ -167,16 +168,7 @@ export function PublicTestResultWorkspace() {
   }
 
   if (resultQuery.isLoading) {
-    return (
-      <PublicThemeLayout containerClassName="max-w-3xl">
-        <div
-          className="flex min-h-[60vh] items-center justify-center px-4 py-10 text-sm text-muted-foreground"
-          aria-live="polite"
-        >
-          Анализируется ваш результат. Это займет несколько секунд.
-        </div>
-      </PublicThemeLayout>
-    );
+    return <PublicTestAnalysisProcessingScreen startedAt={null} />;
   }
 
   if (resultQuery.isError || !resultQuery.data) {
@@ -193,6 +185,11 @@ export function PublicTestResultWorkspace() {
   }
 
   const result = resultQuery.data;
+
+  if (result.analysis.status === 'PENDING') {
+    return <PublicTestAnalysisProcessingScreen startedAt={result.finishedAt} />;
+  }
+
   const parsedAnalysis = parseAnalysisResult(result.analysis.summary);
   const heroSignals = getHeroSignals(parsedAnalysis);
 

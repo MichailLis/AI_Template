@@ -17,6 +17,7 @@ interface SkillItem {
 }
 
 export interface AnalysisResult {
+  introduction: string;
   skillsLevel: {
     title: string;
     summary: string;
@@ -92,6 +93,23 @@ const getStringArray = (record: Record<string, unknown>, key: string, maxItems: 
   ).slice(0, maxItems);
 };
 
+const getLegacyIntroduction = (
+  thinkingType: Record<string, unknown>,
+  skillsLevel: Record<string, unknown>,
+) => {
+  const thinkingTypeName = getString(thinkingType, 'type');
+  const skillsSummary = getString(skillsLevel, 'summary');
+
+  if (thinkingTypeName && skillsSummary) {
+    return `По результатам теста сформирован персональный анализ: ${thinkingTypeName.toLocaleLowerCase()}. ${skillsSummary}`;
+  }
+
+  return (
+    skillsSummary ??
+    'По результатам теста сформирован персональный анализ сильных сторон, особенностей мышления и возможных направлений развития.'
+  );
+};
+
 export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
   if (!isRecord(value)) {
     return null;
@@ -162,6 +180,8 @@ export const parseAnalysisResult = (value: unknown): AnalysisResult | null => {
   );
 
   const result: AnalysisResult = {
+    introduction:
+      getString(value, 'introduction') ?? getLegacyIntroduction(thinkingType, skillsLevel),
     skillsLevel: {
       title: getString(skillsLevel, 'title') ?? 'Текущий уровень базовых навыков',
       summary: getString(skillsLevel, 'summary') ?? '',

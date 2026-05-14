@@ -41,6 +41,8 @@ jest.mock('../admin/openrouter.client', () => ({
 }));
 
 const validAnalysisResult = {
+  introduction:
+    'По результатам теста виден устойчивый интерес к практическим задачам и постепенному развитию профессиональных навыков.',
   skillsLevel: {
     title: 'Текущий уровень базовых навыков',
     summary: 'Навыки развиты на среднем уровне.',
@@ -264,6 +266,9 @@ describe('TestsAnalysisService', () => {
         useResponseHealing: true,
       }),
     );
+    const promptOptions = jest.mocked(generateOpenRouterPrompt).mock.calls[0]?.[2];
+    expect(promptOptions?.prompt).toContain('introduction');
+    expect(promptOptions?.prompt).toContain('2-4 предложения');
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
     >;

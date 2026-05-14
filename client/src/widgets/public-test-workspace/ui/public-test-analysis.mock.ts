@@ -4,11 +4,11 @@ import type {
 } from './public-test-analysis.types';
 
 export const analysisProcessingSteps: AnalysisProcessingStep[] = [
-  { id: 'init', text: 'Инициализируем модуль интерпретации ответов...' },
-  { id: 'normalize', text: 'Нормализуем и валидируем данные сессии...' },
-  { id: 'patterns', text: 'Выявляем устойчивые поведенческие паттерны...' },
-  { id: 'match', text: 'Сопоставляем профиль с карьерными траекториями...' },
-  { id: 'report', text: 'Формируем персональный итоговый отчет...' },
+  { id: 'prepare', text: 'Готовим ответы к анализу' },
+  { id: 'patterns', text: 'Выделяем ключевые закономерности' },
+  { id: 'strengths', text: 'Собираем выводы о сильных сторонах' },
+  { id: 'directions', text: 'Подбираем направления развития' },
+  { id: 'report', text: 'Проверяем итоговый отчет' },
 ];
 
 export const mockAnalysisReport: PublicTestAnalysisReportViewModel = {
