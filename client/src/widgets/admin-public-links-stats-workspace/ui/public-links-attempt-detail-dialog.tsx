@@ -29,12 +29,72 @@ interface AttemptAnalysis {
 }
 
 interface AttemptDetail {
-  studentName: string;
+  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION';
+  studentName: string | null;
+  studentLastInitial: string | null;
+  studentMiddleInitial: string | null;
+  educationOrganization: string | null;
+  groupOrClass: string | null;
+  studentGender: 'MALE' | 'FEMALE' | null;
+  studentAge: number | null;
+  studentResidence: string | null;
+  studentEducationLevel:
+    | 'BASIC_GENERAL'
+    | 'SECONDARY_GENERAL'
+    | 'SECONDARY_SPECIAL'
+    | 'INCOMPLETE_HIGHER_FROM_YEAR_3'
+    | 'HIGHER'
+    | null;
   attemptNumber: number;
   status: string;
   analysis: AttemptAnalysis | null;
   answers: AttemptAnswer[];
 }
+
+const educationLevelLabels = {
+  BASIC_GENERAL: 'Основное общее',
+  SECONDARY_GENERAL: 'Среднее общее',
+  SECONDARY_SPECIAL: 'Среднее специальное',
+  INCOMPLETE_HIGHER_FROM_YEAR_3: 'Неоконченное высшее',
+  HIGHER: 'Высшее',
+} as const;
+
+const genderLabels = {
+  MALE: 'Мужской',
+  FEMALE: 'Женский',
+} as const;
+
+const getAttemptDescriptionName = (attempt: AttemptDetail) => {
+  if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
+    return 'Демографическая анкета';
+  }
+
+  return attempt.studentName ?? 'Анкета по учебным данным';
+};
+
+const getAttemptProfileText = (attempt: AttemptDetail) => {
+  if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
+    return [
+      attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+      attempt.studentAge ? `${attempt.studentAge} лет` : null,
+      attempt.studentResidence,
+      attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+    ]
+      .filter(Boolean)
+      .join(' • ');
+  }
+
+  return [
+    attempt.studentName,
+    attempt.studentLastInitial && attempt.studentMiddleInitial
+      ? `${attempt.studentLastInitial}.${attempt.studentMiddleInitial}.`
+      : null,
+    attempt.educationOrganization,
+    attempt.groupOrClass,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+};
 
 interface PublicLinksAttemptDetailDialogProps {
   isOpen: boolean;
@@ -67,7 +127,9 @@ export function PublicLinksAttemptDetailDialog({
             </DialogTitle>
             <DialogDescription>
               {detailAttempt
-                ? `${detailAttempt.studentName} • прохождение #${detailAttempt.attemptNumber}`
+                ? `${getAttemptDescriptionName(detailAttempt)} • прохождение #${
+                    detailAttempt.attemptNumber
+                  }`
                 : 'Загружаем данные прохождения...'}
             </DialogDescription>
           </DialogHeader>
@@ -80,6 +142,17 @@ export function PublicLinksAttemptDetailDialog({
             <p className={`text-sm ${adminToneClassNames.danger.textAccent}`}>
               Не удалось получить детали прохождения.
             </p>
+          ) : null}
+
+          {!isLoading && detailAttempt ? (
+            <div className={adminClassNames.panel.compactCard}>
+              <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>
+                Профиль участника
+              </p>
+              <p className={`mt-1 text-sm ${adminClassNames.text.muted}`}>
+                {getAttemptProfileText(detailAttempt) || '—'}
+              </p>
+            </div>
           ) : null}
 
           {!isLoading && detailAttempt && detailView === 'analysis' ? (
