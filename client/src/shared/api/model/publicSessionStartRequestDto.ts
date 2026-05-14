@@ -5,23 +5,27 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { PublicSessionStartRequestDtoEducationLevel } from './publicSessionStartRequestDtoEducationLevel';
+import type { PublicSessionStartRequestDtoEntryProfileMode } from './publicSessionStartRequestDtoEntryProfileMode';
+import type { PublicSessionStartRequestDtoGender } from './publicSessionStartRequestDtoGender';
 
 export interface PublicSessionStartRequestDto {
+  entryProfileMode?: PublicSessionStartRequestDtoEntryProfileMode;
   /**
    * @minLength 1
    * @maxLength 200
    */
-  studentName: string;
+  studentName?: string;
   /**
    * @minLength 1
    * @maxLength 1
    */
-  studentLastInitial: string;
+  studentLastInitial?: string;
   /**
    * @minLength 1
    * @maxLength 1
    */
-  studentMiddleInitial: string;
+  studentMiddleInitial?: string;
   /**
    * @minLength 1
    * @maxLength 300
@@ -31,6 +35,18 @@ export interface PublicSessionStartRequestDto {
    * @minLength 1
    * @maxLength 120
    */
-  groupOrClass: string;
+  groupOrClass?: string;
+  gender?: PublicSessionStartRequestDtoGender;
+  /**
+   * @minimum 1
+   * @maximum 120
+   */
+  age?: number;
+  /**
+   * @minLength 1
+   * @maxLength 300
+   */
+  residence?: string;
+  educationLevel?: PublicSessionStartRequestDtoEducationLevel;
   consentAccepted: true;
 }

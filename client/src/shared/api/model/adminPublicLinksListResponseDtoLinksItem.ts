@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { AdminPublicLinksListResponseDtoLinksItemEntryProfileMode } from './adminPublicLinksListResponseDtoLinksItemEntryProfileMode';
 
 export type AdminPublicLinksListResponseDtoLinksItem = {
   id: number;
@@ -14,6 +15,7 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   educationOrganizationId: number | null;
   /** @nullable */
   educationOrganizationName: string | null;
+  entryProfileMode: AdminPublicLinksListResponseDtoLinksItemEntryProfileMode;
   shortCode: string;
   shortUrl: string;
   isActive: boolean;

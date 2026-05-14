@@ -6,7 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode } from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemStatus';
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel';
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentGender } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentGender';
 
 export type AdminPublicAttemptsListResponseDtoAttemptsItem = {
   attemptId: number;
@@ -16,11 +19,29 @@ export type AdminPublicAttemptsListResponseDtoAttemptsItem = {
    */
   attemptNumber: number;
   status: AdminPublicAttemptsListResponseDtoAttemptsItemStatus;
-  studentName: string;
-  studentLastInitial: string;
-  studentMiddleInitial: string;
-  educationOrganization: string;
-  groupOrClass: string;
+  entryProfileMode: AdminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode;
+  /** @nullable */
+  studentName: string | null;
+  /** @nullable */
+  studentLastInitial: string | null;
+  /** @nullable */
+  studentMiddleInitial: string | null;
+  /** @nullable */
+  educationOrganization: string | null;
+  /** @nullable */
+  groupOrClass: string | null;
+  /** @nullable */
+  studentGender: AdminPublicAttemptsListResponseDtoAttemptsItemStudentGender;
+  /**
+   * @minimum -9007199254740991
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  studentAge: number | null;
+  /** @nullable */
+  studentResidence: string | null;
+  /** @nullable */
+  studentEducationLevel: AdminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel;
   startedAt: string;
   /** @nullable */
   finishedAt: string | null;

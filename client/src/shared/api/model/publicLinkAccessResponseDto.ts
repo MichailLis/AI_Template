@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { PublicLinkAccessResponseDtoEntryProfileMode } from './publicLinkAccessResponseDtoEntryProfileMode';
 import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLinkAccessResponseDtoGroupValidationMode';
 
 export interface PublicLinkAccessResponseDto {
@@ -12,6 +13,7 @@ export interface PublicLinkAccessResponseDto {
   title: string;
   /** @nullable */
   description: string | null;
+  entryProfileMode: PublicLinkAccessResponseDtoEntryProfileMode;
   /** @nullable */
   educationOrganization: string | null;
   groupValidationMode: PublicLinkAccessResponseDtoGroupValidationMode;

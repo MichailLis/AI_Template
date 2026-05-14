@@ -7,7 +7,10 @@
  */
 import type { AdminPublicAttemptDetailResponseDtoAnalysis } from './adminPublicAttemptDetailResponseDtoAnalysis';
 import type { AdminPublicAttemptDetailResponseDtoAnswersItem } from './adminPublicAttemptDetailResponseDtoAnswersItem';
+import type { AdminPublicAttemptDetailResponseDtoEntryProfileMode } from './adminPublicAttemptDetailResponseDtoEntryProfileMode';
 import type { AdminPublicAttemptDetailResponseDtoStatus } from './adminPublicAttemptDetailResponseDtoStatus';
+import type { AdminPublicAttemptDetailResponseDtoStudentEducationLevel } from './adminPublicAttemptDetailResponseDtoStudentEducationLevel';
+import type { AdminPublicAttemptDetailResponseDtoStudentGender } from './adminPublicAttemptDetailResponseDtoStudentGender';
 
 export interface AdminPublicAttemptDetailResponseDto {
   attemptId: number;
@@ -19,11 +22,29 @@ export interface AdminPublicAttemptDetailResponseDto {
    */
   attemptNumber: number;
   status: AdminPublicAttemptDetailResponseDtoStatus;
-  studentName: string;
-  studentLastInitial: string;
-  studentMiddleInitial: string;
-  educationOrganization: string;
-  groupOrClass: string;
+  entryProfileMode: AdminPublicAttemptDetailResponseDtoEntryProfileMode;
+  /** @nullable */
+  studentName: string | null;
+  /** @nullable */
+  studentLastInitial: string | null;
+  /** @nullable */
+  studentMiddleInitial: string | null;
+  /** @nullable */
+  educationOrganization: string | null;
+  /** @nullable */
+  groupOrClass: string | null;
+  /** @nullable */
+  studentGender: AdminPublicAttemptDetailResponseDtoStudentGender;
+  /**
+   * @minimum -9007199254740991
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  studentAge: number | null;
+  /** @nullable */
+  studentResidence: string | null;
+  /** @nullable */
+  studentEducationLevel: AdminPublicAttemptDetailResponseDtoStudentEducationLevel;
   consentAcceptedAt: string;
   consentVersion: string;
   startedAt: string;
