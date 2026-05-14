@@ -47,6 +47,24 @@ enum TestStudentAnalysisProviderMode {
   LLM
 }
 
+enum TestEntryProfileMode {
+  DEMOGRAPHIC
+  EDUCATION
+}
+
+enum TestStudentGender {
+  MALE
+  FEMALE
+}
+
+enum TestStudentEducationLevel {
+  BASIC_GENERAL
+  SECONDARY_GENERAL
+  SECONDARY_SPECIAL
+  INCOMPLETE_HIGHER_FROM_YEAR_3
+  HIGHER
+}
+
 enum AnalysisPromptVersionStatus {
   DRAFT
   PUBLISHED
@@ -170,21 +188,22 @@ model TestQuestionSliderBand {
 }
 
 model TestPublicLink {
-  id                      Int       @id @default(autoincrement())
+  id                      Int                  @id @default(autoincrement())
   topicVersionId          Int
   educationOrganizationId Int?
-  shortCode               String    @unique
-  isActive                Boolean   @default(true)
+  shortCode               String               @unique
+  isActive                Boolean              @default(true)
   startsAt                DateTime?
   endsAt                  DateTime?
-  maxAttemptsPerStudent   Int       @default(1)
+  maxAttemptsPerStudent   Int                  @default(1)
   timeLimitMinutes        Int?
-  allowResume             Boolean   @default(true)
+  allowResume             Boolean              @default(true)
+  entryProfileMode        TestEntryProfileMode @default(EDUCATION)
   consentVersion          String
   consentTextSnapshot     String
   createdByUserId         Int?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
   archivedAt              DateTime?
 
   topicVersion          TestTopicVersion       @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
@@ -218,27 +237,31 @@ model EducationOrganization {
 }
 
 model TestStudentAttempt {
-  id                    Int                      @id @default(autoincrement())
+  id                    Int                        @id @default(autoincrement())
   publicLinkId          Int
   topicVersionId        Int
   attemptNumber         Int
-  status                TestStudentAttemptStatus @default(IN_PROGRESS)
-  studentName           String
-  studentLastInitial    String
-  studentMiddleInitial  String
-  educationOrganization String
-  groupOrClass          String
+  status                TestStudentAttemptStatus   @default(IN_PROGRESS)
+  studentName           String?
+  studentLastInitial    String?
+  studentMiddleInitial  String?
+  educationOrganization String?
+  groupOrClass          String?
+  studentGender         TestStudentGender?
+  studentAge            Int?
+  studentResidence      String?
+  studentEducationLevel TestStudentEducationLevel?
   studentKeyHash        String
   consentAcceptedAt     DateTime
   consentVersion        String
   consentTextSnapshot   String
-  resumeToken           String                   @unique
-  startedAt             DateTime                 @default(now())
+  resumeToken           String                     @unique
+  startedAt             DateTime                   @default(now())
   expiresAt             DateTime?
   finishedAt            DateTime?
   anonymizedAt          DateTime?
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
 
   publicLink   TestPublicLink       @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
   topicVersion TestTopicVersion     @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
