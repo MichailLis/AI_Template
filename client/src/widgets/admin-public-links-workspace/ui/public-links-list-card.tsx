@@ -18,6 +18,7 @@ interface PublicLinkListItem {
   title: string;
   educationOrganizationName: string | null;
   publicTemplate: 'STANDARD' | 'POLUS';
+  createdAt: string;
   archivedAt: string | null;
   isActive: boolean;
 }
@@ -99,6 +100,17 @@ const getLinkStateClassName = (link: PublicLinkListItem) => {
 
 const getPublicTemplateLabel = (template: PublicLinkListItem['publicTemplate']) =>
   template === 'POLUS' ? 'Polus' : 'Текущий';
+
+const publicLinkCreatedAtFormatter = new Intl.DateTimeFormat('ru-RU', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const formatPublicLinkCreatedAt = (value: string) =>
+  publicLinkCreatedAtFormatter.format(new Date(value));
 
 const getLinkRowClassName = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
@@ -273,6 +285,9 @@ function PublicLinkRow({ link, publicLinksTab, onOpenShortLink, ...handlers }: P
           className={`mt-1 flex min-w-0 flex-wrap items-center gap-2 text-sm ${adminClassNames.text.body}`}
         >
           <span className="min-w-0 truncate">{link.title}</span>
+          <span className={`shrink-0 text-xs ${adminClassNames.text.muted}`}>
+            Создана: {formatPublicLinkCreatedAt(link.createdAt)}
+          </span>
           {link.educationOrganizationName ? (
             <>
               <span className={adminClassNames.publicLinks.divider}>/</span>
