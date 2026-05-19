@@ -34,6 +34,11 @@ const createTopicSnapshot = () => ({
     description: null,
     analysisPromptVersionId: 42,
     analysisPromptVersion: publishedPromptVersion,
+    scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+    scoringConfig: {
+      version: '3.0',
+      directions: ['A1', 'A2'],
+    },
     questions: [
       {
         id: 100,
@@ -59,6 +64,7 @@ describe('TestsService analysis prompt attachment', () => {
       findFirst: jest.Mock;
     };
     testTopic: {
+      findMany: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
     };
@@ -68,7 +74,16 @@ describe('TestsService analysis prompt attachment', () => {
   };
   let txMock: {
     testTopic: {
+      create: jest.Mock;
       update: jest.Mock;
+    };
+    analysisPrompt: {
+      create: jest.Mock;
+      findFirst: jest.Mock;
+    };
+    analysisPromptVersion: {
+      create: jest.Mock;
+      findFirst: jest.Mock;
     };
     testTopicVersion: {
       create: jest.Mock;
@@ -88,7 +103,16 @@ describe('TestsService analysis prompt attachment', () => {
   beforeEach(() => {
     txMock = {
       testTopic: {
+        create: jest.fn(),
         update: jest.fn(),
+      },
+      analysisPrompt: {
+        create: jest.fn(),
+        findFirst: jest.fn(),
+      },
+      analysisPromptVersion: {
+        create: jest.fn(),
+        findFirst: jest.fn(),
       },
       testTopicVersion: {
         create: jest.fn(),
@@ -110,6 +134,7 @@ describe('TestsService analysis prompt attachment', () => {
         findFirst: jest.fn(),
       },
       testTopic: {
+        findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
       },
@@ -198,7 +223,57 @@ describe('TestsService analysis prompt attachment', () => {
         title: 'Career skills',
         description: null,
         analysisPromptVersionId: 42,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        scoringConfig: {
+          version: '3.0',
+          directions: ['A1', 'A2'],
+        },
       },
     });
+  });
+
+  it('importProfOrientationV3Plus creates a full Polus draft with scoring config', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([]);
+    txMock.analysisPrompt.findFirst.mockResolvedValue(null);
+    txMock.analysisPrompt.create.mockResolvedValue({ id: 70 });
+    txMock.analysisPromptVersion.create.mockResolvedValue({ id: 80 });
+    txMock.testTopic.create.mockResolvedValue({ id: 1 });
+    txMock.testTopicVersion.create.mockResolvedValue({
+      id: 10,
+      versionNumber: 1,
+    });
+    txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
+      Promise.resolve({ id: data.order }),
+    );
+    const getTopicDraftSpy = jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
+      topicId: 1,
+      slug: 'prof-orientation-v3-plus',
+      draft: {
+        id: 10,
+        versionNumber: 1,
+        title: 'Профориентационный тест v3+',
+        description: null,
+        analysisPromptVersion: null,
+        questions: [],
+      },
+      published: null,
+    });
+
+    await service.importProfOrientationV3Plus(5);
+
+    expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        title: 'Профориентационный тест v3+',
+        analysisPromptVersionId: 80,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        scoringConfig: expect.objectContaining({
+          version: '3.0',
+        }) as unknown,
+      }) as unknown,
+    });
+    expect(txMock.testQuestion.create).toHaveBeenCalledTimes(21);
+    expect(txMock.testQuestionOption.createMany).toHaveBeenCalledTimes(10);
+    expect(txMock.testQuestionSliderBand.createMany).toHaveBeenCalledTimes(11);
+    expect(getTopicDraftSpy).toHaveBeenCalledWith(5, 1);
   });
 });

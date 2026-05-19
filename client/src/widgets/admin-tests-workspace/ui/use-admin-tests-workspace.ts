@@ -6,6 +6,7 @@ import {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
+  useTestsControllerImportProfOrientationV3Plus,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
   useTestsControllerRestoreTopic,
@@ -25,6 +26,7 @@ export function useAdminTestsWorkspace() {
 
   const createTopicMutation = useTestsControllerCreateTopic();
   const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
+  const importProfOrientationV3PlusMutation = useTestsControllerImportProfOrientationV3Plus();
   const deleteTopicMutation = useTestsControllerDeleteTopic();
   const archiveTopicMutation = useTestsControllerArchiveTopic();
   const restoreTopicMutation = useTestsControllerRestoreTopic();
@@ -34,6 +36,7 @@ export function useAdminTestsWorkspace() {
   const mutations = {
     createTopicMutation,
     createTopicFromAiMutation,
+    importProfOrientationV3PlusMutation,
     deleteTopicMutation,
     archiveTopicMutation,
     restoreTopicMutation,

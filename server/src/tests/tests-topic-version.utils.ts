@@ -42,6 +42,9 @@ export const createTopicWithDraft = async (
     slug: string;
     title: string;
     description: string | null;
+    analysisPromptVersionId?: number | null;
+    scoringKind?: 'DEFAULT' | 'PROF_ORIENTATION_V3_PLUS';
+    scoringConfig?: unknown;
   },
 ) => {
   const topic = await tx.testTopic.create({
@@ -57,6 +60,11 @@ export const createTopicWithDraft = async (
       status: 'DRAFT',
       title: input.title,
       description: input.description,
+      analysisPromptVersionId: input.analysisPromptVersionId,
+      scoringKind: input.scoringKind,
+      ...(input.scoringConfig !== undefined
+        ? { scoringConfig: toPrismaSettingsInput(input.scoringConfig) }
+        : {}),
     },
   });
 

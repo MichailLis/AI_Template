@@ -79,6 +79,7 @@ describe('PublicTestEntryWorkspace', () => {
 
     expect(screen.getByText(/Профессор Полюс/i)).toBeInTheDocument();
     expect(screen.getByText(/Найди свой инженерный маршрут/i)).toBeInTheDocument();
+    expect(screen.getByText('Демографическая анкета')).toBeInTheDocument();
   });
 
   it('renders education and demographic fields together for the Polus hybrid profile mode', () => {

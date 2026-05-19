@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { getSliderQuestionMeta } from '../public-question-card.utils';
 import { hasMeaningfulQuestionAnswer } from '../public-test-run-answer.helpers';
 
+import { PolusPublicSliderField } from './polus-public-slider-field';
+
 import type { PublicTestQuestion } from '../public-test-run.types';
 
 interface AnswerOverride {
@@ -25,6 +27,16 @@ interface PolusPublicQuestionCardProps {
 }
 
 const markerLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
+
+const getMaxChoices = (settings: unknown) => {
+  if (typeof settings !== 'object' || settings === null || Array.isArray(settings)) {
+    return null;
+  }
+
+  const value = (settings as Record<string, unknown>).maxChoices;
+
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
+};
 
 function getPrimaryActionContent(isSubmitting: boolean, isLastQuestion: boolean) {
   if (isSubmitting) {
@@ -119,50 +131,66 @@ function PolusChoiceAnswers({
   onSingleSelect?: (value: string) => void;
 }) {
   const selectedValues = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
+  const maxChoices = mode === 'multi' ? getMaxChoices(question.settings) : null;
+  const selectedCount = selectedValues.length;
 
   return (
-    <div
-      className={
-        mode === 'multi' ? 'polus-answer-list polus-answer-list--multi' : 'polus-answer-list'
-      }
-      role="group"
-      aria-label="Варианты ответа"
-    >
-      {question.options.map((option, index) => {
-        const selected =
-          mode === 'single'
-            ? currentAnswer === option.value
-            : selectedValues.includes(option.value);
+    <>
+      {maxChoices ? (
+        <p className="polus-question-description" aria-live="polite">
+          {selectedCount} из {maxChoices}
+        </p>
+      ) : null}
 
-        return (
-          <button
-            key={option.id}
-            className="polus-answer-option"
-            type="button"
-            data-selected={selected}
-            aria-pressed={selected}
-            disabled={isSubmitting}
-            onClick={() => {
-              if (mode === 'single') {
-                onAnswerChange(question.id, option.value);
-                onSingleSelect?.(option.value);
-                return;
-              }
+      <div
+        className={
+          mode === 'multi' ? 'polus-answer-list polus-answer-list--multi' : 'polus-answer-list'
+        }
+        role="group"
+        aria-label="Варианты ответа"
+      >
+        {question.options.map((option, index) => {
+          const selected =
+            mode === 'single'
+              ? currentAnswer === option.value
+              : selectedValues.includes(option.value);
+          const limitReached = Boolean(maxChoices && selectedCount >= maxChoices);
+          const disabled = isSubmitting || (mode === 'multi' && !selected && limitReached);
 
-              onAnswerChange(
-                question.id,
-                selected
-                  ? selectedValues.filter((value) => value !== option.value)
-                  : [...selectedValues, option.value],
-              );
-            }}
-          >
-            <span className="polus-answer-marker">{markerLetters[index] ?? index + 1}</span>
-            <span>{option.label}</span>
-          </button>
-        );
-      })}
-    </div>
+          return (
+            <button
+              key={option.id}
+              className="polus-answer-option"
+              type="button"
+              data-selected={selected}
+              aria-pressed={selected}
+              disabled={disabled}
+              onClick={() => {
+                if (mode === 'single') {
+                  onAnswerChange(question.id, option.value);
+                  onSingleSelect?.(option.value);
+                  return;
+                }
+
+                if (!selected && maxChoices && selectedCount >= maxChoices) {
+                  return;
+                }
+
+                onAnswerChange(
+                  question.id,
+                  selected
+                    ? selectedValues.filter((value) => value !== option.value)
+                    : [...selectedValues, option.value],
+                );
+              }}
+            >
+              <span className="polus-answer-marker">{markerLetters[index] ?? index + 1}</span>
+              <span>{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
@@ -255,24 +283,18 @@ export function PolusPublicQuestionCard({
         ) : null}
 
         {question.type === 'SLIDER' && sliderMeta ? (
-          <div className="mt-6">
-            <div className="polus-slider-output" aria-live="polite">
-              {hasAnswer ? sliderMeta.value : '—'}
-            </div>
-            <input
-              className="polus-slider"
-              type="range"
-              min={sliderMeta.min}
-              max={sliderMeta.max}
-              step={sliderMeta.step}
-              value={sliderMeta.value}
-              aria-label="Оценка по шкале"
-              onChange={(event) => onAnswerChange(question.id, Number(event.target.value))}
-            />
-            {sliderMeta.activeLabel ? (
-              <p className="polus-question-description">{sliderMeta.activeLabel}</p>
-            ) : null}
-          </div>
+          <PolusPublicSliderField
+            questionId={question.id}
+            min={sliderMeta.min}
+            max={sliderMeta.max}
+            step={sliderMeta.step}
+            value={sliderMeta.value}
+            hasAnswer={hasAnswer}
+            activeLabel={sliderMeta.activeLabel}
+            minLabel={sliderMeta.minLabel}
+            maxLabel={sliderMeta.maxLabel}
+            onAnswerChange={onAnswerChange}
+          />
         ) : null}
       </article>
 

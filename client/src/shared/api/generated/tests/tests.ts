@@ -522,6 +522,87 @@ export const useTestsControllerCreateTopicFromAi = <
   return useMutation(getTestsControllerCreateTopicFromAiMutationOptions(options), queryClient);
 };
 /**
+ * @summary Import built-in prof-orientation v3+ methodology as Polus test draft
+ */
+export const testsControllerImportProfOrientationV3Plus = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<TestsTopicDetailResponseDto>(
+    { url: `/admin/tests/methodologies/prof-orientation-v3-plus/import`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getTestsControllerImportProfOrientationV3PlusMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['testsControllerImportProfOrientationV3Plus'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>,
+    void
+  > = () => {
+    return testsControllerImportProfOrientationV3Plus(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsControllerImportProfOrientationV3PlusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>
+>;
+
+export type TestsControllerImportProfOrientationV3PlusMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Import built-in prof-orientation v3+ methodology as Polus test draft
+ */
+export const useTestsControllerImportProfOrientationV3Plus = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsControllerImportProfOrientationV3Plus>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(
+    getTestsControllerImportProfOrientationV3PlusMutationOptions(options),
+    queryClient,
+  );
+};
+/**
  * @summary Delete test topic with all versions and questions
  */
 export const testsControllerDeleteTopic = (

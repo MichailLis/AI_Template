@@ -165,7 +165,7 @@ function DemographicProfileFields({
 }) {
   return (
     <>
-      <p className="polus-form-section-title">Дополнительная анкета</p>
+      <p className="polus-form-section-title">Демографическая анкета</p>
       <div className="polus-field">
         <label htmlFor="polus-student-gender">1. Укажите, пожалуйста Ваш пол?</label>
         <select

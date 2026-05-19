@@ -41,6 +41,7 @@ describe('TestsPublicSessionService', () => {
   let getAccessiblePublicLinkByCodeMock: jest.Mock<Promise<AccessibleLinkFixture>, [string]>;
   let upsertStubAnalysisMock: jest.Mock;
   let upsertPendingLlmAnalysisMock: jest.Mock;
+  let upsertProfOrientationAnalysisMock: jest.Mock;
   let enqueueAttemptAnalysisMock: jest.Mock;
   let toPublicAnalysisResponseMock: jest.Mock;
   let toAttemptStatusMock: jest.Mock;
@@ -62,6 +63,7 @@ describe('TestsPublicSessionService', () => {
     getAccessiblePublicLinkByCodeMock = jest.fn<Promise<AccessibleLinkFixture>, [string]>();
     upsertStubAnalysisMock = jest.fn();
     upsertPendingLlmAnalysisMock = jest.fn();
+    upsertProfOrientationAnalysisMock = jest.fn();
     enqueueAttemptAnalysisMock = jest.fn();
     toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
     toAttemptStatusMock = jest.fn((attempt: { status: string }) => attempt.status);
@@ -93,6 +95,7 @@ describe('TestsPublicSessionService', () => {
       enqueueAttemptAnalysis: jest.fn(),
       upsertStubAnalysis: upsertStubAnalysisMock,
       upsertPendingLlmAnalysis: upsertPendingLlmAnalysisMock,
+      upsertProfOrientationV3PlusAnalysis: upsertProfOrientationAnalysisMock,
       toPublicAnalysisResponse: toPublicAnalysisResponseMock,
       toAttemptStatus: toAttemptStatusMock,
     };
@@ -490,6 +493,50 @@ describe('TestsPublicSessionService', () => {
       providerMode: 'LLM',
       status: 'PENDING',
       promptVersionId: 42,
+    });
+  });
+
+  it('finishSession stores ready prof-orientation algorithm analysis before LLM enrichment', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      topicVersion: {
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        scoringConfig: { version: '3.0' },
+        analysisPromptVersionId: 42,
+        questions: [{ id: 100 }],
+      },
+      answers: [],
+    } as never);
+    txMock.testStudentAttempt.update.mockResolvedValue({
+      id: 5,
+      finishedAt: new Date('2026-05-01T10:00:00.000Z'),
+    });
+    upsertProfOrientationAnalysisMock.mockResolvedValue({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: {
+        resultKind: 'prof_orientation_v3_plus',
+        primaryDirection: { id: 'A1' },
+        llm: { status: 'pending' },
+      },
+    });
+
+    const result = await service.finishSession('session-token');
+
+    expect(upsertProfOrientationAnalysisMock).toHaveBeenCalledWith(txMock, {
+      attempt: expect.objectContaining({ id: 5 }) as unknown,
+      promptVersionId: 42,
+    });
+    expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
+    expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
+    expect(enqueueAttemptAnalysisMock).toHaveBeenCalledWith(5);
+    expect(result.analysis).toMatchObject({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
     });
   });
 });

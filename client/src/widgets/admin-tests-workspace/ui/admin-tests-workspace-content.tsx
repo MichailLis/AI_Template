@@ -41,6 +41,8 @@ export function AdminTestsWorkspaceContent({
         onListModeChange={workspace.setListMode}
         onOpenCreateModal={onOpenCreateModal}
         onOpenAiGenerator={() => workspace.setIsAiGeneratorOpen(true)}
+        onImportProfOrientation={workspace.handleImportProfOrientationV3Plus}
+        isImportingProfOrientation={workspace.importProfOrientationV3PlusMutation.isPending}
         onSelectTest={workspace.handleSelectTest}
         onOpenSettings={(topicId) => onWorkspaceNavigate(`/admin/tests/${topicId}/settings`)}
         onRequestArchiveTest={workspace.setPendingArchiveTopic}

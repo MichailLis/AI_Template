@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
@@ -13,6 +14,17 @@ import type {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
+import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus.enrichment';
+import {
+  buildProfOrientationV3PlusQuestionPayloads,
+  PROF_ORIENTATION_V3_PLUS_CONFIG,
+  PROF_ORIENTATION_V3_PLUS_PROMPT,
+  PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
+  PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
+  PROF_ORIENTATION_V3_PLUS_SLUG,
+  PROF_ORIENTATION_V3_PLUS_TITLE,
+  toProfOrientationScoringConfig,
+} from './prof-orientation-v3-plus.fixture';
 import {
   buildAiQuestionPayloads,
   cloneQuestionsToVersion,
@@ -118,6 +130,58 @@ export class TestsService {
       ...topic,
       activeDraftVersion: draft,
     };
+  }
+
+  private async ensureProfOrientationPromptVersion(tx: Prisma.TransactionClient) {
+    const existingPrompt = await tx.analysisPrompt.findFirst({
+      where: {
+        title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
+        archivedAt: null,
+      },
+      include: {
+        versions: {
+          where: { status: 'PUBLISHED' },
+          orderBy: { versionNumber: 'desc' },
+          take: 1,
+        },
+      },
+    });
+    const existingPublishedVersion = existingPrompt?.versions[0];
+
+    if (existingPublishedVersion) {
+      return existingPublishedVersion.id;
+    }
+
+    const prompt =
+      existingPrompt ??
+      (await tx.analysisPrompt.create({
+        data: {
+          title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
+          description: 'Built-in prompt for Polus prof-orientation v3+ result enrichment',
+        },
+      }));
+    const latestVersion = existingPrompt
+      ? await tx.analysisPromptVersion.findFirst({
+          where: { promptId: prompt.id },
+          orderBy: { versionNumber: 'desc' },
+          select: { versionNumber: true },
+        })
+      : null;
+    const createdVersion = await tx.analysisPromptVersion.create({
+      data: {
+        promptId: prompt.id,
+        versionNumber: (latestVersion?.versionNumber ?? 0) + 1,
+        status: 'PUBLISHED',
+        model: PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
+        temperature: 0.2,
+        prompt: PROF_ORIENTATION_V3_PLUS_PROMPT,
+        outputSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
+        publishedAt: new Date(),
+      },
+      select: { id: true },
+    });
+
+    return createdVersion.id;
   }
 
   async listTopics(userId: number, archived?: boolean): Promise<TestsTopicListResponseDto> {
@@ -282,6 +346,31 @@ export class TestsService {
         slug,
         title: dto.title,
         description: dto.description ?? null,
+      });
+
+      await createQuestionsInVersion(tx, createdTopic.draftVersionId, questionPayloads);
+
+      return createdTopic.topicId;
+    });
+
+    return this.getTopicDraft(userId, topicId);
+  }
+
+  async importProfOrientationV3Plus(userId: number): Promise<TestsTopicDetailResponseDto> {
+    await ensureTestsAdminAccess(this.prisma, userId);
+
+    const slug = await ensureUniqueTopicSlug(this.prisma, PROF_ORIENTATION_V3_PLUS_SLUG);
+    const questionPayloads = buildProfOrientationV3PlusQuestionPayloads();
+
+    const topicId = await this.prisma.$transaction(async (tx) => {
+      const analysisPromptVersionId = await this.ensureProfOrientationPromptVersion(tx);
+      const createdTopic = await createTopicWithDraft(tx, {
+        slug,
+        title: PROF_ORIENTATION_V3_PLUS_TITLE,
+        description: PROF_ORIENTATION_V3_PLUS_CONFIG.purpose,
+        analysisPromptVersionId,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        scoringConfig: toProfOrientationScoringConfig(),
       });
 
       await createQuestionsInVersion(tx, createdTopic.draftVersionId, questionPayloads);
@@ -470,6 +559,11 @@ export class TestsService {
           title: draft.title,
           description: draft.description,
           analysisPromptVersionId: draft.analysisPromptVersionId,
+          scoringKind: draft.scoringKind,
+          scoringConfig:
+            draft.scoringConfig === null
+              ? Prisma.JsonNull
+              : (draft.scoringConfig as Prisma.InputJsonValue),
         },
       });
 

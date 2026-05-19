@@ -45,6 +45,13 @@ enum TestStudentAnalysisStatus {
 enum TestStudentAnalysisProviderMode {
   STUB
   LLM
+  ALGORITHM
+  ALGORITHM_LLM
+}
+
+enum TestScoringKind {
+  DEFAULT
+  PROF_ORIENTATION_V3_PLUS
 }
 
 enum TestEntryProfileMode {
@@ -124,6 +131,8 @@ model TestTopicVersion {
   title                   String
   description             String?
   analysisPromptVersionId Int?
+  scoringKind             TestScoringKind        @default(DEFAULT)
+  scoringConfig           Json?
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
 
@@ -205,7 +214,7 @@ model TestPublicLink {
   timeLimitMinutes        Int?
   allowResume             Boolean              @default(true)
   entryProfileMode        TestEntryProfileMode @default(EDUCATION)
-  publicTemplate          TestPublicTemplate    @default(STANDARD)
+  publicTemplate          TestPublicTemplate   @default(STANDARD)
   consentVersion          String
   consentTextSnapshot     String
   createdByUserId         Int?

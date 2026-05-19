@@ -3,6 +3,7 @@ export {
   createHandleConfirmTopicSwitch,
   createHandleCreateTest,
   createHandleCreateTestFromAi,
+  createHandleImportProfOrientationV3Plus,
   createHandleSelectTest,
 } from './admin-tests-topic-action-creators';
 export {

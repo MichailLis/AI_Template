@@ -13,6 +13,10 @@ describe('openrouter client', () => {
     expect(resolveOpenRouterTimeoutMs(createConfig(90_000))).toBe(90_000);
   });
 
+  it('uses request timeout override before global OpenRouter timeout', () => {
+    expect(resolveOpenRouterTimeoutMs(createConfig('120000'), 180_000)).toBe(180_000);
+  });
+
   it('falls back to a longer default timeout for structured analysis requests', () => {
     expect(resolveOpenRouterTimeoutMs(createConfig(undefined))).toBe(120_000);
     expect(resolveOpenRouterTimeoutMs(createConfig('not-a-number'))).toBe(120_000);

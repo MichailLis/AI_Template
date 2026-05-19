@@ -60,7 +60,7 @@ export const UserScalarFieldEnumSchema = z.enum(['id','email','name','password',
 
 export const TestTopicScalarFieldEnumSchema = z.enum(['id','slug','createdAt','updatedAt','archivedAt','activeDraftVersionId','activePublishedVersionId']);
 
-export const TestTopicVersionScalarFieldEnumSchema = z.enum(['id','topicId','versionNumber','status','title','description','analysisPromptVersionId','createdAt','updatedAt']);
+export const TestTopicVersionScalarFieldEnumSchema = z.enum(['id','topicId','versionNumber','status','title','description','analysisPromptVersionId','scoringKind','scoringConfig','createdAt','updatedAt']);
 
 export const TestQuestionScalarFieldEnumSchema = z.enum(['id','versionId','type','title','description','required','order','settings','createdAt','updatedAt']);
 
@@ -116,9 +116,13 @@ export const TestStudentAnalysisStatusSchema = z.enum(['PENDING','READY','FAILED
 
 export type TestStudentAnalysisStatusType = `${z.infer<typeof TestStudentAnalysisStatusSchema>}`
 
-export const TestStudentAnalysisProviderModeSchema = z.enum(['STUB','LLM']);
+export const TestStudentAnalysisProviderModeSchema = z.enum(['STUB','LLM','ALGORITHM','ALGORITHM_LLM']);
 
 export type TestStudentAnalysisProviderModeType = `${z.infer<typeof TestStudentAnalysisProviderModeSchema>}`
+
+export const TestScoringKindSchema = z.enum(['DEFAULT','PROF_ORIENTATION_V3_PLUS']);
+
+export type TestScoringKindType = `${z.infer<typeof TestScoringKindSchema>}`
 
 export const TestEntryProfileModeSchema = z.enum(['DEMOGRAPHIC','EDUCATION','EDUCATION_DEMOGRAPHIC']);
 
@@ -187,12 +191,14 @@ export type TestTopic = z.infer<typeof TestTopicSchema>
 
 export const TestTopicVersionSchema = z.object({
   status: TestTopicVersionStatusSchema,
+  scoringKind: TestScoringKindSchema,
   id: z.number().int(),
   topicId: z.number().int(),
   versionNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
   analysisPromptVersionId: z.number().int().nullable(),
+  scoringConfig: JsonValueSchema.nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -529,6 +535,8 @@ export const TestTopicVersionSelectSchema: z.ZodType<Prisma.TestTopicVersionSele
   title: z.boolean().optional(),
   description: z.boolean().optional(),
   analysisPromptVersionId: z.boolean().optional(),
+  scoringKind: z.boolean().optional(),
+  scoringConfig: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   topic: z.union([z.boolean(),z.lazy(() => TestTopicArgsSchema)]).optional(),
@@ -1098,6 +1106,8 @@ export const TestTopicVersionWhereInputSchema: z.ZodType<Prisma.TestTopicVersion
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => EnumTestScoringKindFilterSchema), z.lazy(() => TestScoringKindSchema) ]).optional(),
+  scoringConfig: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   topic: z.union([ z.lazy(() => TestTopicScalarRelationFilterSchema), z.lazy(() => TestTopicWhereInputSchema) ]).optional(),
@@ -1117,6 +1127,8 @@ export const TestTopicVersionOrderByWithRelationInputSchema: z.ZodType<Prisma.Te
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   analysisPromptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  scoringKind: z.lazy(() => SortOrderSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   topic: z.lazy(() => TestTopicOrderByWithRelationInputSchema).optional(),
@@ -1152,6 +1164,8 @@ export const TestTopicVersionWhereUniqueInputSchema: z.ZodType<Prisma.TestTopicV
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => EnumTestScoringKindFilterSchema), z.lazy(() => TestScoringKindSchema) ]).optional(),
+  scoringConfig: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   topic: z.union([ z.lazy(() => TestTopicScalarRelationFilterSchema), z.lazy(() => TestTopicWhereInputSchema) ]).optional(),
@@ -1171,6 +1185,8 @@ export const TestTopicVersionOrderByWithAggregationInputSchema: z.ZodType<Prisma
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   analysisPromptVersionId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
+  scoringKind: z.lazy(() => SortOrderSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => TestTopicVersionCountOrderByAggregateInputSchema).optional(),
@@ -1191,6 +1207,8 @@ export const TestTopicVersionScalarWhereWithAggregatesInputSchema: z.ZodType<Pri
   title: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => EnumTestScoringKindWithAggregatesFilterSchema), z.lazy(() => TestScoringKindSchema) ]).optional(),
+  scoringConfig: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -2454,6 +2472,8 @@ export const TestTopicVersionCreateInputSchema: z.ZodType<Prisma.TestTopicVersio
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -2473,6 +2493,8 @@ export const TestTopicVersionUncheckedCreateInputSchema: z.ZodType<Prisma.TestTo
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -2487,6 +2509,8 @@ export const TestTopicVersionUpdateInputSchema: z.ZodType<Prisma.TestTopicVersio
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -2506,6 +2530,8 @@ export const TestTopicVersionUncheckedUpdateInputSchema: z.ZodType<Prisma.TestTo
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -2523,6 +2549,8 @@ export const TestTopicVersionCreateManyInputSchema: z.ZodType<Prisma.TestTopicVe
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -2532,6 +2560,8 @@ export const TestTopicVersionUpdateManyMutationInputSchema: z.ZodType<Prisma.Tes
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -2544,6 +2574,8 @@ export const TestTopicVersionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Te
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -3902,6 +3934,30 @@ export const EnumTestTopicVersionStatusFilterSchema: z.ZodType<Prisma.EnumTestTo
   not: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => NestedEnumTestTopicVersionStatusFilterSchema) ]).optional(),
 });
 
+export const EnumTestScoringKindFilterSchema: z.ZodType<Prisma.EnumTestScoringKindFilter> = z.strictObject({
+  equals: z.lazy(() => TestScoringKindSchema).optional(),
+  in: z.lazy(() => TestScoringKindSchema).array().optional(),
+  notIn: z.lazy(() => TestScoringKindSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => NestedEnumTestScoringKindFilterSchema) ]).optional(),
+});
+
+export const JsonNullableFilterSchema: z.ZodType<Prisma.JsonNullableFilter> = z.strictObject({
+  equals: InputJsonValueSchema.optional(),
+  path: z.string().array().optional(),
+  mode: z.lazy(() => QueryModeSchema).optional(),
+  string_contains: z.string().optional(),
+  string_starts_with: z.string().optional(),
+  string_ends_with: z.string().optional(),
+  array_starts_with: InputJsonValueSchema.optional().nullable(),
+  array_ends_with: InputJsonValueSchema.optional().nullable(),
+  array_contains: InputJsonValueSchema.optional().nullable(),
+  lt: InputJsonValueSchema.optional(),
+  lte: InputJsonValueSchema.optional(),
+  gt: InputJsonValueSchema.optional(),
+  gte: InputJsonValueSchema.optional(),
+  not: InputJsonValueSchema.optional(),
+});
+
 export const TestTopicScalarRelationFilterSchema: z.ZodType<Prisma.TestTopicScalarRelationFilter> = z.strictObject({
   is: z.lazy(() => TestTopicWhereInputSchema).optional(),
   isNot: z.lazy(() => TestTopicWhereInputSchema).optional(),
@@ -3955,6 +4011,8 @@ export const TestTopicVersionCountOrderByAggregateInputSchema: z.ZodType<Prisma.
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
   analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
+  scoringKind: z.lazy(() => SortOrderSchema).optional(),
+  scoringConfig: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3974,6 +4032,7 @@ export const TestTopicVersionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
   analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
+  scoringKind: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -3986,6 +4045,7 @@ export const TestTopicVersionMinOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   title: z.lazy(() => SortOrderSchema).optional(),
   description: z.lazy(() => SortOrderSchema).optional(),
   analysisPromptVersionId: z.lazy(() => SortOrderSchema).optional(),
+  scoringKind: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
 });
@@ -4007,19 +4067,17 @@ export const EnumTestTopicVersionStatusWithAggregatesFilterSchema: z.ZodType<Pri
   _max: z.lazy(() => NestedEnumTestTopicVersionStatusFilterSchema).optional(),
 });
 
-export const EnumTestQuestionTypeFilterSchema: z.ZodType<Prisma.EnumTestQuestionTypeFilter> = z.strictObject({
-  equals: z.lazy(() => TestQuestionTypeSchema).optional(),
-  in: z.lazy(() => TestQuestionTypeSchema).array().optional(),
-  notIn: z.lazy(() => TestQuestionTypeSchema).array().optional(),
-  not: z.union([ z.lazy(() => TestQuestionTypeSchema), z.lazy(() => NestedEnumTestQuestionTypeFilterSchema) ]).optional(),
+export const EnumTestScoringKindWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTestScoringKindWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => TestScoringKindSchema).optional(),
+  in: z.lazy(() => TestScoringKindSchema).array().optional(),
+  notIn: z.lazy(() => TestScoringKindSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => NestedEnumTestScoringKindWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTestScoringKindFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTestScoringKindFilterSchema).optional(),
 });
 
-export const BoolFilterSchema: z.ZodType<Prisma.BoolFilter> = z.strictObject({
-  equals: z.boolean().optional(),
-  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
-});
-
-export const JsonNullableFilterSchema: z.ZodType<Prisma.JsonNullableFilter> = z.strictObject({
+export const JsonNullableWithAggregatesFilterSchema: z.ZodType<Prisma.JsonNullableWithAggregatesFilter> = z.strictObject({
   equals: InputJsonValueSchema.optional(),
   path: z.string().array().optional(),
   mode: z.lazy(() => QueryModeSchema).optional(),
@@ -4034,6 +4092,21 @@ export const JsonNullableFilterSchema: z.ZodType<Prisma.JsonNullableFilter> = z.
   gt: InputJsonValueSchema.optional(),
   gte: InputJsonValueSchema.optional(),
   not: InputJsonValueSchema.optional(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedJsonNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedJsonNullableFilterSchema).optional(),
+});
+
+export const EnumTestQuestionTypeFilterSchema: z.ZodType<Prisma.EnumTestQuestionTypeFilter> = z.strictObject({
+  equals: z.lazy(() => TestQuestionTypeSchema).optional(),
+  in: z.lazy(() => TestQuestionTypeSchema).array().optional(),
+  notIn: z.lazy(() => TestQuestionTypeSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestQuestionTypeSchema), z.lazy(() => NestedEnumTestQuestionTypeFilterSchema) ]).optional(),
+});
+
+export const BoolFilterSchema: z.ZodType<Prisma.BoolFilter> = z.strictObject({
+  equals: z.boolean().optional(),
+  not: z.union([ z.boolean(),z.lazy(() => NestedBoolFilterSchema) ]).optional(),
 });
 
 export const TestTopicVersionScalarRelationFilterSchema: z.ZodType<Prisma.TestTopicVersionScalarRelationFilter> = z.strictObject({
@@ -4141,26 +4214,6 @@ export const BoolWithAggregatesFilterSchema: z.ZodType<Prisma.BoolWithAggregates
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedBoolFilterSchema).optional(),
   _max: z.lazy(() => NestedBoolFilterSchema).optional(),
-});
-
-export const JsonNullableWithAggregatesFilterSchema: z.ZodType<Prisma.JsonNullableWithAggregatesFilter> = z.strictObject({
-  equals: InputJsonValueSchema.optional(),
-  path: z.string().array().optional(),
-  mode: z.lazy(() => QueryModeSchema).optional(),
-  string_contains: z.string().optional(),
-  string_starts_with: z.string().optional(),
-  string_ends_with: z.string().optional(),
-  array_starts_with: InputJsonValueSchema.optional().nullable(),
-  array_ends_with: InputJsonValueSchema.optional().nullable(),
-  array_contains: InputJsonValueSchema.optional().nullable(),
-  lt: InputJsonValueSchema.optional(),
-  lte: InputJsonValueSchema.optional(),
-  gt: InputJsonValueSchema.optional(),
-  gte: InputJsonValueSchema.optional(),
-  not: InputJsonValueSchema.optional(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedJsonNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedJsonNullableFilterSchema).optional(),
 });
 
 export const TestQuestionScalarRelationFilterSchema: z.ZodType<Prisma.TestQuestionScalarRelationFilter> = z.strictObject({
@@ -5224,6 +5277,10 @@ export const EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema: z.ZodTy
   set: z.lazy(() => TestTopicVersionStatusSchema).optional(),
 });
 
+export const EnumTestScoringKindFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumTestScoringKindFieldUpdateOperationsInput> = z.strictObject({
+  set: z.lazy(() => TestScoringKindSchema).optional(),
+});
+
 export const TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema: z.ZodType<Prisma.TestTopicUpdateOneRequiredWithoutVersionsNestedInput> = z.strictObject({
   create: z.union([ z.lazy(() => TestTopicCreateWithoutVersionsInputSchema), z.lazy(() => TestTopicUncheckedCreateWithoutVersionsInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => TestTopicCreateOrConnectWithoutVersionsInputSchema).optional(),
@@ -6244,6 +6301,13 @@ export const NestedEnumTestTopicVersionStatusFilterSchema: z.ZodType<Prisma.Nest
   not: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => NestedEnumTestTopicVersionStatusFilterSchema) ]).optional(),
 });
 
+export const NestedEnumTestScoringKindFilterSchema: z.ZodType<Prisma.NestedEnumTestScoringKindFilter> = z.strictObject({
+  equals: z.lazy(() => TestScoringKindSchema).optional(),
+  in: z.lazy(() => TestScoringKindSchema).array().optional(),
+  notIn: z.lazy(() => TestScoringKindSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => NestedEnumTestScoringKindFilterSchema) ]).optional(),
+});
+
 export const NestedEnumTestTopicVersionStatusWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTestTopicVersionStatusWithAggregatesFilter> = z.strictObject({
   equals: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   in: z.lazy(() => TestTopicVersionStatusSchema).array().optional(),
@@ -6252,6 +6316,33 @@ export const NestedEnumTestTopicVersionStatusWithAggregatesFilterSchema: z.ZodTy
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTestTopicVersionStatusFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTestTopicVersionStatusFilterSchema).optional(),
+});
+
+export const NestedEnumTestScoringKindWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTestScoringKindWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => TestScoringKindSchema).optional(),
+  in: z.lazy(() => TestScoringKindSchema).array().optional(),
+  notIn: z.lazy(() => TestScoringKindSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => NestedEnumTestScoringKindWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTestScoringKindFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTestScoringKindFilterSchema).optional(),
+});
+
+export const NestedJsonNullableFilterSchema: z.ZodType<Prisma.NestedJsonNullableFilter> = z.strictObject({
+  equals: InputJsonValueSchema.optional(),
+  path: z.string().array().optional(),
+  mode: z.lazy(() => QueryModeSchema).optional(),
+  string_contains: z.string().optional(),
+  string_starts_with: z.string().optional(),
+  string_ends_with: z.string().optional(),
+  array_starts_with: InputJsonValueSchema.optional().nullable(),
+  array_ends_with: InputJsonValueSchema.optional().nullable(),
+  array_contains: InputJsonValueSchema.optional().nullable(),
+  lt: InputJsonValueSchema.optional(),
+  lte: InputJsonValueSchema.optional(),
+  gt: InputJsonValueSchema.optional(),
+  gte: InputJsonValueSchema.optional(),
+  not: InputJsonValueSchema.optional(),
 });
 
 export const NestedEnumTestQuestionTypeFilterSchema: z.ZodType<Prisma.NestedEnumTestQuestionTypeFilter> = z.strictObject({
@@ -6282,23 +6373,6 @@ export const NestedBoolWithAggregatesFilterSchema: z.ZodType<Prisma.NestedBoolWi
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedBoolFilterSchema).optional(),
   _max: z.lazy(() => NestedBoolFilterSchema).optional(),
-});
-
-export const NestedJsonNullableFilterSchema: z.ZodType<Prisma.NestedJsonNullableFilter> = z.strictObject({
-  equals: InputJsonValueSchema.optional(),
-  path: z.string().array().optional(),
-  mode: z.lazy(() => QueryModeSchema).optional(),
-  string_contains: z.string().optional(),
-  string_starts_with: z.string().optional(),
-  string_ends_with: z.string().optional(),
-  array_starts_with: InputJsonValueSchema.optional().nullable(),
-  array_ends_with: InputJsonValueSchema.optional().nullable(),
-  array_contains: InputJsonValueSchema.optional().nullable(),
-  lt: InputJsonValueSchema.optional(),
-  lte: InputJsonValueSchema.optional(),
-  gt: InputJsonValueSchema.optional(),
-  gte: InputJsonValueSchema.optional(),
-  not: InputJsonValueSchema.optional(),
 });
 
 export const NestedEnumTestEntryProfileModeFilterSchema: z.ZodType<Prisma.NestedEnumTestEntryProfileModeFilter> = z.strictObject({
@@ -6583,6 +6657,8 @@ export const TestTopicVersionCreateWithoutTopicInputSchema: z.ZodType<Prisma.Tes
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -6600,6 +6676,8 @@ export const TestTopicVersionUncheckedCreateWithoutTopicInputSchema: z.ZodType<P
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -6624,6 +6702,8 @@ export const TestTopicVersionCreateWithoutDraftForTopicInputSchema: z.ZodType<Pr
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -6642,6 +6722,8 @@ export const TestTopicVersionUncheckedCreateWithoutDraftForTopicInputSchema: z.Z
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   publishedForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActivePublishedVersionInputSchema).optional(),
@@ -6660,6 +6742,8 @@ export const TestTopicVersionCreateWithoutPublishedForTopicInputSchema: z.ZodTyp
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -6678,6 +6762,8 @@ export const TestTopicVersionUncheckedCreateWithoutPublishedForTopicInputSchema:
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -6718,6 +6804,8 @@ export const TestTopicVersionScalarWhereInputSchema: z.ZodType<Prisma.TestTopicV
   title: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => EnumTestScoringKindFilterSchema), z.lazy(() => TestScoringKindSchema) ]).optional(),
+  scoringConfig: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
 });
@@ -6738,6 +6826,8 @@ export const TestTopicVersionUpdateWithoutDraftForTopicInputSchema: z.ZodType<Pr
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -6756,6 +6846,8 @@ export const TestTopicVersionUncheckedUpdateWithoutDraftForTopicInputSchema: z.Z
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   publishedForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActivePublishedVersionNestedInputSchema).optional(),
@@ -6780,6 +6872,8 @@ export const TestTopicVersionUpdateWithoutPublishedForTopicInputSchema: z.ZodTyp
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -6798,6 +6892,8 @@ export const TestTopicVersionUncheckedUpdateWithoutPublishedForTopicInputSchema:
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -7294,6 +7390,8 @@ export const TestTopicVersionCreateWithoutQuestionsInputSchema: z.ZodType<Prisma
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -7312,6 +7410,8 @@ export const TestTopicVersionUncheckedCreateWithoutQuestionsInputSchema: z.ZodTy
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -7426,6 +7526,8 @@ export const TestTopicVersionUpdateWithoutQuestionsInputSchema: z.ZodType<Prisma
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -7444,6 +7546,8 @@ export const TestTopicVersionUncheckedUpdateWithoutQuestionsInputSchema: z.ZodTy
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -7694,6 +7798,8 @@ export const TestTopicVersionCreateWithoutPublicLinksInputSchema: z.ZodType<Pris
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -7712,6 +7818,8 @@ export const TestTopicVersionUncheckedCreateWithoutPublicLinksInputSchema: z.Zod
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -7862,6 +7970,8 @@ export const TestTopicVersionUpdateWithoutPublicLinksInputSchema: z.ZodType<Pris
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -7880,6 +7990,8 @@ export const TestTopicVersionUncheckedUpdateWithoutPublicLinksInputSchema: z.Zod
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -8088,6 +8200,8 @@ export const TestTopicVersionCreateWithoutStudentAttemptsInputSchema: z.ZodType<
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -8106,6 +8220,8 @@ export const TestTopicVersionUncheckedCreateWithoutStudentAttemptsInputSchema: z
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -8246,6 +8362,8 @@ export const TestTopicVersionUpdateWithoutStudentAttemptsInputSchema: z.ZodType<
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -8264,6 +8382,8 @@ export const TestTopicVersionUncheckedUpdateWithoutStudentAttemptsInputSchema: z
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -8831,6 +8951,8 @@ export const TestTopicVersionCreateWithoutAnalysisPromptVersionInputSchema: z.Zo
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   topic: z.lazy(() => TestTopicCreateNestedOneWithoutVersionsInputSchema),
@@ -8848,6 +8970,8 @@ export const TestTopicVersionUncheckedCreateWithoutAnalysisPromptVersionInputSch
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedCreateNestedManyWithoutActiveDraftVersionInputSchema).optional(),
@@ -9067,6 +9191,8 @@ export const TestTopicVersionCreateManyTopicInputSchema: z.ZodType<Prisma.TestTo
   title: z.string(),
   description: z.string().optional().nullable(),
   analysisPromptVersionId: z.number().int().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -9076,6 +9202,8 @@ export const TestTopicVersionUpdateWithoutTopicInputSchema: z.ZodType<Prisma.Tes
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -9093,6 +9221,8 @@ export const TestTopicVersionUncheckedUpdateWithoutTopicInputSchema: z.ZodType<P
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -9109,6 +9239,8 @@ export const TestTopicVersionUncheckedUpdateManyWithoutTopicInputSchema: z.ZodTy
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   analysisPromptVersionId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });
@@ -9838,6 +9970,8 @@ export const TestTopicVersionCreateManyAnalysisPromptVersionInputSchema: z.ZodTy
   status: z.lazy(() => TestTopicVersionStatusSchema).optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
+  scoringKind: z.lazy(() => TestScoringKindSchema).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
@@ -9860,6 +9994,8 @@ export const TestTopicVersionUpdateWithoutAnalysisPromptVersionInputSchema: z.Zo
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   topic: z.lazy(() => TestTopicUpdateOneRequiredWithoutVersionsNestedInputSchema).optional(),
@@ -9877,6 +10013,8 @@ export const TestTopicVersionUncheckedUpdateWithoutAnalysisPromptVersionInputSch
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   draftForTopic: z.lazy(() => TestTopicUncheckedUpdateManyWithoutActiveDraftVersionNestedInputSchema).optional(),
@@ -9893,6 +10031,8 @@ export const TestTopicVersionUncheckedUpdateManyWithoutAnalysisPromptVersionInpu
   status: z.union([ z.lazy(() => TestTopicVersionStatusSchema), z.lazy(() => EnumTestTopicVersionStatusFieldUpdateOperationsInputSchema) ]).optional(),
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  scoringKind: z.union([ z.lazy(() => TestScoringKindSchema), z.lazy(() => EnumTestScoringKindFieldUpdateOperationsInputSchema) ]).optional(),
+  scoringConfig: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 });

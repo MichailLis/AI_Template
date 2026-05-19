@@ -1,7 +1,10 @@
-import { Download, ExternalLink } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 import { parseAnalysisResult } from '@/features/tests';
 
+import { PolusAtlasCard } from './polus-atlas-card';
+import { ProfOrientationResult } from './polus-prof-orientation-result';
+import { parseProfOrientationSummary } from './polus-prof-orientation-summary';
 import { polusAssets } from './polus-public-assets';
 import { PolusPublicLayout } from './polus-public-layout';
 
@@ -128,26 +131,8 @@ function PolusMatchCard({ analysis }: { analysis: AnalysisResult | null }) {
   );
 }
 
-function PolusAtlasCard({ url }: { url: string }) {
-  return (
-    <section className="polus-method-card" aria-label="Подходящие специальности">
-      <span className="polus-method-label">Подходящие специальности</span>
-      <h2>Атлас профессий</h2>
-      <p>Можно посмотреть направления и спрос на профессии в подключенном атласе.</p>
-      <a
-        className="polus-secondary-action polus-atlas-action"
-        href={url}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Перейти в атлас профессий
-        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-      </a>
-    </section>
-  );
-}
-
 export function PolusPublicResult({ result }: PolusPublicResultProps) {
+  const profOrientationSummary = parseProfOrientationSummary(result.analysis.summary);
   const parsedAnalysis = parseAnalysisResult(result.analysis.summary);
 
   return (
@@ -156,12 +141,23 @@ export function PolusPublicResult({ result }: PolusPublicResultProps) {
         <div className="polus-state-view">
           <div className="polus-result-layout">
             <p className="polus-section-label">Персональная карта развития</p>
-            <PolusResultHero analysis={parsedAnalysis} />
-            <PolusResultTiles analysis={parsedAnalysis} />
-            <PolusProfileCard analysis={parsedAnalysis} />
-            <PolusMatchCard analysis={parsedAnalysis} />
+            {profOrientationSummary ? (
+              <ProfOrientationResult
+                professionAtlasUrl={result.professionAtlasUrl}
+                summary={profOrientationSummary}
+              />
+            ) : (
+              <>
+                <PolusResultHero analysis={parsedAnalysis} />
+                <PolusResultTiles analysis={parsedAnalysis} />
+                <PolusProfileCard analysis={parsedAnalysis} />
+                <PolusMatchCard analysis={parsedAnalysis} />
+              </>
+            )}
 
-            {result.professionAtlasUrl ? <PolusAtlasCard url={result.professionAtlasUrl} /> : null}
+            {!profOrientationSummary && result.professionAtlasUrl ? (
+              <PolusAtlasCard url={result.professionAtlasUrl} />
+            ) : null}
 
             <div className="polus-result-actions">
               <button className="polus-primary-action" type="button" onClick={handleExportPdf}>

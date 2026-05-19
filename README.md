@@ -121,6 +121,9 @@ OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
 OPENROUTER_HTTP_REFERER="http://localhost:5173"
 OPENROUTER_APP_NAME="AI Template Admin"
+OPENROUTER_TIMEOUT_MS=120000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 Security note:
@@ -141,6 +144,8 @@ Tests workspace is available at `"/admin/tests"` and currently includes:
 - publish flow: current draft -> published, then auto-create next draft copy
 - drag-and-drop reorder with backend validation and user-facing recovery messaging
 - AI-assisted test creation modal (generate questions -> preview -> transactional create)
+- built-in prof-orientation v3+ import for the Polus template
+  (`POST /admin/tests/methodologies/prof-orientation-v3-plus/import`)
 
 Current UX baseline for question editing:
 
@@ -163,6 +168,24 @@ Domain constraints currently applied:
 - no branching configurator yet
 - no parallel drafts
 - weights are `Int`
+
+Built-in prof-orientation v3+ contract:
+
+- runtime uses the committed fixture under
+  `server/src/tests/prof-orientation-v3-plus/site-config.json`, not the external
+  source package
+- each import creates a new draft topic with a unique slug/title and
+  `scoringKind = PROF_ORIENTATION_V3_PLUS`
+- the imported draft contains 10 multi-choice methodology questions and 11 slider
+  questions
+- public multi-choice questions enforce `settings.maxChoices = 2`
+- `finishSession` saves deterministic algorithm analysis first, then runs optional
+  LLM enrichment under `summary.llm`
+- LLM enrichment may explain and expand result blocks, but must not change the
+  deterministic primary direction, scores, confidence, profile type, or
+  professions
+- prof-orientation OpenRouter calls use a longer timeout by default and retry only
+  timeout failures; see `docs/2026-05-19-prof-orientation-v3-plus.md`
 
 ## Public Links and Student Flow (Current Branch)
 
@@ -205,6 +228,8 @@ Current public run UX:
 - question transitions are animated to reduce abrupt content jumps
 - open-text answers use a higher-contrast textarea for bright screens
 - slider questions show the current value with the matching label and avoid duplicate range numbers in helper copy
+- Polus prof-orientation processing uses the Professor Polus thinking animation
+  while LLM enrichment is pending
 
 UI/theming contract for public pages:
 

@@ -8,6 +8,8 @@ interface TestsListHeaderProps {
   onListModeChange: (mode: 'active' | 'archived') => void;
   onOpenCreateModal: () => void;
   onOpenAiGenerator: () => void;
+  onImportProfOrientation: () => void;
+  isImportingProfOrientation: boolean;
 }
 
 export function TestsListHeader({
@@ -17,6 +19,8 @@ export function TestsListHeader({
   onListModeChange,
   onOpenCreateModal,
   onOpenAiGenerator,
+  onImportProfOrientation,
+  isImportingProfOrientation,
 }: TestsListHeaderProps) {
   return (
     <AdminListToolbar
@@ -34,6 +38,14 @@ export function TestsListHeader({
         <>
           <Button type="button" variant="outline" onClick={onOpenAiGenerator}>
             Сгенерировать с ИИ
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isImportingProfOrientation}
+            onClick={onImportProfOrientation}
+          >
+            {isImportingProfOrientation ? 'Импортируем...' : 'Импорт v3+'}
           </Button>
           <Button type="button" onClick={onOpenCreateModal}>
             Создать

@@ -11,7 +11,11 @@ import {
 
 const DEFAULT_OPENROUTER_TIMEOUT_MS = 120_000;
 
-export const resolveOpenRouterTimeoutMs = (config: ConfigService) => {
+export const resolveOpenRouterTimeoutMs = (config: ConfigService, timeoutMs?: number) => {
+  if (Number.isFinite(timeoutMs) && timeoutMs && timeoutMs > 0) {
+    return timeoutMs;
+  }
+
   const rawValue = config.get<string | number>('OPENROUTER_TIMEOUT_MS');
   const parsedValue =
     typeof rawValue === 'number' ? rawValue : typeof rawValue === 'string' ? Number(rawValue) : NaN;
@@ -162,9 +166,13 @@ export const generateOpenRouterPrompt = async (
   config: ConfigService,
   apiKey: string,
   dto: GeneratePromptDto,
+  options?: { timeoutMs?: number },
 ) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), resolveOpenRouterTimeoutMs(config));
+  const timeout = setTimeout(
+    () => controller.abort(),
+    resolveOpenRouterTimeoutMs(config, options?.timeoutMs),
+  );
   const { body, responseFormat } = buildPromptRequestBody(dto);
 
   try {

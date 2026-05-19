@@ -21,6 +21,8 @@ interface AdminTestsListSectionProps {
   onListModeChange: (mode: ListMode) => void;
   onOpenCreateModal: () => void;
   onOpenAiGenerator: () => void;
+  onImportProfOrientation: () => void;
+  isImportingProfOrientation: boolean;
   onSelectTest: (topicId: number) => void;
   onOpenSettings: (topicId: number) => void;
   onRequestArchiveTest: (topic: TestTopicListItem) => void;
@@ -46,6 +48,8 @@ export function AdminTestsListSection({
   onListModeChange,
   onOpenCreateModal,
   onOpenAiGenerator,
+  onImportProfOrientation,
+  isImportingProfOrientation,
   onSelectTest,
   onOpenSettings,
   onRequestArchiveTest,
@@ -62,6 +66,8 @@ export function AdminTestsListSection({
         onListModeChange={onListModeChange}
         onOpenCreateModal={onOpenCreateModal}
         onOpenAiGenerator={onOpenAiGenerator}
+        onImportProfOrientation={onImportProfOrientation}
+        isImportingProfOrientation={isImportingProfOrientation}
       />
       <TestsListCard
         topics={topics}

@@ -93,6 +93,18 @@ export class TestsController {
     return this.testsService.createTopicFromAi(userId, dto);
   }
 
+  @Post('methodologies/prof-orientation-v3-plus/import')
+  @ApiOperation({
+    summary: 'Import built-in prof-orientation v3+ methodology as Polus test draft',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: TestsTopicDetailResponseDto,
+  })
+  importProfOrientationV3Plus(@GetCurrentUserId() userId: number) {
+    return this.testsService.importProfOrientationV3Plus(userId);
+  }
+
   @Delete(':topicId')
   @ApiOperation({
     summary: 'Delete test topic with all versions and questions',

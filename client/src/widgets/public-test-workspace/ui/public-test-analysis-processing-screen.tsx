@@ -1,6 +1,8 @@
 import { BrainCircuit, Check, CheckCircle2, LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { polusAssets } from './polus/polus-public-assets';
+import { PolusPublicLayout } from './polus/polus-public-layout';
 import { analysisProcessingSteps } from './public-test-analysis.mock';
 import { PublicThemeLayout } from './public-theme-layout';
 
@@ -8,50 +10,136 @@ import type { ReactNode } from 'react';
 
 const stepDurationMs = 12_000;
 
+type ProcessingStepState = 'done' | 'current' | 'waiting';
+
 interface PublicTestAnalysisProcessingScreenProps {
   startedAt: string | null;
   phase?: 'processing' | 'ready';
+  variant?: 'standard' | 'polus';
 }
 
-export function PublicTestAnalysisProcessingScreen({
-  startedAt,
-  phase = 'processing',
-}: PublicTestAnalysisProcessingScreenProps) {
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const isReadyPhase = phase === 'ready';
+interface ProcessingScreenViewProps {
+  isReadyPhase: boolean;
+  progress: number;
+  currentStepIndex: number;
+}
 
-  useEffect(() => {
-    if (isReadyPhase) {
-      return;
-    }
+const getStepState = (
+  isReadyPhase: boolean,
+  index: number,
+  currentStepIndex: number,
+): ProcessingStepState => {
+  if (isReadyPhase || index < currentStepIndex) {
+    return 'done';
+  }
 
-    const startMs = startedAt ? new Date(startedAt).getTime() : Date.now();
+  if (index === currentStepIndex) {
+    return 'current';
+  }
 
-    const updateElapsed = () => {
-      const diff = Date.now() - startMs;
-      setElapsedMs(diff > 0 ? diff : 0);
-    };
+  return 'waiting';
+};
 
-    updateElapsed();
+const getStandardStepIcon = (state: ProcessingStepState): ReactNode => {
+  if (state === 'done') {
+    return <Check className="h-4 w-4" />;
+  }
 
-    const timer = window.setInterval(updateElapsed, 1000);
+  if (state === 'current') {
+    return <LoaderCircle className="h-4 w-4 animate-spin" />;
+  }
 
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, [isReadyPhase, startedAt]);
+  return <span className="inline-block h-4 w-4 rounded-full border border-border/80" />;
+};
 
-  const effectiveElapsedMs = isReadyPhase
-    ? analysisProcessingSteps.length * stepDurationMs
-    : elapsedMs;
-  const computedProgress = Math.round(
-    (effectiveElapsedMs / (analysisProcessingSteps.length * stepDurationMs)) * 100,
+const getPolusStepIcon = (state: ProcessingStepState) => {
+  if (state === 'done') {
+    return <Check className="h-4 w-4" />;
+  }
+
+  if (state === 'current') {
+    return <LoaderCircle className="h-4 w-4 animate-spin" />;
+  }
+
+  return null;
+};
+
+function PolusProcessingScreen({
+  isReadyPhase,
+  progress,
+  currentStepIndex,
+}: ProcessingScreenViewProps) {
+  const sectionLabel = isReadyPhase ? 'Отчет готов' : 'Профессор Полюс анализирует';
+  const title = isReadyPhase ? 'Открываем карту развития' : 'Формируем отчет';
+  const description = isReadyPhase
+    ? 'Персональная карта уже готова и сейчас откроется.'
+    : 'Собираем ответы, ищем сильные стороны и готовим понятное пояснение результата. Страница обновится автоматически.';
+
+  return (
+    <PolusPublicLayout view="result">
+      <section className="polus-test-stage polus-result-stage">
+        <div className="polus-state-view polus-processing-card">
+          <div className="polus-processing-layout">
+            <div className="polus-processing-copy">
+              <p className="polus-section-label">{sectionLabel}</p>
+              <h1>{title}</h1>
+              <p>{description}</p>
+            </div>
+
+            <div
+              className={`polus-processing-professor${
+                isReadyPhase ? '' : ' polus-processing-professor--thinking'
+              }`}
+              aria-hidden="true"
+            >
+              {isReadyPhase ? (
+                <div className="polus-result-speech-bubble">
+                  <span className="polus-result-speech-dot" />
+                  <span className="polus-result-speech-dot" />
+                  <span className="polus-result-speech-dot" />
+                </div>
+              ) : null}
+              <img
+                src={isReadyPhase ? polusAssets.professor : polusAssets.professorThinking}
+                alt=""
+                data-animated={isReadyPhase ? undefined : 'true'}
+              />
+            </div>
+          </div>
+
+          <div className="polus-processing-progress" aria-label="Статус обработки">
+            <div className="polus-progress-line">
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            <div className="polus-processing-progress-meta">
+              <span>Статус обработки</span>
+              <strong>{progress}%</strong>
+            </div>
+          </div>
+
+          <div className="polus-processing-steps" aria-label="Этапы подготовки">
+            {analysisProcessingSteps.map((step, index) => {
+              const stepState = getStepState(isReadyPhase, index, currentStepIndex);
+
+              return (
+                <div className="polus-processing-step" data-state={stepState} key={step.id}>
+                  <span aria-hidden="true">{getPolusStepIcon(stepState)}</span>
+                  <p>{step.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </PolusPublicLayout>
   );
-  const progress = isReadyPhase ? 100 : Math.min(95, computedProgress);
-  const currentStepIndex = isReadyPhase
-    ? analysisProcessingSteps.length - 1
-    : Math.min(analysisProcessingSteps.length - 1, Math.floor(elapsedMs / stepDurationMs));
+}
 
+function StandardProcessingScreen({
+  isReadyPhase,
+  progress,
+  currentStepIndex,
+}: ProcessingScreenViewProps) {
   return (
     <PublicThemeLayout containerClassName="max-w-4xl py-8 md:py-10">
       <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center gap-6">
@@ -100,24 +188,18 @@ export function PublicTestAnalysisProcessingScreen({
 
           <div className="space-y-3">
             {analysisProcessingSteps.map((step, index) => {
-              const isCompleted = isReadyPhase || index < currentStepIndex;
-              const isCurrent = !isReadyPhase && index === currentStepIndex;
-
-              let statusIcon: ReactNode;
-              if (isCompleted) {
-                statusIcon = <Check className="h-4 w-4" />;
-              } else if (isCurrent) {
-                statusIcon = <LoaderCircle className="h-4 w-4 animate-spin" />;
-              } else {
-                statusIcon = (
-                  <span className="inline-block h-4 w-4 rounded-full border border-border/80" />
-                );
-              }
+              const stepState = getStepState(isReadyPhase, index, currentStepIndex);
 
               return (
                 <div key={step.id} className="flex items-start gap-3 text-sm">
-                  <span className="mt-0.5 shrink-0 text-primary">{statusIcon}</span>
-                  <span className={isCurrent ? 'text-foreground' : 'text-muted-foreground'}>
+                  <span className="mt-0.5 shrink-0 text-primary">
+                    {getStandardStepIcon(stepState)}
+                  </span>
+                  <span
+                    className={
+                      stepState === 'current' ? 'text-foreground' : 'text-muted-foreground'
+                    }
+                  >
                     {step.text}
                   </span>
                 </div>
@@ -127,5 +209,53 @@ export function PublicTestAnalysisProcessingScreen({
         </div>
       </div>
     </PublicThemeLayout>
+  );
+}
+
+export function PublicTestAnalysisProcessingScreen({
+  startedAt,
+  phase = 'processing',
+  variant = 'standard',
+}: PublicTestAnalysisProcessingScreenProps) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const isReadyPhase = phase === 'ready';
+
+  useEffect(() => {
+    if (isReadyPhase) {
+      return;
+    }
+
+    const startMs = startedAt ? new Date(startedAt).getTime() : Date.now();
+
+    const updateElapsed = () => {
+      const diff = Date.now() - startMs;
+      setElapsedMs(diff > 0 ? diff : 0);
+    };
+
+    updateElapsed();
+
+    const timer = window.setInterval(updateElapsed, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [isReadyPhase, startedAt]);
+
+  const effectiveElapsedMs = isReadyPhase
+    ? analysisProcessingSteps.length * stepDurationMs
+    : elapsedMs;
+  const computedProgress = Math.round(
+    (effectiveElapsedMs / (analysisProcessingSteps.length * stepDurationMs)) * 100,
+  );
+  const progress = isReadyPhase ? 100 : Math.min(95, computedProgress);
+  const currentStepIndex = isReadyPhase
+    ? analysisProcessingSteps.length - 1
+    : Math.min(analysisProcessingSteps.length - 1, Math.floor(elapsedMs / stepDurationMs));
+  const viewProps = { isReadyPhase, progress, currentStepIndex };
+
+  return variant === 'polus' ? (
+    <PolusProcessingScreen {...viewProps} />
+  ) : (
+    <StandardProcessingScreen {...viewProps} />
   );
 }

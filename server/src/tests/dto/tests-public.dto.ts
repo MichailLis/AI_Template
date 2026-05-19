@@ -134,7 +134,12 @@ export const PublicSessionSaveAnswersResponseSchema = z.object({
 });
 
 export const PublicSessionAnalysisStatusSchema = z.enum(['PENDING', 'READY', 'FAILED']);
-export const PublicSessionAnalysisProviderModeSchema = z.enum(['STUB', 'LLM']);
+export const PublicSessionAnalysisProviderModeSchema = z.enum([
+  'STUB',
+  'LLM',
+  'ALGORITHM',
+  'ALGORITHM_LLM',
+]);
 
 export const PublicSessionAnalysisSchema = z.object({
   providerMode: PublicSessionAnalysisProviderModeSchema,

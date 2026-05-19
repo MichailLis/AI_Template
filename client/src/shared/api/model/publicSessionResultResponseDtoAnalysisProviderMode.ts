@@ -12,4 +12,6 @@ export type PublicSessionResultResponseDtoAnalysisProviderMode =
 export const PublicSessionResultResponseDtoAnalysisProviderMode = {
   STUB: 'STUB',
   LLM: 'LLM',
+  ALGORITHM: 'ALGORITHM',
+  ALGORITHM_LLM: 'ALGORITHM_LLM',
 } as const;

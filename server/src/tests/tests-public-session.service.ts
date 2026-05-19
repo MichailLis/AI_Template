@@ -414,16 +414,23 @@ export class TestsPublicSessionService {
       });
 
       const promptVersionId = attempt.topicVersion.analysisPromptVersionId;
-      const analysis = promptVersionId
-        ? await this.analysisService.upsertPendingLlmAnalysis(tx, {
-            attemptId: attempt.id,
+      const isProfOrientationScoring =
+        attempt.topicVersion.scoringKind === 'PROF_ORIENTATION_V3_PLUS';
+      const analysis = isProfOrientationScoring
+        ? await this.analysisService.upsertProfOrientationV3PlusAnalysis(tx, {
+            attempt,
             promptVersionId,
           })
-        : await this.analysisService.upsertStubAnalysis(tx, {
-            attemptId: attempt.id,
-            answeredQuestionsCount: answersCount,
-            totalQuestionsCount: attempt.topicVersion.questions.length,
-          });
+        : promptVersionId
+          ? await this.analysisService.upsertPendingLlmAnalysis(tx, {
+              attemptId: attempt.id,
+              promptVersionId,
+            })
+          : await this.analysisService.upsertStubAnalysis(tx, {
+              attemptId: attempt.id,
+              answeredQuestionsCount: answersCount,
+              totalQuestionsCount: attempt.topicVersion.questions.length,
+            });
 
       return {
         updatedAttempt,

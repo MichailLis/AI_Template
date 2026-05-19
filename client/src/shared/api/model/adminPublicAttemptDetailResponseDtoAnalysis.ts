@@ -10,7 +10,7 @@
  * @nullable
  */
 export type AdminPublicAttemptDetailResponseDtoAnalysis = {
-  providerMode: 'STUB' | 'LLM';
+  providerMode: 'STUB' | 'LLM' | 'ALGORITHM' | 'ALGORITHM_LLM';
   status: 'PENDING' | 'READY' | 'FAILED';
   summary: unknown | null;
   /** @nullable */

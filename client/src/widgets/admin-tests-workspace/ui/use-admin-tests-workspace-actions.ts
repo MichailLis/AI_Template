@@ -6,6 +6,7 @@ import {
   createHandleConfirmTopicSwitch,
   createHandleCreateTest,
   createHandleCreateTestFromAi,
+  createHandleImportProfOrientationV3Plus,
   createHandleReorderQuestions,
   createHandleSelectTest,
 } from './admin-tests-workspace-action-creators';
@@ -18,6 +19,7 @@ import type {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
+  useTestsControllerImportProfOrientationV3Plus,
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,
   useTestsControllerRestoreTopic,
@@ -25,6 +27,9 @@ import type {
 
 type CreateTopicMutation = ReturnType<typeof useTestsControllerCreateTopic>;
 type CreateTopicFromAiMutation = ReturnType<typeof useTestsControllerCreateTopicFromAi>;
+type ImportProfOrientationV3PlusMutation = ReturnType<
+  typeof useTestsControllerImportProfOrientationV3Plus
+>;
 type DeleteTopicMutation = ReturnType<typeof useTestsControllerDeleteTopic>;
 type ReorderQuestionsMutation = ReturnType<typeof useTestsControllerReorderQuestions>;
 type PublishMutation = ReturnType<typeof useTestsControllerPublishTopic>;
@@ -50,6 +55,7 @@ interface UseAdminTestsWorkspaceActionsParams {
   setIsAiGeneratorOpen: (value: boolean) => void;
   createTopicMutation: CreateTopicMutation;
   createTopicFromAiMutation: CreateTopicFromAiMutation;
+  importProfOrientationV3PlusMutation: ImportProfOrientationV3PlusMutation;
   deleteTopicMutation: DeleteTopicMutation;
   reorderQuestionsMutation: ReorderQuestionsMutation;
   publishMutation: PublishMutation;
@@ -101,10 +107,17 @@ function createCreationActions(params: UseAdminTestsWorkspaceActionsParams) {
     refetchTestsData: params.refetchTestsData,
     navigateToTopic: params.navigateToTopic,
   });
+  const handleImportProfOrientationV3Plus = createHandleImportProfOrientationV3Plus({
+    importProfOrientationV3PlusMutation: params.importProfOrientationV3PlusMutation,
+    draftAutosave: params.draftAutosave,
+    refetchTestsData: params.refetchTestsData,
+    navigateToTopic: params.navigateToTopic,
+  });
 
   return {
     handleCreateTest,
     handleCreateTestFromAi,
+    handleImportProfOrientationV3Plus,
   };
 }
 

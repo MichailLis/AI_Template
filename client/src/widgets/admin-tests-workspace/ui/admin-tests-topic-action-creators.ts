@@ -13,11 +13,15 @@ import type {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
+  useTestsControllerImportProfOrientationV3Plus,
 } from '@/shared/api/generated/tests/tests';
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
 type CreateTopicMutation = ReturnType<typeof useTestsControllerCreateTopic>;
 type CreateTopicFromAiMutation = ReturnType<typeof useTestsControllerCreateTopicFromAi>;
+type ImportProfOrientationV3PlusMutation = ReturnType<
+  typeof useTestsControllerImportProfOrientationV3Plus
+>;
 type DeleteTopicMutation = ReturnType<typeof useTestsControllerDeleteTopic>;
 type DraftAutosave = ReturnType<typeof useDraftAutosave>;
 type QuestionEditor = ReturnType<typeof useQuestionEditor>;
@@ -112,6 +116,34 @@ export const createHandleCreateTestFromAi = ({
         },
       },
     );
+  };
+};
+
+interface ImportProfOrientationV3PlusDeps {
+  importProfOrientationV3PlusMutation: ImportProfOrientationV3PlusMutation;
+  draftAutosave: DraftAutosave;
+  refetchTestsData: () => void;
+  navigateToTopic: (topicId: number) => void;
+}
+
+export const createHandleImportProfOrientationV3Plus = ({
+  importProfOrientationV3PlusMutation,
+  draftAutosave,
+  refetchTestsData,
+  navigateToTopic,
+}: ImportProfOrientationV3PlusDeps) => {
+  return () => {
+    importProfOrientationV3PlusMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success('Методика v3+ импортирована');
+        draftAutosave.resetAutosaveMeta();
+        refetchTestsData();
+        navigateToTopic(result.topicId);
+      },
+      onError: (error) => {
+        toast.error(parseApiError(error));
+      },
+    });
   };
 };
 

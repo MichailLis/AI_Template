@@ -5,6 +5,7 @@ import { parseAnalysisResult } from '@/features/tests';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
+import { getProfOrientationLlmStatus } from './polus/polus-prof-orientation-llm-data';
 import { PolusPublicResult } from './polus/polus-public-result';
 import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-processing-screen';
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
@@ -24,6 +25,10 @@ interface HeroSignal {
 const handleExportPdf = () => {
   window.print();
 };
+
+const shouldWaitForAnalysis = (result: PublicSessionResultResponseDto | undefined) =>
+  result?.analysis.status === 'PENDING' ||
+  getProfOrientationLlmStatus(result?.analysis.summary) === 'pending';
 
 const getTopSkill = (analysis: AnalysisResult | null) =>
   analysis?.skillsLevel.items
@@ -153,7 +158,7 @@ export function PublicTestResultWorkspace() {
       retry: false,
       refetchInterval: (query) => {
         const data = query.state.data as PublicSessionResultResponseDto | undefined;
-        return data?.analysis.status === 'PENDING' ? 3000 : false;
+        return shouldWaitForAnalysis(data) ? 3000 : false;
       },
     },
   });
@@ -187,8 +192,13 @@ export function PublicTestResultWorkspace() {
 
   const result = resultQuery.data;
 
-  if (result.analysis.status === 'PENDING') {
-    return <PublicTestAnalysisProcessingScreen startedAt={result.finishedAt} />;
+  if (shouldWaitForAnalysis(result)) {
+    return (
+      <PublicTestAnalysisProcessingScreen
+        startedAt={result.finishedAt}
+        variant={result.publicTemplate === 'POLUS' ? 'polus' : 'standard'}
+      />
+    );
   }
 
   if (result.publicTemplate === 'POLUS') {

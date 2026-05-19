@@ -4,6 +4,7 @@ import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../admin/openro
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
+import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus.enrichment';
 import { TestsAnalysisService } from './tests-analysis.service';
 
 type AnalysisUpsertArgs = {
@@ -38,6 +39,7 @@ type AnalysisUpdateArgs = {
 jest.mock('../admin/openrouter.client', () => ({
   fetchOpenRouterModels: jest.fn(),
   generateOpenRouterPrompt: jest.fn(),
+  resolveOpenRouterTimeoutMs: jest.fn(() => 120_000),
 }));
 
 const validAnalysisResult = {
@@ -77,6 +79,24 @@ const validAnalysisResult = {
     developmentRecommendations: ['делать мини-проекты'],
     professionalNextSteps: ['получить обратную связь'],
   },
+};
+
+const validProfOrientationEnrichment = {
+  professorSummary:
+    'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
+  summary:
+    'Профиль 3D-моделирования означает, что участнику ближе перевод идеи в точную цифровую модель и подготовку ее к производству.',
+  confidenceComment:
+    'Высокая уверенность связана с большим отрывом ведущего направления, устойчивыми выборами и достаточной готовностью по цифровым шкалам.',
+  methodSignals: [
+    'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
+    'Интерес к направлению A1 выше остальных интересов.',
+  ],
+  firstSteps: ['Смоделировать простой корпус устройства.', 'Сделать сборку из нескольких деталей.'],
+  learningPlan: ['основы черчения', 'CAD/САПР'],
+  professionNotes: ['Инженер-конструктор связан с разработкой деталей и сборок.'],
+  nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
+  cautions: [],
 };
 
 describe('TestsAnalysisService', () => {
@@ -365,5 +385,183 @@ describe('TestsAnalysisService', () => {
         model: 'google/gemini-2.0-flash-exp:free',
       }),
     );
+  });
+
+  it('runAttemptAnalysis enriches prof-orientation summary without changing algorithm fields', async () => {
+    const algorithmSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      primaryDirection: { id: 'A1', name: '3D-моделирование' },
+      confidence: { level: 'high' },
+      profile: { type: 'single_profile' },
+      llm: { status: 'pending' },
+    };
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 5,
+      analysis: {
+        summary: algorithmSummary,
+      },
+      topicVersion: {
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        analysisPromptVersion: {
+          id: 42,
+          model: 'google/gemini-2.0-flash-exp:free',
+          temperature: 0.2,
+          prompt: 'Enrich prof-orientation result',
+        },
+        questions: [],
+      },
+      answers: [],
+    });
+    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+      model: 'google/gemini-2.0-flash-exp:free',
+      output: JSON.stringify(validProfOrientationEnrichment),
+    });
+    prismaMock.testStudentAnalysis.update.mockResolvedValue({});
+
+    await service.runAttemptAnalysis(5);
+
+    const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
+      (args: AnalysisUpdateArgs) => Promise<unknown>
+    >;
+    const updateArgs = updateMock.mock.calls[0]?.[0];
+
+    expect(updateArgs?.data).toMatchObject({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: {
+        resultKind: 'prof_orientation_v3_plus',
+        primaryDirection: { id: 'A1', name: '3D-моделирование' },
+        confidence: { level: 'high' },
+        profile: { type: 'single_profile' },
+        llm: {
+          status: 'ready',
+          analysis: validProfOrientationEnrichment,
+        },
+      },
+    });
+    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(
+      configMock,
+      'test-key',
+      expect.objectContaining({
+        responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
+      }),
+      { timeoutMs: 180_000 },
+    );
+    const promptOptions = jest.mocked(generateOpenRouterPrompt).mock.calls[0]?.[2];
+    expect(promptOptions?.prompt).toContain('Профессор Полюс говорит');
+    expect(promptOptions?.prompt).toContain('240-420 символов');
+    expect(promptOptions?.prompt).toContain('не раскрывай внутреннюю механику подсчета');
+    expect(promptOptions?.prompt).toContain('profile.type');
+    expect(promptOptions?.prompt).toContain('не используй технические ключи');
+  });
+
+  it('runAttemptAnalysis retries prof-orientation enrichment once after OpenRouter timeout', async () => {
+    const algorithmSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      primaryDirection: { id: 'A1', name: '3D-моделирование' },
+      confidence: { level: 'high' },
+      profile: { type: 'single_profile' },
+      llm: { status: 'pending' },
+    };
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 5,
+      analysis: {
+        summary: algorithmSummary,
+      },
+      topicVersion: {
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        analysisPromptVersion: {
+          id: 42,
+          model: 'google/gemini-2.0-flash-exp:free',
+          temperature: 0.2,
+          prompt: 'Enrich prof-orientation result',
+        },
+        questions: [],
+      },
+      answers: [],
+    });
+    jest
+      .mocked(generateOpenRouterPrompt)
+      .mockRejectedValueOnce(new Error('OpenRouter request timeout'))
+      .mockResolvedValue({
+        model: 'google/gemini-2.0-flash-exp:free',
+        output: JSON.stringify(validProfOrientationEnrichment),
+      });
+    prismaMock.testStudentAnalysis.update.mockResolvedValue({});
+
+    await service.runAttemptAnalysis(5);
+
+    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(2);
+    const firstPromptCall = jest.mocked(generateOpenRouterPrompt).mock.calls[0] as unknown[];
+    expect(firstPromptCall[3]).toMatchObject({
+      timeoutMs: 180_000,
+    });
+    const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
+      (args: AnalysisUpdateArgs) => Promise<unknown>
+    >;
+    const updateArgs = updateMock.mock.calls[0]?.[0];
+
+    expect(updateArgs?.data).toMatchObject({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: {
+        resultKind: 'prof_orientation_v3_plus',
+        llm: {
+          status: 'ready',
+          analysis: validProfOrientationEnrichment,
+        },
+      },
+    });
+  });
+
+  it('runAttemptAnalysis does not retry prof-orientation enrichment after non-timeout errors', async () => {
+    const algorithmSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      primaryDirection: { id: 'A1', name: '3D-моделирование' },
+      confidence: { level: 'high' },
+      profile: { type: 'single_profile' },
+      llm: { status: 'pending' },
+    };
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 5,
+      analysis: {
+        summary: algorithmSummary,
+      },
+      topicVersion: {
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        analysisPromptVersion: {
+          id: 42,
+          model: 'google/gemini-2.0-flash-exp:free',
+          temperature: 0.2,
+          prompt: 'Enrich prof-orientation result',
+        },
+        questions: [],
+      },
+      answers: [],
+    });
+    jest
+      .mocked(generateOpenRouterPrompt)
+      .mockRejectedValue(new Error('OpenRouter returned an empty response'));
+    prismaMock.testStudentAnalysis.update.mockResolvedValue({});
+
+    await service.runAttemptAnalysis(5);
+
+    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(1);
+    const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
+      (args: AnalysisUpdateArgs) => Promise<unknown>
+    >;
+    const updateArgs = updateMock.mock.calls[0]?.[0];
+
+    expect(updateArgs?.data).toMatchObject({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: {
+        resultKind: 'prof_orientation_v3_plus',
+        llm: {
+          status: 'failed',
+          errorMessage: 'OpenRouter returned an empty response',
+        },
+      },
+    });
   });
 });

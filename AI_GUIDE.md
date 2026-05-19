@@ -199,6 +199,9 @@ OPENROUTER_API_KEY="sk-or-v1-..."
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
 OPENROUTER_HTTP_REFERER="http://localhost:5173"
 OPENROUTER_APP_NAME="AI Template Admin"
+OPENROUTER_TIMEOUT_MS=120000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 ## Tests Module Foundation (Current Branch)
@@ -235,6 +238,29 @@ AI-assisted tests generation baseline:
 2. Flow is two-phase: generate preview -> commit via transactional backend endpoint.
 3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
 4. Model selector must show only models with structured-output capability.
+
+Built-in prof-orientation v3+ baseline:
+
+1. Runtime methodology data must come from the committed fixture at
+   `server/src/tests/prof-orientation-v3-plus/site-config.json`; do not read from
+   the external `Методика теста + вопросы` package at runtime.
+2. Admin import endpoint:
+   `POST /admin/tests/methodologies/prof-orientation-v3-plus/import`.
+3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
+   10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
+   `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
+4. Public multi-choice UI must enforce `settings.maxChoices`.
+5. For this scoring kind, `finishSession` must store deterministic algorithm
+   analysis as `READY` before LLM enrichment starts.
+6. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
+   direction, score, confidence, profile, or profession fields.
+7. Prof-orientation OpenRouter calls may use
+   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
+   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for
+   `OpenRouter request timeout` and must stay capped at 2.
+8. Polus result UI should merge LLM explanations into existing methodology blocks
+   and avoid exposing raw method internals to students.
+9. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
 
 ## Admin Public Links + Stats Contract (Current Branch)
 

@@ -104,6 +104,11 @@
           "protected": true
         },
         {
+          "path": "/admin/tests/methodologies/prof-orientation-v3-plus/import",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
           "path": "/admin/tests/{topicId}/draft",
           "methods": ["get", "patch"],
           "protected": true
