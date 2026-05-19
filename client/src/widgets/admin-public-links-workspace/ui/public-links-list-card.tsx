@@ -18,6 +18,7 @@ interface PublicLinkListItem {
   title: string;
   educationOrganizationName: string | null;
   publicTemplate: 'STANDARD' | 'POLUS';
+  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   createdAt: string;
   archivedAt: string | null;
   isActive: boolean;
@@ -101,6 +102,18 @@ const getLinkStateClassName = (link: PublicLinkListItem) => {
 const getPublicTemplateLabel = (template: PublicLinkListItem['publicTemplate']) =>
   template === 'POLUS' ? 'Polus' : 'Текущий';
 
+const getEntryProfileModeLabel = (mode: PublicLinkListItem['entryProfileMode']) => {
+  if (mode === 'DEMOGRAPHIC') {
+    return 'Демографическая';
+  }
+
+  if (mode === 'EDUCATION_DEMOGRAPHIC') {
+    return 'Учебная + демографическая';
+  }
+
+  return 'Учебная';
+};
+
 const publicLinkCreatedAtFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: '2-digit',
   month: '2-digit',
@@ -143,6 +156,7 @@ const buildLinkSearchText = (link: PublicLinkListItem) => {
     link.educationOrganizationName ?? '',
     getLinkStateLabel(link),
     getPublicTemplateLabel(link.publicTemplate),
+    getEntryProfileModeLabel(link.entryProfileMode),
   ]
     .join(' ')
     .toLowerCase();
@@ -279,6 +293,11 @@ function PublicLinkRow({ link, publicLinksTab, onOpenShortLink, ...handlers }: P
             className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
           >
             {getPublicTemplateLabel(link.publicTemplate)}
+          </span>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
+          >
+            {getEntryProfileModeLabel(link.entryProfileMode)}
           </span>
         </div>
         <div

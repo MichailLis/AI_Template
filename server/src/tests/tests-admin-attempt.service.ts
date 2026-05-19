@@ -48,6 +48,11 @@ export class TestsAdminAttemptService {
     const attempts = await this.prisma.testStudentAttempt.findMany({
       where,
       include: {
+        publicLink: {
+          select: {
+            entryProfileMode: true,
+          },
+        },
         analysis: {
           select: {
             status: true,
@@ -86,6 +91,7 @@ export class TestsAdminAttemptService {
           select: {
             id: true,
             shortCode: true,
+            entryProfileMode: true,
           },
         },
         answers: {

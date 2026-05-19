@@ -222,4 +222,76 @@ describe('TestsAdminAttemptService', () => {
       studentEducationLevel: 'SECONDARY_SPECIAL',
     });
   });
+
+  it('uses the public link entry profile mode for partially filled hybrid attempt rows', async () => {
+    const startedAt = new Date('2026-01-04T10:00:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
+    prismaMock.testStudentAttempt.count.mockResolvedValue(1);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([
+      {
+        id: 404,
+        status: 'COMPLETED',
+        attemptNumber: 1,
+        publicLink: {
+          entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+        },
+        studentName: null,
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: null,
+        groupOrClass: null,
+        studentGender: 'FEMALE',
+        studentAge: 17,
+        studentResidence: 'Казань',
+        studentEducationLevel: 'SECONDARY_GENERAL',
+        startedAt,
+        finishedAt: null,
+        expiresAt: null,
+        analysis: null,
+      },
+    ]);
+
+    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+
+    expect(response.attempts[0]?.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
+  });
+
+  it('uses the public link entry profile mode for hybrid attempt details', async () => {
+    const startedAt = new Date('2026-01-05T10:00:00.000Z');
+    const consentAcceptedAt = new Date('2026-01-05T09:59:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+      id: 505,
+      status: 'COMPLETED',
+      publicLink: {
+        id: 13,
+        shortCode: 'HYBRID2026',
+        entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+      },
+      attemptNumber: 1,
+      studentName: null,
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: null,
+      groupOrClass: null,
+      studentGender: 'FEMALE',
+      studentAge: 17,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_GENERAL',
+      consentAcceptedAt,
+      consentVersion: 'v1',
+      startedAt,
+      finishedAt: null,
+      expiresAt: null,
+      answers: [],
+      analysis: null,
+    });
+
+    const response = await service.getAttemptDetail(7, 505);
+
+    expect(response.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
+  });
 });

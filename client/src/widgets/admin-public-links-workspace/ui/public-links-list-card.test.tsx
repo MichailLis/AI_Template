@@ -33,14 +33,15 @@ describe('PublicLinksListCard', () => {
     vi.clearAllMocks();
   });
 
-  it('shows the created date for public links', () => {
+  it('shows the entry profile mode and created date for hybrid public links', () => {
     const createdAt = '2026-05-19T10:30:00.000Z';
-    const publicLink = {
+    const hybridLink = {
       id: 42,
       shortCode: 'HYBRID2026',
       title: 'Профориентационный тест',
       educationOrganizationName: 'Лицей',
       publicTemplate: 'POLUS' as const,
+      entryProfileMode: 'EDUCATION_DEMOGRAPHIC' as const,
       createdAt,
       archivedAt: null,
       isActive: true,
@@ -49,7 +50,7 @@ describe('PublicLinksListCard', () => {
     render(
       <PublicLinksListCard
         publicLinksTab="active"
-        visiblePublicLinks={[publicLink]}
+        visiblePublicLinks={[hybridLink]}
         publicLinksLoading={false}
         publicLinksError={false}
         searchValue=""
@@ -57,6 +58,7 @@ describe('PublicLinksListCard', () => {
       />,
     );
 
+    expect(screen.getByText('Учебная + демографическая')).toBeInTheDocument();
     expect(
       screen.getByText(`Создана: ${formatExpectedPublicLinkCreatedAt(createdAt)}`),
     ).toBeInTheDocument();

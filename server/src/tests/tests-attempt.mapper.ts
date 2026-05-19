@@ -1,5 +1,6 @@
 import type {
   Prisma,
+  TestEntryProfileMode,
   TestStudentAttemptStatus,
   TestStudentEducationLevel,
   TestStudentGender,
@@ -44,6 +45,7 @@ interface AttemptDetailRecord {
   publicLink: {
     id: number;
     shortCode: string;
+    entryProfileMode?: TestEntryProfileMode;
   };
   attemptNumber: number;
   studentName: string | null;
@@ -96,6 +98,9 @@ interface AttemptListRecord {
   analysis: {
     status: string;
   } | null;
+  publicLink?: {
+    entryProfileMode: TestEntryProfileMode;
+  };
 }
 
 type AttemptProfileRecord = Pick<
@@ -111,7 +116,7 @@ type AttemptProfileRecord = Pick<
   | 'studentEducationLevel'
 >;
 
-const mapAttemptProfile = (attempt: AttemptProfileRecord) => {
+const inferAttemptProfileMode = (attempt: AttemptProfileRecord) => {
   const hasEducationProfile =
     Boolean(attempt.studentName) ||
     Boolean(attempt.studentLastInitial) ||
@@ -123,12 +128,21 @@ const mapAttemptProfile = (attempt: AttemptProfileRecord) => {
     attempt.studentAge !== null ||
     attempt.studentResidence ||
     attempt.studentEducationLevel;
-  const entryProfileMode =
-    hasEducationProfile && hasDemographicProfile
-      ? 'EDUCATION_DEMOGRAPHIC'
-      : hasDemographicProfile
-        ? 'DEMOGRAPHIC'
-        : 'EDUCATION';
+  if (hasEducationProfile && hasDemographicProfile) {
+    return 'EDUCATION_DEMOGRAPHIC';
+  }
+
+  if (hasDemographicProfile) {
+    return 'DEMOGRAPHIC';
+  }
+
+  return 'EDUCATION';
+};
+
+const mapAttemptProfile = (
+  attempt: AttemptProfileRecord & { publicLink?: { entryProfileMode?: TestEntryProfileMode } },
+) => {
+  const entryProfileMode = attempt.publicLink?.entryProfileMode ?? inferAttemptProfileMode(attempt);
 
   return {
     entryProfileMode,
