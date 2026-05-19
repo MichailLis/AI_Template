@@ -7,6 +7,7 @@
  */
 import type { PublicLinkAccessResponseDtoEntryProfileMode } from './publicLinkAccessResponseDtoEntryProfileMode';
 import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLinkAccessResponseDtoGroupValidationMode';
+import type { PublicLinkAccessResponseDtoPublicTemplate } from './publicLinkAccessResponseDtoPublicTemplate';
 
 export interface PublicLinkAccessResponseDto {
   shortCode: string;
@@ -14,6 +15,7 @@ export interface PublicLinkAccessResponseDto {
   /** @nullable */
   description: string | null;
   entryProfileMode: PublicLinkAccessResponseDtoEntryProfileMode;
+  publicTemplate: PublicLinkAccessResponseDtoPublicTemplate;
   /** @nullable */
   educationOrganization: string | null;
   groupValidationMode: PublicLinkAccessResponseDtoGroupValidationMode;

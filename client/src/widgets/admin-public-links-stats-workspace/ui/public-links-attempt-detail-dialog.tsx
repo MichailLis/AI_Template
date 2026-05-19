@@ -29,7 +29,7 @@ interface AttemptAnalysis {
 }
 
 interface AttemptDetail {
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION';
+  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   studentName: string | null;
   studentLastInitial: string | null;
   studentMiddleInitial: string | null;
@@ -69,31 +69,43 @@ const getAttemptDescriptionName = (attempt: AttemptDetail) => {
     return 'Демографическая анкета';
   }
 
+  if (attempt.entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
+    return attempt.studentName ?? 'Учебные данные + демографическая анкета';
+  }
+
   return attempt.studentName ?? 'Анкета по учебным данным';
 };
 
+const getDemographicProfileParts = (attempt: AttemptDetail) => [
+  attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+  attempt.studentAge ? `${attempt.studentAge} лет` : null,
+  attempt.studentResidence,
+  attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+];
+
+const getEducationProfileParts = (attempt: AttemptDetail) => [
+  attempt.studentName,
+  attempt.studentLastInitial && attempt.studentMiddleInitial
+    ? `${attempt.studentLastInitial}.${attempt.studentMiddleInitial}.`
+    : null,
+  attempt.educationOrganization,
+  attempt.groupOrClass,
+];
+
 const getAttemptProfileText = (attempt: AttemptDetail) => {
   if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
-    return [
-      attempt.studentGender ? genderLabels[attempt.studentGender] : null,
-      attempt.studentAge ? `${attempt.studentAge} лет` : null,
-      attempt.studentResidence,
-      attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
-    ]
+    return getDemographicProfileParts(attempt).filter(Boolean).join(' • ');
+  }
+
+  const educationDetails = getEducationProfileParts(attempt);
+
+  if (attempt.entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
+    return [...educationDetails, ...getDemographicProfileParts(attempt)]
       .filter(Boolean)
       .join(' • ');
   }
 
-  return [
-    attempt.studentName,
-    attempt.studentLastInitial && attempt.studentMiddleInitial
-      ? `${attempt.studentLastInitial}.${attempt.studentMiddleInitial}.`
-      : null,
-    attempt.educationOrganization,
-    attempt.groupOrClass,
-  ]
-    .filter(Boolean)
-    .join(' • ');
+  return educationDetails.filter(Boolean).join(' • ');
 };
 
 interface PublicLinksAttemptDetailDialogProps {

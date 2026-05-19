@@ -175,6 +175,56 @@ describe('createPublicTestEntryStartHandler', () => {
     expect(navigate).toHaveBeenCalledWith('/t/CODE1/session/session-token');
   });
 
+  it('submits education and demographic data for hybrid profile mode', async () => {
+    const startSession = vi.fn().mockResolvedValue({
+      session: {
+        sessionToken: 'session-token',
+      },
+    });
+    const navigate = vi.fn();
+
+    await createPublicTestEntryStartHandler({
+      code: 'CODE1',
+      entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+      educationFormState: {
+        ...validFormState,
+        studentLastInitial: '',
+        studentMiddleInitial: '',
+      },
+      demographicFormState: {
+        gender: 'MALE',
+        age: ' 18 ',
+        residence: ' Казань ',
+        educationLevel: 'SECONDARY_SPECIAL',
+        consentAccepted: true,
+      },
+      linkData: {
+        educationOrganization: 'Лицей из ссылки',
+        groupValidationMode: 'NONE',
+        groupValidationPattern: null,
+        groupValidationHint: null,
+      },
+      startSession,
+      navigate,
+    })(createSubmitEvent());
+
+    expect(startSession).toHaveBeenCalledWith({
+      code: 'CODE1',
+      data: {
+        entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+        studentName: 'Иван',
+        educationOrganization: 'Лицей из ссылки',
+        groupOrClass: 'ИС-21',
+        gender: 'MALE',
+        age: 18,
+        residence: 'Казань',
+        educationLevel: 'SECONDARY_SPECIAL',
+        consentAccepted: true,
+      },
+    });
+    expect(navigate).toHaveBeenCalledWith('/t/CODE1/session/session-token');
+  });
+
   it('blocks incomplete demographic data before starting a session', async () => {
     const startSession = vi.fn();
     const navigate = vi.fn();

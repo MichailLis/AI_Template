@@ -68,7 +68,7 @@ export const TestQuestionOptionScalarFieldEnumSchema = z.enum(['id','questionId'
 
 export const TestQuestionSliderBandScalarFieldEnumSchema = z.enum(['id','questionId','minValue','maxValue','label','weight','order']);
 
-export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','educationOrganizationId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','entryProfileMode','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
+export const TestPublicLinkScalarFieldEnumSchema = z.enum(['id','topicVersionId','educationOrganizationId','shortCode','isActive','startsAt','endsAt','maxAttemptsPerStudent','timeLimitMinutes','allowResume','entryProfileMode','publicTemplate','consentVersion','consentTextSnapshot','createdByUserId','createdAt','updatedAt','archivedAt']);
 
 export const EducationOrganizationScalarFieldEnumSchema = z.enum(['id','name','isActive','groupValidationMode','groupValidationPattern','groupValidationExample','groupValidationHint','createdAt','updatedAt']);
 
@@ -120,9 +120,13 @@ export const TestStudentAnalysisProviderModeSchema = z.enum(['STUB','LLM']);
 
 export type TestStudentAnalysisProviderModeType = `${z.infer<typeof TestStudentAnalysisProviderModeSchema>}`
 
-export const TestEntryProfileModeSchema = z.enum(['DEMOGRAPHIC','EDUCATION']);
+export const TestEntryProfileModeSchema = z.enum(['DEMOGRAPHIC','EDUCATION','EDUCATION_DEMOGRAPHIC']);
 
 export type TestEntryProfileModeType = `${z.infer<typeof TestEntryProfileModeSchema>}`
+
+export const TestPublicTemplateSchema = z.enum(['STANDARD','POLUS']);
+
+export type TestPublicTemplateType = `${z.infer<typeof TestPublicTemplateSchema>}`
 
 export const TestStudentGenderSchema = z.enum(['MALE','FEMALE']);
 
@@ -253,6 +257,7 @@ export type TestQuestionSliderBand = z.infer<typeof TestQuestionSliderBandSchema
 
 export const TestPublicLinkSchema = z.object({
   entryProfileMode: TestEntryProfileModeSchema,
+  publicTemplate: TestPublicTemplateSchema,
   id: z.number().int(),
   topicVersionId: z.number().int(),
   educationOrganizationId: z.number().int().nullable(),
@@ -663,6 +668,7 @@ export const TestPublicLinkSelectSchema: z.ZodType<Prisma.TestPublicLinkSelect> 
   timeLimitMinutes: z.boolean().optional(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.boolean().optional(),
+  publicTemplate: z.boolean().optional(),
   consentVersion: z.boolean().optional(),
   consentTextSnapshot: z.boolean().optional(),
   createdByUserId: z.boolean().optional(),
@@ -1473,6 +1479,7 @@ export const TestPublicLinkWhereInputSchema: z.ZodType<Prisma.TestPublicLinkWher
   timeLimitMinutes: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   allowResume: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => EnumTestEntryProfileModeFilterSchema), z.lazy(() => TestEntryProfileModeSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => EnumTestPublicTemplateFilterSchema), z.lazy(() => TestPublicTemplateSchema) ]).optional(),
   consentVersion: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   consentTextSnapshot: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
@@ -1497,6 +1504,7 @@ export const TestPublicLinkOrderByWithRelationInputSchema: z.ZodType<Prisma.Test
   timeLimitMinutes: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   allowResume: z.lazy(() => SortOrderSchema).optional(),
   entryProfileMode: z.lazy(() => SortOrderSchema).optional(),
+  publicTemplate: z.lazy(() => SortOrderSchema).optional(),
   consentVersion: z.lazy(() => SortOrderSchema).optional(),
   consentTextSnapshot: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1536,6 +1544,7 @@ export const TestPublicLinkWhereUniqueInputSchema: z.ZodType<Prisma.TestPublicLi
   timeLimitMinutes: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
   allowResume: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => EnumTestEntryProfileModeFilterSchema), z.lazy(() => TestEntryProfileModeSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => EnumTestPublicTemplateFilterSchema), z.lazy(() => TestPublicTemplateSchema) ]).optional(),
   consentVersion: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   consentTextSnapshot: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number().int() ]).optional().nullable(),
@@ -1560,6 +1569,7 @@ export const TestPublicLinkOrderByWithAggregationInputSchema: z.ZodType<Prisma.T
   timeLimitMinutes: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   allowResume: z.lazy(() => SortOrderSchema).optional(),
   entryProfileMode: z.lazy(() => SortOrderSchema).optional(),
+  publicTemplate: z.lazy(() => SortOrderSchema).optional(),
   consentVersion: z.lazy(() => SortOrderSchema).optional(),
   consentTextSnapshot: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
@@ -1588,6 +1598,7 @@ export const TestPublicLinkScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   timeLimitMinutes: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
   allowResume: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema), z.boolean() ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => EnumTestEntryProfileModeWithAggregatesFilterSchema), z.lazy(() => TestEntryProfileModeSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => EnumTestPublicTemplateWithAggregatesFilterSchema), z.lazy(() => TestPublicTemplateSchema) ]).optional(),
   consentVersion: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   consentTextSnapshot: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   createdByUserId: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema), z.number() ]).optional().nullable(),
@@ -2784,6 +2795,7 @@ export const TestPublicLinkCreateInputSchema: z.ZodType<Prisma.TestPublicLinkCre
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -2807,6 +2819,7 @@ export const TestPublicLinkUncheckedCreateInputSchema: z.ZodType<Prisma.TestPubl
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -2825,6 +2838,7 @@ export const TestPublicLinkUpdateInputSchema: z.ZodType<Prisma.TestPublicLinkUpd
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2848,6 +2862,7 @@ export const TestPublicLinkUncheckedUpdateInputSchema: z.ZodType<Prisma.TestPubl
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -2869,6 +2884,7 @@ export const TestPublicLinkCreateManyInputSchema: z.ZodType<Prisma.TestPublicLin
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -2886,6 +2902,7 @@ export const TestPublicLinkUpdateManyMutationInputSchema: z.ZodType<Prisma.TestP
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2905,6 +2922,7 @@ export const TestPublicLinkUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Test
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -4262,6 +4280,13 @@ export const EnumTestEntryProfileModeFilterSchema: z.ZodType<Prisma.EnumTestEntr
   not: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema) ]).optional(),
 });
 
+export const EnumTestPublicTemplateFilterSchema: z.ZodType<Prisma.EnumTestPublicTemplateFilter> = z.strictObject({
+  equals: z.lazy(() => TestPublicTemplateSchema).optional(),
+  in: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  notIn: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => NestedEnumTestPublicTemplateFilterSchema) ]).optional(),
+});
+
 export const EducationOrganizationNullableScalarRelationFilterSchema: z.ZodType<Prisma.EducationOrganizationNullableScalarRelationFilter> = z.strictObject({
   is: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
   isNot: z.lazy(() => EducationOrganizationWhereInputSchema).optional().nullable(),
@@ -4284,6 +4309,7 @@ export const TestPublicLinkCountOrderByAggregateInputSchema: z.ZodType<Prisma.Te
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   allowResume: z.lazy(() => SortOrderSchema).optional(),
   entryProfileMode: z.lazy(() => SortOrderSchema).optional(),
+  publicTemplate: z.lazy(() => SortOrderSchema).optional(),
   consentVersion: z.lazy(() => SortOrderSchema).optional(),
   consentTextSnapshot: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
@@ -4313,6 +4339,7 @@ export const TestPublicLinkMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Test
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   allowResume: z.lazy(() => SortOrderSchema).optional(),
   entryProfileMode: z.lazy(() => SortOrderSchema).optional(),
+  publicTemplate: z.lazy(() => SortOrderSchema).optional(),
   consentVersion: z.lazy(() => SortOrderSchema).optional(),
   consentTextSnapshot: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
@@ -4333,6 +4360,7 @@ export const TestPublicLinkMinOrderByAggregateInputSchema: z.ZodType<Prisma.Test
   timeLimitMinutes: z.lazy(() => SortOrderSchema).optional(),
   allowResume: z.lazy(() => SortOrderSchema).optional(),
   entryProfileMode: z.lazy(() => SortOrderSchema).optional(),
+  publicTemplate: z.lazy(() => SortOrderSchema).optional(),
   consentVersion: z.lazy(() => SortOrderSchema).optional(),
   consentTextSnapshot: z.lazy(() => SortOrderSchema).optional(),
   createdByUserId: z.lazy(() => SortOrderSchema).optional(),
@@ -4358,6 +4386,16 @@ export const EnumTestEntryProfileModeWithAggregatesFilterSchema: z.ZodType<Prism
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema).optional(),
+});
+
+export const EnumTestPublicTemplateWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTestPublicTemplateWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => TestPublicTemplateSchema).optional(),
+  in: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  notIn: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => NestedEnumTestPublicTemplateWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTestPublicTemplateFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTestPublicTemplateFilterSchema).optional(),
 });
 
 export const EnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.EnumGroupOrClassValidationModeFilter> = z.strictObject({
@@ -5556,6 +5594,10 @@ export const EnumTestEntryProfileModeFieldUpdateOperationsInputSchema: z.ZodType
   set: z.lazy(() => TestEntryProfileModeSchema).optional(),
 });
 
+export const EnumTestPublicTemplateFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumTestPublicTemplateFieldUpdateOperationsInput> = z.strictObject({
+  set: z.lazy(() => TestPublicTemplateSchema).optional(),
+});
+
 export const TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInputSchema: z.ZodType<Prisma.TestTopicVersionUpdateOneRequiredWithoutPublicLinksNestedInput> = z.strictObject({
   create: z.union([ z.lazy(() => TestTopicVersionCreateWithoutPublicLinksInputSchema), z.lazy(() => TestTopicVersionUncheckedCreateWithoutPublicLinksInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => TestTopicVersionCreateOrConnectWithoutPublicLinksInputSchema).optional(),
@@ -6266,6 +6308,13 @@ export const NestedEnumTestEntryProfileModeFilterSchema: z.ZodType<Prisma.Nested
   not: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema) ]).optional(),
 });
 
+export const NestedEnumTestPublicTemplateFilterSchema: z.ZodType<Prisma.NestedEnumTestPublicTemplateFilter> = z.strictObject({
+  equals: z.lazy(() => TestPublicTemplateSchema).optional(),
+  in: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  notIn: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => NestedEnumTestPublicTemplateFilterSchema) ]).optional(),
+});
+
 export const NestedEnumTestEntryProfileModeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTestEntryProfileModeWithAggregatesFilter> = z.strictObject({
   equals: z.lazy(() => TestEntryProfileModeSchema).optional(),
   in: z.lazy(() => TestEntryProfileModeSchema).array().optional(),
@@ -6274,6 +6323,16 @@ export const NestedEnumTestEntryProfileModeWithAggregatesFilterSchema: z.ZodType
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTestEntryProfileModeFilterSchema).optional(),
+});
+
+export const NestedEnumTestPublicTemplateWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTestPublicTemplateWithAggregatesFilter> = z.strictObject({
+  equals: z.lazy(() => TestPublicTemplateSchema).optional(),
+  in: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  notIn: z.lazy(() => TestPublicTemplateSchema).array().optional(),
+  not: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => NestedEnumTestPublicTemplateWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTestPublicTemplateFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTestPublicTemplateFilterSchema).optional(),
 });
 
 export const NestedEnumGroupOrClassValidationModeFilterSchema: z.ZodType<Prisma.NestedEnumGroupOrClassValidationModeFilter> = z.strictObject({
@@ -6437,6 +6496,7 @@ export const TestPublicLinkCreateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -6459,6 +6519,7 @@ export const TestPublicLinkUncheckedCreateWithoutCreatedByUserInputSchema: z.Zod
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -6508,6 +6569,7 @@ export const TestPublicLinkScalarWhereInputSchema: z.ZodType<Prisma.TestPublicLi
   timeLimitMinutes: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
   allowResume: z.union([ z.lazy(() => BoolFilterSchema), z.boolean() ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => EnumTestEntryProfileModeFilterSchema), z.lazy(() => TestEntryProfileModeSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => EnumTestPublicTemplateFilterSchema), z.lazy(() => TestPublicTemplateSchema) ]).optional(),
   consentVersion: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   consentTextSnapshot: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   createdByUserId: z.union([ z.lazy(() => IntNullableFilterSchema), z.number() ]).optional().nullable(),
@@ -6908,6 +6970,7 @@ export const TestPublicLinkCreateWithoutTopicVersionInputSchema: z.ZodType<Prism
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -6929,6 +6992,7 @@ export const TestPublicLinkUncheckedCreateWithoutTopicVersionInputSchema: z.ZodT
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -7915,6 +7979,7 @@ export const TestPublicLinkCreateWithoutEducationOrganizationInputSchema: z.ZodT
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -7936,6 +8001,7 @@ export const TestPublicLinkUncheckedCreateWithoutEducationOrganizationInputSchem
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -7980,6 +8046,7 @@ export const TestPublicLinkCreateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -8002,6 +8069,7 @@ export const TestPublicLinkUncheckedCreateWithoutAttemptsInputSchema: z.ZodType<
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -8130,6 +8198,7 @@ export const TestPublicLinkUpdateWithoutAttemptsInputSchema: z.ZodType<Prisma.Te
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -8152,6 +8221,7 @@ export const TestPublicLinkUncheckedUpdateWithoutAttemptsInputSchema: z.ZodType<
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -8921,6 +8991,7 @@ export const TestPublicLinkCreateManyCreatedByUserInputSchema: z.ZodType<Prisma.
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdAt: z.coerce.date().optional(),
@@ -8937,6 +9008,7 @@ export const TestPublicLinkUpdateWithoutCreatedByUserInputSchema: z.ZodType<Pris
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -8959,6 +9031,7 @@ export const TestPublicLinkUncheckedUpdateWithoutCreatedByUserInputSchema: z.Zod
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -8979,6 +9052,7 @@ export const TestPublicLinkUncheckedUpdateManyWithoutCreatedByUserInputSchema: z
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -9080,6 +9154,7 @@ export const TestPublicLinkCreateManyTopicVersionInputSchema: z.ZodType<Prisma.T
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -9221,6 +9296,7 @@ export const TestPublicLinkUpdateWithoutTopicVersionInputSchema: z.ZodType<Prism
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -9242,6 +9318,7 @@ export const TestPublicLinkUncheckedUpdateWithoutTopicVersionInputSchema: z.ZodT
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -9262,6 +9339,7 @@ export const TestPublicLinkUncheckedUpdateManyWithoutTopicVersionInputSchema: z.
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -9589,6 +9667,7 @@ export const TestPublicLinkCreateManyEducationOrganizationInputSchema: z.ZodType
   timeLimitMinutes: z.number().int().optional().nullable(),
   allowResume: z.boolean().optional(),
   entryProfileMode: z.lazy(() => TestEntryProfileModeSchema).optional(),
+  publicTemplate: z.lazy(() => TestPublicTemplateSchema).optional(),
   consentVersion: z.string(),
   consentTextSnapshot: z.string(),
   createdByUserId: z.number().int().optional().nullable(),
@@ -9606,6 +9685,7 @@ export const TestPublicLinkUpdateWithoutEducationOrganizationInputSchema: z.ZodT
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -9627,6 +9707,7 @@ export const TestPublicLinkUncheckedUpdateWithoutEducationOrganizationInputSchem
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -9647,6 +9728,7 @@ export const TestPublicLinkUncheckedUpdateManyWithoutEducationOrganizationInputS
   timeLimitMinutes: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   allowResume: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   entryProfileMode: z.union([ z.lazy(() => TestEntryProfileModeSchema), z.lazy(() => EnumTestEntryProfileModeFieldUpdateOperationsInputSchema) ]).optional(),
+  publicTemplate: z.union([ z.lazy(() => TestPublicTemplateSchema), z.lazy(() => EnumTestPublicTemplateFieldUpdateOperationsInputSchema) ]).optional(),
   consentVersion: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   consentTextSnapshot: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdByUserId: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),

@@ -10,6 +10,7 @@ import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
 import {
   buildAnonymousAttemptKeyHash,
+  buildEducationDemographicStudentKeyHash,
   buildStudentKeyHash,
   createRandomToken,
   toPrismaRequiredJsonInput,
@@ -75,6 +76,39 @@ export class TestsPublicSessionService {
     }
   }
 
+  private resolveDemographicProfile(dto: PublicSessionStartRequestDto) {
+    if (!dto.gender) {
+      throw new BadRequestException('Укажите пол');
+    }
+
+    const studentAge = dto.age;
+
+    if (
+      studentAge === undefined ||
+      !Number.isInteger(studentAge) ||
+      studentAge < 1 ||
+      studentAge > 120
+    ) {
+      throw new BadRequestException('Укажите корректный возраст');
+    }
+
+    const studentResidence = this.normalizeRequiredString(
+      dto.residence,
+      'Укажите место жительства',
+    );
+
+    if (!dto.educationLevel) {
+      throw new BadRequestException('Укажите уровень образования');
+    }
+
+    return {
+      studentGender: dto.gender,
+      studentAge,
+      studentResidence,
+      studentEducationLevel: dto.educationLevel,
+    };
+  }
+
   private toSessionResultAnalysisResponse(
     status: ReturnType<TestsAnalysisService['toAttemptStatus']>,
     analysis: Parameters<TestsAnalysisService['toPublicAnalysisResponse']>[0],
@@ -104,6 +138,7 @@ export class TestsPublicSessionService {
       return this.startDemographicSession(link, dto);
     }
 
+    const isEducationDemographicMode = link.entryProfileMode === 'EDUCATION_DEMOGRAPHIC';
     const resolvedEducationOrganization =
       link.educationOrganization?.name ??
       this.normalizeRequiredString(
@@ -111,28 +146,44 @@ export class TestsPublicSessionService {
         'Учебное заведение обязательно для начала теста',
       );
     const studentName = this.normalizeRequiredString(dto.studentName, 'Укажите имя участника');
-    const studentLastInitial = this.normalizeRequiredString(
-      dto.studentLastInitial,
-      'Укажите первую букву фамилии',
-    );
-    const studentMiddleInitial = this.normalizeRequiredString(
-      dto.studentMiddleInitial,
-      'Укажите первую букву отчества',
-    );
     const normalizedGroupOrClass = this.normalizeRequiredString(
       dto.groupOrClass,
       'Укажите группу или класс',
     );
+    const demographicProfile = isEducationDemographicMode
+      ? this.resolveDemographicProfile(dto)
+      : null;
+    let studentLastInitial: string | null = null;
+    let studentMiddleInitial: string | null = null;
+    let studentKeyHash: string;
+
+    if (demographicProfile) {
+      studentKeyHash = buildEducationDemographicStudentKeyHash({
+        studentName,
+        studentAge: demographicProfile.studentAge,
+        educationOrganization: resolvedEducationOrganization,
+        groupOrClass: normalizedGroupOrClass,
+      });
+    } else {
+      studentLastInitial = this.normalizeRequiredString(
+        dto.studentLastInitial,
+        'Укажите первую букву фамилии',
+      );
+      studentMiddleInitial = this.normalizeRequiredString(
+        dto.studentMiddleInitial,
+        'Укажите первую букву отчества',
+      );
+      studentKeyHash = buildStudentKeyHash({
+        studentName,
+        studentLastInitial,
+        studentMiddleInitial,
+        educationOrganization: resolvedEducationOrganization,
+        groupOrClass: normalizedGroupOrClass,
+      });
+    }
 
     this.validateGroupOrClassForLink(normalizedGroupOrClass, link);
 
-    const studentKeyHash = buildStudentKeyHash({
-      studentName,
-      studentLastInitial,
-      studentMiddleInitial,
-      educationOrganization: resolvedEducationOrganization,
-      groupOrClass: normalizedGroupOrClass,
-    });
     const now = new Date();
 
     await this.prisma.testStudentAttempt.updateMany({
@@ -200,10 +251,10 @@ export class TestsPublicSessionService {
         studentMiddleInitial,
         educationOrganization: resolvedEducationOrganization,
         groupOrClass: normalizedGroupOrClass,
-        studentGender: null,
-        studentAge: null,
-        studentResidence: null,
-        studentEducationLevel: null,
+        studentGender: demographicProfile?.studentGender ?? null,
+        studentAge: demographicProfile?.studentAge ?? null,
+        studentResidence: demographicProfile?.studentResidence ?? null,
+        studentEducationLevel: demographicProfile?.studentEducationLevel ?? null,
         studentKeyHash,
         consentAcceptedAt: now,
         consentVersion: link.consentVersion,
@@ -221,30 +272,7 @@ export class TestsPublicSessionService {
     link: AccessiblePublicLink,
     dto: PublicSessionStartRequestDto,
   ): Promise<SessionStateResponse> {
-    if (!dto.gender) {
-      throw new BadRequestException('Укажите пол');
-    }
-
-    const studentAge = dto.age;
-
-    if (
-      !Number.isInteger(studentAge) ||
-      studentAge === undefined ||
-      studentAge < 1 ||
-      studentAge > 120
-    ) {
-      throw new BadRequestException('Укажите корректный возраст');
-    }
-
-    const studentResidence = this.normalizeRequiredString(
-      dto.residence,
-      'Укажите место жительства',
-    );
-
-    if (!dto.educationLevel) {
-      throw new BadRequestException('Укажите уровень образования');
-    }
-
+    const demographicProfile = this.resolveDemographicProfile(dto);
     const now = new Date();
     const resumeToken = createRandomToken(24);
     const expiresAt =
@@ -263,10 +291,10 @@ export class TestsPublicSessionService {
         studentMiddleInitial: null,
         educationOrganization: null,
         groupOrClass: null,
-        studentGender: dto.gender,
-        studentAge,
-        studentResidence,
-        studentEducationLevel: dto.educationLevel,
+        studentGender: demographicProfile.studentGender,
+        studentAge: demographicProfile.studentAge,
+        studentResidence: demographicProfile.studentResidence,
+        studentEducationLevel: demographicProfile.studentEducationLevel,
         studentKeyHash: buildAnonymousAttemptKeyHash(resumeToken),
         consentAcceptedAt: now,
         consentVersion: link.consentVersion,
@@ -426,6 +454,7 @@ export class TestsPublicSessionService {
 
     return {
       sessionToken,
+      publicTemplate: attempt.publicLink.publicTemplate,
       status,
       finishedAt: toOptionalIsoString(attempt.finishedAt),
       analysis: this.toSessionResultAnalysisResponse(status, attempt.analysis),

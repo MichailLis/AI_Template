@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import type { StudentFormState } from './public-test-entry.types';
+import { RegistrationDemographicFields } from './public-test-registration-demographic-fields';
+
+import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
 import type { FormEvent } from 'react';
 
 type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
@@ -13,22 +15,30 @@ type FormFieldChangeHandler = <K extends keyof StudentFormState>(
   key: K,
   value: StudentFormState[K],
 ) => void;
+type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
+  key: K,
+  value: DemographicFormState[K],
+) => void;
 
 interface PublicTestRegistrationCardProps {
   formState: StudentFormState;
+  demographicFormState?: DemographicFormState;
   lockedEducationOrganization: string | null;
   groupValidationMode: GroupValidationMode;
   groupValidationExample: string | null;
   groupValidationHint: string | null;
   groupValidationWarning: string | null;
+  showDemographicFields?: boolean;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFieldChange: FormFieldChangeHandler;
+  onDemographicFieldChange?: DemographicFieldChangeHandler;
 }
 
 interface RegistrationFormFieldsProps {
   formState: StudentFormState;
   onFieldChange: FormFieldChangeHandler;
+  showInitialFields?: boolean;
 }
 
 function RegistrationCardHeader() {
@@ -51,7 +61,11 @@ function RegistrationCardHeader() {
   );
 }
 
-function IdentityFields({ formState, onFieldChange }: RegistrationFormFieldsProps) {
+function IdentityFields({
+  formState,
+  onFieldChange,
+  showInitialFields = true,
+}: RegistrationFormFieldsProps) {
   return (
     <>
       <div className="space-y-2 md:col-span-2">
@@ -67,38 +81,42 @@ function IdentityFields({ formState, onFieldChange }: RegistrationFormFieldsProp
           placeholder="Введите ваше имя"
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="student-last-initial" className="font-medium">
-          Фамилия (1-я буква)
-        </Label>
-        <Input
-          id="student-last-initial"
-          value={formState.studentLastInitial}
-          maxLength={1}
-          onChange={(event) =>
-            onFieldChange('studentLastInitial', event.target.value.toUpperCase())
-          }
-          required
-          placeholder="И"
-          className="h-11 text-center text-lg font-semibold uppercase"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="student-middle-initial" className="font-medium">
-          Отчество (1-я буква)
-        </Label>
-        <Input
-          id="student-middle-initial"
-          value={formState.studentMiddleInitial}
-          maxLength={1}
-          onChange={(event) =>
-            onFieldChange('studentMiddleInitial', event.target.value.toUpperCase())
-          }
-          required
-          placeholder="О"
-          className="h-11 text-center text-lg font-semibold uppercase"
-        />
-      </div>
+      {showInitialFields ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="student-last-initial" className="font-medium">
+              Фамилия (1-я буква)
+            </Label>
+            <Input
+              id="student-last-initial"
+              value={formState.studentLastInitial}
+              maxLength={1}
+              onChange={(event) =>
+                onFieldChange('studentLastInitial', event.target.value.toUpperCase())
+              }
+              required
+              placeholder="И"
+              className="h-11 text-center text-lg font-semibold uppercase"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="student-middle-initial" className="font-medium">
+              Отчество (1-я буква)
+            </Label>
+            <Input
+              id="student-middle-initial"
+              value={formState.studentMiddleInitial}
+              maxLength={1}
+              onChange={(event) =>
+                onFieldChange('studentMiddleInitial', event.target.value.toUpperCase())
+              }
+              required
+              placeholder="О"
+              className="h-11 text-center text-lg font-semibold uppercase"
+            />
+          </div>
+        </>
+      ) : null}
     </>
   );
 }
@@ -208,15 +226,21 @@ function SubmitButton({ isSubmitting }: SubmitButtonProps) {
 
 export function PublicTestRegistrationCard({
   formState,
+  demographicFormState,
   lockedEducationOrganization,
   groupValidationMode,
   groupValidationExample,
   groupValidationHint,
   groupValidationWarning,
+  showDemographicFields = false,
   isSubmitting,
   onSubmit,
   onFieldChange,
+  onDemographicFieldChange,
 }: PublicTestRegistrationCardProps) {
+  const canShowDemographicFields =
+    showDemographicFields && demographicFormState && onDemographicFieldChange;
+
   return (
     <div className="order-1 lg:order-2">
       <Card className="relative overflow-hidden border border-border/60 bg-card shadow-xl lg:sticky lg:top-8">
@@ -226,7 +250,11 @@ export function PublicTestRegistrationCard({
         <CardContent className="px-6 pb-6">
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="grid gap-4 md:grid-cols-2">
-              <IdentityFields formState={formState} onFieldChange={onFieldChange} />
+              <IdentityFields
+                formState={formState}
+                onFieldChange={onFieldChange}
+                showInitialFields={!showDemographicFields}
+              />
               <EducationOrganizationField
                 formState={formState}
                 lockedEducationOrganization={lockedEducationOrganization}
@@ -240,6 +268,12 @@ export function PublicTestRegistrationCard({
                 groupValidationWarning={groupValidationWarning}
                 onFieldChange={onFieldChange}
               />
+              {canShowDemographicFields ? (
+                <RegistrationDemographicFields
+                  formState={demographicFormState}
+                  onFieldChange={onDemographicFieldChange}
+                />
+              ) : null}
             </div>
 
             <SubmitButton isSubmitting={isSubmitting} />

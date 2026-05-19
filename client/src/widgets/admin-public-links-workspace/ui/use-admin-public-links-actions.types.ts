@@ -1,5 +1,8 @@
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
-import type { PublicLinkEntryProfileMode } from './public-link-create-card.types';
+import type {
+  PublicLinkEntryProfileMode,
+  PublicLinkTemplate,
+} from './public-link-create-card.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 export interface UseAdminPublicLinksActionsParams {
@@ -11,6 +14,7 @@ export interface UseAdminPublicLinksActionsParams {
   groupValidationPattern: string;
   groupValidationExample: string;
   groupValidationHint: string;
+  newPublicTemplate: PublicLinkTemplate;
   newPublicEntryProfileMode: PublicLinkEntryProfileMode;
   newPublicMaxAttempts: string;
   newPublicTimeLimit: string;

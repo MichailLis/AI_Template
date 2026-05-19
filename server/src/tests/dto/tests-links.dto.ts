@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   EntryProfileModeSchema,
+  PublicTemplateSchema,
   PublicSessionAnalysisProviderModeSchema,
   PublicSessionAnalysisStatusSchema,
   PublicSessionStatusSchema,
@@ -30,6 +31,7 @@ export const AdminCreatePublicLinkSchema = z
     startsAt: z.string().datetime().nullable().optional(),
     endsAt: z.string().datetime().nullable().optional(),
     entryProfileMode: EntryProfileModeSchema.optional(),
+    publicTemplate: PublicTemplateSchema.default('STANDARD'),
     maxAttemptsPerStudent: z.number().int().min(1).max(20).optional(),
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
@@ -85,6 +87,7 @@ export const AdminPublicLinkSchema = z.object({
   educationOrganizationId: z.number().nullable(),
   educationOrganizationName: z.string().nullable(),
   entryProfileMode: EntryProfileModeSchema,
+  publicTemplate: PublicTemplateSchema,
   shortCode: z.string(),
   shortUrl: z.string(),
   isActive: z.boolean(),

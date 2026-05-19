@@ -55,6 +55,31 @@ describe('tests-links dto group validation schemas', () => {
 });
 
 describe('tests link DTO profile mode fields', () => {
+  it('defaults public link creation input to the standard template', () => {
+    const result = AdminCreatePublicLinkSchema.parse({
+      publishedVersionId: 10,
+      entryProfileMode: 'DEMOGRAPHIC',
+      maxAttemptsPerStudent: 3,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(result.publicTemplate).toBe('STANDARD');
+  });
+
+  it('accepts POLUS public link creation input', () => {
+    const result = AdminCreatePublicLinkSchema.parse({
+      publishedVersionId: 10,
+      publicTemplate: 'POLUS',
+      entryProfileMode: 'DEMOGRAPHIC',
+      maxAttemptsPerStudent: 3,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(result.publicTemplate).toBe('POLUS');
+  });
+
   it('accepts DEMOGRAPHIC public link creation input', () => {
     const result = AdminCreatePublicLinkSchema.parse({
       publishedVersionId: 10,
@@ -67,6 +92,18 @@ describe('tests link DTO profile mode fields', () => {
     expect(result.entryProfileMode).toBe('DEMOGRAPHIC');
   });
 
+  it('accepts EDUCATION_DEMOGRAPHIC public link creation input', () => {
+    const result = AdminCreatePublicLinkSchema.parse({
+      publishedVersionId: 10,
+      entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+      maxAttemptsPerStudent: 3,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(result.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
+  });
+
   it('returns entry profile mode in admin public link response', () => {
     const result = AdminPublicLinkSchema.parse({
       id: 1,
@@ -75,6 +112,7 @@ describe('tests link DTO profile mode fields', () => {
       educationOrganizationId: null,
       educationOrganizationName: null,
       entryProfileMode: 'EDUCATION',
+      publicTemplate: 'POLUS',
       shortCode: 'CODE2026',
       shortUrl: '/t/CODE2026',
       isActive: true,
@@ -92,5 +130,6 @@ describe('tests link DTO profile mode fields', () => {
     });
 
     expect(result.entryProfileMode).toBe('EDUCATION');
+    expect(result.publicTemplate).toBe('POLUS');
   });
 });

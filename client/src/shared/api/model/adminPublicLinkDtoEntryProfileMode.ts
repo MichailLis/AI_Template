@@ -12,4 +12,5 @@ export type AdminPublicLinkDtoEntryProfileMode =
 export const AdminPublicLinkDtoEntryProfileMode = {
   DEMOGRAPHIC: 'DEMOGRAPHIC',
   EDUCATION: 'EDUCATION',
+  EDUCATION_DEMOGRAPHIC: 'EDUCATION_DEMOGRAPHIC',
 } as const;

@@ -34,6 +34,16 @@ interface StartSessionRequestData {
   consentAccepted: true;
 }
 
+type DemographicProfilePayload = Pick<
+  StartSessionRequestData,
+  'gender' | 'age' | 'residence' | 'educationLevel'
+>;
+
+type EducationProfilePayload = Pick<
+  StartSessionRequestData,
+  'studentName' | 'educationOrganization' | 'groupOrClass'
+>;
+
 interface StartSessionResponse {
   session: {
     sessionToken: string;
@@ -53,14 +63,9 @@ interface CreatePublicTestEntryStartHandlerParams {
   navigate: NavigateFunction;
 }
 
-const buildDemographicPayload = (
+const buildDemographicProfilePayload = (
   formState: DemographicFormState,
-): StartSessionRequestData | null => {
-  if (!formState.consentAccepted) {
-    toast.error('Необходимо согласие на обработку персональных данных');
-    return null;
-  }
-
+): DemographicProfilePayload | null => {
   if (!formState.gender) {
     toast.error('Укажите пол');
     return null;
@@ -86,19 +91,38 @@ const buildDemographicPayload = (
   }
 
   return {
-    entryProfileMode: 'DEMOGRAPHIC',
     gender: formState.gender,
     age,
     residence,
     educationLevel: formState.educationLevel,
+  };
+};
+
+const buildDemographicPayload = (
+  formState: DemographicFormState,
+): StartSessionRequestData | null => {
+  if (!formState.consentAccepted) {
+    toast.error('Необходимо согласие на обработку персональных данных');
+    return null;
+  }
+
+  const demographicProfile = buildDemographicProfilePayload(formState);
+
+  if (!demographicProfile) {
+    return null;
+  }
+
+  return {
+    entryProfileMode: 'DEMOGRAPHIC',
+    ...demographicProfile,
     consentAccepted: true,
   };
 };
 
-const buildEducationPayload = (
+const buildEducationProfilePayload = (
   formState: StudentFormState,
   linkData: LinkAccessSnapshot | undefined,
-): StartSessionRequestData | null => {
+): EducationProfilePayload | null => {
   if (!formState.consentAccepted) {
     toast.error('Необходимо согласие на обработку персональных данных');
     return null;
@@ -131,12 +155,47 @@ const buildEducationPayload = (
   }
 
   return {
-    entryProfileMode: 'EDUCATION',
     studentName: formState.studentName.trim(),
-    studentLastInitial: normalizeInitial(formState.studentLastInitial),
-    studentMiddleInitial: normalizeInitial(formState.studentMiddleInitial),
     educationOrganization: effectiveEducationOrganization,
     groupOrClass: normalizedGroupOrClass,
+  };
+};
+
+const buildEducationPayload = (
+  formState: StudentFormState,
+  linkData: LinkAccessSnapshot | undefined,
+): StartSessionRequestData | null => {
+  const educationProfile = buildEducationProfilePayload(formState, linkData);
+
+  if (!educationProfile) {
+    return null;
+  }
+
+  return {
+    entryProfileMode: 'EDUCATION',
+    ...educationProfile,
+    studentLastInitial: normalizeInitial(formState.studentLastInitial),
+    studentMiddleInitial: normalizeInitial(formState.studentMiddleInitial),
+    consentAccepted: true,
+  };
+};
+
+const buildEducationDemographicPayload = (
+  educationFormState: StudentFormState,
+  demographicFormState: DemographicFormState,
+  linkData: LinkAccessSnapshot | undefined,
+): StartSessionRequestData | null => {
+  const educationProfile = buildEducationProfilePayload(educationFormState, linkData);
+  const demographicProfile = buildDemographicProfilePayload(demographicFormState);
+
+  if (!educationProfile || !demographicProfile) {
+    return null;
+  }
+
+  return {
+    entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+    ...educationProfile,
+    ...demographicProfile,
     consentAccepted: true,
   };
 };
@@ -158,10 +217,15 @@ export const createPublicTestEntryStartHandler = ({
       return;
     }
 
-    const data =
-      entryProfileMode === 'DEMOGRAPHIC'
-        ? buildDemographicPayload(demographicFormState)
-        : buildEducationPayload(educationFormState, linkData);
+    let data: StartSessionRequestData | null;
+
+    if (entryProfileMode === 'DEMOGRAPHIC') {
+      data = buildDemographicPayload(demographicFormState);
+    } else if (entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
+      data = buildEducationDemographicPayload(educationFormState, demographicFormState, linkData);
+    } else {
+      data = buildEducationPayload(educationFormState, linkData);
+    }
 
     if (!data) {
       return;

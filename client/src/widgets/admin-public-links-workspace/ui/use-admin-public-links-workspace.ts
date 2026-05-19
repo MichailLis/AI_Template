@@ -84,6 +84,7 @@ export function useAdminPublicLinksWorkspace({
     groupValidationPattern: formState.groupValidationPattern,
     groupValidationExample: formState.groupValidationExample,
     groupValidationHint: formState.groupValidationHint,
+    newPublicTemplate: formState.newPublicTemplate,
     newPublicEntryProfileMode: formState.newPublicEntryProfileMode,
     newPublicMaxAttempts: formState.newPublicMaxAttempts,
     newPublicTimeLimit: formState.newPublicTimeLimit,

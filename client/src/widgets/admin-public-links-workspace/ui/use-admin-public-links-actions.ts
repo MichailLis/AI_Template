@@ -24,6 +24,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     publishedVersionId,
     newPublicShortCode,
     newEducationOrganizationId,
+    newPublicTemplate,
     newPublicEntryProfileMode,
     newPublicMaxAttempts,
     newPublicTimeLimit,
@@ -58,6 +59,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
           publishedVersionId: validation.publishedVersionId,
           educationOrganizationId: validation.educationOrganizationId,
           shortCode: newPublicShortCode.trim() || undefined,
+          publicTemplate: newPublicTemplate,
           entryProfileMode: newPublicEntryProfileMode,
           maxAttemptsPerStudent:
             newPublicEntryProfileMode === 'DEMOGRAPHIC' ? 1 : validation.maxAttemptsPerStudent,

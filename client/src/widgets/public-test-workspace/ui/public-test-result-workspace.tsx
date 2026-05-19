@@ -5,6 +5,7 @@ import { parseAnalysisResult } from '@/features/tests';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
+import { PolusPublicResult } from './polus/polus-public-result';
 import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-processing-screen';
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
 import { PublicThemeLayout } from './public-theme-layout';
@@ -188,6 +189,10 @@ export function PublicTestResultWorkspace() {
 
   if (result.analysis.status === 'PENDING') {
     return <PublicTestAnalysisProcessingScreen startedAt={result.finishedAt} />;
+  }
+
+  if (result.publicTemplate === 'POLUS') {
+    return <PolusPublicResult result={result} />;
   }
 
   const parsedAnalysis = parseAnalysisResult(result.analysis.summary);

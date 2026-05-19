@@ -18,7 +18,9 @@ export const PublicQuestionSliderBandSchema = z.object({
   order: z.number(),
 });
 
-export const EntryProfileModeSchema = z.enum(['DEMOGRAPHIC', 'EDUCATION']);
+export const EntryProfileModeSchema = z.enum(['DEMOGRAPHIC', 'EDUCATION', 'EDUCATION_DEMOGRAPHIC']);
+
+export const PublicTemplateSchema = z.enum(['STANDARD', 'POLUS']);
 
 export const PublicStudentGenderSchema = z.enum(['MALE', 'FEMALE']);
 
@@ -76,6 +78,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
   entryProfileMode: EntryProfileModeSchema,
+  publicTemplate: PublicTemplateSchema,
   educationOrganization: z.string().nullable(),
   groupValidationMode: PublicGroupValidationModeSchema,
   groupValidationPattern: z.string().nullable(),
@@ -94,6 +97,7 @@ export const PublicLinkAccessResponseSchema = z.object({
 export const PublicSessionStateSchema = z.object({
   sessionToken: z.string(),
   shortCode: z.string(),
+  publicTemplate: PublicTemplateSchema,
   attemptNumber: z.number().int().min(1),
   status: PublicSessionStatusSchema,
   startedAt: z.string(),
@@ -150,6 +154,7 @@ export const PublicSessionFinishResponseSchema = z.object({
 
 export const PublicSessionResultResponseSchema = z.object({
   sessionToken: z.string(),
+  publicTemplate: PublicTemplateSchema,
   status: PublicSessionStatusSchema,
   finishedAt: z.string().nullable(),
   analysis: PublicSessionAnalysisSchema,

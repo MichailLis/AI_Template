@@ -24,6 +24,7 @@ describe('PublicTestResultWorkspace', () => {
       isError: false,
       data: {
         sessionToken: 'session-token',
+        publicTemplate: 'STANDARD',
         status: 'COMPLETED',
         finishedAt: '2026-05-12T12:00:00.000Z',
         professionAtlasUrl: null,
@@ -51,6 +52,7 @@ describe('PublicTestResultWorkspace', () => {
       isError: false,
       data: {
         sessionToken: 'session-token',
+        publicTemplate: 'STANDARD',
         status: 'COMPLETED',
         finishedAt: '2026-05-12T12:00:00.000Z',
         professionAtlasUrl: 'https://atlas.example/professions',
@@ -72,5 +74,32 @@ describe('PublicTestResultWorkspace', () => {
       'href',
       'https://atlas.example/professions',
     );
+  });
+
+  it('renders the Polus result template when the session uses POLUS', () => {
+    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        sessionToken: 'session-token',
+        publicTemplate: 'POLUS',
+        status: 'COMPLETED',
+        finishedAt: '2026-05-12T12:00:00.000Z',
+        professionAtlasUrl: null,
+        analysis: {
+          providerMode: 'STUB',
+          status: 'READY',
+          summary: null,
+          rawText: null,
+          errorMessage: null,
+          generatedAt: '2026-05-12T12:00:01.000Z',
+        },
+      },
+    } as never);
+
+    render(<PublicTestResultWorkspace />);
+
+    expect(screen.getByText(/Профессор Полюс говорит/i)).toBeInTheDocument();
+    expect(screen.getByText(/Персональная карта развития/i)).toBeInTheDocument();
   });
 });

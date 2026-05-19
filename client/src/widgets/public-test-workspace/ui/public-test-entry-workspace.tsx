@@ -7,6 +7,7 @@ import {
   useTestsPublicControllerStartSession,
 } from '@/shared/api/generated/tests-public/tests-public';
 
+import { PolusPublicEntry } from './polus/polus-public-entry';
 import { PublicEntryStateCard } from './public-entry-state-card';
 import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
@@ -19,7 +20,35 @@ import { PublicTestOverviewPanel } from './public-test-overview-panel';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
 
-import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
+import type {
+  DemographicFormState,
+  EntryProfileMode,
+  StudentFormState,
+} from './public-test-entry.types';
+import type { PublicLinkAccessResponseDto } from '@/shared/api/model';
+import type { FormEvent } from 'react';
+
+type EducationFieldChangeHandler = <K extends keyof StudentFormState>(
+  key: K,
+  value: StudentFormState[K],
+) => void;
+
+type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
+  key: K,
+  value: DemographicFormState[K],
+) => void;
+
+interface StandardPublicTestEntryProps {
+  link: PublicLinkAccessResponseDto;
+  entryProfileMode: EntryProfileMode;
+  demographicFormState: DemographicFormState;
+  registrationFormState: StudentFormState;
+  currentGroupValidationWarning: string | null;
+  isSubmitting: boolean;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onEducationFieldChange: EducationFieldChangeHandler;
+  onDemographicFieldChange: DemographicFieldChangeHandler;
+}
 
 function PublicEntryLoadingState() {
   return (
@@ -33,6 +62,56 @@ function PublicEntryLoadingState() {
         </div>
       }
     />
+  );
+}
+
+function StandardPublicTestEntry({
+  link,
+  entryProfileMode,
+  demographicFormState,
+  registrationFormState,
+  currentGroupValidationWarning,
+  isSubmitting,
+  onSubmit,
+  onEducationFieldChange,
+  onDemographicFieldChange,
+}: StandardPublicTestEntryProps) {
+  return (
+    <PublicThemeLayout containerClassName="max-w-6xl py-6 md:py-8 lg:py-10">
+      <div className="grid grid-cols-1 gap-8 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+        <PublicTestOverviewPanel
+          title={link.title}
+          description={link.description}
+          questionCount={link.questionCount}
+          maxAttemptsPerStudent={link.maxAttemptsPerStudent}
+          timeLimitMinutes={link.timeLimitMinutes}
+        />
+
+        {entryProfileMode === 'DEMOGRAPHIC' ? (
+          <PublicTestDemographicProfileCard
+            formState={demographicFormState}
+            isSubmitting={isSubmitting}
+            onSubmit={onSubmit}
+            onFieldChange={onDemographicFieldChange}
+          />
+        ) : (
+          <PublicTestRegistrationCard
+            formState={registrationFormState}
+            demographicFormState={demographicFormState}
+            lockedEducationOrganization={link.educationOrganization}
+            groupValidationMode={link.groupValidationMode}
+            groupValidationExample={link.groupValidationExample}
+            groupValidationHint={link.groupValidationHint}
+            groupValidationWarning={currentGroupValidationWarning}
+            showDemographicFields={entryProfileMode === 'EDUCATION_DEMOGRAPHIC'}
+            isSubmitting={isSubmitting}
+            onSubmit={onSubmit}
+            onFieldChange={onEducationFieldChange}
+            onDemographicFieldChange={onDemographicFieldChange}
+          />
+        )}
+      </div>
+    </PublicThemeLayout>
   );
 }
 
@@ -113,7 +192,7 @@ export function PublicTestEntryWorkspace() {
     educationFormState,
     demographicFormState,
     linkData:
-      entryProfileMode === 'EDUCATION'
+      entryProfileMode !== 'DEMOGRAPHIC'
         ? {
             educationOrganization: link.educationOrganization,
             groupValidationMode: link.groupValidationMode,
@@ -125,38 +204,33 @@ export function PublicTestEntryWorkspace() {
     navigate,
   });
 
-  return (
-    <PublicThemeLayout containerClassName="max-w-6xl py-6 md:py-8 lg:py-10">
-      <div className="grid grid-cols-1 gap-8 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
-        <PublicTestOverviewPanel
-          title={link.title}
-          description={link.description}
-          questionCount={link.questionCount}
-          maxAttemptsPerStudent={link.maxAttemptsPerStudent}
-          timeLimitMinutes={link.timeLimitMinutes}
-        />
+  if (link.publicTemplate === 'POLUS') {
+    return (
+      <PolusPublicEntry
+        link={link}
+        entryProfileMode={entryProfileMode}
+        demographicFormState={demographicFormState}
+        registrationFormState={registrationFormState}
+        currentGroupValidationWarning={currentGroupValidationWarning}
+        isSubmitting={startMutation.isPending}
+        onSubmit={handleStart}
+        onEducationFieldChange={updateEducationField}
+        onDemographicFieldChange={updateDemographicField}
+      />
+    );
+  }
 
-        {entryProfileMode === 'DEMOGRAPHIC' ? (
-          <PublicTestDemographicProfileCard
-            formState={demographicFormState}
-            isSubmitting={startMutation.isPending}
-            onSubmit={handleStart}
-            onFieldChange={updateDemographicField}
-          />
-        ) : (
-          <PublicTestRegistrationCard
-            formState={registrationFormState}
-            lockedEducationOrganization={link.educationOrganization}
-            groupValidationMode={link.groupValidationMode}
-            groupValidationExample={link.groupValidationExample}
-            groupValidationHint={link.groupValidationHint}
-            groupValidationWarning={currentGroupValidationWarning}
-            isSubmitting={startMutation.isPending}
-            onSubmit={handleStart}
-            onFieldChange={updateEducationField}
-          />
-        )}
-      </div>
-    </PublicThemeLayout>
+  return (
+    <StandardPublicTestEntry
+      link={link}
+      entryProfileMode={entryProfileMode}
+      demographicFormState={demographicFormState}
+      registrationFormState={registrationFormState}
+      currentGroupValidationWarning={currentGroupValidationWarning}
+      isSubmitting={startMutation.isPending}
+      onSubmit={handleStart}
+      onEducationFieldChange={updateEducationField}
+      onDemographicFieldChange={updateDemographicField}
+    />
   );
 }

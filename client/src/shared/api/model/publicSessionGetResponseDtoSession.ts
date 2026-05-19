@@ -6,12 +6,14 @@
  * OpenAPI spec version: 1.0
  */
 import type { PublicSessionGetResponseDtoSessionAnswersItem } from './publicSessionGetResponseDtoSessionAnswersItem';
+import type { PublicSessionGetResponseDtoSessionPublicTemplate } from './publicSessionGetResponseDtoSessionPublicTemplate';
 import type { PublicSessionGetResponseDtoSessionQuestionsItem } from './publicSessionGetResponseDtoSessionQuestionsItem';
 import type { PublicSessionGetResponseDtoSessionStatus } from './publicSessionGetResponseDtoSessionStatus';
 
 export type PublicSessionGetResponseDtoSession = {
   sessionToken: string;
   shortCode: string;
+  publicTemplate: PublicSessionGetResponseDtoSessionPublicTemplate;
   /**
    * @minimum 1
    * @maximum 9007199254740991

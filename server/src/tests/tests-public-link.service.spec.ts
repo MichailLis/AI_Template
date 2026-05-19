@@ -219,6 +219,57 @@ describe('TestsPublicLinkService', () => {
     expect(result.maxAttemptsPerStudent).toBe(1);
   });
 
+  it('createPublicLink stores POLUS template when requested', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        publicTemplate: 'POLUS',
+      }),
+    );
+
+    const dto: AdminCreatePublicLinkDto = {
+      publishedVersionId: 50,
+      publicTemplate: 'POLUS',
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    };
+
+    const result = await service.createPublicLink(7, dto);
+
+    const createCall = prismaMock.testPublicLink.create.mock.calls[0]?.[0];
+
+    expect(createCall?.data.publicTemplate).toBe('POLUS');
+    expect(result.publicTemplate).toBe('POLUS');
+  });
+
+  it('createPublicLink defaults to STANDARD template', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(createPublicLinkRecordFixture());
+
+    const dto: AdminCreatePublicLinkDto = {
+      publishedVersionId: 50,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    };
+
+    const result = await service.createPublicLink(7, dto);
+
+    const createCall = prismaMock.testPublicLink.create.mock.calls[0]?.[0];
+
+    expect(createCall?.data.publicTemplate).toBe('STANDARD');
+    expect(result.publicTemplate).toBe('STANDARD');
+  });
+
   it('updatePublicLink keeps DEMOGRAPHIC links limited to one allowed attempt', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue({
       id: 100,
@@ -263,6 +314,7 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
   startsAt: null,
   endsAt: null,
   entryProfileMode: 'EDUCATION',
+  publicTemplate: 'STANDARD',
   maxAttemptsPerStudent: 3,
   timeLimitMinutes: null,
   allowResume: true,

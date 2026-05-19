@@ -170,4 +170,44 @@ describe('TestsAdminAttemptService', () => {
       studentEducationLevel: 'SECONDARY_GENERAL',
     });
   });
+
+  it('marks attempts with education and demographic fields as EDUCATION_DEMOGRAPHIC', async () => {
+    const startedAt = new Date('2026-01-03T10:00:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
+    prismaMock.testStudentAttempt.count.mockResolvedValue(1);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([
+      {
+        id: 303,
+        status: 'COMPLETED',
+        attemptNumber: 1,
+        studentName: 'Иван',
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: 'Лицей',
+        groupOrClass: '10А',
+        studentGender: 'MALE',
+        studentAge: 18,
+        studentResidence: 'Казань',
+        studentEducationLevel: 'SECONDARY_SPECIAL',
+        startedAt,
+        finishedAt: null,
+        expiresAt: null,
+        analysis: null,
+      },
+    ]);
+
+    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+
+    expect(response.attempts[0]).toMatchObject({
+      attemptId: 303,
+      entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+      studentName: 'Иван',
+      studentGender: 'MALE',
+      studentAge: 18,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_SPECIAL',
+    });
+  });
 });

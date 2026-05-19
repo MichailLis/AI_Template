@@ -6,9 +6,143 @@ import { Textarea } from '@/shared/ui/textarea';
 
 import type { PublicLinkAccessSettingsSectionProps } from './public-link-create-card.types';
 
+type AccessSettingsProps = PublicLinkAccessSettingsSectionProps;
+
+function PublicTemplateField({
+  newPublicTemplate,
+  onPublicTemplateChange,
+}: Pick<AccessSettingsProps, 'newPublicTemplate' | 'onPublicTemplateChange'>) {
+  return (
+    <div className="flex flex-col gap-2 sm:col-span-2">
+      <Label htmlFor="public-template">Шаблон публичного теста</Label>
+      <select
+        id="public-template"
+        value={newPublicTemplate}
+        onChange={(event) => onPublicTemplateChange(event.target.value as typeof newPublicTemplate)}
+        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+      >
+        <option value="STANDARD">Текущий</option>
+        <option value="POLUS">Polus</option>
+      </select>
+      <p className={`text-xs ${adminClassNames.text.muted}`}>
+        Шаблон фиксируется при создании публичной ссылки.
+      </p>
+    </div>
+  );
+}
+
+function EntryProfileModeField({
+  newPublicEntryProfileMode,
+  onEntryProfileModeChange,
+}: Pick<AccessSettingsProps, 'newPublicEntryProfileMode' | 'onEntryProfileModeChange'>) {
+  return (
+    <div className="flex flex-col gap-2 sm:col-span-2">
+      <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
+      <select
+        id="public-entry-profile-mode"
+        value={newPublicEntryProfileMode}
+        onChange={(event) =>
+          onEntryProfileModeChange(event.target.value as typeof newPublicEntryProfileMode)
+        }
+        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+      >
+        <option value="DEMOGRAPHIC">Демографическая анкета</option>
+        <option value="EDUCATION">Анкета по учебным данным</option>
+        <option value="EDUCATION_DEMOGRAPHIC">Учебные данные + демографическая анкета</option>
+      </select>
+      <p className={`text-xs ${adminClassNames.text.muted}`}>
+        Для демографической анкеты лимит попыток устанавливается равным 1.
+      </p>
+    </div>
+  );
+}
+
+function AttemptLimitFields({
+  newPublicEntryProfileMode,
+  newPublicMaxAttempts,
+  onMaxAttemptsChange,
+  newPublicTimeLimit,
+  onTimeLimitChange,
+}: Pick<
+  AccessSettingsProps,
+  | 'newPublicEntryProfileMode'
+  | 'newPublicMaxAttempts'
+  | 'onMaxAttemptsChange'
+  | 'newPublicTimeLimit'
+  | 'onTimeLimitChange'
+>) {
+  return (
+    <>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="public-max-attempts">Лимит попыток</Label>
+        <Input
+          id="public-max-attempts"
+          type="number"
+          min={1}
+          value={newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts}
+          onChange={(event) => onMaxAttemptsChange(event.target.value)}
+          disabled={newPublicEntryProfileMode === 'DEMOGRAPHIC'}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="public-time-limit">Лимит времени</Label>
+        <Input
+          id="public-time-limit"
+          type="number"
+          min={1}
+          value={newPublicTimeLimit}
+          onChange={(event) => onTimeLimitChange(event.target.value)}
+        />
+      </div>
+    </>
+  );
+}
+
+function ConsentDetails({
+  newPublicConsentVersion,
+  onConsentVersionChange,
+  newPublicConsentText,
+  onConsentTextChange,
+}: Pick<
+  AccessSettingsProps,
+  | 'newPublicConsentVersion'
+  | 'onConsentVersionChange'
+  | 'newPublicConsentText'
+  | 'onConsentTextChange'
+>) {
+  return (
+    <details className={adminClassNames.panel.compactCard}>
+      <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
+        Согласие на обработку данных
+      </summary>
+      <div className="mt-3 grid gap-3">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="public-consent-version">Версия согласия</Label>
+          <Input
+            id="public-consent-version"
+            value={newPublicConsentVersion}
+            onChange={(event) => onConsentVersionChange(event.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="public-consent-text">Текст согласия</Label>
+          <Textarea
+            id="public-consent-text"
+            value={newPublicConsentText}
+            onChange={(event) => onConsentTextChange(event.target.value)}
+            className="min-h-20"
+          />
+        </div>
+      </div>
+    </details>
+  );
+}
+
 export function PublicLinkAccessSettingsSection({
   newPublicShortCode,
   onShortCodeChange,
+  newPublicTemplate,
+  onPublicTemplateChange,
   newPublicEntryProfileMode,
   onEntryProfileModeChange,
   newPublicMaxAttempts,
@@ -46,44 +180,21 @@ export function PublicLinkAccessSettingsSection({
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
-            <select
-              id="public-entry-profile-mode"
-              value={newPublicEntryProfileMode}
-              onChange={(event) =>
-                onEntryProfileModeChange(event.target.value as typeof newPublicEntryProfileMode)
-              }
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="DEMOGRAPHIC">Демографическая анкета</option>
-              <option value="EDUCATION">Анкета по учебным данным</option>
-            </select>
-            <p className={`text-xs ${adminClassNames.text.muted}`}>
-              Для демографической анкеты лимит попыток устанавливается равным 1.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="public-max-attempts">Лимит попыток</Label>
-            <Input
-              id="public-max-attempts"
-              type="number"
-              min={1}
-              value={newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts}
-              onChange={(event) => onMaxAttemptsChange(event.target.value)}
-              disabled={newPublicEntryProfileMode === 'DEMOGRAPHIC'}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="public-time-limit">Лимит времени</Label>
-            <Input
-              id="public-time-limit"
-              type="number"
-              min={1}
-              value={newPublicTimeLimit}
-              onChange={(event) => onTimeLimitChange(event.target.value)}
-            />
-          </div>
+          <PublicTemplateField
+            newPublicTemplate={newPublicTemplate}
+            onPublicTemplateChange={onPublicTemplateChange}
+          />
+          <EntryProfileModeField
+            newPublicEntryProfileMode={newPublicEntryProfileMode}
+            onEntryProfileModeChange={onEntryProfileModeChange}
+          />
+          <AttemptLimitFields
+            newPublicEntryProfileMode={newPublicEntryProfileMode}
+            newPublicMaxAttempts={newPublicMaxAttempts}
+            onMaxAttemptsChange={onMaxAttemptsChange}
+            newPublicTimeLimit={newPublicTimeLimit}
+            onTimeLimitChange={onTimeLimitChange}
+          />
         </div>
 
         <label className={adminClassNames.form.checkboxLabel}>
@@ -95,30 +206,12 @@ export function PublicLinkAccessSettingsSection({
           Разрешить студенту вернуться к незавершенной попытке
         </label>
 
-        <details className={adminClassNames.panel.compactCard}>
-          <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
-            Согласие на обработку данных
-          </summary>
-          <div className="mt-3 grid gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="public-consent-version">Версия согласия</Label>
-              <Input
-                id="public-consent-version"
-                value={newPublicConsentVersion}
-                onChange={(event) => onConsentVersionChange(event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="public-consent-text">Текст согласия</Label>
-              <Textarea
-                id="public-consent-text"
-                value={newPublicConsentText}
-                onChange={(event) => onConsentTextChange(event.target.value)}
-                className="min-h-20"
-              />
-            </div>
-          </div>
-        </details>
+        <ConsentDetails
+          newPublicConsentVersion={newPublicConsentVersion}
+          onConsentVersionChange={onConsentVersionChange}
+          newPublicConsentText={newPublicConsentText}
+          onConsentTextChange={onConsentTextChange}
+        />
       </div>
     </div>
   );

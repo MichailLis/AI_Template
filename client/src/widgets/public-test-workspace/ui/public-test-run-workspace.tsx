@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
 import { PublicTestRunProgress } from './public-test-run-progress';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
@@ -60,6 +61,25 @@ export function PublicTestRunWorkspace() {
 
   if (session.questions.length === 0) {
     return <PublicTestRunStateScreen message="Тест пока не содержит вопросов." tone="danger" />;
+  }
+
+  if (session.publicTemplate === 'POLUS') {
+    const currentQuestion = session.questions[currentQuestionIndex];
+
+    return (
+      <PolusPublicRun
+        session={session}
+        currentQuestionIndex={currentQuestionIndex}
+        totalQuestionsCount={totalQuestionsCount}
+        currentAnswer={getCurrentAnswer(currentQuestion.id)}
+        questionTransitionClass={questionTransitionClass}
+        isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
+        onAnswerChange={setQuestionAnswer}
+        onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
+        onNext={() => goToQuestionIndex(currentQuestionIndex + 1)}
+        onFinish={handleFinish}
+      />
+    );
   }
 
   return (

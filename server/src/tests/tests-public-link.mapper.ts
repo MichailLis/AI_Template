@@ -12,6 +12,7 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
     educationOrganizationId: link.educationOrganization?.id ?? null,
     educationOrganizationName: link.educationOrganization?.name ?? null,
     entryProfileMode: link.entryProfileMode,
+    publicTemplate: link.publicTemplate,
     shortCode: link.shortCode,
     shortUrl: `/t/${link.shortCode}`,
     isActive: link.isActive,

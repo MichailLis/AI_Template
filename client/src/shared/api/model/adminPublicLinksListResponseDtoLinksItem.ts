@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicLinksListResponseDtoLinksItemEntryProfileMode } from './adminPublicLinksListResponseDtoLinksItemEntryProfileMode';
+import type { AdminPublicLinksListResponseDtoLinksItemPublicTemplate } from './adminPublicLinksListResponseDtoLinksItemPublicTemplate';
 
 export type AdminPublicLinksListResponseDtoLinksItem = {
   id: number;
@@ -16,6 +17,7 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   /** @nullable */
   educationOrganizationName: string | null;
   entryProfileMode: AdminPublicLinksListResponseDtoLinksItemEntryProfileMode;
+  publicTemplate: AdminPublicLinksListResponseDtoLinksItemPublicTemplate;
   shortCode: string;
   shortUrl: string;
   isActive: boolean;

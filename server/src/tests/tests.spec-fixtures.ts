@@ -1,7 +1,7 @@
 import type { PublicSessionStartRequestDto } from './dto/tests-public.dto';
 
 export type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
-export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION';
+export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 
 export type AccessibleLinkFixture = {
   id: number;
@@ -65,10 +65,26 @@ export const createPublicSessionDemographicStartDto = (
   ...overrides,
 });
 
+export const createPublicSessionEducationDemographicStartDto = (
+  overrides: Partial<PublicSessionStartRequestDto> = {},
+): PublicSessionStartRequestDto => ({
+  entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+  studentName: 'Иван',
+  educationOrganization: 'Ввод из формы',
+  groupOrClass: ' ИС-21 ',
+  gender: 'FEMALE',
+  age: 17,
+  residence: 'Казань',
+  educationLevel: 'SECONDARY_GENERAL',
+  consentAccepted: true,
+  ...overrides,
+});
+
 export const createPublicSessionStateResponse = (sessionToken: string) => ({
   session: {
     sessionToken,
     shortCode: 'ABC123',
+    publicTemplate: 'STANDARD' as const,
     attemptNumber: 1,
     status: 'IN_PROGRESS' as const,
     startedAt: new Date('2026-02-15T10:00:00.000Z').toISOString(),

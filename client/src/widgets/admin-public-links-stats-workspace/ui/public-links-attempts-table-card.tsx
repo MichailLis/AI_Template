@@ -14,7 +14,7 @@ interface PublicAttemptRow {
   attemptNumber: number;
   status: string;
   analysisStatus: string | null;
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION';
+  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   studentName: string | null;
   studentLastInitial: string | null;
   studentMiddleInitial: string | null;
@@ -117,6 +117,12 @@ const getAttemptProfilePrimary = (attempt: PublicAttemptRow) => {
       .join(', ');
   }
 
+  if (attempt.entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
+    return [attempt.studentName, attempt.studentAge ? `${attempt.studentAge} лет` : null]
+      .filter(Boolean)
+      .join(', ');
+  }
+
   return attempt.studentName ?? '—';
 };
 
@@ -130,15 +136,23 @@ const getAttemptProfileSecondary = (attempt: PublicAttemptRow) => {
       .join(' • ');
   }
 
-  return [
+  const educationDetails = [
     attempt.studentLastInitial && attempt.studentMiddleInitial
       ? `${attempt.studentLastInitial}.${attempt.studentMiddleInitial}.`
       : null,
     attempt.educationOrganization,
     attempt.groupOrClass,
-  ]
-    .filter(Boolean)
-    .join(' • ');
+  ];
+
+  if (attempt.entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
+    educationDetails.push(
+      attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+      attempt.studentResidence,
+      attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+    );
+  }
+
+  return educationDetails.filter(Boolean).join(' • ');
 };
 
 export function PublicLinksAttemptsTableCard({

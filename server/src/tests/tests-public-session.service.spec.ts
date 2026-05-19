@@ -9,6 +9,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
 import {
   createAccessibleLinkFixture,
   createPublicSessionDemographicStartDto,
+  createPublicSessionEducationDemographicStartDto,
   createPublicSessionStartDto,
   createPublicSessionStateResponse,
   type AccessibleLinkFixture,
@@ -230,6 +231,62 @@ describe('TestsPublicSessionService', () => {
       ),
     ).rejects.toThrow(BadRequestException);
     expect(createAttemptMock).not.toHaveBeenCalled();
+  });
+
+  it('startSessionByCode creates an EDUCATION_DEMOGRAPHIC attempt with both profile blocks', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({
+        entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+        allowResume: true,
+        maxAttemptsPerStudent: 3,
+        educationOrganization: {
+          name: 'Лицей 42',
+          groupValidationMode: 'NONE',
+          groupValidationPattern: null,
+          groupValidationHint: null,
+        },
+      }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([]);
+    createAttemptMock.mockResolvedValue({ resumeToken: 'resume-hybrid' });
+
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-hybrid'));
+
+    const result = await service.startSessionByCode(
+      'HYBRID2026',
+      createPublicSessionEducationDemographicStartDto({
+        educationOrganization: '',
+        gender: 'MALE',
+        age: 18,
+        residence: '  Казань  ',
+        educationLevel: 'SECONDARY_SPECIAL',
+      }),
+    );
+
+    const createCall = createAttemptMock.mock.calls[0]?.[0];
+
+    expect(updateManyMock).toHaveBeenCalled();
+    expect(findManyMock).toHaveBeenCalled();
+    expect(createCall?.data).toMatchObject({
+      publicLinkId: 100,
+      topicVersionId: 200,
+      attemptNumber: 1,
+      studentName: 'Иван',
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: 'Лицей 42',
+      groupOrClass: 'ИС-21',
+      studentGender: 'MALE',
+      studentAge: 18,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_SPECIAL',
+    });
+    expect(createCall?.data.studentKeyHash).toEqual(expect.any(String));
+    expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-hybrid');
+    expect(result.session.sessionToken).toBe('resume-hybrid');
   });
 
   it('startSessionByCode returns resumable session when allowResume is enabled', async () => {

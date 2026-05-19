@@ -112,13 +112,23 @@ type AttemptProfileRecord = Pick<
 >;
 
 const mapAttemptProfile = (attempt: AttemptProfileRecord) => {
-  const entryProfileMode =
+  const hasEducationProfile =
+    Boolean(attempt.studentName) ||
+    Boolean(attempt.studentLastInitial) ||
+    Boolean(attempt.studentMiddleInitial) ||
+    Boolean(attempt.educationOrganization) ||
+    Boolean(attempt.groupOrClass);
+  const hasDemographicProfile =
     attempt.studentGender ||
     attempt.studentAge !== null ||
     attempt.studentResidence ||
-    attempt.studentEducationLevel
-      ? 'DEMOGRAPHIC'
-      : 'EDUCATION';
+    attempt.studentEducationLevel;
+  const entryProfileMode =
+    hasEducationProfile && hasDemographicProfile
+      ? 'EDUCATION_DEMOGRAPHIC'
+      : hasDemographicProfile
+        ? 'DEMOGRAPHIC'
+        : 'EDUCATION';
 
   return {
     entryProfileMode,
@@ -141,6 +151,7 @@ export const mapSessionState = (
   return {
     sessionToken: attempt.resumeToken,
     shortCode: attempt.publicLink.shortCode,
+    publicTemplate: attempt.publicLink.publicTemplate,
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
     startedAt: attempt.startedAt.toISOString(),

@@ -17,6 +17,7 @@ interface PublicLinkListItem {
   shortCode: string;
   title: string;
   educationOrganizationName: string | null;
+  publicTemplate: 'STANDARD' | 'POLUS';
   archivedAt: string | null;
   isActive: boolean;
 }
@@ -96,6 +97,9 @@ const getLinkStateClassName = (link: PublicLinkListItem) => {
   return adminBadgeClassNames.warning;
 };
 
+const getPublicTemplateLabel = (template: PublicLinkListItem['publicTemplate']) =>
+  template === 'POLUS' ? 'Polus' : 'Текущий';
+
 const getLinkRowClassName = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
     return adminClassNames.publicLinks.rowArchived;
@@ -121,7 +125,13 @@ const getEmptyStateText = (publicLinksTab: PublicLinksTab, searchValue: string) 
 };
 
 const buildLinkSearchText = (link: PublicLinkListItem) => {
-  return [link.shortCode, link.title, link.educationOrganizationName ?? '', getLinkStateLabel(link)]
+  return [
+    link.shortCode,
+    link.title,
+    link.educationOrganizationName ?? '',
+    getLinkStateLabel(link),
+    getPublicTemplateLabel(link.publicTemplate),
+  ]
     .join(' ')
     .toLowerCase();
 };
@@ -252,6 +262,11 @@ function PublicLinkRow({ link, publicLinksTab, onOpenShortLink, ...handlers }: P
             )}`}
           >
             {getLinkStateLabel(link)}
+          </span>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
+          >
+            {getPublicTemplateLabel(link.publicTemplate)}
           </span>
         </div>
         <div

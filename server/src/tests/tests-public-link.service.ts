@@ -23,8 +23,10 @@ import {
 const DEFAULT_MAX_ATTEMPTS = 1;
 const DEFAULT_ALLOW_RESUME = true;
 const DEFAULT_ENTRY_PROFILE_MODE = 'EDUCATION';
+const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
 
-type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION';
+type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+type PublicTemplate = 'STANDARD' | 'POLUS';
 
 const resolveMaxAttemptsForEntryProfileMode = (
   entryProfileMode: EntryProfileMode,
@@ -105,6 +107,7 @@ export class TestsPublicLinkService {
 
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
     const entryProfileMode = dto.entryProfileMode ?? DEFAULT_ENTRY_PROFILE_MODE;
+    const publicTemplate: PublicTemplate = dto.publicTemplate ?? DEFAULT_PUBLIC_TEMPLATE;
     const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
       entryProfileMode,
       dto.maxAttemptsPerStudent,
@@ -118,6 +121,7 @@ export class TestsPublicLinkService {
         startsAt: parseDateOrNull(dto.startsAt),
         endsAt: parseDateOrNull(dto.endsAt),
         entryProfileMode,
+        publicTemplate,
         maxAttemptsPerStudent,
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
@@ -362,6 +366,7 @@ export class TestsPublicLinkService {
       title: link.topicVersion.title,
       description: link.topicVersion.description,
       entryProfileMode: link.entryProfileMode,
+      publicTemplate: link.publicTemplate,
       educationOrganization: link.educationOrganization?.name ?? null,
       groupValidationMode: link.educationOrganization?.groupValidationMode ?? 'NONE',
       groupValidationPattern: link.educationOrganization?.groupValidationPattern ?? null,

@@ -21,6 +21,7 @@ describe('TestsPublicSessionService read paths', () => {
       resumeToken: 'session-token',
       publicLink: {
         shortCode: 'ABC123',
+        publicTemplate: 'POLUS',
         timeLimitMinutes: 30,
       },
       attemptNumber: 1,
@@ -63,6 +64,7 @@ describe('TestsPublicSessionService read paths', () => {
     const result = await service.getSessionByToken('session-token');
 
     expect(result.session.status).toBe('EXPIRED');
+    expect(result.session.publicTemplate).toBe('POLUS');
     expect(updateMock).not.toHaveBeenCalled();
   });
 
@@ -74,6 +76,9 @@ describe('TestsPublicSessionService read paths', () => {
       status: 'IN_PROGRESS',
       expiresAt: new Date('2026-05-12T11:59:00.000Z'),
       finishedAt: null,
+      publicLink: {
+        publicTemplate: 'POLUS',
+      },
       analysis: null,
     };
     const findUniqueMock = jest.fn().mockResolvedValue(attempt);
@@ -101,6 +106,7 @@ describe('TestsPublicSessionService read paths', () => {
     const result = await service.getSessionResult('session-token');
 
     expect(result.status).toBe('EXPIRED');
+    expect(result.publicTemplate).toBe('POLUS');
     expect(result.analysis.status).toBe('FAILED');
     expect(result.analysis.errorMessage).toBe('Test session expired before completion');
     expect(updateMock).not.toHaveBeenCalled();
@@ -112,6 +118,9 @@ describe('TestsPublicSessionService read paths', () => {
       status: 'COMPLETED',
       expiresAt: null,
       finishedAt: new Date('2026-05-12T12:00:00.000Z'),
+      publicLink: {
+        publicTemplate: 'POLUS',
+      },
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
@@ -148,6 +157,7 @@ describe('TestsPublicSessionService read paths', () => {
     const result = await service.getSessionResult('session-token');
 
     expect(result).toMatchObject({
+      publicTemplate: 'POLUS',
       professionAtlasUrl: 'https://atlas.example/professions',
     });
   });
