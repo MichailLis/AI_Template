@@ -1,4 +1,3 @@
-import { TestAnalysisResultView } from '@/features/tests';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import {
@@ -8,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog';
+import { PublicTestStudentAnalysisView } from '@/widgets/public-test-workspace';
 
 type AttemptDetailView = 'analysis' | 'answers';
 
@@ -30,6 +30,7 @@ interface AttemptAnalysis {
 
 interface AttemptDetail {
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+  professionAtlasUrl: string | null;
   studentName: string | null;
   studentLastInitial: string | null;
   studentMiddleInitial: string | null;
@@ -173,8 +174,9 @@ export function PublicLinksAttemptDetailDialog({
                 <Badge variant="outline">{detailAttempt.status}</Badge>
               </div>
 
-              <TestAnalysisResultView
+              <PublicTestStudentAnalysisView
                 analysis={detailAttempt.analysis}
+                professionAtlasUrl={detailAttempt.professionAtlasUrl}
                 generatedAtLabel={`Сгенерировано: ${formatDateTime(
                   detailAttempt.analysis?.generatedAt ?? null,
                 )}`}

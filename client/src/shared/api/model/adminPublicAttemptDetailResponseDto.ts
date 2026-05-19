@@ -16,6 +16,8 @@ export interface AdminPublicAttemptDetailResponseDto {
   attemptId: number;
   publicLinkId: number;
   shortCode: string;
+  /** @nullable */
+  professionAtlasUrl: string | null;
   /**
    * @minimum 1
    * @maximum 9007199254740991

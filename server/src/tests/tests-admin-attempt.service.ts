@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import type { AdminPublicAttemptsListQueryDto } from './dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from './tests-attempt.mapper';
@@ -11,6 +12,7 @@ export class TestsAdminAttemptService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly analysisService: TestsAnalysisService,
+    private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
   ) {}
 
   async listAttemptsForLink(
@@ -99,8 +101,12 @@ export class TestsAdminAttemptService {
       throw new NotFoundException('Attempt not found');
     }
 
-    return mapAttemptDetail(attempt, (currentAttempt) =>
-      this.analysisService.toAttemptStatus(currentAttempt),
+    const professionAtlasUrl = await this.professionAtlasSettingsService.getProfessionAtlasUrl();
+
+    return mapAttemptDetail(
+      attempt,
+      (currentAttempt) => this.analysisService.toAttemptStatus(currentAttempt),
+      professionAtlasUrl,
     );
   }
 }

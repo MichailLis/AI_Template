@@ -693,6 +693,29 @@
   margin: 0 auto;
 }
 
+.theme-public--polus.polus-admin-result-preview .polus-test-stage,
+.theme-public--polus.polus-admin-result-preview .polus-result-stage {
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.theme-public--polus.polus-admin-result-preview .polus-state-view {
+  padding: clamp(18px, 2.5vw, 28px);
+}
+
+.theme-public--polus.polus-admin-result-preview .polus-result-professor {
+  min-height: 260px;
+  overflow: visible;
+}
+
+.theme-public--polus.polus-admin-result-preview .polus-result-professor-figure {
+  display: block;
+  width: min(176px, 100%);
+  max-width: 100%;
+  height: auto;
+}
+
 .theme-public--polus .polus-result-hero {
   position: relative;
   display: grid;

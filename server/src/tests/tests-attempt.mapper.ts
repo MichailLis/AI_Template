@@ -186,11 +186,13 @@ export const mapAttemptListItem = (
 export const mapAttemptDetail = (
   attempt: AttemptDetailRecord,
   toAttemptStatus: (attempt: AttemptDetailRecord) => string,
+  professionAtlasUrl: string | null = null,
 ) => {
   return {
     attemptId: attempt.id,
     publicLinkId: attempt.publicLink.id,
     shortCode: attempt.publicLink.shortCode,
+    professionAtlasUrl,
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
     ...mapAttemptProfile(attempt),

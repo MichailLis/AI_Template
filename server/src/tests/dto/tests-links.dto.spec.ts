@@ -1,6 +1,7 @@
 import {
   AdminCreatePublicLinkSchema,
   AdminCreateEducationOrganizationSchema,
+  AdminPublicAttemptDetailResponseSchema,
   AdminPublicLinkSchema,
   AdminUpdateEducationOrganizationSchema,
 } from './tests-links.dto';
@@ -131,5 +132,35 @@ describe('tests link DTO profile mode fields', () => {
 
     expect(result.entryProfileMode).toBe('EDUCATION');
     expect(result.publicTemplate).toBe('POLUS');
+  });
+
+  it('returns profession atlas URL in admin attempt detail response', () => {
+    const result = AdminPublicAttemptDetailResponseSchema.parse({
+      attemptId: 1,
+      publicLinkId: 2,
+      shortCode: 'CODE2026',
+      professionAtlasUrl: 'https://atlas.example/professions',
+      attemptNumber: 1,
+      status: 'COMPLETED',
+      entryProfileMode: 'DEMOGRAPHIC',
+      studentName: null,
+      studentLastInitial: null,
+      studentMiddleInitial: null,
+      educationOrganization: null,
+      groupOrClass: null,
+      studentGender: 'FEMALE',
+      studentAge: 17,
+      studentResidence: 'Казань',
+      studentEducationLevel: 'SECONDARY_GENERAL',
+      consentAcceptedAt: '2026-05-14T10:00:00.000Z',
+      consentVersion: 'v1',
+      startedAt: '2026-05-14T10:00:00.000Z',
+      finishedAt: null,
+      expiresAt: null,
+      answers: [],
+      analysis: null,
+    });
+
+    expect(result.professionAtlasUrl).toBe('https://atlas.example/professions');
   });
 });

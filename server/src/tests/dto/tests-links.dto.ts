@@ -246,6 +246,7 @@ export const AdminPublicAttemptDetailResponseSchema = z.object({
   attemptId: z.number(),
   publicLinkId: z.number(),
   shortCode: z.string(),
+  professionAtlasUrl: z.string().url().nullable(),
   attemptNumber: z.number().int().min(1),
   status: PublicSessionStatusSchema,
   entryProfileMode: EntryProfileModeSchema,

@@ -1,3 +1,4 @@
+import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { TestsAnalysisService } from './tests-analysis.service';
@@ -22,6 +23,9 @@ describe('TestsAdminAttemptService', () => {
   let analysisServiceMock: {
     toAttemptStatus: jest.Mock;
   };
+  let professionAtlasSettingsServiceMock: {
+    getProfessionAtlasUrl: jest.Mock;
+  };
 
   beforeEach(() => {
     prismaMock = {
@@ -40,10 +44,14 @@ describe('TestsAdminAttemptService', () => {
     analysisServiceMock = {
       toAttemptStatus: jest.fn(() => 'COMPLETED'),
     };
+    professionAtlasSettingsServiceMock = {
+      getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
+    };
 
     service = new TestsAdminAttemptService(
       prismaMock as unknown as PrismaService,
       analysisServiceMock as unknown as TestsAnalysisService,
+      professionAtlasSettingsServiceMock as unknown as ProfessionAtlasSettingsService,
     );
   });
 
@@ -153,11 +161,15 @@ describe('TestsAdminAttemptService', () => {
       answers: [],
       analysis: null,
     });
+    professionAtlasSettingsServiceMock.getProfessionAtlasUrl.mockResolvedValue(
+      'https://atlas.example/professions',
+    );
 
     const response = await service.getAttemptDetail(7, 202);
 
     expect(response).toMatchObject({
       attemptId: 202,
+      professionAtlasUrl: 'https://atlas.example/professions',
       entryProfileMode: 'DEMOGRAPHIC',
       studentName: null,
       studentLastInitial: null,
