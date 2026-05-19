@@ -8,6 +8,7 @@ interface PolusPublicSliderFieldProps {
   value: number;
   hasAnswer: boolean;
   activeLabel: string | null;
+  ariaLabel?: string;
   minLabel: string | null;
   maxLabel: string | null;
   onAnswerChange: (questionId: number, value: unknown) => void;
@@ -23,11 +24,13 @@ export function PolusPublicSliderField({
   value,
   hasAnswer,
   activeLabel,
+  ariaLabel = 'Оценка по шкале',
   minLabel,
   maxLabel,
   onAnswerChange,
 }: PolusPublicSliderFieldProps) {
-  const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  const displayValue = hasAnswer ? value : min + (max - min) / 2;
+  const progress = max > min ? ((displayValue - min) / (max - min)) * 100 : 0;
 
   const commitValue = (rawValue: number) => {
     const nextValue = Math.min(max, Math.max(min, rawValue));
@@ -37,6 +40,7 @@ export function PolusPublicSliderField({
   return (
     <div
       className="polus-slider-field"
+      data-has-answer={hasAnswer}
       style={{ '--polus-slider-progress': `${progress}%` } as CSSProperties}
     >
       <div className="polus-slider-readout" aria-live="polite">
@@ -56,8 +60,8 @@ export function PolusPublicSliderField({
         min={min}
         max={max}
         step={step}
-        value={value}
-        aria-label="Оценка по шкале"
+        value={displayValue}
+        aria-label={ariaLabel}
         aria-valuetext={hasAnswer ? `${formatSliderValue(value)}: ${activeLabel ?? ''}` : undefined}
         onInput={(event) => commitValue(Number(event.currentTarget.value))}
         onChange={(event) => commitValue(Number(event.currentTarget.value))}

@@ -1,3 +1,5 @@
+import { PolusSelectField } from './polus-public-select-field';
+
 import type { DemographicFormState, StudentFormState } from '../public-test-entry.types';
 import type { PublicLinkAccessResponseDto } from '@/shared/api/model';
 
@@ -28,6 +30,11 @@ const educationLevelOptions = [
   { value: 'HIGHER', label: 'Высшее' },
 ] as const;
 
+const genderOptions = [
+  { value: 'MALE', label: 'Мужской' },
+  { value: 'FEMALE', label: 'Женский' },
+] as const;
+
 export function PolusEducationDemographicFields({
   demographicFormState,
   registrationFormState,
@@ -39,11 +46,38 @@ export function PolusEducationDemographicFields({
   return (
     <>
       <div className="polus-field polus-field-wide">
-        <label htmlFor="polus-student-name">Имя участника</label>
+        <label htmlFor="polus-student-name">Имя</label>
         <input
           id="polus-student-name"
           value={registrationFormState.studentName}
           onChange={(event) => onEducationFieldChange('studentName', event.target.value)}
+          placeholder="Введите ваше имя"
+          required
+        />
+      </div>
+      <div className="polus-field">
+        <label htmlFor="polus-student-last-initial">Фамилия (1-я буква)</label>
+        <input
+          id="polus-student-last-initial"
+          className="polus-initial-input"
+          value={registrationFormState.studentLastInitial}
+          onChange={(event) =>
+            onEducationFieldChange('studentLastInitial', event.target.value.toUpperCase())
+          }
+          placeholder="И"
+          required
+        />
+      </div>
+      <div className="polus-field">
+        <label htmlFor="polus-student-middle-initial">Отчество (1-я буква)</label>
+        <input
+          id="polus-student-middle-initial"
+          className="polus-initial-input"
+          value={registrationFormState.studentMiddleInitial}
+          onChange={(event) =>
+            onEducationFieldChange('studentMiddleInitial', event.target.value.toUpperCase())
+          }
+          placeholder="О"
           required
         />
       </div>
@@ -56,6 +90,7 @@ export function PolusEducationDemographicFields({
           max={120}
           value={demographicFormState.age}
           onChange={(event) => onDemographicFieldChange('age', event.target.value)}
+          placeholder="Например, 17"
           required
         />
       </div>
@@ -65,7 +100,7 @@ export function PolusEducationDemographicFields({
           id="polus-student-group"
           value={registrationFormState.groupOrClass}
           onChange={(event) => onEducationFieldChange('groupOrClass', event.target.value)}
-          placeholder={link.groupValidationExample || '10А, ИС-21'}
+          placeholder={link.groupValidationExample || '10А, ИС-21...'}
           required
         />
         {warning ? <p className="text-sm text-red-600">{warning}</p> : null}
@@ -77,56 +112,57 @@ export function PolusEducationDemographicFields({
           value={registrationFormState.educationOrganization}
           onChange={(event) => onEducationFieldChange('educationOrganization', event.target.value)}
           disabled={Boolean(link.educationOrganization)}
+          placeholder={
+            link.educationOrganization
+              ? 'Учебное заведение определено по ссылке'
+              : 'Школа, колледж, вуз...'
+          }
           required
         />
       </div>
-      <p className="polus-form-section-title">Дополнительная анкета</p>
       <div className="polus-field">
-        <label htmlFor="polus-student-gender">1. Укажите, пожалуйста Ваш пол?</label>
-        <select
+        <label htmlFor="polus-student-gender">Пол</label>
+        <PolusSelectField
           id="polus-student-gender"
-          value={demographicFormState.gender}
-          onChange={(event) =>
-            onDemographicFieldChange('gender', event.target.value as DemographicFormState['gender'])
-          }
+          options={genderOptions}
+          placeholder="Выберите пол"
           required
-        >
-          <option value="">Выберите пол</option>
-          <option value="MALE">Мужской</option>
-          <option value="FEMALE">Женский</option>
-        </select>
+          value={demographicFormState.gender}
+          onChange={(value) =>
+            onDemographicFieldChange('gender', value as DemographicFormState['gender'])
+          }
+        />
+      </div>
+      <div className="polus-field">
+        <label htmlFor="polus-student-education-level">Уровень образования</label>
+        <PolusSelectField
+          id="polus-student-education-level"
+          options={educationLevelOptions}
+          placement="top"
+          placeholder="Выберите уровень"
+          required
+          value={demographicFormState.educationLevel}
+          onChange={(value) =>
+            onDemographicFieldChange(
+              'educationLevel',
+              value as DemographicFormState['educationLevel'],
+            )
+          }
+        />
       </div>
       <div className="polus-field polus-field-wide">
-        <label htmlFor="polus-student-residence">3. Укажите Ваше место жительства?</label>
+        <label htmlFor="polus-student-residence">Место жительства</label>
+        <span className="polus-field-hint" id="polus-student-residence-hint">
+          Область, город или населенный пункт
+        </span>
         <input
           id="polus-student-residence"
           value={demographicFormState.residence}
+          aria-describedby="polus-student-residence-hint"
           onChange={(event) => onDemographicFieldChange('residence', event.target.value)}
+          placeholder="Город или населенный пункт"
           required
         />
-      </div>
-      <div className="polus-field polus-field-wide">
-        <label htmlFor="polus-student-education-level">
-          4. Укажите уровень Вашего образования:
-        </label>
-        <select
-          id="polus-student-education-level"
-          value={demographicFormState.educationLevel}
-          onChange={(event) =>
-            onDemographicFieldChange(
-              'educationLevel',
-              event.target.value as DemographicFormState['educationLevel'],
-            )
-          }
-          required
-        >
-          <option value="">Выберите уровень</option>
-          {educationLevelOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
       </div>
     </>
   );

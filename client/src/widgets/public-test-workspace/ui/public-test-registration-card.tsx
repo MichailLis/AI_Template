@@ -90,7 +90,6 @@ function IdentityFields({
             <Input
               id="student-last-initial"
               value={formState.studentLastInitial}
-              maxLength={1}
               onChange={(event) =>
                 onFieldChange('studentLastInitial', event.target.value.toUpperCase())
               }
@@ -106,7 +105,6 @@ function IdentityFields({
             <Input
               id="student-middle-initial"
               value={formState.studentMiddleInitial}
-              maxLength={1}
               onChange={(event) =>
                 onFieldChange('studentMiddleInitial', event.target.value.toUpperCase())
               }

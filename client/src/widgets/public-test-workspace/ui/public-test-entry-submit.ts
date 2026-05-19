@@ -196,6 +196,8 @@ const buildEducationDemographicPayload = (
     entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
     ...educationProfile,
     ...demographicProfile,
+    studentLastInitial: normalizeInitial(educationFormState.studentLastInitial),
+    studentMiddleInitial: normalizeInitial(educationFormState.studentMiddleInitial),
     consentAccepted: true,
   };
 };

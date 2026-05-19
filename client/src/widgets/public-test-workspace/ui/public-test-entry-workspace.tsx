@@ -38,6 +38,46 @@ type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
   value: DemographicFormState[K],
 ) => void;
 
+const latinLettersPattern = /[A-Za-z]/g;
+
+const removeLatinLetters = (value: string) => value.replace(latinLettersPattern, '');
+
+const sanitizeEducationFieldValue = <K extends keyof StudentFormState>(
+  key: K,
+  value: StudentFormState[K],
+): StudentFormState[K] => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const valueWithoutLatin = removeLatinLetters(value);
+
+  if (key === 'studentName') {
+    return valueWithoutLatin.toUpperCase() as StudentFormState[K];
+  }
+
+  if (key === 'studentLastInitial' || key === 'studentMiddleInitial') {
+    return valueWithoutLatin.toUpperCase().slice(0, 1) as StudentFormState[K];
+  }
+
+  return valueWithoutLatin as StudentFormState[K];
+};
+
+const sanitizeDemographicFieldValue = <K extends keyof DemographicFormState>(
+  key: K,
+  value: DemographicFormState[K],
+): DemographicFormState[K] => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  if (key === 'age' || key === 'residence') {
+    return removeLatinLetters(value) as DemographicFormState[K];
+  }
+
+  return value;
+};
+
 interface StandardPublicTestEntryProps {
   link: PublicLinkAccessResponseDto;
   entryProfileMode: EntryProfileMode;
@@ -135,9 +175,11 @@ export function PublicTestEntryWorkspace() {
     key: K,
     value: StudentFormState[K],
   ) => {
+    const sanitizedValue = sanitizeEducationFieldValue(key, value);
+
     setEducationFormState((previousState) => ({
       ...previousState,
-      [key]: value,
+      [key]: sanitizedValue,
     }));
   };
 
@@ -145,9 +187,11 @@ export function PublicTestEntryWorkspace() {
     key: K,
     value: DemographicFormState[K],
   ) => {
+    const sanitizedValue = sanitizeDemographicFieldValue(key, value);
+
     setDemographicFormState((previousState) => ({
       ...previousState,
-      [key]: value,
+      [key]: sanitizedValue,
     }));
   };
 

@@ -1,9 +1,11 @@
 import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { getSliderQuestionMeta } from '../public-question-card.utils';
 import { hasMeaningfulQuestionAnswer } from '../public-test-run-answer.helpers';
 
 import { PolusPublicSliderField } from './polus-public-slider-field';
+import { getPolusSliderPresentation } from './polus-public-slider-presentation';
 
 import type { PublicTestQuestion } from '../public-test-run.types';
 
@@ -130,9 +132,17 @@ function PolusChoiceAnswers({
   onAnswerChange: (questionId: number, value: unknown) => void;
   onSingleSelect?: (value: string) => void;
 }) {
-  const selectedValues = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
+  const selectedValues = useMemo(
+    () => (Array.isArray(currentAnswer) ? (currentAnswer as string[]) : []),
+    [currentAnswer],
+  );
+  const latestMultiValuesRef = useRef<string[]>(selectedValues);
   const maxChoices = mode === 'multi' ? getMaxChoices(question.settings) : null;
   const selectedCount = selectedValues.length;
+
+  useEffect(() => {
+    latestMultiValuesRef.current = selectedValues;
+  }, [selectedValues]);
 
   return (
     <>
@@ -172,16 +182,19 @@ function PolusChoiceAnswers({
                   return;
                 }
 
-                if (!selected && maxChoices && selectedCount >= maxChoices) {
+                const latestSelectedValues = latestMultiValuesRef.current;
+                const latestSelected = latestSelectedValues.includes(option.value);
+
+                if (!latestSelected && maxChoices && latestSelectedValues.length >= maxChoices) {
                   return;
                 }
 
-                onAnswerChange(
-                  question.id,
-                  selected
-                    ? selectedValues.filter((value) => value !== option.value)
-                    : [...selectedValues, option.value],
-                );
+                const nextValues = latestSelected
+                  ? latestSelectedValues.filter((value) => value !== option.value)
+                  : [...latestSelectedValues, option.value];
+
+                latestMultiValuesRef.current = nextValues;
+                onAnswerChange(question.id, nextValues);
               }}
             >
               <span className="polus-answer-marker">{markerLetters[index] ?? index + 1}</span>
@@ -212,6 +225,9 @@ export function PolusPublicQuestionCard({
       ? getSliderQuestionMeta(question.settings, question.sliderBands, currentAnswer)
       : null;
   const hasAnswer = hasMeaningfulQuestionAnswer(question.type, currentAnswer);
+  const sliderPresentation = sliderMeta
+    ? getPolusSliderPresentation(question.settings, sliderMeta.value, hasAnswer)
+    : null;
   const needsInlineAction = question.type !== 'SINGLE_CHOICE';
   const inlineActionIsDisabled = isSubmitting || (question.required && !hasAnswer);
   const progress =
@@ -246,7 +262,10 @@ export function PolusPublicQuestionCard({
       </div>
 
       <article className="polus-question-card">
-        <h2>{question.title}</h2>
+        {sliderPresentation?.stageLabel ? (
+          <p className="polus-question-kicker">{sliderPresentation.stageLabel}</p>
+        ) : null}
+        <h2>{sliderPresentation?.title ?? question.title}</h2>
         {question.description ? (
           <p className="polus-question-description">{question.description}</p>
         ) : null}
@@ -290,9 +309,10 @@ export function PolusPublicQuestionCard({
             step={sliderMeta.step}
             value={sliderMeta.value}
             hasAnswer={hasAnswer}
-            activeLabel={sliderMeta.activeLabel}
-            minLabel={sliderMeta.minLabel}
-            maxLabel={sliderMeta.maxLabel}
+            activeLabel={sliderPresentation?.activeLabel ?? sliderMeta.activeLabel}
+            ariaLabel={sliderPresentation?.ariaLabel}
+            minLabel={sliderPresentation?.minLabel ?? sliderMeta.minLabel}
+            maxLabel={sliderPresentation?.maxLabel ?? sliderMeta.maxLabel}
             onAnswerChange={onAnswerChange}
           />
         ) : null}

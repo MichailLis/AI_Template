@@ -188,8 +188,8 @@ describe('createPublicTestEntryStartHandler', () => {
       entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
       educationFormState: {
         ...validFormState,
-        studentLastInitial: '',
-        studentMiddleInitial: '',
+        studentLastInitial: ' и ',
+        studentMiddleInitial: ' п ',
       },
       demographicFormState: {
         gender: 'MALE',
@@ -213,6 +213,8 @@ describe('createPublicTestEntryStartHandler', () => {
       data: {
         entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
         studentName: 'Иван',
+        studentLastInitial: 'И',
+        studentMiddleInitial: 'П',
         educationOrganization: 'Лицей из ссылки',
         groupOrClass: 'ИС-21',
         gender: 'MALE',

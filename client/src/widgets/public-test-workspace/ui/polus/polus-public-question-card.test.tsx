@@ -66,6 +66,31 @@ const sliderQuestion = {
   options: [],
 } as PublicTestQuestion;
 
+const interestSliderQuestion = {
+  ...sliderQuestion,
+  id: 5,
+  settings: {
+    min: 0,
+    max: 10,
+    step: 1,
+    methodologySliderId: 'S_A1',
+    sliderKind: 'interest',
+  },
+} as PublicTestQuestion;
+
+const precisionReadinessSliderQuestion = {
+  ...sliderQuestion,
+  id: 6,
+  title: 'Насколько тебе подходит аккуратность: размеры, качество, измерения, документация?',
+  settings: {
+    min: 0,
+    max: 10,
+    step: 1,
+    methodologySliderId: 'R_PRECISION',
+    sliderKind: 'readiness',
+  },
+} as PublicTestQuestion;
+
 afterEach(() => {
   cleanup();
 });
@@ -178,7 +203,42 @@ describe('PolusPublicQuestionCard', () => {
     await user.click(screen.getByRole('button', { name: /управлять/i }));
 
     expect(screen.getByText('2 из 2')).toBeInTheDocument();
+    expect(onAnswerChange).toHaveBeenLastCalledWith(3, ['model', 'print']);
     expect(onAnswerChange).not.toHaveBeenLastCalledWith(3, ['model', 'print', 'fly']);
+  });
+
+  it('keeps rapid multi-choice clicks in the same answer draft', () => {
+    const onAnswerChange = vi.fn();
+
+    function MultiChoiceHarness() {
+      const [answer, setAnswer] = useState<unknown>([]);
+
+      return (
+        <PolusPublicQuestionCard
+          question={multiChoiceQuestion}
+          currentAnswer={answer}
+          currentQuestionIndex={2}
+          totalQuestionsCount={3}
+          isLastQuestion={false}
+          isSubmitting={false}
+          canGoBack
+          onAnswerChange={(questionId, value) => {
+            setAnswer(value);
+            onAnswerChange(questionId, value);
+          }}
+          onBack={vi.fn()}
+          onNext={vi.fn()}
+          onFinish={vi.fn()}
+        />
+      );
+    }
+
+    render(<MultiChoiceHarness />);
+
+    screen.getByRole('button', { name: /моделировать/i }).click();
+    screen.getByRole('button', { name: /печатать/i }).click();
+
+    expect(onAnswerChange).toHaveBeenLastCalledWith(3, ['model', 'print']);
   });
 
   it('renders a Polus slider with scale labels without numeric shortcut buttons', () => {
@@ -204,11 +264,64 @@ describe('PolusPublicQuestionCard', () => {
     expect(screen.getByText('Низко')).toBeInTheDocument();
     expect(screen.getByText('Высоко')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Выбрать оценку 9' })).not.toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Оценка по шкале' })).toHaveValue('5');
 
     fireEvent.change(screen.getByRole('slider', { name: 'Оценка по шкале' }), {
       target: { value: '9' },
     });
 
     expect(onAnswerChange).toHaveBeenCalledWith(4, 9);
+  });
+
+  it('uses human Polus scale labels for methodology interest sliders', () => {
+    render(
+      <PolusPublicQuestionCard
+        question={interestSliderQuestion}
+        currentAnswer={7}
+        currentQuestionIndex={10}
+        totalQuestionsCount={21}
+        isLastQuestion={false}
+        isSubmitting={false}
+        canGoBack
+        onAnswerChange={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        onFinish={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Интерес')).toBeInTheDocument();
+    expect(screen.getByText('Совсем не интересно')).toBeInTheDocument();
+    expect(screen.getByText('Очень интересно')).toBeInTheDocument();
+    expect(screen.getByText('Интересно')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Оценка интереса по шкале' })).toHaveValue('7');
+  });
+
+  it('uses readiness wording and fixes the precision slider title', () => {
+    render(
+      <PolusPublicQuestionCard
+        question={precisionReadinessSliderQuestion}
+        currentAnswer={undefined}
+        currentQuestionIndex={16}
+        totalQuestionsCount={21}
+        isLastQuestion={false}
+        isSubmitting={false}
+        canGoBack
+        onAnswerChange={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        onFinish={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Готовность')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Насколько ты готов внимательно работать с размерами, качеством, измерениями и документацией?',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Совсем не готов')).toBeInTheDocument();
+    expect(screen.getByText('Полностью готов')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Оценка готовности по шкале' })).toHaveValue('5');
   });
 });
