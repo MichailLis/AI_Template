@@ -16,3 +16,11 @@ The expected runtime topology is four separate containers:
 - `ai_template_adminer`
 
 Do not use `.devcontainer/docker-compose.devcontainer.yml` to run the project for the user. The devcontainer compose file is only for VS Code "Reopen in Container" workflows and should not replace the normal project Docker stack.
+
+After changing files under `client/`, rebuild/recreate the frontend container before frontend-related verification:
+
+```powershell
+docker compose up -d --build --force-recreate frontend
+```
+
+The project Codex hook in `.codex/hooks.json` enforces this before frontend-related tests.

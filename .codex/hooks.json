@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".codex/hooks/frontend_container_rebuild_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking frontend container rebuild guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".codex/hooks/frontend_container_rebuild_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Recording frontend container rebuild"
+          }
+        ]
+      }
+    ]
+  }
+}

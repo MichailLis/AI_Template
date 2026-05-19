@@ -12,6 +12,8 @@ server/openapi.json
 Design/
 
 # Local AI/QA artifacts
+.codex-artifacts/
+.codex/state/
 .sisyphus/
 .sisyphusnotepads*
 README_tmp.html
