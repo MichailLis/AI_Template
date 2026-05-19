@@ -7,7 +7,7 @@ Current project state:
 - Auth is fully wired (JWT access/refresh)
 - Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio foundation, and Tests module workspace
 - Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/stats`)
-- Public student flow (`/t/*`) is product-ready, supports selectable entry profile modes, and uses a scoped theme isolated from admin screens
+- Public student flow (`/t/*`) is product-ready, supports selectable public templates, selectable entry profile modes, and scoped themes isolated from admin screens
 - Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
 
 ## Stack
@@ -174,23 +174,28 @@ Admin routes:
 Admin capabilities baseline:
 
 - archive/restore lifecycle for public links (archive disables access without losing historical data)
+- public template selection for new public links:
+  - `STANDARD`: current public template and the default for old and new links
+  - `POLUS`: branded Polus public template
 - entry profile mode selection for new public links:
   - `DEMOGRAPHIC`: demographic profile before the test, with attempt limit forced to `1`
   - `EDUCATION`: current education-based profile before the test
+  - `EDUCATION_DEMOGRAPHIC`: education profile plus demographic questionnaire before the test
 - filters by test + public link on stats page
 - table actions for student-level details (analysis and submitted answers)
 - link selector copy uses business language (`тестов пройдено`)
 
 Public student routes:
 
-- `"/t/:code"`: registration/entry screen, branched by public link entry profile mode
-- `"/t/:code/session/:sessionToken"`: test run workspace
-- `"/t/:code/result/:sessionToken"`: result and analysis screen
+- `"/t/:code"`: registration/entry screen, branched by public link template and entry profile mode
+- `"/t/:code/session/:sessionToken"`: test run workspace, branched by public link template
+- `"/t/:code/result/:sessionToken"`: result and analysis screen, branched by public link template
 
 Entry profile modes:
 
 - `DEMOGRAPHIC`: collects gender, age, residence, and education level before starting the test
 - `EDUCATION`: collects the current education-based profile before starting the test
+- `EDUCATION_DEMOGRAPHIC`: collects student name, age, education organization, group/class, gender, residence, and education level; Polus hybrid entry does not require initials
 
 Current public run UX:
 
@@ -206,6 +211,9 @@ UI/theming contract for public pages:
 - public pages must be wrapped with `PublicThemeLayout`
 - public theme tokens live in `client/src/widgets/public-test-workspace/ui/public-theme.css` (`.theme-public` scope)
 - do not move public-theme tokens into global `client/src/app/index.css`
+- `STANDARD` must preserve the existing public components and remains the default unless a link explicitly stores `publicTemplate = POLUS`
+- `POLUS` components live under `client/src/widgets/public-test-workspace/ui/polus/*`
+- Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; assets/fonts belong in the Polus public-test asset folder, not `client/public/prototypes`
 - user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
 
 ## Required Workflow for New Features

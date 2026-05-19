@@ -252,10 +252,15 @@ Behavior baseline:
 4. Filters must support both test and public link selection.
 5. Link labels in selectors should use business copy (`тестов пройдено`).
 6. Student row actions must provide direct access to analysis and answers.
-7. Public links have an entry profile mode:
+7. Public links have a public template:
+   - `STANDARD` -> current public template; default for existing rows and new links unless explicitly changed.
+   - `POLUS` -> branded Polus public template; selected during public-link creation only.
+8. Public link DTOs and responses must expose `publicTemplate` through admin link lists, public link access, session state, and result fetches without changing `/t/*` routes.
+9. Public links have an entry profile mode:
    - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`.
    - `EDUCATION` -> collect the current education-based profile before the test.
-8. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
+   - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior.
+10. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
 
 ## Public Student UX Contract (`/t/*`)
 
@@ -273,9 +278,14 @@ UI/theming rules:
 4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
 5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
 6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
-7. Entry page must branch by the link `entryProfileMode` without changing public routes:
+7. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
+   - `STANDARD` preserves the existing public components.
+   - `POLUS` uses components under `client/src/widgets/public-test-workspace/ui/polus/*`.
+8. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
+9. Entry page must branch by the link `entryProfileMode` without changing public routes:
    - `DEMOGRAPHIC` shows the demographic profile form.
    - `EDUCATION` shows the education profile form.
+   - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry does not require initials.
 
 ## Reference Example For AI Agents (Illustrative)
 
