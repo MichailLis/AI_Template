@@ -20,8 +20,48 @@ type CountRecord = {
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+const isDirectionId = (value: unknown): value is ProfOrientationDirectionId =>
+  typeof value === 'string' &&
+  PROF_ORIENTATION_DIRECTIONS.includes(value as ProfOrientationDirectionId);
+
+const isDirectionSummary = (value: unknown): value is ProfOrientationSummary['primaryDirection'] =>
+  isRecord(value) && isDirectionId(value.id) && typeof value.name === 'string';
+
+const hasValidScores = (value: unknown) =>
+  isRecord(value) &&
+  PROF_ORIENTATION_DIRECTIONS.every((directionId) => isFiniteNumber(value[directionId]));
+
+const hasValidProfile = (value: unknown) => isRecord(value) && typeof value.type === 'string';
+
+const hasValidConfidence = (value: unknown) =>
+  isRecord(value) &&
+  typeof value.level === 'string' &&
+  isFiniteNumber(value.gap) &&
+  isFiniteNumber(value.consistencyIndex) &&
+  isFiniteNumber(value.readinessTop);
+
+const hasValidFlags = (value: unknown) =>
+  Array.isArray(value) && value.every((flag) => isRecord(flag) && typeof flag.code === 'string');
+
+const hasValidV3SummaryShape = (value: unknown) =>
+  isRecord(value) &&
+  hasValidScores(value.scores) &&
+  Array.isArray(value.topDirections) &&
+  value.topDirections.every(isDirectionSummary) &&
+  (value.primaryDirection === null || isDirectionSummary(value.primaryDirection)) &&
+  (value.secondaryDirection === null || isDirectionSummary(value.secondaryDirection)) &&
+  hasValidProfile(value.profile) &&
+  hasValidConfidence(value.confidence) &&
+  hasValidFlags(value.flags);
+
 export const getV3Summary = (value: unknown): ProfOrientationSummary | null =>
-  isProfOrientationV3PlusSummary(value) ? value : null;
+  isProfOrientationV3PlusSummary(value) && hasValidV3SummaryShape(value) ? value : null;
 
 export const toShare = (count: number, total: number) =>
   total === 0 ? 0 : round1((count / total) * 100);
@@ -54,6 +94,10 @@ const collectDirectionLabels = (summaries: ProfOrientationSummary[]) => {
 };
 
 const buildDirectionItems = (summaries: ProfOrientationSummary[]): ShareItem[] => {
+  if (summaries.length === 0) {
+    return [];
+  }
+
   const directionLabelById = collectDirectionLabels(summaries);
   const counts = new Map<ProfOrientationDirectionId, CountRecord>();
 
@@ -131,6 +175,10 @@ const buildDirectionPairItems = (summaries: ProfOrientationSummary[]): Direction
 };
 
 const buildScoreAverages = (summaries: ProfOrientationSummary[]) => {
+  if (summaries.length === 0) {
+    return [];
+  }
+
   const directionLabelById = collectDirectionLabels(summaries);
   const sums = new Map<ProfOrientationDirectionId, number>();
   const totalAttempts = summaries.length;

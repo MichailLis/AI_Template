@@ -97,10 +97,12 @@ describe('getV3Summary', () => {
       }),
     );
     const invalid = getV3Summary({ resultKind: 'other' });
+    const partial = getV3Summary({ resultKind: 'prof_orientation_v3_plus' });
 
     expect(valid).not.toBeNull();
     expect(valid?.resultKind).toBe('prof_orientation_v3_plus');
     expect(invalid).toBeNull();
+    expect(partial).toBeNull();
   });
 });
 
@@ -129,6 +131,17 @@ describe('buildCountShares', () => {
 });
 
 describe('buildV3AnalyticsSections', () => {
+  it('returns empty aggregate arrays when there are no valid v3 summaries', () => {
+    const result = buildV3AnalyticsSections([createAttempt(1, null)]);
+
+    expect(result.directions).toEqual([]);
+    expect(result.directionPairs).toEqual([]);
+    expect(result.scoreAverages).toEqual([]);
+    expect(result.profiles).toEqual([]);
+    expect(result.confidence.levels).toEqual([]);
+    expect(result.flags).toEqual([]);
+  });
+
   it('aggregates directions, pairs, scores, profiles, confidence and flags from valid v3 summaries', () => {
     const attempts = [
       createAttempt(
