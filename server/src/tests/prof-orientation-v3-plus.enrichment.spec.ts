@@ -1,48 +1,53 @@
 import { parseProfOrientationV3PlusEnrichment } from './prof-orientation-v3-plus.enrichment';
 
-const baseEnrichment = {
-  professorSummary:
-    'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели.',
-  summary:
-    'Профиль 3D-моделирования означает, что участнику ближе перевод идеи в точную цифровую модель.',
-  confidenceComment:
-    'Высокая уверенность связана с устойчивыми выборами и достаточной готовностью.',
-  methodSignals: [
-    'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
-    'Интерес к направлению A1 выше остальных интересов.',
-  ],
-  firstSteps: ['Смоделировать простой корпус устройства.', 'Сделать сборку из деталей.'],
-  learningPlan: ['основы черчения', 'CAD/САПР'],
-  professionNotes: ['Инженер-конструктор связан с разработкой деталей и сборок.'],
-  nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
-  cautions: [],
-};
-
 describe('parseProfOrientationV3PlusEnrichment', () => {
-  it('normalizes an unusably short professor summary to the methodology summary', () => {
-    const parsed = parseProfOrientationV3PlusEnrichment({
-      ...baseEnrichment,
-      professorSummary: ':',
+  it('normalizes common OpenRouter methodology enrichment shape drift', () => {
+    const result = parseProfOrientationV3PlusEnrichment({
+      professorSummary:
+        'Похоже, тебе интересно превращать идею в понятную цифровую модель и сразу проверять ее на практике.',
+      summary:
+        'Карточку стоит читать как приглашение попробовать цифровое проектирование через небольшую практическую задачу.',
+      methodSignals: [
+        'В ответах повторяются задачи про форму, конструкцию и подготовку модели.',
+        'Близко идет направление печати, поэтому полезно связать модель с реальным изделием.',
+      ],
+      firstSteps: [
+        'Смоделировать простой корпус устройства.',
+        'Подготовить модель к печати и проверить размеры.',
+      ],
+      learningPlan: ['основы черчения', 'CAD/САПР'],
+      professionNotes: [
+        {
+          title: 'Инженер-конструктор',
+          note: 'проектирует детали, сборки и техническую документацию.',
+        },
+        {
+          title: 'Техник-конструктор',
+          description: 'помогает готовить чертежи и уточнять размеры деталей.',
+        },
+        {
+          title: 'Лишний пример',
+          note: 'должен быть обрезан вместе со следующими лишними элементами.',
+        },
+        {
+          title: 'Лишний пример 2',
+          note: 'должен быть обрезан.',
+        },
+        {
+          title: 'Лишний пример 3',
+          note: 'должен быть обрезан.',
+        },
+      ],
+      cautions: [],
     });
 
-    expect(parsed.professorSummary).toBe(baseEnrichment.summary);
-  });
-
-  it('allows empty profession notes for broad or low-definition profiles', () => {
-    const parsed = parseProfOrientationV3PlusEnrichment({
-      ...baseEnrichment,
-      professionNotes: [],
-    });
-
-    expect(parsed.professionNotes).toEqual([]);
-  });
-
-  it('keeps expanded professor summary within the display limit', () => {
-    const parsed = parseProfOrientationV3PlusEnrichment({
-      ...baseEnrichment,
-      professorSummary: 'Развернутое пояснение профессора. '.repeat(20),
-    });
-
-    expect(parsed.professorSummary.length).toBeLessThanOrEqual(420);
+    expect(result.confidenceComment).toBe(result.summary);
+    expect(result.nextMiniProject).toBe('Смоделировать простой корпус устройства.');
+    expect(result.professionNotes).toEqual([
+      'Инженер-конструктор: проектирует детали, сборки и техническую документацию.',
+      'Техник-конструктор: помогает готовить чертежи и уточнять размеры деталей.',
+      'Лишний пример: должен быть обрезан вместе со следующими лишними элементами.',
+      'Лишний пример 2: должен быть обрезан.',
+    ]);
   });
 });

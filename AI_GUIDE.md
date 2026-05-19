@@ -53,6 +53,19 @@ Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project 
 That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
 `workspace` container that runs frontend and backend together. It is not the project runtime topology.
 
+### Frontend Container Rebuild Before Tests
+
+When files under `client/` are changed, rebuild/recreate the frontend container before running
+frontend-related verification such as lint, build, Vitest/Jest, Playwright, smoke checks, or
+`verify:*` gates:
+
+```powershell
+docker compose up -d --build --force-recreate frontend
+```
+
+Use the root `docker-compose.yml` only. The project Codex hook in `.codex/hooks.json` enforces this
+guard before frontend-related test commands.
+
 ## Search Mode (Exhaustive, For Non-Trivial Tasks)
 
 Use exhaustive search mode when request touches unfamiliar areas, multiple modules, or architecture decisions.
@@ -249,18 +262,21 @@ Built-in prof-orientation v3+ baseline:
 3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
    10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
    `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
-4. Public multi-choice UI must enforce `settings.maxChoices`.
-5. For this scoring kind, `finishSession` must store deterministic algorithm
+4. Built-in methodology LLM enrichment must use `openai/gpt-oss-120b`. If an
+   older published methodology prompt exists on another model, create a new
+   published prompt version for new imports instead of reusing the stale one.
+5. Public multi-choice UI must enforce `settings.maxChoices`.
+6. For this scoring kind, `finishSession` must store deterministic algorithm
    analysis as `READY` before LLM enrichment starts.
-6. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
+7. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
    direction, score, confidence, profile, or profession fields.
-7. Prof-orientation OpenRouter calls may use
+8. Prof-orientation OpenRouter calls may use
    `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
    `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for
    `OpenRouter request timeout` and must stay capped at 2.
-8. Polus result UI should merge LLM explanations into existing methodology blocks
+9. Polus result UI should merge LLM explanations into existing methodology blocks
    and avoid exposing raw method internals to students.
-9. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
+10. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
 
 ## Admin Public Links + Stats Contract (Current Branch)
 
@@ -311,7 +327,7 @@ UI/theming rules:
 9. Entry page must branch by the link `entryProfileMode` without changing public routes:
    - `DEMOGRAPHIC` shows the demographic profile form.
    - `EDUCATION` shows the education profile form.
-   - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry does not require initials.
+   - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry includes name, surname initial, and patronymic initial.
 
 ## Reference Example For AI Agents (Illustrative)
 

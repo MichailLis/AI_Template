@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 import { TestsQuestionService } from './tests-question.service';
 import { TestsService } from './tests.service';
+import { PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL } from './prof-orientation-v3-plus.fixture';
 
 jest.mock('./tests-admin-access.utils', () => ({
   ensureTestsAdminAccess: jest.fn().mockResolvedValue(undefined),
@@ -275,5 +276,60 @@ describe('TestsService analysis prompt attachment', () => {
     expect(txMock.testQuestionOption.createMany).toHaveBeenCalledTimes(10);
     expect(txMock.testQuestionSliderBand.createMany).toHaveBeenCalledTimes(11);
     expect(getTopicDraftSpy).toHaveBeenCalledWith(5, 1);
+  });
+
+  it('importProfOrientationV3Plus creates a new prompt version when existing model is stale', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([]);
+    txMock.analysisPrompt.findFirst.mockResolvedValue({
+      id: 70,
+      versions: [
+        {
+          id: 79,
+          versionNumber: 1,
+          status: 'PUBLISHED',
+          model: 'google/gemini-2.0-flash-exp:free',
+        },
+      ],
+    });
+    txMock.analysisPromptVersion.findFirst.mockResolvedValue({ versionNumber: 1 });
+    txMock.analysisPromptVersion.create.mockResolvedValue({ id: 80 });
+    txMock.testTopic.create.mockResolvedValue({ id: 1 });
+    txMock.testTopicVersion.create.mockResolvedValue({
+      id: 10,
+      versionNumber: 1,
+    });
+    txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
+      Promise.resolve({ id: data.order }),
+    );
+    jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
+      topicId: 1,
+      slug: 'prof-orientation-v3-plus',
+      draft: {
+        id: 10,
+        versionNumber: 1,
+        title: 'Профориентационный тест v3+',
+        description: null,
+        analysisPromptVersion: null,
+        questions: [],
+      },
+      published: null,
+    });
+
+    await service.importProfOrientationV3Plus(5);
+
+    expect(txMock.analysisPromptVersion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        promptId: 70,
+        versionNumber: 2,
+        status: 'PUBLISHED',
+        model: PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
+      }) as unknown,
+      select: { id: true },
+    });
+    expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        analysisPromptVersionId: 80,
+      }) as unknown,
+    });
   });
 });

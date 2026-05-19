@@ -1,4 +1,5 @@
 import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { parseAnalysisResult } from '@/features/tests';
@@ -15,6 +16,11 @@ import type { AnalysisResult } from '@/features/tests';
 import type { PublicSessionResultResponseDto } from '@/shared/api/model';
 import type { LucideIcon } from 'lucide-react';
 
+const resultPollIntervalMs = 3_000;
+const resultClockIntervalMs = 1_000;
+const polusMinimumProcessingMs = 10_000;
+const profOrientationLlmSoftWaitMs = 45_000;
+
 interface HeroSignal {
   icon: LucideIcon;
   label: string;
@@ -26,9 +32,67 @@ const handleExportPdf = () => {
   window.print();
 };
 
-const shouldWaitForAnalysis = (result: PublicSessionResultResponseDto | undefined) =>
+const parseTimeMs = (value: string | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsedTimeMs = new Date(value).getTime();
+
+  return Number.isFinite(parsedTimeMs) ? parsedTimeMs : null;
+};
+
+const getElapsedSinceFinishedMs = (
+  result: PublicSessionResultResponseDto | undefined,
+  nowMs: number,
+  fallbackStartedAtMs: number,
+) => {
+  const finishedAtMs = parseTimeMs(result?.finishedAt) ?? fallbackStartedAtMs;
+
+  return Math.max(0, nowMs - finishedAtMs);
+};
+
+const shouldPollAnalysis = (result: PublicSessionResultResponseDto | undefined) =>
   result?.analysis.status === 'PENDING' ||
   getProfOrientationLlmStatus(result?.analysis.summary) === 'pending';
+
+const shouldShowProcessingScreen = (
+  result: PublicSessionResultResponseDto | undefined,
+  nowMs: number,
+  fallbackStartedAtMs: number,
+) => {
+  if (!result) {
+    return false;
+  }
+
+  if (result.analysis.status === 'PENDING') {
+    return true;
+  }
+
+  if (result.publicTemplate !== 'POLUS') {
+    return false;
+  }
+
+  const elapsedMs = getElapsedSinceFinishedMs(result, nowMs, fallbackStartedAtMs);
+
+  if (elapsedMs < polusMinimumProcessingMs) {
+    return true;
+  }
+
+  return (
+    getProfOrientationLlmStatus(result.analysis.summary) === 'pending' &&
+    elapsedMs < profOrientationLlmSoftWaitMs
+  );
+};
+
+const getProcessingStartedAt = (
+  result: PublicSessionResultResponseDto,
+  fallbackStartedAtMs: number,
+) => {
+  const finishedAtMs = parseTimeMs(result.finishedAt);
+
+  return new Date(finishedAtMs ?? fallbackStartedAtMs).toISOString();
+};
 
 const getTopSkill = (analysis: AnalysisResult | null) =>
   analysis?.skillsLevel.items
@@ -151,6 +215,8 @@ function ProfessionAtlasLink({ url }: { url: string }) {
 
 export function PublicTestResultWorkspace() {
   const { sessionToken } = useParams<{ sessionToken: string }>();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [fallbackStartedAtMs] = useState(() => Date.now());
 
   const resultQuery = useTestsPublicControllerGetSessionResult(sessionToken ?? '', {
     query: {
@@ -158,10 +224,26 @@ export function PublicTestResultWorkspace() {
       retry: false,
       refetchInterval: (query) => {
         const data = query.state.data as PublicSessionResultResponseDto | undefined;
-        return shouldWaitForAnalysis(data) ? 3000 : false;
+        return shouldPollAnalysis(data) ? resultPollIntervalMs : false;
       },
     },
   });
+  const result = resultQuery.data;
+  const showProcessingScreen = shouldShowProcessingScreen(result, nowMs, fallbackStartedAtMs);
+
+  useEffect(() => {
+    if (!showProcessingScreen) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, resultClockIntervalMs);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [showProcessingScreen]);
 
   if (!sessionToken) {
     return (
@@ -177,7 +259,7 @@ export function PublicTestResultWorkspace() {
     return <PublicTestAnalysisProcessingScreen startedAt={null} />;
   }
 
-  if (resultQuery.isError || !resultQuery.data) {
+  if (resultQuery.isError || !result) {
     return (
       <PublicThemeLayout containerClassName="max-w-3xl">
         <div
@@ -190,12 +272,10 @@ export function PublicTestResultWorkspace() {
     );
   }
 
-  const result = resultQuery.data;
-
-  if (shouldWaitForAnalysis(result)) {
+  if (showProcessingScreen) {
     return (
       <PublicTestAnalysisProcessingScreen
-        startedAt={result.finishedAt}
+        startedAt={getProcessingStartedAt(result, fallbackStartedAtMs)}
         variant={result.publicTemplate === 'POLUS' ? 'polus' : 'standard'}
       />
     );

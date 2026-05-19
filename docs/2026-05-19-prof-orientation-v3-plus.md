@@ -28,9 +28,10 @@ The importer creates the methodology as a normal tests-module draft:
 - Slider questions store methodology ids, interest/readiness category metadata,
   direction metadata, and readiness weights in question settings.
 - The version stores:
-  - `scoringKind = PROF_ORIENTATION_V3_PLUS`
-  - full `scoringConfig`
-  - a built-in prompt version for methodology-bound LLM enrichment.
+- `scoringKind = PROF_ORIENTATION_V3_PLUS`
+- full `scoringConfig`
+- a built-in prompt version for methodology-bound LLM enrichment on
+  `openai/gpt-oss-120b`.
 
 The public Polus runner enforces `maxChoices` for multi-choice questions and uses
 a dedicated slider field for the methodology sliders.
@@ -62,6 +63,10 @@ The built-in prompt is methodology-specific. It asks the model to explain the
 already computed result in plain language, especially the "Professor Polus says"
 summary, and to avoid exposing internal formulas, JSON keys, raw confidence
 metrics, or method diagnostics to the student.
+
+The built-in methodology prompt model is `openai/gpt-oss-120b`. If an older
+published methodology prompt exists on another model, the importer creates a new
+published prompt version and attaches new imports to that version.
 
 The structured enrichment schema includes:
 

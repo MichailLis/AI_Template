@@ -82,7 +82,7 @@ export interface ProfOrientationV3PlusConfig {
 export const PROF_ORIENTATION_V3_PLUS_TITLE = 'Профориентационный тест v3+';
 export const PROF_ORIENTATION_V3_PLUS_SLUG = 'prof-orientation-v3-plus';
 export const PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE = 'Профориентация v3+: обогащение результата';
-export const PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL = 'google/gemini-2.0-flash-exp:free';
+export const PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL = 'openai/gpt-oss-120b';
 export const PROF_ORIENTATION_V3_PLUS_PROMPT = [
   'Ты помогаешь школьнику понять результат профориентационного теста.',
   'Работай строго в рамках методики v3+: направления, карточка результата, профессии, мини-проект, уверенность и flags уже рассчитаны алгоритмом.',
@@ -109,9 +109,11 @@ export const toProfOrientationResultCard = (
 });
 
 const sliderBands = [
-  { minValue: 0, maxValue: 3, label: 'Низко', weight: 0, order: 1 },
-  { minValue: 4, maxValue: 7, label: 'Средне', weight: 0, order: 2 },
-  { minValue: 8, maxValue: 10, label: 'Высоко', weight: 0, order: 3 },
+  { minValue: 0, maxValue: 2, label: 'Почти нет', weight: 0, order: 1 },
+  { minValue: 3, maxValue: 4, label: 'Слабо', weight: 0, order: 2 },
+  { minValue: 5, maxValue: 6, label: 'Умеренно', weight: 0, order: 3 },
+  { minValue: 7, maxValue: 8, label: 'Заметно', weight: 0, order: 4 },
+  { minValue: 9, maxValue: 10, label: 'Очень сильно', weight: 0, order: 5 },
 ];
 
 export const buildProfOrientationV3PlusQuestionPayloads = (): PersistQuestionPayload[] => {

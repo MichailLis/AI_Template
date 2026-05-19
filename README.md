@@ -178,6 +178,7 @@ Built-in prof-orientation v3+ contract:
   `scoringKind = PROF_ORIENTATION_V3_PLUS`
 - the imported draft contains 10 multi-choice methodology questions and 11 slider
   questions
+- the built-in methodology prompt uses `openai/gpt-oss-120b`
 - public multi-choice questions enforce `settings.maxChoices = 2`
 - `finishSession` saves deterministic algorithm analysis first, then runs optional
   LLM enrichment under `summary.llm`

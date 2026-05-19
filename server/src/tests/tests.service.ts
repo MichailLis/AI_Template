@@ -148,7 +148,7 @@ export class TestsService {
     });
     const existingPublishedVersion = existingPrompt?.versions[0];
 
-    if (existingPublishedVersion) {
+    if (existingPublishedVersion?.model === PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL) {
       return existingPublishedVersion.id;
     }
 

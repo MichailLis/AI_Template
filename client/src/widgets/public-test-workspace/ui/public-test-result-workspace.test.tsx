@@ -18,7 +18,48 @@ vi.mock('@/features/tests', () => ({
 }));
 
 describe('PublicTestResultWorkspace', () => {
-  it('shows a full processing screen while analysis is still pending', () => {
+  const getRecentFinishedAt = (elapsedMs: number) => new Date(Date.now() - elapsedMs).toISOString();
+  const profOrientationPrimaryDirection = {
+    id: 'A1',
+    name: '3D-моделирование',
+    score: 54.2,
+    resultCard: {
+      headline: 'Профиль: проектирование и цифровая модель',
+      meaning: 'Тебе ближе этап, где идея превращается в точную 3D-модель.',
+      fitsIf: ['интересно работать в CAD'],
+      tryActions: ['смоделировать корпус датчика'],
+      learn: ['основы черчения'],
+      miniProject: 'Смоделируй корпус небольшого устройства.',
+    },
+    professions: [{ code: '201524', title: 'Инженер-конструктор' }],
+  };
+
+  const getMinimalProfOrientationSummary = ({
+    llm,
+    meaning = profOrientationPrimaryDirection.resultCard.meaning,
+  }: {
+    llm: Record<string, unknown>;
+    meaning?: string;
+  }) => ({
+    resultKind: 'prof_orientation_v3_plus',
+    primaryDirection: {
+      ...profOrientationPrimaryDirection,
+      resultCard: {
+        ...profOrientationPrimaryDirection.resultCard,
+        meaning,
+      },
+    },
+    topDirections: [],
+    confidence: { level: 'high', label: 'высокая' },
+    profile: {
+      type: 'single_profile',
+      title: '3D-моделирование',
+      meaning: 'Алгоритмический профиль.',
+    },
+    flags: [],
+    llm,
+  });
+  const mockSessionResult = (overrides: Record<string, unknown>) => {
     vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
       isLoading: false,
       isError: false,
@@ -29,34 +70,6 @@ describe('PublicTestResultWorkspace', () => {
         finishedAt: '2026-05-12T12:00:00.000Z',
         professionAtlasUrl: null,
         analysis: {
-          providerMode: 'LLM',
-          status: 'PENDING',
-          summary: null,
-          rawText: null,
-          errorMessage: null,
-          generatedAt: null,
-        },
-      },
-    } as never);
-
-    render(<PublicTestResultWorkspace />);
-
-    expect(screen.getByRole('heading', { name: /формируем отчет/i })).toBeInTheDocument();
-    expect(screen.getByText(/может занять около минуты/i)).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /результат теста/i })).not.toBeInTheDocument();
-  });
-
-  it('shows the configured profession atlas link with student-facing explanation', () => {
-    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        sessionToken: 'session-token',
-        publicTemplate: 'STANDARD',
-        status: 'COMPLETED',
-        finishedAt: '2026-05-12T12:00:00.000Z',
-        professionAtlasUrl: 'https://atlas.example/professions',
-        analysis: {
           providerMode: 'STUB',
           status: 'READY',
           summary: null,
@@ -64,8 +77,32 @@ describe('PublicTestResultWorkspace', () => {
           errorMessage: null,
           generatedAt: '2026-05-12T12:00:01.000Z',
         },
+        ...overrides,
       },
     } as never);
+  };
+
+  it('shows a full processing screen while analysis is still pending', () => {
+    mockSessionResult({
+      analysis: {
+        providerMode: 'LLM',
+        status: 'PENDING',
+        summary: null,
+        rawText: null,
+        errorMessage: null,
+        generatedAt: null,
+      },
+    });
+
+    render(<PublicTestResultWorkspace />);
+
+    expect(screen.getByRole('heading', { name: /формируем отчет/i })).toBeInTheDocument();
+    expect(screen.getByText(/страница обновится автоматически/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /результат теста/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the configured profession atlas link with student-facing explanation', () => {
+    mockSessionResult({ professionAtlasUrl: 'https://atlas.example/professions' });
 
     render(<PublicTestResultWorkspace />);
 
@@ -77,25 +114,7 @@ describe('PublicTestResultWorkspace', () => {
   });
 
   it('renders the Polus result template when the session uses POLUS', () => {
-    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        sessionToken: 'session-token',
-        publicTemplate: 'POLUS',
-        status: 'COMPLETED',
-        finishedAt: '2026-05-12T12:00:00.000Z',
-        professionAtlasUrl: null,
-        analysis: {
-          providerMode: 'STUB',
-          status: 'READY',
-          summary: null,
-          rawText: null,
-          errorMessage: null,
-          generatedAt: '2026-05-12T12:00:01.000Z',
-        },
-      },
-    } as never);
+    mockSessionResult({ publicTemplate: 'POLUS' });
 
     render(<PublicTestResultWorkspace />);
 
@@ -104,49 +123,40 @@ describe('PublicTestResultWorkspace', () => {
   });
 
   it('renders prof-orientation Polus summary when algorithm result is available', () => {
-    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        sessionToken: 'session-token',
-        publicTemplate: 'POLUS',
-        status: 'COMPLETED',
-        finishedAt: '2026-05-12T12:00:00.000Z',
-        professionAtlasUrl: 'https://atlas.example/professions',
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      professionAtlasUrl: 'https://atlas.example/professions',
         analysis: {
           providerMode: 'ALGORITHM',
           status: 'READY',
           summary: {
-            resultKind: 'prof_orientation_v3_plus',
-            primaryDirection: {
-              id: 'A1',
-              name: '3D-моделирование',
-              score: 54.2,
-              resultCard: {
-                headline: 'Профиль: проектирование и цифровая модель',
-                meaning: 'Тебе ближе этап, где идея превращается в точную 3D-модель.',
-                fitsIf: ['интересно работать в CAD'],
-                tryActions: ['смоделировать корпус датчика'],
-                learn: ['основы черчения'],
-                miniProject: 'Смоделируй корпус небольшого устройства.',
-              },
-              professions: [{ code: '201524', title: 'Инженер-конструктор' }],
-            },
-            topDirections: [
-              {
-                id: 'A1',
-                name: '3D-моделирование',
-                score: 54.2,
-                professions: [{ code: '201524', title: 'Инженер-конструктор' }],
-                resultCard: {
-                  headline: 'Профиль: проектирование и цифровая модель',
-                  meaning: 'Тебе ближе этап, где идея превращается в точную 3D-модель.',
-                  fitsIf: ['интересно работать в CAD'],
-                  tryActions: ['смоделировать корпус датчика'],
-                  learn: ['основы черчения'],
-                  miniProject: 'Смоделируй корпус небольшого устройства.',
+            ...getMinimalProfOrientationSummary({
+              llm: {
+                status: 'ready',
+                analysis: {
+                  professorSummary:
+                    'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
+                  summary:
+                    'Профиль single_profile означает, что участнику ближе перевод идеи в точную цифровую модель.',
+                  confidenceComment:
+                    'Высокая уверенность связана с gap 12 и consistencyIndex 1 по цифровым шкалам.',
+                  methodSignals: [
+                    'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
+                    'Интерес к направлению A1 выше остальных.',
+                  ],
+                  firstSteps: [
+                    'Смоделировать простой корпус устройства.',
+                    'Сделать сборку из нескольких деталей.',
+                  ],
+                  learningPlan: ['основы черчения', 'CAD/САПР'],
+                  professionNotes: ['Инженер-конструктор проектирует детали и сборки.'],
+                  nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
+                  cautions: [],
                 },
               },
+            }),
+            topDirections: [
+              profOrientationPrimaryDirection,
               {
                 id: 'B2',
                 name: 'Программирование',
@@ -162,43 +172,17 @@ describe('PublicTestResultWorkspace', () => {
                 },
               },
             ],
-            confidence: { level: 'high', label: 'высокая' },
             profile: {
               type: 'single_profile',
               title: '3D-моделирование',
               meaning: 'Тебе ближе цифровое проектирование.',
-            },
-            flags: [],
-            llm: {
-              status: 'ready',
-              analysis: {
-                professorSummary:
-                  'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
-                summary:
-                  'Профиль single_profile означает, что участнику ближе перевод идеи в точную цифровую модель.',
-                confidenceComment:
-                  'Высокая уверенность связана с gap 12 и consistencyIndex 1 по цифровым шкалам.',
-                methodSignals: [
-                  'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
-                  'Интерес к направлению A1 выше остальных.',
-                ],
-                firstSteps: [
-                  'Смоделировать простой корпус устройства.',
-                  'Сделать сборку из нескольких деталей.',
-                ],
-                learningPlan: ['основы черчения', 'CAD/САПР'],
-                professionNotes: ['Инженер-конструктор проектирует детали и сборки.'],
-                nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
-                cautions: [],
-              },
             },
           },
           rawText: null,
           errorMessage: null,
           generatedAt: '2026-05-12T12:00:01.000Z',
         },
-      },
-    } as never);
+    });
 
     const { container } = render(<PublicTestResultWorkspace />);
     const view = within(container);
@@ -246,111 +230,103 @@ describe('PublicTestResultWorkspace', () => {
   });
 
   it('shows the processing screen instead of the Polus result while methodology LLM is pending', () => {
-    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        sessionToken: 'session-token',
-        publicTemplate: 'POLUS',
-        status: 'COMPLETED',
-        finishedAt: '2026-05-12T12:00:00.000Z',
-        professionAtlasUrl: null,
-        analysis: {
-          providerMode: 'ALGORITHM_LLM',
-          status: 'READY',
-          summary: {
-            resultKind: 'prof_orientation_v3_plus',
-            primaryDirection: {
-              id: 'A1',
-              name: '3D-моделирование',
-              score: 54.2,
-              resultCard: {
-                headline: 'Профиль: проектирование и цифровая модель',
-                meaning: 'Алгоритмическое описание карточки не должно быть речью профессора.',
-                fitsIf: ['интересно работать в CAD'],
-                tryActions: ['смоделировать корпус датчика'],
-                learn: ['основы черчения'],
-                miniProject: 'Смоделируй корпус небольшого устройства.',
-              },
-              professions: [{ code: '201524', title: 'Инженер-конструктор' }],
-            },
-            topDirections: [],
-            confidence: { level: 'high', label: 'высокая' },
-            profile: {
-              type: 'single_profile',
-              title: '3D-моделирование',
-              meaning: 'Алгоритмический профиль.',
-            },
-            flags: [],
-            llm: {
-              status: 'pending',
-            },
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      finishedAt: 'not-a-date',
+      analysis: {
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: getMinimalProfOrientationSummary({
+          meaning: 'Алгоритмическое описание карточки не должно быть речью профессора.',
+          llm: {
+            status: 'pending',
           },
-          rawText: null,
-          errorMessage: null,
-          generatedAt: '2026-05-12T12:00:01.000Z',
-        },
+        }),
+        rawText: null,
+        errorMessage: null,
+        generatedAt: '2026-05-12T12:00:01.000Z',
       },
-    } as never);
+    });
 
     const { container } = render(<PublicTestResultWorkspace />);
 
     expect(container.textContent).toContain('Формируем отчет');
     expect(container.textContent).toContain('Страница обновится автоматически');
+    expect(container.textContent).not.toContain('%');
     expect(container.querySelector('.theme-public--polus')).toBeInTheDocument();
     expect(container.querySelector('.polus-processing-card')).toBeInTheDocument();
     expect(container.querySelector('.polus-result-message')).not.toBeInTheDocument();
     expect(container.textContent).not.toContain('Алгоритмическое описание карточки');
   });
 
-  it('uses deterministic professor copy when methodology LLM fails', () => {
-    vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        sessionToken: 'session-token',
-        publicTemplate: 'POLUS',
-        status: 'COMPLETED',
-        finishedAt: '2026-05-12T12:00:00.000Z',
-        professionAtlasUrl: null,
-        analysis: {
-          providerMode: 'ALGORITHM_LLM',
-          status: 'READY',
-          summary: {
-            resultKind: 'prof_orientation_v3_plus',
-            primaryDirection: {
-              id: 'A1',
-              name: '3D-моделирование',
-              score: 54.2,
-              resultCard: {
-                headline: 'Профиль: проектирование и цифровая модель',
-                meaning: 'Алгоритмическое описание карточки можно показать после ошибки ИИ.',
-                fitsIf: ['интересно работать в CAD'],
-                tryActions: ['смоделировать корпус датчика'],
-                learn: ['основы черчения'],
-                miniProject: 'Смоделируй корпус небольшого устройства.',
-              },
-              professions: [{ code: '201524', title: 'Инженер-конструктор' }],
-            },
-            topDirections: [],
-            confidence: { level: 'high', label: 'высокая' },
-            profile: {
-              type: 'single_profile',
-              title: '3D-моделирование',
-              meaning: 'Алгоритмический профиль.',
-            },
-            flags: [],
-            llm: {
-              status: 'failed',
-              errorMessage: 'OpenRouter request timeout',
-            },
-          },
-          rawText: null,
-          errorMessage: 'OpenRouter request timeout',
-          generatedAt: '2026-05-12T12:00:01.000Z',
-        },
+  it('keeps the Polus processing screen for a short minimum time when methodology LLM is already ready', () => {
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      finishedAt: getRecentFinishedAt(5_000),
+      analysis: {
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: null,
+        rawText: null,
+        errorMessage: null,
+        generatedAt: '2026-05-12T12:00:01.000Z',
       },
-    } as never);
+    });
+
+    const { container } = render(<PublicTestResultWorkspace />);
+
+    expect(container.textContent).toContain('Формируем отчет');
+    expect(container.querySelector('.polus-processing-card')).toBeInTheDocument();
+    expect(container.querySelector('.polus-result-message')).not.toBeInTheDocument();
+  });
+
+  it('shows the Polus result with pending professor copy after the soft LLM wait expires', () => {
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      finishedAt: getRecentFinishedAt(60_000),
+      analysis: {
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: getMinimalProfOrientationSummary({
+          meaning: 'Алгоритмическое описание карточки можно показать во время ожидания ИИ.',
+          llm: {
+            status: 'pending',
+          },
+        }),
+        rawText: null,
+        errorMessage: null,
+        generatedAt: '2026-05-12T12:00:01.000Z',
+      },
+    });
+
+    const { container } = render(<PublicTestResultWorkspace />);
+
+    const heroText = container.querySelector('.polus-result-message')?.textContent ?? '';
+
+    expect(container.querySelector('.polus-processing-card')).not.toBeInTheDocument();
+    expect(heroText).toContain('Профессор Полюс говорит');
+    expect(heroText).toContain('формулирует понятное ИИ-пояснение');
+    expect(heroText).toContain('Базовый результат ниже уже готов');
+  });
+
+  it('uses deterministic professor copy when methodology LLM fails', () => {
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      analysis: {
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: getMinimalProfOrientationSummary({
+          meaning: 'Алгоритмическое описание карточки можно показать после ошибки ИИ.',
+          llm: {
+            status: 'failed',
+            errorMessage: 'OpenRouter request timeout',
+          },
+        }),
+        rawText: null,
+        errorMessage: 'OpenRouter request timeout',
+        generatedAt: '2026-05-12T12:00:01.000Z',
+      },
+    });
 
     const { container } = render(<PublicTestResultWorkspace />);
 

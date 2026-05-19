@@ -8,7 +8,8 @@ import { PublicThemeLayout } from './public-theme-layout';
 
 import type { ReactNode } from 'react';
 
-const stepDurationMs = 12_000;
+const stepDurationMs = 8_000;
+const longWaitThresholdMs = 35_000;
 
 type ProcessingStepState = 'done' | 'current' | 'waiting';
 
@@ -20,8 +21,8 @@ interface PublicTestAnalysisProcessingScreenProps {
 
 interface ProcessingScreenViewProps {
   isReadyPhase: boolean;
-  progress: number;
   currentStepIndex: number;
+  isLongWait: boolean;
 }
 
 const getStepState = (
@@ -64,16 +65,47 @@ const getPolusStepIcon = (state: ProcessingStepState) => {
   return null;
 };
 
+const getPolusDescription = (isReadyPhase: boolean, isLongWait: boolean) => {
+  if (isReadyPhase) {
+    return 'Персональная карта уже готова и сейчас откроется.';
+  }
+
+  if (isLongWait) {
+    return 'Пояснение занимает чуть больше времени. Профессор сверяет выводы и дописывает рекомендации.';
+  }
+
+  return 'Собираем ответы, ищем сильные стороны и готовим понятное пояснение результата. Страница обновится автоматически.';
+};
+
+const getProcessingStatusText = (isReadyPhase: boolean, isLongWait: boolean) => {
+  if (isReadyPhase) {
+    return 'Готово';
+  }
+
+  return isLongWait ? 'Дописываем пояснение' : 'В процессе';
+};
+
+const getStandardDescription = (isReadyPhase: boolean, isLongWait: boolean) => {
+  if (isReadyPhase) {
+    return 'Открываем персональный отчет по результатам теста.';
+  }
+
+  if (isLongWait) {
+    return 'Анализ занимает чуть больше времени. Страница обновится автоматически, когда отчет будет готов.';
+  }
+
+  return 'Это может занять около минуты. Страница обновится автоматически, когда анализ будет готов.';
+};
+
 function PolusProcessingScreen({
   isReadyPhase,
-  progress,
   currentStepIndex,
+  isLongWait,
 }: ProcessingScreenViewProps) {
   const sectionLabel = isReadyPhase ? 'Отчет готов' : 'Профессор Полюс анализирует';
   const title = isReadyPhase ? 'Открываем карту развития' : 'Формируем отчет';
-  const description = isReadyPhase
-    ? 'Персональная карта уже готова и сейчас откроется.'
-    : 'Собираем ответы, ищем сильные стороны и готовим понятное пояснение результата. Страница обновится автоматически.';
+  const description = getPolusDescription(isReadyPhase, isLongWait);
+  const statusText = getProcessingStatusText(isReadyPhase, isLongWait);
 
   return (
     <PolusPublicLayout view="result">
@@ -108,12 +140,12 @@ function PolusProcessingScreen({
           </div>
 
           <div className="polus-processing-progress" aria-label="Статус обработки">
-            <div className="polus-progress-line">
-              <span style={{ width: `${progress}%` }} />
+            <div className="polus-progress-line polus-progress-line--indeterminate">
+              <span />
             </div>
             <div className="polus-processing-progress-meta">
               <span>Статус обработки</span>
-              <strong>{progress}%</strong>
+              <strong>{statusText}</strong>
             </div>
           </div>
 
@@ -137,9 +169,12 @@ function PolusProcessingScreen({
 
 function StandardProcessingScreen({
   isReadyPhase,
-  progress,
   currentStepIndex,
+  isLongWait,
 }: ProcessingScreenViewProps) {
+  const description = getStandardDescription(isReadyPhase, isLongWait);
+  const statusText = isReadyPhase ? 'Готово' : 'В процессе';
+
   return (
     <PublicThemeLayout containerClassName="max-w-4xl py-8 md:py-10">
       <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center gap-6">
@@ -159,24 +194,21 @@ function StandardProcessingScreen({
             {isReadyPhase ? 'Анализ готов' : 'Формируем отчет'}
           </h1>
           <p className="text-sm text-muted-foreground md:text-base">
-            {isReadyPhase
-              ? 'Открываем персональный отчет по результатам теста.'
-              : 'Это может занять около минуты. Страница обновится автоматически, когда анализ будет готов.'}
+            {description}
           </p>
         </div>
 
         <div className="w-full space-y-2 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm">
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted/70">
             <div
-              className={`h-full rounded-full bg-gradient-to-r transition-all duration-700 ${
+              className={`h-full w-1/2 rounded-full bg-gradient-to-r ${
                 isReadyPhase ? 'from-primary to-emerald-500' : 'from-primary to-accent'
-              }`}
-              style={{ width: `${progress}%` }}
+              } ${isReadyPhase ? 'w-full' : 'animate-pulse'}`}
             />
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Статус обработки</span>
-            <span>{progress}%</span>
+            <span>{statusText}</span>
           </div>
         </div>
 
@@ -244,14 +276,11 @@ export function PublicTestAnalysisProcessingScreen({
   const effectiveElapsedMs = isReadyPhase
     ? analysisProcessingSteps.length * stepDurationMs
     : elapsedMs;
-  const computedProgress = Math.round(
-    (effectiveElapsedMs / (analysisProcessingSteps.length * stepDurationMs)) * 100,
-  );
-  const progress = isReadyPhase ? 100 : Math.min(95, computedProgress);
   const currentStepIndex = isReadyPhase
     ? analysisProcessingSteps.length - 1
     : Math.min(analysisProcessingSteps.length - 1, Math.floor(elapsedMs / stepDurationMs));
-  const viewProps = { isReadyPhase, progress, currentStepIndex };
+  const isLongWait = !isReadyPhase && effectiveElapsedMs >= longWaitThresholdMs;
+  const viewProps = { isReadyPhase, currentStepIndex, isLongWait };
 
   return variant === 'polus' ? (
     <PolusProcessingScreen {...viewProps} />

@@ -76,8 +76,11 @@ export type ProfOrientationV3PlusEnrichment = z.infer<typeof ProfOrientationV3Pl
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const toTrimmedString = (value: unknown) =>
+  typeof value === 'string' && value.trim() ? value.trim() : null;
+
 const toDisplayProfessorSummary = (value: unknown, fallback: unknown) => {
-  const candidate = typeof value === 'string' ? value.trim() : '';
+  const candidate = toTrimmedString(value) ?? '';
 
   if (candidate.length >= 24) {
     return candidate.length <= PROFESSOR_SUMMARY_MAX_LENGTH
@@ -85,7 +88,7 @@ const toDisplayProfessorSummary = (value: unknown, fallback: unknown) => {
       : `${candidate.slice(0, PROFESSOR_SUMMARY_MAX_LENGTH - 3).trimEnd()}...`;
   }
 
-  const fallbackText = typeof fallback === 'string' ? fallback.trim() : '';
+  const fallbackText = toTrimmedString(fallback) ?? '';
 
   if (!fallbackText) {
     return candidate;
@@ -96,14 +99,69 @@ const toDisplayProfessorSummary = (value: unknown, fallback: unknown) => {
     : `${fallbackText.slice(0, PROFESSOR_SUMMARY_MAX_LENGTH - 3).trimEnd()}...`;
 };
 
+const toProfessionNote = (value: unknown) => {
+  const directValue = toTrimmedString(value);
+  if (directValue) {
+    return directValue;
+  }
+
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const title = toTrimmedString(value.title) ?? toTrimmedString(value.profession);
+  const note =
+    toTrimmedString(value.note) ??
+    toTrimmedString(value.description) ??
+    toTrimmedString(value.comment) ??
+    toTrimmedString(value.summary) ??
+    toTrimmedString(value.text);
+
+  if (title && note) {
+    return `${title}: ${note}`;
+  }
+
+  return title ?? note;
+};
+
+const toStringArray = (
+  value: unknown,
+  maxItems: number,
+  itemMapper: (item: unknown) => string | null = toTrimmedString,
+) =>
+  Array.isArray(value)
+    ? value
+        .map(itemMapper)
+        .filter((item): item is string => Boolean(item))
+        .slice(0, maxItems)
+    : [];
+
 export const parseProfOrientationV3PlusEnrichment = (
   value: unknown,
 ): ProfOrientationV3PlusEnrichment => {
   const normalizedValue = isRecord(value)
-    ? {
-        ...value,
-        professorSummary: toDisplayProfessorSummary(value.professorSummary, value.summary),
-      }
+    ? (() => {
+        const firstSteps = toStringArray(value.firstSteps, MAX_FIRST_STEPS);
+        const summary = toTrimmedString(value.summary);
+
+        return {
+          ...value,
+          professorSummary: toDisplayProfessorSummary(value.professorSummary, value.summary),
+          summary,
+          confidenceComment: toTrimmedString(value.confidenceComment) ?? summary,
+          methodSignals: toStringArray(value.methodSignals, MAX_METHOD_SIGNALS),
+          firstSteps,
+          learningPlan: toStringArray(value.learningPlan, MAX_LEARNING_ITEMS),
+          professionNotes: toStringArray(
+            value.professionNotes,
+            MAX_PROFESSION_NOTES,
+            toProfessionNote,
+          ),
+          nextMiniProject:
+            toTrimmedString(value.nextMiniProject) ?? firstSteps[0] ?? toTrimmedString(summary),
+          cautions: toStringArray(value.cautions, MAX_CAUTIONS),
+        };
+      })()
     : value;
 
   return ProfOrientationV3PlusEnrichmentSchema.parse(normalizedValue);
