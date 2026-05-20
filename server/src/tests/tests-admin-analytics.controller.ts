@@ -1,4 +1,5 @@
 import {
+  applyDecorators,
   Controller,
   Get,
   HttpStatus,
@@ -9,7 +10,8 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { type Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
@@ -20,10 +22,20 @@ import {
 } from './dto/tests-analytics.dto';
 import { TestsAnalyticsExportService } from './tests-analytics-export.service';
 import { TestsAnalyticsService } from './tests-analytics.service';
-import { type Response } from 'express';
 
 const XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const PDF_CONTENT_TYPE = 'application/pdf';
+const ANALYTICS_SCOPE_VALUES = ['TOPIC', 'PUBLIC_LINK'] as const;
+const ANALYTICS_LINK_STATUS_VALUES = ['ALL', 'ACTIVE', 'ARCHIVED'] as const;
+
+const ApiAnalyticsQuery = () =>
+  applyDecorators(
+    ApiQuery({ name: 'scope', required: false, enum: ANALYTICS_SCOPE_VALUES }),
+    ApiQuery({ name: 'publicLinkId', required: false, type: Number }),
+    ApiQuery({ name: 'linkStatus', required: false, enum: ANALYTICS_LINK_STATUS_VALUES }),
+    ApiQuery({ name: 'dateFrom', required: false, type: String, format: 'date' }),
+    ApiQuery({ name: 'dateTo', required: false, type: String, format: 'date' }),
+  );
 
 @ApiTags('tests')
 @ApiBearerAuth()
@@ -38,6 +50,7 @@ export class TestsAdminAnalyticsController {
 
   @Get('topics/:topicId/analytics/summary')
   @ApiOperation({ summary: 'Get analytics summary for topic' })
+  @ApiAnalyticsQuery()
   @ApiResponse({ status: HttpStatus.OK, type: AdminTestAnalyticsSummaryDto })
   getSummary(
     @GetCurrentUserId() userId: number,
@@ -49,6 +62,7 @@ export class TestsAdminAnalyticsController {
 
   @Get('topics/:topicId/analytics/export.xlsx')
   @ApiOperation({ summary: 'Export analytics summary in XLSX' })
+  @ApiAnalyticsQuery()
   @ApiResponse({ status: HttpStatus.OK, description: 'Excel analytics report' })
   async exportXlsx(
     @GetCurrentUserId() userId: number,
@@ -70,6 +84,7 @@ export class TestsAdminAnalyticsController {
 
   @Get('topics/:topicId/analytics/export.pdf')
   @ApiOperation({ summary: 'Export analytics summary in PDF' })
+  @ApiAnalyticsQuery()
   @ApiResponse({ status: HttpStatus.OK, description: 'PDF analytics report' })
   async exportPdf(
     @GetCurrentUserId() userId: number,

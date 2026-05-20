@@ -31,6 +31,7 @@ import type {
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
   AdminPublicLinksListResponseDto,
+  AdminTestAnalyticsSummaryDto,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
   CreateTestsTopicDto,
@@ -39,6 +40,9 @@ import type {
   ErrorResponseDto,
   PublishTestsTopicResponseDto,
   ReorderTestsQuestionsDto,
+  TestsAdminAnalyticsControllerExportPdfParams,
+  TestsAdminAnalyticsControllerExportXlsxParams,
+  TestsAdminAnalyticsControllerGetSummaryParams,
   TestsAdminAttemptsControllerListPublicLinkAttemptsParams,
   TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams,
   TestsControllerListTopicsParams,
@@ -2797,6 +2801,525 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getTestsAdminAttemptsControllerGetAttemptDetailQueryOptions(
     attemptId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get analytics summary for topic
+ */
+export const testsAdminAnalyticsControllerGetSummary = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminTestAnalyticsSummaryDto>(
+    { url: `/admin/tests/topics/${topicId}/analytics/summary`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getTestsAdminAnalyticsControllerGetSummaryQueryKey = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+) => {
+  return [`/admin/tests/topics/${topicId}/analytics/summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getTestsAdminAnalyticsControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getTestsAdminAnalyticsControllerGetSummaryQueryKey(topicId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>
+  > = ({ signal }) =>
+    testsAdminAnalyticsControllerGetSummary(topicId, params, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: topicId !== null && topicId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsAdminAnalyticsControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>
+>;
+export type TestsAdminAnalyticsControllerGetSummaryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminAnalyticsControllerGetSummary<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params: undefined | TestsAdminAnalyticsControllerGetSummaryParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerGetSummary<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerGetSummary<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get analytics summary for topic
+ */
+
+export function useTestsAdminAnalyticsControllerGetSummary<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsAdminAnalyticsControllerGetSummaryQueryOptions(
+    topicId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Export analytics summary in XLSX
+ */
+export const testsAdminAnalyticsControllerExportXlsx = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>(
+    { url: `/admin/tests/topics/${topicId}/analytics/export.xlsx`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getTestsAdminAnalyticsControllerExportXlsxQueryKey = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+) => {
+  return [
+    `/admin/tests/topics/${topicId}/analytics/export.xlsx`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getTestsAdminAnalyticsControllerExportXlsxQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getTestsAdminAnalyticsControllerExportXlsxQueryKey(topicId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>
+  > = ({ signal }) =>
+    testsAdminAnalyticsControllerExportXlsx(topicId, params, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: topicId !== null && topicId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsAdminAnalyticsControllerExportXlsxQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>
+>;
+export type TestsAdminAnalyticsControllerExportXlsxQueryError = ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminAnalyticsControllerExportXlsx<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params: undefined | TestsAdminAnalyticsControllerExportXlsxParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerExportXlsx<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerExportXlsx<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export analytics summary in XLSX
+ */
+
+export function useTestsAdminAnalyticsControllerExportXlsx<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportXlsxParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsAdminAnalyticsControllerExportXlsxQueryOptions(
+    topicId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Export analytics summary in PDF
+ */
+export const testsAdminAnalyticsControllerExportPdf = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>(
+    { url: `/admin/tests/topics/${topicId}/analytics/export.pdf`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getTestsAdminAnalyticsControllerExportPdfQueryKey = (
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+) => {
+  return [
+    `/admin/tests/topics/${topicId}/analytics/export.pdf`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getTestsAdminAnalyticsControllerExportPdfQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getTestsAdminAnalyticsControllerExportPdfQueryKey(topicId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>
+  > = ({ signal }) =>
+    testsAdminAnalyticsControllerExportPdf(topicId, params, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: topicId !== null && topicId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsAdminAnalyticsControllerExportPdfQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>
+>;
+export type TestsAdminAnalyticsControllerExportPdfQueryError = ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminAnalyticsControllerExportPdf<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params: undefined | TestsAdminAnalyticsControllerExportPdfParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerExportPdf<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAnalyticsControllerExportPdf<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export analytics summary in PDF
+ */
+
+export function useTestsAdminAnalyticsControllerExportPdf<
+  TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  params?: TestsAdminAnalyticsControllerExportPdfParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsAdminAnalyticsControllerExportPdfQueryOptions(
+    topicId,
+    params,
     options,
   );
 
