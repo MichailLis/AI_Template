@@ -13,6 +13,12 @@
       "backendModule": "AdminModule",
       "prismaModel": "User",
       "schema": "adminOverviewSchema",
+      "ownership": {
+        "kind": "admin-shell",
+        "owns": ["admin shell", "overview", "users", "settings"],
+        "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features.",
+        "candidateExtractions": ["analysis-prompts"]
+      },
       "backendFiles": [
         "server/src/admin/admin.module.ts",
         "server/src/admin/admin.controller.ts",
@@ -47,6 +53,18 @@
       "backendModule": "TestsModule",
       "prismaModel": "TestTopic",
       "schema": "testsTopicCreateSchema",
+      "ownership": {
+        "kind": "product-feature",
+        "owns": [
+          "test authoring",
+          "publishing",
+          "public links",
+          "education organizations for tests",
+          "attempt/session/result flows",
+          "public /t/* routes"
+        ],
+        "adminRoutesAreUiHost": true
+      },
       "verification": {
         "requireOwnedRoots": true,
         "requireOpenApiOperations": true
