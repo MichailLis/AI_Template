@@ -134,6 +134,54 @@ Current branch state:
 
 ## Feature Pipeline (Required Order)
 
+### Phase 0: Feature Ownership Classification
+
+Before any fullstack feature work, classify the task and state the classification explicitly.
+Do not run `npm run gen:nest <name>` until the owning feature is clear.
+
+Use `existing-feature-change` when the work extends an existing bounded context. This is the default
+choice when the route root, Prisma models, UI workspace, and user workflow already belong to an
+existing feature such as `admin`, `tests`, or `auth`.
+
+Use `new-feature` only when the work introduces a new durable bounded context with most of these
+signals:
+
+- a new business object or process with an independent lifecycle
+- a new backend module and API tag/route root
+- new Prisma model ownership or a clearly separate data owner
+- a new frontend slice/workspace/page instead of an addition to an existing workspace
+- a new entry in `template/features.manifest.json`
+- a generated API file that belongs to the new feature after `npm run gen:api`
+- dedicated unit/e2e coverage for the new workflow
+
+Examples:
+
+- `existing-feature-change`: import questions from CSV under `/admin/tests`, export test attempts,
+  add public-link statistics filters, or add settings for test publishing.
+- `new-feature`: add a standalone `news` management area with its own `News` model, `/admin/news`
+  route, backend module, frontend workspace, manifest entry, and tests.
+
+Classification guardrails:
+
+1. Prefer expanding the existing owning feature over creating a module for every button or endpoint.
+2. Do not hide a truly independent domain inside `admin` or `tests` just because it is faster.
+3. If table ownership is unclear, stop and ask before changing Prisma schema or scaffolding a module.
+4. If a change crosses multiple bounded contexts, define the owning feature and the cross-feature
+   contract before implementation.
+5. Keep cross-feature public surface explicit; do not deep-import another feature's internals.
+
+For every backend + frontend task, include this pre-implementation note in the working plan:
+
+```text
+Change classification:
+Owning feature/module:
+Prisma owner/model:
+Route root:
+Manifest impact:
+Generator decision:
+Verification gates:
+```
+
 ### Phase 1: Data Modeling
 
 1. Update `server/prisma/schema.prisma`.
@@ -148,11 +196,12 @@ Current branch state:
 
 ### Phase 2: Backend API
 
-1. Scaffold module:
+1. For a `new-feature`, scaffold the backend module:
    ```powershell
    npm run gen:nest <name>
    ```
-2. Replace scaffolded placeholders with real logic.
+   For an `existing-feature-change`, intentionally skip the generator and extend the owning module.
+2. Replace scaffolded placeholders with real logic when a generator was used.
 3. DTO rules:
    - Use `createZodDto(...)`
    - In response DTOs, convert Prisma `Date` fields to `z.string()` for Swagger/OpenAPI compatibility
