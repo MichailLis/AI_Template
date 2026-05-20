@@ -24,8 +24,8 @@ import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 import {
+  AdminTestAnalyticsQueryDto,
   AdminTestAnalyticsSummaryDto,
-  type AdminTestAnalyticsQueryDto,
 } from './dto/tests-analytics.dto';
 import { TestsAnalyticsExportService } from './tests-analytics-export.service';
 import { TestsAnalyticsService } from './tests-analytics.service';

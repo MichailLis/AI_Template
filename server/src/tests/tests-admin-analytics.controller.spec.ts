@@ -1,9 +1,9 @@
-import { StreamableFile } from '@nestjs/common';
+import { StreamableFile, type Type } from '@nestjs/common';
 
 import { TestsAdminAnalyticsController } from './tests-admin-analytics.controller';
 import { TestsAnalyticsExportService } from './tests-analytics-export.service';
 import { TestsAnalyticsService } from './tests-analytics.service';
-import type {
+import {
   AdminTestAnalyticsQueryDto,
   AdminTestAnalyticsSummaryDto,
 } from './dto/tests-analytics.dto';
@@ -103,6 +103,22 @@ describe('TestsAdminAnalyticsController', () => {
 
     expect(result).toEqual(summary);
     expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(7, 11, query);
+  });
+
+  it('keeps query DTO metadata for validation and coercion', () => {
+    const assertQueryMetatype = (methodName: keyof TestsAdminAnalyticsController) => {
+      const paramTypes = Reflect.getMetadata(
+        'design:paramtypes',
+        TestsAdminAnalyticsController.prototype,
+        methodName,
+      ) as Type<unknown>[];
+
+      expect(paramTypes[2]).toBe(AdminTestAnalyticsQueryDto);
+    };
+
+    assertQueryMetatype('getSummary');
+    assertQueryMetatype('exportXlsx');
+    assertQueryMetatype('exportPdf');
   });
 
   it('exportXlsx calls analytics + excel service and returns StreamableFile with headers', async () => {
