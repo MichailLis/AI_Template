@@ -294,7 +294,15 @@ describe('PolusPublicQuestionCard', () => {
     expect(screen.getByText('Совсем не интересно')).toBeInTheDocument();
     expect(screen.getByText('Очень интересно')).toBeInTheDocument();
     expect(screen.getByText('Интересно')).toBeInTheDocument();
-    expect(screen.getByRole('slider', { name: 'Оценка интереса по шкале' })).toHaveValue('7');
+    const slider = screen.getByRole('slider', { name: 'Оценка интереса по шкале' });
+    const sliderField = slider.closest('.polus-slider-field');
+
+    expect(slider).toHaveValue('7');
+    expect(sliderField).toHaveStyle({
+      '--polus-slider-progress': '70%',
+      '--polus-slider-active-color': 'rgb(187, 20, 96)',
+      '--polus-slider-active-shadow': 'rgba(187, 20, 96, 0.26)',
+    });
   });
 
   it('uses readiness wording and fixes the precision slider title', () => {

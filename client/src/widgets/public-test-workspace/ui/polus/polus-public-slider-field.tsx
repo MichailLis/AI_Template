@@ -16,6 +16,28 @@ interface PolusPublicSliderFieldProps {
 
 const formatSliderValue = (value: number) => Number.parseFloat(value.toFixed(2)).toString();
 
+const sliderLowColor = { red: 43, green: 67, blue: 127 };
+const sliderHighColor = { red: 249, green: 0, blue: 82 };
+
+const clampRatio = (value: number) => Math.min(1, Math.max(0, value));
+
+const getSliderColor = (ratio: number, alpha?: number) => {
+  const clampedRatio = clampRatio(ratio);
+  const red = Math.round(
+    sliderLowColor.red + (sliderHighColor.red - sliderLowColor.red) * clampedRatio,
+  );
+  const green = Math.round(
+    sliderLowColor.green + (sliderHighColor.green - sliderLowColor.green) * clampedRatio,
+  );
+  const blue = Math.round(
+    sliderLowColor.blue + (sliderHighColor.blue - sliderLowColor.blue) * clampedRatio,
+  );
+
+  return typeof alpha === 'number'
+    ? `rgba(${red}, ${green}, ${blue}, ${alpha})`
+    : `rgb(${red}, ${green}, ${blue})`;
+};
+
 export function PolusPublicSliderField({
   questionId,
   min,
@@ -31,6 +53,12 @@ export function PolusPublicSliderField({
 }: PolusPublicSliderFieldProps) {
   const displayValue = hasAnswer ? value : min + (max - min) / 2;
   const progress = max > min ? ((displayValue - min) / (max - min)) * 100 : 0;
+  const sliderRatio = clampRatio(progress / 100);
+  const sliderStyle = {
+    '--polus-slider-progress': `${progress}%`,
+    '--polus-slider-active-color': getSliderColor(sliderRatio),
+    '--polus-slider-active-shadow': getSliderColor(sliderRatio, 0.26),
+  } as CSSProperties;
 
   const commitValue = (rawValue: number) => {
     const nextValue = Math.min(max, Math.max(min, rawValue));
@@ -38,11 +66,7 @@ export function PolusPublicSliderField({
   };
 
   return (
-    <div
-      className="polus-slider-field"
-      data-has-answer={hasAnswer}
-      style={{ '--polus-slider-progress': `${progress}%` } as CSSProperties}
-    >
+    <div className="polus-slider-field" data-has-answer={hasAnswer} style={sliderStyle}>
       <div className="polus-slider-readout" aria-live="polite">
         <output className="polus-slider-value" htmlFor={`polus-question-${questionId}-slider`}>
           {hasAnswer ? formatSliderValue(value) : '—'}
