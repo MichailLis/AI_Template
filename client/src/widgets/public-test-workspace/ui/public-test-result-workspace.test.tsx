@@ -126,62 +126,62 @@ describe('PublicTestResultWorkspace', () => {
     mockSessionResult({
       publicTemplate: 'POLUS',
       professionAtlasUrl: 'https://atlas.example/professions',
-        analysis: {
-          providerMode: 'ALGORITHM',
-          status: 'READY',
-          summary: {
-            ...getMinimalProfOrientationSummary({
-              llm: {
-                status: 'ready',
-                analysis: {
-                  professorSummary:
-                    'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
-                  summary:
-                    'Профиль single_profile означает, что участнику ближе перевод идеи в точную цифровую модель.',
-                  confidenceComment:
-                    'Высокая уверенность связана с gap 12 и consistencyIndex 1 по цифровым шкалам.',
-                  methodSignals: [
-                    'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
-                    'Интерес к направлению A1 выше остальных.',
-                  ],
-                  firstSteps: [
-                    'Смоделировать простой корпус устройства.',
-                    'Сделать сборку из нескольких деталей.',
-                  ],
-                  learningPlan: ['основы черчения', 'CAD/САПР'],
-                  professionNotes: ['Инженер-конструктор проектирует детали и сборки.'],
-                  nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
-                  cautions: [],
-                },
+      analysis: {
+        providerMode: 'ALGORITHM',
+        status: 'READY',
+        summary: {
+          ...getMinimalProfOrientationSummary({
+            llm: {
+              status: 'ready',
+              analysis: {
+                professorSummary:
+                  'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
+                summary:
+                  'Профиль single_profile означает, что участнику ближе перевод идеи в точную цифровую модель.',
+                confidenceComment:
+                  'Высокая уверенность связана с gap 12 и consistencyIndex 1 по цифровым шкалам.',
+                methodSignals: [
+                  'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
+                  'Интерес к направлению A1 выше остальных.',
+                ],
+                firstSteps: [
+                  'Смоделировать простой корпус устройства.',
+                  'Сделать сборку из нескольких деталей.',
+                ],
+                learningPlan: ['основы черчения', 'CAD/САПР'],
+                professionNotes: ['Инженер-конструктор проектирует детали и сборки.'],
+                nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
+                cautions: [],
               },
-            }),
-            topDirections: [
-              profOrientationPrimaryDirection,
-              {
-                id: 'B2',
-                name: 'Программирование',
-                score: 41.1,
-                professions: [],
-                resultCard: {
-                  headline: 'Профиль: программирование',
-                  meaning: 'Тебе ближе логика программ.',
-                  fitsIf: [],
-                  tryActions: [],
-                  learn: [],
-                  miniProject: 'Напиши простую программу.',
-                },
-              },
-            ],
-            profile: {
-              type: 'single_profile',
-              title: '3D-моделирование',
-              meaning: 'Тебе ближе цифровое проектирование.',
             },
+          }),
+          topDirections: [
+            profOrientationPrimaryDirection,
+            {
+              id: 'B2',
+              name: 'Программирование',
+              score: 41.1,
+              professions: [],
+              resultCard: {
+                headline: 'Профиль: программирование',
+                meaning: 'Тебе ближе логика программ.',
+                fitsIf: [],
+                tryActions: [],
+                learn: [],
+                miniProject: 'Напиши простую программу.',
+              },
+            },
+          ],
+          profile: {
+            type: 'single_profile',
+            title: '3D-моделирование',
+            meaning: 'Тебе ближе цифровое проектирование.',
           },
-          rawText: null,
-          errorMessage: null,
-          generatedAt: '2026-05-12T12:00:01.000Z',
         },
+        rawText: null,
+        errorMessage: null,
+        generatedAt: '2026-05-12T12:00:01.000Z',
+      },
     });
 
     const { container } = render(<PublicTestResultWorkspace />);
@@ -280,7 +280,7 @@ describe('PublicTestResultWorkspace', () => {
     expect(container.querySelector('.polus-result-message')).not.toBeInTheDocument();
   });
 
-  it('shows the Polus result with pending professor copy after the soft LLM wait expires', () => {
+  it('keeps the Polus processing screen while methodology LLM is pending after the soft wait', () => {
     mockSessionResult({
       publicTemplate: 'POLUS',
       finishedAt: getRecentFinishedAt(60_000),
@@ -301,12 +301,8 @@ describe('PublicTestResultWorkspace', () => {
 
     const { container } = render(<PublicTestResultWorkspace />);
 
-    const heroText = container.querySelector('.polus-result-message')?.textContent ?? '';
-
-    expect(container.querySelector('.polus-processing-card')).not.toBeInTheDocument();
-    expect(heroText).toContain('Профессор Полюс говорит');
-    expect(heroText).toContain('формулирует понятное ИИ-пояснение');
-    expect(heroText).toContain('Базовый результат ниже уже готов');
+    expect(container.querySelector('.polus-processing-card')).toBeInTheDocument();
+    expect(container.querySelector('.polus-result-message')).not.toBeInTheDocument();
   });
 
   it('uses deterministic professor copy when methodology LLM fails', () => {

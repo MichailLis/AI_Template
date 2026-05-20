@@ -19,7 +19,6 @@ import type { LucideIcon } from 'lucide-react';
 const resultPollIntervalMs = 3_000;
 const resultClockIntervalMs = 1_000;
 const polusMinimumProcessingMs = 10_000;
-const profOrientationLlmSoftWaitMs = 45_000;
 
 interface HeroSignal {
   icon: LucideIcon;
@@ -79,10 +78,7 @@ const shouldShowProcessingScreen = (
     return true;
   }
 
-  return (
-    getProfOrientationLlmStatus(result.analysis.summary) === 'pending' &&
-    elapsedMs < profOrientationLlmSoftWaitMs
-  );
+  return getProfOrientationLlmStatus(result.analysis.summary) === 'pending';
 };
 
 const getProcessingStartedAt = (
