@@ -10,7 +10,14 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { type Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
@@ -36,6 +43,19 @@ const ApiAnalyticsQuery = () =>
     ApiQuery({ name: 'dateFrom', required: false, type: String, format: 'date' }),
     ApiQuery({ name: 'dateTo', required: false, type: String, format: 'date' }),
   );
+
+const apiBinaryResponse = (contentType: string, description: string) => ({
+  status: HttpStatus.OK,
+  description,
+  content: {
+    [contentType]: {
+      schema: {
+        type: 'string',
+        format: 'binary',
+      },
+    },
+  },
+});
 
 @ApiTags('tests')
 @ApiBearerAuth()
@@ -63,7 +83,8 @@ export class TestsAdminAnalyticsController {
   @Get('topics/:topicId/analytics/export.xlsx')
   @ApiOperation({ summary: 'Export analytics summary in XLSX' })
   @ApiAnalyticsQuery()
-  @ApiResponse({ status: HttpStatus.OK, description: 'Excel analytics report' })
+  @ApiProduces(XLSX_CONTENT_TYPE)
+  @ApiResponse(apiBinaryResponse(XLSX_CONTENT_TYPE, 'Excel analytics report'))
   async exportXlsx(
     @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
@@ -85,7 +106,8 @@ export class TestsAdminAnalyticsController {
   @Get('topics/:topicId/analytics/export.pdf')
   @ApiOperation({ summary: 'Export analytics summary in PDF' })
   @ApiAnalyticsQuery()
-  @ApiResponse({ status: HttpStatus.OK, description: 'PDF analytics report' })
+  @ApiProduces(PDF_CONTENT_TYPE)
+  @ApiResponse(apiBinaryResponse(PDF_CONTENT_TYPE, 'PDF analytics report'))
   async exportPdf(
     @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,

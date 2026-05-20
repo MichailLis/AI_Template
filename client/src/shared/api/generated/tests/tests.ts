@@ -2991,8 +2991,14 @@ export const testsAdminAnalyticsControllerExportXlsx = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>(
-    { url: `/admin/tests/topics/${topicId}/analytics/export.xlsx`, method: 'GET', params, signal },
+  return customInstance<Blob>(
+    {
+      url: `/admin/tests/topics/${topicId}/analytics/export.xlsx`,
+      method: 'GET',
+      params,
+      responseType: 'blob',
+      signal,
+    },
     options,
   );
 };
@@ -3165,8 +3171,14 @@ export const testsAdminAnalyticsControllerExportPdf = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>(
-    { url: `/admin/tests/topics/${topicId}/analytics/export.pdf`, method: 'GET', params, signal },
+  return customInstance<Blob>(
+    {
+      url: `/admin/tests/topics/${topicId}/analytics/export.pdf`,
+      method: 'GET',
+      params,
+      responseType: 'blob',
+      signal,
+    },
     options,
   );
 };
