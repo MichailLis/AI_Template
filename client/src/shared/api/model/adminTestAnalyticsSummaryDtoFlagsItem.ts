@@ -9,6 +9,8 @@
 export type AdminTestAnalyticsSummaryDtoFlagsItem = {
   /** @minLength 1 */
   flag: string;
+  /** @minLength 1 */
+  label: string;
   /**
    * @minimum 0
    * @maximum 9007199254740991

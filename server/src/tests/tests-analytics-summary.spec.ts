@@ -6,6 +6,12 @@ import {
   toShare,
 } from './tests-analytics-summary';
 
+const FLAG_LABELS = {
+  readiness_conflict: 'Готовность к ведущему направлению пока низкая',
+  interest_slider_conflict: 'Выборы противоречат слайдеру интереса',
+  overchoice: 'Выбрано слишком много вариантов',
+};
+
 const createDirectionSummary = (directionId: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) => ({
   id: directionId,
   block: `block-${directionId}`,
@@ -72,7 +78,7 @@ const createSummary = (input: {
     flags:
       input.flags?.map((flag) => ({
         code: flag,
-        label: `${flag}`,
+        label: FLAG_LABELS[flag],
         severity: 'warning',
       })) ?? [],
     llm: { status: 'not_requested' },
@@ -218,8 +224,8 @@ describe('buildV3AnalyticsSections', () => {
 
     expect(result.profiles).toEqual(
       expect.arrayContaining([
-        { profileType: 'mixed_profile', count: 1, share: 50 },
-        { profileType: 'single_profile', count: 1, share: 50 },
+        { profileType: 'mixed_profile', label: 'Mixed profile', count: 1, share: 50 },
+        { profileType: 'single_profile', label: 'Single profile', count: 1, share: 50 },
       ]),
     );
 
@@ -235,8 +241,18 @@ describe('buildV3AnalyticsSections', () => {
 
     expect(result.flags).toEqual(
       expect.arrayContaining([
-        { flag: 'readiness_conflict', count: 1, share: 50 },
-        { flag: 'interest_slider_conflict', count: 1, share: 50 },
+        {
+          flag: 'readiness_conflict',
+          label: 'Готовность к ведущему направлению пока низкая',
+          count: 1,
+          share: 50,
+        },
+        {
+          flag: 'interest_slider_conflict',
+          label: 'Выборы противоречат слайдеру интереса',
+          count: 1,
+          share: 50,
+        },
       ]),
     );
 

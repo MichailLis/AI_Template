@@ -9,6 +9,8 @@
 export type AdminTestAnalyticsSummaryDtoProfilesItem = {
   /** @minLength 1 */
   profileType: string;
+  /** @minLength 1 */
+  label: string;
   /**
    * @minimum 0
    * @maximum 9007199254740991

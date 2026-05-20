@@ -34,6 +34,7 @@ export type ScoreAverageItem = {
 
 export type ProfileCountItem = {
   profileType: ProfOrientationProfileType;
+  label: string;
   count: number;
   share: number;
 };
@@ -46,6 +47,7 @@ export type ConfidenceLevelItem = {
 
 export type FlagCountItem = {
   flag: string;
+  label: string;
   count: number;
   share: number;
 };

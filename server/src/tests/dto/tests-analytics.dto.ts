@@ -80,6 +80,7 @@ export const AdminTestAnalyticsScoreAverageItemSchema = z.object({
 export const AdminTestAnalyticsProfilesSchema = z.array(
   z.object({
     profileType: z.string().trim().min(1),
+    label: z.string().trim().min(1),
     count: z.number().int().min(0),
     share: ShareSchema,
   }),
@@ -104,6 +105,7 @@ export const AdminTestAnalyticsConfidenceSchema = z.object({
 export const AdminTestAnalyticsFlagsSchema = z.array(
   z.object({
     flag: z.string().trim().min(1),
+    label: z.string().trim().min(1),
     count: z.number().int().min(0),
     share: ShareSchema,
   }),

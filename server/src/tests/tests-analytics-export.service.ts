@@ -367,7 +367,7 @@ export class TestsAnalyticsExportService {
 
     const profileRows = [
       ['Профиль', 'Кол-во', 'Доля, %'],
-      ...summary.profiles.map((item) => [item.profileType, item.count, `${item.share}%`]),
+      ...summary.profiles.map((item) => [item.label, item.count, `${item.share}%`]),
     ];
 
     const publicLinksRows = [

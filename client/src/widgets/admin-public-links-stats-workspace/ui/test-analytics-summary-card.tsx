@@ -133,7 +133,7 @@ function SummaryHighlights({ summary }: { summary: AdminTestAnalyticsSummaryDto 
           Частый профиль
         </p>
         <p className={cn('mt-2 text-sm font-semibold', adminClassNames.text.heading)}>
-          {topProfile ? topProfile.profileType : 'Нет данных V3+'}
+          {topProfile ? topProfile.label : 'Нет данных V3+'}
         </p>
         <p className={cn('mt-1 text-sm', adminClassNames.text.muted)}>
           {topProfile
@@ -148,7 +148,7 @@ function SummaryHighlights({ summary }: { summary: AdminTestAnalyticsSummaryDto 
           Сигналы качества
         </p>
         <p className={cn('mt-2 text-sm font-semibold', adminClassNames.text.heading)}>
-          {topFlag ? topFlag.flag : 'Без флагов'}
+          {topFlag ? topFlag.label : 'Без флагов'}
         </p>
         <p className={cn('mt-1 text-sm', adminClassNames.text.muted)}>
           {topFlag

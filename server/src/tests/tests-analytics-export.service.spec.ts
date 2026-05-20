@@ -46,8 +46,8 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     { id: 'B2', label: 'Кодирование', average: 64.4 },
   ],
   profiles: [
-    { profileType: 'single_profile', count: 1, share: 50 },
-    { profileType: 'mixed_profile', count: 1, share: 50 },
+    { profileType: 'single_profile', label: 'Ведущее направление', count: 1, share: 50 },
+    { profileType: 'mixed_profile', label: 'Смешанный профиль', count: 1, share: 50 },
   ],
   confidence: {
     levels: [
@@ -58,7 +58,14 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     consistencyIndex: { value: 8.2, total: 2 },
     readinessTop: { value: 9.1, total: 2 },
   },
-  flags: [{ flag: 'readiness_conflict', count: 1, share: 33.3 }],
+  flags: [
+    {
+      flag: 'readiness_conflict',
+      label: 'Готовность к ведущему направлению пока низкая',
+      count: 1,
+      share: 33.3,
+    },
+  ],
   publicLinks: [
     {
       publicLinkId: 10,

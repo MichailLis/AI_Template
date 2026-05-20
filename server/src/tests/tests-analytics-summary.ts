@@ -203,17 +203,19 @@ const buildScoreAverages = (summaries: ProfOrientationSummary[]) => {
 };
 
 const buildProfileItems = (summaries: ProfOrientationSummary[]): ProfileCountItem[] => {
-  const counts = new Map<string, number>();
+  const counts = new Map<string, CountRecord>();
   for (const summary of summaries) {
     const key = summary.profile.type;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const current = counts.get(key) ?? { label: summary.profile.title, count: 0 };
+    counts.set(key, {
+      label: current.label,
+      count: current.count + 1,
+    });
   }
 
-  return buildCountShares(
-    new Map(Array.from(counts.entries()).map(([id, count]) => [id, { label: id, count }])),
-    summaries.length,
-  ).map((item) => ({
+  return buildCountShares(counts, summaries.length).map((item) => ({
     profileType: item.id as ProfileCountItem['profileType'],
+    label: item.label,
     count: item.count,
     share: item.share,
   }));
@@ -260,19 +262,21 @@ const buildConfidence = (summaries: ProfOrientationSummary[]) => {
 };
 
 const buildFlagItems = (summaries: ProfOrientationSummary[]): FlagCountItem[] => {
-  const counts = new Map<string, number>();
+  const counts = new Map<string, CountRecord>();
 
   for (const summary of summaries) {
     for (const flag of summary.flags) {
-      counts.set(flag.code, (counts.get(flag.code) ?? 0) + 1);
+      const current = counts.get(flag.code) ?? { label: flag.label, count: 0 };
+      counts.set(flag.code, {
+        label: current.label,
+        count: current.count + 1,
+      });
     }
   }
 
-  return buildCountShares(
-    new Map(Array.from(counts.entries()).map(([id, count]) => [id, { label: id, count }])),
-    summaries.length,
-  ).map((item) => ({
+  return buildCountShares(counts, summaries.length).map((item) => ({
     flag: item.id,
+    label: item.label,
     count: item.count,
     share: item.share,
   }));

@@ -110,7 +110,7 @@ const buildDirectionRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow
 const buildProfileRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow[] => [
   ...summary.profiles.map((item) => ({
     id: `profile-${item.profileType}`,
-    label: item.profileType,
+    label: item.label,
     value: formatNumber(item.count),
     share: item.share,
     note: 'Профиль результата',
@@ -124,7 +124,7 @@ const buildProfileRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow[]
   })),
   ...summary.flags.map((item) => ({
     id: `flag-${item.flag}`,
-    label: item.flag,
+    label: item.label,
     value: formatNumber(item.count),
     share: item.share,
     note: 'Флаг качества',
