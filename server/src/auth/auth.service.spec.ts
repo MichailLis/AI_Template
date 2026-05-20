@@ -24,6 +24,7 @@ type PrismaUserDelegate = {
   create: jest.Mock;
   findUnique: jest.Mock;
   update: jest.Mock;
+  updateMany: jest.Mock;
 };
 
 const createTestUser = (overrides: Partial<TestUser> = {}): TestUser => ({
@@ -49,6 +50,7 @@ describe('AuthService', () => {
         create: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
       },
     };
 
@@ -216,18 +218,48 @@ describe('AuthService', () => {
   it('refreshTokens should return new tokens when refresh token is valid', async () => {
     prismaMock.user.findUnique.mockResolvedValue(createTestUser());
     jest.mocked(argon2.verify).mockResolvedValue(true);
+    jest.mocked(argon2.hash).mockResolvedValue('new-hashed-refresh-token');
     jest.spyOn(service, 'getTokens').mockResolvedValue({
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
     });
-    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
+    prismaMock.user.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await service.refreshTokens(1, 'valid-refresh-token');
 
-    expect(updateRefreshTokenSpy).toHaveBeenCalledWith(1, 'new-refresh-token');
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 1,
+        hashedRefreshToken: 'hashed-refresh-token',
+      },
+      data: { hashedRefreshToken: 'new-hashed-refresh-token' },
+    });
     expect(result).toEqual({
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
+    });
+  });
+
+  it('refreshTokens should reject a stale parallel refresh after the stored hash changes', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      createTestUser({ hashedRefreshToken: 'old-hash' }),
+    );
+    jest.mocked(argon2.verify).mockResolvedValue(true);
+    jest.mocked(argon2.hash).mockResolvedValue('new-hash');
+    jest.spyOn(service, 'getTokens').mockResolvedValue({
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+    });
+    prismaMock.user.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(service.refreshTokens(1, 'old-refresh-token')).rejects.toThrow(ForbiddenException);
+
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 1,
+        hashedRefreshToken: 'old-hash',
+      },
+      data: { hashedRefreshToken: 'new-hash' },
     });
   });
 

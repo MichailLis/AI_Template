@@ -5,6 +5,7 @@ import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.servic
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus.enrichment';
+import { PROF_ORIENTATION_V3_PLUS_CONFIG } from './prof-orientation-v3-plus.fixture';
 import { TestsAnalysisService } from './tests-analysis.service';
 
 type AnalysisUpsertArgs = {
@@ -106,6 +107,7 @@ describe('TestsAnalysisService', () => {
       findUnique: jest.Mock;
     };
     testStudentAnalysis: {
+      findMany: jest.Mock;
       update: jest.Mock;
     };
   };
@@ -127,6 +129,7 @@ describe('TestsAnalysisService', () => {
         findUnique: jest.fn(),
       },
       testStudentAnalysis: {
+        findMany: jest.fn(),
         update: jest.fn(),
       },
     };
@@ -232,6 +235,100 @@ describe('TestsAnalysisService', () => {
     ).toBe('IN_PROGRESS');
 
     jest.useRealTimers();
+  });
+
+  it('toPublicAnalysisResponse does not expose raw provider text to students', () => {
+    const result = service.toPublicAnalysisResponse({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: { introduction: 'Student safe summary' },
+      rawText: 'Internal provider output',
+      errorMessage: null,
+      generatedAt: new Date('2026-05-12T12:00:00.000Z'),
+    } as never);
+
+    expect(result).toMatchObject({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: { introduction: 'Student safe summary' },
+      errorMessage: null,
+      generatedAt: '2026-05-12T12:00:00.000Z',
+    });
+    expect(result).not.toHaveProperty('rawText');
+  });
+
+  it('recovers stale pending LLM analyses by re-enqueuing their attempts', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+    prismaMock.testStudentAnalysis.findMany.mockResolvedValue([{ attemptId: 5 }, { attemptId: 8 }]);
+    const enqueueSpy = jest
+      .spyOn(service, 'enqueueAttemptAnalysis')
+      .mockImplementation(() => undefined);
+
+    await expect(service.recoverStalePendingLlmAnalyses()).resolves.toBe(2);
+
+    expect(prismaMock.testStudentAnalysis.findMany).toHaveBeenCalledWith({
+      where: {
+        status: 'PENDING',
+        providerMode: 'LLM',
+        updatedAt: {
+          lt: new Date('2026-05-12T11:50:00.000Z'),
+        },
+        attempt: {
+          status: 'COMPLETED',
+          topicVersion: {
+            analysisPromptVersionId: {
+              not: null,
+            },
+          },
+        },
+      },
+      select: {
+        attemptId: true,
+      },
+      orderBy: {
+        updatedAt: 'asc',
+      },
+      take: 20,
+    });
+    expect(enqueueSpy).toHaveBeenNthCalledWith(1, 5);
+    expect(enqueueSpy).toHaveBeenNthCalledWith(2, 8);
+
+    enqueueSpy.mockRestore();
+  });
+
+  it('starts stale pending LLM analysis recovery during application bootstrap', () => {
+    const recoverySpy = jest.spyOn(service, 'recoverStalePendingLlmAnalyses').mockResolvedValue(0);
+
+    service.onApplicationBootstrap();
+
+    expect(recoverySpy).toHaveBeenCalledTimes(1);
+    recoverySpy.mockRestore();
+  });
+
+  it('upsertProfOrientationV3PlusAnalysis uses the topic version scoring config', async () => {
+    txMock.testStudentAnalysis.upsert.mockResolvedValue({});
+
+    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+      attempt: {
+        id: 5,
+        topicVersion: {
+          scoringConfig: {
+            ...PROF_ORIENTATION_V3_PLUS_CONFIG,
+            version: '3.1-custom',
+          },
+          questions: [],
+        },
+        answers: [],
+      } as never,
+      promptVersionId: null,
+    });
+
+    const upsertMock = txMock.testStudentAnalysis.upsert as jest.MockedFunction<
+      (args: { create: { summary: { scoringVersion: string } } }) => Promise<unknown>
+    >;
+    const upsertArgs = upsertMock.mock.calls[0]?.[0];
+
+    expect(upsertArgs?.create.summary.scoringVersion).toBe('3.1-custom');
   });
 
   it('runAttemptAnalysis stores structured ready analysis from OpenRouter', async () => {

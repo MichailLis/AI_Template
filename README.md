@@ -1,6 +1,6 @@
 # Fullstack AI Template (NestJS + React + Prisma)
 
-Minimal template for AI-assisted feature delivery.
+Strict fullstack product template for AI-assisted feature delivery.
 
 Current project state:
 
@@ -8,7 +8,7 @@ Current project state:
 - Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio foundation, and Tests module workspace
 - Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/stats`)
 - Public student flow (`/t/*`) is product-ready, supports selectable public templates, selectable entry profile modes, and scoped themes isolated from admin screens
-- Final template target remains auth-only; business modules are temporary and can be removed when finalizing baseline
+- Strict template guardrails remain enforced through `AI_GUIDE.md`, `template/features.manifest.json`, `template/fsd.rules.json`, and `scripts/verify-architecture.mjs`
 
 ## Stack
 
@@ -215,11 +215,20 @@ Public student routes:
 - `"/t/:code/session/:sessionToken"`: test run workspace, branched by public link template
 - `"/t/:code/result/:sessionToken"`: result and analysis screen, branched by public link template
 
+Public session/result URL security model:
+
+- `sessionToken` works as a bearer-style link token: anyone with the URL can open the
+  active session or final result while the session/link remains valid.
+- Do not log or share these URLs outside the student-facing flow.
+- Public result responses expose only student-safe analysis fields: status, provider mode,
+  generated timestamp, safe summary, and user-facing error text.
+- Raw provider output, prompts, scoring internals, and debug data remain admin/internal only.
+
 Entry profile modes:
 
 - `DEMOGRAPHIC`: collects gender, age, residence, and education level before starting the test
 - `EDUCATION`: collects the current education-based profile before starting the test
-- `EDUCATION_DEMOGRAPHIC`: collects student name, age, education organization, group/class, gender, residence, and education level; Polus hybrid entry does not require initials
+- `EDUCATION_DEMOGRAPHIC`: collects student name, surname initial, patronymic initial, age, education organization, group/class, gender, residence, and education level in Polus hybrid entry
 
 Current public run UX:
 
@@ -301,7 +310,7 @@ npm run gen:api
 npm run verify:template
 ```
 
-8. If this was only a pipeline test, remove the feature and return to auth-only baseline.
+8. If this was only a pipeline test, remove the temporary feature and return the manifest/routes to the current declared baseline.
 
 ## Quality Gates
 
@@ -310,6 +319,10 @@ Run before finalizing changes:
 ```powershell
 npm run verify:local
 npm run verify:template
+npm run test:run --prefix client
+npm run format:check
+npm run audit:all
+npm run verify:e2e:critical
 ```
 
 For explicit step-by-step checks:
@@ -327,6 +340,8 @@ npm run verify:template
 `verify:template` is the release-level full pipeline (including Prisma sync, API regeneration, architecture/smoke checks).
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json` and runs mandatory server unit/e2e tests.
+
+Until the verification scripts are expanded, release readiness also requires the explicit client Vitest, format, audit, and critical e2e commands shown above.
 
 Server smoke details:
 
@@ -357,12 +372,12 @@ Use this before opening PR or finalizing a feature branch:
 - Frontend layer rules source of truth: `template/fsd.rules.json`
 - Hard check command: `npm run verify:architecture`
 - If a feature is added/removed, update manifest and wiring in the same change.
-- In final auth-only template state, keep manifest `features` empty.
+- In an explicit auth-only cleanup branch, keep manifest `features` empty.
 - `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
 - When `features` is not empty, `client/src/pages/dashboard.tsx` must exist and include `to="<feature.route>"` links for declared features.
 - Declared `publicRoutes` must be present in `client/src/app/App.tsx`.
 - Generated API directories that do not match feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
-- In auth-only baseline, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
+- In an explicit auth-only cleanup branch, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 
 Frontend strict FSD contract for this branch:
 

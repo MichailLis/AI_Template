@@ -276,6 +276,8 @@ describe('TestsPublicLinkService', () => {
       archivedAt: null,
       entryProfileMode: 'EDUCATION',
       maxAttemptsPerStudent: 3,
+      startsAt: null,
+      endsAt: null,
     });
     prismaMock.testPublicLink.update.mockResolvedValue(
       createPublicLinkRecordFixture({
@@ -297,6 +299,86 @@ describe('TestsPublicLinkService', () => {
     expect(updateCall?.data.maxAttemptsPerStudent).toBe(1);
     expect(result.entryProfileMode).toBe('DEMOGRAPHIC');
     expect(result.maxAttemptsPerStudent).toBe(1);
+  });
+
+  it('updatePublicLink rejects a partial startsAt update that would invert the stored date window', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      entryProfileMode: 'EDUCATION',
+      maxAttemptsPerStudent: 3,
+      startsAt: new Date('2026-05-20T10:00:00.000Z'),
+      endsAt: new Date('2026-05-21T10:00:00.000Z'),
+    });
+    prismaMock.testPublicLink.update.mockResolvedValue(createPublicLinkRecordFixture());
+
+    await expect(
+      service.updatePublicLink(7, 100, {
+        startsAt: '2026-05-22T10:00:00.000Z',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
+  it('updatePublicLink rejects a partial endsAt update that would invert the stored date window', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      entryProfileMode: 'EDUCATION',
+      maxAttemptsPerStudent: 3,
+      startsAt: new Date('2026-05-20T10:00:00.000Z'),
+      endsAt: new Date('2026-05-21T10:00:00.000Z'),
+    });
+    prismaMock.testPublicLink.update.mockResolvedValue(createPublicLinkRecordFixture());
+
+    await expect(
+      service.updatePublicLink(7, 100, {
+        endsAt: '2026-05-19T10:00:00.000Z',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
+  it('getAccessiblePublicLinkByCode allows immutable archived published snapshots', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          title: 'Профориентация',
+          description: null,
+          status: 'ARCHIVED',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    await expect(service.getAccessiblePublicLinkByCode('demo2026')).resolves.toMatchObject({
+      shortCode: 'DEMO2026',
+      topicVersion: {
+        id: 50,
+        status: 'ARCHIVED',
+      },
+    });
+  });
+
+  it('getAccessiblePublicLinkByCode rejects links pointing to draft versions', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          title: 'Профориентация',
+          description: null,
+          status: 'DRAFT',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    await expect(service.getAccessiblePublicLinkByCode('demo2026')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });
 

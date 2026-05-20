@@ -13,8 +13,6 @@ export type PublicSessionResultResponseDtoAnalysis = {
   status: PublicSessionResultResponseDtoAnalysisStatus;
   summary: unknown | null;
   /** @nullable */
-  rawText: string | null;
-  /** @nullable */
   errorMessage: string | null;
   /** @nullable */
   generatedAt: string | null;

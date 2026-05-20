@@ -6,13 +6,28 @@ const rootDir = process.cwd();
 const composePath = join(rootDir, 'docker-compose.yml');
 const serverDockerfilePath = join(rootDir, 'server', 'Dockerfile');
 const clientDockerfilePath = join(rootDir, 'client', 'Dockerfile');
+const runtimeApiBaseUrlPath = join(
+  rootDir,
+  'client',
+  'src',
+  'shared',
+  'api',
+  'runtime-api-base-url.ts',
+);
 const envExamplePaths = ['.env.example', join('server', '.env.example'), '.env.deploy.example'];
 
 const composeSource = readFileSync(composePath, 'utf8');
 const serverDockerfile = readFileSync(serverDockerfilePath, 'utf8');
 const clientDockerfile = readFileSync(clientDockerfilePath, 'utf8');
+const runtimeApiBaseUrlSource = readFileSync(runtimeApiBaseUrlPath, 'utf8');
 const legacyDevJwtValue = ['secret', '123'].join('');
 const openRouterKeyPrefix = ['sk', 'or'].join('-');
+const requiredRuntimeApiDiscoveryMarkers = [
+  '/api-json',
+  '/auth/signin',
+  '/admin/tests/public-links',
+  '/tests/public/links/{code}',
+];
 
 const failures = [];
 
@@ -154,6 +169,12 @@ for (const envExamplePath of envExamplePaths) {
 
   if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(envExample)) {
     fail(`${envExamplePath} must not contain real-looking runtime secrets`);
+  }
+}
+
+for (const marker of requiredRuntimeApiDiscoveryMarkers) {
+  if (!runtimeApiBaseUrlSource.includes(marker)) {
+    fail(`runtime API discovery must validate required marker ${marker}`);
   }
 }
 

@@ -1,17 +1,14 @@
 # AI Agent Programming Guide - Fullstack Base Project
 
-This template is a minimal, stable base for AI-driven development.
+This template is a stable product-oriented base for AI-driven development.
 
-Target template baseline:
+Current branch baseline:
 
 - Auth flow (`/auth/signup`, `/auth/signin`, `/auth/logout`, `/auth/refresh`)
-- Frontend auth UI route: `/login` only
-- No business modules in the final template branch (auth-only)
+- Frontend auth UI route: `/login`
+- Admin workspace, Prompt Studio, tests editor, public links, analytics, public student flow, and Polus public template
 
-Note:
-
-- Temporary feature modules can exist in feature branches for pipeline checks.
-- Before finalizing template state, remove temporary modules and keep only auth.
+Auth-only mode is still a supported cleanup target for a dedicated template-finalization branch. Do not remove current business modules from this branch unless the task explicitly asks to return to auth-only.
 
 ## Tech Stack
 
@@ -253,6 +250,7 @@ Required behavior:
 7. For strict machine-parseable output, use `response_format: json_schema` + `strict: true` with explicit schema.
 8. When schema is required, set `provider.require_parameters=true` to avoid routing to providers that ignore required params.
 9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
+10. Archived prompt versions remain valid for already published test versions that reference them; archive hides prompt versions from future selection/editing workflows, it must not break historical runtime analysis.
 
 Recommended env vars for prompt foundation:
 
@@ -361,6 +359,16 @@ Target routes:
 - `"/t/:code/session/:sessionToken"` -> run workspace
 - `"/t/:code/result/:sessionToken"` -> result workspace
 
+Security model:
+
+- Public session/result URLs are bearer-style links: anyone with a valid `sessionToken`
+  can open the active session or final result until normal session/link rules block access.
+- Do not log, display, or send public session/result URLs outside the student-facing flow.
+- Public result DTOs must expose only student-safe analysis fields: status, provider mode,
+  generated timestamp, safe summary blocks, and user-facing error text.
+- Raw provider output, prompts, scoring internals, and debug-only fields belong only in
+  admin/internal DTOs protected by admin guards.
+
 UI/theming rules:
 
 1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
@@ -380,7 +388,7 @@ UI/theming rules:
 
 ## Reference Example For AI Agents (Illustrative)
 
-Example goal: implement `news` feature with editor UI (example only, not part of final auth-only template).
+Example goal: implement `news` feature with editor UI (example only, not part of the current baseline).
 
 1. Schema:
    - Add `News` model to `server/prisma/schema.prisma`.
@@ -406,7 +414,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
-5. Final template cleanup:
+5. Temporary feature cleanup, only when the feature was created just for pipeline checks:
    - Remove temporary module files and wiring
    - Remove feature entry from manifest
    - Run `npm run verify:template` again
@@ -502,8 +510,7 @@ Use this checklist before opening PR or finalizing work.
 - Feature inventory is declared in `template/features.manifest.json`.
 - Public student routes are declared in `template/features.manifest.json` under `publicRoutes`.
 - Additional non-feature generated API directories are declared in `template/features.manifest.json` under `generatedApiDirs`.
-- In final template state, `features` can be empty (auth-only baseline).
-- In auth-only frontend baseline, required auth route is `"/login"`.
+- In an explicit auth-only cleanup branch, `features` can be empty and `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 - Every declared feature must have:
   - backend module/controller/service/DTO files
   - frontend page + create form

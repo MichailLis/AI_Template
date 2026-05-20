@@ -255,9 +255,7 @@ describe('Tests public sessions (e2e)', () => {
         answers: [
           {
             questionId,
-            answerPayload: {
-              text: 'Занятия помогли лучше структурировать практику.',
-            },
+            answerPayload: 'Занятия помогли лучше структурировать практику.',
           },
         ],
       })
@@ -270,9 +268,7 @@ describe('Tests public sessions (e2e)', () => {
     expect(answersResponse.body.answers).toHaveLength(1);
     expect(answersResponse.body.answers[0]).toMatchObject({
       questionId,
-      answerPayload: {
-        text: 'Занятия помогли лучше структурировать практику.',
-      },
+      answerPayload: 'Занятия помогли лучше структурировать практику.',
     });
 
     const finishResponse = await request(app.getHttpServer())
@@ -289,6 +285,7 @@ describe('Tests public sessions (e2e)', () => {
         errorMessage: null,
       },
     });
+    expect(finishResponse.body.analysis).not.toHaveProperty('rawText');
 
     const resultResponse = await request(app.getHttpServer())
       .get(`/tests/public/sessions/${sessionToken}/result`)
@@ -302,6 +299,34 @@ describe('Tests public sessions (e2e)', () => {
         providerMode: 'STUB',
         status: 'READY',
       },
+    });
+    expect(resultResponse.body.analysis).not.toHaveProperty('rawText');
+  });
+
+  it('keeps an existing public link accessible after republishing its topic', async () => {
+    const { shortCode, topicId, publishedVersionId } =
+      await createPublishedTopicWithPublicLink('REPB');
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/publish`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const linkVersion = await prisma.testTopicVersion.findUniqueOrThrow({
+      where: { id: publishedVersionId },
+      select: { status: true },
+    });
+
+    expect(linkVersion.status).toBe('ARCHIVED');
+
+    const linkResponse = await request(app.getHttpServer())
+      .get(`/tests/public/links/${shortCode}`)
+      .expect(200);
+
+    expect(linkResponse.body).toMatchObject({
+      shortCode,
+      title: 'Публичный e2e тест REPB',
+      questionCount: 1,
     });
   });
 

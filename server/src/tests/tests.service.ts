@@ -393,6 +393,23 @@ export class TestsService {
       throw new NotFoundException('Test topic not found');
     }
 
+    const protectedVersionsCount = await this.prisma.testTopicVersion.count({
+      where: {
+        topicId,
+        OR: [
+          { status: 'PUBLISHED' },
+          { publicLinks: { some: {} } },
+          { studentAttempts: { some: {} } },
+        ],
+      },
+    });
+
+    if (protectedVersionsCount > 0) {
+      throw new BadRequestException(
+        'Test topic with published versions, public links, or attempts cannot be hard-deleted',
+      );
+    }
+
     await this.prisma.testTopic.delete({
       where: { id: topicId },
     });

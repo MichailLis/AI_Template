@@ -286,6 +286,7 @@ model TestStudentAttempt {
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
   @@index([publicLinkId, studentKeyHash])
+  @@index([publicLinkId, startedAt])
   @@index([status, startedAt])
   @@index([topicVersionId])
   @@map("test_student_attempts")

@@ -49,4 +49,11 @@ describe('Prisma analysis prompt schema', () => {
     expect(schema).toContain('@@unique([versionId, order])');
     expect(schema.match(/@@unique\(\[questionId, order\]\)/g)).toHaveLength(2);
   });
+
+  it('indexes public-link attempts by start time for stats queries', () => {
+    expect(schema).toContain('@@index([publicLinkId, startedAt])');
+    expect(migrationSql).toContain(
+      'CREATE INDEX "test_student_attempts_publicLinkId_startedAt_idx"',
+    );
+  });
 });

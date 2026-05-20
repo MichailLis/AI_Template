@@ -69,6 +69,7 @@ export const setupInterceptors = (api: AxiosInstance) => {
         originalRequest._retry = true;
         try {
           if (!refreshPromise) {
+            isAuthRefreshRedirecting = false;
             refreshPromise = refreshTokens().finally(() => {
               refreshPromise = null;
             });

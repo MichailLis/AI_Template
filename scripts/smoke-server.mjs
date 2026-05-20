@@ -4,17 +4,29 @@ import { dirname, join } from 'node:path';
 
 const port = process.env.SMOKE_SERVER_PORT ?? process.env.PORT ?? '3000';
 const targetUrl = `http://127.0.0.1:${port}/api-json`;
-const authApiPaths = ['/auth/signup', '/auth/signin', '/auth/logout', '/auth/refresh'];
+const authApiOperations = [
+  { path: '/auth/signup', methods: ['post'] },
+  { path: '/auth/signin', methods: ['post'] },
+  { path: '/auth/logout', methods: ['post'] },
+  { path: '/auth/refresh', methods: ['post'] },
+];
 
 const manifestRaw = await readFile(
   join(process.cwd(), 'template', 'features.manifest.json'),
   'utf-8',
 );
 const manifest = JSON.parse(manifestRaw);
-const featureApiPaths = (manifest.features ?? [])
-  .map((feature) => feature.route)
-  .filter((route) => typeof route === 'string');
-const requiredPaths = [...authApiPaths, ...featureApiPaths];
+const featureApiOperations = (manifest.features ?? []).flatMap((feature) => {
+  if (Array.isArray(feature.openApiOperations) && feature.openApiOperations.length > 0) {
+    return feature.openApiOperations;
+  }
+
+  return typeof feature.route === 'string' ? [{ path: feature.route, methods: [] }] : [];
+});
+const requiredApiOperations = [...authApiOperations, ...featureApiOperations].filter(
+  (operation) => typeof operation.path === 'string' && operation.path.length > 0,
+);
+const requiredPaths = [...new Set(requiredApiOperations.map((operation) => operation.path))];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
@@ -40,6 +52,39 @@ const waitForSwagger = async (url, timeoutMs) => {
   }
 
   throw new Error(`Server smoke check timed out: ${url}`);
+};
+
+const isSwaggerDocument = (payload) => {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    ('openapi' in payload || 'swagger' in payload) &&
+    typeof payload.paths === 'object' &&
+    payload.paths !== null
+  );
+};
+
+const findMissingOperations = (swaggerDoc) => {
+  const paths = swaggerDoc.paths ?? {};
+  const missingOperations = [];
+
+  for (const operation of requiredApiOperations) {
+    const methods = Array.isArray(operation.methods) ? operation.methods : [];
+    const pathItem = paths[operation.path];
+
+    if (!pathItem || methods.length === 0) {
+      continue;
+    }
+
+    for (const method of methods) {
+      const normalizedMethod = String(method).toLowerCase();
+      if (!pathItem[normalizedMethod]) {
+        missingOperations.push(`${normalizedMethod.toUpperCase()} ${operation.path}`);
+      }
+    }
+  }
+
+  return missingOperations;
 };
 
 const stopProcess = (child) =>
@@ -106,11 +151,21 @@ try {
     swaggerDoc = await waitForSwagger(targetUrl, 45000);
   }
 
-  const actualPaths = new Set(Object.keys(swaggerDoc.paths ?? {}));
+  if (!isSwaggerDocument(swaggerDoc)) {
+    throw new Error('Target /api-json is not an OpenAPI/Swagger document.');
+  }
+
+  const actualPaths = new Set(Object.keys(swaggerDoc.paths));
   const missingPaths = requiredPaths.filter((path) => !actualPaths.has(path));
 
   if (missingPaths.length > 0) {
     throw new Error(`Missing required API paths: ${missingPaths.join(', ')}`);
+  }
+
+  const missingOperations = findMissingOperations(swaggerDoc);
+
+  if (missingOperations.length > 0) {
+    throw new Error(`Missing required API operations: ${missingOperations.join(', ')}`);
   }
 
   console.log('Server smoke check passed.');

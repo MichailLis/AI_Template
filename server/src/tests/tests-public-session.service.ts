@@ -17,6 +17,10 @@ import {
 } from './tests-domain.utils';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { TestsAnalysisService } from './tests-analysis.service';
+import {
+  validatePublicAnswerPayload,
+  validatePublicAttemptAnswersForFinish,
+} from './tests-answer-validation';
 import { TestsPublicLinkService } from './tests-public-link.service';
 
 type SessionStateResponse = {
@@ -118,7 +122,6 @@ export class TestsPublicSessionService {
         providerMode: 'STUB' as const,
         status: 'FAILED' as const,
         summary: null,
-        rawText: null,
         errorMessage: 'Test session expired before completion',
         generatedAt: null,
       };
@@ -326,16 +329,22 @@ export class TestsPublicSessionService {
       attempt.topicVersion.questions.map((question) => [question.id, question]),
     );
 
-    for (const answer of dto.answers) {
-      if (!questionMap.has(answer.questionId)) {
+    const validatedAnswers = dto.answers.map((answer) => {
+      const question = questionMap.get(answer.questionId);
+      if (!question) {
         throw new BadRequestException(
           `Question ${answer.questionId} does not belong to this session`,
         );
       }
-    }
+
+      return {
+        questionId: answer.questionId,
+        answerPayload: validatePublicAnswerPayload(question, answer.answerPayload),
+      };
+    });
 
     const answers = await this.prisma.$transaction(async (tx) => {
-      for (const answer of dto.answers) {
+      for (const answer of validatedAnswers) {
         const question = questionMap.get(answer.questionId)!;
         const answerPayload = toPrismaRequiredJsonInput(answer.answerPayload);
 
@@ -395,6 +404,7 @@ export class TestsPublicSessionService {
     }
 
     ensureAttemptCanAcceptAnswers(attempt);
+    validatePublicAttemptAnswersForFinish(attempt.topicVersion.questions, attempt.answers);
 
     const finishedAttempt = await this.prisma.$transaction(async (tx) => {
       const updatedAttempt = await tx.testStudentAttempt.update({

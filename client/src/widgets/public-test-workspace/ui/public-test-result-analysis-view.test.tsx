@@ -44,7 +44,6 @@ const readyAnalysis = {
       professionalNextSteps: ['получить обратную связь'],
     },
   },
-  rawText: null,
   errorMessage: null,
   generatedAt: '2026-05-12T12:00:01.000Z',
 };

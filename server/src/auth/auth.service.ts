@@ -86,7 +86,18 @@ export class AuthService {
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    const hashedRefreshToken = await argon2.hash(tokens.refreshToken);
+    const updateResult = await this.prisma.user.updateMany({
+      where: {
+        id: user.id,
+        hashedRefreshToken: user.hashedRefreshToken,
+      },
+      data: { hashedRefreshToken },
+    });
+
+    if (updateResult.count !== 1) {
+      throw new ForbiddenException('Access Denied');
+    }
 
     return tokens;
   }

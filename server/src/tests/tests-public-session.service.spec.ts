@@ -32,6 +32,12 @@ type AttemptCreateInput = {
   [key: string]: unknown;
 };
 
+type StudentAnswerUpsertArgs = {
+  create: { answerPayload: unknown };
+  update: { answerPayload: unknown };
+  [key: string]: unknown;
+};
+
 describe('TestsPublicSessionService', () => {
   let service: TestsPublicSessionService;
 
@@ -50,6 +56,8 @@ describe('TestsPublicSessionService', () => {
   let txMock: {
     testStudentAnswer: {
       count: jest.Mock;
+      findMany: jest.Mock;
+      upsert: jest.Mock<unknown, [StudentAnswerUpsertArgs]>;
     };
     testStudentAttempt: {
       update: jest.Mock;
@@ -71,6 +79,8 @@ describe('TestsPublicSessionService', () => {
     txMock = {
       testStudentAnswer: {
         count: jest.fn(),
+        findMany: jest.fn(),
+        upsert: jest.fn<unknown, [StudentAnswerUpsertArgs]>(),
       },
       testStudentAttempt: {
         update: jest.fn(),
@@ -389,6 +399,76 @@ describe('TestsPublicSessionService', () => {
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
+  it('saveAnswers normalizes answer payloads before persistence', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: null,
+      finishedAt: null,
+      topicVersion: {
+        questions: [
+          {
+            id: 100,
+            type: 'OPEN_TEXT',
+            title: 'Text question',
+            required: true,
+            settings: null,
+            options: [],
+          },
+        ],
+      },
+    } as never);
+    txMock.testStudentAnswer.findMany.mockResolvedValue([
+      {
+        questionId: 100,
+        answerPayload: 'trimmed',
+        updatedAt: new Date('2026-05-12T12:00:00.000Z'),
+      },
+    ]);
+
+    const result = await service.saveAnswers('session-token', {
+      answers: [{ questionId: 100, answerPayload: '  trimmed  ' }],
+    });
+
+    const upsertArgs = txMock.testStudentAnswer.upsert.mock.calls[0]?.[0];
+
+    expect(upsertArgs).toBeDefined();
+    if (!upsertArgs) {
+      throw new Error('Expected saved answer upsert arguments');
+    }
+    expect(upsertArgs.create.answerPayload).toBe('trimmed');
+    expect(upsertArgs.update.answerPayload).toBe('trimmed');
+    expect(result.answers[0]?.answerPayload).toBe('trimmed');
+  });
+
+  it('saveAnswers rejects payloads that do not match the question type', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: null,
+      finishedAt: null,
+      topicVersion: {
+        questions: [
+          {
+            id: 100,
+            type: 'SINGLE_CHOICE',
+            title: 'Choice question',
+            required: true,
+            settings: null,
+            options: [{ value: 'A' }],
+          },
+        ],
+      },
+    } as never);
+
+    await expect(
+      service.saveAnswers('session-token', {
+        answers: [{ questionId: 100, answerPayload: 'Z' }],
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
   it('finishSession rejects attempts already marked expired', async () => {
     jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
       id: 5,
@@ -428,6 +508,7 @@ describe('TestsPublicSessionService', () => {
       finishedAt: null,
       expiresAt: null,
       analysis: null,
+      answers: [],
       topicVersion: {
         analysisPromptVersionId: null,
         questions: [{ id: 100 }],
@@ -458,6 +539,34 @@ describe('TestsPublicSessionService', () => {
     });
   });
 
+  it('finishSession rejects incomplete required answers before completing attempt', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      topicVersion: {
+        analysisPromptVersionId: null,
+        questions: [
+          {
+            id: 100,
+            type: 'OPEN_TEXT',
+            title: 'Required question',
+            required: true,
+            settings: null,
+            options: [],
+          },
+        ],
+      },
+      answers: [],
+    } as never);
+
+    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    expect(txMock.testStudentAttempt.update).not.toHaveBeenCalled();
+    expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
+  });
+
   it('finishSession stores pending LLM analysis and enqueues async run after transaction', async () => {
     jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
       id: 5,
@@ -465,6 +574,7 @@ describe('TestsPublicSessionService', () => {
       finishedAt: null,
       expiresAt: null,
       analysis: null,
+      answers: [],
       topicVersion: {
         analysisPromptVersionId: 42,
         questions: [{ id: 100 }],

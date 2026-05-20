@@ -13,8 +13,6 @@ export type PublicSessionFinishResponseDtoAnalysis = {
   status: PublicSessionFinishResponseDtoAnalysisStatus;
   summary: unknown | null;
   /** @nullable */
-  rawText: string | null;
-  /** @nullable */
   errorMessage: string | null;
   /** @nullable */
   generatedAt: string | null;

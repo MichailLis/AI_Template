@@ -60,7 +60,7 @@ export const PublicTestQuestionSchema = z.object({
 
 export const PublicSessionAnswerSchema = z.object({
   questionId: z.number().int().min(1),
-  answerPayload: z.unknown(),
+  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]),
   updatedAt: z.string(),
 });
 
@@ -120,7 +120,7 @@ export const PublicSessionGetResponseSchema = z.object({
 
 export const PublicSessionSaveAnswerItemSchema = z.object({
   questionId: z.number().int().min(1),
-  answerPayload: z.unknown(),
+  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]),
 });
 
 export const PublicSessionSaveAnswersRequestSchema = z.object({
@@ -145,7 +145,6 @@ export const PublicSessionAnalysisSchema = z.object({
   providerMode: PublicSessionAnalysisProviderModeSchema,
   status: PublicSessionAnalysisStatusSchema,
   summary: z.unknown().nullable(),
-  rawText: z.string().nullable(),
   errorMessage: z.string().nullable(),
   generatedAt: z.string().nullable(),
 });

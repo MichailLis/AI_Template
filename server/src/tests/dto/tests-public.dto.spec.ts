@@ -1,5 +1,6 @@
 import {
   PublicLinkAccessResponseSchema,
+  PublicSessionAnalysisSchema,
   PublicSessionResultResponseSchema,
   PublicSessionStateSchema,
   PublicSessionStartRequestSchema,
@@ -123,7 +124,6 @@ describe('tests public DTO schemas', () => {
         providerMode: 'STUB',
         status: 'READY',
         summary: null,
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-14T10:30:01.000Z',
       },
@@ -132,5 +132,18 @@ describe('tests public DTO schemas', () => {
 
     expect(session.publicTemplate).toBe('POLUS');
     expect(result.publicTemplate).toBe('POLUS');
+  });
+
+  it('strips internal raw analysis text from public analysis payloads', () => {
+    const result = PublicSessionAnalysisSchema.parse({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: null,
+      rawText: 'internal provider output',
+      errorMessage: null,
+      generatedAt: '2026-05-14T10:30:01.000Z',
+    });
+
+    expect(result).not.toHaveProperty('rawText');
   });
 });

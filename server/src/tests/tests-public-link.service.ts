@@ -28,6 +28,20 @@ const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
 type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 type PublicTemplate = 'STANDARD' | 'POLUS';
 
+const ensureValidPublicLinkDateWindow = (startsAt: Date | null, endsAt: Date | null) => {
+  if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
+    throw new BadRequestException('endsAt must be greater than startsAt');
+  }
+};
+
+const resolveDateUpdate = (value: string | null | undefined, fallback: Date | null) => {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  return parseDateOrNull(value) ?? null;
+};
+
 const resolveMaxAttemptsForEntryProfileMode = (
   entryProfileMode: EntryProfileMode,
   requestedMaxAttempts: number | undefined,
@@ -186,7 +200,14 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true, archivedAt: true, entryProfileMode: true, maxAttemptsPerStudent: true },
+      select: {
+        id: true,
+        archivedAt: true,
+        entryProfileMode: true,
+        maxAttemptsPerStudent: true,
+        startsAt: true,
+        endsAt: true,
+      },
     });
 
     if (!existing) {
@@ -202,13 +223,17 @@ export class TestsPublicLinkService {
       entryProfileMode,
       dto.maxAttemptsPerStudent ?? existing.maxAttemptsPerStudent,
     );
+    const startsAt = resolveDateUpdate(dto.startsAt, existing.startsAt);
+    const endsAt = resolveDateUpdate(dto.endsAt, existing.endsAt);
+
+    ensureValidPublicLinkDateWindow(startsAt, endsAt);
 
     const updated = await this.prisma.testPublicLink.update({
       where: { id: linkId },
       data: {
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...(dto.startsAt !== undefined ? { startsAt: parseDateOrNull(dto.startsAt) } : {}),
-        ...(dto.endsAt !== undefined ? { endsAt: parseDateOrNull(dto.endsAt) } : {}),
+        ...(dto.startsAt !== undefined ? { startsAt } : {}),
+        ...(dto.endsAt !== undefined ? { endsAt } : {}),
         ...(dto.entryProfileMode !== undefined ? { entryProfileMode } : {}),
         maxAttemptsPerStudent,
         ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
@@ -341,8 +366,8 @@ export class TestsPublicLinkService {
       throw new BadRequestException('Public test link is disabled');
     }
 
-    if (link.topicVersion.status !== 'PUBLISHED') {
-      throw new BadRequestException('Public test link points to unpublished test version');
+    if (link.topicVersion.status === 'DRAFT') {
+      throw new BadRequestException('Public test link points to draft test version');
     }
 
     const now = new Date();

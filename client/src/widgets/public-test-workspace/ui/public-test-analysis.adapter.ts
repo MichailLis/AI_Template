@@ -9,7 +9,6 @@ import type {
 
 interface PublicAnalysisPayload {
   summary: unknown;
-  rawText: string | null;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -137,12 +136,10 @@ const adaptActionPlan = (summary: Record<string, unknown>): AnalysisActionPlanSt
 
 export const adaptPublicAnalysisReport = ({
   summary,
-  rawText,
 }: PublicAnalysisPayload): PublicTestAnalysisReportViewModel => {
   if (!isRecord(summary)) {
     return {
       ...mockAnalysisReport,
-      narrative: readString(rawText) ?? mockAnalysisReport.narrative,
       hasMockContent: true,
     };
   }
@@ -172,7 +169,7 @@ export const adaptPublicAnalysisReport = ({
     answeredQuestionsCount,
     totalQuestionsCount,
     note: readString(summary.note) ?? mockAnalysisReport.note,
-    narrative: readString(rawText) ?? readString(summary.narrative) ?? mockAnalysisReport.narrative,
+    narrative: readString(summary.narrative) ?? mockAnalysisReport.narrative,
     professions: professions.length > 0 ? professions : mockAnalysisReport.professions,
     traitScores: traitScores.length > 0 ? traitScores : mockAnalysisReport.traitScores,
     actionPlan: actionPlan.length > 0 ? actionPlan : mockAnalysisReport.actionPlan,
