@@ -246,7 +246,7 @@ const buildConfidence = (summaries: ProfOrientationSummary[]) => {
     new Map(Array.from(levelCounts.entries()).map(([id, count]) => [id, { label: id, count }])),
     total,
   ).map((item) => ({
-    level: item.label,
+    label: item.label,
     count: item.count,
     share: item.share,
   }));

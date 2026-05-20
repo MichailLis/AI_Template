@@ -4,7 +4,10 @@ import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import { buildV3AnalyticsSections, getV3Summary, toShare } from './tests-analytics-summary';
-import type { AdminTestAnalyticsQueryDto } from './dto/tests-analytics.dto';
+import type {
+  AdminTestAnalyticsQueryDto,
+  AdminTestAnalyticsSummaryDto,
+} from './dto/tests-analytics.dto';
 import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 
 const PUBLIC_LINK_SELECT = {
@@ -164,7 +167,11 @@ const mapAgeRange = (age: number | null) => {
 export class TestsAnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getSummary(userId: number, topicId: number, query: AdminTestAnalyticsQueryDto) {
+  async getSummary(
+    userId: number,
+    topicId: number,
+    query: AdminTestAnalyticsQueryDto,
+  ): Promise<AdminTestAnalyticsSummaryDto> {
     await ensureTestsAdminAccess(this.prisma, userId);
 
     const topic = await this.prisma.testTopic.findUnique({
@@ -394,7 +401,7 @@ export class TestsAnalyticsService {
       },
       filters: {
         scope: query.scope,
-        publicLinkId: query.scope === 'PUBLIC_LINK' ? query.publicLinkId : null,
+        publicLinkId: query.scope === 'PUBLIC_LINK' ? (query.publicLinkId ?? null) : null,
         linkStatus: query.linkStatus,
         dateFrom: query.dateFrom ?? null,
         dateTo: query.dateTo ?? null,

@@ -51,8 +51,8 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
   ],
   confidence: {
     levels: [
-      { level: 'high', count: 1, share: 50 },
-      { level: 'low', count: 1, share: 50 },
+      { label: 'high', count: 1, share: 50 },
+      { label: 'low', count: 1, share: 50 },
     ],
     gap: { value: 11.5, total: 2 },
     consistencyIndex: { value: 8.2, total: 2 },

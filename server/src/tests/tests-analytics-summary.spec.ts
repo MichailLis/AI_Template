@@ -225,8 +225,8 @@ describe('buildV3AnalyticsSections', () => {
 
     expect(result.confidence.levels).toEqual(
       expect.arrayContaining([
-        { level: 'high', count: 1, share: 50 },
-        { level: 'mixed', count: 1, share: 50 },
+        { label: 'high', count: 1, share: 50 },
+        { label: 'mixed', count: 1, share: 50 },
       ]),
     );
     expect(result.confidence.gap).toMatchObject({ value: 10, total: 2 });

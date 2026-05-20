@@ -39,7 +39,7 @@ export type ProfileCountItem = {
 };
 
 export type ConfidenceLevelItem = {
-  level: string;
+  label: string;
   count: number;
   share: number;
 };
