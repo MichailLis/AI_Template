@@ -15,6 +15,8 @@ RUN npm ci
 
 FROM deps AS build
 
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
 COPY nest-cli.json prisma.config.ts tsconfig*.json ./
 COPY prisma ./prisma
 COPY src ./src
