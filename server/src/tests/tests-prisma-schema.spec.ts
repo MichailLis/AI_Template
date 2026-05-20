@@ -1,8 +1,13 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('Prisma analysis prompt schema', () => {
   const schema = readFileSync(join(__dirname, '../../prisma/schema.prisma'), 'utf8');
+  const migrationsDir = join(__dirname, '../../prisma/migrations');
+  const migrationSql = readdirSync(migrationsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => readFileSync(join(migrationsDir, entry.name, 'migration.sql'), 'utf8'))
+    .join('\n');
 
   it('declares versioned analysis prompt models', () => {
     expect(schema).toContain('model AnalysisPrompt');
@@ -22,6 +27,22 @@ describe('Prisma analysis prompt schema', () => {
     expect(schema).toMatch(/scoringConfig\s+Json\?/);
     expect(schema).toContain('ALGORITHM');
     expect(schema).toContain('ALGORITHM_LLM');
+  });
+
+  it('keeps deploy migrations aligned with prof-orientation and public-template schema', () => {
+    expect(migrationSql).toContain('CREATE TYPE "TestScoringKind"');
+    expect(migrationSql).toContain('CREATE TYPE "TestPublicTemplate"');
+    expect(migrationSql).toContain(
+      'ALTER TYPE "TestStudentAnalysisProviderMode" ADD VALUE \'ALGORITHM\'',
+    );
+    expect(migrationSql).toContain(
+      'ALTER TYPE "TestStudentAnalysisProviderMode" ADD VALUE \'ALGORITHM_LLM\'',
+    );
+    expect(migrationSql).toContain(
+      '"publicTemplate" "TestPublicTemplate" NOT NULL DEFAULT \'STANDARD\'',
+    );
+    expect(migrationSql).toContain('"scoringConfig" JSONB');
+    expect(migrationSql).toContain('"scoringKind" "TestScoringKind" NOT NULL DEFAULT \'DEFAULT\'');
   });
 
   it('enforces unique order values for ordered test child collections', () => {
