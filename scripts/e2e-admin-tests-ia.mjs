@@ -213,9 +213,7 @@ const seedAuthState = async (page) => {
       }),
     );
 
-    // Set tokens directly
     storage.setItem('accessToken', 'mock-access-token');
-    storage.setItem('refreshToken', 'mock-refresh-token');
   });
 
   console.log('✓ Auth state seeded');

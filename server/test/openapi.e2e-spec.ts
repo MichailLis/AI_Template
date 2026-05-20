@@ -43,7 +43,7 @@ describe('OpenAPI contract (e2e)', () => {
     expect(document.components?.schemas?.ErrorResponseDto).toBeDefined();
   });
 
-  it('documents refresh response as tokens without user payload', () => {
+  it('documents refresh response as access token only', () => {
     const refreshOperation = document.paths?.['/auth/refresh']?.post;
     const okResponse = refreshOperation?.responses?.['200'];
     const refreshSchema = document.components?.schemas?.RefreshResponseDto as
@@ -55,7 +55,7 @@ describe('OpenAPI contract (e2e)', () => {
     expect(JSON.stringify(okResponse)).not.toContain('AuthResponseDto');
     expect(refreshSchema).toBeDefined();
     expect(refreshSchema?.properties).toHaveProperty('accessToken');
-    expect(refreshSchema?.properties).toHaveProperty('refreshToken');
+    expect(refreshSchema?.properties).not.toHaveProperty('refreshToken');
     expect(refreshSchema?.properties).not.toHaveProperty('user');
   });
 

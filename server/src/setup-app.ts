@@ -6,6 +6,9 @@ import { setupSwagger } from './swagger';
 export const setupApp = (app: INestApplication) => {
   app.useGlobalFilters(new AllExceptionsFilter());
   const swaggerDocument = setupSwagger(app);
-  app.enableCors();
+  app.enableCors({
+    credentials: true,
+    origin: true,
+  });
   return swaggerDocument;
 };

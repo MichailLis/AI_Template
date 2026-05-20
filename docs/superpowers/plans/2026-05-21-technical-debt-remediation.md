@@ -13,8 +13,9 @@
 ## Progress
 
 - Completed in commit `ca36e23 chore: remediate technical debt audit`: Tasks 0.1, 0.2, 1.1, 1.2, 2.1-2.4, 3.1-3.3, 4.1, 4.2.
+- Completed in the current Task 4.3 batch: HttpOnly refresh-token cookie flow.
 - Still open from the earlier phases: Task 1.3.
-- Next recommended task: Task 4.3.
+- Next recommended task: Task 4.4.
 
 ## Source Audit
 
@@ -468,13 +469,13 @@
 - Modify: `client/src/features/auth/ui/login-form.tsx`
 - Modify: `client/src/features/auth/ui/protected-route.tsx`
 
-- [ ] Move refresh tokens out of JS-readable storage. Preferred target: `HttpOnly`, `Secure`, `SameSite` cookie.
+- [x] Move refresh tokens out of JS-readable storage. Preferred target: `HttpOnly`, `Secure`, `SameSite` cookie.
 
-- [ ] Keep access tokens short-lived. Do not store refresh tokens via `safeStorage`.
+- [x] Keep access tokens short-lived. Do not store refresh tokens via `safeStorage`.
 
-- [ ] Update login, refresh, and logout flows as one coherent change.
+- [x] Update login, refresh, and logout flows as one coherent change.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server

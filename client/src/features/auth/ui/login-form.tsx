@@ -40,7 +40,7 @@ export const LoginForm = () => {
       { data: values },
       {
         onSuccess: (data) => {
-          setAuth(data.user, data.accessToken, data.refreshToken);
+          setAuth(data.user, data.accessToken);
           toast.success('С возвращением!');
           navigate('/admin');
         },

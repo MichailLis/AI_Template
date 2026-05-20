@@ -99,7 +99,6 @@ const mockAdminOverview = {
 
 const mockAuthResponse = {
   accessToken: 'mock-access-token',
-  refreshToken: 'mock-refresh-token',
   user: {
     id: 1,
     email: 'admin@example.com',
@@ -230,9 +229,10 @@ const fulfillJson = async (route, body, status = 200) => {
   await route.fulfill({
     status,
     headers: {
+      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': targetUrl,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -243,9 +243,10 @@ const fulfillCorsPreflight = async (route) => {
   await route.fulfill({
     status: 204,
     headers: {
+      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': targetUrl,
     },
   });
 };
@@ -344,7 +345,6 @@ const createContext = async (browser, { authenticated = false } = {}) => {
         }),
       );
       window.localStorage.setItem('accessToken', 'mock-access-token');
-      window.localStorage.setItem('refreshToken', 'mock-refresh-token');
     });
   }
 
@@ -430,15 +430,36 @@ const runPublicSessionSmoke = async (browser) => {
   try {
     await page.goto(`${targetUrl}/t/SMOKE`);
     await page.getByText('Smoke Public Test').waitFor({ timeout: 10000 });
-    await page.getByLabel('Имя').fill('Ivan');
-    await page.getByLabel('Фамилия (1-я буква)').fill('I');
-    await page.getByLabel('Отчество (1-я буква)').fill('O');
-    await page.getByLabel('Учебное заведение').fill('Smoke School');
-    await page.getByLabel('Группа / класс').fill('SM-1');
-    await page.getByLabel(/Согласен/).check();
+    await page.getByLabel('Имя').fill('Иван');
+    await page.getByLabel('Фамилия (1-я буква)').fill('И');
+    await page.getByLabel('Отчество (1-я буква)').fill('О');
+    await page.getByLabel('Учебное заведение').fill('Школа');
+    await page.getByLabel('Группа / класс').fill('СМ-1');
     await page.getByRole('button', { name: /Начать тестирование/ }).click();
 
-    await page.waitForURL('**/t/SMOKE/session/session-smoke', { timeout: 10000 });
+    await page
+      .waitForURL('**/t/SMOKE/session/session-smoke', { timeout: 10000 })
+      .catch(async (error) => {
+        const bodyText = (await page.textContent('body')) ?? '';
+        const inputState = await page.evaluate(() =>
+          Array.from(document.querySelectorAll('input')).map((input) => ({
+            id: input.id,
+            validationMessage: input.validationMessage,
+            valid: input.checkValidity(),
+            value: input.value,
+          })),
+        );
+        throw new Error(
+          [
+            error instanceof Error ? error.message : String(error),
+            `Current URL: ${page.url()}`,
+            `Visible text: ${bodyText.slice(0, 1000)}`,
+            `Input state: ${JSON.stringify(inputState)}`,
+            `Browser errors: ${browserErrors.join(' | ') || 'none'}`,
+            `Unhandled API requests: ${unhandledApiRequests.join(' | ') || 'none'}`,
+          ].join('\n'),
+        );
+      });
     await page.getByText('Describe your learning experience').waitFor({ timeout: 10000 });
 
     assertNoBrowserErrors(browserErrors);

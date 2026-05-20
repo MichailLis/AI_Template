@@ -48,6 +48,18 @@ const mockFailedRefresh = () => {
   );
 };
 
+const mockSuccessfulRefresh = () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'new-access', refreshToken: 'leaked-refresh' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ),
+  );
+};
+
 const mockPendingFailedRefresh = () => {
   let resolveRefresh: ((response: Response) => void) | null = null;
   const refreshResponse = new Promise<Response>((resolve) => {
@@ -91,10 +103,19 @@ describe('setupInterceptors', () => {
     const api = createApiWithUnauthorizedAdapter();
 
     safeStorage.setItem('accessToken', 'first-access');
-    safeStorage.setItem('refreshToken', 'first-refresh');
 
     await expect(api.get('/protected')).rejects.toThrow('Refresh failed');
 
+    expect(fetch).toHaveBeenLastCalledWith(
+      'http://api.test/auth/refresh',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'POST',
+      }),
+    );
+    expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]?.headers).not.toHaveProperty(
+      'Authorization',
+    );
     expect(safeStorage.getItem('accessToken')).toBeNull();
     expect(safeStorage.getItem('refreshToken')).toBeNull();
     expect(onAuthRefreshFailed).toHaveBeenCalledTimes(1);
@@ -102,7 +123,6 @@ describe('setupInterceptors', () => {
     await waitForRefreshFailureCycleReset();
 
     safeStorage.setItem('accessToken', 'second-access');
-    safeStorage.setItem('refreshToken', 'second-refresh');
 
     await expect(api.get('/protected')).rejects.toThrow('Refresh failed');
 
@@ -119,7 +139,6 @@ describe('setupInterceptors', () => {
     const api = createApiWithUnauthorizedAdapter();
 
     safeStorage.setItem('accessToken', 'access');
-    safeStorage.setItem('refreshToken', 'refresh');
 
     const firstRequest = api.get('/protected');
     const secondRequest = api.get('/protected');
@@ -138,5 +157,47 @@ describe('setupInterceptors', () => {
     expect(safeStorage.getItem('accessToken')).toBeNull();
     expect(safeStorage.getItem('refreshToken')).toBeNull();
     expect(onAuthRefreshFailed).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes with cookie credentials and stores only the new access token', async () => {
+    mockSuccessfulRefresh();
+    const adapter = vi.fn<AxiosAdapter>(async (config) => {
+      if (
+        config.url === '/protected' &&
+        !config.headers.Authorization?.toString().includes('new-access')
+      ) {
+        throw createUnauthorizedError(config);
+      }
+
+      return {
+        config,
+        data: { ok: true },
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+      };
+    });
+    const api = axios.create({
+      baseURL: 'http://api.test',
+      adapter,
+    });
+
+    setupInterceptors(api);
+    safeStorage.setItem('accessToken', 'expired-access');
+
+    await expect(api.get('/protected')).resolves.toEqual({ ok: true });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://api.test/auth/refresh',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'POST',
+      }),
+    );
+    expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]?.headers).not.toHaveProperty(
+      'Authorization',
+    );
+    expect(safeStorage.getItem('accessToken')).toBe('new-access');
+    expect(safeStorage.getItem('refreshToken')).toBeNull();
   });
 });

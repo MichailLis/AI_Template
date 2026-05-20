@@ -9,6 +9,5 @@ import type { AuthResponseDtoUser } from './authResponseDtoUser';
 
 export interface AuthResponseDto {
   accessToken: string;
-  refreshToken: string;
   user: AuthResponseDtoUser;
 }
