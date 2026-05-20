@@ -360,7 +360,6 @@ const useAttemptDetail = () => {
 export function useAdminPublicLinksStatsWorkspace() {
   const { activePublicLinks, archivedPublicLinks } = usePublicLinksData();
   const selection = usePublicLinkSelection(activePublicLinks, archivedPublicLinks);
-  const analytics = useAnalyticsReport(selection.effectiveTopicId, selection.effectivePublicLinkId);
   const attempts = usePaginatedPublicAttempts(
     selection.effectivePublicLinkId,
     selection.attemptsPage,
@@ -378,10 +377,20 @@ export function useAdminPublicLinksStatsWorkspace() {
 
   return {
     ...selection,
-    ...analytics,
     ...attempts,
     ...detail,
     handlePreviousAttemptsPage,
     handleNextAttemptsPage,
+  };
+}
+
+export function useAdminTestAnalyticsReportWorkspace() {
+  const { activePublicLinks, archivedPublicLinks } = usePublicLinksData();
+  const selection = usePublicLinkSelection(activePublicLinks, archivedPublicLinks);
+  const analytics = useAnalyticsReport(selection.effectiveTopicId, selection.effectivePublicLinkId);
+
+  return {
+    ...selection,
+    ...analytics,
   };
 }

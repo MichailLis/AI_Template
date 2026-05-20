@@ -44,7 +44,9 @@ interface AnalyticsReportFiltersProps {
   onAnalyticsDateToChange: (dateTo: string) => void;
 }
 
-interface PublicLinksStatsFiltersCardProps
+type PublicLinksStatsFiltersCardProps = LinkNavigationFiltersProps;
+
+interface TestAnalyticsReportFiltersCardProps
   extends LinkNavigationFiltersProps, AnalyticsReportFiltersProps {}
 
 function LinkNavigationFilters({
@@ -210,10 +212,47 @@ export function PublicLinksStatsFiltersCard(props: PublicLinksStatsFiltersCardPr
               <BarChart3 className="size-4" />
               Статистика публичных ссылок
             </CardTitle>
-            <CardDescription>Сначала выберите область, затем тест и ссылку.</CardDescription>
+            <CardDescription>
+              Выберите область, тест и ссылку для просмотра попыток.
+            </CardDescription>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
+              <Link to="/admin/analytics">Сводный отчет</Link>
+            </Button>
+            <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
+              <Link to="/admin/public-links">Управление ссылками</Link>
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <LinkNavigationFilters {...props} />
+        <p className={`text-sm ${adminClassNames.text.muted}`}>
+          Таблица ниже показывает прохождения выбранной публичной ссылки. Сводные отчеты доступны в
+          разделе аналитики.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TestAnalyticsReportFiltersCard(props: TestAnalyticsReportFiltersCardProps) {
+  return (
+    <Card className={adminClassNames.panel.card}>
+      <CardHeader className="pb-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="size-4" />
+              Сводный аналитический отчет
+            </CardTitle>
+            <CardDescription>
+              Выберите тест целиком или отдельную публичную ссылку для отчета.
+            </CardDescription>
           </div>
           <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-            <Link to="/admin/public-links">Вернуться к управлению ссылками</Link>
+            <Link to="/admin/public-links/stats">Статистика ссылок</Link>
           </Button>
         </div>
       </CardHeader>
@@ -221,8 +260,7 @@ export function PublicLinksStatsFiltersCard(props: PublicLinksStatsFiltersCardPr
         <LinkNavigationFilters {...props} />
         <AnalyticsReportFilters {...props} />
         <p className={`text-sm ${adminClassNames.text.muted}`}>
-          Сводный отчет использует параметры отчета; таблица прохождений ниже показывает выбранную
-          публичную ссылку.
+          По умолчанию отчет строится по тесту целиком со всеми публичными ссылками.
         </p>
       </CardContent>
     </Card>
