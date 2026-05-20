@@ -10,6 +10,12 @@
 
 ---
 
+## Progress
+
+- Completed in commit `ca36e23 chore: remediate technical debt audit`: Tasks 0.1, 0.2, 1.1, 1.2, 2.1-2.4, 3.1-3.3, 4.1, 4.2.
+- Still open from the earlier phases: Task 1.3.
+- Next recommended task: Task 4.3.
+
 ## Source Audit
 
 - Audit: `docs/technical-debt-audit-2026-05-21.md`
@@ -81,13 +87,13 @@
 - Read: `package.json`
 - Read: `template/features.manifest.json`
 
-- [ ] Create branch:
+- [x] Create branch:
 
   ```powershell
   git switch -c codex/technical-debt-remediation
   ```
 
-- [ ] Capture baseline checks:
+- [x] Capture baseline checks:
 
   ```powershell
   npm run verify:local
@@ -98,7 +104,7 @@
   npm run verify:architecture
   ```
 
-- [ ] Record results in implementation notes or PR description. Expected baseline from audit: `verify:local`, client tests, audits, OpenAPI, and architecture pass; `format:check` fails.
+- [x] Record results in implementation notes or PR description. Expected baseline from audit: `verify:local`, client tests, audits, OpenAPI, and architecture pass; `format:check` fails.
 
 ### Task 0.2 - Set the repository source of truth
 
@@ -109,15 +115,15 @@
 - Modify or replace with pointers: `AGENT.md`, `CLAUDE.md`
 - Verify: `scripts/verify-ai-guide.mjs`
 
-- [ ] Decide one of two explicit baselines:
+- [x] Decide one of two explicit baselines:
   - Product template with tests/public links/OpenRouter/Polus/admin modules.
   - Auth-only template with business modules moved out of `main`.
 
-- [ ] If product template is chosen, update `AI_GUIDE.md` and `README.md` so they no longer describe the branch as auth-only.
+- [x] If product template is chosen, update `AI_GUIDE.md` and `README.md` so they no longer describe the branch as auth-only.
 
-- [ ] Convert duplicated agent instruction files into pointers to `AGENTS.md` and `AI_GUIDE.md`, or remove them if the repo owner confirms they are obsolete.
+- [x] Convert duplicated agent instruction files into pointers to `AGENTS.md` and `AI_GUIDE.md`, or remove them if the repo owner confirms they are obsolete.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run verify:ai-guide
@@ -135,13 +141,13 @@
 - Modify: `server/src/tests/tests.service.spec.ts`
 - Consider: `server/src/tests/dto/tests.dto.ts`
 
-- [ ] Add a failing unit test: deleting a topic with any published version, public link, attempt, answer, or analysis throws `BadRequestException`.
+- [x] Add a failing unit test: deleting a topic with any published version, public link, attempt, answer, or analysis throws `BadRequestException`.
 
-- [ ] Implement refusal in `TestsService.deleteTopic()` before `prisma.testTopic.delete`.
+- [x] Implement refusal in `TestsService.deleteTopic()` before `prisma.testTopic.delete`.
 
-- [ ] Keep hard delete only for never-published, never-used draft-only topics.
+- [x] Keep hard delete only for never-published, never-used draft-only topics.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests.service.spec.ts
@@ -160,15 +166,15 @@
 - Modify: `server/src/tests/tests-public-link.service.spec.ts`
 - Add or modify e2e: `server/test/*.e2e-spec.ts`
 
-- [ ] Add an e2e test: create topic v1, publish v1, create public link, publish v2, then `GET /tests/public/links/:code` still succeeds.
+- [x] Add an e2e test: create topic v1, publish v1, create public link, publish v2, then `GET /tests/public/links/:code` still succeeds.
 
-- [ ] Stop rejecting public links solely because their immutable `topicVersion.status` became `ARCHIVED` after republish.
+- [x] Stop rejecting public links solely because their immutable `topicVersion.status` became `ARCHIVED` after republish.
 
-- [ ] Keep explicit link archive/delete behavior unchanged: archived/inactive links must still be inaccessible.
+- [x] Keep explicit link archive/delete behavior unchanged: archived/inactive links must still be inaccessible.
 
-- [ ] Document archive semantics for prompt versions referenced by published test versions: archiving hides library/editor use, but does not invalidate already published versions.
+- [x] Document archive semantics for prompt versions referenced by published test versions: archiving hides library/editor use, but does not invalidate already published versions.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-public-link.service.spec.ts
@@ -212,26 +218,26 @@
 - Modify: `server/src/tests/tests-public-session.service.ts`
 - Modify: `server/src/tests/dto/tests-public.dto.ts`
 
-- [ ] Implement a pure validator for each question type:
+- [x] Implement a pure validator for each question type:
   - required unanswered values are rejected at finish.
   - choice values must exist in `question.options`.
   - multi-choice values must be unique, must exist in `question.options`, and must respect `settings.maxChoices`.
   - slider answers must be numeric and inside configured min/max/step.
   - free-text answers must be bounded strings if the UI supports them.
 
-- [ ] Validate `saveAnswers()` payload shape before upsert.
+- [x] Validate `saveAnswers()` payload shape before upsert.
 
-- [ ] Validate all required questions in `finishSession()` before marking an attempt `COMPLETED`.
+- [x] Validate all required questions in `finishSession()` before marking an attempt `COMPLETED`.
 
-- [ ] Narrow DTOs where OpenAPI can represent the shape. Keep a safe JSON boundary only where the question-type union cannot be expressed cleanly.
+- [x] Narrow DTOs where OpenAPI can represent the shape. Keep a safe JSON boundary only where the question-type union cannot be expressed cleanly.
 
-- [ ] Regenerate API after DTO changes:
+- [x] Regenerate API after DTO changes:
 
   ```powershell
   npm run gen:api
   ```
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-answer-validation.spec.ts
@@ -251,11 +257,11 @@
 - Modify: `server/src/tests/prof-orientation-v3-plus.scoring.spec.ts`
 - Modify: `server/src/tests/tests-analysis.service.spec.ts`
 
-- [ ] Add a test with a non-default `TestTopicVersion.scoringConfig` and known answers.
+- [x] Add a test with a non-default `TestTopicVersion.scoringConfig` and known answers.
 
-- [ ] Ensure `upsertProfOrientationV3PlusAnalysis()` passes the version-specific config into deterministic scoring.
+- [x] Ensure `upsertProfOrientationV3PlusAnalysis()` passes the version-specific config into deterministic scoring.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- prof-orientation-v3-plus.scoring.spec.ts
@@ -274,21 +280,21 @@
 - Modify: `client/src/widgets/public-test-workspace/ui/public-test-result-workspace.tsx`
 - Modify: `client/src/widgets/public-test-workspace/ui/polus/*`
 
-- [ ] Define the student-facing analysis fields that are allowed: status, provider mode if needed, generatedAt, safe summary blocks, user-facing error state.
+- [x] Define the student-facing analysis fields that are allowed: status, provider mode if needed, generatedAt, safe summary blocks, user-facing error state.
 
-- [ ] Remove `rawText`, prompt internals, method internals, and debug-only fields from public session/result responses.
+- [x] Remove `rawText`, prompt internals, method internals, and debug-only fields from public session/result responses.
 
-- [ ] Keep admin analytics/attempt-detail DTOs able to access internal fields only behind admin guards.
+- [x] Keep admin analytics/attempt-detail DTOs able to access internal fields only behind admin guards.
 
-- [ ] Document tokenized public result URL behavior in `README.md` or a dedicated docs file.
+- [x] Document tokenized public result URL behavior in `README.md` or a dedicated docs file.
 
-- [ ] Rebuild frontend container before frontend checks:
+- [x] Rebuild frontend container before frontend checks:
 
   ```powershell
   docker compose up -d --build --force-recreate frontend
   ```
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run gen:api
@@ -306,17 +312,17 @@
 - Modify: `client/src/widgets/public-test-workspace/ui/use-public-test-run-workspace.ts`
 - Modify or add: `client/src/widgets/public-test-workspace/ui/*.test.tsx`
 
-- [ ] Add a Vitest case where the server returns a canonical saved answer different from the local draft.
+- [x] Add a Vitest case where the server returns a canonical saved answer different from the local draft.
 
-- [ ] Clear saved draft entries or replace them with canonical response values after successful save.
+- [x] Clear saved draft entries or replace them with canonical response values after successful save.
 
-- [ ] Rebuild frontend container before verification:
+- [x] Rebuild frontend container before verification:
 
   ```powershell
   docker compose up -d --build --force-recreate frontend
   ```
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test:run --prefix client
@@ -335,13 +341,13 @@
 - Modify: `server/src/tests/tests-public-session.service.ts`
 - Add or modify: `server/src/tests/tests-analysis.service.spec.ts`
 
-- [ ] Add a service method that finds stale `PENDING` LLM analyses and re-enqueues them.
+- [x] Add a service method that finds stale `PENDING` LLM analyses and re-enqueues them.
 
-- [ ] Invoke recovery on startup or expose an explicit admin-safe maintenance path. Prefer a small service hook over a new queue system unless product load requires a queue.
+- [x] Invoke recovery on startup or expose an explicit admin-safe maintenance path. Prefer a small service hook over a new queue system unless product load requires a queue.
 
-- [ ] Preserve cap/retry rules from `AI_GUIDE.md` for OpenRouter timeouts.
+- [x] Preserve cap/retry rules from `AI_GUIDE.md` for OpenRouter timeouts.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-analysis.service.spec.ts
@@ -358,11 +364,11 @@
 - Modify: `server/src/tests/tests-public-link.service.ts`
 - Modify: `server/src/tests/tests-public-link.service.spec.ts`
 
-- [ ] Add tests for updating only `startsAt` and only `endsAt` where the stored effective interval would become invalid.
+- [x] Add tests for updating only `startsAt` and only `endsAt` where the stored effective interval would become invalid.
 
-- [ ] In `updatePublicLink()`, load existing dates and validate `effectiveStartsAt < effectiveEndsAt` before writing.
+- [x] In `updatePublicLink()`, load existing dates and validate `effectiveStartsAt < effectiveEndsAt` before writing.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-public-link.service.spec.ts
@@ -378,18 +384,18 @@
 - Add migration: `server/prisma/migrations/<timestamp>_add_attempt_public_link_started_at_index/migration.sql`
 - Modify: `server/src/tests/tests-prisma-schema.spec.ts`
 
-- [ ] Add `@@index([publicLinkId, startedAt])` to `TestStudentAttempt`.
+- [x] Add `@@index([publicLinkId, startedAt])` to `TestStudentAttempt`.
 
-- [ ] Generate/apply migration in the normal Prisma workflow:
+- [x] Generate/apply migration in the normal Prisma workflow:
 
   ```powershell
   npm run prisma:generate
   npm run prisma:push
   ```
 
-- [ ] Add schema test coverage for the new index.
+- [x] Add schema test coverage for the new index.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-prisma-schema.spec.ts
@@ -408,11 +414,11 @@
 - Modify: `client/src/shared/api/runtime-api-base-url.test.ts`
 - Modify if needed: `scripts/smoke-server.mjs`
 
-- [ ] Replace the current "accept any HTTP(S) origin" behavior with probing required routes before `configureApiBaseUrl(...)`.
+- [x] Replace the current "accept any HTTP(S) origin" behavior with probing required routes before `configureApiBaseUrl(...)`.
 
-- [ ] Required probes should include enough API surface to reject unrelated local Swagger/services, for example `/api-json` plus known auth/public route paths.
+- [x] Required probes should include enough API surface to reject unrelated local Swagger/services, for example `/api-json` plus known auth/public route paths.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   docker compose up -d --build --force-recreate frontend
@@ -432,15 +438,15 @@
 - Modify: `server/src/auth/auth.service.spec.ts`
 - Consider migration: `server/prisma/schema.prisma`
 
-- [ ] Add client test for two separate refresh-failure cycles. Expected: each cycle clears storage and calls logout/redirect hook.
+- [x] Add client test for two separate refresh-failure cycles. Expected: each cycle clears storage and calls logout/redirect hook.
 
-- [ ] Reset or remove `isAuthRefreshRedirecting` after navigation/auth state is handled.
+- [x] Reset or remove `isAuthRefreshRedirecting` after navigation/auth state is handled.
 
-- [ ] Add server test for parallel refresh attempts with the same old refresh token.
+- [x] Add server test for parallel refresh attempts with the same old refresh token.
 
-- [ ] Implement atomic single-use refresh behavior. Prefer a refresh-token table with `jti`/revocation for a durable fix; use optimistic concurrency only if schema churn must stay minimal.
+- [x] Implement atomic single-use refresh behavior. Prefer a refresh-token table with `jti`/revocation for a durable fix; use optimistic concurrency only if schema churn must stay minimal.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- auth.service.spec.ts
