@@ -140,7 +140,18 @@ describe('Auth (e2e)', () => {
     expect(typeof response.body.accessToken).toBe('string');
     expect(response.body.refreshToken).toBeUndefined();
     expect(response.body.user).toBeUndefined();
-    getRefreshCookie(response);
+    const rotatedRefreshCookie = getRefreshCookie(response);
+    expect(rotatedRefreshCookie).not.toBe(refreshCookie);
+
+    const chainedResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', rotatedRefreshCookie)
+      .expect(200);
+
+    expect(typeof chainedResponse.body.accessToken).toBe('string');
+    expect(chainedResponse.body.refreshToken).toBeUndefined();
+    expect(chainedResponse.body.user).toBeUndefined();
+    getRefreshCookie(chainedResponse);
   });
 
   it('POST /auth/refresh should reject refresh tokens sent through Authorization', async () => {

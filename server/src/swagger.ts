@@ -9,7 +9,7 @@ const swaggerConfig = new DocumentBuilder()
   .setDescription('The API documentation for our base project')
   .setVersion('1.0')
   .addBearerAuth()
-  .addCookieAuth(REFRESH_TOKEN_COOKIE_NAME)
+  .addCookieAuth(REFRESH_TOKEN_COOKIE_NAME, undefined, REFRESH_TOKEN_COOKIE_NAME)
   .build();
 
 export const createSwaggerDocument = (app: INestApplication) => {

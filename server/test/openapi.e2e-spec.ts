@@ -9,6 +9,7 @@ describe('OpenAPI contract (e2e)', () => {
   let app: INestApplication;
   let document: OpenAPIObject;
   let previousSkipDbConnect: string | undefined;
+  const refreshCookieName = 'refreshToken';
 
   beforeAll(async () => {
     previousSkipDbConnect = process.env.SKIP_DB_CONNECT;
@@ -57,6 +58,20 @@ describe('OpenAPI contract (e2e)', () => {
     expect(refreshSchema?.properties).toHaveProperty('accessToken');
     expect(refreshSchema?.properties).not.toHaveProperty('refreshToken');
     expect(refreshSchema?.properties).not.toHaveProperty('user');
+  });
+
+  it('documents refresh authentication as the refresh-token cookie scheme', () => {
+    const refreshOperation = document.paths?.['/auth/refresh']?.post;
+    const securitySchemes = document.components?.securitySchemes as
+      | Record<string, { type?: string; in?: string; name?: string }>
+      | undefined;
+
+    expect(refreshOperation?.security).toEqual([{ [refreshCookieName]: [] }]);
+    expect(securitySchemes?.[refreshCookieName]).toMatchObject({
+      type: 'apiKey',
+      in: 'cookie',
+      name: refreshCookieName,
+    });
   });
 
   it('documents public test errors without protected-only statuses', () => {
