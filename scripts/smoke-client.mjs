@@ -1,15 +1,11 @@
-import { spawn, spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+import { spawnNpm } from './lib/npm-runner.mjs';
 
 const port = '4173';
 const targetUrl = `http://127.0.0.1:${port}/`;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
-const npmCliPath =
-  process.platform === 'win32'
-    ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
-    : null;
 
 const waitForClient = async (url, timeoutMs) => {
   const startedAt = Date.now();
@@ -58,22 +54,19 @@ const stopProcess = (child) =>
     }, 3000);
   });
 
-const client = spawn(
-  npmExecutable,
-  process.platform === 'win32'
-    ? [
-        npmCliPath,
-        'run',
-        'preview',
-        '--prefix',
-        'client',
-        '--',
-        '--host',
-        '127.0.0.1',
-        '--port',
-        port,
-      ]
-    : ['run', 'preview', '--prefix', 'client', '--', '--host', '127.0.0.1', '--port', port],
+const client = spawnNpm(
+  [
+    'run',
+    'preview',
+    '--prefix',
+    'client',
+    '--',
+    '--host',
+    '127.0.0.1',
+    '--port',
+    port,
+    '--strictPort',
+  ],
   {
     stdio: ['ignore', 'pipe', 'pipe'],
   },

@@ -62,9 +62,9 @@ describe('Prisma analysis prompt schema', () => {
     expect(schema).toMatch(/email\s+String\s+@unique\s+@db\.Citext/);
     expect(schema).toMatch(/name\s+String\s+@unique\s+@db\.Citext/);
     expect(migrationSql).toContain('CREATE EXTENSION IF NOT EXISTS citext');
-    expect(migrationSql).toContain('ALTER TABLE "users" ALTER COLUMN "email" TYPE CITEXT');
+    expect(migrationSql).toContain('ALTER TABLE "users" ALTER COLUMN "email" TYPE public.CITEXT');
     expect(migrationSql).toContain(
-      'ALTER TABLE "education_organizations" ALTER COLUMN "name" TYPE CITEXT',
+      'ALTER TABLE "education_organizations" ALTER COLUMN "name" TYPE public.CITEXT',
     );
   });
 });

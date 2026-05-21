@@ -55,7 +55,7 @@ Linux/Windows deployment commands.
 If you intentionally want to run the apps on the host instead of Docker:
 
 ```powershell
-npm install
+npm ci
 npm run install:all
 docker compose up -d postgres adminer
 npm run prisma:generate
@@ -72,7 +72,7 @@ Do not use it as the normal project Docker runtime.
 2. Install dependencies in the container:
 
 ```powershell
-npm install
+npm ci
 npm run install:all
 ```
 
@@ -244,10 +244,10 @@ Current public run UX:
 UI/theming contract for public pages:
 
 - public pages must be wrapped with `PublicThemeLayout`
-- public theme tokens live in `client/src/widgets/public-test-workspace/ui/public-theme.css` (`.theme-public` scope)
+- public theme tokens live in `client/src/features/tests/ui/public-theme.css` (`.theme-public` scope)
 - do not move public-theme tokens into global `client/src/app/index.css`
 - `STANDARD` must preserve the existing public components and remains the default unless a link explicitly stores `publicTemplate = POLUS`
-- `POLUS` components live under `client/src/widgets/public-test-workspace/ui/polus/*`
+- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; shared Polus result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`
 - Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; assets/fonts belong in the Polus public-test asset folder, not `client/public/prototypes`
 - user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
 
@@ -319,10 +319,6 @@ Run before finalizing changes:
 ```powershell
 npm run verify:local
 npm run verify:template
-npm run test:run --prefix client
-npm run format:check
-npm run audit:all
-npm run verify:e2e:critical
 ```
 
 For explicit step-by-step checks:
@@ -333,21 +329,26 @@ npm run test --prefix server
 npm run test:e2e --prefix server
 npm run build --prefix server
 npm run build --prefix client
+npm run test:run --prefix client
+npm run format:check
+npm run audit:all
+npm run verify:e2e:critical
 npm run verify:template
 ```
 
 `verify:local` is the default daily development loop.
-`verify:template` is the release-level full pipeline (including Prisma sync, API regeneration, architecture/smoke checks).
+`verify:template` is the release-level full pipeline, including Prisma sync, API regeneration,
+architecture/smoke checks, server tests, client Vitest, formatting, dependency audit, and critical
+browser flows.
 
-`verify:template` also enforces architecture consistency via `template/features.manifest.json` and runs mandatory server unit/e2e tests.
-
-Until the verification scripts are expanded, release readiness also requires the explicit client Vitest, format, audit, and critical e2e commands shown above.
+`verify:template` also enforces architecture consistency via `template/features.manifest.json`.
 
 Server smoke details:
 
-- `npm run verify:smoke:server` targets `SMOKE_SERVER_PORT`, then `PORT`, then `3000`
-- if a compatible server is already running on the selected port, the smoke check reuses it
-- if no compatible server responds, the smoke check starts the backend itself and stops only the process it started
+- `npm run verify:smoke:server` starts an isolated backend on `SMOKE_SERVER_PORT`/`PORT` when set, otherwise on a free local port
+- if the selected isolated port is already in use, the smoke check fails instead of validating a foreign process
+- set `SMOKE_SERVER_REUSE_EXISTING=1` only for explicit local reuse; then it targets `SMOKE_SERVER_PORT`, `PORT`, or `3000`
+- the smoke check stops only the process it started
 - the smoke check validates the Swagger document and required routes instead of relying on a fixed unrelated port
 
 ## PR-Ready Checklist

@@ -102,8 +102,23 @@ export const buildEducationDemographicStudentKeyHash = (input: {
   return createHash('sha256').update(fingerprint).digest('hex');
 };
 
-export const buildAnonymousAttemptKeyHash = (resumeToken: string) => {
-  return createHash('sha256').update(`anonymous|${resumeToken}`).digest('hex');
+export const buildDemographicStudentKeyHash = (input: {
+  publicLinkId: number;
+  studentGender: string;
+  studentAge: number;
+  studentResidence: string;
+  studentEducationLevel: string;
+}) => {
+  const fingerprint = [
+    'demographic',
+    String(input.publicLinkId),
+    input.studentGender,
+    String(input.studentAge),
+    normalizeStudentIdentityPart(input.studentResidence),
+    input.studentEducationLevel,
+  ].join('|');
+
+  return createHash('sha256').update(fingerprint).digest('hex');
 };
 
 export const createRandomToken = (size = 24) => randomBytes(size).toString('hex');

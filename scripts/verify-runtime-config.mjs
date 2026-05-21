@@ -1,11 +1,19 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
 const composePath = join(rootDir, 'docker-compose.yml');
 const serverDockerfilePath = join(rootDir, 'server', 'Dockerfile');
 const clientDockerfilePath = join(rootDir, 'client', 'Dockerfile');
+const clientViteConfigPath = join(rootDir, 'client', 'vite.config.ts');
+const serverPackagePath = join(rootDir, 'server', 'package.json');
+const schematicsAssetCopyScriptPath = join(
+  rootDir,
+  'server',
+  'scripts',
+  'copy-schematics-assets.mjs',
+);
 const runtimeApiBaseUrlPath = join(
   rootDir,
   'client',
@@ -24,6 +32,8 @@ const runtimeDocPaths = [
 const composeSource = readFileSync(composePath, 'utf8');
 const serverDockerfile = readFileSync(serverDockerfilePath, 'utf8');
 const clientDockerfile = readFileSync(clientDockerfilePath, 'utf8');
+const clientViteConfigSource = readFileSync(clientViteConfigPath, 'utf8');
+const serverPackage = JSON.parse(readFileSync(serverPackagePath, 'utf8'));
 const runtimeApiBaseUrlSource = readFileSync(runtimeApiBaseUrlPath, 'utf8');
 const legacyDevJwtValue = ['secret', '123'].join('');
 const openRouterKeyPrefix = ['sk', 'or'].join('-');
@@ -87,6 +97,7 @@ const services = composeConfig?.services ?? {};
 const backend = services.backend;
 const frontend = services.frontend;
 const expectedServices = ['postgres', 'adminer', 'backend', 'frontend'];
+const serverBuildSchematicsScript = serverPackage.scripts?.['build:schematics'] ?? '';
 
 if (!backend) {
   fail('docker-compose.yml must define backend service');
@@ -193,6 +204,30 @@ for (const [label, dockerfile] of [
   if (dockerfile.includes('npm install')) {
     fail(`${label} must not use npm install`);
   }
+}
+
+if (!serverBuildSchematicsScript) {
+  fail('server package must define build:schematics script');
+}
+
+if (/powershell|Copy-Item/i.test(serverBuildSchematicsScript)) {
+  fail('server build:schematics must not depend on PowerShell/Copy-Item');
+}
+
+if (!serverBuildSchematicsScript.includes('node scripts/copy-schematics-assets.mjs')) {
+  fail('server build:schematics must copy schematics assets through a Node script');
+}
+
+if (!existsSync(schematicsAssetCopyScriptPath)) {
+  fail('server/scripts/copy-schematics-assets.mjs must exist');
+}
+
+if (clientViteConfigSource.includes('VITE_PUBLIC_API_BASE_URL')) {
+  fail('client/vite.config.ts must not read legacy VITE_PUBLIC_API_BASE_URL');
+}
+
+if (!clientViteConfigSource.includes('VITE_API_URL')) {
+  fail('client/vite.config.ts must read VITE_API_URL');
 }
 
 for (const envExamplePath of envExamplePaths) {

@@ -1,4 +1,4 @@
-import type { ProfOrientationLlmState } from './polus-prof-orientation-llm-data';
+import type { ProfOrientationLlmState } from './prof-orientation-llm-data';
 
 export interface ProfOrientationDirection {
   id: string;

@@ -1,37 +1,15 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 
 import { chromium } from 'playwright';
+
+import { spawnNpm, spawnSyncNpm } from './lib/npm-runner.mjs';
 
 const previewHost = '127.0.0.1';
 let previewPort = '';
 let targetUrl = '';
 const mockApiOrigin = 'http://mock.api';
-
-const resolveNpmCommand = (args) => {
-  if (process.platform === 'win32' && process.env.npm_execpath) {
-    return {
-      executable: process.execPath,
-      args: [process.env.npm_execpath, ...args],
-      options: {},
-    };
-  }
-
-  if (process.platform === 'win32') {
-    return {
-      executable: 'npm',
-      args,
-      options: { shell: true },
-    };
-  }
-
-  return {
-    executable: 'npm',
-    args,
-    options: {},
-  };
-};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -180,9 +158,7 @@ const stopProcess = (child) =>
 
 const buildClient = () => {
   const buildArgs = ['run', 'build', '--prefix', 'client'];
-  const npmCommand = resolveNpmCommand(buildArgs);
-  const buildProcess = spawnSync(npmCommand.executable, npmCommand.args, {
-    ...npmCommand.options,
+  const buildProcess = spawnSyncNpm(buildArgs, {
     stdio: 'inherit',
   });
 
@@ -208,9 +184,7 @@ const startPreview = () => {
     previewPort,
     '--strictPort',
   ];
-  const npmCommand = resolveNpmCommand(previewArgs);
-  const preview = spawn(npmCommand.executable, npmCommand.args, {
-    ...npmCommand.options,
+  const preview = spawnNpm(previewArgs, {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 

@@ -414,14 +414,14 @@ Security model:
 UI/theming rules:
 
 1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
-2. Scoped theme tokens are defined in `client/src/widgets/public-test-workspace/ui/public-theme.css` under `.theme-public`.
+2. Scoped theme tokens are defined in `client/src/features/tests/ui/public-theme.css` under `.theme-public`.
 3. Do not place public-theme tokens in global `client/src/app/index.css`.
 4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
 5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
 6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
 7. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
    - `STANDARD` preserves the existing public components.
-   - `POLUS` uses components under `client/src/widgets/public-test-workspace/ui/polus/*`.
+   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`.
 8. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
 9. Entry page must branch by the link `entryProfileMode` without changing public routes:
    - `DEMOGRAPHIC` shows the demographic profile form.
@@ -463,11 +463,12 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 
 ## Stability Rules
 
-1. Lint/test/build must pass:
+1. Core lint/test/build commands must pass during implementation loops:
    ```powershell
    npm run lint
    npm run test --prefix server
    npm run test:e2e --prefix server
+   npm run test:run --prefix client
    npm run build --prefix server
    npm run build --prefix client
    ```
@@ -475,7 +476,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    ```powershell
    npm run verify:template
    ```
-   This includes `verify:architecture` against `template/features.manifest.json` and mandatory server unit/e2e tests.
+   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
@@ -535,8 +536,8 @@ Use this checklist before opening PR or finalizing work.
    - Route added in `client/src/app/App.tsx`.
    - `publicRoutes` from manifest are wired in `client/src/app/App.tsx`.
    - `client/src/pages/dashboard.tsx` includes feature entry links for declared feature routes (required by `verify:architecture`).
-7. **Full pipeline green**
-   - `npm run test --prefix server` and `npm run test:e2e --prefix server` passed.
+7. **Core tests green**
+   - `npm run test --prefix server`, `npm run test:e2e --prefix server`, and `npm run test:run --prefix client` passed when the branch changed related behavior.
 8. **Full pipeline green**
    - `npm run verify:template` passed with no failures.
 9. **No hidden bypasses**

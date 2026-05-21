@@ -41,6 +41,129 @@ const internalTermReplacements = [
   ['sliderValues', 'оценки по шкалам'],
 ] as const;
 
+const repeatedChoiceToken = 'выбор';
+
+const isWhitespaceChar = (char: string) => char.trim().length === 0;
+
+const isChoiceTokenBoundary = (char: string | undefined) =>
+  char === undefined || char === ')' || char === ',' || isWhitespaceChar(char);
+
+const trimTrailingWhitespace = (text: string) => {
+  let endIndex = text.length;
+
+  while (endIndex > 0 && isWhitespaceChar(text[endIndex - 1] ?? '')) {
+    endIndex -= 1;
+  }
+
+  return text.slice(0, endIndex);
+};
+
+const getRepeatedChoiceNoiseEnd = (text: string, startIndex: number) => {
+  let index = startIndex + 1;
+  let choiceCount = 0;
+
+  while (index < text.length) {
+    const char = text[index];
+
+    if (char === ')' && choiceCount >= 2) {
+      return index + 1;
+    }
+
+    if (char === ',' || isWhitespaceChar(char)) {
+      index += 1;
+      continue;
+    }
+
+    if (
+      text.startsWith(repeatedChoiceToken, index) &&
+      isChoiceTokenBoundary(text[index + repeatedChoiceToken.length])
+    ) {
+      choiceCount += 1;
+      index += repeatedChoiceToken.length;
+      continue;
+    }
+
+    return choiceCount >= 2 ? index : null;
+  }
+
+  return choiceCount >= 2 ? index : null;
+};
+
+const stripRepeatedChoiceNoise = (text: string) => {
+  let strippedText = '';
+  let index = 0;
+
+  while (index < text.length) {
+    if (text[index] === '(') {
+      const noiseEnd = getRepeatedChoiceNoiseEnd(text, index);
+
+      if (noiseEnd !== null) {
+        index = noiseEnd;
+        continue;
+      }
+    }
+
+    strippedText += text[index];
+    index += 1;
+  }
+
+  return strippedText;
+};
+
+const removeSpacesBeforePunctuation = (text: string) => {
+  let normalizedText = '';
+
+  for (const char of text) {
+    if (char === ',' || char === '.' || char === ')') {
+      normalizedText = trimTrailingWhitespace(normalizedText);
+    }
+
+    normalizedText += char;
+  }
+
+  return normalizedText;
+};
+
+const normalizeWhitespace = (text: string) => {
+  let normalizedText = '';
+  let hasPendingSpace = false;
+
+  for (const char of text) {
+    if (isWhitespaceChar(char)) {
+      hasPendingSpace = true;
+      continue;
+    }
+
+    if (hasPendingSpace && normalizedText) {
+      normalizedText += ' ';
+    }
+
+    normalizedText += char;
+    hasPendingSpace = false;
+  }
+
+  return normalizedText;
+};
+
+const trimLeadingSeparators = (text: string) => {
+  let startIndex = 0;
+
+  while (
+    startIndex < text.length &&
+    (text[startIndex] === ':' ||
+      text[startIndex] === ';' ||
+      text[startIndex] === ',' ||
+      text[startIndex] === '-' ||
+      text[startIndex] === '–' ||
+      text[startIndex] === '—' ||
+      isWhitespaceChar(text[startIndex] ?? ''))
+  ) {
+    startIndex += 1;
+  }
+
+  return text.slice(startIndex);
+};
+
 const sanitizeMethodologyText = (text: string) => {
   let sanitizedText = text;
 
@@ -48,23 +171,23 @@ const sanitizeMethodologyText = (text: string) => {
     sanitizedText = sanitizedText.replaceAll(technicalTerm, readableTerm);
   }
 
-  return sanitizedText
+  sanitizedText = sanitizedText
     .replace(/\bQ\d+_[A-Z]\d\b/gu, 'выбор')
     .replace(/\bS_[A-Z]\d\b/gu, 'шкала интереса')
     .replace(/\bR_[A-Z_]+\b/gu, 'шкала готовности')
     .replace(/\b[A-Z]\d\b\s*[—-]\s*/gu, '')
     .replace(/\b[A-Z]\d\b/gu, 'направление')
     .replace(/\bgap\s*\d+(?:[.,]\d+)?/giu, 'отрыв по баллам')
-    .replace(/\blabel\s*/giu, '')
-    .replace(/\((?:выбор,?\s*){2,}\)/gu, '')
+    .replace(/\blabel\s*/giu, '');
+
+  sanitizedText = stripRepeatedChoiceNoise(sanitizedText)
     .replace(/отрыв по баллам,\s*высокая,\s*/giu, 'отрыв по баллам высокий, ')
     .replace(/устойчивость выборов\s*1/giu, 'выборы были устойчивыми')
-    .replace(/по направление/giu, 'по ведущему направлению')
-    .replace(/\s+([,.)])/gu, '$1')
-    .replace(/\s{2,}/gu, ' ')
-    .trim()
-    .replace(/^[:;,\-–—]\s*/u, '')
-    .trim();
+    .replace(/по направление/giu, 'по ведущему направлению');
+
+  return trimLeadingSeparators(
+    normalizeWhitespace(removeSpacesBeforePunctuation(sanitizedText)),
+  ).trim();
 };
 
 const getString = (record: Record<string, unknown>, key: string) => {

@@ -91,6 +91,10 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 Для production-like окружений сервер не стартует без этого значения или с
 локальными placeholder-секретами.
 
+OpenRouter-переменные должны оставаться backend-only и совпадать с контрактом в
+`.env.deploy.example` и `docker-compose.deploy.yml`. Не добавляйте
+`OPENROUTER_API_KEY` в frontend env или Vite-переменные.
+
 ## 4. Запустить
 
 ```bash

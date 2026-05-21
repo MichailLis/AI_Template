@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:schematics": "tsc -p schematics/tsconfig.json && powershell -Command \"Copy-Item -Path 'schematics/resource/files' -Destination 'dist/schematics/resource/' -Recurse -Force; Copy-Item -Path 'schematics/resource/schema.json' -Destination 'dist/schematics/resource/' -Force\"",
+    "build:schematics": "tsc -p schematics/tsconfig.json && node scripts/copy-schematics-assets.mjs",
     "gen:nest": "npx nest g -c ./schematics/collection.json resource",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -86,6 +86,7 @@
     "zod-prisma-types": "^3.3.11"
   },
   "overrides": {
+    "uuid": "11.1.1",
     "@prisma/dev": {
       "@hono/node-server": "1.19.13"
     }

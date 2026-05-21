@@ -8,6 +8,7 @@ import type {
   TestsTopicDetailResponseDtoDraft,
   TestsTopicDetailResponseDtoDraftQuestionsItem,
   UpsertTestsQuestionDto,
+  UpsertTestsQuestionDtoSettings,
 } from '@/shared/api/model';
 
 export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
@@ -19,6 +20,10 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
+};
+
+const isSettingsRecord = (value: unknown): value is UpsertTestsQuestionDtoSettings => {
+  return isRecord(value) && !Array.isArray(value);
 };
 
 const DEFAULT_SLIDER_MIN = '1';
@@ -102,13 +107,18 @@ export const createEmptyQuestionFormState = (): QuestionFormState => ({
 export const isChoiceType = (type: QuestionType) =>
   type === 'SINGLE_CHOICE' || type === 'MULTI_CHOICE';
 
-const parseSettings = (raw: string) => {
+const parseSettings = (raw: string): UpsertTestsQuestionDtoSettings | undefined => {
   const value = raw.trim();
   if (!value) {
     return undefined;
   }
 
-  return JSON.parse(value) as unknown;
+  const settings = JSON.parse(value) as unknown;
+  if (!isSettingsRecord(settings)) {
+    throw new Error('Дополнительные настройки должны быть JSON-объектом');
+  }
+
+  return settings;
 };
 
 const getSliderSettingsNumber = (
@@ -173,10 +183,6 @@ const parseSliderSettings = (
 
   if (settings === undefined) {
     return sliderScale;
-  }
-
-  if (!isRecord(settings)) {
-    throw new Error('Дополнительные настройки слайдера должны быть JSON-объектом');
   }
 
   return {

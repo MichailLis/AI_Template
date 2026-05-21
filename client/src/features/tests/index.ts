@@ -1,8 +1,11 @@
+import './theme';
+
 export { AiTestGeneratorModal } from './ui/ai-test-generator-modal';
 export { QuestionModal } from './ui/question-modal';
 export { TestsCreateModal } from './ui/tests-create-modal';
 export { TestsListCard } from './ui/tests-list-card';
 export { TestsListHeader } from './ui/tests-list-header';
+export { PublicTestStudentAnalysisView } from './ui/public-test-student-analysis-view';
 export { TestAnalysisResultView } from './ui/test-analysis-result-view';
 export { TestEditor } from './ui/test-editor';
 export { TestQuestionsOnlyView } from './ui/test-questions-only-view';
@@ -14,6 +17,11 @@ export { useQuestionEditor } from './model/use-question-editor';
 
 export { hasDraftEdits, parseApiError } from './lib/tests-utils';
 export { parseAnalysisResult } from './lib/test-analysis-result-parser';
+export { getProfOrientationLlmStatus } from './ui/polus/prof-orientation-llm-data';
+export { parseProfOrientationSummary } from './ui/polus/prof-orientation-summary';
+export { ProfOrientationResult } from './ui/polus/prof-orientation-result';
+export { polusAssets } from './ui/polus/polus-public-assets';
 
 export type { AnalysisPayload, AnalysisResult } from './lib/test-analysis-result-parser';
+export type { ProfOrientationSummary } from './ui/polus/prof-orientation-summary';
 export type { TestTopicListItem } from './model/types';

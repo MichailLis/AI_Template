@@ -11,7 +11,7 @@ const API_FALLBACK_PORT_ATTEMPTS = 20;
 const API_PROBE_TIMEOUT_MS = 400;
 const API_DISCOVERY_CACHE_TTL_MS = 5000;
 const API_HOST_CANDIDATES = ['localhost', '127.0.0.1'] as const;
-const API_BASE_URL_ENV_KEYS = ['VITE_API_URL', 'VITE_PUBLIC_API_BASE_URL'] as const;
+const API_BASE_URL_ENV_KEY = 'VITE_API_URL';
 // Важно: рядом могут работать чужие Swagger-серверы на localhost.
 // Принимаем candidate API только если в схеме есть обязательные маршруты именно этого проекта.
 const API_REQUIRED_PATHS = [
@@ -91,24 +91,20 @@ const probeApiHostPort = (host: string, port: number) =>
   });
 
 const getEnvApiBaseUrl = () => {
-  for (const envKey of API_BASE_URL_ENV_KEYS) {
-    const rawValue = process.env[envKey]?.trim();
-    if (!rawValue) {
-      continue;
-    }
-
-    try {
-      const parsedUrl = new URL(rawValue);
-      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-        continue;
-      }
-      return parsedUrl.origin;
-    } catch {
-      continue;
-    }
+  const rawValue = process.env[API_BASE_URL_ENV_KEY]?.trim();
+  if (!rawValue) {
+    return null;
   }
 
-  return null;
+  try {
+    const parsedUrl = new URL(rawValue);
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return null;
+    }
+    return parsedUrl.origin;
+  } catch {
+    return null;
+  }
 };
 
 const discoverApiBaseUrl = async () => {

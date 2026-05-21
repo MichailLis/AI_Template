@@ -1,3 +1,4 @@
+import { PublicTestStudentAnalysisView } from '@/features/tests';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import {
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog';
-import { PublicTestStudentAnalysisView } from '@/widgets/public-test-workspace';
 
 type AttemptDetailView = 'analysis' | 'answers';
 

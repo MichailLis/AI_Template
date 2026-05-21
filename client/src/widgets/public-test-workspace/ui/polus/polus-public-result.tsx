@@ -1,11 +1,13 @@
 import { Download } from 'lucide-react';
 
-import { parseAnalysisResult } from '@/features/tests';
+import {
+  parseAnalysisResult,
+  parseProfOrientationSummary,
+  polusAssets,
+  ProfOrientationResult,
+} from '@/features/tests';
 
 import { PolusAtlasCard } from './polus-atlas-card';
-import { ProfOrientationResult } from './polus-prof-orientation-result';
-import { parseProfOrientationSummary } from './polus-prof-orientation-summary';
-import { polusAssets } from './polus-public-assets';
 import { PolusPublicLayout } from './polus-public-layout';
 
 import type { AnalysisResult } from '@/features/tests';

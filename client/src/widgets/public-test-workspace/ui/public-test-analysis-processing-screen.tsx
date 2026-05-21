@@ -1,7 +1,8 @@
 import { BrainCircuit, Check, CheckCircle2, LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { polusAssets } from './polus/polus-public-assets';
+import { polusAssets } from '@/features/tests';
+
 import { PolusPublicLayout } from './polus/polus-public-layout';
 import { analysisProcessingSteps } from './public-test-analysis.mock';
 import { PublicThemeLayout } from './public-theme-layout';
@@ -193,9 +194,7 @@ function StandardProcessingScreen({
           <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
             {isReadyPhase ? 'Анализ готов' : 'Формируем отчет'}
           </h1>
-          <p className="text-sm text-muted-foreground md:text-base">
-            {description}
-          </p>
+          <p className="text-sm text-muted-foreground md:text-base">{description}</p>
         </div>
 
         <div className="w-full space-y-2 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm">

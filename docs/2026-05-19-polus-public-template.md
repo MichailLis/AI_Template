@@ -2,7 +2,7 @@
 
 Date: 2026-05-19
 
-This note records the current production contract for the Polus public test template. The prototype remains reference material only; runtime code must not depend on `client/public/prototypes`.
+This note records the current production contract for the Polus public test template. The prototype remains reference material only; runtime code must not depend on `client/public/prototypes`. Local prototype references belong outside the Vite public runtime, under ignored design scratch space such as `Design/prototypes/`.
 
 ## Public Link Template Choice
 
@@ -19,8 +19,8 @@ This note records the current production contract for the Polus public test temp
 
 - `DEMOGRAPHIC`: collects gender, age, residence, and education level; attempts are limited to one student submission.
 - `EDUCATION`: collects the existing education-based student profile.
-- `EDUCATION_DEMOGRAPHIC`: collects student name, age, education organization, group/class, gender, residence, and education level.
-- Polus hybrid entry does not require initials.
+- `EDUCATION_DEMOGRAPHIC`: collects student name, surname initial, patronymic initial, age, education organization, group/class, gender, residence, and education level.
+- Polus hybrid entry requires surname and patronymic initials while using the education attempt/resume behavior.
 - `EDUCATION` and `EDUCATION_DEMOGRAPHIC` use the education attempt/resume behavior.
 
 ## Public UI Contract
@@ -47,4 +47,4 @@ npm run verify:local
 npm run verify:template
 ```
 
-Browser smoke covered `POLUS43972297`: the hybrid entry fields were visible, submit opened a session, and the database stored both education and demographic fields while leaving initials empty for the Polus hybrid flow.
+Browser smoke covered `POLUS43972297`: the hybrid entry fields were visible, submit opened a session, and the database stored education, demographic, surname-initial, and patronymic-initial fields for the Polus hybrid flow.

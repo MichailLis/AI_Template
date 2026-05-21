@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
@@ -19,6 +19,7 @@ const clientLint = clientScripts.lint ?? '';
 const serverLint = serverScripts.lint ?? '';
 const serverLintFix = serverScripts['lint:fix'] ?? '';
 const auditCommandPattern = /(?:^|&&|\|\||;)\s*npm(?:\s+run)?\s+audit(?::|\b)/;
+const ciWorkflowPath = join(rootDir, '.github', 'workflows', 'ci.yml');
 const requireRootScriptSegment = (scriptName, expectedSegment) => {
   const script = rootScripts[scriptName] ?? '';
 
@@ -67,6 +68,10 @@ if (rootScripts.lint !== 'npm run lint --prefix client && npm run lint --prefix 
   fail('root lint script must run client and server lint scripts');
 }
 
+if (rootScripts['install:all'] !== 'npm ci --prefix client && npm ci --prefix server') {
+  fail('install:all must use npm ci for client and server');
+}
+
 if (!rootScripts['audit:all']) {
   fail('root package must define audit:all script');
 }
@@ -75,17 +80,45 @@ if (!rootScripts['audit:prod']) {
   fail('root package must define audit:prod script');
 }
 
-if (auditCommandPattern.test(rootScripts['verify:local'] ?? '')) {
-  fail('verify:local must not include audit scripts before dependency remediation');
-}
-
-if (auditCommandPattern.test(rootScripts['verify:template'] ?? '')) {
-  fail('verify:template must not include audit scripts before dependency remediation');
+if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migrations.mjs') {
+  fail('root package must define verify:prisma-migrations script');
 }
 
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
+  requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
+}
+
+for (const expectedSegment of [
+  'npm run test:run --prefix client',
+  'npm run format:check',
+  'npm run audit:all',
+  'npm run verify:e2e:critical',
+]) {
+  requireRootScriptSegment('verify:template', expectedSegment);
+}
+
+if (auditCommandPattern.test(rootScripts['verify:local'] ?? '')) {
+  fail('verify:local must stay practical and must not include audit scripts');
+}
+
+if (!existsSync(ciWorkflowPath)) {
+  fail('.github/workflows/ci.yml must exist');
+} else {
+  const ciWorkflow = readFileSync(ciWorkflowPath, 'utf8');
+
+  for (const expectedCommand of [
+    'npm ci',
+    'npm ci --prefix client',
+    'npm ci --prefix server',
+    'npm run gen:api',
+    'npm run verify:template',
+  ]) {
+    if (!ciWorkflow.includes(expectedCommand)) {
+      fail(`.github/workflows/ci.yml must include ${expectedCommand}`);
+    }
+  }
 }
 
 if (failures.length > 0) {

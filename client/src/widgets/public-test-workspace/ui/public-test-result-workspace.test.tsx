@@ -13,9 +13,14 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
   useTestsPublicControllerGetSessionResult: vi.fn(),
 }));
 
-vi.mock('@/features/tests', () => ({
-  parseAnalysisResult: () => null,
-}));
+vi.mock('@/features/tests', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@/features/tests');
+
+  return {
+    ...actual,
+    parseAnalysisResult: () => null,
+  };
+});
 
 describe('PublicTestResultWorkspace', () => {
   const getRecentFinishedAt = (elapsedMs: number) => new Date(Date.now() - elapsedMs).toISOString();

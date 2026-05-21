@@ -16,8 +16,17 @@
 - Completed in the current Task 4.3 batch: HttpOnly refresh-token cookie flow.
 - Completed in the current Task 4.4 batch: CORS allowlist and non-local runtime placeholder guardrails.
 - Completed in the current Task 4.5 batch: shared admin authorization boundary.
-- Still open from the earlier phases: Task 1.3.
-- Next recommended task: Task 4.6.
+- Completed in the current Task 4.6 verification pass: normalized identities, env-only OpenRouter secrets, unified error shape, and narrowed JSON boundaries.
+- Completed in the current Task 1.3 pass: stable DEMOGRAPHIC attempt key, transactional public attempt allocation, bounded P2002 retry, and concurrent start coverage.
+- Completed in the current Task 5.1 pass: Prisma migration drift verifier added to local/template gates.
+- Completed in the current Task 5.2 pass: manifest/OpenAPI ownership expanded, strict FSD verifier enforced, and shared Polus analysis UI moved under `features/tests`.
+- Completed in the current Task 5.3 pass: deterministic `npm ci` setup, authoritative release gate, clean-checkout CI, formatter/audit gate fixes, and CI duplication review fix.
+- Completed in the current Task 5.4 pass: isolated server smoke, shared cross-platform npm runner, Node schematics asset copy, VITE_API_URL-only runtime discovery, and hardened browser/e2e smoke assertions.
+- Completed in the current Task 6.1 pass: local AI/QA tool state ignored, prototype public assets excluded from hygiene tooling until Task 6.2, TypeScript build info moved under ignored server dist, and tracked build cache removed.
+- Completed in the current Task 6.2 pass: prototype-only assets moved out of `client/public`, `dist/prototypes` removed from production builds, and Polus runtime GIF compression explicitly deferred for owner handling.
+- Completed in the current Task 6.3 pass: Polus LLM sanitizer slow-regex warning replaced with bounded scanner coverage, long/noisy methodology text regression tests added, and maintainability verification expanded beyond client TS/TSX.
+- Completed in the current Task 6.4 pass: README, `AI_GUIDE.md`, deployment docs, and Polus template notes synchronized around hybrid initials, release gates, and backend-only OpenRouter env contract.
+- Next recommended task: Final Release Gate.
 
 ## Source Audit
 
@@ -195,13 +204,13 @@
 - Modify: `server/src/tests/tests-public-session.service.spec.ts`
 - Modify if needed: `server/src/tests/tests-attempt-access.ts`
 
-- [ ] Add tests for concurrent starts against the same public link/student key. Expected: no duplicate attempt number leaks; either one request resumes or one request gets a clean limit/retry response.
+- [x] Add tests for concurrent starts against the same public link/student key. Expected: no duplicate attempt number leaks; either one request resumes or one request gets a clean limit/retry response.
 
-- [ ] For DEMOGRAPHIC mode, derive a stable privacy-preserving key from normalized demographic fields and link id, not from `resumeToken`.
+- [x] For DEMOGRAPHIC mode, derive a stable privacy-preserving key from normalized demographic fields and link id, not from `resumeToken`.
 
-- [ ] Wrap attempt allocation in a transaction and retry once on Prisma unique constraint `P2002` for `[publicLinkId, studentKeyHash, attemptNumber]`.
+- [x] Wrap attempt allocation in a transaction and retry once on Prisma unique constraint `P2002` for `[publicLinkId, studentKeyHash, attemptNumber]`.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server -- tests-public-session.service.spec.ts
@@ -559,19 +568,19 @@
 - Modify: `server/src/common/filters/all-exceptions.filter.ts`
 - Modify: `client/src/features/tests/lib/tests-utils.ts`
 
-- [ ] Normalize emails to lowercase on signup/signin and enforce DB-level protection with `citext` or a lower-case unique index.
+- [x] Normalize emails to lowercase on signup/signin and enforce DB-level protection with `citext` or a lower-case unique index.
 
-- [ ] Normalize education organization names or enforce case-insensitive uniqueness at the DB level.
+- [x] Normalize education organization names or enforce case-insensitive uniqueness at the DB level.
 
-- [ ] Prefer environment-only OpenRouter secrets or encrypt saved app setting values with a server-held key. Do not return raw secret values to clients.
+- [x] Prefer environment-only OpenRouter secrets or encrypt saved app setting values with a server-held key. Do not return raw secret values to clients.
 
-- [ ] Add contract tests for unified error shape:
+- [x] Add contract tests for unified error shape:
 
   ```json
   { "success": false, "error": { "code": "SOME_CODE", "message": "Human message" } }
   ```
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run prisma:generate
@@ -594,11 +603,11 @@
 - Modify: `package.json`
 - Modify: `.github/workflows/ci.yml` when CI is added
 
-- [ ] Add a clean workflow that compares committed migrations to `server/prisma/schema.prisma`.
+- [x] Add a clean workflow that compares committed migrations to `server/prisma/schema.prisma`.
 
-- [ ] Use this check before future Prisma schema changes are accepted.
+- [x] Use this check before future Prisma schema changes are accepted.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run verify:prisma-migrations
@@ -615,13 +624,13 @@
 - Modify or move: `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx`
 - Modify generated API only through `npm run gen:api`
 
-- [ ] Add inventory coverage for admin users, prompts, settings, analytics summary/export, and other admin paths listed in the audit.
+- [x] Add inventory coverage for admin users, prompts, settings, analytics summary/export, and other admin paths listed in the audit.
 
-- [ ] Make `verify-architecture` enforce `template/fsd.rules.json` exactly: widgets must not import other widget slices unless explicitly allowed.
+- [x] Make `verify-architecture` enforce `template/fsd.rules.json` exactly: widgets must not import other widget slices unless explicitly allowed.
 
-- [ ] Move shared UI/details used by multiple widgets down to `features`, `entities`, or `shared` according to existing FSD rules.
+- [x] Move shared UI/details used by multiple widgets down to `features`, `entities`, or `shared` according to existing FSD rules.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run gen:api
@@ -640,13 +649,13 @@
 - Add: `.github/workflows/ci.yml`
 - Modify: `README.md`
 
-- [ ] Switch deterministic setup guidance from `npm install` to `npm ci` for root/client/server.
+- [x] Switch deterministic setup guidance from `npm install` to `npm ci` for root/client/server.
 
-- [ ] Add client Vitest, `format:check`, `audit:all`, and `verify:e2e:critical` to the release gate.
+- [x] Add client Vitest, `format:check`, `audit:all`, and `verify:e2e:critical` to the release gate.
 
-- [ ] Keep a fast local gate that remains practical for daily work, but make release CI stricter.
+- [x] Keep a fast local gate that remains practical for daily work, but make release CI stricter.
 
-- [ ] Add GitHub Actions CI on clean checkout:
+- [x] Add GitHub Actions CI on clean checkout:
 
   ```powershell
   npm ci
@@ -660,7 +669,7 @@
   npm run verify:e2e:critical
   ```
 
-- [ ] Verify locally before pushing:
+- [x] Verify locally before pushing:
 
   ```powershell
   npm run verify:package-scripts
@@ -678,20 +687,23 @@
 
 - Modify: `scripts/smoke-server.mjs`
 - Modify: `scripts/e2e-critical-flows.mjs`
+- Modify: `scripts/smoke-client.mjs`
+- Modify: `scripts/e2e-admin-tests-ia.mjs`
+- Create: `scripts/lib/npm-runner.mjs`
 - Modify: `server/package.json`
 - Create: `server/scripts/copy-schematics-assets.mjs`
 - Modify: `client/vite.config.ts`
 - Modify: `scripts/verify-runtime-config.mjs`
 
-- [ ] Make release smoke start an isolated server or require a build/version marker before accepting an existing process.
+- [x] Make release smoke start an isolated server or require a build/version marker before accepting an existing process.
 
-- [ ] Replace Windows-specific npm resolution with a cross-platform runner helper.
+- [x] Replace Windows-specific npm resolution with a cross-platform runner helper.
 
-- [ ] Replace `powershell -Command` in `build:schematics` with a Node script.
+- [x] Replace `powershell -Command` in `build:schematics` with a Node script.
 
-- [ ] Remove legacy `VITE_PUBLIC_API_BASE_URL` fallback or add an explicit deprecation warning and verification.
+- [x] Remove legacy `VITE_PUBLIC_API_BASE_URL` fallback or add an explicit deprecation warning and verification.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run verify:smoke:server
@@ -699,6 +711,11 @@
   npm run build:schematics --prefix server
   npm run verify:runtime-config
   ```
+
+- [x] Additional review hardening:
+  - `scripts/e2e-admin-tests-ia.mjs` always builds current client assets before preview.
+  - Browser `console.error` and `pageerror` fail IA e2e except the deliberately mocked 500 resource error in the error scenario.
+  - Client preview smoke uses `--strictPort` for fast, explicit port-conflict failures.
 
 ## Phase 6 - Hygiene, Formatting, Assets, And Maintainability
 
@@ -714,13 +731,13 @@
 - Modify: `server/tsconfig.json`
 - Format intended tracked files only
 
-- [ ] Ignore local tool state: `.omx/`, `.playwright-cli/`, `.playwright-mcp/`.
+- [x] Ignore local tool state: `.omx/`, `.playwright-cli/`, `.playwright-mcp/`.
 
-- [ ] Ignore or move `client/public/prototypes/` according to the asset decision in Task 6.2.
+- [x] Ignore or move `client/public/prototypes/` according to the asset decision in Task 6.2.
 
-- [ ] Move `tsBuildInfoFile` under ignored `dist` or another ignored path, then remove tracked `server/tsconfig.build.tsbuildinfo`.
+- [x] Move `tsBuildInfoFile` under ignored `dist` or another ignored path, then remove tracked `server/tsconfig.build.tsbuildinfo`.
 
-- [ ] Run formatting after ignore rules are fixed:
+- [x] Run formatting after ignore rules are fixed:
 
   ```powershell
   npm run format:check
@@ -738,17 +755,19 @@
 - Modify if references exist: `client/src/**`
 - Modify docs if needed: `README.md`, `AI_GUIDE.md`
 
-- [ ] Search for references:
+- [x] Search for references:
 
   ```powershell
   rg "prototypes|client/public/prototypes|\\.gif|polus" client/src docs README.md AI_GUIDE.md
   ```
 
-- [ ] Move prototype-only assets outside `client/public` or add them to ignore rules if they are local design scratch files.
+- [x] Move prototype-only assets outside `client/public` or add them to ignore rules if they are local design scratch files.
 
-- [ ] Optimize or replace large public assets that are actually used by the Polus runtime.
+- [x] Optimize or replace large public assets that are actually used by the Polus runtime.
 
-- [ ] Verify:
+  Decision: `professor-polus-thinking.gif` remains unchanged in this pass because the owner will compress it later.
+
+- [x] Verify:
 
   ```powershell
   docker compose up -d --build --force-recreate frontend
@@ -763,17 +782,19 @@
 **Files:**
 
 - Modify: `scripts/verify-maintainability.mjs`
-- Modify: `client/src/widgets/public-test-workspace/ui/polus/polus-prof-orientation-llm-data.ts`
-- Modify or add: `client/src/widgets/public-test-workspace/ui/polus/*.test.ts`
+- Modify: `client/src/features/tests/ui/polus/prof-orientation-llm-data.ts`
+- Modify or add: `client/src/features/tests/ui/polus/*.test.ts`
 - Consider splitting: `client/src/widgets/admin-public-links-workspace/ui/public-links-list-card.tsx`
 
-- [ ] Replace the slow regex in `polus-prof-orientation-llm-data.ts` with a bounded parser or safer expression.
+- [x] Replace the slow regex in `polus-prof-orientation-llm-data.ts` with a bounded parser or safer expression.
 
-- [ ] Add a regression test with long LLM-controlled text.
+- [x] Add a regression test with long LLM-controlled text.
 
-- [ ] Decide whether lint warnings fail release CI. If yes, update scripts and fix oversized frontend files in separate small tasks.
+- [x] Decide whether lint warnings fail release CI. If yes, update scripts and fix oversized frontend files in separate small tasks.
 
-- [ ] Verify:
+  Decision: release lint warnings remain advisory in this pass; the slow-regex warning is fixed, and remaining max-lines warnings are deferred to focused component split tasks.
+
+- [x] Verify:
 
   ```powershell
   docker compose up -d --build --force-recreate frontend
@@ -793,13 +814,13 @@
 - Modify: `docs/deployment-dockerhub.md`
 - Modify: `AI_GUIDE.md` only when it remains the source of truth
 
-- [ ] Align README with the actual Polus hybrid initials requirement.
+- [x] Align README with the actual Polus hybrid initials requirement.
 
-- [ ] Update quality gate docs to include client Vitest, format check, audit, and critical e2e.
+- [x] Update quality gate docs to include client Vitest, format check, audit, and critical e2e.
 
-- [ ] Keep deploy env docs synchronized with Task 4.4.
+- [x] Keep deploy env docs synchronized with Task 4.4.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run verify:ai-guide

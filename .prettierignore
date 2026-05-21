@@ -2,13 +2,18 @@ node_modules
 client/node_modules
 server/node_modules
 .serena
+.omx
+.playwright-cli
+.playwright-mcp
 Design
+01_брендинг
 nul
 Промт инжиниринг
 package-lock.json
 client/package-lock.json
 server/package-lock.json
 client/dist
+client/public/prototypes
 server/dist
 coverage
 client/src/shared/api/generated

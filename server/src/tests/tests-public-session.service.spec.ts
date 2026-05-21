@@ -61,6 +61,9 @@ describe('TestsPublicSessionService', () => {
     };
     testStudentAttempt: {
       update: jest.Mock;
+      updateMany: jest.Mock<Promise<{ count: number }>, [Record<string, unknown>]>;
+      findMany: jest.Mock<Promise<AttemptHistoryItem[]>, [Record<string, unknown>]>;
+      create: jest.Mock<Promise<{ resumeToken: string }>, [AttemptCreateInput]>;
     };
   };
 
@@ -84,6 +87,9 @@ describe('TestsPublicSessionService', () => {
       },
       testStudentAttempt: {
         update: jest.fn(),
+        updateMany: updateManyMock,
+        findMany: findManyMock,
+        create: createAttemptMock,
       },
     };
     transactionMock = jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock));
@@ -189,6 +195,8 @@ describe('TestsPublicSessionService', () => {
         maxAttemptsPerStudent: 1,
       }),
     );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([]);
     createAttemptMock.mockResolvedValue({ resumeToken: 'resume-demo' });
 
     const getSessionByTokenSpy = jest
@@ -207,8 +215,8 @@ describe('TestsPublicSessionService', () => {
 
     const createCall = createAttemptMock.mock.calls[0]?.[0];
 
-    expect(updateManyMock).not.toHaveBeenCalled();
-    expect(findManyMock).not.toHaveBeenCalled();
+    expect(updateManyMock).toHaveBeenCalled();
+    expect(findManyMock).toHaveBeenCalled();
     expect(createCall?.data).toMatchObject({
       publicLinkId: 100,
       topicVersionId: 200,
@@ -226,6 +234,82 @@ describe('TestsPublicSessionService', () => {
     expect(createCall?.data.studentKeyHash).toEqual(expect.any(String));
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-demo');
     expect(result.session.sessionToken).toBe('resume-demo');
+  });
+
+  it('startSessionByCode builds a stable DEMOGRAPHIC key from normalized profile and link', async () => {
+    getAccessiblePublicLinkByCodeMock
+      .mockResolvedValueOnce(
+        createAccessibleLinkFixture({
+          id: 100,
+          entryProfileMode: 'DEMOGRAPHIC',
+          educationOrganization: null,
+          maxAttemptsPerStudent: 3,
+        }),
+      )
+      .mockResolvedValueOnce(
+        createAccessibleLinkFixture({
+          id: 100,
+          entryProfileMode: 'DEMOGRAPHIC',
+          educationOrganization: null,
+          maxAttemptsPerStudent: 3,
+        }),
+      )
+      .mockResolvedValueOnce(
+        createAccessibleLinkFixture({
+          id: 101,
+          entryProfileMode: 'DEMOGRAPHIC',
+          educationOrganization: null,
+          maxAttemptsPerStudent: 3,
+        }),
+      );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([]);
+    createAttemptMock
+      .mockResolvedValueOnce({ resumeToken: 'resume-demo-1' })
+      .mockResolvedValueOnce({ resumeToken: 'resume-demo-2' })
+      .mockResolvedValueOnce({ resumeToken: 'resume-demo-3' });
+
+    jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-1'))
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-2'))
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-3'));
+
+    await service.startSessionByCode(
+      'DEMO2026',
+      createPublicSessionDemographicStartDto({
+        gender: 'MALE',
+        age: 18,
+        residence: '  КаЗаНь   Центр  ',
+        educationLevel: 'SECONDARY_SPECIAL',
+      }),
+    );
+    await service.startSessionByCode(
+      'DEMO2026',
+      createPublicSessionDemographicStartDto({
+        gender: 'MALE',
+        age: 18,
+        residence: 'казань центр',
+        educationLevel: 'SECONDARY_SPECIAL',
+      }),
+    );
+    await service.startSessionByCode(
+      'DEMO2027',
+      createPublicSessionDemographicStartDto({
+        gender: 'MALE',
+        age: 18,
+        residence: 'казань центр',
+        educationLevel: 'SECONDARY_SPECIAL',
+      }),
+    );
+
+    const firstKey = createAttemptMock.mock.calls[0]?.[0].data.studentKeyHash;
+    const secondKey = createAttemptMock.mock.calls[1]?.[0].data.studentKeyHash;
+    const anotherLinkKey = createAttemptMock.mock.calls[2]?.[0].data.studentKeyHash;
+
+    expect(firstKey).toEqual(expect.any(String));
+    expect(firstKey).toBe(secondKey);
+    expect(firstKey).not.toBe(anotherLinkKey);
   });
 
   it('startSessionByCode rejects incomplete DEMOGRAPHIC profile data', async () => {
@@ -326,6 +410,110 @@ describe('TestsPublicSessionService', () => {
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
     expect(result.session.sessionToken).toBe('resume-existing');
+  });
+
+  it('startSessionByCode retries allocation after an attempt number race', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({ allowResume: true }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 10,
+        attemptNumber: 1,
+        status: 'IN_PROGRESS',
+        resumeToken: 'resume-existing',
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    ]);
+    createAttemptMock.mockRejectedValueOnce({
+      code: 'P2002',
+      meta: {
+        target: ['publicLinkId', 'studentKeyHash', 'attemptNumber'],
+      },
+    });
+
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-existing'));
+
+    const result = await service.startSessionByCode('ABC123', createPublicSessionStartDto());
+
+    expect(transactionMock).toHaveBeenCalledTimes(2);
+    expect(createAttemptMock).toHaveBeenCalledTimes(1);
+    expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
+    expect(result.session.sessionToken).toBe('resume-existing');
+  });
+
+  it('startSessionByCode handles concurrent starts for the same student key', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({ allowResume: true }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+
+    let releaseInitialReads!: () => void;
+    const initialReadsReleased = new Promise<void>((resolve) => {
+      releaseInitialReads = resolve;
+    });
+    let findManyCallCount = 0;
+    findManyMock.mockImplementation(async () => {
+      findManyCallCount += 1;
+
+      if (findManyCallCount <= 2) {
+        if (findManyCallCount === 2) {
+          releaseInitialReads();
+        }
+
+        await initialReadsReleased;
+        return [];
+      }
+
+      return [
+        {
+          id: 10,
+          attemptNumber: 1,
+          status: 'IN_PROGRESS',
+          resumeToken: 'resume-new',
+          expiresAt: new Date(Date.now() + 60_000),
+        },
+      ];
+    });
+
+    let createCallCount = 0;
+    createAttemptMock.mockImplementation(() => {
+      createCallCount += 1;
+
+      if (createCallCount === 1) {
+        return Promise.resolve({ resumeToken: 'resume-new' });
+      }
+
+      const attemptNumberRaceError = Object.assign(new Error('Attempt number race'), {
+        code: 'P2002',
+        meta: {
+          target: ['publicLinkId', 'studentKeyHash', 'attemptNumber'],
+        },
+      });
+
+      return Promise.reject(attemptNumberRaceError);
+    });
+
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-new'));
+
+    const results = await Promise.all([
+      service.startSessionByCode('ABC123', createPublicSessionStartDto()),
+      service.startSessionByCode('ABC123', createPublicSessionStartDto()),
+    ]);
+
+    expect(transactionMock).toHaveBeenCalledTimes(3);
+    expect(createAttemptMock).toHaveBeenCalledTimes(2);
+    expect(findManyMock).toHaveBeenCalledTimes(3);
+    expect(getSessionByTokenSpy).toHaveBeenCalledTimes(2);
+    expect(results.map((result) => result.session.sessionToken)).toEqual([
+      'resume-new',
+      'resume-new',
+    ]);
   });
 
   it('getSessionByToken can report an expired status without mutating the attempt', async () => {

@@ -1,9 +1,15 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { createServer } from 'node:net';
+import { join } from 'node:path';
 
-const port = process.env.SMOKE_SERVER_PORT ?? process.env.PORT ?? '3000';
-const targetUrl = `http://127.0.0.1:${port}/api-json`;
+import { spawnNpm } from './lib/npm-runner.mjs';
+
+const smokeHost = '127.0.0.1';
+const requestedPort = process.env.SMOKE_SERVER_PORT ?? process.env.PORT ?? '';
+const reuseExistingServer = process.env.SMOKE_SERVER_REUSE_EXISTING === '1';
+let port = requestedPort;
+let targetUrl = '';
 const authApiOperations = [
   { path: '/auth/signup', methods: ['post'] },
   { path: '/auth/signin', methods: ['post'] },
@@ -29,11 +35,67 @@ const requiredApiOperations = [...authApiOperations, ...featureApiOperations].fi
 const requiredPaths = [...new Set(requiredApiOperations.map((operation) => operation.path))];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
-const npmCliPath =
-  process.platform === 'win32'
-    ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
-    : null;
+
+const buildTargetUrl = (candidatePort) => `http://${smokeHost}:${candidatePort}/api-json`;
+
+const isValidPort = (candidatePort) => {
+  if (!/^\d+$/.test(candidatePort)) {
+    return false;
+  }
+
+  const numericPort = Number(candidatePort);
+  return numericPort > 0 && numericPort <= 65535;
+};
+
+const findAvailablePort = () =>
+  new Promise((resolve, reject) => {
+    const server = createServer();
+
+    server.unref();
+    server.on('error', reject);
+    server.listen(0, smokeHost, () => {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        server.close();
+        reject(new Error('Could not allocate an isolated smoke server port'));
+        return;
+      }
+
+      server.close(() => {
+        resolve(String(address.port));
+      });
+    });
+  });
+
+const assertPortAvailable = (candidatePort) =>
+  new Promise((resolve, reject) => {
+    const server = createServer();
+
+    server.unref();
+    server.once('error', () => {
+      reject(
+        new Error(
+          `Smoke server port ${candidatePort} is already in use. Stop the existing process or set SMOKE_SERVER_PORT to a free port. Use SMOKE_SERVER_REUSE_EXISTING=1 only for explicit local reuse.`,
+        ),
+      );
+    });
+    server.listen(Number(candidatePort), smokeHost, () => {
+      server.close(() => resolve());
+    });
+  });
+
+const resolveIsolatedPort = async () => {
+  if (!requestedPort) {
+    return findAvailablePort();
+  }
+
+  if (!isValidPort(requestedPort)) {
+    throw new Error(`Invalid SMOKE_SERVER_PORT/PORT value: ${requestedPort}`);
+  }
+
+  await assertPortAvailable(requestedPort);
+  return requestedPort;
+};
 
 const waitForSwagger = async (url, timeoutMs) => {
   const startedAt = Date.now();
@@ -113,19 +175,13 @@ const stopProcess = (child) =>
   });
 
 const startServer = () =>
-  spawn(
-    npmExecutable,
-    process.platform === 'win32'
-      ? [npmCliPath, 'run', 'start', '--prefix', 'server']
-      : ['run', 'start', '--prefix', 'server'],
-    {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: {
-        ...process.env,
-        PORT: port,
-      },
+  spawnNpm(['run', 'start', '--prefix', 'server'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: {
+      ...process.env,
+      PORT: port,
     },
-  );
+  });
 
 let server = null;
 let serverLogs = '';
@@ -143,9 +199,16 @@ const captureServerLogs = (child) => {
 try {
   let swaggerDoc;
 
-  try {
-    swaggerDoc = await waitForSwagger(targetUrl, 1500);
-  } catch {
+  if (reuseExistingServer) {
+    port = requestedPort || '3000';
+    if (!isValidPort(port)) {
+      throw new Error(`Invalid SMOKE_SERVER_PORT/PORT value: ${port}`);
+    }
+    targetUrl = buildTargetUrl(port);
+    swaggerDoc = await waitForSwagger(targetUrl, 5000);
+  } else {
+    port = await resolveIsolatedPort();
+    targetUrl = buildTargetUrl(port);
     server = startServer();
     captureServerLogs(server);
     swaggerDoc = await waitForSwagger(targetUrl, 45000);

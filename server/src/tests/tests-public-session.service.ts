@@ -9,7 +9,7 @@ import { mapSessionState, toOptionalIsoString } from './tests-attempt.mapper';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
 import {
-  buildAnonymousAttemptKeyHash,
+  buildDemographicStudentKeyHash,
   buildEducationDemographicStudentKeyHash,
   buildStudentKeyHash,
   createRandomToken,
@@ -30,6 +30,48 @@ type SessionStateResponse = {
 type AccessiblePublicLink = Awaited<
   ReturnType<TestsPublicLinkService['getAccessiblePublicLinkByCode']>
 >;
+
+type DemographicProfile = {
+  studentGender: NonNullable<PublicSessionStartRequestDto['gender']>;
+  studentAge: number;
+  studentResidence: string;
+  studentEducationLevel: NonNullable<PublicSessionStartRequestDto['educationLevel']>;
+};
+
+type AttemptProfileSnapshot = {
+  studentName: string | null;
+  studentLastInitial: string | null;
+  studentMiddleInitial: string | null;
+  educationOrganization: string | null;
+  groupOrClass: string | null;
+  studentGender: DemographicProfile['studentGender'] | null;
+  studentAge: number | null;
+  studentResidence: string | null;
+  studentEducationLevel: DemographicProfile['studentEducationLevel'] | null;
+};
+
+type AttemptAllocationInput = {
+  link: AccessiblePublicLink;
+  studentKeyHash: string;
+  profile: AttemptProfileSnapshot;
+};
+
+type AttemptAllocationClient = Pick<PrismaService, 'testStudentAttempt'>;
+
+const isAttemptNumberRaceError = (error: unknown) => {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const prismaError = error as { code?: unknown; meta?: { target?: unknown } };
+  const target = prismaError.meta?.target;
+
+  return (
+    prismaError.code === 'P2002' &&
+    Array.isArray(target) &&
+    ['publicLinkId', 'studentKeyHash', 'attemptNumber'].every((field) => target.includes(field))
+  );
+};
 
 @Injectable()
 export class TestsPublicSessionService {
@@ -80,7 +122,7 @@ export class TestsPublicSessionService {
     }
   }
 
-  private resolveDemographicProfile(dto: PublicSessionStartRequestDto) {
+  private resolveDemographicProfile(dto: PublicSessionStartRequestDto): DemographicProfile {
     if (!dto.gender) {
       throw new BadRequestException('Укажите пол');
     }
@@ -128,6 +170,103 @@ export class TestsPublicSessionService {
     }
 
     return this.analysisService.toPublicAnalysisResponse(analysis);
+  }
+
+  private async allocateAttempt(client: AttemptAllocationClient, input: AttemptAllocationInput) {
+    const { link, profile, studentKeyHash } = input;
+    const now = new Date();
+
+    await client.testStudentAttempt.updateMany({
+      where: {
+        publicLinkId: link.id,
+        studentKeyHash,
+        status: 'IN_PROGRESS',
+        expiresAt: {
+          lt: now,
+        },
+      },
+      data: {
+        status: 'EXPIRED',
+        finishedAt: now,
+      },
+    });
+
+    const previousAttempts = await client.testStudentAttempt.findMany({
+      where: {
+        publicLinkId: link.id,
+        studentKeyHash,
+      },
+      select: {
+        id: true,
+        attemptNumber: true,
+        status: true,
+        resumeToken: true,
+        expiresAt: true,
+      },
+      orderBy: {
+        attemptNumber: 'desc',
+      },
+    });
+
+    if (link.allowResume) {
+      const resumableAttempt = previousAttempts.find(
+        (attempt) =>
+          attempt.status === 'IN_PROGRESS' &&
+          (!attempt.expiresAt || attempt.expiresAt.getTime() > now.getTime()),
+      );
+
+      if (resumableAttempt) {
+        return { resumeToken: resumableAttempt.resumeToken };
+      }
+    }
+
+    if (previousAttempts.length >= link.maxAttemptsPerStudent) {
+      throw new BadRequestException('Attempts limit reached for this test link');
+    }
+
+    const nextAttemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;
+    const expiresAt =
+      link.timeLimitMinutes !== null
+        ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
+        : null;
+    const createdAttempt = await client.testStudentAttempt.create({
+      data: {
+        publicLinkId: link.id,
+        topicVersionId: link.topicVersionId,
+        attemptNumber: nextAttemptNumber,
+        status: 'IN_PROGRESS',
+        ...profile,
+        studentKeyHash,
+        consentAcceptedAt: now,
+        consentVersion: link.consentVersion,
+        consentTextSnapshot: link.consentTextSnapshot,
+        resumeToken: createRandomToken(24),
+        startedAt: now,
+        expiresAt,
+      },
+    });
+
+    return { resumeToken: createdAttempt.resumeToken };
+  }
+
+  private async startAllocatedSession(
+    input: AttemptAllocationInput,
+  ): Promise<SessionStateResponse> {
+    for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
+      try {
+        const allocatedAttempt = await this.prisma.$transaction((tx) =>
+          this.allocateAttempt(tx, input),
+        );
+
+        return this.getSessionByToken(allocatedAttempt.resumeToken);
+      } catch (error) {
+        if (!isAttemptNumberRaceError(error)) {
+          throw error;
+        }
+      }
+    }
+
+    throw new BadRequestException('Не удалось начать попытку. Попробуйте ещё раз.');
   }
 
   async startSessionByCode(
@@ -187,68 +326,10 @@ export class TestsPublicSessionService {
 
     this.validateGroupOrClassForLink(normalizedGroupOrClass, link);
 
-    const now = new Date();
-
-    await this.prisma.testStudentAttempt.updateMany({
-      where: {
-        publicLinkId: link.id,
-        studentKeyHash,
-        status: 'IN_PROGRESS',
-        expiresAt: {
-          lt: now,
-        },
-      },
-      data: {
-        status: 'EXPIRED',
-        finishedAt: now,
-      },
-    });
-
-    const previousAttempts = await this.prisma.testStudentAttempt.findMany({
-      where: {
-        publicLinkId: link.id,
-        studentKeyHash,
-      },
-      select: {
-        id: true,
-        attemptNumber: true,
-        status: true,
-        resumeToken: true,
-        expiresAt: true,
-      },
-      orderBy: {
-        attemptNumber: 'desc',
-      },
-    });
-
-    if (link.allowResume) {
-      const resumableAttempt = previousAttempts.find(
-        (attempt) =>
-          attempt.status === 'IN_PROGRESS' &&
-          (!attempt.expiresAt || attempt.expiresAt.getTime() > now.getTime()),
-      );
-
-      if (resumableAttempt) {
-        return this.getSessionByToken(resumableAttempt.resumeToken);
-      }
-    }
-
-    if (previousAttempts.length >= link.maxAttemptsPerStudent) {
-      throw new BadRequestException('Attempts limit reached for this test link');
-    }
-
-    const nextAttemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;
-    const expiresAt =
-      link.timeLimitMinutes !== null
-        ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
-        : null;
-
-    const createdAttempt = await this.prisma.testStudentAttempt.create({
-      data: {
-        publicLinkId: link.id,
-        topicVersionId: link.topicVersionId,
-        attemptNumber: nextAttemptNumber,
-        status: 'IN_PROGRESS',
+    return this.startAllocatedSession({
+      link,
+      studentKeyHash,
+      profile: {
         studentName,
         studentLastInitial,
         studentMiddleInitial,
@@ -258,17 +339,8 @@ export class TestsPublicSessionService {
         studentAge: demographicProfile?.studentAge ?? null,
         studentResidence: demographicProfile?.studentResidence ?? null,
         studentEducationLevel: demographicProfile?.studentEducationLevel ?? null,
-        studentKeyHash,
-        consentAcceptedAt: now,
-        consentVersion: link.consentVersion,
-        consentTextSnapshot: link.consentTextSnapshot,
-        resumeToken: createRandomToken(24),
-        startedAt: now,
-        expiresAt,
       },
     });
-
-    return this.getSessionByToken(createdAttempt.resumeToken);
   }
 
   private async startDemographicSession(
@@ -276,19 +348,14 @@ export class TestsPublicSessionService {
     dto: PublicSessionStartRequestDto,
   ): Promise<SessionStateResponse> {
     const demographicProfile = this.resolveDemographicProfile(dto);
-    const now = new Date();
-    const resumeToken = createRandomToken(24);
-    const expiresAt =
-      link.timeLimitMinutes !== null
-        ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
-        : null;
 
-    const createdAttempt = await this.prisma.testStudentAttempt.create({
-      data: {
+    return this.startAllocatedSession({
+      link,
+      studentKeyHash: buildDemographicStudentKeyHash({
         publicLinkId: link.id,
-        topicVersionId: link.topicVersionId,
-        attemptNumber: 1,
-        status: 'IN_PROGRESS',
+        ...demographicProfile,
+      }),
+      profile: {
         studentName: null,
         studentLastInitial: null,
         studentMiddleInitial: null,
@@ -298,17 +365,8 @@ export class TestsPublicSessionService {
         studentAge: demographicProfile.studentAge,
         studentResidence: demographicProfile.studentResidence,
         studentEducationLevel: demographicProfile.studentEducationLevel,
-        studentKeyHash: buildAnonymousAttemptKeyHash(resumeToken),
-        consentAcceptedAt: now,
-        consentVersion: link.consentVersion,
-        consentTextSnapshot: link.consentTextSnapshot,
-        resumeToken,
-        startedAt: now,
-        expiresAt,
       },
     });
-
-    return this.getSessionByToken(createdAttempt.resumeToken);
   }
 
   async getSessionByToken(sessionToken: string): Promise<SessionStateResponse> {

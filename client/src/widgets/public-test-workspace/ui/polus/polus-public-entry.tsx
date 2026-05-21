@@ -1,4 +1,5 @@
-import { polusAssets } from './polus-public-assets';
+import { polusAssets } from '@/features/tests';
+
 import { PolusEducationDemographicFields } from './polus-public-education-demographic-fields';
 import { PolusPublicLayout } from './polus-public-layout';
 import { PolusSelectField } from './polus-public-select-field';

@@ -95,6 +95,9 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 - Значения `change-this-*` обязательно замените перед реальным продакшеном.
 - `CORS_ALLOWED_ORIGINS` должен содержать реальные frontend origins через запятую.
   В production-like окружениях backend не стартует без этого значения.
+- OpenRouter-переменные должны оставаться backend-only и совпадать с контрактом
+  в `.env.deploy.example` и `docker-compose.deploy.yml`; не добавляйте
+  `OPENROUTER_API_KEY` в frontend env или Vite-переменные.
 - Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
   `docker compose config` или чат, поверните его у провайдера перед повторным
   использованием.
