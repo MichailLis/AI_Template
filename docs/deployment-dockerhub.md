@@ -71,6 +71,7 @@ DATABASE_URL=postgresql://ai_template:change-this-db-password@postgres:5432/ai_t
 
 JWT_ACCESS_SECRET=change-this-access-secret
 JWT_REFRESH_SECRET=change-this-refresh-secret
+CORS_ALLOWED_ORIGINS=https://your-domain.example
 
 RUN_DB_MIGRATIONS=true
 
@@ -81,7 +82,7 @@ BOOTSTRAP_ADMIN_RESET_PASSWORD=false
 
 OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL=
-OPENROUTER_HTTP_REFERER=
+OPENROUTER_HTTP_REFERER=https://your-domain.example
 OPENROUTER_APP_NAME=AI Template Admin
 OPENROUTER_TIMEOUT_MS=120000
 OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
@@ -92,6 +93,8 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 
 - `POSTGRES_PASSWORD` и пароль внутри `DATABASE_URL` должны совпадать.
 - Значения `change-this-*` обязательно замените перед реальным продакшеном.
+- `CORS_ALLOWED_ORIGINS` должен содержать реальные frontend origins через запятую.
+  В production-like окружениях backend не стартует без этого значения.
 - Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
   `docker compose config` или чат, поверните его у провайдера перед повторным
   использованием.
@@ -209,12 +212,21 @@ DATABASE_URL=postgresql://clean_user:clean_password@postgres:5432/clean_db?schem
 
 JWT_ACCESS_SECRET=change-this-access-secret
 JWT_REFRESH_SECRET=change-this-refresh-secret
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:18080
 RUN_DB_MIGRATIONS=true
 
 BOOTSTRAP_ADMIN_EMAIL=admin@example.com
 BOOTSTRAP_ADMIN_PASSWORD=change-this-admin-password
 BOOTSTRAP_ADMIN_NAME=Administrator
 BOOTSTRAP_ADMIN_RESET_PASSWORD=false
+
+OPENROUTER_API_KEY=
+OPENROUTER_DEFAULT_MODEL=
+OPENROUTER_HTTP_REFERER=http://127.0.0.1:18080
+OPENROUTER_APP_NAME=AI Template Admin
+OPENROUTER_TIMEOUT_MS=120000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 Запуск:

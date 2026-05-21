@@ -14,8 +14,9 @@
 
 - Completed in commit `ca36e23 chore: remediate technical debt audit`: Tasks 0.1, 0.2, 1.1, 1.2, 2.1-2.4, 3.1-3.3, 4.1, 4.2.
 - Completed in the current Task 4.3 batch: HttpOnly refresh-token cookie flow.
+- Completed in the current Task 4.4 batch: CORS allowlist and non-local runtime placeholder guardrails.
 - Still open from the earlier phases: Task 1.3.
-- Next recommended task: Task 4.4.
+- Next recommended task: Task 4.5.
 
 ## Source Audit
 
@@ -500,15 +501,15 @@
 - Modify: `docs/deployment-dockerhub.md`
 - Modify or add: `scripts/verify-runtime-config.mjs`
 
-- [ ] Restrict CORS origins by environment. Local defaults may allow `http://localhost:5173`; non-local environments must require explicit origins.
+- [x] Restrict CORS origins by environment. Local defaults may allow `http://localhost:5173`; non-local environments must require explicit origins.
 
-- [ ] Fail fast in non-local `NODE_ENV` if JWT secrets or database credentials match dev placeholders.
+- [x] Fail fast in non-local `NODE_ENV` if JWT secrets or database credentials match dev placeholders.
 
-- [ ] Synchronize all OpenRouter/prof-orientation env vars across examples, compose files, and docs.
+- [x] Synchronize all OpenRouter/prof-orientation env vars across examples, compose files, and docs.
 
-- [ ] Add static verification for the env contract.
+- [x] Add static verification for the env contract.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run verify:runtime-config

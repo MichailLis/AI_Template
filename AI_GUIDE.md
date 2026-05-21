@@ -46,6 +46,14 @@ Expected runtime services:
 - `ai_template_postgres` on `localhost:5432`
 - `ai_template_adminer` on `http://localhost:8080`
 
+Runtime security defaults:
+
+- Local development may use the root compose defaults and local JWT/database placeholders.
+- Non-local `NODE_ENV` values must provide non-placeholder `DATABASE_URL`,
+  `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and explicit `CORS_ALLOWED_ORIGINS`.
+- `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
+  wildcard origins with credentialed auth cookies.
+
 Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project for the user.
 That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
 `workspace` container that runs frontend and backend together. It is not the project runtime topology.
@@ -255,7 +263,7 @@ Required behavior:
 Recommended env vars for prompt foundation:
 
 ```env
-OPENROUTER_API_KEY="sk-or-v1-..."
+OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
 OPENROUTER_HTTP_REFERER="http://localhost:5173"
 OPENROUTER_APP_NAME="AI Template Admin"

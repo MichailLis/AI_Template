@@ -56,6 +56,7 @@ DATABASE_URL=postgresql://ai_template:CHANGE_DB_PASSWORD@postgres:5432/ai_templa
 
 JWT_ACCESS_SECRET=CHANGE_ACCESS_SECRET
 JWT_REFRESH_SECRET=CHANGE_REFRESH_SECRET
+CORS_ALLOWED_ORIGINS=https://YOUR_DOMAIN
 
 RUN_DB_MIGRATIONS=true
 
@@ -66,7 +67,7 @@ BOOTSTRAP_ADMIN_RESET_PASSWORD=false
 
 OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL=
-OPENROUTER_HTTP_REFERER=
+OPENROUTER_HTTP_REFERER=https://YOUR_DOMAIN
 OPENROUTER_APP_NAME=AI Template Admin
 OPENROUTER_TIMEOUT_MS=120000
 OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
@@ -78,12 +79,17 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 - `CHANGE_DB_PASSWORD`
 - `CHANGE_ACCESS_SECRET`
 - `CHANGE_REFRESH_SECRET`
+- `https://YOUR_DOMAIN`
 - `admin@example.com`
 - `CHANGE_ADMIN_PASSWORD`
 
 Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
 `docker compose config` или чат, поверните его у провайдера перед повторным
 использованием.
+
+`CORS_ALLOWED_ORIGINS` должен перечислять реальные frontend origins через запятую.
+Для production-like окружений сервер не стартует без этого значения или с
+локальными placeholder-секретами.
 
 ## 4. Запустить
 

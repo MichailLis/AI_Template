@@ -15,6 +15,11 @@ const runtimeApiBaseUrlPath = join(
   'runtime-api-base-url.ts',
 );
 const envExamplePaths = ['.env.example', join('server', '.env.example'), '.env.deploy.example'];
+const runtimeDocPaths = [
+  'AI_GUIDE.md',
+  join('docs', 'server-admin-deploy.md'),
+  join('docs', 'deployment-dockerhub.md'),
+];
 
 const composeSource = readFileSync(composePath, 'utf8');
 const serverDockerfile = readFileSync(serverDockerfilePath, 'utf8');
@@ -22,6 +27,19 @@ const clientDockerfile = readFileSync(clientDockerfilePath, 'utf8');
 const runtimeApiBaseUrlSource = readFileSync(runtimeApiBaseUrlPath, 'utf8');
 const legacyDevJwtValue = ['secret', '123'].join('');
 const openRouterKeyPrefix = ['sk', 'or'].join('-');
+const setupAppPath = join(rootDir, 'server', 'src', 'setup-app.ts');
+const setupAppSource = readFileSync(setupAppPath, 'utf8');
+const deployComposePath = join(rootDir, 'docker-compose.deploy.yml');
+const deployComposeSource = readFileSync(deployComposePath, 'utf8');
+const runtimeEnvNames = [
+  'CORS_ALLOWED_ORIGINS',
+  'OPENROUTER_DEFAULT_MODEL',
+  'OPENROUTER_HTTP_REFERER',
+  'OPENROUTER_APP_NAME',
+  'OPENROUTER_TIMEOUT_MS',
+  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS',
+  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES',
+];
 const requiredRuntimeApiDiscoveryMarkers = [
   '/api-json',
   '/auth/signin',
@@ -99,6 +117,25 @@ if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(compose
   fail('docker-compose.yml must not contain hardcoded runtime secrets');
 }
 
+if (/origin:\s*true/.test(setupAppSource)) {
+  fail('server/src/setup-app.ts must not enable credentialed CORS for every origin');
+}
+
+if (!setupAppSource.includes('CORS_ALLOWED_ORIGINS')) {
+  fail('server/src/setup-app.ts must read CORS_ALLOWED_ORIGINS');
+}
+
+for (const marker of [
+  'is required outside local development',
+  'Non-local runtime configuration contains unsafe placeholder values',
+  'dev-access-secret-change-me',
+  'dev-refresh-secret-change-me',
+]) {
+  if (!setupAppSource.includes(marker)) {
+    fail(`server/src/setup-app.ts must enforce runtime guard marker: ${marker}`);
+  }
+}
+
 if (backend) {
   const backendCommand = commandToText(backend.command);
 
@@ -169,6 +206,32 @@ for (const envExamplePath of envExamplePaths) {
 
   if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(envExample)) {
     fail(`${envExamplePath} must not contain real-looking runtime secrets`);
+  }
+
+  for (const runtimeEnvName of runtimeEnvNames) {
+    if (!new RegExp(`^${runtimeEnvName}=`, 'm').test(envExample)) {
+      fail(`${envExamplePath} must document ${runtimeEnvName}`);
+    }
+  }
+}
+
+for (const runtimeEnvName of runtimeEnvNames) {
+  if (!new RegExp(`${runtimeEnvName}:\\s*\\$\\{${runtimeEnvName}`).test(composeSource)) {
+    fail(`docker-compose.yml backend environment must expose ${runtimeEnvName}`);
+  }
+
+  if (!new RegExp(`${runtimeEnvName}:\\s*\\$\\{${runtimeEnvName}`).test(deployComposeSource)) {
+    fail(`docker-compose.deploy.yml backend environment must expose ${runtimeEnvName}`);
+  }
+}
+
+for (const runtimeDocPath of runtimeDocPaths) {
+  const runtimeDoc = readFileSync(join(rootDir, runtimeDocPath), 'utf8');
+
+  for (const runtimeEnvName of runtimeEnvNames) {
+    if (!runtimeDoc.includes(runtimeEnvName)) {
+      fail(`${runtimeDocPath} must document ${runtimeEnvName}`);
+    }
   }
 }
 
