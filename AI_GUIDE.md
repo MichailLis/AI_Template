@@ -209,6 +209,24 @@ Classification guardrails:
    contract before implementation.
 5. Keep cross-feature public surface explicit; do not deep-import another feature's internals.
 
+Current ownership map:
+
+- `auth` owns authentication flow, JWT/session behavior, and `/login` frontend entrypoint.
+- `admin` is an admin shell and operational workspace, not a catch-all product domain. It owns the
+  admin frame, overview, users, and settings screens.
+- `/admin/*` is a route namespace for protected operator UI. A page under `/admin` does not
+  automatically belong to the `admin` feature.
+- `tests` owns test authoring, publishing, public links, education organizations used by tests,
+  attempt/session/result flows, public `/t/*` routes, and `tests` / `tests-public` generated API
+  clients.
+- `analysis-prompts` is a candidate bounded context. Until it is extracted, prompt lifecycle work
+  must explicitly say whether it stays admin-owned or becomes a new feature. Tests may use prompt
+  contracts, but must not deep-import admin prompt internals.
+- `openrouter` is infrastructure/integration code. Feature code must not import OpenRouter
+  utilities through another feature module; expose integration services from the integration owner.
+- `app-settings` is system configuration/infrastructure unless a task gives it an independent
+  product workflow and lifecycle.
+
 For every backend + frontend task, include this pre-implementation note in the working plan:
 
 ```text
