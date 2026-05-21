@@ -1,13 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsQuestionService } from './tests-question.service';
 import { TestsService } from './tests.service';
 import { PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL } from './prof-orientation-v3-plus.fixture';
 
-jest.mock('./tests-admin-access.utils', () => ({
-  ensureTestsAdminAccess: jest.fn().mockResolvedValue(undefined),
+jest.mock('../common/authz/admin-access.utils', () => ({
+  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
 const publishedPromptVersion = {
@@ -152,7 +152,7 @@ describe('TestsService analysis prompt attachment', () => {
       prismaMock as unknown as PrismaService,
       {} as unknown as TestsQuestionService,
     );
-    jest.mocked(ensureTestsAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {

@@ -9,7 +9,7 @@ import type {
   AdminUpdatePublicLinkDto,
 } from './dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from './dto/tests-public.dto';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { parseDateOrNull } from './tests-date.utils';
 import { createShortCodeCandidate } from './tests-domain.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
@@ -112,7 +112,7 @@ export class TestsPublicLinkService {
   }
 
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkDto) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
     const educationOrganizationId =
       await this.educationOrganizationService.ensureActiveEducationOrganizationIfProvided(
@@ -151,7 +151,7 @@ export class TestsPublicLinkService {
   }
 
   async listPublicLinks(userId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const links = await this.prisma.testPublicLink.findMany({
       where: {
@@ -169,7 +169,7 @@ export class TestsPublicLinkService {
   }
 
   async listArchivedPublicLinks(userId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const links = await this.prisma.testPublicLink.findMany({
       where: {
@@ -189,7 +189,7 @@ export class TestsPublicLinkService {
   }
 
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const educationOrganizationId =
       dto.educationOrganizationId !== undefined
@@ -249,7 +249,7 @@ export class TestsPublicLinkService {
   }
 
   async regeneratePublicLinkShortCode(userId: number, linkId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -278,7 +278,7 @@ export class TestsPublicLinkService {
   }
 
   async deletePublicLink(userId: number, linkId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
@@ -309,7 +309,7 @@ export class TestsPublicLinkService {
   }
 
   async restorePublicLink(userId: number, linkId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },

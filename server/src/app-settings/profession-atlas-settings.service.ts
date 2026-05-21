@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { ensureAdminAccess } from '../admin/admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 
 const PROFESSION_ATLAS_URL_SETTING_KEY = 'professionAtlas.url';

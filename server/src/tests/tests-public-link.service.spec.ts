@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { createEducationOrganizationRecordFixture } from './tests.spec-fixtures';
@@ -13,8 +13,8 @@ import type {
   AdminUpdatePublicLinkDto,
 } from './dto/tests-links.dto';
 
-jest.mock('./tests-admin-access.utils', () => ({
-  ensureTestsAdminAccess: jest.fn().mockResolvedValue(undefined),
+jest.mock('../common/authz/admin-access.utils', () => ({
+  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
 type PrismaEducationOrganizationDelegate = {
@@ -75,7 +75,7 @@ describe('TestsPublicLinkService', () => {
       prismaMock as unknown as PrismaService,
       educationOrganizationService,
     );
-    jest.mocked(ensureTestsAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {

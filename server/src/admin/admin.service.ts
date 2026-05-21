@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role } from '@prisma/client';
 
+import { assertAdminUser } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
@@ -17,7 +18,7 @@ export class AdminService {
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
   ) {}
 
-  private async ensureAdminAccess(userId: number) {
+  private async getCurrentAdminUser(userId: number) {
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -28,11 +29,7 @@ export class AdminService {
       },
     });
 
-    if (!currentUser || currentUser.role !== 'ADMIN') {
-      throw new ForbiddenException('Admin area only');
-    }
-
-    return currentUser;
+    return assertAdminUser(currentUser);
   }
 
   private toAdminUserResponse(user: {
@@ -54,7 +51,7 @@ export class AdminService {
   }
 
   async getOverview(userId: number) {
-    const currentUser = await this.ensureAdminAccess(userId);
+    const currentUser = await this.getCurrentAdminUser(userId);
 
     const [totalUsers, totalAdmins] = await Promise.all([
       this.prisma.user.count(),
@@ -96,7 +93,7 @@ export class AdminService {
   }
 
   async getUsers(userId: number, query: AdminUsersQueryDto) {
-    await this.ensureAdminAccess(userId);
+    await this.getCurrentAdminUser(userId);
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
@@ -162,7 +159,7 @@ export class AdminService {
   }
 
   async getPromptModels(userId: number) {
-    await this.ensureAdminAccess(userId);
+    await this.getCurrentAdminUser(userId);
 
     const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
@@ -170,7 +167,7 @@ export class AdminService {
   }
 
   async generatePrompt(userId: number, dto: GeneratePromptDto) {
-    await this.ensureAdminAccess(userId);
+    await this.getCurrentAdminUser(userId);
 
     const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
@@ -178,7 +175,7 @@ export class AdminService {
   }
 
   async updateUserRole(adminId: number, targetUserId: number, dto: UpdateUserRoleDto) {
-    await this.ensureAdminAccess(adminId);
+    await this.getCurrentAdminUser(adminId);
 
     if (adminId === targetUserId && dto.role !== 'ADMIN') {
       throw new ForbiddenException('Admin cannot revoke own admin role');

@@ -2,10 +2,10 @@ import { BadRequestException, ServiceUnavailableException } from '@nestjs/common
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../prisma.service';
-import { ensureAdminAccess } from '../admin/admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from './openrouter-api-key.service';
 
-jest.mock('../admin/admin-access.utils', () => ({
+jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 

@@ -1,12 +1,12 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsAnalyticsService } from './tests-analytics.service';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
 import { PROF_ORIENTATION_DIRECTIONS } from './prof-orientation-v3-plus.types';
 
-jest.mock('./tests-admin-access.utils', () => ({
-  ensureTestsAdminAccess: jest.fn(),
+jest.mock('../common/authz/admin-access.utils', () => ({
+  ensureAdminAccess: jest.fn(),
 }));
 
 const createDirectionSummary = (directionId: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) => ({
@@ -141,7 +141,7 @@ describe('TestsAnalyticsService', () => {
     };
 
     service = new TestsAnalyticsService(prismaMock as unknown as PrismaService);
-    jest.mocked(ensureTestsAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -150,7 +150,7 @@ describe('TestsAnalyticsService', () => {
 
   it('checks admin access before loading analytics data', async () => {
     const error = new ForbiddenException('Admin area only');
-    jest.mocked(ensureTestsAdminAccess).mockRejectedValue(error);
+    jest.mocked(ensureAdminAccess).mockRejectedValue(error);
 
     await expect(
       service.getSummary(7, 1, {
@@ -159,7 +159,7 @@ describe('TestsAnalyticsService', () => {
       }),
     ).rejects.toBe(error);
 
-    expect(ensureTestsAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testTopic.findUnique).not.toHaveBeenCalled();
   });
 
@@ -173,7 +173,7 @@ describe('TestsAnalyticsService', () => {
       }),
     ).rejects.toBeInstanceOf(NotFoundException);
 
-    expect(ensureTestsAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
   });
 
@@ -206,7 +206,7 @@ describe('TestsAnalyticsService', () => {
 
     expect(result.publicLinks).toHaveLength(2);
     expect(result.publicLinks.map((link) => link.publicLinkId)).toEqual([11, 22]);
-    expect(ensureTestsAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testPublicLink.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {

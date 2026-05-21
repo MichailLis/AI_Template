@@ -1,10 +1,10 @@
 import { PrismaService } from '../prisma.service';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
 import { createEducationOrganizationRecordFixture } from './tests.spec-fixtures';
 
-jest.mock('./tests-admin-access.utils', () => ({
-  ensureTestsAdminAccess: jest.fn().mockResolvedValue(undefined),
+jest.mock('../common/authz/admin-access.utils', () => ({
+  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
 type PrismaMock = {
@@ -33,7 +33,7 @@ describe('TestsEducationOrganizationService', () => {
     };
 
     service = new TestsEducationOrganizationService(prismaMock as unknown as PrismaService);
-    jest.mocked(ensureTestsAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -80,7 +80,7 @@ describe('TestsEducationOrganizationService', () => {
       ) => Promise<unknown>
     )(7, { page: 3, limit: 10 });
 
-    expect(ensureTestsAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.educationOrganization.count).toHaveBeenCalledWith();
     expect(prismaMock.educationOrganization.findMany).toHaveBeenCalledWith({
       orderBy: [{ isActive: 'desc' }, { name: 'asc' }],

@@ -8,7 +8,7 @@ import type {
   AdminTestAnalyticsQueryDto,
   AdminTestAnalyticsSummaryDto,
 } from './dto/tests-analytics.dto';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 
 const PUBLIC_LINK_SELECT = {
   id: true,
@@ -172,7 +172,7 @@ export class TestsAnalyticsService {
     topicId: number,
     query: AdminTestAnalyticsQueryDto,
   ): Promise<AdminTestAnalyticsSummaryDto> {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const topic = await this.prisma.testTopic.findUnique({
       where: {

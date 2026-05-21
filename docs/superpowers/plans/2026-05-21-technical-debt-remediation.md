@@ -15,8 +15,9 @@
 - Completed in commit `ca36e23 chore: remediate technical debt audit`: Tasks 0.1, 0.2, 1.1, 1.2, 2.1-2.4, 3.1-3.3, 4.1, 4.2.
 - Completed in the current Task 4.3 batch: HttpOnly refresh-token cookie flow.
 - Completed in the current Task 4.4 batch: CORS allowlist and non-local runtime placeholder guardrails.
+- Completed in the current Task 4.5 batch: shared admin authorization boundary.
 - Still open from the earlier phases: Task 1.3.
-- Next recommended task: Task 4.5.
+- Next recommended task: Task 4.6.
 
 ## Source Audit
 
@@ -524,17 +525,18 @@
 
 - Create: `server/src/authz/admin-access.service.ts` or `server/src/common/authz/admin-access.utils.ts`
 - Modify: `server/src/admin/admin-access.utils.ts`
+- Modify: `server/src/admin/admin.service.ts`
 - Modify: `server/src/tests/tests-admin-access.utils.ts`
 - Modify: `server/src/openrouter/openrouter-api-key.service.ts`
 - Modify: `server/src/app-settings/profession-atlas-settings.service.ts`
 - Modify: `server/src/admin/analysis-prompts.service.ts`
 - Modify related specs that mock old utilities
 
-- [ ] Extract one shared admin access boundary.
+- [x] Extract one shared admin access boundary.
 
-- [ ] Replace cross-module imports from `../admin/admin-access.utils`.
+- [x] Replace cross-module imports from `../admin/admin-access.utils`.
 
-- [ ] Verify:
+- [x] Verify:
 
   ```powershell
   npm run test --prefix server

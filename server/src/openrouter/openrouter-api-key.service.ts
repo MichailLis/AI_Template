@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { ensureAdminAccess } from '../admin/admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 
 const OPENROUTER_API_KEY_SETTING_KEY = 'openrouter.apiKey';

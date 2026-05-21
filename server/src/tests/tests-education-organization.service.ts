@@ -7,7 +7,7 @@ import type {
   AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
 } from './dto/tests-links.dto';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 
 @Injectable()
 export class TestsEducationOrganizationService {
@@ -161,7 +161,7 @@ export class TestsEducationOrganizationService {
     userId: number,
     query: AdminEducationOrganizationsListQueryDto = {},
   ) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const total = await this.prisma.educationOrganization.count();
     const isPaginated = query.page !== undefined || query.limit !== undefined;
@@ -203,7 +203,7 @@ export class TestsEducationOrganizationService {
   }
 
   async createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const name = dto.name.trim();
 
@@ -252,7 +252,7 @@ export class TestsEducationOrganizationService {
     organizationId: number,
     dto: AdminUpdateEducationOrganizationDto,
   ) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.educationOrganization.findUnique({
       where: { id: organizationId },
