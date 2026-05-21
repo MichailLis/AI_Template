@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { TestsTopicDetailResponseDtoDraftQuestionsItemOptionsItem } from './testsTopicDetailResponseDtoDraftQuestionsItemOptionsItem';
+import type { TestsTopicDetailResponseDtoDraftQuestionsItemSettings } from './testsTopicDetailResponseDtoDraftQuestionsItemSettings';
 import type { TestsTopicDetailResponseDtoDraftQuestionsItemSliderBandsItem } from './testsTopicDetailResponseDtoDraftQuestionsItemSliderBandsItem';
 import type { TestsTopicDetailResponseDtoDraftQuestionsItemType } from './testsTopicDetailResponseDtoDraftQuestionsItemType';
 
@@ -17,7 +18,8 @@ export type TestsTopicDetailResponseDtoDraftQuestionsItem = {
   description: string | null;
   required: boolean;
   order: number;
-  settings: unknown | null;
+  /** @nullable */
+  settings: TestsTopicDetailResponseDtoDraftQuestionsItemSettings;
   options: TestsTopicDetailResponseDtoDraftQuestionsItemOptionsItem[];
   sliderBands: TestsTopicDetailResponseDtoDraftQuestionsItemSliderBandsItem[];
 };

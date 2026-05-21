@@ -5,11 +5,9 @@ import { toast } from 'sonner';
 
 import {
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey,
-  getAdminSettingsControllerGetOpenRouterSettingsQueryKey,
   useAdminSettingsControllerGetProfessionAtlasSettings,
   useAdminSettingsControllerGetOpenRouterSettings,
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
-  useAdminSettingsControllerUpdateOpenRouterApiKey,
 } from '@/shared/api/generated/admin/admin';
 import {
   adminBadgeClassNames,
@@ -108,7 +106,6 @@ function AdminSettingsHero({
 
 export function AdminSettingsWorkspace() {
   const queryClient = useQueryClient();
-  const [apiKey, setApiKey] = useState('');
   const [professionAtlasForm, setProfessionAtlasForm] = useState({
     isDirty: false,
     value: '',
@@ -116,20 +113,6 @@ export function AdminSettingsWorkspace() {
 
   const settingsQuery = useAdminSettingsControllerGetOpenRouterSettings();
   const professionAtlasQuery = useAdminSettingsControllerGetProfessionAtlasSettings();
-  const updateApiKeyMutation = useAdminSettingsControllerUpdateOpenRouterApiKey({
-    mutation: {
-      onError: (error) => {
-        toast.error(getApiErrorMessage(error));
-      },
-      onSuccess: async () => {
-        setApiKey('');
-        await queryClient.invalidateQueries({
-          queryKey: getAdminSettingsControllerGetOpenRouterSettingsQueryKey(),
-        });
-        toast.success('OpenRouter API key сохранен');
-      },
-    },
-  });
   const updateProfessionAtlasUrlMutation = useAdminSettingsControllerUpdateProfessionAtlasUrl({
     mutation: {
       onError: (error) => {
@@ -147,25 +130,10 @@ export function AdminSettingsWorkspace() {
 
   const openRouter = settingsQuery.data?.openRouter;
   const professionAtlas = professionAtlasQuery.data?.professionAtlas;
-  const normalizedApiKey = apiKey.trim();
   const professionAtlasUrl = professionAtlasForm.isDirty
     ? professionAtlasForm.value
     : (professionAtlas?.url ?? '');
   const normalizedProfessionAtlasUrl = professionAtlasUrl.trim();
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!normalizedApiKey || updateApiKeyMutation.isPending) {
-      return;
-    }
-
-    updateApiKeyMutation.mutate({
-      data: {
-        apiKey: normalizedApiKey,
-      },
-    });
-  };
 
   const handleProfessionAtlasSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -189,17 +157,12 @@ export function AdminSettingsWorkspace() {
       />
 
       <OpenRouterSettingsCard
-        apiKey={apiKey}
-        canSubmit={Boolean(normalizedApiKey) && !updateApiKeyMutation.isPending}
         isError={settingsQuery.isError}
         isLoading={settingsQuery.isLoading}
-        isSaving={updateApiKeyMutation.isPending}
         openRouter={openRouter}
-        onApiKeyChange={setApiKey}
         onRetry={() => {
           void settingsQuery.refetch();
         }}
-        onSubmit={handleSubmit}
       />
 
       <ProfessionAtlasSettingsCard

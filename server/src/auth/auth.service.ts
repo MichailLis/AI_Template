@@ -6,6 +6,8 @@ import { PrismaService } from '../prisma.service';
 import { SigninDto, SignupDto } from './dto/auth.dto';
 import * as argon2 from 'argon2';
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -16,11 +18,12 @@ export class AuthService {
 
   async signup(dto: SignupDto) {
     const hashedPassword = await argon2.hash(dto.password);
+    const email = normalizeEmail(dto.email);
 
     try {
       const user = await this.prisma.user.create({
         data: {
-          email: dto.email,
+          email,
           password: hashedPassword,
           name: dto.name,
         },
@@ -46,8 +49,9 @@ export class AuthService {
   }
 
   async signin(dto: SigninDto) {
+    const email = normalizeEmail(dto.email);
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email },
     });
 
     if (!user) throw new ForbiddenException('Access Denied');

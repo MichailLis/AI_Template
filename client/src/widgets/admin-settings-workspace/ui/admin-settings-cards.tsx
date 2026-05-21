@@ -1,12 +1,4 @@
-import {
-  ExternalLink,
-  KeyRound,
-  Link2,
-  RefreshCcw,
-  Save,
-  ShieldCheck,
-  TriangleAlert,
-} from 'lucide-react';
+import { ExternalLink, KeyRound, Link2, RefreshCcw, Save, TriangleAlert } from 'lucide-react';
 
 import {
   adminBadgeClassNames,
@@ -22,15 +14,13 @@ import { Label } from '@/shared/ui/label';
 import type {
   AdminProfessionAtlasSettingsResponseDto,
   AdminOpenRouterSettingsResponseDto,
-  AdminOpenRouterSettingsResponseDtoOpenRouterSource,
 } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 
 type OpenRouterSettings = AdminOpenRouterSettingsResponseDto['openRouter'];
 type ProfessionAtlasSettings = AdminProfessionAtlasSettingsResponseDto['professionAtlas'];
 
-const sourceLabels: Record<AdminOpenRouterSettingsResponseDtoOpenRouterSource, string> = {
-  DATABASE: 'Настройки админки',
+const sourceLabels: Record<OpenRouterSettings['source'], string> = {
   ENV: 'Переменная окружения',
   NONE: 'Не задан',
 };
@@ -147,58 +137,6 @@ function ProfessionAtlasStatusPanel({
   );
 }
 
-interface ApiKeyFormProps {
-  apiKey: string;
-  canSubmit: boolean;
-  isSaving: boolean;
-  openRouter: OpenRouterSettings | undefined;
-  onApiKeyChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}
-
-function ApiKeyForm({
-  apiKey,
-  canSubmit,
-  isSaving,
-  openRouter,
-  onApiKeyChange,
-  onSubmit,
-}: ApiKeyFormProps) {
-  return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="openrouter-api-key">Новый API key</Label>
-        <Input
-          id="openrouter-api-key"
-          type="password"
-          value={apiKey}
-          onChange={(event) => onApiKeyChange(event.target.value)}
-          placeholder="sk-or-v1-..."
-          autoComplete="off"
-          spellCheck={false}
-          className="font-mono"
-        />
-        <p className={adminClassNames.form.fieldHint}>
-          После сохранения поле очищается, а ключ отображается только в маскированном виде.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={!canSubmit}>
-          <Save className="h-4 w-4" />
-          {isSaving ? 'Сохраняем...' : 'Сохранить ключ'}
-        </Button>
-        {openRouter?.source === 'ENV' ? (
-          <span className={`flex items-center gap-2 ${adminClassNames.form.fieldHint}`}>
-            <ShieldCheck className="h-4 w-4" />
-            Сейчас используется ключ из окружения сервера.
-          </span>
-        ) : null}
-      </div>
-    </form>
-  );
-}
-
 interface ProfessionAtlasFormProps {
   canSubmit: boolean;
   isSaving: boolean;
@@ -241,27 +179,17 @@ function ProfessionAtlasForm({
 }
 
 interface OpenRouterSettingsCardProps {
-  apiKey: string;
-  canSubmit: boolean;
   isError: boolean;
   isLoading: boolean;
-  isSaving: boolean;
   openRouter: OpenRouterSettings | undefined;
-  onApiKeyChange: (value: string) => void;
   onRetry: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
 export function OpenRouterSettingsCard({
-  apiKey,
-  canSubmit,
   isError,
   isLoading,
-  isSaving,
   openRouter,
-  onApiKeyChange,
   onRetry,
-  onSubmit,
 }: OpenRouterSettingsCardProps) {
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
@@ -276,7 +204,7 @@ export function OpenRouterSettingsCard({
             <div className="min-w-0">
               <CardTitle className="text-lg">OpenRouter API key</CardTitle>
               <CardDescription>
-                Новый ключ сохранится в настройках проекта и будет иметь приоритет над `.env`.
+                Ключ берется только из переменной окружения сервера.
               </CardDescription>
             </div>
           </div>
@@ -297,15 +225,6 @@ export function OpenRouterSettingsCard({
         ) : null}
 
         {openRouter ? <OpenRouterStatusPanel openRouter={openRouter} /> : null}
-
-        <ApiKeyForm
-          apiKey={apiKey}
-          canSubmit={canSubmit}
-          isSaving={isSaving}
-          openRouter={openRouter}
-          onApiKeyChange={onApiKeyChange}
-          onSubmit={onSubmit}
-        />
       </CardContent>
     </Card>
   );

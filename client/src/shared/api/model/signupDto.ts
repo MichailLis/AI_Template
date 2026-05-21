@@ -8,7 +8,7 @@
 
 export interface SignupDto {
   /** @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$ */
-  email: string;
+  email?: string;
   /** @minLength 8 */
   password: string;
   /** @minLength 2 */

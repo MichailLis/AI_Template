@@ -8,7 +8,6 @@ import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.servic
 import {
   AdminProfessionAtlasSettingsResponseDto,
   AdminOpenRouterSettingsResponseDto,
-  UpdateOpenRouterApiKeyDto,
   UpdateProfessionAtlasUrlDto,
 } from './dto/admin-settings.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
@@ -29,16 +28,6 @@ export class AdminSettingsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminOpenRouterSettingsResponseDto })
   getOpenRouterSettings(@GetCurrentUserId() userId: number) {
     return this.openRouterApiKeyService.getOpenRouterSettings(userId);
-  }
-
-  @Patch('openrouter/api-key')
-  @ApiOperation({ summary: 'Update OpenRouter API key' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminOpenRouterSettingsResponseDto })
-  updateOpenRouterApiKey(
-    @GetCurrentUserId() userId: number,
-    @Body() dto: UpdateOpenRouterApiKeyDto,
-  ) {
-    return this.openRouterApiKeyService.updateOpenRouterApiKey(userId, dto.apiKey);
   }
 
   @Get('profession-atlas')

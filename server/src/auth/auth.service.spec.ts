@@ -80,15 +80,15 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  it('signup should create user and return tokens with public user fields', async () => {
+  it('signup should create user with normalized email and return tokens with public user fields', async () => {
     const dto: SignupDto = {
-      email: 'new@example.com',
+      email: ' New.User@Example.COM ',
       password: 'Password123',
       name: 'New User',
     };
     const createdUser = createTestUser({
       id: 7,
-      email: dto.email,
+      email: 'new.user@example.com',
       name: dto.name ?? null,
       password: 'stored-hash',
     });
@@ -105,7 +105,7 @@ describe('AuthService', () => {
 
     expect(prismaMock.user.create).toHaveBeenCalledWith({
       data: {
-        email: dto.email,
+        email: 'new.user@example.com',
         password: 'stored-hash',
         name: dto.name,
       },
@@ -116,7 +116,7 @@ describe('AuthService', () => {
       refreshToken: 'refresh-token',
       user: {
         id: 7,
-        email: dto.email,
+        email: 'new.user@example.com',
         name: dto.name,
       },
     });
@@ -161,9 +161,9 @@ describe('AuthService', () => {
     await expect(service.signin(dto)).rejects.toThrow(ForbiddenException);
   });
 
-  it('signin should return tokens and user data for valid credentials', async () => {
+  it('signin should look up users by normalized email and return user data', async () => {
     const dto: SigninDto = {
-      email: 'user@example.com',
+      email: ' User@Example.COM ',
       password: 'Password123',
     };
 
@@ -177,6 +177,9 @@ describe('AuthService', () => {
 
     const result = await service.signin(dto);
 
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'user@example.com' },
+    });
     expect(updateRefreshTokenSpy).toHaveBeenCalledWith(1, 'refresh-token');
     expect(result).toEqual({
       accessToken: 'access-token',

@@ -40,7 +40,6 @@ import type {
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
   UpdateAnalysisPromptVersionDto,
-  UpdateOpenRouterApiKeyDto,
   UpdateProfessionAtlasUrlDto,
   UpdateUserRoleDto,
 } from '../../model';
@@ -746,97 +745,6 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Update OpenRouter API key
- */
-export const adminSettingsControllerUpdateOpenRouterApiKey = (
-  updateOpenRouterApiKeyDto: UpdateOpenRouterApiKeyDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<AdminOpenRouterSettingsResponseDto>(
-    {
-      url: `/admin/settings/openrouter/api-key`,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      data: updateOpenRouterApiKeyDto,
-      signal,
-    },
-    options,
-  );
-};
-
-export const getAdminSettingsControllerUpdateOpenRouterApiKeyMutationOptions = <
-  TError = ErrorType<ErrorResponseDto>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
-    TError,
-    { data: UpdateOpenRouterApiKeyDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
-  TError,
-  { data: UpdateOpenRouterApiKeyDto },
-  TContext
-> => {
-  const mutationKey = ['adminSettingsControllerUpdateOpenRouterApiKey'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
-    { data: UpdateOpenRouterApiKeyDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return adminSettingsControllerUpdateOpenRouterApiKey(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationResult = NonNullable<
-  Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>
->;
-export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationBody = UpdateOpenRouterApiKeyDto;
-export type AdminSettingsControllerUpdateOpenRouterApiKeyMutationError =
-  ErrorType<ErrorResponseDto>;
-
-/**
- * @summary Update OpenRouter API key
- */
-export const useAdminSettingsControllerUpdateOpenRouterApiKey = <
-  TError = ErrorType<ErrorResponseDto>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
-      TError,
-      { data: UpdateOpenRouterApiKeyDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof adminSettingsControllerUpdateOpenRouterApiKey>>,
-  TError,
-  { data: UpdateOpenRouterApiKeyDto },
-  TContext
-> => {
-  return useMutation(
-    getAdminSettingsControllerUpdateOpenRouterApiKeyMutationOptions(options),
-    queryClient,
-  );
-};
 /**
  * @summary Get profession atlas settings
  */

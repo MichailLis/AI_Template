@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { CreateTestsTopicFromAiDtoQuestionsItemOptionsItem } from './createTestsTopicFromAiDtoQuestionsItemOptionsItem';
+import type { CreateTestsTopicFromAiDtoQuestionsItemSettings } from './createTestsTopicFromAiDtoQuestionsItemSettings';
 import type { CreateTestsTopicFromAiDtoQuestionsItemSliderBandsItem } from './createTestsTopicFromAiDtoQuestionsItemSliderBandsItem';
 import type { CreateTestsTopicFromAiDtoQuestionsItemType } from './createTestsTopicFromAiDtoQuestionsItemType';
 
@@ -22,7 +23,7 @@ export type CreateTestsTopicFromAiDtoQuestionsItem = {
    */
   description?: string | null;
   required?: boolean;
-  settings?: unknown;
+  settings?: CreateTestsTopicFromAiDtoQuestionsItemSettings;
   options?: CreateTestsTopicFromAiDtoQuestionsItemOptionsItem[];
   sliderBands?: CreateTestsTopicFromAiDtoQuestionsItemSliderBandsItem[];
 };

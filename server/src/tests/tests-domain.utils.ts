@@ -21,6 +21,9 @@ const isInputJsonValue = (value: unknown): value is Prisma.InputJsonValue => {
   return false;
 };
 
+const isJsonObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 export const toPrismaSettingsInput = (
   value: unknown,
 ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined => {
@@ -168,7 +171,7 @@ export const mapQuestion = (question: {
     description: question.description,
     required: question.required,
     order: question.order,
-    settings: question.settings ?? null,
+    settings: isJsonObject(question.settings) ? question.settings : null,
     options: question.options,
     sliderBands: question.sliderBands,
   };

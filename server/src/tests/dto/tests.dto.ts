@@ -8,6 +8,8 @@ export const TestQuestionTypeSchema = z.enum([
   'SLIDER',
 ]);
 
+export const JsonObjectSchema = z.object({}).catchall(z.unknown());
+
 export const TestQuestionOptionSchema = z.object({
   id: z.number(),
   label: z.string(),
@@ -32,7 +34,7 @@ export const TestQuestionSchema = z.object({
   description: z.string().nullable(),
   required: z.boolean(),
   order: z.number(),
-  settings: z.unknown().nullable(),
+  settings: JsonObjectSchema.nullable(),
   options: z.array(TestQuestionOptionSchema),
   sliderBands: z.array(TestQuestionSliderBandSchema),
 });
@@ -137,7 +139,7 @@ export const UpsertTestsQuestionSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).nullable().optional(),
   required: z.boolean().default(true),
-  settings: z.unknown().optional(),
+  settings: JsonObjectSchema.optional(),
   options: z.array(UpsertTestQuestionOptionSchema).optional(),
   sliderBands: z.array(UpsertTestQuestionSliderBandSchema).optional(),
 });

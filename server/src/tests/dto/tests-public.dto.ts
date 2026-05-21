@@ -1,7 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-import { TestQuestionTypeSchema } from './tests.dto';
+import { TestAnalysisSummarySchema } from './tests-analysis.dto';
+import { JsonObjectSchema, TestQuestionTypeSchema } from './tests.dto';
 
 export const PublicQuestionOptionSchema = z.object({
   id: z.number(),
@@ -53,7 +54,7 @@ export const PublicTestQuestionSchema = z.object({
   description: z.string().nullable(),
   required: z.boolean(),
   order: z.number(),
-  settings: z.unknown().nullable(),
+  settings: JsonObjectSchema.nullable(),
   options: z.array(PublicQuestionOptionSchema),
   sliderBands: z.array(PublicQuestionSliderBandSchema),
 });
@@ -144,7 +145,7 @@ export const PublicSessionAnalysisProviderModeSchema = z.enum([
 export const PublicSessionAnalysisSchema = z.object({
   providerMode: PublicSessionAnalysisProviderModeSchema,
   status: PublicSessionAnalysisStatusSchema,
-  summary: z.unknown().nullable(),
+  summary: TestAnalysisSummarySchema.nullable(),
   errorMessage: z.string().nullable(),
   generatedAt: z.string().nullable(),
 });

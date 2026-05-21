@@ -56,4 +56,15 @@ describe('Prisma analysis prompt schema', () => {
       'CREATE INDEX "test_student_attempts_publicLinkId_startedAt_idx"',
     );
   });
+
+  it('enforces case-insensitive uniqueness for identity fields at the database boundary', () => {
+    expect(schema).toContain('extensions = [citext]');
+    expect(schema).toMatch(/email\s+String\s+@unique\s+@db\.Citext/);
+    expect(schema).toMatch(/name\s+String\s+@unique\s+@db\.Citext/);
+    expect(migrationSql).toContain('CREATE EXTENSION IF NOT EXISTS citext');
+    expect(migrationSql).toContain('ALTER TABLE "users" ALTER COLUMN "email" TYPE CITEXT');
+    expect(migrationSql).toContain(
+      'ALTER TABLE "education_organizations" ALTER COLUMN "name" TYPE CITEXT',
+    );
+  });
 });

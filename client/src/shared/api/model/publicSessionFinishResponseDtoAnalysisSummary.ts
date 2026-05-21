@@ -6,10 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface UpdateOpenRouterApiKeyDto {
-  /**
-   * @minLength 1
-   * @maxLength 500
-   */
-  apiKey: string;
-}
+/**
+ * @nullable
+ */
+export type PublicSessionFinishResponseDtoAnalysisSummary = { [key: string]: unknown } | null;

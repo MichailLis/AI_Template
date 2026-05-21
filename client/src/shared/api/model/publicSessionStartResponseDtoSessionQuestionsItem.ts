@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { PublicSessionStartResponseDtoSessionQuestionsItemOptionsItem } from './publicSessionStartResponseDtoSessionQuestionsItemOptionsItem';
+import type { PublicSessionStartResponseDtoSessionQuestionsItemSettings } from './publicSessionStartResponseDtoSessionQuestionsItemSettings';
 import type { PublicSessionStartResponseDtoSessionQuestionsItemSliderBandsItem } from './publicSessionStartResponseDtoSessionQuestionsItemSliderBandsItem';
 import type { PublicSessionStartResponseDtoSessionQuestionsItemType } from './publicSessionStartResponseDtoSessionQuestionsItemType';
 
@@ -17,7 +18,8 @@ export type PublicSessionStartResponseDtoSessionQuestionsItem = {
   description: string | null;
   required: boolean;
   order: number;
-  settings: unknown | null;
+  /** @nullable */
+  settings: PublicSessionStartResponseDtoSessionQuestionsItemSettings;
   options: PublicSessionStartResponseDtoSessionQuestionsItemOptionsItem[];
   sliderBands: PublicSessionStartResponseDtoSessionQuestionsItemSliderBandsItem[];
 };

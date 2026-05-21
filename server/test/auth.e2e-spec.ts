@@ -13,6 +13,7 @@ describe('Auth (e2e)', () => {
   const refreshCookieName = 'refreshToken';
   const testEmail = `auth-e2e-${Date.now()}@example.com`;
   const refreshEmail = `auth-refresh-e2e-${Date.now()}@example.com`;
+  const normalizedEmail = `auth-normalized-e2e-${Date.now()}@example.com`;
   const testPassword = 'Password123';
 
   const getRefreshCookie = (response: request.Response) => {
@@ -56,7 +57,9 @@ describe('Auth (e2e)', () => {
     await app.init();
 
     prisma = app.get(PrismaService);
-    await prisma.user.deleteMany({ where: { email: { in: [testEmail, refreshEmail] } } });
+    await prisma.user.deleteMany({
+      where: { email: { in: [testEmail, refreshEmail, normalizedEmail] } },
+    });
 
     await request(app.getHttpServer()).post('/auth/signup').send({
       email: refreshEmail,
@@ -66,7 +69,9 @@ describe('Auth (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { email: { in: [testEmail, refreshEmail] } } });
+    await prisma.user.deleteMany({
+      where: { email: { in: [testEmail, refreshEmail, normalizedEmail] } },
+    });
     await app.close();
   });
 
@@ -105,6 +110,39 @@ describe('Auth (e2e)', () => {
     expect(typeof response.body.accessToken).toBe('string');
     expect(response.body.refreshToken).toBeUndefined();
     getRefreshCookie(response);
+  });
+
+  it('POST /auth/signup and /auth/signin should normalize email case and whitespace', async () => {
+    const mixedCaseEmail = ` ${normalizedEmail.toUpperCase()} `;
+
+    const signupResponse = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({
+        email: mixedCaseEmail,
+        password: testPassword,
+        name: 'Normalized Auth E2E User',
+      })
+      .expect(201);
+
+    expect(signupResponse.body.user).toMatchObject({
+      email: normalizedEmail,
+      name: 'Normalized Auth E2E User',
+    });
+    getRefreshCookie(signupResponse);
+
+    const signinResponse = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({
+        email: mixedCaseEmail,
+        password: testPassword,
+      })
+      .expect(200);
+
+    expect(signinResponse.body.user).toMatchObject({
+      email: normalizedEmail,
+      name: 'Normalized Auth E2E User',
+    });
+    getRefreshCookie(signinResponse);
   });
 
   it('POST /auth/signin should return normalized validation errors', async () => {

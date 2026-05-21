@@ -7,11 +7,13 @@
  */
 import type { PublicSessionResultResponseDtoAnalysisProviderMode } from './publicSessionResultResponseDtoAnalysisProviderMode';
 import type { PublicSessionResultResponseDtoAnalysisStatus } from './publicSessionResultResponseDtoAnalysisStatus';
+import type { PublicSessionResultResponseDtoAnalysisSummary } from './publicSessionResultResponseDtoAnalysisSummary';
 
 export type PublicSessionResultResponseDtoAnalysis = {
   providerMode: PublicSessionResultResponseDtoAnalysisProviderMode;
   status: PublicSessionResultResponseDtoAnalysisStatus;
-  summary: unknown | null;
+  /** @nullable */
+  summary: PublicSessionResultResponseDtoAnalysisSummary;
   /** @nullable */
   errorMessage: string | null;
   /** @nullable */
