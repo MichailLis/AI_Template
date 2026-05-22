@@ -1,9 +1,9 @@
-import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
 
 import { spawnNpm } from './lib/npm-runner.mjs';
+import { getProcessTreeSpawnOptions, stopProcessTree } from './lib/process-tree.mjs';
 
 const smokeHost = '127.0.0.1';
 const requestedPort = process.env.SMOKE_SERVER_PORT ?? process.env.PORT ?? '';
@@ -149,39 +149,17 @@ const findMissingOperations = (swaggerDoc) => {
   return missingOperations;
 };
 
-const stopProcess = (child) =>
-  new Promise((resolve) => {
-    if (child.exitCode !== null) {
-      resolve();
-      return;
-    }
-
-    if (process.platform === 'win32') {
-      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-        stdio: 'ignore',
-      });
-      resolve();
-      return;
-    }
-
-    child.once('exit', () => resolve());
-    child.kill('SIGTERM');
-
-    setTimeout(() => {
-      if (child.exitCode === null) {
-        child.kill('SIGKILL');
-      }
-    }, 3000);
-  });
-
 const startServer = () =>
-  spawnNpm(['run', 'start', '--prefix', 'server'], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: {
-      ...process.env,
-      PORT: port,
-    },
-  });
+  spawnNpm(
+    ['run', 'start', '--prefix', 'server'],
+    getProcessTreeSpawnOptions({
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        PORT: port,
+      },
+    }),
+  );
 
 let server = null;
 let serverLogs = '';
@@ -237,11 +215,11 @@ try {
   console.error(error instanceof Error ? error.message : String(error));
   console.error(serverLogs);
   if (server) {
-    await stopProcess(server);
+    await stopProcessTree(server);
   }
   process.exit(1);
 }
 
 if (server) {
-  await stopProcess(server);
+  await stopProcessTree(server);
 }

@@ -1,6 +1,5 @@
-import { spawnSync } from 'node:child_process';
-
 import { spawnNpm } from './lib/npm-runner.mjs';
+import { getProcessTreeSpawnOptions, stopProcessTree } from './lib/process-tree.mjs';
 
 const port = '4173';
 const targetUrl = `http://127.0.0.1:${port}/`;
@@ -29,31 +28,6 @@ const waitForClient = async (url, timeoutMs) => {
   throw new Error(`Client smoke check timed out: ${url}`);
 };
 
-const stopProcess = (child) =>
-  new Promise((resolve) => {
-    if (child.exitCode !== null) {
-      resolve();
-      return;
-    }
-
-    if (process.platform === 'win32') {
-      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-        stdio: 'ignore',
-      });
-      resolve();
-      return;
-    }
-
-    child.once('exit', () => resolve());
-    child.kill('SIGTERM');
-
-    setTimeout(() => {
-      if (child.exitCode === null) {
-        child.kill('SIGKILL');
-      }
-    }, 3000);
-  });
-
 const client = spawnNpm(
   [
     'run',
@@ -67,9 +41,9 @@ const client = spawnNpm(
     port,
     '--strictPort',
   ],
-  {
+  getProcessTreeSpawnOptions({
     stdio: ['ignore', 'pipe', 'pipe'],
-  },
+  }),
 );
 
 let clientLogs = '';
@@ -89,8 +63,8 @@ try {
   console.error('Client smoke check failed.');
   console.error(error instanceof Error ? error.message : String(error));
   console.error(clientLogs);
-  await stopProcess(client);
+  await stopProcessTree(client);
   process.exit(1);
 }
 
-await stopProcess(client);
+await stopProcessTree(client);

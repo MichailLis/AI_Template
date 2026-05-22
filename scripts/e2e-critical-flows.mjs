@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 
 import { chromium } from 'playwright';
 
 import { spawnNpm, spawnSyncNpm } from './lib/npm-runner.mjs';
+import { getProcessTreeSpawnOptions, stopProcessTree } from './lib/process-tree.mjs';
 
 const previewHost = '127.0.0.1';
 let previewPort = '';
@@ -131,31 +131,6 @@ const waitForClient = async (url, timeoutMs) => {
   throw new Error(`Client preview did not become ready: ${url}`);
 };
 
-const stopProcess = (child) =>
-  new Promise((resolve) => {
-    if (child.exitCode !== null) {
-      resolve();
-      return;
-    }
-
-    if (process.platform === 'win32') {
-      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-        stdio: 'ignore',
-      });
-      resolve();
-      return;
-    }
-
-    child.once('exit', () => resolve());
-    child.kill('SIGTERM');
-
-    setTimeout(() => {
-      if (child.exitCode === null) {
-        child.kill('SIGKILL');
-      }
-    }, 3000);
-  });
-
 const buildClient = () => {
   const buildArgs = ['run', 'build', '--prefix', 'client'];
   const buildProcess = spawnSyncNpm(buildArgs, {
@@ -184,9 +159,12 @@ const startPreview = () => {
     previewPort,
     '--strictPort',
   ];
-  const preview = spawnNpm(previewArgs, {
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  const preview = spawnNpm(
+    previewArgs,
+    getProcessTreeSpawnOptions({
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }),
+  );
 
   let logs = '';
   preview.stdout.on('data', (chunk) => {
@@ -483,7 +461,7 @@ const main = async () => {
     process.exit(1);
   } finally {
     if (previewProcess) {
-      await stopProcess(previewProcess);
+      await stopProcessTree(previewProcess);
     }
   }
 };
