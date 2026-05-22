@@ -1,4 +1,5 @@
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -44,12 +45,11 @@ export function PromptEditorModelSection({
         </div>
         <div className="space-y-2">
           <Label htmlFor="prompt-model">Модель</Label>
-          <select
+          <AdminSelectField
             id="prompt-model"
             value={selectedModel}
             onChange={(event) => onModelChange(event.target.value)}
             disabled={filteredModels.length === 0}
-            className={adminClassNames.form.select}
           >
             {filteredModels.length === 0 ? <option value="">Нет моделей</option> : null}
             {filteredModels.map((item) => (
@@ -57,7 +57,7 @@ export function PromptEditorModelSection({
                 {item.label}
               </option>
             ))}
-          </select>
+          </AdminSelectField>
         </div>
       </div>
 

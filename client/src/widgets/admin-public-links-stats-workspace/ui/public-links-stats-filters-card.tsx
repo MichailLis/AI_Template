@@ -2,6 +2,7 @@ import { BarChart3, ListFilter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
@@ -71,24 +72,24 @@ function LinkNavigationFilters({
       <div className="grid gap-3 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.2fr)_minmax(0,1.1fr)]">
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="public-link-scope">Область ссылок</Label>
-          <select
+          <AdminSelectField
             id="public-link-scope"
             value={publicLinksTab}
             onChange={(event) => onTabChange(event.target.value as PublicLinksTab)}
-            className={`flex ${adminClassNames.form.select}`}
+            className="flex"
           >
             <option value="active">Активные</option>
             <option value="archived">Архив</option>
-          </select>
+          </AdminSelectField>
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="stats-topic-select">Тест (контекст)</Label>
-          <select
+          <AdminSelectField
             id="stats-topic-select"
             value={effectiveTopicId ? String(effectiveTopicId) : ''}
             onChange={(event) => onTopicChange(Number.parseInt(event.target.value, 10))}
-            className={`flex ${adminClassNames.form.select}`}
+            className="flex"
             disabled={topicOptions.length === 0}
           >
             {topicOptions.length === 0 ? (
@@ -99,16 +100,16 @@ function LinkNavigationFilters({
                 {topic.title}
               </option>
             ))}
-          </select>
+          </AdminSelectField>
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="stats-link-select">Публичная ссылка (число попыток)</Label>
-          <select
+          <AdminSelectField
             id="stats-link-select"
             value={effectivePublicLinkId ? String(effectivePublicLinkId) : ''}
             onChange={(event) => onPublicLinkChange(Number.parseInt(event.target.value, 10))}
-            className={`flex ${adminClassNames.form.select}`}
+            className="flex"
             disabled={linksForTopic.length === 0}
           >
             {linksForTopic.length === 0 ? (
@@ -123,7 +124,7 @@ function LinkNavigationFilters({
                 </option>
               );
             })}
-          </select>
+          </AdminSelectField>
         </div>
       </div>
     </div>
@@ -149,31 +150,31 @@ function AnalyticsReportFilters({
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)]">
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="analytics-scope-select">Сводка</Label>
-          <select
+          <AdminSelectField
             id="analytics-scope-select"
             value={analyticsScope}
             onChange={(event) => onAnalyticsScopeChange(event.target.value as AnalyticsScope)}
-            className={`flex ${adminClassNames.form.select}`}
+            className="flex"
           >
             <option value="TOPIC">Весь тест</option>
             <option value="PUBLIC_LINK">Выбранная ссылка</option>
-          </select>
+          </AdminSelectField>
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="analytics-link-status-select">Ссылки в отчете</Label>
-          <select
+          <AdminSelectField
             id="analytics-link-status-select"
             value={analyticsLinkStatus}
             onChange={(event) =>
               onAnalyticsLinkStatusChange(event.target.value as AnalyticsLinkStatus)
             }
-            className={`flex ${adminClassNames.form.select}`}
+            className="flex"
           >
             <option value="ALL">Все</option>
             <option value="ACTIVE">Активные</option>
             <option value="ARCHIVED">Архив</option>
-          </select>
+          </AdminSelectField>
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">

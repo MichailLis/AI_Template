@@ -1,4 +1,5 @@
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -15,15 +16,14 @@ function PublicTemplateField({
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
       <Label htmlFor="public-template">Шаблон публичного теста</Label>
-      <select
+      <AdminSelectField
         id="public-template"
         value={newPublicTemplate}
         onChange={(event) => onPublicTemplateChange(event.target.value as typeof newPublicTemplate)}
-        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
       >
         <option value="STANDARD">Текущий</option>
         <option value="POLUS">Polus</option>
-      </select>
+      </AdminSelectField>
       <p className={`text-xs ${adminClassNames.text.muted}`}>
         Шаблон фиксируется при создании публичной ссылки.
       </p>
@@ -38,18 +38,17 @@ function EntryProfileModeField({
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
       <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
-      <select
+      <AdminSelectField
         id="public-entry-profile-mode"
         value={newPublicEntryProfileMode}
         onChange={(event) =>
           onEntryProfileModeChange(event.target.value as typeof newPublicEntryProfileMode)
         }
-        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
       >
         <option value="DEMOGRAPHIC">Демографическая анкета</option>
         <option value="EDUCATION">Анкета по учебным данным</option>
         <option value="EDUCATION_DEMOGRAPHIC">Учебные данные + демографическая анкета</option>
-      </select>
+      </AdminSelectField>
       <p className={`text-xs ${adminClassNames.text.muted}`}>
         Для демографической анкеты лимит попыток устанавливается равным 1.
       </p>

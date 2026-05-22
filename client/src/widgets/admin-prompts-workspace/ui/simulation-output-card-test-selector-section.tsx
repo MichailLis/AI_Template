@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
@@ -29,7 +30,7 @@ export function PromptTestSelectorSection({
     <div className={`flex flex-col gap-3 p-4 ${adminClassNames.border.bottom}`}>
       <div className="flex flex-col gap-2">
         <Label htmlFor="prompt-test-group">Тест для проверки промпта</Label>
-        <select
+        <AdminSelectField
           id="prompt-test-group"
           value={selectedTestId ?? ''}
           onChange={(event) => {
@@ -37,7 +38,6 @@ export function PromptTestSelectorSection({
             onSelectedTestChange(Number.isFinite(nextValue) ? nextValue : null);
           }}
           disabled={isLoadingQuestions || testQuestionGroups.length === 0}
-          className={adminClassNames.form.select}
         >
           {testQuestionGroups.length === 0 ? (
             <option value="">Нет тестов с вопросами</option>
@@ -48,7 +48,7 @@ export function PromptTestSelectorSection({
               {testGroup.questionCount} вопросов
             </option>
           ))}
-        </select>
+        </AdminSelectField>
       </div>
 
       {isLoadingQuestions ? (

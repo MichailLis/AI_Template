@@ -3,7 +3,7 @@ import {
   parseGroupValidationMode,
   type GroupValidationMode,
 } from '@/shared/lib/group-validation';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
@@ -38,11 +38,11 @@ export function EducationOrganizationValidationFields({
     <>
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-organization-mode`}>Режим проверки группы/класса</Label>
-        <select
+        <AdminSelectField
           id={`${idPrefix}-organization-mode`}
           value={validationMode}
           onChange={(event) => onValidationModeChange(parseGroupValidationMode(event.target.value))}
-          className={`flex ${adminClassNames.form.select}`}
+          className="flex"
           disabled={disabled}
         >
           {GROUP_VALIDATION_MODE_OPTIONS.map((option) => (
@@ -50,7 +50,7 @@ export function EducationOrganizationValidationFields({
               {option.label}
             </option>
           ))}
-        </select>
+        </AdminSelectField>
       </div>
 
       {validationMode !== 'NONE' ? (
