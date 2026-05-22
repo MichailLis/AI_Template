@@ -159,6 +159,9 @@ export type GroupOrClassValidationModeType = `${z.infer<typeof GroupOrClassValid
 export const UserSchema = z.object({
   role: RoleSchema,
   id: z.number().int(),
+  /**
+   * Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
+   */
   email: z.string(),
   name: z.string().nullable(),
   password: z.string(),
@@ -291,6 +294,9 @@ export type TestPublicLink = z.infer<typeof TestPublicLinkSchema>
 export const EducationOrganizationSchema = z.object({
   groupValidationMode: GroupOrClassValidationModeSchema,
   id: z.number().int(),
+  /**
+   * Application trims names; citext keeps database uniqueness case-insensitive.
+   */
   name: z.string(),
   isActive: z.boolean(),
   groupValidationPattern: z.string().nullable(),

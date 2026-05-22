@@ -1,17 +1,10 @@
-import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { ensureAdminAccess } from '../admin/admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 
-const OPENROUTER_API_KEY_SETTING_KEY = 'openrouter.apiKey';
-
-type OpenRouterApiKeySource = 'DATABASE' | 'ENV' | 'NONE';
-
-interface StoredApiKey {
-  value: string;
-  updatedAt: Date;
-}
+type OpenRouterApiKeySource = 'ENV' | 'NONE';
 
 @Injectable()
 export class OpenRouterApiKeyService {
@@ -26,24 +19,6 @@ export class OpenRouterApiKeyService {
     }
 
     return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`;
-  }
-
-  private async getStoredApiKey(): Promise<StoredApiKey | null> {
-    const setting = await this.prisma.appSetting.findUnique({
-      where: {
-        key: OPENROUTER_API_KEY_SETTING_KEY,
-      },
-    });
-    const value = setting?.value.trim();
-
-    if (!setting || !value) {
-      return null;
-    }
-
-    return {
-      value,
-      updatedAt: setting.updatedAt,
-    };
   }
 
   private getEnvApiKey() {
@@ -65,34 +40,20 @@ export class OpenRouterApiKeyService {
     };
   }
 
-  async getOpenRouterApiKey() {
-    const storedApiKey = await this.getStoredApiKey();
-
-    if (storedApiKey) {
-      return storedApiKey.value;
-    }
-
+  getOpenRouterApiKey() {
     const envApiKey = this.getEnvApiKey();
 
     if (envApiKey) {
-      return envApiKey;
+      return Promise.resolve(envApiKey);
     }
 
-    throw new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server');
+    return Promise.reject(
+      new ServiceUnavailableException('OPENROUTER_API_KEY is not configured on server'),
+    );
   }
 
   async getOpenRouterSettings(userId: number) {
     await ensureAdminAccess(this.prisma, userId);
-
-    const storedApiKey = await this.getStoredApiKey();
-
-    if (storedApiKey) {
-      return this.toSettingsResponse({
-        apiKey: storedApiKey.value,
-        source: 'DATABASE',
-        updatedAt: storedApiKey.updatedAt,
-      });
-    }
 
     const envApiKey = this.getEnvApiKey();
 
@@ -100,35 +61,6 @@ export class OpenRouterApiKeyService {
       apiKey: envApiKey,
       source: envApiKey ? 'ENV' : 'NONE',
       updatedAt: null,
-    });
-  }
-
-  async updateOpenRouterApiKey(userId: number, apiKey: string) {
-    await ensureAdminAccess(this.prisma, userId);
-
-    const normalizedApiKey = apiKey.trim();
-
-    if (!normalizedApiKey) {
-      throw new BadRequestException('OpenRouter API key must not be empty');
-    }
-
-    const setting = await this.prisma.appSetting.upsert({
-      where: {
-        key: OPENROUTER_API_KEY_SETTING_KEY,
-      },
-      create: {
-        key: OPENROUTER_API_KEY_SETTING_KEY,
-        value: normalizedApiKey,
-      },
-      update: {
-        value: normalizedApiKey,
-      },
-    });
-
-    return this.toSettingsResponse({
-      apiKey: setting.value.trim(),
-      source: 'DATABASE',
-      updatedAt: setting.updatedAt,
     });
   }
 }

@@ -13,9 +13,14 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
   useTestsPublicControllerGetSessionResult: vi.fn(),
 }));
 
-vi.mock('@/features/tests', () => ({
-  parseAnalysisResult: () => null,
-}));
+vi.mock('@/features/tests', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@/features/tests');
+
+  return {
+    ...actual,
+    parseAnalysisResult: () => null,
+  };
+});
 
 describe('PublicTestResultWorkspace', () => {
   const getRecentFinishedAt = (elapsedMs: number) => new Date(Date.now() - elapsedMs).toISOString();
@@ -73,7 +78,6 @@ describe('PublicTestResultWorkspace', () => {
           providerMode: 'STUB',
           status: 'READY',
           summary: null,
-          rawText: null,
           errorMessage: null,
           generatedAt: '2026-05-12T12:00:01.000Z',
         },
@@ -88,7 +92,6 @@ describe('PublicTestResultWorkspace', () => {
         providerMode: 'LLM',
         status: 'PENDING',
         summary: null,
-        rawText: null,
         errorMessage: null,
         generatedAt: null,
       },
@@ -178,7 +181,6 @@ describe('PublicTestResultWorkspace', () => {
             meaning: 'Тебе ближе цифровое проектирование.',
           },
         },
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
@@ -242,7 +244,6 @@ describe('PublicTestResultWorkspace', () => {
             status: 'pending',
           },
         }),
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
@@ -267,7 +268,6 @@ describe('PublicTestResultWorkspace', () => {
         providerMode: 'ALGORITHM_LLM',
         status: 'READY',
         summary: null,
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
@@ -293,7 +293,6 @@ describe('PublicTestResultWorkspace', () => {
             status: 'pending',
           },
         }),
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
@@ -318,7 +317,6 @@ describe('PublicTestResultWorkspace', () => {
             errorMessage: 'OpenRouter request timeout',
           },
         }),
-        rawText: null,
         errorMessage: 'OpenRouter request timeout',
         generatedAt: '2026-05-12T12:00:01.000Z',
       },

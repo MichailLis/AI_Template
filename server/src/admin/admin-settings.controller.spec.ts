@@ -6,7 +6,6 @@ describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
   let openRouterApiKeyService: {
     getOpenRouterSettings: jest.Mock;
-    updateOpenRouterApiKey: jest.Mock;
   };
   let professionAtlasSettingsService: {
     getProfessionAtlasSettings: jest.Mock;
@@ -16,7 +15,6 @@ describe('AdminSettingsController', () => {
   beforeEach(() => {
     openRouterApiKeyService = {
       getOpenRouterSettings: jest.fn(),
-      updateOpenRouterApiKey: jest.fn(),
     };
     professionAtlasSettingsService = {
       getProfessionAtlasSettings: jest.fn(),
@@ -34,38 +32,18 @@ describe('AdminSettingsController', () => {
       openRouter: {
         isConfigured: true,
         maskedValue: 'sk-or-v1...cret',
-        source: 'DATABASE',
-        updatedAt: '2026-05-01T11:00:00.000Z',
+        source: 'ENV',
+        updatedAt: null,
       },
     });
 
     await expect(controller.getOpenRouterSettings(3)).resolves.toMatchObject({
       openRouter: {
         isConfigured: true,
-        source: 'DATABASE',
+        source: 'ENV',
       },
     });
     expect(openRouterApiKeyService.getOpenRouterSettings).toHaveBeenCalledWith(3);
-  });
-
-  it('updates OpenRouter api key', async () => {
-    openRouterApiKeyService.updateOpenRouterApiKey.mockResolvedValue({
-      openRouter: {
-        isConfigured: true,
-        maskedValue: 'sk-or-v1...cret',
-        source: 'DATABASE',
-        updatedAt: '2026-05-01T11:00:00.000Z',
-      },
-    });
-
-    await controller.updateOpenRouterApiKey(3, {
-      apiKey: 'sk-or-v1-new-secret',
-    });
-
-    expect(openRouterApiKeyService.updateOpenRouterApiKey).toHaveBeenCalledWith(
-      3,
-      'sk-or-v1-new-secret',
-    );
   });
 
   it('returns profession atlas settings', async () => {

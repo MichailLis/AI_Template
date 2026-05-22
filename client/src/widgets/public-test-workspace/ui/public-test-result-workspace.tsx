@@ -2,11 +2,10 @@ import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { parseAnalysisResult } from '@/features/tests';
+import { getProfOrientationLlmStatus, parseAnalysisResult } from '@/features/tests';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
-import { getProfOrientationLlmStatus } from './polus/polus-prof-orientation-llm-data';
 import { PolusPublicResult } from './polus/polus-public-result';
 import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-processing-screen';
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';

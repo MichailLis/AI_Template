@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 generator zod {
@@ -8,7 +9,8 @@ generator zod {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [citext]
 }
 
 enum Role {
@@ -92,7 +94,8 @@ enum GroupOrClassValidationMode {
 
 model User {
   id                 Int     @id @default(autoincrement())
-  email              String  @unique
+  /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
+  email              String  @unique @db.Citext
   name               String?
   password           String
   hashedRefreshToken String?
@@ -236,7 +239,8 @@ model TestPublicLink {
 
 model EducationOrganization {
   id                     Int                        @id @default(autoincrement())
-  name                   String                     @unique
+  /// Application trims names; citext keeps database uniqueness case-insensitive.
+  name                   String                     @unique @db.Citext
   isActive               Boolean                    @default(true)
   groupValidationMode    GroupOrClassValidationMode @default(NONE)
   groupValidationPattern String?
@@ -286,6 +290,7 @@ model TestStudentAttempt {
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
   @@index([publicLinkId, studentKeyHash])
+  @@index([publicLinkId, startedAt])
   @@index([status, startedAt])
   @@index([topicVersionId])
   @@map("test_student_attempts")

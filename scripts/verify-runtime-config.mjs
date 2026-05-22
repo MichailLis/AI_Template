@@ -1,18 +1,61 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
 const composePath = join(rootDir, 'docker-compose.yml');
 const serverDockerfilePath = join(rootDir, 'server', 'Dockerfile');
 const clientDockerfilePath = join(rootDir, 'client', 'Dockerfile');
+const clientViteConfigPath = join(rootDir, 'client', 'vite.config.ts');
+const serverPackagePath = join(rootDir, 'server', 'package.json');
+const schematicsAssetCopyScriptPath = join(
+  rootDir,
+  'server',
+  'scripts',
+  'copy-schematics-assets.mjs',
+);
+const runtimeApiBaseUrlPath = join(
+  rootDir,
+  'client',
+  'src',
+  'shared',
+  'api',
+  'runtime-api-base-url.ts',
+);
 const envExamplePaths = ['.env.example', join('server', '.env.example'), '.env.deploy.example'];
+const runtimeDocPaths = [
+  'AI_GUIDE.md',
+  join('docs', 'server-admin-deploy.md'),
+  join('docs', 'deployment-dockerhub.md'),
+];
 
 const composeSource = readFileSync(composePath, 'utf8');
 const serverDockerfile = readFileSync(serverDockerfilePath, 'utf8');
 const clientDockerfile = readFileSync(clientDockerfilePath, 'utf8');
+const clientViteConfigSource = readFileSync(clientViteConfigPath, 'utf8');
+const serverPackage = JSON.parse(readFileSync(serverPackagePath, 'utf8'));
+const runtimeApiBaseUrlSource = readFileSync(runtimeApiBaseUrlPath, 'utf8');
 const legacyDevJwtValue = ['secret', '123'].join('');
 const openRouterKeyPrefix = ['sk', 'or'].join('-');
+const setupAppPath = join(rootDir, 'server', 'src', 'setup-app.ts');
+const setupAppSource = readFileSync(setupAppPath, 'utf8');
+const deployComposePath = join(rootDir, 'docker-compose.deploy.yml');
+const deployComposeSource = readFileSync(deployComposePath, 'utf8');
+const runtimeEnvNames = [
+  'CORS_ALLOWED_ORIGINS',
+  'OPENROUTER_DEFAULT_MODEL',
+  'OPENROUTER_HTTP_REFERER',
+  'OPENROUTER_APP_NAME',
+  'OPENROUTER_TIMEOUT_MS',
+  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS',
+  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES',
+];
+const requiredRuntimeApiDiscoveryMarkers = [
+  '/api-json',
+  '/auth/signin',
+  '/admin/tests/public-links',
+  '/tests/public/links/{code}',
+];
 
 const failures = [];
 
@@ -54,6 +97,7 @@ const services = composeConfig?.services ?? {};
 const backend = services.backend;
 const frontend = services.frontend;
 const expectedServices = ['postgres', 'adminer', 'backend', 'frontend'];
+const serverBuildSchematicsScript = serverPackage.scripts?.['build:schematics'] ?? '';
 
 if (!backend) {
   fail('docker-compose.yml must define backend service');
@@ -82,6 +126,25 @@ if (/env_file:\s*(?:\r?\n\s*-\s*)?\.\/server\/\.env/.test(composeSource)) {
 
 if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(composeSource)) {
   fail('docker-compose.yml must not contain hardcoded runtime secrets');
+}
+
+if (/origin:\s*true/.test(setupAppSource)) {
+  fail('server/src/setup-app.ts must not enable credentialed CORS for every origin');
+}
+
+if (!setupAppSource.includes('CORS_ALLOWED_ORIGINS')) {
+  fail('server/src/setup-app.ts must read CORS_ALLOWED_ORIGINS');
+}
+
+for (const marker of [
+  'is required outside local development',
+  'Non-local runtime configuration contains unsafe placeholder values',
+  'dev-access-secret-change-me',
+  'dev-refresh-secret-change-me',
+]) {
+  if (!setupAppSource.includes(marker)) {
+    fail(`server/src/setup-app.ts must enforce runtime guard marker: ${marker}`);
+  }
 }
 
 if (backend) {
@@ -143,6 +206,30 @@ for (const [label, dockerfile] of [
   }
 }
 
+if (!serverBuildSchematicsScript) {
+  fail('server package must define build:schematics script');
+}
+
+if (/powershell|Copy-Item/i.test(serverBuildSchematicsScript)) {
+  fail('server build:schematics must not depend on PowerShell/Copy-Item');
+}
+
+if (!serverBuildSchematicsScript.includes('node scripts/copy-schematics-assets.mjs')) {
+  fail('server build:schematics must copy schematics assets through a Node script');
+}
+
+if (!existsSync(schematicsAssetCopyScriptPath)) {
+  fail('server/scripts/copy-schematics-assets.mjs must exist');
+}
+
+if (clientViteConfigSource.includes('VITE_PUBLIC_API_BASE_URL')) {
+  fail('client/vite.config.ts must not read legacy VITE_PUBLIC_API_BASE_URL');
+}
+
+if (!clientViteConfigSource.includes('VITE_API_URL')) {
+  fail('client/vite.config.ts must read VITE_API_URL');
+}
+
 for (const envExamplePath of envExamplePaths) {
   const envExample = readFileSync(join(rootDir, envExamplePath), 'utf8');
   const openRouterKeyMatch = envExample.match(/^OPENROUTER_API_KEY=(.*)$/m);
@@ -154,6 +241,38 @@ for (const envExamplePath of envExamplePaths) {
 
   if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(envExample)) {
     fail(`${envExamplePath} must not contain real-looking runtime secrets`);
+  }
+
+  for (const runtimeEnvName of runtimeEnvNames) {
+    if (!new RegExp(`^${runtimeEnvName}=`, 'm').test(envExample)) {
+      fail(`${envExamplePath} must document ${runtimeEnvName}`);
+    }
+  }
+}
+
+for (const runtimeEnvName of runtimeEnvNames) {
+  if (!new RegExp(`${runtimeEnvName}:\\s*\\$\\{${runtimeEnvName}`).test(composeSource)) {
+    fail(`docker-compose.yml backend environment must expose ${runtimeEnvName}`);
+  }
+
+  if (!new RegExp(`${runtimeEnvName}:\\s*\\$\\{${runtimeEnvName}`).test(deployComposeSource)) {
+    fail(`docker-compose.deploy.yml backend environment must expose ${runtimeEnvName}`);
+  }
+}
+
+for (const runtimeDocPath of runtimeDocPaths) {
+  const runtimeDoc = readFileSync(join(rootDir, runtimeDocPath), 'utf8');
+
+  for (const runtimeEnvName of runtimeEnvNames) {
+    if (!runtimeDoc.includes(runtimeEnvName)) {
+      fail(`${runtimeDocPath} must document ${runtimeEnvName}`);
+    }
+  }
+}
+
+for (const marker of requiredRuntimeApiDiscoveryMarkers) {
+  if (!runtimeApiBaseUrlSource.includes(marker)) {
+    fail(`runtime API discovery must validate required marker ${marker}`);
   }
 }
 

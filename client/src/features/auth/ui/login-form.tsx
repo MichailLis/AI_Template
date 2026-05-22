@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
@@ -22,10 +22,32 @@ interface AuthError {
   };
 }
 
+const DEFAULT_LOGIN_REDIRECT = '/admin';
+
+const resolveLoginRedirect = (state: unknown) => {
+  if (typeof state !== 'object' || state === null || !('from' in state)) {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+
+  const from = (state as { from?: unknown }).from;
+  if (typeof from !== 'string') {
+    return DEFAULT_LOGIN_REDIRECT;
+  }
+
+  return from === '/admin' ||
+    from.startsWith('/admin/') ||
+    from.startsWith('/admin?') ||
+    from.startsWith('/admin#')
+    ? from
+    : DEFAULT_LOGIN_REDIRECT;
+};
+
 export const LoginForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const loginMutation = useAuthControllerSignin();
+  const redirectTo = resolveLoginRedirect(location.state);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -40,9 +62,9 @@ export const LoginForm = () => {
       { data: values },
       {
         onSuccess: (data) => {
-          setAuth(data.user, data.accessToken, data.refreshToken);
+          setAuth(data.user, data.accessToken);
           toast.success('С возвращением!');
-          navigate('/admin');
+          navigate(redirectTo);
         },
         onError: (error: unknown) => {
           const authError = error as AuthError;

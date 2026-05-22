@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
 
@@ -16,6 +16,7 @@ import {
 } from './prof-orientation-v3-plus.enrichment';
 import {
   isProfOrientationV3PlusSummary,
+  resolveProfOrientationV3PlusConfig,
   scoreProfOrientationV3Plus,
 } from './prof-orientation-v3-plus.scoring';
 import type { AttemptWithSessionData } from './tests-attempt.query';
@@ -83,9 +84,11 @@ interface ProfOrientationAttemptAnalysisRecord {
 const PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS = 180_000;
 const PROF_ORIENTATION_TIMEOUT_RETRIES = 1;
 const PROF_ORIENTATION_MAX_TIMEOUT_RETRIES = 2;
+const STALE_PENDING_ANALYSIS_MINUTES = 10;
+const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 
 @Injectable()
-export class TestsAnalysisService {
+export class TestsAnalysisService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
@@ -314,6 +317,7 @@ export class TestsAnalysisService {
     const summary = scoreProfOrientationV3Plus({
       questions: input.attempt.topicVersion.questions,
       answers: input.attempt.answers,
+      config: resolveProfOrientationV3PlusConfig(input.attempt.topicVersion.scoringConfig),
       llmStatus: input.promptVersionId ? 'pending' : 'not_requested',
     });
     const providerMode = input.promptVersionId ? 'ALGORITHM_LLM' : 'ALGORITHM';
@@ -347,6 +351,44 @@ export class TestsAnalysisService {
 
   enqueueAttemptAnalysis(attemptId: number) {
     void this.runAttemptAnalysis(attemptId).catch(() => undefined);
+  }
+
+  onApplicationBootstrap() {
+    void this.recoverStalePendingLlmAnalyses().catch(() => undefined);
+  }
+
+  async recoverStalePendingLlmAnalyses(now = new Date()) {
+    const staleBefore = new Date(now.getTime() - STALE_PENDING_ANALYSIS_MINUTES * 60 * 1000);
+    const analyses = await this.prisma.testStudentAnalysis.findMany({
+      where: {
+        status: 'PENDING',
+        providerMode: 'LLM',
+        updatedAt: {
+          lt: staleBefore,
+        },
+        attempt: {
+          status: 'COMPLETED',
+          topicVersion: {
+            analysisPromptVersionId: {
+              not: null,
+            },
+          },
+        },
+      },
+      select: {
+        attemptId: true,
+      },
+      orderBy: {
+        updatedAt: 'asc',
+      },
+      take: STALE_PENDING_ANALYSIS_RECOVERY_LIMIT,
+    });
+
+    for (const analysis of analyses) {
+      this.enqueueAttemptAnalysis(analysis.attemptId);
+    }
+
+    return analyses.length;
   }
 
   async runAttemptAnalysis(attemptId: number) {
@@ -561,7 +603,6 @@ export class TestsAnalysisService {
         providerMode: 'STUB' as const,
         status: 'PENDING' as const,
         summary: null,
-        rawText: null,
         errorMessage: null,
         generatedAt: null,
       };
@@ -571,7 +612,6 @@ export class TestsAnalysisService {
       providerMode: analysis.providerMode,
       status: analysis.status,
       summary: analysis.summary,
-      rawText: analysis.rawText,
       errorMessage: analysis.errorMessage,
       generatedAt: analysis.generatedAt ? analysis.generatedAt.toISOString() : null,
     };

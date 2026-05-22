@@ -12,15 +12,42 @@ const importRuntimeApi = async () => {
   };
 };
 
+const API_SWAGGER_PATH = '/api-json';
+const REQUIRED_API_PATHS = [
+  '/auth/signin',
+  '/admin/tests/public-links',
+  '/tests/public/links/{code}',
+] as const;
+
+const createSwaggerDocument = (paths: readonly string[] = REQUIRED_API_PATHS) => ({
+  openapi: '3.0.0',
+  paths: Object.fromEntries(paths.map((path) => [path, { get: {} }])),
+});
+
+const jsonResponse = (payload: unknown, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
 const mockDiscoveryResponse = (payload: { baseUrl?: string | null }, status = 200) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(payload, status)));
+};
+
+const mockValidDiscoveryResponse = (baseUrl: string) => {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(payload), {
-        status,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    ),
+    vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ baseUrl }))
+      .mockResolvedValueOnce(jsonResponse(createSwaggerDocument())),
+  );
+};
+
+const mockDiscoveryThenProbeResponse = (baseUrl: string, probeResponse: Response) => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValueOnce(jsonResponse({ baseUrl })).mockResolvedValueOnce(probeResponse),
   );
 };
 
@@ -31,13 +58,67 @@ describe('discoverAndConfigureApiBaseUrl', () => {
     vi.resetModules();
   });
 
-  it('accepts valid HTTP(S) base URLs from runtime discovery', async () => {
-    mockDiscoveryResponse({ baseUrl: 'https://api.example.test' });
+  it('accepts valid HTTP(S) base URLs after probing the project Swagger document', async () => {
+    mockValidDiscoveryResponse('https://api.example.test');
     const { api, discoverAndConfigureApiBaseUrl } = await importRuntimeApi();
 
     await expect(discoverAndConfigureApiBaseUrl()).resolves.toBe('https://api.example.test');
 
+    expect(fetch).toHaveBeenCalledWith('/__api-base-url', {
+      method: 'GET',
+      cache: 'no-store',
+    });
+    expect(fetch).toHaveBeenCalledWith(`https://api.example.test${API_SWAGGER_PATH}`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
     expect(api.defaults.baseURL).toBe('https://api.example.test');
+  });
+
+  it('rejects discovered HTTP(S) base URLs when the API probe is not this project', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse({ baseUrl: 'https://api.example.test' }))
+        .mockResolvedValueOnce(jsonResponse(createSwaggerDocument(['/auth/signin']))),
+    );
+    const { api, discoverAndConfigureApiBaseUrl } = await importRuntimeApi();
+
+    await expect(discoverAndConfigureApiBaseUrl()).resolves.toBe('http://localhost:3000');
+
+    expect(fetch).toHaveBeenCalledWith(`https://api.example.test${API_SWAGGER_PATH}`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
+    expect(api.defaults.baseURL).toBe('http://localhost:3000');
+  });
+
+  it('rejects discovered HTTP(S) base URLs when the API probe fails', async () => {
+    mockDiscoveryThenProbeResponse(
+      'https://api.example.test',
+      new Response(JSON.stringify({}), { status: 404 }),
+    );
+    const { api, discoverAndConfigureApiBaseUrl } = await importRuntimeApi();
+
+    await expect(discoverAndConfigureApiBaseUrl()).resolves.toBe('http://localhost:3000');
+
+    expect(api.defaults.baseURL).toBe('http://localhost:3000');
+  });
+
+  it('rejects discovered HTTP(S) base URLs when the API probe is not JSON', async () => {
+    mockDiscoveryThenProbeResponse(
+      'https://api.example.test',
+      new Response('not json', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    );
+    const { api, discoverAndConfigureApiBaseUrl } = await importRuntimeApi();
+
+    await expect(discoverAndConfigureApiBaseUrl()).resolves.toBe('http://localhost:3000');
+
+    expect(api.defaults.baseURL).toBe('http://localhost:3000');
   });
 
   it('ignores malformed runtime discovery values without changing the configured base URL', async () => {
@@ -87,7 +168,7 @@ describe('discoverAndConfigureApiBaseUrl', () => {
   });
 
   it('deduplicates concurrent discovery requests', async () => {
-    mockDiscoveryResponse({ baseUrl: 'http://127.0.0.1:3001' });
+    mockValidDiscoveryResponse('http://127.0.0.1:3001');
     const fetchMock = vi.mocked(fetch);
     const { discoverAndConfigureApiBaseUrl } = await importRuntimeApi();
 
@@ -95,6 +176,6 @@ describe('discoverAndConfigureApiBaseUrl', () => {
       Promise.all([discoverAndConfigureApiBaseUrl(), discoverAndConfigureApiBaseUrl()]),
     ).resolves.toEqual(['http://127.0.0.1:3001', 'http://127.0.0.1:3001']);
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

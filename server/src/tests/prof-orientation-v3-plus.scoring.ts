@@ -88,6 +88,29 @@ const getDirectionFromAnswerValue = (
   directionMap: Record<string, ProfOrientationDirectionId>,
 ) => directionMap[value] ?? null;
 
+export const resolveProfOrientationV3PlusConfig = (value: unknown): ProfOrientationV3PlusConfig => {
+  if (!isRecord(value)) {
+    return PROF_ORIENTATION_V3_PLUS_CONFIG;
+  }
+
+  const candidate = value as Partial<ProfOrientationV3PlusConfig>;
+
+  if (
+    typeof candidate.version !== 'string' ||
+    !Array.isArray(candidate.questions) ||
+    !Array.isArray(candidate.sliders) ||
+    !isRecord(candidate.directions) ||
+    !isRecord(candidate.mixed_profiles) ||
+    !isRecord(candidate.scoring) ||
+    !isRecord(candidate.control_rules) ||
+    !isRecord(candidate.result_output)
+  ) {
+    return PROF_ORIENTATION_V3_PLUS_CONFIG;
+  }
+
+  return candidate as ProfOrientationV3PlusConfig;
+};
+
 const getDirectionSummary = (
   directionId: ProfOrientationDirectionId,
   score: number,

@@ -10,7 +10,6 @@ interface InterceptorRuntimeHooks {
 
 interface RefreshTokens {
   accessToken: string;
-  refreshToken: string;
 }
 
 let runtimeHooks: InterceptorRuntimeHooks = {};
@@ -29,18 +28,13 @@ export const setupInterceptors = (api: AxiosInstance) => {
   configuredApis.add(api);
 
   const refreshTokens = async (): Promise<RefreshTokens> => {
-    const refreshToken = safeStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      throw new Error('No refresh token');
-    }
-
     // We need to use the same baseURL
     const baseURL = api.defaults.baseURL || '';
     const response = await fetch(`${baseURL}/auth/refresh`, {
+      credentials: 'include',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`,
       },
     });
 
@@ -69,6 +63,7 @@ export const setupInterceptors = (api: AxiosInstance) => {
         originalRequest._retry = true;
         try {
           if (!refreshPromise) {
+            isAuthRefreshRedirecting = false;
             refreshPromise = refreshTokens().finally(() => {
               refreshPromise = null;
             });
@@ -77,7 +72,7 @@ export const setupInterceptors = (api: AxiosInstance) => {
           const tokens = await refreshPromise;
 
           safeStorage.setItem('accessToken', tokens.accessToken);
-          safeStorage.setItem('refreshToken', tokens.refreshToken);
+          safeStorage.removeItem('refreshToken');
 
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
           return api(originalRequest);

@@ -1,10 +1,10 @@
 import { ExternalLink } from 'lucide-react';
 
-import { parseProfOrientationMethodologyEnrichment } from './polus-prof-orientation-llm-data';
 import { polusAssets } from './polus-public-assets';
+import { parseProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
 
-import type { ProfOrientationMethodologyEnrichment } from './polus-prof-orientation-llm-data';
-import type { ProfOrientationSummary } from './polus-prof-orientation-summary';
+import type { ProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
+import type { ProfOrientationSummary } from './prof-orientation-summary';
 
 type ProfOrientationProfession = NonNullable<
   ProfOrientationSummary['primaryDirection']

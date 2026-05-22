@@ -10,9 +10,27 @@ describe('Auth (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
+  const refreshCookieName = 'refreshToken';
   const testEmail = `auth-e2e-${Date.now()}@example.com`;
   const refreshEmail = `auth-refresh-e2e-${Date.now()}@example.com`;
+  const normalizedEmail = `auth-normalized-e2e-${Date.now()}@example.com`;
   const testPassword = 'Password123';
+
+  const getRefreshCookie = (response: request.Response) => {
+    const setCookieHeader = response.headers['set-cookie'];
+    const cookies = Array.isArray(setCookieHeader)
+      ? setCookieHeader
+      : setCookieHeader
+        ? [setCookieHeader]
+        : [];
+    const refreshCookie = cookies.find((cookie) => cookie.startsWith(`${refreshCookieName}=`));
+
+    expect(refreshCookie).toBeDefined();
+    expect(refreshCookie).toContain('HttpOnly');
+    expect(refreshCookie).toContain('SameSite=Lax');
+
+    return refreshCookie!.split(';')[0];
+  };
 
   const signinRefreshUser = async () => {
     const response = await request(app.getHttpServer())
@@ -23,9 +41,9 @@ describe('Auth (e2e)', () => {
       })
       .expect(200);
 
-    return response.body as {
-      accessToken: string;
-      refreshToken: string;
+    return {
+      accessToken: response.body.accessToken as string,
+      refreshCookie: getRefreshCookie(response),
     };
   };
 
@@ -39,7 +57,9 @@ describe('Auth (e2e)', () => {
     await app.init();
 
     prisma = app.get(PrismaService);
-    await prisma.user.deleteMany({ where: { email: { in: [testEmail, refreshEmail] } } });
+    await prisma.user.deleteMany({
+      where: { email: { in: [testEmail, refreshEmail, normalizedEmail] } },
+    });
 
     await request(app.getHttpServer()).post('/auth/signup').send({
       email: refreshEmail,
@@ -49,7 +69,9 @@ describe('Auth (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { email: { in: [testEmail, refreshEmail] } } });
+    await prisma.user.deleteMany({
+      where: { email: { in: [testEmail, refreshEmail, normalizedEmail] } },
+    });
     await app.close();
   });
 
@@ -68,10 +90,11 @@ describe('Auth (e2e)', () => {
       name: 'Auth E2E User',
     });
     expect(typeof response.body.accessToken).toBe('string');
-    expect(typeof response.body.refreshToken).toBe('string');
+    expect(response.body.refreshToken).toBeUndefined();
+    getRefreshCookie(response);
   });
 
-  it('POST /auth/signin should login existing user and return auth tokens', async () => {
+  it('POST /auth/signin should login existing user and set an HttpOnly refresh cookie', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/signin')
       .send({
@@ -85,7 +108,41 @@ describe('Auth (e2e)', () => {
       name: 'Auth E2E User',
     });
     expect(typeof response.body.accessToken).toBe('string');
-    expect(typeof response.body.refreshToken).toBe('string');
+    expect(response.body.refreshToken).toBeUndefined();
+    getRefreshCookie(response);
+  });
+
+  it('POST /auth/signup and /auth/signin should normalize email case and whitespace', async () => {
+    const mixedCaseEmail = ` ${normalizedEmail.toUpperCase()} `;
+
+    const signupResponse = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({
+        email: mixedCaseEmail,
+        password: testPassword,
+        name: 'Normalized Auth E2E User',
+      })
+      .expect(201);
+
+    expect(signupResponse.body.user).toMatchObject({
+      email: normalizedEmail,
+      name: 'Normalized Auth E2E User',
+    });
+    getRefreshCookie(signupResponse);
+
+    const signinResponse = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({
+        email: mixedCaseEmail,
+        password: testPassword,
+      })
+      .expect(200);
+
+    expect(signinResponse.body.user).toMatchObject({
+      email: normalizedEmail,
+      name: 'Normalized Auth E2E User',
+    });
+    getRefreshCookie(signinResponse);
   });
 
   it('POST /auth/signin should return normalized validation errors', async () => {
@@ -111,24 +168,37 @@ describe('Auth (e2e)', () => {
   });
 
   it('POST /auth/refresh should rotate refresh tokens without user payload', async () => {
-    const { refreshToken } = await signinRefreshUser();
+    const { refreshCookie } = await signinRefreshUser();
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', refreshCookie)
+      .expect(200);
+
+    expect(typeof response.body.accessToken).toBe('string');
+    expect(response.body.refreshToken).toBeUndefined();
+    expect(response.body.user).toBeUndefined();
+    const rotatedRefreshCookie = getRefreshCookie(response);
+    expect(rotatedRefreshCookie).not.toBe(refreshCookie);
+
+    const chainedResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', rotatedRefreshCookie)
+      .expect(200);
+
+    expect(typeof chainedResponse.body.accessToken).toBe('string');
+    expect(chainedResponse.body.refreshToken).toBeUndefined();
+    expect(chainedResponse.body.user).toBeUndefined();
+    getRefreshCookie(chainedResponse);
+  });
+
+  it('POST /auth/refresh should reject refresh tokens sent through Authorization', async () => {
+    const { refreshCookie } = await signinRefreshUser();
+    const refreshToken = refreshCookie.split('=')[1];
 
     const response = await request(app.getHttpServer())
       .post('/auth/refresh')
       .set('Authorization', `Bearer ${refreshToken}`)
-      .expect(200);
-
-    expect(typeof response.body.accessToken).toBe('string');
-    expect(typeof response.body.refreshToken).toBe('string');
-    expect(response.body.user).toBeUndefined();
-  });
-
-  it('POST /auth/refresh should reject malformed authorization header', async () => {
-    const { refreshToken } = await signinRefreshUser();
-
-    const response = await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .set('Authorization', `Basic ${refreshToken}`)
       .expect(401);
 
     expect(response.body).toMatchObject({
@@ -140,11 +210,8 @@ describe('Auth (e2e)', () => {
     });
   });
 
-  it('POST /auth/refresh should reject missing bearer token value', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .set('Authorization', 'Bearer')
-      .expect(401);
+  it('POST /auth/refresh should reject a missing refresh cookie', async () => {
+    const response = await request(app.getHttpServer()).post('/auth/refresh').expect(401);
 
     expect(response.body).toMatchObject({
       success: false,
@@ -156,16 +223,16 @@ describe('Auth (e2e)', () => {
   });
 
   it('POST /auth/refresh should reject a reused refresh token after rotation', async () => {
-    const { refreshToken } = await signinRefreshUser();
+    const { refreshCookie } = await signinRefreshUser();
 
     await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Authorization', `Bearer ${refreshToken}`)
+      .set('Cookie', refreshCookie)
       .expect(200);
 
     const response = await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Authorization', `Bearer ${refreshToken}`)
+      .set('Cookie', refreshCookie)
       .expect(403);
 
     expect(response.body).toMatchObject({
@@ -179,16 +246,27 @@ describe('Auth (e2e)', () => {
   });
 
   it('POST /auth/refresh should reject a refresh token invalidated by logout', async () => {
-    const { accessToken, refreshToken } = await signinRefreshUser();
+    const { accessToken, refreshCookie } = await signinRefreshUser();
 
-    await request(app.getHttpServer())
+    const logoutResponse = await request(app.getHttpServer())
       .post('/auth/logout')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
+    const logoutSetCookieHeader = logoutResponse.headers['set-cookie'];
+    const logoutCookies = Array.isArray(logoutSetCookieHeader)
+      ? logoutSetCookieHeader
+      : logoutSetCookieHeader
+        ? [logoutSetCookieHeader]
+        : [];
+
+    expect(
+      logoutCookies.some((cookie) => cookie.startsWith(`${refreshCookieName}=;`)),
+    ).toBeTruthy();
+
     const response = await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Authorization', `Bearer ${refreshToken}`)
+      .set('Cookie', refreshCookie)
       .expect(403);
 
     expect(response.body).toMatchObject({

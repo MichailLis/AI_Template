@@ -1,12 +1,9 @@
+import { polusAssets } from '@/features/tests';
 import { cn } from '@/shared/lib/utils';
 
 import { PublicThemeLayout } from '../public-theme-layout';
 
-import { polusAssets } from './polus-public-assets';
-
 import type { ReactNode } from 'react';
-
-import './polus-public-theme.css';
 
 interface PolusPublicLayoutProps {
   children: ReactNode;

@@ -12,6 +12,7 @@ import {
   buildSessionAnswers,
   getEffectiveQuestionAnswer,
   hasMeaningfulQuestionAnswer,
+  reconcileAnswerDraftAfterSave,
 } from './public-test-run-answer.helpers';
 
 import type { PublicTestAnswerDraft } from './public-test-run.types';
@@ -83,10 +84,11 @@ export function usePublicTestRunWorkspace() {
     }
 
     try {
-      await saveAnswersMutation.mutateAsync({
+      const response = await saveAnswersMutation.mutateAsync({
         sessionToken,
         data: { answers },
       });
+      setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, response.answers));
       toast.success('Ответы сохранены');
     } catch {
       toast.error('Не удалось сохранить ответы');
@@ -108,10 +110,11 @@ export function usePublicTestRunWorkspace() {
 
     try {
       if (answers.length > 0) {
-        await saveAnswersMutation.mutateAsync({
+        const saveResponse = await saveAnswersMutation.mutateAsync({
           sessionToken,
           data: { answers },
         });
+        setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, saveResponse.answers));
       }
 
       const response = await finishMutation.mutateAsync({ sessionToken });

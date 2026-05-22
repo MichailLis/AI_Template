@@ -1,7 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-import { TestQuestionTypeSchema } from './tests.dto';
+import { TestAnalysisSummarySchema } from './tests-analysis.dto';
+import { JsonObjectSchema, TestQuestionTypeSchema } from './tests.dto';
 
 export const PublicQuestionOptionSchema = z.object({
   id: z.number(),
@@ -53,14 +54,14 @@ export const PublicTestQuestionSchema = z.object({
   description: z.string().nullable(),
   required: z.boolean(),
   order: z.number(),
-  settings: z.unknown().nullable(),
+  settings: JsonObjectSchema.nullable(),
   options: z.array(PublicQuestionOptionSchema),
   sliderBands: z.array(PublicQuestionSliderBandSchema),
 });
 
 export const PublicSessionAnswerSchema = z.object({
   questionId: z.number().int().min(1),
-  answerPayload: z.unknown(),
+  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]),
   updatedAt: z.string(),
 });
 
@@ -120,7 +121,7 @@ export const PublicSessionGetResponseSchema = z.object({
 
 export const PublicSessionSaveAnswerItemSchema = z.object({
   questionId: z.number().int().min(1),
-  answerPayload: z.unknown(),
+  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]),
 });
 
 export const PublicSessionSaveAnswersRequestSchema = z.object({
@@ -144,8 +145,7 @@ export const PublicSessionAnalysisProviderModeSchema = z.enum([
 export const PublicSessionAnalysisSchema = z.object({
   providerMode: PublicSessionAnalysisProviderModeSchema,
   status: PublicSessionAnalysisStatusSchema,
-  summary: z.unknown().nullable(),
-  rawText: z.string().nullable(),
+  summary: TestAnalysisSummarySchema.nullable(),
   errorMessage: z.string().nullable(),
   generatedAt: z.string().nullable(),
 });

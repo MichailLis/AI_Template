@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildSessionAnswers, hasMeaningfulQuestionAnswer } from './public-test-run-answer.helpers';
+import {
+  buildSessionAnswers,
+  hasMeaningfulQuestionAnswer,
+  reconcileAnswerDraftAfterSave,
+} from './public-test-run-answer.helpers';
 
 import type { PublicTestQuestion } from './public-test-run.types';
 
@@ -33,6 +37,8 @@ describe('public test run answer helpers', () => {
       makeQuestion(2, 'MULTI_CHOICE'),
       makeQuestion(3, 'SLIDER'),
       makeQuestion(4, 'OPEN_TEXT'),
+      makeQuestion(5, 'OPEN_TEXT'),
+      makeQuestion(6, 'SLIDER'),
     ];
 
     expect(
@@ -40,11 +46,39 @@ describe('public test run answer helpers', () => {
         1: 'option_a',
         2: ['option_a', 'option_b'],
         3: 7,
+        5: { text: 'legacy payload' },
+        6: Number.NaN,
       }),
     ).toEqual([
       { questionId: 1, answerPayload: 'option_a' },
       { questionId: 2, answerPayload: ['option_a', 'option_b'] },
       { questionId: 3, answerPayload: 7 },
     ]);
+  });
+
+  it('replaces saved draft values with canonical answer payloads returned by the server', () => {
+    expect(
+      reconcileAnswerDraftAfterSave(
+        {
+          1: '  local draft  ',
+          2: ['a'],
+          3: 'unsaved draft',
+        },
+        [
+          {
+            questionId: 1,
+            answerPayload: 'local draft',
+          },
+          {
+            questionId: 2,
+            answerPayload: ['a', 'b'],
+          },
+        ],
+      ),
+    ).toEqual({
+      1: 'local draft',
+      2: ['a', 'b'],
+      3: 'unsaved draft',
+    });
   });
 });

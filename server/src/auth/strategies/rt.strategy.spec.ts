@@ -2,11 +2,15 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
+import { REFRESH_TOKEN_COOKIE_NAME } from '../auth-cookie';
 import { RefreshTokenStrategy } from './rt.strategy';
 
-const createRequest = (authorization?: string): Request =>
+const createRequest = (cookie?: string, authorization?: string): Request =>
   ({
-    headers: authorization === undefined ? {} : { authorization },
+    headers: {
+      ...(authorization === undefined ? {} : { authorization }),
+      ...(cookie === undefined ? {} : { cookie }),
+    },
     get: jest.fn((headerName: string) => {
       if (headerName.toLowerCase() === 'authorization') {
         return authorization;
@@ -28,10 +32,13 @@ describe('RefreshTokenStrategy', () => {
     } as unknown as ConfigService);
   });
 
-  it('validate should attach the exact bearer refresh token', () => {
+  it('validate should attach the exact refresh token from cookie', () => {
     const payload = { sub: 7, email: 'user@example.com' };
 
-    const result = strategy.validate(createRequest('Bearer refresh-token'), payload);
+    const result = strategy.validate(
+      createRequest(`other=value; ${REFRESH_TOKEN_COOKIE_NAME}=refresh-token`),
+      payload,
+    );
 
     expect(result).toEqual({
       ...payload,
@@ -39,19 +46,27 @@ describe('RefreshTokenStrategy', () => {
     });
   });
 
-  it('validate should reject missing authorization header', () => {
+  it('validate should decode an encoded refresh cookie value', () => {
+    const payload = { sub: 7, email: 'user@example.com' };
+
+    const result = strategy.validate(
+      createRequest(`${REFRESH_TOKEN_COOKIE_NAME}=refresh%20token`),
+      payload,
+    );
+
+    expect(result).toEqual({
+      ...payload,
+      refreshToken: 'refresh token',
+    });
+  });
+
+  it('validate should reject missing refresh cookie', () => {
     expect(() => strategy.validate(createRequest(), { sub: 7 })).toThrow(UnauthorizedException);
   });
 
-  it('validate should reject malformed authorization header', () => {
-    expect(() => strategy.validate(createRequest('Basic refresh-token'), { sub: 7 })).toThrow(
-      UnauthorizedException,
-    );
-  });
-
-  it('validate should reject a bearer header without a token value', () => {
-    expect(() => strategy.validate(createRequest('Bearer'), { sub: 7 })).toThrow(
-      UnauthorizedException,
-    );
+  it('validate should ignore authorization header refresh tokens', () => {
+    expect(() =>
+      strategy.validate(createRequest(undefined, 'Bearer refresh-token'), { sub: 7 }),
+    ).toThrow(UnauthorizedException);
   });
 });

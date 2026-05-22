@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
-import { ensureAdminAccess } from './admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { generateOpenRouterPrompt } from './openrouter.client';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 
@@ -13,7 +13,7 @@ type PublishVersionUpdate = (args: {
   where: { id: number };
 }) => Promise<unknown>;
 
-jest.mock('./admin-access.utils', () => ({
+jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('./openrouter.client', () => ({

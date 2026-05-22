@@ -10,7 +10,6 @@ export type AdminOpenRouterSettingsResponseDtoOpenRouterSource =
   (typeof AdminOpenRouterSettingsResponseDtoOpenRouterSource)[keyof typeof AdminOpenRouterSettingsResponseDtoOpenRouterSource];
 
 export const AdminOpenRouterSettingsResponseDtoOpenRouterSource = {
-  DATABASE: 'DATABASE',
   ENV: 'ENV',
   NONE: 'NONE',
 } as const;

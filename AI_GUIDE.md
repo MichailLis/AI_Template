@@ -1,17 +1,14 @@
 # AI Agent Programming Guide - Fullstack Base Project
 
-This template is a minimal, stable base for AI-driven development.
+This template is a stable product-oriented base for AI-driven development.
 
-Target template baseline:
+Current branch baseline:
 
 - Auth flow (`/auth/signup`, `/auth/signin`, `/auth/logout`, `/auth/refresh`)
-- Frontend auth UI route: `/login` only
-- No business modules in the final template branch (auth-only)
+- Frontend auth UI route: `/login`
+- Admin workspace, Prompt Studio, tests editor, public links, analytics, public student flow, and Polus public template
 
-Note:
-
-- Temporary feature modules can exist in feature branches for pipeline checks.
-- Before finalizing template state, remove temporary modules and keep only auth.
+Auth-only mode is still a supported cleanup target for a dedicated template-finalization branch. Do not remove current business modules from this branch unless the task explicitly asks to return to auth-only.
 
 ## Tech Stack
 
@@ -48,6 +45,14 @@ Expected runtime services:
 - `ai_template_backend` on `http://localhost:3000`
 - `ai_template_postgres` on `localhost:5432`
 - `ai_template_adminer` on `http://localhost:8080`
+
+Runtime security defaults:
+
+- Local development may use the root compose defaults and local JWT/database placeholders.
+- Non-local `NODE_ENV` values must provide non-placeholder `DATABASE_URL`,
+  `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and explicit `CORS_ALLOWED_ORIGINS`.
+- `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
+  wildcard origins with credentialed auth cookies.
 
 Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project for the user.
 That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
@@ -88,6 +93,40 @@ Stop conditions for search:
 - You can name exact target files and existing pattern to follow.
 - Additional searches return repetitive information.
 - Required external behavior is confirmed by official docs.
+
+## CodeGraph Usage Recommendations
+
+CodeGraph is an optional local code-intelligence index and MCP navigation tool for this repository.
+Use it to speed up discovery, not to replace source reading or verification gates.
+
+Preferred use cases:
+
+1. Start non-trivial codebase discovery with `codegraph_status` and `codegraph_files` when the MCP
+   tools are available. If MCP is not loaded in the current agent session, use the CLI equivalents
+   `codegraph status` and `codegraph files`.
+2. Use `codegraph_context` for "how does this feature work?" questions before opening many files.
+   Prefer queries that include real code terms: feature names, route segments, symbols, DTO names,
+   generated client names, or file names.
+3. Use `codegraph_search` or `codegraph query` for exact symbol lookup, NestJS route lookup, and
+   generated API hook discovery. Route searches such as `education-organizations` or `public-links`
+   are useful; broad punctuation-only searches are not.
+4. Use `codegraph_explore` after a context/search result when several related symbols need source
+   snippets in one call. Keep the query symbol/file-oriented instead of natural-language heavy.
+5. Use CodeGraph route results as a fast endpoint map, especially for NestJS controllers, then
+   confirm behavior in the controller/service/DTO source before editing.
+
+Trust boundaries:
+
+1. Do not rely on `codegraph affected`, `codegraph_impact`, `codegraph_callers`, or
+   `codegraph_callees` as the only test-impact signal. They can miss Jest specs, NestJS dependency
+   injection chains, and generated-client relationships.
+2. Always confirm affected tests with `rg`, imports, neighboring specs, and the relevant package
+   test commands.
+3. After file deletions or renames, run `codegraph index --force` if results look stale. A full
+   reindex is fast enough for this repo and clears stale symbols reliably.
+4. Keep `.codegraph/` local and ignored. Never commit the index database.
+5. CodeGraph findings do not waive required project gates such as `npm run verify:local`,
+   `npm run verify:template`, lint, build, or targeted tests.
 
 ## Refactor Debt Prevention (Always-On)
 
@@ -271,11 +310,12 @@ Required behavior:
 7. For strict machine-parseable output, use `response_format: json_schema` + `strict: true` with explicit schema.
 8. When schema is required, set `provider.require_parameters=true` to avoid routing to providers that ignore required params.
 9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
+10. Archived prompt versions remain valid for already published test versions that reference them; archive hides prompt versions from future selection/editing workflows, it must not break historical runtime analysis.
 
 Recommended env vars for prompt foundation:
 
 ```env
-OPENROUTER_API_KEY="sk-or-v1-..."
+OPENROUTER_API_KEY=
 OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
 OPENROUTER_HTTP_REFERER="http://localhost:5173"
 OPENROUTER_APP_NAME="AI Template Admin"
@@ -379,17 +419,27 @@ Target routes:
 - `"/t/:code/session/:sessionToken"` -> run workspace
 - `"/t/:code/result/:sessionToken"` -> result workspace
 
+Security model:
+
+- Public session/result URLs are bearer-style links: anyone with a valid `sessionToken`
+  can open the active session or final result until normal session/link rules block access.
+- Do not log, display, or send public session/result URLs outside the student-facing flow.
+- Public result DTOs must expose only student-safe analysis fields: status, provider mode,
+  generated timestamp, safe summary blocks, and user-facing error text.
+- Raw provider output, prompts, scoring internals, and debug-only fields belong only in
+  admin/internal DTOs protected by admin guards.
+
 UI/theming rules:
 
 1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
-2. Scoped theme tokens are defined in `client/src/widgets/public-test-workspace/ui/public-theme.css` under `.theme-public`.
+2. Scoped theme tokens are defined in `client/src/features/tests/ui/public-theme.css` under `.theme-public`.
 3. Do not place public-theme tokens in global `client/src/app/index.css`.
 4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
 5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
 6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
 7. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
    - `STANDARD` preserves the existing public components.
-   - `POLUS` uses components under `client/src/widgets/public-test-workspace/ui/polus/*`.
+   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`.
 8. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
 9. Entry page must branch by the link `entryProfileMode` without changing public routes:
    - `DEMOGRAPHIC` shows the demographic profile form.
@@ -398,7 +448,7 @@ UI/theming rules:
 
 ## Reference Example For AI Agents (Illustrative)
 
-Example goal: implement `news` feature with editor UI (example only, not part of final auth-only template).
+Example goal: implement `news` feature with editor UI (example only, not part of the current baseline).
 
 1. Schema:
    - Add `News` model to `server/prisma/schema.prisma`.
@@ -424,18 +474,19 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
-5. Final template cleanup:
+5. Temporary feature cleanup, only when the feature was created just for pipeline checks:
    - Remove temporary module files and wiring
    - Remove feature entry from manifest
    - Run `npm run verify:template` again
 
 ## Stability Rules
 
-1. Lint/test/build must pass:
+1. Core lint/test/build commands must pass during implementation loops:
    ```powershell
    npm run lint
    npm run test --prefix server
    npm run test:e2e --prefix server
+   npm run test:run --prefix client
    npm run build --prefix server
    npm run build --prefix client
    ```
@@ -443,7 +494,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    ```powershell
    npm run verify:template
    ```
-   This includes `verify:architecture` against `template/features.manifest.json` and mandatory server unit/e2e tests.
+   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
@@ -503,8 +554,8 @@ Use this checklist before opening PR or finalizing work.
    - Route added in `client/src/app/App.tsx`.
    - `publicRoutes` from manifest are wired in `client/src/app/App.tsx`.
    - `client/src/pages/dashboard.tsx` includes feature entry links for declared feature routes (required by `verify:architecture`).
-7. **Full pipeline green**
-   - `npm run test --prefix server` and `npm run test:e2e --prefix server` passed.
+7. **Core tests green**
+   - `npm run test --prefix server`, `npm run test:e2e --prefix server`, and `npm run test:run --prefix client` passed when the branch changed related behavior.
 8. **Full pipeline green**
    - `npm run verify:template` passed with no failures.
 9. **No hidden bypasses**
@@ -520,8 +571,7 @@ Use this checklist before opening PR or finalizing work.
 - Feature inventory is declared in `template/features.manifest.json`.
 - Public student routes are declared in `template/features.manifest.json` under `publicRoutes`.
 - Additional non-feature generated API directories are declared in `template/features.manifest.json` under `generatedApiDirs`.
-- In final template state, `features` can be empty (auth-only baseline).
-- In auth-only frontend baseline, required auth route is `"/login"`.
+- In an explicit auth-only cleanup branch, `features` can be empty and `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).
 - Every declared feature must have:
   - backend module/controller/service/DTO files
   - frontend page + create form

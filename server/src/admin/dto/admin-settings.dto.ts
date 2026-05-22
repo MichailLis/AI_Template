@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-export const OpenRouterApiKeySourceSchema = z.enum(['DATABASE', 'ENV', 'NONE']);
+export const OpenRouterApiKeySourceSchema = z.enum(['ENV', 'NONE']);
 
 export const OpenRouterApiKeySettingsSchema = z.object({
   isConfigured: z.boolean(),
@@ -23,10 +23,6 @@ export const AdminProfessionAtlasSettingsResponseSchema = z.object({
   professionAtlas: ProfessionAtlasSettingsSchema,
 });
 
-export const UpdateOpenRouterApiKeySchema = z.object({
-  apiKey: z.string().trim().min(1).max(500),
-});
-
 export const UpdateProfessionAtlasUrlSchema = z.object({
   url: z.string().trim().url().max(2048),
 });
@@ -34,8 +30,6 @@ export const UpdateProfessionAtlasUrlSchema = z.object({
 export class AdminOpenRouterSettingsResponseDto extends createZodDto(
   AdminOpenRouterSettingsResponseSchema,
 ) {}
-
-export class UpdateOpenRouterApiKeyDto extends createZodDto(UpdateOpenRouterApiKeySchema) {}
 
 export class AdminProfessionAtlasSettingsResponseDto extends createZodDto(
   AdminProfessionAtlasSettingsResponseSchema,

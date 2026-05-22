@@ -1,8 +1,8 @@
+import '@/features/tests/theme';
+
 import { cn } from '@/shared/lib/utils';
 
 import type { ReactNode } from 'react';
-
-import './public-theme.css';
 
 interface PublicThemeLayoutProps {
   children: ReactNode;

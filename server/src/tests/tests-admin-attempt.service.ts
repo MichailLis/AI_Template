@@ -4,7 +4,7 @@ import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas
 import { PrismaService } from '../prisma.service';
 import type { AdminPublicAttemptsListQueryDto } from './dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from './tests-attempt.mapper';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsAnalysisService } from './tests-analysis.service';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class TestsAdminAttemptService {
     linkId: number,
     query: AdminPublicAttemptsListQueryDto,
   ) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const link = await this.prisma.testPublicLink.findUnique({
       where: {
@@ -80,7 +80,7 @@ export class TestsAdminAttemptService {
   }
 
   async getAttemptDetail(userId: number, attemptId: number) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const attempt = await this.prisma.testStudentAttempt.findUnique({
       where: {

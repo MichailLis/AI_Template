@@ -1,13 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsQuestionService } from './tests-question.service';
 import { TestsService } from './tests.service';
 import { PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL } from './prof-orientation-v3-plus.fixture';
 
-jest.mock('./tests-admin-access.utils', () => ({
-  ensureTestsAdminAccess: jest.fn().mockResolvedValue(undefined),
+jest.mock('../common/authz/admin-access.utils', () => ({
+  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
 const publishedPromptVersion = {
@@ -65,11 +65,13 @@ describe('TestsService analysis prompt attachment', () => {
       findFirst: jest.Mock;
     };
     testTopic: {
+      delete: jest.Mock;
       findMany: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
     };
     testTopicVersion: {
+      count: jest.Mock;
       update: jest.Mock;
     };
   };
@@ -135,11 +137,13 @@ describe('TestsService analysis prompt attachment', () => {
         findFirst: jest.fn(),
       },
       testTopic: {
+        delete: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
       },
       testTopicVersion: {
+        count: jest.fn(),
         update: jest.fn(),
       },
     };
@@ -148,7 +152,7 @@ describe('TestsService analysis prompt attachment', () => {
       prismaMock as unknown as PrismaService,
       {} as unknown as TestsQuestionService,
     );
-    jest.mocked(ensureTestsAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -203,6 +207,37 @@ describe('TestsService analysis prompt attachment', () => {
         analysisPromptVersionId: 404,
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deleteTopic refuses to delete topics with published versions, public links, or attempts', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.testTopicVersion.count.mockResolvedValue(1);
+
+    await expect(service.deleteTopic(5, 1)).rejects.toThrow(BadRequestException);
+
+    expect(prismaMock.testTopicVersion.count).toHaveBeenCalledWith({
+      where: {
+        topicId: 1,
+        OR: [
+          { status: 'PUBLISHED' },
+          { publicLinks: { some: {} } },
+          { studentAttempts: { some: {} } },
+        ],
+      },
+    });
+    expect(prismaMock.testTopic.delete).not.toHaveBeenCalled();
+  });
+
+  it('deleteTopic hard-deletes draft-only unused topics', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.testTopicVersion.count.mockResolvedValue(0);
+    prismaMock.testTopic.delete.mockResolvedValue({});
+
+    await expect(service.deleteTopic(5, 1)).resolves.toEqual({ topicId: 1 });
+
+    expect(prismaMock.testTopic.delete).toHaveBeenCalledWith({
+      where: { id: 1 },
+    });
   });
 
   it('publishTopic carries selected prompt version into the next draft', async () => {

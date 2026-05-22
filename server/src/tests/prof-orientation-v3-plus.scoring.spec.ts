@@ -2,7 +2,10 @@ import {
   buildProfOrientationV3PlusQuestionPayloads,
   PROF_ORIENTATION_V3_PLUS_CONFIG,
 } from './prof-orientation-v3-plus.fixture';
-import { scoreProfOrientationV3Plus } from './prof-orientation-v3-plus.scoring';
+import {
+  resolveProfOrientationV3PlusConfig,
+  scoreProfOrientationV3Plus,
+} from './prof-orientation-v3-plus.scoring';
 
 const questions = buildProfOrientationV3PlusQuestionPayloads().map((question, index) => ({
   id: index + 1,
@@ -60,6 +63,16 @@ describe('scoreProfOrientationV3Plus', () => {
     expect(PROF_ORIENTATION_V3_PLUS_CONFIG.questions).toHaveLength(10);
     expect(PROF_ORIENTATION_V3_PLUS_CONFIG.sliders).toHaveLength(11);
     expect(buildProfOrientationV3PlusQuestionPayloads()).toHaveLength(21);
+  });
+
+  it('resolves persisted scoring config with fallback to the built-in methodology', () => {
+    const customConfig = {
+      ...PROF_ORIENTATION_V3_PLUS_CONFIG,
+      version: '3.1-custom',
+    };
+
+    expect(resolveProfOrientationV3PlusConfig(customConfig).version).toBe('3.1-custom');
+    expect(resolveProfOrientationV3PlusConfig({ version: 'broken' }).version).toBe('3.0');
   });
 
   it('returns a high-confidence single profile for a strong A1 result', () => {

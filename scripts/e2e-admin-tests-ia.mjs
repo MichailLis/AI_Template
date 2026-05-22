@@ -6,21 +6,15 @@
  * mocks API endpoints, and runs navigation scenarios.
  */
 
-import { spawn, spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { chromium } from 'playwright';
+
+import { spawnNpm, spawnSyncNpm } from './lib/npm-runner.mjs';
+import { getProcessTreeSpawnOptions, stopProcessTree } from './lib/process-tree.mjs';
 
 const port = '4173';
 const targetUrl = `http://127.0.0.1:${port}/`;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const npmExecutable = process.platform === 'win32' ? process.execPath : 'npm';
-const npmCliPath =
-  process.platform === 'win32'
-    ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
-    : null;
 
 // Deterministic fixtures for mock API responses
 const mockTopicList = {
@@ -109,49 +103,18 @@ const waitForClient = async (url, timeoutMs) => {
   throw new Error(`Client not ready: ${url}`);
 };
 
-const stopProcess = (child) =>
-  new Promise((resolve) => {
-    if (child.exitCode !== null) {
-      resolve();
-      return;
-    }
-
-    if (process.platform === 'win32') {
-      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-        stdio: 'ignore',
-      });
-      resolve();
-      return;
-    }
-
-    child.once('exit', () => resolve());
-    child.kill('SIGTERM');
-
-    setTimeout(() => {
-      if (child.exitCode === null) {
-        child.kill('SIGKILL');
-      }
-    }, 3000);
-  });
-
-const buildIfNeeded = async () => {
-  if (existsSync(join(process.cwd(), 'client', 'dist'))) {
-    console.log('✓ Build exists (client/dist)');
-    return;
-  }
-
+const buildClient = async () => {
   console.log('Building client...');
-  const buildArgs =
-    process.platform === 'win32'
-      ? [npmCliPath, 'run', 'build', '--prefix', 'client']
-      : ['run', 'build', '--prefix', 'client'];
-
-  const buildProcess = spawnSync(npmExecutable, buildArgs, {
+  const buildProcess = spawnSyncNpm(['run', 'build', '--prefix', 'client'], {
     stdio: 'inherit',
   });
 
+  if (buildProcess.error) {
+    throw buildProcess.error;
+  }
+
   if (buildProcess.status !== 0) {
-    throw new Error('Client build failed');
+    throw new Error(`Client build failed with exit code ${buildProcess.status ?? 'unknown'}`);
   }
 
   console.log('✓ Build complete');
@@ -160,25 +123,22 @@ const buildIfNeeded = async () => {
 const startPreview = () => {
   console.log('Starting preview server...');
 
-  const client = spawn(
-    npmExecutable,
-    process.platform === 'win32'
-      ? [
-          npmCliPath,
-          'run',
-          'preview',
-          '--prefix',
-          'client',
-          '--',
-          '--host',
-          '127.0.0.1',
-          '--port',
-          port,
-        ]
-      : ['run', 'preview', '--prefix', 'client', '--', '--host', '127.0.0.1', '--port', port],
-    {
+  const client = spawnNpm(
+    [
+      'run',
+      'preview',
+      '--prefix',
+      'client',
+      '--',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      port,
+      '--strictPort',
+    ],
+    getProcessTreeSpawnOptions({
       stdio: ['ignore', 'pipe', 'pipe'],
-    },
+    }),
   );
 
   let clientLogs = '';
@@ -190,6 +150,36 @@ const startPreview = () => {
   });
 
   return { client, logs: () => clientLogs };
+};
+
+const isExpectedMockedServerError = (message) =>
+  message.includes('Failed to load resource: the server responded with a status of 500') &&
+  message.includes('Internal Server Error');
+
+const createCheckedPage = async (browser, scenarioName, options = {}) => {
+  const page = await browser.newPage();
+  const browserErrors = [];
+  const allowConsoleError = options.allowConsoleError ?? (() => false);
+
+  page.on('console', (message) => {
+    const text = message.text();
+
+    if (message.type() === 'error' && !allowConsoleError(text)) {
+      browserErrors.push(`console.error: ${text}`);
+    }
+  });
+
+  page.on('pageerror', (error) => {
+    browserErrors.push(`pageerror: ${error.message}`);
+  });
+
+  const assertNoBrowserErrors = () => {
+    if (browserErrors.length === 0) return;
+
+    throw new Error(`${scenarioName} browser errors:\n${browserErrors.join('\n')}`);
+  };
+
+  return { page, assertNoBrowserErrors };
 };
 
 const seedAuthState = async (page) => {
@@ -213,9 +203,7 @@ const seedAuthState = async (page) => {
       }),
     );
 
-    // Set tokens directly
     storage.setItem('accessToken', 'mock-access-token');
-    storage.setItem('refreshToken', 'mock-refresh-token');
   });
 
   console.log('✓ Auth state seeded');
@@ -266,7 +254,7 @@ const setupRouteMocks = async (page, forceError = false) => {
 const runHappyPath = async (browser) => {
   console.log('\n=== RUNNING HAPPY PATH ===');
 
-  const page = await browser.newPage();
+  const { page, assertNoBrowserErrors } = await createCheckedPage(browser, 'Happy path');
 
   try {
     // Setup mocks
@@ -321,6 +309,8 @@ const runHappyPath = async (browser) => {
     });
     console.log('✓ Screenshot saved to .sisyphus/evidence/task-1-admin-tests-ia-happy.png');
 
+    assertNoBrowserErrors();
+
     console.log('\n✅ HAPPY PATH PASSED');
   } finally {
     await page.close();
@@ -330,7 +320,9 @@ const runHappyPath = async (browser) => {
 const runErrorScenario = async (browser) => {
   console.log('\n=== RUNNING ERROR SCENARIO ===');
 
-  const page = await browser.newPage();
+  const { page, assertNoBrowserErrors } = await createCheckedPage(browser, 'Error scenario', {
+    allowConsoleError: isExpectedMockedServerError,
+  });
 
   try {
     // Setup mocks with 500 error
@@ -358,10 +350,6 @@ const runErrorScenario = async (browser) => {
 
     console.log(`   Error indicators present: ${hasErrorState ? '✓' : '✗'}`);
 
-    if (!hasErrorState) {
-      console.warn('Warning: No explicit error state detected in UI');
-    }
-
     // Take screenshot of error state
     await page.screenshot({
       path: '.sisyphus/evidence/task-1-admin-tests-ia-error.png',
@@ -369,7 +357,13 @@ const runErrorScenario = async (browser) => {
     });
     console.log('✓ Screenshot saved to .sisyphus/evidence/task-1-admin-tests-ia-error.png');
 
-    console.log('\n✅ ERROR SCENARIO COMPLETED (500 error simulated)');
+    if (!hasErrorState) {
+      throw new Error('No explicit error state detected in UI');
+    }
+
+    assertNoBrowserErrors();
+
+    console.log('\n✅ ERROR SCENARIO PASSED (500 error simulated)');
   } finally {
     await page.close();
   }
@@ -377,16 +371,16 @@ const runErrorScenario = async (browser) => {
 
 const main = async () => {
   let previewProcess = null;
-  let previewLogs = '';
+  let getPreviewLogs = () => '';
 
   try {
-    // Step 1: Build if needed
-    await buildIfNeeded();
+    // Step 1: Build current client assets
+    await buildClient();
 
     // Step 2: Start preview
     const { client, logs } = startPreview();
     previewProcess = client;
-    previewLogs = logs;
+    getPreviewLogs = logs;
 
     // Step 3: Wait for client to be ready
     await waitForClient(targetUrl, 30000);
@@ -411,6 +405,7 @@ const main = async () => {
     console.error('\n❌ SCRIPT FAILED:');
     console.error(error);
 
+    const previewLogs = getPreviewLogs();
     if (previewLogs) {
       console.error('\n--- PREVIEW LOGS ---');
       console.error(previewLogs);
@@ -420,7 +415,7 @@ const main = async () => {
     process.exit(1);
   } finally {
     if (previewProcess) {
-      await stopProcess(previewProcess);
+      await stopProcessTree(previewProcess);
     }
   }
 };

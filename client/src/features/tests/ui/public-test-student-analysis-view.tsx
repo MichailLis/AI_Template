@@ -1,12 +1,8 @@
-import { TestAnalysisResultView } from '@/features/tests';
+import { ProfOrientationResult } from './polus/prof-orientation-result';
+import { parseProfOrientationSummary } from './polus/prof-orientation-summary';
+import { TestAnalysisResultView } from './test-analysis-result-view';
 
-import { ProfOrientationResult } from './polus/polus-prof-orientation-result';
-import { parseProfOrientationSummary } from './polus/polus-prof-orientation-summary';
-
-import type { AnalysisPayload } from '@/features/tests';
-
-import './public-theme.css';
-import './polus/polus-public-theme.css';
+import type { AnalysisPayload } from '../lib/test-analysis-result-parser';
 
 interface PublicTestStudentAnalysisViewProps {
   analysis: AnalysisPayload | null;

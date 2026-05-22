@@ -2,6 +2,7 @@ import {
   TestsTopicDetailResponseSchema,
   TestsTopicListQuerySchema,
   UpdateTestsTopicDraftSchema,
+  UpsertTestsQuestionSchema,
 } from './tests.dto';
 
 describe('TestsTopicListQuerySchema', () => {
@@ -66,5 +67,29 @@ describe('TestsTopicDetailResponseSchema', () => {
 
     expect(result.draft.analysisPromptVersion?.id).toBe(42);
     expect(result.published?.analysisPromptVersion).toBeNull();
+  });
+});
+
+describe('UpsertTestsQuestionSchema', () => {
+  it('accepts question settings only as JSON objects', () => {
+    expect(() =>
+      UpsertTestsQuestionSchema.parse({
+        type: 'SLIDER',
+        title: 'Шкала интереса',
+        settings: {
+          min: 1,
+          max: 10,
+          step: 1,
+        },
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      UpsertTestsQuestionSchema.parse({
+        type: 'SLIDER',
+        title: 'Шкала интереса',
+        settings: 'not-an-object',
+      }),
+    ).toThrow();
   });
 });

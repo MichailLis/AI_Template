@@ -1,10 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { ensureAdminAccess } from '../admin/admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { ProfessionAtlasSettingsService } from './profession-atlas-settings.service';
 
-jest.mock('../admin/admin-access.utils', () => ({
+jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 

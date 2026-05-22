@@ -1,5 +1,7 @@
 import {
   PublicLinkAccessResponseSchema,
+  PublicTestQuestionSchema,
+  PublicSessionAnalysisSchema,
   PublicSessionResultResponseSchema,
   PublicSessionStateSchema,
   PublicSessionStartRequestSchema,
@@ -123,7 +125,6 @@ describe('tests public DTO schemas', () => {
         providerMode: 'STUB',
         status: 'READY',
         summary: null,
-        rawText: null,
         errorMessage: null,
         generatedAt: '2026-05-14T10:30:01.000Z',
       },
@@ -132,5 +133,76 @@ describe('tests public DTO schemas', () => {
 
     expect(session.publicTemplate).toBe('POLUS');
     expect(result.publicTemplate).toBe('POLUS');
+  });
+
+  it('strips internal raw analysis text from public analysis payloads', () => {
+    const result = PublicSessionAnalysisSchema.parse({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: null,
+      rawText: 'internal provider output',
+      errorMessage: null,
+      generatedAt: '2026-05-14T10:30:01.000Z',
+    });
+
+    expect(result).not.toHaveProperty('rawText');
+  });
+
+  it('exposes public analysis summaries only as JSON objects or null', () => {
+    expect(() =>
+      PublicSessionAnalysisSchema.parse({
+        providerMode: 'LLM',
+        status: 'READY',
+        summary: {
+          introduction: 'Краткий результат',
+        },
+        errorMessage: null,
+        generatedAt: '2026-05-14T10:30:01.000Z',
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      PublicSessionAnalysisSchema.parse({
+        providerMode: 'LLM',
+        status: 'READY',
+        summary: 'not-an-object',
+        errorMessage: null,
+        generatedAt: '2026-05-14T10:30:01.000Z',
+      }),
+    ).toThrow();
+  });
+
+  it('exposes question settings only as JSON objects or null', () => {
+    expect(() =>
+      PublicTestQuestionSchema.parse({
+        id: 1,
+        type: 'SLIDER',
+        title: 'Шкала интереса',
+        description: null,
+        required: true,
+        order: 1,
+        settings: {
+          min: 1,
+          max: 10,
+          step: 1,
+        },
+        options: [],
+        sliderBands: [],
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      PublicTestQuestionSchema.parse({
+        id: 1,
+        type: 'SLIDER',
+        title: 'Шкала интереса',
+        description: null,
+        required: true,
+        order: 1,
+        settings: 'not-an-object',
+        options: [],
+        sliderBands: [],
+      }),
+    ).toThrow();
   });
 });

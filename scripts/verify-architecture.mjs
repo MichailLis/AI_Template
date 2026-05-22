@@ -45,6 +45,8 @@ const toRouteSegment = (route) => route.replace(/^\/+/, '').split('/')[0];
 
 const hasToken = (source, token) => new RegExp(`\\b${token}\\b`).test(source);
 
+const httpMethods = new Set(['delete', 'get', 'head', 'options', 'patch', 'post', 'put']);
+
 const toPosixPath = (value) => value.replace(/\\/g, '/');
 
 const normalizeManifestPath = (value) => toPosixPath(value).replace(/\/+$/, '');
@@ -336,6 +338,125 @@ const getLayerInfo = (clientPath, layers) => {
 
 const hasPrefixMatch = (value, prefixes) => prefixes.some((prefix) => value.startsWith(prefix));
 
+const hasPathPrefixMatch = (value, prefixes) =>
+  prefixes.some((prefix) => value === prefix || value.startsWith(`${prefix}/`));
+
+const collectFeatureFrontendOwnedRoots = (features) =>
+  unique(
+    features.flatMap((feature) => asArray(feature.ownedRoots?.frontend).map(normalizeManifestPath)),
+  );
+
+const verifyWidgetInventory = async (errors, features) => {
+  const widgetEntries = await readDirFromRoot('client/src/widgets', true);
+  const declaredWidgetRoots = new Set(
+    collectFeatureFrontendOwnedRoots(features).filter((ownedRoot) =>
+      /^client\/src\/widgets\/[^/]+$/.test(ownedRoot),
+    ),
+  );
+
+  for (const entry of widgetEntries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const widgetRoot = `client/src/widgets/${entry.name}`;
+    const nestedEntries = await readDirFromRoot(widgetRoot);
+
+    if (nestedEntries.length > 0 && !declaredWidgetRoots.has(widgetRoot)) {
+      errors.push(
+        `${widgetRoot}: widget directory is not declared in manifest ownedRoots.frontend`,
+      );
+    }
+  }
+};
+
+const getOpenApiInventoryPrefixes = (errors, feature, featurePrefix) => {
+  const verification = getFeatureVerification(errors, feature, featurePrefix);
+
+  if (verification.requireOpenApiOperations !== true) {
+    return [];
+  }
+
+  if (
+    feature.openApiInventoryPrefixes !== undefined &&
+    !Array.isArray(feature.openApiInventoryPrefixes)
+  ) {
+    errors.push(`${featurePrefix}: openApiInventoryPrefixes must be an array`);
+    return [];
+  }
+
+  const configuredPrefixes = asArray(feature.openApiInventoryPrefixes);
+  const prefixes = configuredPrefixes.length > 0 ? configuredPrefixes : [feature.route];
+
+  return prefixes
+    .filter((prefix) => {
+      if (typeof prefix !== 'string' || prefix.trim().length === 0) {
+        errors.push(`${featurePrefix}: openApiInventoryPrefixes entries must be non-empty strings`);
+        return false;
+      }
+
+      return true;
+    })
+    .map((prefix) => prefix.replace(/\/+$/, ''));
+};
+
+const verifyOpenApiInventoryCoverage = (errors, openApiDoc, features) => {
+  const inventoryPrefixes = unique(
+    features.flatMap((feature) =>
+      getOpenApiInventoryPrefixes(errors, feature, `feature:${feature.name}`),
+    ),
+  );
+
+  if (inventoryPrefixes.length === 0) {
+    return;
+  }
+
+  if (!openApiDoc) {
+    errors.push(
+      'template/features.manifest.json: server/openapi.json is required for OpenAPI inventory coverage',
+    );
+    return;
+  }
+
+  const declaredOperations = new Map();
+
+  for (const feature of features) {
+    for (const expectedOperation of asArray(feature.openApiOperations)) {
+      if (!isObject(expectedOperation) || typeof expectedOperation.path !== 'string') {
+        continue;
+      }
+
+      const methods = declaredOperations.get(expectedOperation.path) ?? new Set();
+
+      for (const method of asArray(expectedOperation.methods)) {
+        methods.add(String(method).toLowerCase());
+      }
+
+      declaredOperations.set(expectedOperation.path, methods);
+    }
+  }
+
+  for (const [operationPath, pathItem] of Object.entries(openApiDoc.paths ?? {})) {
+    if (!hasPathPrefixMatch(operationPath, inventoryPrefixes) || !isObject(pathItem)) {
+      continue;
+    }
+
+    for (const method of Object.keys(pathItem)) {
+      const normalizedMethod = method.toLowerCase();
+
+      if (!httpMethods.has(normalizedMethod)) {
+        continue;
+      }
+
+      if (!declaredOperations.get(operationPath)?.has(normalizedMethod)) {
+        errors.push(
+          `OpenAPI inventory violation: ${normalizedMethod.toUpperCase()} ${operationPath} is not declared in template/features.manifest.json openApiOperations`,
+        );
+      }
+    }
+  }
+};
+
 const hasLayerBypass = (fromLayer, toLayer, rules) =>
   rules.some((rule) => rule.from === fromLayer && rule.to === toLayer);
 
@@ -398,10 +519,7 @@ const verifyFsdRules = async (errors) => {
         continue;
       }
 
-      const allowedLayers = new Set([
-        sourceInfo.layer,
-        ...(allowedImports[sourceInfo.layer] ?? []),
-      ]);
+      const allowedLayers = new Set(allowedImports[sourceInfo.layer] ?? []);
 
       if (
         !allowedLayers.has(targetInfo.layer) &&
@@ -657,6 +775,8 @@ const verify = async () => {
     }
   }
 
+  await verifyWidgetInventory(errors, features);
+  verifyOpenApiInventoryCoverage(errors, openApiDoc, features);
   await verifyFsdRules(errors);
 
   if (errors.length > 0) {

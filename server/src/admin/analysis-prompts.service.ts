@@ -5,7 +5,7 @@ import type { Prisma } from '@prisma/client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
-import { ensureAdminAccess } from './admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { generateOpenRouterPrompt } from './openrouter.client';
 
 import type {

@@ -19,18 +19,41 @@
         "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features.",
         "candidateExtractions": ["analysis-prompts"]
       },
+      "verification": {
+        "requireOwnedRoots": true,
+        "requireOpenApiOperations": true
+      },
+      "openApiInventoryPrefixes": ["/admin"],
+      "ownedRoots": {
+        "backend": ["server/src/admin", "server/src/app-settings", "server/src/openrouter"],
+        "frontend": [
+          "client/src/features/admin",
+          "client/src/widgets/admin-page-layout",
+          "client/src/widgets/admin-prompts-workspace",
+          "client/src/widgets/admin-settings-workspace",
+          "client/src/widgets/admin-users-workspace"
+        ]
+      },
       "backendFiles": [
         "server/src/admin/admin.module.ts",
         "server/src/admin/admin.controller.ts",
+        "server/src/admin/admin-settings.controller.ts",
         "server/src/admin/admin.service.ts",
+        "server/src/admin/analysis-prompts.controller.ts",
+        "server/src/admin/analysis-prompts.service.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
         "server/src/admin/dto/admin-prompt-models-response.dto.ts",
         "server/src/admin/dto/admin-prompt-response.dto.ts",
+        "server/src/admin/dto/admin-settings.dto.ts",
         "server/src/admin/dto/admin-users-query.dto.ts",
         "server/src/admin/dto/admin-user-response.dto.ts",
         "server/src/admin/dto/admin-users-response.dto.ts",
+        "server/src/admin/dto/analysis-prompt.dto.ts",
         "server/src/admin/dto/generate-prompt.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
+        "server/src/admin/openrouter.client.ts",
+        "server/src/admin/openrouter.utils.ts",
+        "server/src/app-settings/profession-atlas-settings.service.ts",
         "server/src/openrouter/openrouter.module.ts",
         "server/src/openrouter/openrouter-api-key.service.ts"
       ],
@@ -40,12 +63,75 @@
         "client/src/pages/admin/admin-users-page.tsx",
         "client/src/pages/admin/admin-analytics-page.tsx",
         "client/src/pages/admin/admin-prompts-page.tsx",
+        "client/src/pages/admin/admin-settings-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",
         "client/src/features/admin/ui/admin-overview.tsx",
         "client/src/shared/ui/table.tsx",
         "client/src/shared/ui/badge.tsx"
       ],
-      "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts"
+      "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts",
+      "openApiOperations": [
+        {
+          "path": "/admin",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users/{id}/role",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts",
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/{promptId}",
+          "methods": ["patch", "delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/models",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/generate",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/simulate",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/test-questions",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/versions/{versionId}/publish",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/openrouter",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/profession-atlas",
+          "methods": ["get", "patch"],
+          "protected": true
+        }
+      ]
     },
     {
       "name": "tests",
@@ -69,6 +155,7 @@
         "requireOwnedRoots": true,
         "requireOpenApiOperations": true
       },
+      "openApiInventoryPrefixes": ["/admin/tests", "/tests/public"],
       "ownedRoots": {
         "backend": ["server/src/tests"],
         "frontend": [
@@ -114,6 +201,21 @@
         {
           "path": "/admin/tests/{topicId}/restore",
           "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/topics/{topicId}/analytics/summary",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/topics/{topicId}/analytics/export.xlsx",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/topics/{topicId}/analytics/export.pdf",
+          "methods": ["get"],
           "protected": true
         },
         {

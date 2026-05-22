@@ -2,6 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 const NonEmptyStringSchema = z.string().trim().min(1);
+export const TestAnalysisSummarySchema = z.object({}).catchall(z.unknown());
 const MAX_SKILLS_COUNT = 6;
 const MAX_THINKING_STRENGTHS_COUNT = 4;
 const MAX_TRAITS_COUNT = 6;

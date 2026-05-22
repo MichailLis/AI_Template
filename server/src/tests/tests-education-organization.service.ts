@@ -7,7 +7,13 @@ import type {
   AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
 } from './dto/tests-links.dto';
-import { ensureTestsAdminAccess } from './tests-admin-access.utils';
+import { ensureAdminAccess } from '../common/authz/admin-access.utils';
+
+const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
+  'Учебное заведение с таким названием уже существует';
+
+const isPrismaUniqueConstraintError = (error: unknown) =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 
 @Injectable()
 export class TestsEducationOrganizationService {
@@ -161,7 +167,7 @@ export class TestsEducationOrganizationService {
     userId: number,
     query: AdminEducationOrganizationsListQueryDto = {},
   ) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const total = await this.prisma.educationOrganization.count();
     const isPaginated = query.page !== undefined || query.limit !== undefined;
@@ -203,7 +209,7 @@ export class TestsEducationOrganizationService {
   }
 
   async createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const name = dto.name.trim();
 
@@ -218,7 +224,7 @@ export class TestsEducationOrganizationService {
     });
 
     if (existing) {
-      throw new BadRequestException('Учебное заведение с таким названием уже существует');
+      throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
     }
 
     const validationConfig = this.normalizeGroupValidationConfig({
@@ -228,11 +234,9 @@ export class TestsEducationOrganizationService {
       groupValidationHint: dto.groupValidationHint,
     });
 
-    const created = await this.prisma.educationOrganization.create({
-      data: {
-        name,
-        ...validationConfig,
-      },
+    const created = await this.createEducationOrganizationRecord({
+      name,
+      ...validationConfig,
     });
 
     const statsByOrganizationId = await this.getOrganizationStatsByIds([created.id]);
@@ -252,7 +256,7 @@ export class TestsEducationOrganizationService {
     organizationId: number,
     dto: AdminUpdateEducationOrganizationDto,
   ) {
-    await ensureTestsAdminAccess(this.prisma, userId);
+    await ensureAdminAccess(this.prisma, userId);
 
     const existing = await this.prisma.educationOrganization.findUnique({
       where: { id: organizationId },
@@ -288,7 +292,7 @@ export class TestsEducationOrganizationService {
       });
 
       if (duplicate) {
-        throw new BadRequestException('Учебное заведение с таким названием уже существует');
+        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
       }
     }
 
@@ -308,13 +312,10 @@ export class TestsEducationOrganizationService {
           : existing.groupValidationHint,
     });
 
-    const updated = await this.prisma.educationOrganization.update({
-      where: { id: organizationId },
-      data: {
-        ...(dto.name !== undefined ? { name: nextName } : {}),
-        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...validationConfig,
-      },
+    const updated = await this.updateEducationOrganizationRecord(organizationId, {
+      ...(dto.name !== undefined ? { name: nextName } : {}),
+      ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+      ...validationConfig,
     });
 
     const statsByOrganizationId = await this.getOrganizationStatsByIds([updated.id]);
@@ -327,5 +328,35 @@ export class TestsEducationOrganizationService {
         attemptsCount: 0,
       },
     );
+  }
+
+  private async createEducationOrganizationRecord(data: Prisma.EducationOrganizationCreateInput) {
+    try {
+      return await this.prisma.educationOrganization.create({ data });
+    } catch (error) {
+      if (isPrismaUniqueConstraintError(error)) {
+        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+      }
+
+      throw error;
+    }
+  }
+
+  private async updateEducationOrganizationRecord(
+    organizationId: number,
+    data: Prisma.EducationOrganizationUpdateInput,
+  ) {
+    try {
+      return await this.prisma.educationOrganization.update({
+        where: { id: organizationId },
+        data,
+      });
+    } catch (error) {
+      if (isPrismaUniqueConstraintError(error)) {
+        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+      }
+
+      throw error;
+    }
   }
 }

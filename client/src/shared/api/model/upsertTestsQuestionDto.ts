@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { UpsertTestsQuestionDtoOptionsItem } from './upsertTestsQuestionDtoOptionsItem';
+import type { UpsertTestsQuestionDtoSettings } from './upsertTestsQuestionDtoSettings';
 import type { UpsertTestsQuestionDtoSliderBandsItem } from './upsertTestsQuestionDtoSliderBandsItem';
 import type { UpsertTestsQuestionDtoType } from './upsertTestsQuestionDtoType';
 
@@ -22,7 +23,7 @@ export interface UpsertTestsQuestionDto {
    */
   description?: string | null;
   required?: boolean;
-  settings?: unknown;
+  settings?: UpsertTestsQuestionDtoSettings;
   options?: UpsertTestsQuestionDtoOptionsItem[];
   sliderBands?: UpsertTestsQuestionDtoSliderBandsItem[];
 }

@@ -1,5 +1,15 @@
 import type { PublicTestAnswerDraft, PublicTestQuestion } from './public-test-run.types';
 
+type PublicTestAnswerPayload = string | string[] | number;
+
+const isPublicTestAnswerPayload = (value: unknown): value is PublicTestAnswerPayload => {
+  return (
+    typeof value === 'string' ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (Array.isArray(value) && value.every((item) => typeof item === 'string'))
+  );
+};
+
 export const hasMeaningfulQuestionAnswer = (
   questionType: PublicTestQuestion['type'],
   value: unknown,
@@ -30,9 +40,36 @@ export const buildSessionAnswers = (
   questions: PublicTestQuestion[],
   mergedAnswers: PublicTestAnswerDraft,
 ) =>
-  questions
-    .map((question) => ({
-      questionId: question.id,
-      answerPayload: getEffectiveQuestionAnswer(question, mergedAnswers),
-    }))
-    .filter((item) => item.answerPayload !== undefined);
+  questions.reduce<Array<{ questionId: number; answerPayload: PublicTestAnswerPayload }>>(
+    (answers, question) => {
+      const answerPayload = getEffectiveQuestionAnswer(question, mergedAnswers);
+
+      if (!isPublicTestAnswerPayload(answerPayload)) {
+        return answers;
+      }
+
+      answers.push({
+        questionId: question.id,
+        answerPayload,
+      });
+      return answers;
+    },
+    [],
+  );
+
+export const reconcileAnswerDraftAfterSave = (
+  answerDraft: PublicTestAnswerDraft,
+  savedAnswers: Array<{ questionId: number; answerPayload: PublicTestAnswerPayload }>,
+) => {
+  if (savedAnswers.length === 0) {
+    return answerDraft;
+  }
+
+  return savedAnswers.reduce<PublicTestAnswerDraft>(
+    (nextDraft, answer) => ({
+      ...nextDraft,
+      [answer.questionId]: answer.answerPayload,
+    }),
+    { ...answerDraft },
+  );
+};
