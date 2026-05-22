@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { parseApiError } from '@/features/tests';
 import { useTestsControllerListTopics } from '@/shared/api/generated/tests/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 export type ListMode = 'active' | 'archived';
 

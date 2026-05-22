@@ -15,7 +15,7 @@ export { useAiTestGeneration } from './model/use-ai-test-generation';
 export { useDraftAutosave } from './model/use-draft-autosave';
 export { useQuestionEditor } from './model/use-question-editor';
 
-export { hasDraftEdits, parseApiError } from './lib/tests-utils';
+export { hasDraftEdits } from './lib/tests-utils';
 export { parseAnalysisResult } from './lib/test-analysis-result-parser';
 export { getProfOrientationLlmStatus } from './ui/polus/prof-orientation-llm-data';
 export { parseProfOrientationSummary } from './ui/polus/prof-orientation-summary';

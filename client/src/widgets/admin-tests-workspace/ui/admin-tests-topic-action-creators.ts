@@ -1,14 +1,10 @@
 import { toast } from 'sonner';
 
-import {
-  parseApiError,
-  type TestTopicListItem,
-  type useDraftAutosave,
-  type useQuestionEditor,
-} from '@/features/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 import { resolveNextTopicAfterDelete } from './admin-tests-workspace-actions.helpers';
 
+import type { TestTopicListItem, useDraftAutosave, useQuestionEditor } from '@/features/tests';
 import type {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,

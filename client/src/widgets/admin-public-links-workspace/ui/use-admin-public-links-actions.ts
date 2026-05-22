@@ -1,6 +1,5 @@
 import { toast } from 'sonner';
 
-import { parseApiError } from '@/features/tests';
 import {
   useTestsAdminPublicLinksControllerCreatePublicLink,
   useTestsAdminPublicLinksControllerDeletePublicLink,
@@ -8,6 +7,7 @@ import {
   useTestsAdminPublicLinksControllerRestorePublicLink,
   useTestsAdminPublicLinksControllerUpdatePublicLink,
 } from '@/shared/api/generated/tests/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 import {
   getShortLinkQrUrl,

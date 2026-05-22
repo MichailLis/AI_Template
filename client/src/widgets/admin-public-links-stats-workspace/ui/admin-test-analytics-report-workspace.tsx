@@ -1,16 +1,10 @@
+import { formatDateTimeOrDash } from '@/shared/lib/date-format';
+
 import { TestAnalyticsReportFiltersCard } from './public-links-stats-filters-card';
 import { TestAnalyticsBreakdownTables } from './test-analytics-breakdown-table';
 import { TestAnalyticsExportActions } from './test-analytics-export-actions';
 import { TestAnalyticsSummaryCard } from './test-analytics-summary-card';
 import { useAdminTestAnalyticsReportWorkspace } from './use-admin-public-links-stats-workspace';
-
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return '—';
-  }
-
-  return new Date(value).toLocaleString();
-};
 
 export function AdminTestAnalyticsReportWorkspace() {
   const {
@@ -77,7 +71,10 @@ export function AdminTestAnalyticsReportWorkspace() {
         }
       />
 
-      <TestAnalyticsBreakdownTables summary={analyticsSummary} formatDateTime={formatDateTime} />
+      <TestAnalyticsBreakdownTables
+        summary={analyticsSummary}
+        formatDateTime={formatDateTimeOrDash}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { hasDraftEdits, parseApiError, useDraftAutosave } from '@/features/tests';
+import { hasDraftEdits, useDraftAutosave } from '@/features/tests';
 import { useTestsControllerGetTopicDraft } from '@/shared/api/generated/tests/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 interface RefetchableQuery {
   refetch: () => unknown;

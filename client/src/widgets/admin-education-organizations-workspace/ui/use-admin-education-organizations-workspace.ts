@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { parseApiError } from '@/features/tests';
 import {
   useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
   useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
 } from '@/shared/api/generated/tests/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 import {
   mapOrganizationToEditorValues,

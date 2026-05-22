@@ -1,3 +1,6 @@
+import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
+import { formatDateTime } from '@/shared/lib/date-format';
+
 interface UsersQueryParamsInput {
   page: number;
   limit: number;
@@ -7,39 +10,9 @@ interface UsersQueryParamsInput {
   roleFilter: 'ALL' | 'USER' | 'ADMIN';
 }
 
-export const formatDateTime = (value: string) => {
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
+export { formatDateTime };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
-export const getApiErrorMessage = (error: unknown) => {
-  if (!isRecord(error) || !('response' in error) || !isRecord(error.response)) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  if (!('data' in error.response) || !isRecord(error.response.data)) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  const data = error.response.data;
-
-  if ('error' in data && isRecord(data.error) && 'message' in data.error) {
-    return String(data.error.message);
-  }
-
-  if ('message' in data) {
-    return String(data.message);
-  }
-
-  return 'Не удалось выполнить запрос';
-};
+export const getApiErrorMessage = (error: unknown) => getSharedApiErrorMessage(error);
 
 export const buildUsersQueryParams = ({
   page,

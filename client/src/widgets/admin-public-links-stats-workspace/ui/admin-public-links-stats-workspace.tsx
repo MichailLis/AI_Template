@@ -1,15 +1,9 @@
+import { formatDateTimeOrDash } from '@/shared/lib/date-format';
+
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
 import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
 import { PublicLinksStatsFiltersCard } from './public-links-stats-filters-card';
 import { useAdminPublicLinksStatsWorkspace } from './use-admin-public-links-stats-workspace';
-
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return '—';
-  }
-
-  return new Date(value).toLocaleString();
-};
 
 const toPrettyJson = (value: unknown) => {
   try {
@@ -68,7 +62,7 @@ export function AdminPublicLinksStatsWorkspace() {
         page={publicAttemptsPage}
         total={publicAttemptsTotal}
         totalPages={publicAttemptsTotalPages}
-        formatDateTime={formatDateTime}
+        formatDateTime={formatDateTimeOrDash}
         onOpenAttemptDetails={handleOpenAttemptDetails}
         onPreviousPage={handlePreviousAttemptsPage}
         onNextPage={handleNextAttemptsPage}
@@ -80,7 +74,7 @@ export function AdminPublicLinksStatsWorkspace() {
         detailAttempt={detailAttempt ?? null}
         isLoading={attemptDetailQuery.isLoading}
         onClose={handleCloseAttemptDetails}
-        formatDateTime={formatDateTime}
+        formatDateTime={formatDateTimeOrDash}
         toPrettyJson={toPrettyJson}
       />
     </div>
