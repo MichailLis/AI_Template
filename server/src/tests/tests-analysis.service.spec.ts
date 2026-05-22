@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../admin/openrouter.client';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
@@ -37,7 +37,7 @@ type AnalysisUpdateArgs = {
   };
 };
 
-jest.mock('../admin/openrouter.client', () => ({
+jest.mock('../openrouter/openrouter.client', () => ({
   fetchOpenRouterModels: jest.fn(),
   generateOpenRouterPrompt: jest.fn(),
   resolveOpenRouterTimeoutMs: jest.fn(() => 120_000),

@@ -550,7 +550,9 @@ const verify = async () => {
   const manifestRaw = await readFromRoot('template/features.manifest.json');
   const manifest = JSON.parse(manifestRaw);
   const manifestFeatures = manifest.features ?? [];
+  const manifestIntegrationModules = manifest.integrationModules ?? [];
   const features = [];
+  const integrationModules = [];
 
   if (!Array.isArray(manifestFeatures)) {
     errors.push('template/features.manifest.json: features must be an array');
@@ -562,6 +564,21 @@ const verify = async () => {
       }
 
       features.push(feature);
+    }
+  }
+
+  if (!Array.isArray(manifestIntegrationModules)) {
+    errors.push('template/features.manifest.json: integrationModules must be an array');
+  } else {
+    for (const [index, integrationModule] of manifestIntegrationModules.entries()) {
+      if (!isObject(integrationModule)) {
+        errors.push(
+          `template/features.manifest.json: integrationModules[${index}] must be an object`,
+        );
+        continue;
+      }
+
+      integrationModules.push(integrationModule);
     }
   }
 
@@ -653,11 +670,57 @@ const verify = async () => {
   const openApiExists = await existsFromRoot('server/openapi.json');
   const openApiDoc = openApiExists ? JSON.parse(await readFromRoot('server/openapi.json')) : null;
 
+  for (const integrationModule of integrationModules) {
+    const integrationPrefix = `integration:${integrationModule.name ?? '<unknown>'}`;
+
+    if (typeof integrationModule.name !== 'string' || integrationModule.name.trim().length === 0) {
+      errors.push(`${integrationPrefix}: name must be a non-empty string`);
+    }
+
+    if (
+      typeof integrationModule.backendModule !== 'string' ||
+      integrationModule.backendModule.trim().length === 0
+    ) {
+      errors.push(`${integrationPrefix}: backendModule must be a non-empty string`);
+    }
+
+    if (integrationModule.ownedRoots !== undefined && !isObject(integrationModule.ownedRoots)) {
+      errors.push(`${integrationPrefix}: ownedRoots must be an object with backend array`);
+    }
+
+    const backendOwnedRoots = asArray(integrationModule.ownedRoots?.backend);
+    if (backendOwnedRoots.length === 0) {
+      errors.push(`${integrationPrefix}: expected backend ownedRoots`);
+    }
+
+    for (const ownedRoot of backendOwnedRoots) {
+      await validateOwnedRoot(errors, integrationPrefix, 'backend', ownedRoot);
+    }
+
+    if (
+      integrationModule.backendFiles !== undefined &&
+      !Array.isArray(integrationModule.backendFiles)
+    ) {
+      errors.push(`${integrationPrefix}: backendFiles must be an array`);
+    }
+
+    for (const filePath of asArray(integrationModule.backendFiles)) {
+      if (!(await existsFromRoot(filePath))) {
+        errors.push(`${integrationPrefix}: missing backend file ${filePath}`);
+      }
+    }
+  }
+
+  const integrationBackendFiles = integrationModules.flatMap(
+    (integrationModule) => integrationModule.backendFiles ?? [],
+  );
+
   const allowedBackendModuleFiles = new Set([
     'server/src/auth/auth.module.ts',
     ...features
       .flatMap((feature) => feature.backendFiles ?? [])
       .filter((filePath) => filePath.endsWith('.module.ts')),
+    ...integrationBackendFiles.filter((filePath) => filePath.endsWith('.module.ts')),
   ]);
   const serverSrcEntries = await readDirFromRoot('server/src', true);
 
