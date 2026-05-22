@@ -22,6 +22,32 @@ describe('getApiErrorMessage', () => {
       'Request failed',
     );
   });
+
+  it('uses the fallback for responses without structured data', () => {
+    expect(
+      getApiErrorMessage(
+        {
+          response: {
+            status: 500,
+          },
+        },
+        { fallbackMessage: 'Request failed' },
+      ),
+    ).toBe('Request failed');
+  });
+
+  it('uses the fallback for non-record response data', () => {
+    expect(
+      getApiErrorMessage(
+        {
+          response: {
+            data: 'Internal server error',
+          },
+        },
+        { fallbackMessage: 'Request failed' },
+      ),
+    ).toBe('Request failed');
+  });
 });
 
 describe('parseApiError', () => {

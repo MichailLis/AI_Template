@@ -15,4 +15,8 @@ describe('formatDateTimeOrDash', () => {
     expect(formatDateTimeOrDash(null)).toBe('—');
     expect(formatDateTimeOrDash(undefined)).toBe('—');
   });
+
+  it('keeps empty string formatting behavior', () => {
+    expect(formatDateTimeOrDash('')).toBe(new Date('').toLocaleString());
+  });
 });

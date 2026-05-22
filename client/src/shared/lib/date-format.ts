@@ -7,7 +7,7 @@ export const formatDateTime = (value: string) => {
 };
 
 export const formatDateTimeOrDash = (value: string | null | undefined) => {
-  if (!value) {
+  if (value === null || value === undefined) {
     return '—';
   }
 
