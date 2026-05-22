@@ -224,6 +224,8 @@ Current ownership map:
   contracts, but must not deep-import admin prompt internals.
 - `openrouter` is infrastructure/integration code. Feature code must not import OpenRouter
   utilities through another feature module; expose integration services from the integration owner.
+- Integration-only backend modules such as `openrouter` are declared in
+  `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent
   product workflow and lifecycle.
 

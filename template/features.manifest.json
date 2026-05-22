@@ -6,6 +6,25 @@
   },
   "publicRoutes": ["/t/:code", "/t/:code/session/:sessionToken", "/t/:code/result/:sessionToken"],
   "generatedApiDirs": ["tests-public"],
+  "integrationModules": [
+    {
+      "name": "openrouter",
+      "backendModule": "OpenRouterModule",
+      "ownership": {
+        "kind": "integration",
+        "owns": ["OpenRouter API client", "OpenRouter API key resolution"]
+      },
+      "ownedRoots": {
+        "backend": ["server/src/openrouter"]
+      },
+      "backendFiles": [
+        "server/src/openrouter/openrouter.module.ts",
+        "server/src/openrouter/openrouter-api-key.service.ts",
+        "server/src/openrouter/openrouter.client.ts",
+        "server/src/openrouter/openrouter.utils.ts"
+      ]
+    }
+  ],
   "features": [
     {
       "name": "admin",
@@ -25,7 +44,7 @@
       },
       "openApiInventoryPrefixes": ["/admin"],
       "ownedRoots": {
-        "backend": ["server/src/admin", "server/src/app-settings", "server/src/openrouter"],
+        "backend": ["server/src/admin", "server/src/app-settings"],
         "frontend": [
           "client/src/features/admin",
           "client/src/widgets/admin-page-layout",
@@ -51,11 +70,7 @@
         "server/src/admin/dto/analysis-prompt.dto.ts",
         "server/src/admin/dto/generate-prompt.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
-        "server/src/openrouter/openrouter.client.ts",
-        "server/src/openrouter/openrouter.utils.ts",
-        "server/src/app-settings/profession-atlas-settings.service.ts",
-        "server/src/openrouter/openrouter.module.ts",
-        "server/src/openrouter/openrouter-api-key.service.ts"
+        "server/src/app-settings/profession-atlas-settings.service.ts"
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-page.tsx",
