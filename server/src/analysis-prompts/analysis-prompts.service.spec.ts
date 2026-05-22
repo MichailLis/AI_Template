@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 
 type PublishVersionUpdate = (args: {
@@ -17,6 +17,7 @@ jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('../openrouter/openrouter.client', () => ({
+  fetchOpenRouterModels: jest.fn(),
   generateOpenRouterPrompt: jest.fn(),
 }));
 
@@ -102,6 +103,7 @@ describe('AnalysisPromptsService', () => {
       openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
+    jest.mocked(fetchOpenRouterModels).mockReset();
     jest.mocked(generateOpenRouterPrompt).mockReset();
   });
 
@@ -121,6 +123,34 @@ describe('AnalysisPromptsService', () => {
       status: 'DRAFT',
       model: 'google/gemini-2.0-flash-exp:free',
     });
+  });
+
+  it('getPromptModels delegates through the OpenRouter integration', async () => {
+    const response = { defaultModel: 'openai/gpt-oss-20b:free', models: [] };
+    jest.mocked(fetchOpenRouterModels).mockResolvedValue(response);
+
+    await expect(service.getPromptModels(3)).resolves.toBe(response);
+
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    expect(openRouterApiKeyServiceMock.getOpenRouterApiKey).toHaveBeenCalled();
+    expect(fetchOpenRouterModels).toHaveBeenCalledWith(configMock, 'test-key');
+  });
+
+  it('generatePrompt delegates through the OpenRouter integration', async () => {
+    const dto = {
+      model: 'openai/gpt-oss-20b:free',
+      prompt: 'Return JSON',
+      temperature: 0.2,
+      responseFormat: 'json' as const,
+    };
+    const response = { model: dto.model, output: '{}' };
+    jest.mocked(generateOpenRouterPrompt).mockResolvedValue(response);
+
+    await expect(service.generatePrompt(3, dto)).resolves.toBe(response);
+
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    expect(openRouterApiKeyServiceMock.getOpenRouterApiKey).toHaveBeenCalled();
+    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(configMock, 'test-key', dto);
   });
 
   it('createPrompt creates a prompt with first draft version and fixed output schema', async () => {

@@ -15,6 +15,9 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import { AnalysisPromptsService } from './analysis-prompts.service';
+import { AdminPromptModelsResponseDto } from './dto/admin-prompt-models-response.dto';
+import { AdminPromptResponseDto } from './dto/admin-prompt-response.dto';
+import { GeneratePromptDto } from './dto/generate-prompt.dto';
 import {
   AnalysisPromptListResponseDto,
   AnalysisPromptResponseDto,
@@ -47,6 +50,20 @@ export class AnalysisPromptsController {
   @ApiResponse({ status: HttpStatus.OK, type: PromptTestQuestionsResponseDto })
   listTestQuestions(@GetCurrentUserId() userId: number) {
     return this.analysisPromptsService.listTestQuestions(userId);
+  }
+
+  @Get('models')
+  @ApiOperation({ summary: 'Get available OpenRouter models' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPromptModelsResponseDto })
+  getPromptModels(@GetCurrentUserId() userId: number) {
+    return this.analysisPromptsService.getPromptModels(userId);
+  }
+
+  @Post('generate')
+  @ApiOperation({ summary: 'Generate response from prompt via OpenRouter' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
+  generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
+    return this.analysisPromptsService.generatePrompt(userId, dto);
   }
 
   @Post()

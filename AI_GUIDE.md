@@ -219,9 +219,9 @@ Current ownership map:
 - `tests` owns test authoring, publishing, public links, education organizations used by tests,
   attempt/session/result flows, public `/t/*` routes, and `tests` / `tests-public` generated API
   clients.
-- `analysis-prompts` is a candidate bounded context. Until it is extracted, prompt lifecycle work
-  must explicitly say whether it stays admin-owned or becomes a new feature. Tests may use prompt
-  contracts, but must not deep-import admin prompt internals.
+- `analysis-prompts` owns prompt lifecycle, prompt simulation, and the `/admin/prompts` operator
+  workflow. Tests may reference published prompt versions through database relations/contracts, but
+  must not deep-import analysis prompt internals.
 - `openrouter` is infrastructure/integration code. Feature code must not import OpenRouter
   utilities through another feature module; expose integration services from the integration owner.
 - Integration-only backend modules such as `openrouter` are declared in
@@ -294,9 +294,9 @@ Verification gates:
 
 ## OpenRouter Prompt Studio Foundation (Current Branch)
 
-Current admin prompt foundation is implemented under:
+Current prompt foundation is implemented as the `analysis-prompts` bounded context under:
 
-- Backend: `server/src/admin/admin.controller.ts`, `server/src/admin/admin.service.ts`
+- Backend: `server/src/analysis-prompts/*`
 - Frontend page wrapper: `client/src/pages/admin/admin-prompts-page.tsx`
 - Frontend workspace: `client/src/widgets/admin-prompts-workspace/*`
 - Route: `"/admin/prompts"`

@@ -11,6 +11,8 @@ describe('AnalysisPromptsController', () => {
     publishVersion: jest.Mock;
     simulatePrompt: jest.Mock;
     listTestQuestions: jest.Mock;
+    getPromptModels: jest.Mock;
+    generatePrompt: jest.Mock;
   };
 
   beforeEach(() => {
@@ -22,6 +24,8 @@ describe('AnalysisPromptsController', () => {
       publishVersion: jest.fn(),
       simulatePrompt: jest.fn(),
       listTestQuestions: jest.fn(),
+      getPromptModels: jest.fn(),
+      generatePrompt: jest.fn(),
     };
 
     controller = new AnalysisPromptsController(serviceMock as unknown as AnalysisPromptsService);
@@ -105,5 +109,27 @@ describe('AnalysisPromptsController', () => {
 
     await expect(controller.listTestQuestions(7)).resolves.toEqual(response);
     expect(serviceMock.listTestQuestions).toHaveBeenCalledWith(7);
+  });
+
+  it('getPromptModels delegates to service', async () => {
+    const response = { defaultModel: 'openai/gpt-oss-20b:free', models: [] };
+    serviceMock.getPromptModels.mockResolvedValue(response);
+
+    await expect(controller.getPromptModels(7)).resolves.toEqual(response);
+    expect(serviceMock.getPromptModels).toHaveBeenCalledWith(7);
+  });
+
+  it('generatePrompt delegates to service', async () => {
+    const dto = {
+      model: 'openai/gpt-oss-20b:free',
+      prompt: 'Return JSON',
+      temperature: 0.2,
+      responseFormat: 'json' as const,
+    };
+    const response = { model: dto.model, output: '{}' };
+    serviceMock.generatePrompt.mockResolvedValue(response);
+
+    await expect(controller.generatePrompt(7, dto)).resolves.toEqual(response);
+    expect(serviceMock.generatePrompt).toHaveBeenCalledWith(7, dto);
   });
 });

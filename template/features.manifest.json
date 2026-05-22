@@ -35,8 +35,7 @@
       "ownership": {
         "kind": "admin-shell",
         "owns": ["admin shell", "overview", "users", "settings"],
-        "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features.",
-        "candidateExtractions": ["analysis-prompts"]
+        "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features."
       },
       "verification": {
         "requireOwnedRoots": true,
@@ -48,7 +47,6 @@
         "frontend": [
           "client/src/features/admin",
           "client/src/widgets/admin-page-layout",
-          "client/src/widgets/admin-prompts-workspace",
           "client/src/widgets/admin-settings-workspace",
           "client/src/widgets/admin-users-workspace"
         ]
@@ -58,17 +56,11 @@
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin-settings.controller.ts",
         "server/src/admin/admin.service.ts",
-        "server/src/admin/analysis-prompts.controller.ts",
-        "server/src/admin/analysis-prompts.service.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
-        "server/src/admin/dto/admin-prompt-models-response.dto.ts",
-        "server/src/admin/dto/admin-prompt-response.dto.ts",
         "server/src/admin/dto/admin-settings.dto.ts",
         "server/src/admin/dto/admin-users-query.dto.ts",
         "server/src/admin/dto/admin-user-response.dto.ts",
         "server/src/admin/dto/admin-users-response.dto.ts",
-        "server/src/admin/dto/analysis-prompt.dto.ts",
-        "server/src/admin/dto/generate-prompt.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
         "server/src/app-settings/profession-atlas-settings.service.ts"
       ],
@@ -77,7 +69,6 @@
         "client/src/pages/admin/admin-overview-page.tsx",
         "client/src/pages/admin/admin-users-page.tsx",
         "client/src/pages/admin/admin-analytics-page.tsx",
-        "client/src/pages/admin/admin-prompts-page.tsx",
         "client/src/pages/admin/admin-settings-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",
         "client/src/features/admin/ui/admin-overview.tsx",
@@ -101,6 +92,53 @@
           "methods": ["patch"],
           "protected": true
         },
+        {
+          "path": "/admin/settings/openrouter",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/profession-atlas",
+          "methods": ["get", "patch"],
+          "protected": true
+        }
+      ]
+    },
+    {
+      "name": "analysis-prompts",
+      "route": "/admin/prompts",
+      "backendModule": "AnalysisPromptsModule",
+      "prismaModel": "AnalysisPrompt",
+      "schema": "adminPromptGenerateSchema",
+      "ownership": {
+        "kind": "product-feature",
+        "owns": ["analysis prompt lifecycle", "prompt simulation", "prompt model catalog proxy"],
+        "adminRoutesAreUiHost": true
+      },
+      "verification": {
+        "requireOwnedRoots": true,
+        "requireOpenApiOperations": true
+      },
+      "openApiInventoryPrefixes": ["/admin/prompts"],
+      "ownedRoots": {
+        "backend": ["server/src/analysis-prompts"],
+        "frontend": ["client/src/widgets/admin-prompts-workspace"]
+      },
+      "backendFiles": [
+        "server/src/analysis-prompts/analysis-prompts.module.ts",
+        "server/src/analysis-prompts/analysis-prompts.controller.ts",
+        "server/src/analysis-prompts/analysis-prompts.service.ts",
+        "server/src/analysis-prompts/dto/admin-prompt-models-response.dto.ts",
+        "server/src/analysis-prompts/dto/admin-prompt-response.dto.ts",
+        "server/src/analysis-prompts/dto/analysis-prompt.dto.ts",
+        "server/src/analysis-prompts/dto/generate-prompt.dto.ts"
+      ],
+      "frontendFiles": [
+        "client/src/pages/admin/admin-prompts-page.tsx",
+        "client/src/widgets/admin-prompts-workspace/index.ts"
+      ],
+      "generatedApiFile": "client/src/shared/api/generated/admin/admin.ts",
+      "openApiOperations": [
         {
           "path": "/admin/prompts",
           "methods": ["get", "post"],
@@ -134,16 +172,6 @@
         {
           "path": "/admin/prompts/versions/{versionId}/publish",
           "methods": ["post"],
-          "protected": true
-        },
-        {
-          "path": "/admin/settings/openrouter",
-          "methods": ["get"],
-          "protected": true
-        },
-        {
-          "path": "/admin/settings/profession-atlas",
-          "methods": ["get", "patch"],
           "protected": true
         }
       ]

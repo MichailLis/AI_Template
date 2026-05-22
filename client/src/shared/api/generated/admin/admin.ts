@@ -304,216 +304,6 @@ export function useAdminControllerGetUsers<
 }
 
 /**
- * @summary Get available OpenRouter models
- */
-export const adminControllerGetPromptModels = (
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<AdminPromptModelsResponseDto>(
-    { url: `/admin/prompts/models`, method: 'GET', signal },
-    options,
-  );
-};
-
-export const getAdminControllerGetPromptModelsQueryKey = () => {
-  return [`/admin/prompts/models`] as const;
-};
-
-export const getAdminControllerGetPromptModelsQueryOptions = <
-  TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-  TError = ErrorType<ErrorResponseDto>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getAdminControllerGetPromptModelsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetPromptModels>>> = ({
-    signal,
-  }) => adminControllerGetPromptModels(requestOptions, signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type AdminControllerGetPromptModelsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof adminControllerGetPromptModels>>
->;
-export type AdminControllerGetPromptModelsQueryError = ErrorType<ErrorResponseDto>;
-
-export function useAdminControllerGetPromptModels<
-  TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-          TError,
-          Awaited<ReturnType<typeof adminControllerGetPromptModels>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminControllerGetPromptModels<
-  TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-          TError,
-          Awaited<ReturnType<typeof adminControllerGetPromptModels>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminControllerGetPromptModels<
-  TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get available OpenRouter models
- */
-
-export function useAdminControllerGetPromptModels<
-  TData = Awaited<ReturnType<typeof adminControllerGetPromptModels>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPromptModels>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getAdminControllerGetPromptModelsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-/**
- * @summary Generate response from prompt via OpenRouter
- */
-export const adminControllerGeneratePrompt = (
-  generatePromptDto: GeneratePromptDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<AdminPromptResponseDto>(
-    {
-      url: `/admin/prompts/generate`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      data: generatePromptDto,
-      signal,
-    },
-    options,
-  );
-};
-
-export const getAdminControllerGeneratePromptMutationOptions = <
-  TError = ErrorType<ErrorResponseDto>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof adminControllerGeneratePrompt>>,
-    TError,
-    { data: GeneratePromptDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof adminControllerGeneratePrompt>>,
-  TError,
-  { data: GeneratePromptDto },
-  TContext
-> => {
-  const mutationKey = ['adminControllerGeneratePrompt'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof adminControllerGeneratePrompt>>,
-    { data: GeneratePromptDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return adminControllerGeneratePrompt(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type AdminControllerGeneratePromptMutationResult = NonNullable<
-  Awaited<ReturnType<typeof adminControllerGeneratePrompt>>
->;
-export type AdminControllerGeneratePromptMutationBody = GeneratePromptDto;
-export type AdminControllerGeneratePromptMutationError = ErrorType<ErrorResponseDto>;
-
-/**
- * @summary Generate response from prompt via OpenRouter
- */
-export const useAdminControllerGeneratePrompt = <
-  TError = ErrorType<ErrorResponseDto>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof adminControllerGeneratePrompt>>,
-      TError,
-      { data: GeneratePromptDto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof adminControllerGeneratePrompt>>,
-  TError,
-  { data: GeneratePromptDto },
-  TContext
-> => {
-  return useMutation(getAdminControllerGeneratePromptMutationOptions(options), queryClient);
-};
-/**
  * @summary Update user role
  */
 export const adminControllerUpdateUserRole = (
@@ -1352,6 +1142,239 @@ export function useAnalysisPromptsControllerListTestQuestions<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
+/**
+ * @summary Get available OpenRouter models
+ */
+export const analysisPromptsControllerGetPromptModels = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPromptModelsResponseDto>(
+    { url: `/admin/prompts/models`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAnalysisPromptsControllerGetPromptModelsQueryKey = () => {
+  return [`/admin/prompts/models`] as const;
+};
+
+export const getAnalysisPromptsControllerGetPromptModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAnalysisPromptsControllerGetPromptModelsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>
+  > = ({ signal }) => analysisPromptsControllerGetPromptModels(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AnalysisPromptsControllerGetPromptModelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>
+>;
+export type AnalysisPromptsControllerGetPromptModelsQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAnalysisPromptsControllerGetPromptModels<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAnalysisPromptsControllerGetPromptModels<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAnalysisPromptsControllerGetPromptModels<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get available OpenRouter models
+ */
+
+export function useAnalysisPromptsControllerGetPromptModels<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAnalysisPromptsControllerGetPromptModelsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Generate response from prompt via OpenRouter
+ */
+export const analysisPromptsControllerGeneratePrompt = (
+  generatePromptDto: GeneratePromptDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPromptResponseDto>(
+    {
+      url: `/admin/prompts/generate`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: generatePromptDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAnalysisPromptsControllerGeneratePromptMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>,
+    TError,
+    { data: GeneratePromptDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>,
+  TError,
+  { data: GeneratePromptDto },
+  TContext
+> => {
+  const mutationKey = ['analysisPromptsControllerGeneratePrompt'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>,
+    { data: GeneratePromptDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analysisPromptsControllerGeneratePrompt(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalysisPromptsControllerGeneratePromptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>
+>;
+export type AnalysisPromptsControllerGeneratePromptMutationBody = GeneratePromptDto;
+export type AnalysisPromptsControllerGeneratePromptMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Generate response from prompt via OpenRouter
+ */
+export const useAnalysisPromptsControllerGeneratePrompt = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>,
+      TError,
+      { data: GeneratePromptDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof analysisPromptsControllerGeneratePrompt>>,
+  TError,
+  { data: GeneratePromptDto },
+  TContext
+> => {
+  return useMutation(
+    getAnalysisPromptsControllerGeneratePromptMutationOptions(options),
+    queryClient,
+  );
+};
 /**
  * @summary Update analysis prompt and create next draft version
  */

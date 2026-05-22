@@ -6,7 +6,6 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -20,9 +19,6 @@ import { AdminUsersResponseDto } from './dto/admin-users-response.dto';
 import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
-import { AdminPromptModelsResponseDto } from './dto/admin-prompt-models-response.dto';
-import { GeneratePromptDto } from './dto/generate-prompt.dto';
-import { AdminPromptResponseDto } from './dto/admin-prompt-response.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('admin')
@@ -45,20 +41,6 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminUsersResponseDto })
   getUsers(@GetCurrentUserId() userId: number, @Query() query: AdminUsersQueryDto) {
     return this.adminService.getUsers(userId, query);
-  }
-
-  @Get('prompts/models')
-  @ApiOperation({ summary: 'Get available OpenRouter models' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPromptModelsResponseDto })
-  getPromptModels(@GetCurrentUserId() userId: number) {
-    return this.adminService.getPromptModels(userId);
-  }
-
-  @Post('prompts/generate')
-  @ApiOperation({ summary: 'Generate response from prompt via OpenRouter' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
-  generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
-    return this.adminService.generatePrompt(userId, dto);
   }
 
   @Patch('users/:id/role')

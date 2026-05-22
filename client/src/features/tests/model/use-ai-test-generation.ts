@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 
 import {
-  useAdminControllerGeneratePrompt,
-  useAdminControllerGetPromptModels,
+  useAnalysisPromptsControllerGeneratePrompt,
+  useAnalysisPromptsControllerGetPromptModels,
 } from '@/shared/api/generated/admin/admin';
 
 import { AI_QUESTION_TYPES } from '../lib/ai-generator-utils';
@@ -28,13 +28,13 @@ interface UseAiTestGenerationParams {
 }
 
 export function useAiTestGeneration({ open }: UseAiTestGenerationParams) {
-  const modelsQuery = useAdminControllerGetPromptModels({
+  const modelsQuery = useAnalysisPromptsControllerGetPromptModels({
     query: {
       enabled: open,
       staleTime: 5 * 60 * 1000,
     },
   });
-  const generateMutation = useAdminControllerGeneratePrompt();
+  const generateMutation = useAnalysisPromptsControllerGeneratePrompt();
 
   const [topicTitle, setTopicTitle] = useState('');
   const [topicDescription, setTopicDescription] = useState('');
