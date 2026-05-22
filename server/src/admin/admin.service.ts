@@ -1,22 +1,14 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role } from '@prisma/client';
 
 import { assertAdminUser } from '../common/authz/admin-access.utils';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
 import { PrismaService } from '../prisma.service';
-import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import type { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import type { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private async getCurrentAdminUser(userId: number) {
     const currentUser = await this.prisma.user.findUnique({
@@ -156,22 +148,6 @@ export class AdminService {
       totalPages,
       users: users.map((user) => this.toAdminUserResponse(user)),
     };
-  }
-
-  async getPromptModels(userId: number) {
-    await this.getCurrentAdminUser(userId);
-
-    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
-
-    return fetchOpenRouterModels(this.config, apiKey);
-  }
-
-  async generatePrompt(userId: number, dto: GeneratePromptDto) {
-    await this.getCurrentAdminUser(userId);
-
-    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
-
-    return generateOpenRouterPrompt(this.config, apiKey, dto);
   }
 
   async updateUserRole(adminId: number, targetUserId: number, dto: UpdateUserRoleDto) {

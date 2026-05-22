@@ -6,7 +6,8 @@ import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 
 import type {
   AnalysisPromptListResponseDto,
@@ -218,6 +219,22 @@ export class AnalysisPromptsService {
         })),
       })),
     };
+  }
+
+  async getPromptModels(userId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+
+    return fetchOpenRouterModels(this.config, apiKey);
+  }
+
+  async generatePrompt(userId: number, dto: GeneratePromptDto) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+
+    return generateOpenRouterPrompt(this.config, apiKey, dto);
   }
 
   async createPrompt(

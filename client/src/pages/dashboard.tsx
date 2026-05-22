@@ -21,6 +21,9 @@ export default function DashboardPage() {
             <Button asChild variant="outline">
               <Link to="/admin/tests">Открыть тесты</Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link to="/admin/prompts">Открыть промпты</Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

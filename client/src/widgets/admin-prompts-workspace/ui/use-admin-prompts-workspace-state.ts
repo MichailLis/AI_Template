@@ -1,5 +1,5 @@
-import { useAdminControllerGetPromptModels } from '@/shared/api/generated/admin/admin';
 import {
+  useAnalysisPromptsControllerGetPromptModels,
   useAnalysisPromptsControllerCreatePrompt,
   useAnalysisPromptsControllerDeletePrompt,
   useAnalysisPromptsControllerListPrompts,
@@ -18,7 +18,7 @@ import {
 } from './use-admin-prompts-workspace-selectors';
 
 export function useAdminPromptsWorkspaceData() {
-  const modelsQuery = useAdminControllerGetPromptModels();
+  const modelsQuery = useAnalysisPromptsControllerGetPromptModels();
   const promptsQuery = useAnalysisPromptsControllerListPrompts();
   const testQuestionsQuery = useAnalysisPromptsControllerListTestQuestions();
   const createPromptMutation = useAnalysisPromptsControllerCreatePrompt();

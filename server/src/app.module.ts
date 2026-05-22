@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { TestsModule } from './tests/tests.module';
+import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TestsModule } from './tests/tests.module';
     PrismaModule,
     AuthModule,
     AdminModule,
+    AnalysisPromptsModule,
     TestsModule,
   ],
   controllers: [AppController],
