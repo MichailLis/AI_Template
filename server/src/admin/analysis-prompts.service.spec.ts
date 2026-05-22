@@ -1,11 +1,11 @@
 import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
-import { generateOpenRouterPrompt } from './openrouter.client';
+import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
+import { generateOpenRouterPrompt } from '../openrouter/openrouter.client';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 
 type PublishVersionUpdate = (args: {
@@ -16,7 +16,7 @@ type PublishVersionUpdate = (args: {
 jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('./openrouter.client', () => ({
+jest.mock('../openrouter/openrouter.client', () => ({
   generateOpenRouterPrompt: jest.fn(),
 }));
 

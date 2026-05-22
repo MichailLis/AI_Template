@@ -1,7 +1,6 @@
 import { BadGatewayException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import {
   extractOpenRouterErrorMessage,
   filterStructuredOutputPromptModels,
@@ -10,6 +9,20 @@ import {
 } from './openrouter.utils';
 
 const DEFAULT_OPENROUTER_TIMEOUT_MS = 120_000;
+
+interface OpenRouterPromptRequest {
+  model: string;
+  prompt: string;
+  temperature?: number;
+  responseFormat?: 'text' | 'json';
+  responseSchema?: {
+    name?: string;
+    strict?: boolean;
+    schema: Record<string, unknown>;
+  };
+  requireParameters?: boolean;
+  useResponseHealing?: boolean;
+}
 
 export const resolveOpenRouterTimeoutMs = (config: ConfigService, timeoutMs?: number) => {
   if (Number.isFinite(timeoutMs) && timeoutMs && timeoutMs > 0) {
@@ -38,7 +51,7 @@ const parseResponsePayload = async (response: Response): Promise<unknown> => {
   return response.json().catch(async () => ({ message: await response.text() }));
 };
 
-const buildPromptRequestBody = (dto: GeneratePromptDto) => {
+const buildPromptRequestBody = (dto: OpenRouterPromptRequest) => {
   const responseFormat = dto.responseFormat ?? 'text';
 
   const openRouterRequestBody: {
@@ -165,7 +178,7 @@ export const fetchOpenRouterModels = async (config: ConfigService, apiKey: strin
 export const generateOpenRouterPrompt = async (
   config: ConfigService,
   apiKey: string,
-  dto: GeneratePromptDto,
+  dto: OpenRouterPromptRequest,
   options?: { timeoutMs?: number },
 ) => {
   const controller = new AbortController();

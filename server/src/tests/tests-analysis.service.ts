@@ -6,7 +6,7 @@ import {
   fetchOpenRouterModels,
   generateOpenRouterPrompt,
   resolveOpenRouterTimeoutMs,
-} from '../admin/openrouter.client';
+} from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './dto/tests-analysis.dto';

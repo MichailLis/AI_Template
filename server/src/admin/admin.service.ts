@@ -3,12 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role } from '@prisma/client';
 
 import { assertAdminUser } from '../common/authz/admin-access.utils';
-import { PrismaService } from '../prisma.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
+import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import { PrismaService } from '../prisma.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import type { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import type { UpdateUserRoleDto } from './dto/update-user-role.dto';
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from './openrouter.client';
 
 @Injectable()
 export class AdminService {

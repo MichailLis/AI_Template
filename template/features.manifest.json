@@ -51,8 +51,8 @@
         "server/src/admin/dto/analysis-prompt.dto.ts",
         "server/src/admin/dto/generate-prompt.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
-        "server/src/admin/openrouter.client.ts",
-        "server/src/admin/openrouter.utils.ts",
+        "server/src/openrouter/openrouter.client.ts",
+        "server/src/openrouter/openrouter.utils.ts",
         "server/src/app-settings/profession-atlas-settings.service.ts",
         "server/src/openrouter/openrouter.module.ts",
         "server/src/openrouter/openrouter-api-key.service.ts"
