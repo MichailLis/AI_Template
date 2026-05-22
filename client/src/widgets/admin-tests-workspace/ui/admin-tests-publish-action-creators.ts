@@ -1,12 +1,13 @@
 import { toast } from 'sonner';
 
-import { parseApiError, type useDraftAutosave, type useQuestionEditor } from '@/features/tests';
+import { parseApiError } from '@/shared/lib/api-error';
 
 import {
   hasInvalidQuestionReorderPayload,
   isBackendReorderRouteError,
 } from './admin-tests-workspace-actions.helpers';
 
+import type { useDraftAutosave, useQuestionEditor } from '@/features/tests';
 import type {
   useTestsControllerPublishTopic,
   useTestsControllerReorderQuestions,

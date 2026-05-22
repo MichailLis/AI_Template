@@ -1,37 +1,9 @@
+import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
+
 import type { DuplicateVariableData, PromptVariable } from '../model/types';
 
-export const getApiErrorMessage = (error: unknown) => {
-  if (typeof error !== 'object' || error === null || !('response' in error)) {
-    return 'Request failed';
-  }
-
-  const response = error.response;
-
-  if (typeof response !== 'object' || response === null || !('data' in response)) {
-    return 'Request failed';
-  }
-
-  const data = response.data;
-
-  if (typeof data !== 'object' || data === null) {
-    return 'Request failed';
-  }
-
-  if (
-    'error' in data &&
-    typeof data.error === 'object' &&
-    data.error !== null &&
-    'message' in data.error
-  ) {
-    return String(data.error.message);
-  }
-
-  if ('message' in data) {
-    return String(data.message);
-  }
-
-  return 'Request failed';
-};
+export const getApiErrorMessage = (error: unknown) =>
+  getSharedApiErrorMessage(error, { fallbackMessage: 'Request failed' });
 
 export const formatNow = () => new Date().toLocaleTimeString();
 

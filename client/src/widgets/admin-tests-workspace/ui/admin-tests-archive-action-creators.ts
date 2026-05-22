@@ -1,6 +1,8 @@
 import { toast } from 'sonner';
 
-import { parseApiError, type TestTopicListItem } from '@/features/tests';
+import { parseApiError } from '@/shared/lib/api-error';
+
+import type { TestTopicListItem } from '@/features/tests';
 
 interface ConfirmArchiveTopicDeps {
   pendingArchiveTopic: TestTopicListItem | null;

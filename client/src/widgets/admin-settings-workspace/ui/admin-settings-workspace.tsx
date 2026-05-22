@@ -9,6 +9,7 @@ import {
   useAdminSettingsControllerGetOpenRouterSettings,
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
+import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
 import {
   adminBadgeClassNames,
   adminClassNames,
@@ -20,38 +21,8 @@ import { OpenRouterSettingsCard, ProfessionAtlasSettingsCard } from './admin-set
 
 import type { FormEvent } from 'react';
 
-const getApiErrorMessage = (error: unknown) => {
-  if (typeof error !== 'object' || error === null || !('response' in error)) {
-    return 'Запрос не выполнен';
-  }
-
-  const response = error.response;
-
-  if (typeof response !== 'object' || response === null || !('data' in response)) {
-    return 'Запрос не выполнен';
-  }
-
-  const data = response.data;
-
-  if (typeof data !== 'object' || data === null) {
-    return 'Запрос не выполнен';
-  }
-
-  if (
-    'error' in data &&
-    typeof data.error === 'object' &&
-    data.error !== null &&
-    'message' in data.error
-  ) {
-    return String(data.error.message);
-  }
-
-  if ('message' in data) {
-    return String(data.message);
-  }
-
-  return 'Запрос не выполнен';
-};
+const getApiErrorMessage = (error: unknown) =>
+  getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
 
 function AdminSettingsHero({
   isOpenRouterConfigured,

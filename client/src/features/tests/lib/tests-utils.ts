@@ -1,3 +1,5 @@
+import { parseApiError } from '@/shared/lib/api-error';
+
 import type {
   QuestionFormState,
   QuestionOptionDraft,
@@ -10,6 +12,8 @@ import type {
   UpsertTestsQuestionDto,
   UpsertTestsQuestionDtoSettings,
 } from '@/shared/api/model';
+
+export { parseApiError };
 
 export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   OPEN_TEXT: 'Открытый текст',
@@ -29,47 +33,6 @@ const isSettingsRecord = (value: unknown): value is UpsertTestsQuestionDtoSettin
 const DEFAULT_SLIDER_MIN = '1';
 const DEFAULT_SLIDER_MAX = '10';
 const DEFAULT_SLIDER_STEP = '1';
-
-const extractErrorMessage = (data: Record<string, unknown>) => {
-  const nestedError = data.error;
-
-  if (isRecord(nestedError) && 'message' in nestedError) {
-    return String(nestedError.message);
-  }
-
-  if ('message' in data) {
-    return String(data.message);
-  }
-
-  return null;
-};
-
-export const parseApiError = (error: unknown) => {
-  if (!isRecord(error)) {
-    return 'Не удалось выполнить запрос';
-  }
-
-  if ('response' in error && isRecord(error.response)) {
-    const response = error.response;
-
-    if ('status' in response && response.status === 401) {
-      return 'Сессия истекла или доступ запрещен. Войдите заново.';
-    }
-
-    if ('data' in response && isRecord(response.data)) {
-      const message = extractErrorMessage(response.data);
-      if (message) {
-        return message;
-      }
-    }
-  }
-
-  if ('request' in error) {
-    return 'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.';
-  }
-
-  return 'Не удалось выполнить запрос';
-};
 
 export const createDraftId = () => Math.random().toString(36).slice(2, 10);
 
