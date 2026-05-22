@@ -1,4 +1,5 @@
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
@@ -23,9 +24,8 @@ export function QuestionModalBasicFields({
   return (
     <>
       <Label htmlFor="question-type-modal">Тип</Label>
-      <select
+      <AdminSelectField
         id="question-type-modal"
-        className={adminClassNames.form.select}
         value={form.type}
         onChange={(event) => onTypeChange(event.target.value as QuestionType)}
       >
@@ -33,7 +33,7 @@ export function QuestionModalBasicFields({
         <option value="SINGLE_CHOICE">Один вариант</option>
         <option value="MULTI_CHOICE">Несколько вариантов</option>
         <option value="SLIDER">Слайдер</option>
-      </select>
+      </AdminSelectField>
 
       <Label htmlFor="question-title-modal">Заголовок</Label>
       <Input

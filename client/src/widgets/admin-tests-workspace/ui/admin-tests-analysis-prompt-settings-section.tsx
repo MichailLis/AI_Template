@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Label } from '@/shared/ui/label';
 
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
@@ -63,7 +64,7 @@ export function AdminTestsAnalysisPromptSettingsSection({
     >
       <div className="mt-3 flex flex-col gap-2">
         <Label htmlFor="settings-analysis-prompt">Активный промпт</Label>
-        <select
+        <AdminSelectField
           id="settings-analysis-prompt"
           value={selectedAnalysisPromptVersionId ?? ''}
           disabled={isSelectedTopicArchived || promptsQuery.isLoading}
@@ -72,7 +73,6 @@ export function AdminTestsAnalysisPromptSettingsSection({
               event.target.value ? Number(event.target.value) : null,
             )
           }
-          className={adminClassNames.form.select}
         >
           <option value="">Не подключать анализ</option>
           {options.map((option) => (
@@ -80,7 +80,7 @@ export function AdminTestsAnalysisPromptSettingsSection({
               {option.label} · {option.model}
             </option>
           ))}
-        </select>
+        </AdminSelectField>
         {promptsQuery.isError ? (
           <p className={`text-xs ${adminToneClassNames.danger.text}`}>
             Не удалось загрузить промпты анализа.

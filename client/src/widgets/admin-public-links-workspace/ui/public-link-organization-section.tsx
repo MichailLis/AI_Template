@@ -3,6 +3,7 @@ import {
   parseGroupValidationMode,
 } from '@/shared/lib/group-validation';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -53,14 +54,14 @@ function EducationOrganizationSelect({
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="education-organization">Заведение для ссылки</Label>
-      <select
+      <AdminSelectField
         id="education-organization"
         value={newEducationOrganizationId ? String(newEducationOrganizationId) : ''}
         onChange={(event) => {
           const value = event.target.value;
           onEducationOrganizationSelect(value ? Number.parseInt(value, 10) : null);
         }}
-        className={`flex ${adminClassNames.form.select}`}
+        className="flex"
       >
         <option value="">Не привязывать (студент заполнит сам)</option>
         {activeEducationOrganizations.map((organization) => (
@@ -68,7 +69,7 @@ function EducationOrganizationSelect({
             {organization.name}
           </option>
         ))}
-      </select>
+      </AdminSelectField>
     </div>
   );
 }
@@ -123,20 +124,20 @@ function GroupValidationDetails({
           формату.
         </p>
         <Label htmlFor="group-validation-mode">Проверка поля</Label>
-        <select
+        <AdminSelectField
           id="group-validation-mode"
           value={groupValidationMode}
           onChange={(event) =>
             onGroupValidationModeChange(parseGroupValidationMode(event.target.value))
           }
-          className={`flex ${adminClassNames.form.select}`}
+          className="flex"
         >
           {GROUP_VALIDATION_MODE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
-        </select>
+        </AdminSelectField>
 
         {groupValidationMode !== 'NONE' ? (
           <>

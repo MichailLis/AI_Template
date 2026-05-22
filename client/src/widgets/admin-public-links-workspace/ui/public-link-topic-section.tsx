@@ -1,4 +1,5 @@
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
@@ -24,13 +25,13 @@ export function PublicLinkTopicSection({
       </div>
       <div className="mt-3 flex flex-col gap-2">
         <Label htmlFor="public-topic">Тест для публикации</Label>
-        <select
+        <AdminSelectField
           id="public-topic"
           value={effectiveSelectedTopicId > 0 ? String(effectiveSelectedTopicId) : ''}
           onChange={(event) => {
             onSelectTopic(Number.parseInt(event.target.value, 10));
           }}
-          className={`flex ${adminClassNames.form.select}`}
+          className="flex"
           disabled={topics.length === 0}
         >
           {topics.length === 0 ? <option value="">Нет доступных тестов</option> : null}
@@ -39,7 +40,7 @@ export function PublicLinkTopicSection({
               {topic.draftTitle}
             </option>
           ))}
-        </select>
+        </AdminSelectField>
       </div>
     </div>
   );
