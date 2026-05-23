@@ -1,9 +1,9 @@
 import { ConfigService } from '@nestjs/config';
 
+import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import type { OpenRouterClientService } from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
-import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus.enrichment';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from './prof-orientation-v3-plus.fixture';
 import { TestsAnalysisService } from './tests-analysis.service';
