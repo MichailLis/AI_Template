@@ -180,7 +180,11 @@
     {
       "name": "tests",
       "route": "/admin/tests",
-      "additionalRoutes": ["/admin/public-links"],
+      "additionalRoutes": [
+        "/admin/public-links",
+        "/admin/public-links/organizations",
+        "/admin/public-links/stats"
+      ],
       "backendModule": "TestsModule",
       "prismaModel": "TestTopic",
       "schema": "testsTopicCreateSchema",

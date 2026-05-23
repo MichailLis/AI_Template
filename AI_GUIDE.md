@@ -472,7 +472,6 @@ Example goal: implement `news` feature with editor UI (example only, not part of
      - `client/src/features/create-news/ui/create-news-form.tsx`
      - `client/src/pages/news/news-page.tsx`
      - `client/src/app/App.tsx`
-     - add feature entry point to `client/src/pages/dashboard.tsx` (required by `verify:architecture` when features are declared)
 4. Guardrails:
    - Update `template/features.manifest.json`
    - Run `npm run verify:template`
@@ -555,7 +554,6 @@ Use this checklist before opening PR or finalizing work.
 6. **Routes and navigation wired**
    - Route added in `client/src/app/App.tsx`.
    - `publicRoutes` from manifest are wired in `client/src/app/App.tsx`.
-   - `client/src/pages/dashboard.tsx` includes feature entry links for declared feature routes (required by `verify:architecture`).
 7. **Core tests green**
    - `npm run test --prefix server`, `npm run test:e2e --prefix server`, and `npm run test:run --prefix client` passed when the branch changed related behavior.
 8. **Full pipeline green**
@@ -579,7 +577,6 @@ Use this checklist before opening PR or finalizing work.
   - frontend page + create form
   - generated API file from Orval
   - route wiring in `client/src/app/App.tsx`
-  - `client/src/pages/dashboard.tsx` must exist and include a feature entry link (`to="<feature.route>"`) for each declared feature
 - Every declared `publicRoutes` entry must be wired in `client/src/app/App.tsx`.
 - Every generated API directory outside feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - `npm run verify:architecture` fails if any of these constraints are broken.
