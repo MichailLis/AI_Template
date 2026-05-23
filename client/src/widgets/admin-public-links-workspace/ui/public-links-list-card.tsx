@@ -1,6 +1,7 @@
 import { Archive, MoreHorizontal, Power, PowerOff, RefreshCcw, RotateCcw } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { getEntryProfileModeLabel, getPublicTemplateLabel } from '@/shared/lib/public-test-labels';
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
@@ -97,21 +98,6 @@ const getLinkStateClassName = (link: PublicLinkListItem) => {
   }
 
   return adminBadgeClassNames.warning;
-};
-
-const getPublicTemplateLabel = (template: PublicLinkListItem['publicTemplate']) =>
-  template === 'POLUS' ? 'Polus' : 'Текущий';
-
-const getEntryProfileModeLabel = (mode: PublicLinkListItem['entryProfileMode']) => {
-  if (mode === 'DEMOGRAPHIC') {
-    return 'Демографическая';
-  }
-
-  if (mode === 'EDUCATION_DEMOGRAPHIC') {
-    return 'Учебная + демографическая';
-  }
-
-  return 'Учебная';
 };
 
 const publicLinkCreatedAtFormatter = new Intl.DateTimeFormat('ru-RU', {

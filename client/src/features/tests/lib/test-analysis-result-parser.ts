@@ -1,3 +1,5 @@
+import { isRecord } from '@/shared/lib/type-guards';
+
 export type AnalysisStatus = 'PENDING' | 'READY' | 'FAILED' | string;
 
 export interface AnalysisPayload {
@@ -51,9 +53,6 @@ const MAX_TRAITS_COUNT = 6;
 const MAX_RECOMMENDED_DIRECTIONS_COUNT = 6;
 const MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT = 6;
 const MAX_PROFESSIONAL_NEXT_STEPS_COUNT = 3;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const getString = (record: Record<string, unknown>, key: string) => {
   const value = record[key];
