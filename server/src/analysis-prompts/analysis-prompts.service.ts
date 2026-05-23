@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
+import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { PrismaService } from '../prisma.service';
-import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { OpenRouterClientService } from '../openrouter/openrouter.client';
+import { TestsPromptSimulationReadService } from '../tests/tests-prompt-simulation-read.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 
 import type {
@@ -77,6 +78,7 @@ export class AnalysisPromptsService {
     private readonly prisma: PrismaService,
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
     private readonly openRouterClient: OpenRouterClientService,
+    private readonly testsPromptSimulationReadService: TestsPromptSimulationReadService,
   ) {}
 
   private toVersionResponse(version: AnalysisPromptVersionRecord) {
@@ -122,7 +124,7 @@ export class AnalysisPromptsService {
     return prompt;
   }
 
-  private buildSyntheticAnswersPrompt(questions: Array<Record<string, unknown>>) {
+  private buildSyntheticAnswersPrompt(questions: unknown[]) {
     return [
       'Сгенерируй правдоподобные тестовые ответы одного студента на выбранные вопросы.',
       'Ответы нужны только для проверки промпта анализа в админке.',
@@ -132,11 +134,7 @@ export class AnalysisPromptsService {
     ].join('\n');
   }
 
-  private buildAnalysisPrompt(
-    prompt: string,
-    questions: Array<Record<string, unknown>>,
-    syntheticAnswers: unknown,
-  ) {
+  private buildAnalysisPrompt(prompt: string, questions: unknown[], syntheticAnswers: unknown) {
     return [
       prompt.trim(),
       '',
@@ -172,51 +170,8 @@ export class AnalysisPromptsService {
   async listTestQuestions(userId: number): Promise<PromptTestQuestionsResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
-    const testVersions = await this.prisma.testTopicVersion.findMany({
-      where: {
-        status: {
-          in: ['DRAFT', 'PUBLISHED'],
-        },
-        questions: {
-          some: {},
-        },
-      },
-      include: {
-        topic: {
-          select: {
-            slug: true,
-          },
-        },
-        questions: {
-          select: {
-            id: true,
-            type: true,
-            title: true,
-            description: true,
-          },
-          orderBy: { order: 'asc' },
-        },
-      },
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-    });
-
     return {
-      tests: testVersions.map((testVersion) => ({
-        id: testVersion.id,
-        topicId: testVersion.topicId,
-        topicSlug: testVersion.topic.slug,
-        title: testVersion.title,
-        description: testVersion.description,
-        versionNumber: testVersion.versionNumber,
-        versionStatus: testVersion.status,
-        questionCount: testVersion.questions.length,
-        questions: testVersion.questions.map((question) => ({
-          id: question.id,
-          type: question.type,
-          title: question.title,
-          description: question.description,
-        })),
-      })),
+      tests: await this.testsPromptSimulationReadService.listPromptSimulationTests(),
     };
   }
 
@@ -355,42 +310,10 @@ export class AnalysisPromptsService {
     await ensureAdminAccess(this.prisma, userId);
 
     const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
-    const uniqueQuestionIds = Array.from(new Set(dto.questionIds));
-    const questions = await this.prisma.testQuestion.findMany({
-      where: { id: { in: uniqueQuestionIds } },
-      orderBy: [{ versionId: 'asc' }, { order: 'asc' }],
-      include: {
-        options: { orderBy: { order: 'asc' } },
-        sliderBands: { orderBy: { order: 'asc' } },
-      },
-    });
-
-    if (questions.length !== uniqueQuestionIds.length) {
-      throw new BadRequestException('Some selected test questions were not found');
-    }
-
-    const questionPayloads = questions.map((question) => ({
-      id: question.id,
-      type: question.type,
-      title: question.title,
-      description: question.description,
-      required: question.required,
-      order: question.order,
-      settings: question.settings,
-      options: question.options.map((option) => ({
-        id: option.id,
-        label: option.label,
-        value: option.value,
-        order: option.order,
-      })),
-      sliderBands: question.sliderBands.map((band) => ({
-        id: band.id,
-        minValue: band.minValue,
-        maxValue: band.maxValue,
-        label: band.label,
-        order: band.order,
-      })),
-    }));
+    const questionPayloads =
+      await this.testsPromptSimulationReadService.getPromptSimulationQuestionPayloads(
+        dto.questionIds,
+      );
 
     const syntheticAnswers =
       dto.generateAnswers === false
@@ -423,7 +346,7 @@ export class AnalysisPromptsService {
       model: analysisResponse.model,
       output: analysisResponse.output,
       syntheticAnswers,
-      questionCount: questions.length,
+      questionCount: questionPayloads.length,
     };
   }
 }

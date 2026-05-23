@@ -3,9 +3,10 @@ import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
+import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import type { OpenRouterClientService } from '../openrouter/openrouter.client';
-import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
+import type { TestsPromptSimulationReadService } from '../tests/tests-prompt-simulation-read.service';
 
 type PublishVersionUpdate = (args: {
   data: { status: string; publishedAt: Date };
@@ -15,6 +16,15 @@ type PublishVersionUpdate = (args: {
 type OpenRouterClientMock = {
   fetchModels: jest.MockedFunction<OpenRouterClientService['fetchModels']>;
   generatePrompt: jest.MockedFunction<OpenRouterClientService['generatePrompt']>;
+};
+
+type TestsPromptSimulationReadServiceMock = {
+  listPromptSimulationTests: jest.MockedFunction<
+    TestsPromptSimulationReadService['listPromptSimulationTests']
+  >;
+  getPromptSimulationQuestionPayloads: jest.MockedFunction<
+    TestsPromptSimulationReadService['getPromptSimulationQuestionPayloads']
+  >;
 };
 
 jest.mock('../common/authz/admin-access.utils', () => ({
@@ -34,17 +44,12 @@ describe('AnalysisPromptsService', () => {
       findUnique: jest.Mock;
       update: jest.Mock;
     };
-    testTopicVersion: {
-      findMany: jest.Mock;
-    };
-    testQuestion: {
-      findMany: jest.Mock;
-    };
   };
   let openRouterApiKeyServiceMock: {
     getOpenRouterApiKey: jest.Mock;
   };
   let openRouterClientMock: OpenRouterClientMock;
+  let testsPromptSimulationReadServiceMock: TestsPromptSimulationReadServiceMock;
 
   const promptRecord = {
     id: 7,
@@ -81,12 +86,6 @@ describe('AnalysisPromptsService', () => {
         findUnique: jest.fn(),
         update: jest.fn(),
       },
-      testTopicVersion: {
-        findMany: jest.fn(),
-      },
-      testQuestion: {
-        findMany: jest.fn(),
-      },
     };
     openRouterApiKeyServiceMock = {
       getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
@@ -95,11 +94,16 @@ describe('AnalysisPromptsService', () => {
       fetchModels: jest.fn(),
       generatePrompt: jest.fn(),
     };
+    testsPromptSimulationReadServiceMock = {
+      listPromptSimulationTests: jest.fn(),
+      getPromptSimulationQuestionPayloads: jest.fn(),
+    };
 
     service = new AnalysisPromptsService(
       prismaMock as unknown as PrismaService,
       openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
       openRouterClientMock as unknown as OpenRouterClientService,
+      testsPromptSimulationReadServiceMock as unknown as TestsPromptSimulationReadService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
@@ -343,7 +347,7 @@ describe('AnalysisPromptsService', () => {
   });
 
   it('simulatePrompt generates synthetic answers and runs structured analysis with selected questions', async () => {
-    prismaMock.testQuestion.findMany.mockResolvedValue([
+    testsPromptSimulationReadServiceMock.getPromptSimulationQuestionPayloads.mockResolvedValue([
       {
         id: 11,
         type: 'OPEN_TEXT',
@@ -377,11 +381,9 @@ describe('AnalysisPromptsService', () => {
       generateAnswers: true,
     });
 
-    expect(prismaMock.testQuestion.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: { in: [11] } },
-      }),
-    );
+    expect(
+      testsPromptSimulationReadServiceMock.getPromptSimulationQuestionPayloads,
+    ).toHaveBeenCalledWith([11]);
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
     const analysisPromptRequest = openRouterClientMock.generatePrompt.mock.calls[1]?.[1];
 
@@ -399,7 +401,7 @@ describe('AnalysisPromptsService', () => {
   });
 
   it('simulatePrompt allows paid structured output models', async () => {
-    prismaMock.testQuestion.findMany.mockResolvedValue([
+    testsPromptSimulationReadServiceMock.getPromptSimulationQuestionPayloads.mockResolvedValue([
       {
         id: 11,
         type: 'OPEN_TEXT',
@@ -459,15 +461,16 @@ describe('AnalysisPromptsService', () => {
   });
 
   it('listTestQuestions returns selectable tests with all nested questions per version', async () => {
-    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+    testsPromptSimulationReadServiceMock.listPromptSimulationTests.mockResolvedValue([
       {
         id: 31,
         topicId: 12,
+        topicSlug: 'career-skills',
         title: 'Career skills',
         description: 'Skills diagnostics',
         versionNumber: 3,
-        status: 'DRAFT',
-        topic: { slug: 'career-skills' },
+        versionStatus: 'DRAFT',
+        questionCount: 2,
         questions: [
           {
             id: 11,
@@ -486,11 +489,12 @@ describe('AnalysisPromptsService', () => {
       {
         id: 32,
         topicId: 13,
+        topicSlug: 'soft-skills',
         title: 'Soft skills',
         description: null,
         versionNumber: 1,
-        status: 'PUBLISHED',
-        topic: { slug: 'soft-skills' },
+        versionStatus: 'PUBLISHED',
+        questionCount: 1,
         questions: [
           {
             id: 21,
@@ -504,15 +508,7 @@ describe('AnalysisPromptsService', () => {
 
     const result = await service.listTestQuestions(3);
 
-    expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          status: { in: ['DRAFT', 'PUBLISHED'] },
-          questions: { some: {} },
-        },
-      }),
-    );
-    expect(prismaMock.testQuestion.findMany).not.toHaveBeenCalled();
+    expect(testsPromptSimulationReadServiceMock.listPromptSimulationTests).toHaveBeenCalled();
     expect(result.tests).toEqual([
       {
         id: 31,

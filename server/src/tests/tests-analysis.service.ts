@@ -3,12 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
 
 import {
+  TestAnalysisResultJsonSchema,
+  TestAnalysisResultSchema,
+} from '../common/analysis/test-analysis-result.contract';
+import {
   OpenRouterClientService,
   type OpenRouterPromptRequest,
 } from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
-import { TestAnalysisResultJsonSchema, TestAnalysisResultSchema } from './dto/tests-analysis.dto';
 import {
   ProfOrientationV3PlusEnrichmentJsonSchema,
   parseProfOrientationV3PlusEnrichment,
