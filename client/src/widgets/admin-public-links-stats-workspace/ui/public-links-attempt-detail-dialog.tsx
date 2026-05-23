@@ -1,4 +1,5 @@
 import { PublicTestStudentAnalysisView } from '@/features/tests';
+import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import {
@@ -52,19 +53,6 @@ interface AttemptDetail {
   answers: AttemptAnswer[];
 }
 
-const educationLevelLabels = {
-  BASIC_GENERAL: 'Основное общее',
-  SECONDARY_GENERAL: 'Среднее общее',
-  SECONDARY_SPECIAL: 'Среднее специальное',
-  INCOMPLETE_HIGHER_FROM_YEAR_3: 'Неоконченное высшее',
-  HIGHER: 'Высшее',
-} as const;
-
-const genderLabels = {
-  MALE: 'Мужской',
-  FEMALE: 'Женский',
-} as const;
-
 const getAttemptDescriptionName = (attempt: AttemptDetail) => {
   if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
     return 'Демографическая анкета';
@@ -78,10 +66,10 @@ const getAttemptDescriptionName = (attempt: AttemptDetail) => {
 };
 
 const getDemographicProfileParts = (attempt: AttemptDetail) => [
-  attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+  attempt.studentGender ? studentGenderLabels[attempt.studentGender] : null,
   attempt.studentAge ? `${attempt.studentAge} лет` : null,
   attempt.studentResidence,
-  attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+  attempt.studentEducationLevel ? studentEducationLevelLabels[attempt.studentEducationLevel] : null,
 ];
 
 const getEducationProfileParts = (attempt: AttemptDetail) => [

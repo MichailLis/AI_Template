@@ -15,6 +15,49 @@ interface PolusSelectFieldProps {
   onChange: (value: string) => void;
 }
 
+interface PolusSelectMenuProps {
+  activeIndex: number;
+  id: string;
+  listboxId: string;
+  options: readonly PolusSelectOption[];
+  value: string;
+  onActiveIndexChange: (index: number) => void;
+  onSelect: (value: string) => void;
+}
+
+function PolusSelectMenu({
+  activeIndex,
+  id,
+  listboxId,
+  options,
+  value,
+  onActiveIndexChange,
+  onSelect,
+}: PolusSelectMenuProps) {
+  return (
+    <div aria-labelledby={id} className="polus-select-menu" id={listboxId} role="listbox">
+      {options.map((option, index) => (
+        <button
+          aria-selected={option.value === value}
+          className="polus-select-option"
+          data-active={index === activeIndex}
+          data-selected={option.value === value}
+          id={`${listboxId}-${option.value}`}
+          key={option.value}
+          onClick={() => onSelect(option.value)}
+          onMouseEnter={() => onActiveIndexChange(index)}
+          role="option"
+          tabIndex={-1}
+          type="button"
+        >
+          <span>{option.label}</span>
+          {option.value === value ? <span className="polus-select-check" /> : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function PolusSelectField({
   id,
   value,
@@ -126,26 +169,15 @@ export function PolusSelectField({
       </button>
 
       {isOpen ? (
-        <div aria-labelledby={id} className="polus-select-menu" id={listboxId} role="listbox">
-          {options.map((option, index) => (
-            <button
-              aria-selected={option.value === value}
-              className="polus-select-option"
-              data-active={index === activeIndex}
-              data-selected={option.value === value}
-              id={`${listboxId}-${option.value}`}
-              key={option.value}
-              onClick={() => selectOption(option.value)}
-              onMouseEnter={() => setActiveIndex(index)}
-              role="option"
-              tabIndex={-1}
-              type="button"
-            >
-              <span>{option.label}</span>
-              {option.value === value ? <span className="polus-select-check" /> : null}
-            </button>
-          ))}
-        </div>
+        <PolusSelectMenu
+          activeIndex={activeIndex}
+          id={id}
+          listboxId={listboxId}
+          options={options}
+          value={value}
+          onActiveIndexChange={setActiveIndex}
+          onSelect={selectOption}
+        />
       ) : null}
     </div>
   );

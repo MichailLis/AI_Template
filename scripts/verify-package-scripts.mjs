@@ -68,6 +68,10 @@ if (rootScripts.lint !== 'npm run lint --prefix client && npm run lint --prefix 
   fail('root lint script must run client and server lint scripts');
 }
 
+if (rootScripts['test:scripts'] !== 'node --test scripts/lib/*.test.mjs') {
+  fail('root test:scripts script must run scripts/lib/*.test.mjs');
+}
+
 if (rootScripts['install:all'] !== 'npm ci --prefix client && npm ci --prefix server') {
   fail('install:all must use npm ci for client and server');
 }
@@ -87,6 +91,7 @@ if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migr
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
+  requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
 }
 
