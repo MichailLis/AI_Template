@@ -2,6 +2,8 @@ import { constants } from 'node:fs';
 import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, join, posix } from 'node:path';
 
+import { getRouteManifestErrors, isAllowedManifestRoute } from './lib/manifest-route-ownership.mjs';
+
 const root = process.cwd();
 
 const isNotFoundError = (error) =>
@@ -614,21 +616,14 @@ const verify = async () => {
     errors.push('client/src/app/App.tsx: expected to include a root route path="/"');
   }
 
-  const isAllowedRoute = (route) => {
-    if (route === '/' || route === '*') {
-      return true;
-    }
+  errors.push(...getRouteManifestErrors(features));
 
-    if (
-      authRoutes.includes(route) ||
-      featureRoutes.includes(route) ||
-      publicRoutes.includes(route)
-    ) {
-      return true;
-    }
-
-    return featureRoutes.some((featureRoute) => route.startsWith(`${featureRoute}/`));
-  };
+  const isAllowedRoute = (route) =>
+    isAllowedManifestRoute(route, {
+      authRoutes,
+      publicRoutes,
+      features,
+    });
 
   for (const route of declaredRoutePaths) {
     if (!isAllowedRoute(route)) {
