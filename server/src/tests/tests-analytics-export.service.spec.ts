@@ -120,8 +120,14 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
   ],
 });
 
+class TestsAnalyticsPdfRendererMock extends TestsAnalyticsPdfRendererService {
+  override render = jest.fn<Promise<Buffer>, [AdminTestAnalyticsSummaryDto]>();
+}
+
 describe('TestsAnalyticsExportService', () => {
-  const service = new TestsAnalyticsExportService(new TestsAnalyticsPdfRendererService());
+  let service: TestsAnalyticsExportService;
+  let pdfRendererMock: TestsAnalyticsPdfRendererMock;
+
   const requiredSheetNames = [
     'Сводка',
     'Направления',
@@ -131,6 +137,11 @@ describe('TestsAnalyticsExportService', () => {
     'Демография',
     'Прохождения',
   ];
+
+  beforeEach(() => {
+    pdfRendererMock = new TestsAnalyticsPdfRendererMock();
+    service = new TestsAnalyticsExportService(pdfRendererMock);
+  });
 
   it('exports summary to XLSX buffer and creates required sheets', async () => {
     const summary = createSummary('Сводный отчет');
@@ -145,20 +156,15 @@ describe('TestsAnalyticsExportService', () => {
     expect(sheetNames).toEqual(expect.arrayContaining(requiredSheetNames));
   });
 
-  it('exports summary to PDF buffer with expected header', async () => {
+  it('delegates PDF export to renderer', async () => {
     const summary = createSummary('PDF отчёт');
+    const expectedBuffer = Buffer.from('%PDF stub');
+    pdfRendererMock.render.mockResolvedValue(expectedBuffer);
+
     const buffer = await service.toPdf(summary);
-    const prefix = buffer.slice(0, 4).toString('utf8');
 
-    expect(prefix).toBe('%PDF');
-  });
-
-  it('generates PDF for title with Cyrillic characters', async () => {
-    const summary = createSummary('Отчёт: профильный анализ');
-
-    const pdfBuffer = await service.toPdf(summary);
-
-    expect(pdfBuffer).toBeInstanceOf(Buffer);
-    expect(pdfBuffer.slice(0, 4).toString('utf8')).toBe('%PDF');
+    expect(buffer).toBe(expectedBuffer);
+    expect(pdfRendererMock.render).toHaveBeenCalledTimes(1);
+    expect(pdfRendererMock.render).toHaveBeenCalledWith(summary);
   });
 });
