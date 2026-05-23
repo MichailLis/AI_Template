@@ -10,6 +10,7 @@ const SOURCE_SCOPES = [
     directoryPath: join(root, 'client', 'src'),
     extensions: ['.ts', '.tsx'],
     ignoredPrefixes: ['client/src/shared/api/generated/'],
+    ignoredSuffixes: [],
     label: 'Client source',
     maxEffectiveLines: 420,
   },
@@ -17,13 +18,23 @@ const SOURCE_SCOPES = [
     directoryPath: join(root, 'server', 'src'),
     extensions: ['.ts'],
     ignoredPrefixes: ['server/src/generated/'],
+    ignoredSuffixes: ['.spec.ts'],
     label: 'Server source',
+    maxEffectiveLines: 700,
+  },
+  {
+    directoryPath: join(root, 'server', 'src'),
+    extensions: ['.spec.ts'],
+    ignoredPrefixes: ['server/src/generated/'],
+    ignoredSuffixes: [],
+    label: 'Server specs',
     maxEffectiveLines: 900,
   },
   {
     directoryPath: join(root, 'scripts'),
     extensions: ['.js', '.mjs'],
     ignoredPrefixes: [],
+    ignoredSuffixes: [],
     label: 'Repository scripts',
     maxEffectiveLines: 700,
   },
@@ -31,6 +42,7 @@ const SOURCE_SCOPES = [
     directoryPath: join(root, 'client', 'src'),
     extensions: ['.css'],
     ignoredPrefixes: [],
+    ignoredSuffixes: [],
     label: 'Client styles',
     maxEffectiveLines: 2000,
   },
@@ -72,6 +84,9 @@ const collectFiles = async (scope, directoryPath = scope.directoryPath) => {
 
     const relativePath = toPosix(absolutePath.slice(root.length + 1));
     if (scope.ignoredPrefixes.some((prefix) => relativePath.startsWith(prefix))) {
+      continue;
+    }
+    if (scope.ignoredSuffixes.some((suffix) => relativePath.endsWith(suffix))) {
       continue;
     }
 

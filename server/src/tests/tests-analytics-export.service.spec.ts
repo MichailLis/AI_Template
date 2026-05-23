@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 
 import { TestsAnalyticsExportService } from './tests-analytics-export.service';
+import { TestsAnalyticsPdfRendererService } from './tests-analytics-pdf-renderer.service';
 import type { AdminTestAnalyticsSummaryDto } from './dto/tests-analytics.dto';
 
 const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
@@ -120,7 +121,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
 });
 
 describe('TestsAnalyticsExportService', () => {
-  const service = new TestsAnalyticsExportService();
+  const service = new TestsAnalyticsExportService(new TestsAnalyticsPdfRendererService());
   const requiredSheetNames = [
     'Сводка',
     'Направления',
