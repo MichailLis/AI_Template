@@ -1,3 +1,5 @@
+import { isRecord } from './type-guards';
+
 const DEFAULT_API_ERROR_MESSAGE = 'Не удалось выполнить запрос';
 const SESSION_EXPIRED_MESSAGE = 'Сессия истекла или доступ запрещен. Войдите заново.';
 const SERVER_UNAVAILABLE_MESSAGE =
@@ -8,10 +10,6 @@ interface ApiErrorMessageOptions {
   unauthorizedMessage?: string;
   requestMessage?: string;
 }
-
-export const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 const extractErrorMessage = (data: Record<string, unknown>) => {
   const nestedError = data.error;

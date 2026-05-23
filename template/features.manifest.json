@@ -29,6 +29,7 @@
     {
       "name": "admin",
       "route": "/admin",
+      "additionalRoutes": ["/admin/users", "/admin/analytics", "/admin/settings"],
       "backendModule": "AdminModule",
       "prismaModel": "User",
       "schema": "adminOverviewSchema",
@@ -179,6 +180,7 @@
     {
       "name": "tests",
       "route": "/admin/tests",
+      "additionalRoutes": ["/admin/public-links"],
       "backendModule": "TestsModule",
       "prismaModel": "TestTopic",
       "schema": "testsTopicCreateSchema",

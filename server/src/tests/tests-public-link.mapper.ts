@@ -1,8 +1,5 @@
 import type { PublicLinkAdminRecord } from './tests-public-link.query';
-
-export const toOptionalIsoString = (value: Date | null) => {
-  return value ? value.toISOString() : null;
-};
+import { toOptionalIsoString } from './tests-date.utils';
 
 export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
   return {

@@ -1,3 +1,5 @@
+import { isRecord } from '@/shared/lib/type-guards';
+
 import { mockAnalysisReport } from './public-test-analysis.mock';
 
 import type {
@@ -10,10 +12,6 @@ import type {
 interface PublicAnalysisPayload {
   summary: unknown;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 const readString = (value: unknown): string | null => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
