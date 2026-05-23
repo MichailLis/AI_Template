@@ -7,10 +7,7 @@ import type {
 } from '@prisma/client';
 
 import type { AttemptWithSessionData } from './tests-attempt.query';
-
-const toIso = (value: Date | null) => {
-  return value ? value.toISOString() : null;
-};
+import { toOptionalIsoString } from './tests-date.utils';
 
 const mapPublicQuestion = (
   question: AttemptWithSessionData['topicVersion']['questions'][number],
@@ -169,8 +166,8 @@ export const mapSessionState = (
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
     startedAt: attempt.startedAt.toISOString(),
-    expiresAt: toIso(attempt.expiresAt),
-    finishedAt: toIso(attempt.finishedAt),
+    expiresAt: toOptionalIsoString(attempt.expiresAt),
+    finishedAt: toOptionalIsoString(attempt.finishedAt),
     timeLimitMinutes: attempt.publicLink.timeLimitMinutes,
     questions: attempt.topicVersion.questions.map((question) => mapPublicQuestion(question)),
     answers: attempt.answers.map((answer) => ({
@@ -191,8 +188,8 @@ export const mapAttemptListItem = (
     status: toAttemptStatus(attempt),
     ...mapAttemptProfile(attempt),
     startedAt: attempt.startedAt.toISOString(),
-    finishedAt: toIso(attempt.finishedAt),
-    expiresAt: toIso(attempt.expiresAt),
+    finishedAt: toOptionalIsoString(attempt.finishedAt),
+    expiresAt: toOptionalIsoString(attempt.expiresAt),
     analysisStatus: attempt.analysis?.status ?? null,
   };
 };
@@ -213,8 +210,8 @@ export const mapAttemptDetail = (
     consentAcceptedAt: attempt.consentAcceptedAt.toISOString(),
     consentVersion: attempt.consentVersion,
     startedAt: attempt.startedAt.toISOString(),
-    finishedAt: toIso(attempt.finishedAt),
-    expiresAt: toIso(attempt.expiresAt),
+    finishedAt: toOptionalIsoString(attempt.finishedAt),
+    expiresAt: toOptionalIsoString(attempt.expiresAt),
     answers: attempt.answers.map((answer) => ({
       questionId: answer.questionId,
       questionType: answer.questionTypeSnapshot,
@@ -229,10 +226,8 @@ export const mapAttemptDetail = (
           summary: attempt.analysis.summary,
           rawText: attempt.analysis.rawText,
           errorMessage: attempt.analysis.errorMessage,
-          generatedAt: toIso(attempt.analysis.generatedAt),
+          generatedAt: toOptionalIsoString(attempt.analysis.generatedAt),
         }
       : null,
   };
 };
-
-export const toOptionalIsoString = toIso;

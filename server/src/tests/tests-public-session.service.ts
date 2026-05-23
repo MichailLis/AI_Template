@@ -5,9 +5,10 @@ import type {
   PublicSessionSaveAnswersRequestDto,
   PublicSessionStartRequestDto,
 } from './dto/tests-public.dto';
-import { mapSessionState, toOptionalIsoString } from './tests-attempt.mapper';
+import { mapSessionState } from './tests-attempt.mapper';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
+import { toOptionalIsoString } from './tests-date.utils';
 import {
   buildDemographicStudentKeyHash,
   buildEducationDemographicStudentKeyHash,

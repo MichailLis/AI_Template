@@ -1,4 +1,5 @@
 import { parseApiError } from '@/shared/lib/api-error';
+import { isRecord } from '@/shared/lib/type-guards';
 
 import type {
   QuestionFormState,
@@ -22,12 +23,8 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   SLIDER: 'Слайдер',
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 const isSettingsRecord = (value: unknown): value is UpsertTestsQuestionDtoSettings => {
-  return isRecord(value) && !Array.isArray(value);
+  return isRecord(value);
 };
 
 const DEFAULT_SLIDER_MIN = '1';

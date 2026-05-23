@@ -1,3 +1,5 @@
+import { isRecord } from '@/shared/lib/type-guards';
+
 import type { ProfOrientationLlmState } from './prof-orientation-llm-data';
 
 export interface ProfOrientationDirection {
@@ -33,9 +35,6 @@ export interface ProfOrientationSummary {
   };
   llm: ProfOrientationLlmState;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');

@@ -10,10 +10,10 @@ import type {
 } from './dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from './dto/tests-public.dto';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
-import { parseDateOrNull } from './tests-date.utils';
+import { parseDateOrNull, toOptionalIsoString } from './tests-date.utils';
 import { createShortCodeCandidate } from './tests-domain.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
-import { mapAdminPublicLink, toOptionalIsoString } from './tests-public-link.mapper';
+import { mapAdminPublicLink } from './tests-public-link.mapper';
 import {
   publicLinkAccessInclude,
   publicLinkAdminInclude,

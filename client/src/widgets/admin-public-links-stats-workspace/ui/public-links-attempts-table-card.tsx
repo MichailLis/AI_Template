@@ -1,3 +1,4 @@
+import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
@@ -94,23 +95,10 @@ const getAnalysisStatusBadgeClassName = (status: string | null) => {
   return adminBadgeClassNames.neutral;
 };
 
-const educationLevelLabels = {
-  BASIC_GENERAL: 'Основное общее',
-  SECONDARY_GENERAL: 'Среднее общее',
-  SECONDARY_SPECIAL: 'Среднее специальное',
-  INCOMPLETE_HIGHER_FROM_YEAR_3: 'Неоконченное высшее',
-  HIGHER: 'Высшее',
-} as const;
-
-const genderLabels = {
-  MALE: 'Мужской',
-  FEMALE: 'Женский',
-} as const;
-
 const getAttemptProfilePrimary = (attempt: PublicAttemptRow) => {
   if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
     return [
-      attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+      attempt.studentGender ? studentGenderLabels[attempt.studentGender] : null,
       attempt.studentAge ? `${attempt.studentAge} лет` : null,
     ]
       .filter(Boolean)
@@ -130,7 +118,9 @@ const getAttemptProfileSecondary = (attempt: PublicAttemptRow) => {
   if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
     return [
       attempt.studentResidence,
-      attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+      attempt.studentEducationLevel
+        ? studentEducationLevelLabels[attempt.studentEducationLevel]
+        : null,
     ]
       .filter(Boolean)
       .join(' • ');
@@ -146,9 +136,11 @@ const getAttemptProfileSecondary = (attempt: PublicAttemptRow) => {
 
   if (attempt.entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
     educationDetails.push(
-      attempt.studentGender ? genderLabels[attempt.studentGender] : null,
+      attempt.studentGender ? studentGenderLabels[attempt.studentGender] : null,
       attempt.studentResidence,
-      attempt.studentEducationLevel ? educationLevelLabels[attempt.studentEducationLevel] : null,
+      attempt.studentEducationLevel
+        ? studentEducationLevelLabels[attempt.studentEducationLevel]
+        : null,
     );
   }
 
