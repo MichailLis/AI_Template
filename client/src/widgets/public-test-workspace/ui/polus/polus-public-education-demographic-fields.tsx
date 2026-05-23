@@ -35,6 +35,51 @@ const genderOptions = [
   { value: 'FEMALE', label: 'Женский' },
 ] as const;
 
+interface PolusDemographicSelectFieldsProps {
+  demographicFormState: DemographicFormState;
+  onDemographicFieldChange: DemographicFieldChangeHandler;
+}
+
+function PolusDemographicSelectFields({
+  demographicFormState,
+  onDemographicFieldChange,
+}: PolusDemographicSelectFieldsProps) {
+  return (
+    <>
+      <div className="polus-field">
+        <label htmlFor="polus-student-gender">Пол</label>
+        <PolusSelectField
+          id="polus-student-gender"
+          options={genderOptions}
+          placeholder="Выберите пол"
+          required
+          value={demographicFormState.gender}
+          onChange={(value) =>
+            onDemographicFieldChange('gender', value as DemographicFormState['gender'])
+          }
+        />
+      </div>
+      <div className="polus-field">
+        <label htmlFor="polus-student-education-level">Уровень образования</label>
+        <PolusSelectField
+          id="polus-student-education-level"
+          options={educationLevelOptions}
+          placement="top"
+          placeholder="Выберите уровень"
+          required
+          value={demographicFormState.educationLevel}
+          onChange={(value) =>
+            onDemographicFieldChange(
+              'educationLevel',
+              value as DemographicFormState['educationLevel'],
+            )
+          }
+        />
+      </div>
+    </>
+  );
+}
+
 export function PolusEducationDemographicFields({
   demographicFormState,
   registrationFormState,
@@ -120,36 +165,10 @@ export function PolusEducationDemographicFields({
           required
         />
       </div>
-      <div className="polus-field">
-        <label htmlFor="polus-student-gender">Пол</label>
-        <PolusSelectField
-          id="polus-student-gender"
-          options={genderOptions}
-          placeholder="Выберите пол"
-          required
-          value={demographicFormState.gender}
-          onChange={(value) =>
-            onDemographicFieldChange('gender', value as DemographicFormState['gender'])
-          }
-        />
-      </div>
-      <div className="polus-field">
-        <label htmlFor="polus-student-education-level">Уровень образования</label>
-        <PolusSelectField
-          id="polus-student-education-level"
-          options={educationLevelOptions}
-          placement="top"
-          placeholder="Выберите уровень"
-          required
-          value={demographicFormState.educationLevel}
-          onChange={(value) =>
-            onDemographicFieldChange(
-              'educationLevel',
-              value as DemographicFormState['educationLevel'],
-            )
-          }
-        />
-      </div>
+      <PolusDemographicSelectFields
+        demographicFormState={demographicFormState}
+        onDemographicFieldChange={onDemographicFieldChange}
+      />
       <div className="polus-field polus-field-wide">
         <label htmlFor="polus-student-residence">Место жительства</label>
         <span className="polus-field-hint" id="polus-student-residence-hint">
