@@ -1,11 +1,10 @@
 import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import type { OpenRouterClientService } from '../openrouter/openrouter.client';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 
 type PublishVersionUpdate = (args: {
@@ -13,12 +12,13 @@ type PublishVersionUpdate = (args: {
   where: { id: number };
 }) => Promise<unknown>;
 
+type OpenRouterClientMock = {
+  fetchModels: jest.MockedFunction<OpenRouterClientService['fetchModels']>;
+  generatePrompt: jest.MockedFunction<OpenRouterClientService['generatePrompt']>;
+};
+
 jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
-jest.mock('../openrouter/openrouter.client', () => ({
-  fetchOpenRouterModels: jest.fn(),
-  generateOpenRouterPrompt: jest.fn(),
 }));
 
 describe('AnalysisPromptsService', () => {
@@ -41,12 +41,10 @@ describe('AnalysisPromptsService', () => {
       findMany: jest.Mock;
     };
   };
-  let configMock: {
-    get: jest.Mock;
-  };
   let openRouterApiKeyServiceMock: {
     getOpenRouterApiKey: jest.Mock;
   };
+  let openRouterClientMock: OpenRouterClientMock;
 
   const promptRecord = {
     id: 7,
@@ -90,21 +88,20 @@ describe('AnalysisPromptsService', () => {
         findMany: jest.fn(),
       },
     };
-    configMock = {
-      get: jest.fn((key: string) => (key === 'OPENROUTER_API_KEY' ? 'test-key' : undefined)),
-    };
     openRouterApiKeyServiceMock = {
       getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
+    };
+    openRouterClientMock = {
+      fetchModels: jest.fn(),
+      generatePrompt: jest.fn(),
     };
 
     service = new AnalysisPromptsService(
       prismaMock as unknown as PrismaService,
-      configMock as unknown as ConfigService,
       openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
+      openRouterClientMock as unknown as OpenRouterClientService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
-    jest.mocked(fetchOpenRouterModels).mockReset();
-    jest.mocked(generateOpenRouterPrompt).mockReset();
   });
 
   afterEach(() => {
@@ -127,13 +124,13 @@ describe('AnalysisPromptsService', () => {
 
   it('getPromptModels delegates through the OpenRouter integration', async () => {
     const response = { defaultModel: 'openai/gpt-oss-20b:free', models: [] };
-    jest.mocked(fetchOpenRouterModels).mockResolvedValue(response);
+    openRouterClientMock.fetchModels.mockResolvedValue(response);
 
     await expect(service.getPromptModels(3)).resolves.toBe(response);
 
     expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
     expect(openRouterApiKeyServiceMock.getOpenRouterApiKey).toHaveBeenCalled();
-    expect(fetchOpenRouterModels).toHaveBeenCalledWith(configMock, 'test-key');
+    expect(openRouterClientMock.fetchModels).toHaveBeenCalledWith('test-key');
   });
 
   it('generatePrompt delegates through the OpenRouter integration', async () => {
@@ -144,13 +141,13 @@ describe('AnalysisPromptsService', () => {
       responseFormat: 'json' as const,
     };
     const response = { model: dto.model, output: '{}' };
-    jest.mocked(generateOpenRouterPrompt).mockResolvedValue(response);
+    openRouterClientMock.generatePrompt.mockResolvedValue(response);
 
     await expect(service.generatePrompt(3, dto)).resolves.toBe(response);
 
     expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
     expect(openRouterApiKeyServiceMock.getOpenRouterApiKey).toHaveBeenCalled();
-    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(configMock, 'test-key', dto);
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith('test-key', dto);
   });
 
   it('createPrompt creates a prompt with first draft version and fixed output schema', async () => {
@@ -360,7 +357,7 @@ describe('AnalysisPromptsService', () => {
       },
     ]);
     jest
-      .mocked(generateOpenRouterPrompt)
+      .mocked(openRouterClientMock.generatePrompt)
       .mockResolvedValueOnce({
         model: 'google/gemini-2.0-flash-exp:free',
         output: JSON.stringify({
@@ -385,8 +382,10 @@ describe('AnalysisPromptsService', () => {
         where: { id: { in: [11] } },
       }),
     );
-    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(2);
-    expect(jest.mocked(generateOpenRouterPrompt).mock.calls[1]?.[2]).toMatchObject({
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
+    const analysisPromptRequest = openRouterClientMock.generatePrompt.mock.calls[1]?.[1];
+
+    expect(analysisPromptRequest).toMatchObject({
       model: 'google/gemini-2.0-flash-exp:free',
       responseFormat: 'json',
       responseSchema: TestAnalysisResultJsonSchema,
@@ -414,7 +413,7 @@ describe('AnalysisPromptsService', () => {
       },
     ]);
     jest
-      .mocked(generateOpenRouterPrompt)
+      .mocked(openRouterClientMock.generatePrompt)
       .mockResolvedValueOnce({
         model: 'openai/gpt-4.1',
         output: JSON.stringify({
@@ -434,8 +433,10 @@ describe('AnalysisPromptsService', () => {
       generateAnswers: true,
     });
 
-    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(2);
-    expect(jest.mocked(generateOpenRouterPrompt).mock.calls[1]?.[2]).toMatchObject({
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
+    const analysisPromptRequest = openRouterClientMock.generatePrompt.mock.calls[1]?.[1];
+
+    expect(analysisPromptRequest).toMatchObject({
       model: 'openai/gpt-4.1',
       responseFormat: 'json',
     });

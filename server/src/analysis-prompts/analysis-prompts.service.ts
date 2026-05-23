@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from '../tests/dto/tests-analysis.dto';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import { OpenRouterClientService } from '../openrouter/openrouter.client';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 
 import type {
@@ -76,8 +75,8 @@ const parseJsonOutput = (output: string): unknown => {
 export class AnalysisPromptsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
+    private readonly openRouterClient: OpenRouterClientService,
   ) {}
 
   private toVersionResponse(version: AnalysisPromptVersionRecord) {
@@ -226,7 +225,7 @@ export class AnalysisPromptsService {
 
     const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
-    return fetchOpenRouterModels(this.config, apiKey);
+    return this.openRouterClient.fetchModels(apiKey);
   }
 
   async generatePrompt(userId: number, dto: GeneratePromptDto) {
@@ -234,7 +233,7 @@ export class AnalysisPromptsService {
 
     const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
 
-    return generateOpenRouterPrompt(this.config, apiKey, dto);
+    return this.openRouterClient.generatePrompt(apiKey, dto);
   }
 
   async createPrompt(
@@ -398,7 +397,7 @@ export class AnalysisPromptsService {
         ? null
         : parseJsonOutput(
             (
-              await generateOpenRouterPrompt(this.config, apiKey, {
+              await this.openRouterClient.generatePrompt(apiKey, {
                 model: dto.model,
                 prompt: this.buildSyntheticAnswersPrompt(questionPayloads),
                 temperature: 0.2,
@@ -410,7 +409,7 @@ export class AnalysisPromptsService {
             ).output,
           );
 
-    const analysisResponse = await generateOpenRouterPrompt(this.config, apiKey, {
+    const analysisResponse = await this.openRouterClient.generatePrompt(apiKey, {
       model: dto.model,
       prompt: this.buildAnalysisPrompt(dto.prompt, questionPayloads, syntheticAnswers),
       temperature: dto.temperature ?? 0.2,

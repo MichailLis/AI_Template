@@ -1,4 +1,4 @@
-import { BadGatewayException } from '@nestjs/common';
+import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
@@ -10,7 +10,7 @@ import {
 
 const DEFAULT_OPENROUTER_TIMEOUT_MS = 120_000;
 
-interface OpenRouterPromptRequest {
+export interface OpenRouterPromptRequest {
   model: string;
   prompt: string;
   temperature?: number;
@@ -134,7 +134,7 @@ const extractCompletionOutput = (payload: {
       : '';
 };
 
-export const fetchOpenRouterModels = async (config: ConfigService, apiKey: string) => {
+const fetchOpenRouterModels = async (config: ConfigService, apiKey: string) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), resolveOpenRouterTimeoutMs(config));
 
@@ -175,7 +175,7 @@ export const fetchOpenRouterModels = async (config: ConfigService, apiKey: strin
   }
 };
 
-export const generateOpenRouterPrompt = async (
+const generateOpenRouterPrompt = async (
   config: ConfigService,
   apiKey: string,
   dto: OpenRouterPromptRequest,
@@ -246,3 +246,20 @@ export const generateOpenRouterPrompt = async (
     clearTimeout(timeout);
   }
 };
+
+@Injectable()
+export class OpenRouterClientService {
+  constructor(private readonly config: ConfigService) {}
+
+  resolveTimeoutMs(timeoutMs?: number) {
+    return resolveOpenRouterTimeoutMs(this.config, timeoutMs);
+  }
+
+  fetchModels(apiKey: string) {
+    return fetchOpenRouterModels(this.config, apiKey);
+  }
+
+  generatePrompt(apiKey: string, dto: OpenRouterPromptRequest, options?: { timeoutMs?: number }) {
+    return generateOpenRouterPrompt(this.config, apiKey, dto, options);
+  }
+}

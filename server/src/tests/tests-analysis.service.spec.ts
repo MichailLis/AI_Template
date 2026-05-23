@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
-import { fetchOpenRouterModels, generateOpenRouterPrompt } from '../openrouter/openrouter.client';
+import type { OpenRouterClientService } from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { TestAnalysisResultJsonSchema } from './dto/tests-analysis.dto';
@@ -37,11 +37,11 @@ type AnalysisUpdateArgs = {
   };
 };
 
-jest.mock('../openrouter/openrouter.client', () => ({
-  fetchOpenRouterModels: jest.fn(),
-  generateOpenRouterPrompt: jest.fn(),
-  resolveOpenRouterTimeoutMs: jest.fn(() => 120_000),
-}));
+type OpenRouterClientMock = {
+  fetchModels: jest.MockedFunction<OpenRouterClientService['fetchModels']>;
+  generatePrompt: jest.MockedFunction<OpenRouterClientService['generatePrompt']>;
+  resolveTimeoutMs: jest.MockedFunction<OpenRouterClientService['resolveTimeoutMs']>;
+};
 
 const validAnalysisResult = {
   introduction:
@@ -122,6 +122,7 @@ describe('TestsAnalysisService', () => {
   let openRouterApiKeyServiceMock: {
     getOpenRouterApiKey: jest.Mock;
   };
+  let openRouterClientMock: OpenRouterClientMock;
 
   beforeEach(() => {
     prismaMock = {
@@ -144,38 +145,42 @@ describe('TestsAnalysisService', () => {
     openRouterApiKeyServiceMock = {
       getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
     };
+    openRouterClientMock = {
+      fetchModels: jest.fn().mockResolvedValue({
+        defaultModel: 'google/gemini-2.0-flash-exp:free',
+        models: [
+          {
+            id: 'google/gemini-2.0-flash-exp:free',
+            label: 'Gemini',
+            provider: 'google',
+            isFree: true,
+            supportsStructuredOutputs: true,
+            contextLength: 1_000_000,
+            promptPrice: 0,
+            completionPrice: 0,
+          },
+          {
+            id: 'openai/gpt-4.1',
+            label: 'GPT-4.1',
+            provider: 'openai',
+            isFree: false,
+            supportsStructuredOutputs: true,
+            contextLength: 1_000_000,
+            promptPrice: 0.000002,
+            completionPrice: 0.000008,
+          },
+        ],
+      }),
+      generatePrompt: jest.fn(),
+      resolveTimeoutMs: jest.fn(() => 120_000),
+    };
 
     service = new TestsAnalysisService(
       prismaMock as unknown as PrismaService,
       configMock as unknown as ConfigService,
       openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
+      openRouterClientMock as unknown as OpenRouterClientService,
     );
-    jest.mocked(fetchOpenRouterModels).mockResolvedValue({
-      defaultModel: 'google/gemini-2.0-flash-exp:free',
-      models: [
-        {
-          id: 'google/gemini-2.0-flash-exp:free',
-          label: 'Gemini',
-          provider: 'google',
-          isFree: true,
-          supportsStructuredOutputs: true,
-          contextLength: 1_000_000,
-          promptPrice: 0,
-          completionPrice: 0,
-        },
-        {
-          id: 'openai/gpt-4.1',
-          label: 'GPT-4.1',
-          provider: 'openai',
-          isFree: false,
-          supportsStructuredOutputs: true,
-          contextLength: 1_000_000,
-          promptPrice: 0.000002,
-          completionPrice: 0.000008,
-        },
-      ],
-    });
-    jest.mocked(generateOpenRouterPrompt).mockReset();
   });
 
   afterEach(() => {
@@ -364,7 +369,7 @@ describe('TestsAnalysisService', () => {
         },
       ],
     });
-    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+    openRouterClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validAnalysisResult),
     });
@@ -372,8 +377,7 @@ describe('TestsAnalysisService', () => {
 
     await service.runAttemptAnalysis(5);
 
-    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(
-      configMock,
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
         model: 'google/gemini-2.0-flash-exp:free',
@@ -383,7 +387,7 @@ describe('TestsAnalysisService', () => {
         useResponseHealing: true,
       }),
     );
-    const promptOptions = jest.mocked(generateOpenRouterPrompt).mock.calls[0]?.[2];
+    const promptOptions = openRouterClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('introduction');
     expect(promptOptions?.prompt).toContain('2-4 предложения');
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
@@ -414,7 +418,7 @@ describe('TestsAnalysisService', () => {
       },
       answers: [],
     });
-    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+    openRouterClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: '{"skillsLevel":null}',
     });
@@ -467,7 +471,7 @@ describe('TestsAnalysisService', () => {
         },
       ],
     });
-    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+    openRouterClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validAnalysisResult),
     });
@@ -475,8 +479,7 @@ describe('TestsAnalysisService', () => {
 
     await service.runAttemptAnalysis(5);
 
-    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(
-      configMock,
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
         model: 'google/gemini-2.0-flash-exp:free',
@@ -509,7 +512,7 @@ describe('TestsAnalysisService', () => {
       },
       answers: [],
     });
-    jest.mocked(generateOpenRouterPrompt).mockResolvedValue({
+    openRouterClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validProfOrientationEnrichment),
     });
@@ -536,15 +539,14 @@ describe('TestsAnalysisService', () => {
         },
       },
     });
-    expect(generateOpenRouterPrompt).toHaveBeenCalledWith(
-      configMock,
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
       }),
       { timeoutMs: 180_000 },
     );
-    const promptOptions = jest.mocked(generateOpenRouterPrompt).mock.calls[0]?.[2];
+    const promptOptions = openRouterClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('Профессор Полюс говорит');
     expect(promptOptions?.prompt).toContain('240-420 символов');
     expect(promptOptions?.prompt).toContain('не раскрывай внутреннюю механику подсчета');
@@ -578,7 +580,7 @@ describe('TestsAnalysisService', () => {
       answers: [],
     });
     jest
-      .mocked(generateOpenRouterPrompt)
+      .mocked(openRouterClientMock.generatePrompt)
       .mockRejectedValueOnce(new Error('OpenRouter request timeout'))
       .mockResolvedValue({
         model: 'google/gemini-2.0-flash-exp:free',
@@ -588,9 +590,9 @@ describe('TestsAnalysisService', () => {
 
     await service.runAttemptAnalysis(5);
 
-    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(2);
-    const firstPromptCall = jest.mocked(generateOpenRouterPrompt).mock.calls[0] as unknown[];
-    expect(firstPromptCall[3]).toMatchObject({
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
+    const firstPromptCall = openRouterClientMock.generatePrompt.mock.calls[0] as unknown[];
+    expect(firstPromptCall[2]).toMatchObject({
       timeoutMs: 180_000,
     });
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
@@ -637,13 +639,13 @@ describe('TestsAnalysisService', () => {
       answers: [],
     });
     jest
-      .mocked(generateOpenRouterPrompt)
+      .mocked(openRouterClientMock.generatePrompt)
       .mockRejectedValue(new Error('OpenRouter returned an empty response'));
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
 
-    expect(generateOpenRouterPrompt).toHaveBeenCalledTimes(1);
+    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(1);
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
     >;

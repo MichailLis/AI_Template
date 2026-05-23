@@ -3,9 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
 
 import {
-  fetchOpenRouterModels,
-  generateOpenRouterPrompt,
-  resolveOpenRouterTimeoutMs,
+  OpenRouterClientService,
+  type OpenRouterPromptRequest,
 } from '../openrouter/openrouter.client';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
@@ -93,6 +92,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
+    private readonly openRouterClient: OpenRouterClientService,
   ) {}
 
   private buildAttemptAnalysisPrompt(input: {
@@ -180,7 +180,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     }
 
     return Math.max(
-      resolveOpenRouterTimeoutMs(this.config),
+      this.openRouterClient.resolveTimeoutMs(),
       PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS,
     );
   }
@@ -205,7 +205,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
 
   private async generateProfOrientationPromptWithTimeoutRetry(
     apiKey: string,
-    dto: Parameters<typeof generateOpenRouterPrompt>[2],
+    dto: OpenRouterPromptRequest,
   ) {
     const retries = this.getProfOrientationTimeoutRetries();
     const timeoutMs = this.getProfOrientationOpenRouterTimeoutMs();
@@ -213,7 +213,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
 
     while (true) {
       try {
-        return await generateOpenRouterPrompt(this.config, apiKey, dto, { timeoutMs });
+        return await this.openRouterClient.generatePrompt(apiKey, dto, { timeoutMs });
       } catch (error) {
         if (!this.isOpenRouterTimeoutError(error) || attempt >= retries) {
           throw error;
@@ -226,7 +226,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
 
   private async resolveStructuredModel(apiKey: string, savedModel: string) {
     try {
-      const catalog = await fetchOpenRouterModels(this.config, apiKey);
+      const catalog = await this.openRouterClient.fetchModels(apiKey);
 
       if (catalog.models.some((model) => model.id === savedModel)) {
         return savedModel;
@@ -456,7 +456,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
         questionType: answer.questionTypeSnapshot,
         answerPayload: answer.answerPayload,
       }));
-      const response = await generateOpenRouterPrompt(this.config, apiKey, {
+      const response = await this.openRouterClient.generatePrompt(apiKey, {
         model,
         prompt: this.buildAttemptAnalysisPrompt({
           prompt: promptVersion.prompt,
