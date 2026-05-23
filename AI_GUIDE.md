@@ -141,7 +141,8 @@ Goal: avoid another large refactor wave by enforcing guardrails continuously.
 Maintainability thresholds for proactive extraction:
 
 - Prefer splitting files before they cross ~350 lines (lint warning).
-- Hard fail guard exists at 420 lines (`npm run verify:maintainability`).
+- Hard fail target is 420 effective lines. Current guard is tightened in steps:
+  client source at 420, server source at 700 during backend extraction, server specs at 900.
 - Prefer reducer/extraction when a module accumulates more than ~14 `useState` calls.
 - Treat complexity warnings as mandatory refactor candidates for the next small PR.
 

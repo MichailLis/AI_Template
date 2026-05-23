@@ -6,6 +6,7 @@ import { TestsAdminAnalyticsController } from './tests-admin-analytics.controlle
 import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { TestsAdminAttemptsController } from './tests-admin-attempts.controller';
 import { TestsAnalyticsExportService } from './tests-analytics-export.service';
+import { TestsAnalyticsPdfRendererService } from './tests-analytics-pdf-renderer.service';
 import { TestsAnalyticsService } from './tests-analytics.service';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsAttemptService } from './tests-attempt.service';
@@ -19,6 +20,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
   providers: [
     TestsAnalyticsService,
     TestsAnalyticsExportService,
+    TestsAnalyticsPdfRendererService,
     TestsAnalysisService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
