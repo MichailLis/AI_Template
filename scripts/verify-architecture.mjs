@@ -586,8 +586,6 @@ const verify = async () => {
 
   const appModule = await readFromRoot('server/src/app.module.ts');
   const appRoutes = await readFromRoot('client/src/app/App.tsx');
-  const dashboardExists = await existsFromRoot('client/src/pages/dashboard.tsx');
-  const dashboard = dashboardExists ? await readFromRoot('client/src/pages/dashboard.tsx') : '';
   const schemas = await readFromRoot('client/src/shared/api/schemas.ts');
   const prismaSchema = await readFromRoot('server/prisma/schema.prisma');
 
@@ -792,13 +790,6 @@ const verify = async () => {
 
     ensureIncludes(errors, appModule, feature.backendModule, 'server/src/app.module.ts');
     ensureIncludes(errors, appRoutes, `path="${feature.route}"`, 'client/src/app/App.tsx');
-    if (!dashboardExists) {
-      errors.push(
-        'client/src/pages/dashboard.tsx is missing but features are declared in manifest',
-      );
-    } else {
-      ensureIncludes(errors, dashboard, `to="${feature.route}"`, 'client/src/pages/dashboard.tsx');
-    }
     ensureIncludes(
       errors,
       schemas,

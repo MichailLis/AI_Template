@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma.module';
 import { AdminModule } from './admin/admin.module';
@@ -21,9 +19,8 @@ import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.modul
     AnalysisPromptsModule,
     TestsModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,

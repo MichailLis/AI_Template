@@ -302,7 +302,7 @@ Implement controller/service/DTO with existing patterns (`createZodDto`, Swagger
 npm run gen:api
 ```
 
-5. Implement UI in `features` and `pages`, wire route in `client/src/app/App.tsx`, and add feature links in `client/src/pages/dashboard.tsx` (required when features are declared).
+5. Implement UI in `features` and `pages`, then wire the route in `client/src/app/App.tsx`.
 6. Update `template/features.manifest.json`.
 7. Run quality gate:
 
@@ -360,7 +360,7 @@ Use this before opening PR or finalizing a feature branch:
 3. Manifest updated (`template/features.manifest.json` matches actual files/routes).
 4. API mutator contract preserved (`npm run verify:api-mutator` passed).
 5. Frontend API regenerated (`npm run gen:api` passed).
-6. Route/navigation wired (`App.tsx` contains declared `features` and `publicRoutes`; `client/src/pages/dashboard.tsx` contains links to declared feature routes).
+6. Route/navigation wired (`App.tsx` contains declared `features` and `publicRoutes`).
 7. Server tests green (`npm run test --prefix server` and `npm run test:e2e --prefix server` passed).
 8. Full template pipeline green (`npm run verify:template` passed).
 9. No bypasses (do not disable checks or hardcode obsolete smoke paths).
@@ -375,7 +375,6 @@ Use this before opening PR or finalizing a feature branch:
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In an explicit auth-only cleanup branch, keep manifest `features` empty.
 - `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
-- When `features` is not empty, `client/src/pages/dashboard.tsx` must exist and include `to="<feature.route>"` links for declared features.
 - Declared `publicRoutes` must be present in `client/src/app/App.tsx`.
 - Generated API directories that do not match feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - In an explicit auth-only cleanup branch, `auth.requiredRoutes` should reflect frontend routing (currently `"/login"`).

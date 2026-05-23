@@ -7,7 +7,6 @@ Use this checklist before merging template changes to the final auth-only branch
 - Delete temporary feature modules from `server/src/<feature>/`.
 - Delete related frontend feature/page files from `client/src/features/` and `client/src/pages/`.
 - Remove related routes from `client/src/app/App.tsx`.
-- Remove related links/buttons from `client/src/pages/dashboard.tsx`.
 
 ## 2) Clean Prisma schema to auth baseline
 
