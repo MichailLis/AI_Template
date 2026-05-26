@@ -218,6 +218,7 @@ model TestPublicLink {
   allowResume             Boolean              @default(true)
   entryProfileMode        TestEntryProfileMode @default(EDUCATION)
   publicTemplate          TestPublicTemplate   @default(STANDARD)
+  publicBranding          Json?
   consentVersion          String
   consentTextSnapshot     String
   createdByUserId         Int?

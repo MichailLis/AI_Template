@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicLinkDtoEntryProfileMode } from './adminPublicLinkDtoEntryProfileMode';
+import type { AdminPublicLinkDtoPublicBranding } from './adminPublicLinkDtoPublicBranding';
 import type { AdminPublicLinkDtoPublicTemplate } from './adminPublicLinkDtoPublicTemplate';
 
 export interface AdminPublicLinkDto {
@@ -18,6 +19,8 @@ export interface AdminPublicLinkDto {
   educationOrganizationName: string | null;
   entryProfileMode: AdminPublicLinkDtoEntryProfileMode;
   publicTemplate: AdminPublicLinkDtoPublicTemplate;
+  /** @nullable */
+  publicBranding: AdminPublicLinkDtoPublicBranding;
   shortCode: string;
   shortUrl: string;
   isActive: boolean;

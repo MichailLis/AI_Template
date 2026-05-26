@@ -271,6 +271,7 @@ export function PublicTestResultWorkspace() {
     return (
       <PublicTestAnalysisProcessingScreen
         startedAt={getProcessingStartedAt(result, fallbackStartedAtMs)}
+        branding={result.publicBranding}
         variant={result.publicTemplate === 'POLUS' ? 'polus' : 'standard'}
       />
     );
@@ -284,7 +285,10 @@ export function PublicTestResultWorkspace() {
   const heroSignals = getHeroSignals(parsedAnalysis);
 
   return (
-    <PublicThemeLayout containerClassName="public-result-page max-w-6xl py-6 md:py-8">
+    <PublicThemeLayout
+      branding={result.publicBranding}
+      containerClassName="public-result-page max-w-6xl py-6 md:py-8"
+    >
       <section className="public-glass public-result-shell rounded-[1.75rem] px-4 py-4 md:px-6 md:py-6">
         <header className="space-y-4">
           <ResultHero />

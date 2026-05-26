@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { PublicSessionStartResponseDtoSessionAnswersItem } from './publicSessionStartResponseDtoSessionAnswersItem';
+import type { PublicSessionStartResponseDtoSessionPublicBranding } from './publicSessionStartResponseDtoSessionPublicBranding';
 import type { PublicSessionStartResponseDtoSessionPublicTemplate } from './publicSessionStartResponseDtoSessionPublicTemplate';
 import type { PublicSessionStartResponseDtoSessionQuestionsItem } from './publicSessionStartResponseDtoSessionQuestionsItem';
 import type { PublicSessionStartResponseDtoSessionStatus } from './publicSessionStartResponseDtoSessionStatus';
@@ -14,6 +15,8 @@ export type PublicSessionStartResponseDtoSession = {
   sessionToken: string;
   shortCode: string;
   publicTemplate: PublicSessionStartResponseDtoSessionPublicTemplate;
+  /** @nullable */
+  publicBranding: PublicSessionStartResponseDtoSessionPublicBranding;
   /**
    * @minimum 1
    * @maximum 9007199254740991

@@ -18,6 +18,7 @@ import { useEducationOrganizationActions } from './use-admin-public-links-organi
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
 import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
+import type { PublicBrandingConfig } from '@/features/tests';
 
 function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
   const {
@@ -127,6 +128,21 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
     );
   };
 
+  const handleUpdatePublicLinkBranding = (linkId: number, publicBranding: PublicBrandingConfig) => {
+    updatePublicLinkMutation.mutate(
+      { linkId, data: { publicBranding } },
+      {
+        onSuccess: () => {
+          toast.success(publicBranding ? 'Брендинг сохранен' : 'Брендинг сброшен');
+          refetchPublicLinks();
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
   const handleRegeneratePublicLinkShortCode = (linkId: number) => {
     regeneratePublicLinkShortCodeMutation.mutate(
       { linkId },
@@ -202,6 +218,7 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
     handleDeletePublicLink,
     handleRestorePublicLink,
     handleSwitchPublicLinksTab,
+    handleUpdatePublicLinkBranding,
   };
 }
 

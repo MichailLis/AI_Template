@@ -6,12 +6,15 @@
  * OpenAPI spec version: 1.0
  */
 import type { PublicSessionResultResponseDtoAnalysis } from './publicSessionResultResponseDtoAnalysis';
+import type { PublicSessionResultResponseDtoPublicBranding } from './publicSessionResultResponseDtoPublicBranding';
 import type { PublicSessionResultResponseDtoPublicTemplate } from './publicSessionResultResponseDtoPublicTemplate';
 import type { PublicSessionResultResponseDtoStatus } from './publicSessionResultResponseDtoStatus';
 
 export interface PublicSessionResultResponseDto {
   sessionToken: string;
   publicTemplate: PublicSessionResultResponseDtoPublicTemplate;
+  /** @nullable */
+  publicBranding: PublicSessionResultResponseDtoPublicBranding;
   status: PublicSessionResultResponseDtoStatus;
   /** @nullable */
   finishedAt: string | null;

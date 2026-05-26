@@ -1,4 +1,12 @@
-import { Archive, MoreHorizontal, Power, PowerOff, RefreshCcw, RotateCcw } from 'lucide-react';
+import {
+  Archive,
+  MoreHorizontal,
+  Palette,
+  Power,
+  PowerOff,
+  RefreshCcw,
+  RotateCcw,
+} from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -22,6 +30,7 @@ export interface PublicLinkActionHandlers {
   onCopyShortLink: (shortCode: string) => Promise<void>;
   onOpenShortLink: (shortCode: string) => void;
   onOpenQr: (shortCode: string) => void;
+  onOpenBrandingBuilder: (link: PublicLinkListItem) => void;
   onTogglePublicLink: (linkId: number, nextActive: boolean) => void;
   onRegenerateShortCode: (linkId: number) => void;
   onArchivePublicLink: (linkId: number) => void;
@@ -55,6 +64,7 @@ interface ArchivedPublicLinkActionsProps {
 function ActivePublicLinkActions({
   link,
   onTogglePublicLink,
+  onOpenBrandingBuilder,
   onRegenerateShortCode,
   onArchivePublicLink,
   isUpdatingPublicLink,
@@ -63,6 +73,18 @@ function ActivePublicLinkActions({
 }: ActivePublicLinkActionsProps) {
   return (
     <>
+      {link.publicTemplate === 'STANDARD' ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 justify-start px-2 text-left text-sm"
+          onClick={() => onOpenBrandingBuilder(link)}
+        >
+          <Palette className="mr-2 h-3.5 w-3.5" />
+          Конструктор
+        </Button>
+      ) : null}
       <Button
         type="button"
         variant="ghost"

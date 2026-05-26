@@ -13,6 +13,7 @@ import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { parseDateOrNull, toOptionalIsoString } from './tests-date.utils';
 import { createShortCodeCandidate } from './tests-domain.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
+import { toPrismaPublicBranding, toPublicBrandingResponse } from './tests-public-branding.utils';
 import { mapAdminPublicLink } from './tests-public-link.mapper';
 import {
   publicLinkAccessInclude,
@@ -122,6 +123,7 @@ export class TestsPublicLinkService {
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
     const entryProfileMode = dto.entryProfileMode ?? DEFAULT_ENTRY_PROFILE_MODE;
     const publicTemplate: PublicTemplate = dto.publicTemplate ?? DEFAULT_PUBLIC_TEMPLATE;
+    const publicBranding = toPrismaPublicBranding(dto.publicBranding);
     const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
       entryProfileMode,
       dto.maxAttemptsPerStudent,
@@ -136,6 +138,7 @@ export class TestsPublicLinkService {
         endsAt: parseDateOrNull(dto.endsAt),
         entryProfileMode,
         publicTemplate,
+        ...(publicBranding !== undefined ? { publicBranding } : {}),
         maxAttemptsPerStudent,
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
@@ -225,6 +228,7 @@ export class TestsPublicLinkService {
     );
     const startsAt = resolveDateUpdate(dto.startsAt, existing.startsAt);
     const endsAt = resolveDateUpdate(dto.endsAt, existing.endsAt);
+    const publicBranding = toPrismaPublicBranding(dto.publicBranding);
 
     ensureValidPublicLinkDateWindow(startsAt, endsAt);
 
@@ -235,6 +239,7 @@ export class TestsPublicLinkService {
         ...(dto.startsAt !== undefined ? { startsAt } : {}),
         ...(dto.endsAt !== undefined ? { endsAt } : {}),
         ...(dto.entryProfileMode !== undefined ? { entryProfileMode } : {}),
+        ...(publicBranding !== undefined ? { publicBranding } : {}),
         maxAttemptsPerStudent,
         ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
         ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
@@ -392,6 +397,7 @@ export class TestsPublicLinkService {
       description: link.topicVersion.description,
       entryProfileMode: link.entryProfileMode,
       publicTemplate: link.publicTemplate,
+      publicBranding: toPublicBrandingResponse(link.publicBranding),
       educationOrganization: link.educationOrganization?.name ?? null,
       groupValidationMode: link.educationOrganization?.groupValidationMode ?? 'NONE',
       groupValidationPattern: link.educationOrganization?.groupValidationPattern ?? null,

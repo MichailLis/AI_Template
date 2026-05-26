@@ -1,5 +1,6 @@
 import type { PublicLinkAdminRecord } from './tests-public-link.query';
 import { toOptionalIsoString } from './tests-date.utils';
+import { toPublicBrandingResponse } from './tests-public-branding.utils';
 
 export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
   return {
@@ -10,6 +11,7 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
     educationOrganizationName: link.educationOrganization?.name ?? null,
     entryProfileMode: link.entryProfileMode,
     publicTemplate: link.publicTemplate,
+    publicBranding: toPublicBrandingResponse(link.publicBranding),
     shortCode: link.shortCode,
     shortUrl: `/t/${link.shortCode}`,
     isActive: link.isActive,

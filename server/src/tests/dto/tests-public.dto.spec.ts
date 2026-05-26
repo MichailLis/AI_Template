@@ -1,4 +1,5 @@
 import {
+  PublicBrandingConfigSchema,
   PublicLinkAccessResponseSchema,
   PublicTestQuestionSchema,
   PublicSessionAnalysisSchema,
@@ -8,6 +9,55 @@ import {
 } from './tests-public.dto';
 
 describe('tests public DTO schemas', () => {
+  const publicBranding = {
+    version: 1,
+    background: {
+      mode: 'image',
+      color: '#f2f7fb',
+      imageUrl: 'https://cdn.example.com/background.png',
+      overlay: 0.32,
+    },
+    header: {
+      logos: [{ url: 'https://cdn.example.com/logo.svg', alt: 'Client logo', size: 'md' }],
+    },
+    buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
+    surfaces: { cardColor: '#ffffff', borderColor: '#d4dee8' },
+    accents: { accentColor: '#00a889' },
+  };
+
+  it('accepts public branding config for STANDARD public pages', () => {
+    expect(PublicBrandingConfigSchema.parse(publicBranding)).toEqual(publicBranding);
+  });
+
+  it('rejects unsafe public branding values', () => {
+    expect(() =>
+      PublicBrandingConfigSchema.parse({
+        version: 1,
+        buttons: { primaryColor: 'blue' },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      PublicBrandingConfigSchema.parse({
+        version: 1,
+        header: {
+          logos: [
+            { url: 'https://cdn.example.com/logo-1.svg', alt: 'Logo 1' },
+            { url: 'https://cdn.example.com/logo-2.svg', alt: 'Logo 2' },
+            { url: 'https://cdn.example.com/logo-3.svg', alt: 'Logo 3' },
+          ],
+        },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      PublicBrandingConfigSchema.parse({
+        version: 1,
+        background: { mode: 'image', imageUrl: 'http://cdn.example.com/background.png' },
+      }),
+    ).toThrow();
+  });
+
   it('accepts a demographic start payload', () => {
     const result = PublicSessionStartRequestSchema.parse({
       entryProfileMode: 'DEMOGRAPHIC',
@@ -83,6 +133,7 @@ describe('tests public DTO schemas', () => {
       description: null,
       entryProfileMode: 'DEMOGRAPHIC',
       publicTemplate: 'POLUS',
+      publicBranding,
       educationOrganization: null,
       groupValidationMode: 'NONE',
       groupValidationPattern: null,
@@ -100,6 +151,7 @@ describe('tests public DTO schemas', () => {
 
     expect(result.entryProfileMode).toBe('DEMOGRAPHIC');
     expect(result.publicTemplate).toBe('POLUS');
+    expect(result.publicBranding).toEqual(publicBranding);
   });
 
   it('exposes public template in session state and result responses', () => {
@@ -107,6 +159,7 @@ describe('tests public DTO schemas', () => {
       sessionToken: 'session-token',
       shortCode: 'DEMO2026',
       publicTemplate: 'POLUS',
+      publicBranding,
       attemptNumber: 1,
       status: 'IN_PROGRESS',
       startedAt: '2026-05-14T10:00:00.000Z',
@@ -119,6 +172,7 @@ describe('tests public DTO schemas', () => {
     const result = PublicSessionResultResponseSchema.parse({
       sessionToken: 'session-token',
       publicTemplate: 'POLUS',
+      publicBranding,
       status: 'COMPLETED',
       finishedAt: '2026-05-14T10:30:00.000Z',
       analysis: {
@@ -133,6 +187,8 @@ describe('tests public DTO schemas', () => {
 
     expect(session.publicTemplate).toBe('POLUS');
     expect(result.publicTemplate).toBe('POLUS');
+    expect(session.publicBranding).toEqual(publicBranding);
+    expect(result.publicBranding).toEqual(publicBranding);
   });
 
   it('strips internal raw analysis text from public analysis payloads', () => {

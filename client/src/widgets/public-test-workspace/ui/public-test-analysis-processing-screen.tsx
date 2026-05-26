@@ -1,7 +1,7 @@
 import { BrainCircuit, Check, CheckCircle2, LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { polusAssets } from '@/features/tests';
+import { polusAssets, type PublicBrandingConfig } from '@/features/tests';
 
 import { PolusPublicLayout } from './polus/polus-public-layout';
 import { analysisProcessingSteps } from './public-test-analysis.mock';
@@ -16,11 +16,13 @@ type ProcessingStepState = 'done' | 'current' | 'waiting';
 
 interface PublicTestAnalysisProcessingScreenProps {
   startedAt: string | null;
+  branding?: PublicBrandingConfig;
   phase?: 'processing' | 'ready';
   variant?: 'standard' | 'polus';
 }
 
 interface ProcessingScreenViewProps {
+  branding?: PublicBrandingConfig;
   isReadyPhase: boolean;
   currentStepIndex: number;
   isLongWait: boolean;
@@ -169,6 +171,7 @@ function PolusProcessingScreen({
 }
 
 function StandardProcessingScreen({
+  branding,
   isReadyPhase,
   currentStepIndex,
   isLongWait,
@@ -177,7 +180,7 @@ function StandardProcessingScreen({
   const statusText = isReadyPhase ? 'Готово' : 'В процессе';
 
   return (
-    <PublicThemeLayout containerClassName="max-w-4xl py-8 md:py-10">
+    <PublicThemeLayout branding={branding} containerClassName="max-w-4xl py-8 md:py-10">
       <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center gap-6">
         <div className="relative">
           <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
@@ -245,6 +248,7 @@ function StandardProcessingScreen({
 
 export function PublicTestAnalysisProcessingScreen({
   startedAt,
+  branding = null,
   phase = 'processing',
   variant = 'standard',
 }: PublicTestAnalysisProcessingScreenProps) {
@@ -279,7 +283,7 @@ export function PublicTestAnalysisProcessingScreen({
     ? analysisProcessingSteps.length - 1
     : Math.min(analysisProcessingSteps.length - 1, Math.floor(elapsedMs / stepDurationMs));
   const isLongWait = !isReadyPhase && effectiveElapsedMs >= longWaitThresholdMs;
-  const viewProps = { isReadyPhase, currentStepIndex, isLongWait };
+  const viewProps = { branding, isReadyPhase, currentStepIndex, isLongWait };
 
   return variant === 'polus' ? (
     <PolusProcessingScreen {...viewProps} />

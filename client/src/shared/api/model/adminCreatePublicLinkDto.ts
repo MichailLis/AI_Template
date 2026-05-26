@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminCreatePublicLinkDtoEntryProfileMode } from './adminCreatePublicLinkDtoEntryProfileMode';
+import type { AdminCreatePublicLinkDtoPublicBranding } from './adminCreatePublicLinkDtoPublicBranding';
 import type { AdminCreatePublicLinkDtoPublicTemplate } from './adminCreatePublicLinkDtoPublicTemplate';
 
 export interface AdminCreatePublicLinkDto {
@@ -32,6 +33,8 @@ export interface AdminCreatePublicLinkDto {
   endsAt?: string | null;
   entryProfileMode?: AdminCreatePublicLinkDtoEntryProfileMode;
   publicTemplate?: AdminCreatePublicLinkDtoPublicTemplate;
+  /** @nullable */
+  publicBranding?: AdminCreatePublicLinkDtoPublicBranding;
   /**
    * @minimum 1
    * @maximum 20
