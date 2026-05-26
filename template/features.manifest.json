@@ -35,7 +35,7 @@
       "schema": "adminOverviewSchema",
       "ownership": {
         "kind": "admin-shell",
-        "owns": ["admin shell", "overview", "users", "settings"],
+        "owns": ["admin shell", "users", "settings"],
         "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features."
       },
       "verification": {
@@ -67,12 +67,10 @@
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-page.tsx",
-        "client/src/pages/admin/admin-overview-page.tsx",
         "client/src/pages/admin/admin-users-page.tsx",
         "client/src/pages/admin/admin-analytics-page.tsx",
         "client/src/pages/admin/admin-settings-page.tsx",
         "client/src/features/admin/ui/admin-shell.tsx",
-        "client/src/features/admin/ui/admin-overview.tsx",
         "client/src/shared/ui/table.tsx",
         "client/src/shared/ui/badge.tsx"
       ],

@@ -3,18 +3,7 @@ import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
 import { AdminShell } from '@/features/admin';
-import { useAdminControllerGetOverview } from '@/shared/api/generated/admin/admin';
 import { useAuthControllerLogout } from '@/shared/api/generated/auth/auth';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
-import { AdminStateBlock } from '@/shared/ui/admin-state-block';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
-
-import type { AdminOverviewResponseDto } from '@/shared/api/model';
-
-export interface AdminOutletContext {
-  overview: AdminOverviewResponseDto;
-}
 
 export function AdminPageLayout() {
   const navigate = useNavigate();
@@ -22,7 +11,6 @@ export function AdminPageLayout() {
   const user = useAuthStore((state) => state.user);
   const logoutLocal = useAuthStore((state) => state.logout);
 
-  const adminQuery = useAdminControllerGetOverview();
   const logoutMutation = useAuthControllerLogout();
 
   const handleLogout = () => {
@@ -35,49 +23,6 @@ export function AdminPageLayout() {
     });
   };
 
-  if (adminQuery.isLoading) {
-    return (
-      <AdminShell
-        userLabel={user?.email ?? 'Admin'}
-        activePath={location.pathname}
-        onLogout={handleLogout}
-        isLoggingOut={logoutMutation.isPending}
-      >
-        <Card className={adminClassNames.panel.card}>
-          <CardContent className="p-4">
-            <AdminStateBlock>Загрузка админ-панели… Пожалуйста, подождите</AdminStateBlock>
-          </CardContent>
-        </Card>
-      </AdminShell>
-    );
-  }
-
-  if (adminQuery.isError || !adminQuery.data) {
-    return (
-      <AdminShell
-        userLabel={user?.email ?? 'Admin'}
-        activePath={location.pathname}
-        onLogout={handleLogout}
-        isLoggingOut={logoutMutation.isPending}
-      >
-        <Card className={adminClassNames.panel.errorCard}>
-          <CardContent className="p-4">
-            <AdminStateBlock
-              tone="danger"
-              action={
-                <Button type="button" variant="outline" onClick={() => void adminQuery.refetch()}>
-                  Повторить загрузку
-                </Button>
-              }
-            >
-              Не удалось загрузить данные админ-панели. Проверьте подключение и повторите попытку.
-            </AdminStateBlock>
-          </CardContent>
-        </Card>
-      </AdminShell>
-    );
-  }
-
   return (
     <AdminShell
       userLabel={user?.email ?? 'Admin'}
@@ -85,7 +30,7 @@ export function AdminPageLayout() {
       onLogout={handleLogout}
       isLoggingOut={logoutMutation.isPending}
     >
-      <Outlet context={{ overview: adminQuery.data }} />
+      <Outlet />
     </AdminShell>
   );
 }

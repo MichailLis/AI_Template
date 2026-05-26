@@ -10,7 +10,6 @@ import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/in
 import { discoverAndConfigureApiBaseUrl } from '@/shared/api/runtime-api-base-url';
 
 const AdminAnalyticsPage = lazy(() => import('@/pages/admin/admin-analytics-page'));
-const AdminOverviewPage = lazy(() => import('@/pages/admin/admin-overview-page'));
 const AdminPage = lazy(() => import('@/pages/admin/admin-page'));
 const AdminPromptsPage = lazy(() => import('@/pages/admin/admin-prompts-page'));
 const AdminPublicLinksPage = lazy(() => import('@/pages/admin/admin-public-links-page'));
@@ -103,7 +102,7 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<AdminOverviewPage />} />
+                <Route index element={<Navigate to="/admin/tests" replace />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                 <Route path="/admin/prompts" element={<AdminPromptsPage />} />

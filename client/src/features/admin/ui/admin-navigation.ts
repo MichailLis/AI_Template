@@ -2,7 +2,6 @@ import {
   BarChart3,
   Building2,
   ClipboardList,
-  LayoutDashboard,
   Link2,
   MessageSquareText,
   Settings,
@@ -12,7 +11,7 @@ import {
 
 import { adminToneClassNames, type AdminTone } from '@/shared/ui/admin-design-tokens';
 
-type AdminNavGroupId = 'overview' | 'content' | 'publication' | 'analytics' | 'system';
+type AdminNavGroupId = 'content' | 'publication' | 'analytics' | 'system';
 
 export interface AdminNavItem {
   id: string;
@@ -24,14 +23,6 @@ export interface AdminNavItem {
 }
 
 export const navItems: AdminNavItem[] = [
-  {
-    id: 'overview',
-    label: 'Обзор',
-    description: 'Сводка и быстрые действия',
-    icon: LayoutDashboard,
-    href: '/admin',
-    group: 'overview',
-  },
   {
     id: 'users',
     label: 'Пользователи',
@@ -100,10 +91,6 @@ export const navItems: AdminNavItem[] = [
 
 export const navGroups: Array<{ id: AdminNavGroupId; label: string }> = [
   {
-    id: 'overview',
-    label: 'Обзор',
-  },
-  {
     id: 'content',
     label: 'Контент',
   },
@@ -122,7 +109,6 @@ export const navGroups: Array<{ id: AdminNavGroupId; label: string }> = [
 ];
 
 const navGroupTones = {
-  overview: 'info',
   content: 'accent',
   publication: 'success',
   analytics: 'warning',
