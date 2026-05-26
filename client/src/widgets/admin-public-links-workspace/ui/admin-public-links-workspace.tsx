@@ -4,10 +4,13 @@ import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { PublicLinkBrandingBuilder } from './public-link-branding-builder';
 import { PublicLinkCreateDialog } from './public-link-create-card';
 import { PublicLinksListCard } from './public-links-list-card';
 import { PublicLinksListHeader } from './public-links-list-header';
 import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace';
+
+import type { PublicLinkListItem } from './public-links-list-card.helpers';
 
 type AdminPublicLinksWorkspaceState = ReturnType<typeof useAdminPublicLinksWorkspace>;
 
@@ -53,7 +56,10 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   hasPublishedVersion: Boolean(state.detailQuery.data?.published?.id),
 });
 
-const buildListCardProps = (state: AdminPublicLinksWorkspaceState) => ({
+const buildListCardProps = (
+  state: AdminPublicLinksWorkspaceState,
+  onOpenBrandingBuilder: (link: PublicLinkListItem) => void,
+) => ({
   publicLinksTab: state.publicLinksTab,
   visiblePublicLinks: state.visiblePublicLinks,
   publicLinksLoading: state.publicLinksLoading,
@@ -63,6 +69,7 @@ const buildListCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   onCopyShortLink: state.handleCopyShortLink,
   onOpenShortLink: state.handleOpenShortLink,
   onOpenQr: state.handleOpenShortLinkQr,
+  onOpenBrandingBuilder,
   onTogglePublicLink: state.handleTogglePublicLink,
   onRegenerateShortCode: state.handleRegeneratePublicLinkShortCode,
   onArchivePublicLink: state.setPendingDeletePublicLinkId,
@@ -75,11 +82,12 @@ const buildListCardProps = (state: AdminPublicLinksWorkspaceState) => ({
 
 export function AdminPublicLinksWorkspace() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [brandingBuilderLink, setBrandingBuilderLink] = useState<PublicLinkListItem | null>(null);
   const workspaceState = useAdminPublicLinksWorkspace({
     onPublicLinkCreated: () => setIsCreateDialogOpen(false),
   });
   const createCardProps = buildCreateCardProps(workspaceState);
-  const listCardProps = buildListCardProps(workspaceState);
+  const listCardProps = buildListCardProps(workspaceState, setBrandingBuilderLink);
 
   return (
     <>
@@ -98,6 +106,18 @@ export function AdminPublicLinksWorkspace() {
         {...createCardProps}
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <PublicLinkBrandingBuilder
+        open={Boolean(brandingBuilderLink)}
+        link={brandingBuilderLink}
+        isSaving={workspaceState.updatePublicLinkMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBrandingBuilderLink(null);
+          }
+        }}
+        onSave={workspaceState.handleUpdatePublicLinkBranding}
       />
 
       <ConfirmActionDialog

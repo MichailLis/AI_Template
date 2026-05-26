@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicLinksListCard } from './public-links-list-card';
@@ -12,6 +13,7 @@ const baseHandlers = {
   onRegenerateShortCode: vi.fn(),
   onArchivePublicLink: vi.fn(),
   onRestorePublicLink: vi.fn(),
+  onOpenBrandingBuilder: vi.fn(),
   isUpdatingPublicLink: false,
   isRegeneratingShortCode: false,
   isArchivingPublicLink: false,
@@ -62,5 +64,36 @@ describe('PublicLinksListCard', () => {
     expect(
       screen.getByText(`Создана: ${formatExpectedPublicLinkCreatedAt(createdAt)}`),
     ).toBeInTheDocument();
+  });
+
+  it('opens the branding constructor action for active STANDARD links', async () => {
+    const user = userEvent.setup();
+    const standardLink = {
+      id: 43,
+      shortCode: 'BRAND2026',
+      title: 'Профориентационный тест',
+      educationOrganizationName: null,
+      publicTemplate: 'STANDARD' as const,
+      entryProfileMode: 'EDUCATION' as const,
+      createdAt: '2026-05-19T10:30:00.000Z',
+      archivedAt: null,
+      isActive: true,
+    };
+
+    render(
+      <PublicLinksListCard
+        publicLinksTab="active"
+        visiblePublicLinks={[standardLink]}
+        publicLinksLoading={false}
+        publicLinksError={false}
+        searchValue=""
+        {...baseHandlers}
+      />,
+    );
+
+    await user.click(screen.getByLabelText('Действия публичной ссылки'));
+    await user.click(screen.getByRole('button', { name: /конструктор/i }));
+
+    expect(baseHandlers.onOpenBrandingBuilder).toHaveBeenCalledWith(standardLink);
   });
 });

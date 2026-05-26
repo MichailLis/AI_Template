@@ -117,7 +117,10 @@ function StandardPublicTestEntry({
   onDemographicFieldChange,
 }: StandardPublicTestEntryProps) {
   return (
-    <PublicThemeLayout containerClassName="max-w-6xl py-6 md:py-8 lg:py-10">
+    <PublicThemeLayout
+      branding={link.publicBranding}
+      containerClassName="max-w-6xl py-6 md:py-8 lg:py-10"
+    >
       <div className="grid grid-cols-1 gap-8 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
         <PublicTestOverviewPanel
           title={link.title}

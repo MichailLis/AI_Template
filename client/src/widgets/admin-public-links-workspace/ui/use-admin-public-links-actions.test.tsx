@@ -6,6 +6,7 @@ import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
 
 const createPublicLinkMutate = vi.fn();
+const updatePublicLinkMutate = vi.fn();
 
 vi.mock('sonner', () => ({
   toast: {
@@ -44,7 +45,7 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
     isPending: false,
   }),
   useTestsAdminPublicLinksControllerUpdatePublicLink: () => ({
-    mutate: vi.fn(),
+    mutate: updatePublicLinkMutate,
     isPending: false,
   }),
 }));
@@ -99,6 +100,31 @@ describe('useAdminPublicLinksActions', () => {
         data: expect.objectContaining({
           publicTemplate: 'POLUS',
         }),
+      },
+      expect.any(Object),
+    );
+  });
+
+  it('submits public branding updates for the constructor', () => {
+    updatePublicLinkMutate.mockClear();
+    const { result } = renderHook(() => useAdminPublicLinksActions(createParams()));
+
+    act(() => {
+      result.current.handleUpdatePublicLinkBranding(42, {
+        version: 1,
+        buttons: { primaryColor: '#0066cc' },
+      });
+    });
+
+    expect(updatePublicLinkMutate).toHaveBeenCalledWith(
+      {
+        linkId: 42,
+        data: {
+          publicBranding: {
+            version: 1,
+            buttons: { primaryColor: '#0066cc' },
+          },
+        },
       },
       expect.any(Object),
     );

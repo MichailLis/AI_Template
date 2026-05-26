@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   EntryProfileModeSchema,
+  PublicBrandingConfigSchema,
   PublicTemplateSchema,
   PublicSessionAnalysisProviderModeSchema,
   PublicSessionAnalysisStatusSchema,
@@ -32,6 +33,7 @@ export const AdminCreatePublicLinkSchema = z
     endsAt: z.string().datetime().nullable().optional(),
     entryProfileMode: EntryProfileModeSchema.optional(),
     publicTemplate: PublicTemplateSchema.default('STANDARD'),
+    publicBranding: PublicBrandingConfigSchema.nullable().optional(),
     maxAttemptsPerStudent: z.number().int().min(1).max(20).optional(),
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
@@ -59,6 +61,7 @@ export const AdminUpdatePublicLinkSchema = z
     startsAt: z.string().datetime().nullable().optional(),
     endsAt: z.string().datetime().nullable().optional(),
     entryProfileMode: EntryProfileModeSchema.optional(),
+    publicBranding: PublicBrandingConfigSchema.nullable().optional(),
     maxAttemptsPerStudent: z.number().int().min(1).max(20).optional(),
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
@@ -88,6 +91,7 @@ export const AdminPublicLinkSchema = z.object({
   educationOrganizationName: z.string().nullable(),
   entryProfileMode: EntryProfileModeSchema,
   publicTemplate: PublicTemplateSchema,
+  publicBranding: PublicBrandingConfigSchema.nullable(),
   shortCode: z.string(),
   shortUrl: z.string(),
   isActive: z.boolean(),

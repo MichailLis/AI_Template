@@ -83,7 +83,10 @@ export function PublicTestRunWorkspace() {
   }
 
   return (
-    <PublicThemeLayout containerClassName="grid min-h-screen max-w-3xl place-items-center py-5 md:py-7">
+    <PublicThemeLayout
+      branding={session.publicBranding}
+      containerClassName="grid min-h-screen max-w-3xl place-items-center py-5 md:py-7"
+    >
       <div className="w-full space-y-5">
         <div className="px-1">
           <PublicTestRunProgress

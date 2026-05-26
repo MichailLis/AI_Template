@@ -8,6 +8,7 @@ import type {
 
 import type { AttemptWithSessionData } from './tests-attempt.query';
 import { toOptionalIsoString } from './tests-date.utils';
+import { toPublicBrandingResponse } from './tests-public-branding.utils';
 
 const mapPublicQuestion = (
   question: AttemptWithSessionData['topicVersion']['questions'][number],
@@ -163,6 +164,7 @@ export const mapSessionState = (
     sessionToken: attempt.resumeToken,
     shortCode: attempt.publicLink.shortCode,
     publicTemplate: attempt.publicLink.publicTemplate,
+    publicBranding: toPublicBrandingResponse(attempt.publicLink.publicBranding),
     attemptNumber: attempt.attemptNumber,
     status: toAttemptStatus(attempt),
     startedAt: attempt.startedAt.toISOString(),

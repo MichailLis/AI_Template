@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminUpdatePublicLinkDtoEntryProfileMode } from './adminUpdatePublicLinkDtoEntryProfileMode';
+import type { AdminUpdatePublicLinkDtoPublicBranding } from './adminUpdatePublicLinkDtoPublicBranding';
 
 export interface AdminUpdatePublicLinkDto {
   isActive?: boolean;
@@ -20,6 +21,8 @@ export interface AdminUpdatePublicLinkDto {
    */
   endsAt?: string | null;
   entryProfileMode?: AdminUpdatePublicLinkDtoEntryProfileMode;
+  /** @nullable */
+  publicBranding?: AdminUpdatePublicLinkDtoPublicBranding;
   /**
    * @minimum 1
    * @maximum 20

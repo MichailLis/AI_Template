@@ -23,6 +23,7 @@ import {
   validatePublicAttemptAnswersForFinish,
 } from './tests-answer-validation';
 import { TestsPublicLinkService } from './tests-public-link.service';
+import { toPublicBrandingResponse } from './tests-public-branding.utils';
 
 type SessionStateResponse = {
   session: ReturnType<typeof mapSessionState>;
@@ -531,6 +532,7 @@ export class TestsPublicSessionService {
     return {
       sessionToken,
       publicTemplate: attempt.publicLink.publicTemplate,
+      publicBranding: toPublicBrandingResponse(attempt.publicLink.publicBranding),
       status,
       finishedAt: toOptionalIsoString(attempt.finishedAt),
       analysis: this.toSessionResultAnalysisResponse(status, attempt.analysis),

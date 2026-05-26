@@ -4,6 +4,7 @@ import {
   AdminPublicAttemptDetailResponseSchema,
   AdminPublicLinkSchema,
   AdminUpdateEducationOrganizationSchema,
+  AdminUpdatePublicLinkSchema,
 } from './tests-links.dto';
 
 describe('tests-links dto group validation schemas', () => {
@@ -56,6 +57,15 @@ describe('tests-links dto group validation schemas', () => {
 });
 
 describe('tests link DTO profile mode fields', () => {
+  const publicBranding = {
+    version: 1,
+    background: { mode: 'solid', color: '#f2f7fb' },
+    header: {
+      logos: [{ url: 'https://cdn.example.com/logo.svg', alt: 'Client logo', size: 'md' }],
+    },
+    buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
+  };
+
   it('defaults public link creation input to the standard template', () => {
     const result = AdminCreatePublicLinkSchema.parse({
       publishedVersionId: 10,
@@ -79,6 +89,24 @@ describe('tests link DTO profile mode fields', () => {
     });
 
     expect(result.publicTemplate).toBe('POLUS');
+  });
+
+  it('accepts public branding on create and update payloads', () => {
+    const createResult = AdminCreatePublicLinkSchema.parse({
+      publishedVersionId: 10,
+      publicTemplate: 'STANDARD',
+      publicBranding,
+      entryProfileMode: 'DEMOGRAPHIC',
+      maxAttemptsPerStudent: 3,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+    const updateResult = AdminUpdatePublicLinkSchema.parse({
+      publicBranding: null,
+    });
+
+    expect(createResult.publicBranding).toEqual(publicBranding);
+    expect(updateResult.publicBranding).toBeNull();
   });
 
   it('accepts DEMOGRAPHIC public link creation input', () => {
@@ -114,6 +142,7 @@ describe('tests link DTO profile mode fields', () => {
       educationOrganizationName: null,
       entryProfileMode: 'EDUCATION',
       publicTemplate: 'POLUS',
+      publicBranding,
       shortCode: 'CODE2026',
       shortUrl: '/t/CODE2026',
       isActive: true,
@@ -132,6 +161,7 @@ describe('tests link DTO profile mode fields', () => {
 
     expect(result.entryProfileMode).toBe('EDUCATION');
     expect(result.publicTemplate).toBe('POLUS');
+    expect(result.publicBranding).toEqual(publicBranding);
   });
 
   it('returns profession atlas URL in admin attempt detail response', () => {

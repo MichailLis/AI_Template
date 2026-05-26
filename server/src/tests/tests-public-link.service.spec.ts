@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
@@ -41,6 +42,11 @@ type PrismaTestTopicVersionDelegate = {
 };
 
 describe('TestsPublicLinkService', () => {
+  const publicBranding = {
+    version: 1,
+    buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
+    accents: { accentColor: '#00a889' },
+  };
   let service: TestsPublicLinkService;
   let prismaMock: {
     educationOrganization: PrismaEducationOrganizationDelegate;
@@ -270,6 +276,61 @@ describe('TestsPublicLinkService', () => {
     expect(result.publicTemplate).toBe('STANDARD');
   });
 
+  it('createPublicLink stores public branding when provided', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        publicBranding,
+      }),
+    );
+
+    const dto: AdminCreatePublicLinkDto = {
+      publishedVersionId: 50,
+      publicBranding,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    };
+
+    const result = await service.createPublicLink(7, dto);
+
+    const createCall = prismaMock.testPublicLink.create.mock.calls[0]?.[0];
+
+    expect(createCall?.data.publicBranding).toEqual(publicBranding);
+    expect(result.publicBranding).toEqual(publicBranding);
+  });
+
+  it('updatePublicLink resets public branding when null is provided', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      entryProfileMode: 'EDUCATION',
+      maxAttemptsPerStudent: 3,
+      startsAt: null,
+      endsAt: null,
+    });
+    prismaMock.testPublicLink.update.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        publicBranding: null,
+      }),
+    );
+
+    const dto: AdminUpdatePublicLinkDto = {
+      publicBranding: null,
+    };
+
+    const result = await service.updatePublicLink(7, 100, dto);
+
+    const updateCall = prismaMock.testPublicLink.update.mock.calls[0]?.[0];
+
+    expect(updateCall?.data.publicBranding).toBe(Prisma.DbNull);
+    expect(result.publicBranding).toBeNull();
+  });
+
   it('updatePublicLink keeps DEMOGRAPHIC links limited to one allowed attempt', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue({
       id: 100,
@@ -397,6 +458,7 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
   endsAt: null,
   entryProfileMode: 'EDUCATION',
   publicTemplate: 'STANDARD',
+  publicBranding: null,
   maxAttemptsPerStudent: 3,
   timeLimitMinutes: null,
   allowResume: true,

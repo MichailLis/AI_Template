@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicLinksListResponseDtoLinksItemEntryProfileMode } from './adminPublicLinksListResponseDtoLinksItemEntryProfileMode';
+import type { AdminPublicLinksListResponseDtoLinksItemPublicBranding } from './adminPublicLinksListResponseDtoLinksItemPublicBranding';
 import type { AdminPublicLinksListResponseDtoLinksItemPublicTemplate } from './adminPublicLinksListResponseDtoLinksItemPublicTemplate';
 
 export type AdminPublicLinksListResponseDtoLinksItem = {
@@ -18,6 +19,8 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   educationOrganizationName: string | null;
   entryProfileMode: AdminPublicLinksListResponseDtoLinksItemEntryProfileMode;
   publicTemplate: AdminPublicLinksListResponseDtoLinksItemPublicTemplate;
+  /** @nullable */
+  publicBranding: AdminPublicLinksListResponseDtoLinksItemPublicBranding;
   shortCode: string;
   shortUrl: string;
   isActive: boolean;

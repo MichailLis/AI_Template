@@ -7,6 +7,7 @@
  */
 import type { PublicLinkAccessResponseDtoEntryProfileMode } from './publicLinkAccessResponseDtoEntryProfileMode';
 import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLinkAccessResponseDtoGroupValidationMode';
+import type { PublicLinkAccessResponseDtoPublicBranding } from './publicLinkAccessResponseDtoPublicBranding';
 import type { PublicLinkAccessResponseDtoPublicTemplate } from './publicLinkAccessResponseDtoPublicTemplate';
 
 export interface PublicLinkAccessResponseDto {
@@ -16,6 +17,8 @@ export interface PublicLinkAccessResponseDto {
   description: string | null;
   entryProfileMode: PublicLinkAccessResponseDtoEntryProfileMode;
   publicTemplate: PublicLinkAccessResponseDtoPublicTemplate;
+  /** @nullable */
+  publicBranding: PublicLinkAccessResponseDtoPublicBranding;
   /** @nullable */
   educationOrganization: string | null;
   groupValidationMode: PublicLinkAccessResponseDtoGroupValidationMode;

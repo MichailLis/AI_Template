@@ -1,12 +1,15 @@
 import { getEntryProfileModeLabel, getPublicTemplateLabel } from '@/shared/lib/public-test-labels';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 
+import type { PublicBrandingConfig } from '@/features/tests';
+
 export interface PublicLinkListItem {
   id: number;
   shortCode: string;
   title: string;
   educationOrganizationName: string | null;
   publicTemplate: 'STANDARD' | 'POLUS';
+  publicBranding?: PublicBrandingConfig;
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   createdAt: string;
   archivedAt: string | null;

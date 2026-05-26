@@ -8,6 +8,12 @@ import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
 
 describe('TestsPublicSessionService read paths', () => {
+  const publicBranding = {
+    version: 1,
+    buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
+    accents: { accentColor: '#00a889' },
+  };
+
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
@@ -22,6 +28,7 @@ describe('TestsPublicSessionService read paths', () => {
       publicLink: {
         shortCode: 'ABC123',
         publicTemplate: 'POLUS',
+        publicBranding,
         timeLimitMinutes: 30,
       },
       attemptNumber: 1,
@@ -65,6 +72,7 @@ describe('TestsPublicSessionService read paths', () => {
 
     expect(result.session.status).toBe('EXPIRED');
     expect(result.session.publicTemplate).toBe('POLUS');
+    expect(result.session.publicBranding).toEqual(publicBranding);
     expect(updateMock).not.toHaveBeenCalled();
   });
 
@@ -78,6 +86,7 @@ describe('TestsPublicSessionService read paths', () => {
       finishedAt: null,
       publicLink: {
         publicTemplate: 'POLUS',
+        publicBranding,
       },
       analysis: null,
     };
@@ -107,6 +116,7 @@ describe('TestsPublicSessionService read paths', () => {
 
     expect(result.status).toBe('EXPIRED');
     expect(result.publicTemplate).toBe('POLUS');
+    expect(result.publicBranding).toEqual(publicBranding);
     expect(result.analysis.status).toBe('FAILED');
     expect(result.analysis.errorMessage).toBe('Test session expired before completion');
     expect(updateMock).not.toHaveBeenCalled();
@@ -120,6 +130,7 @@ describe('TestsPublicSessionService read paths', () => {
       finishedAt: new Date('2026-05-12T12:00:00.000Z'),
       publicLink: {
         publicTemplate: 'POLUS',
+        publicBranding,
       },
       analysis: {
         providerMode: 'STUB',
@@ -158,6 +169,7 @@ describe('TestsPublicSessionService read paths', () => {
 
     expect(result).toMatchObject({
       publicTemplate: 'POLUS',
+      publicBranding,
       professionAtlasUrl: 'https://atlas.example/professions',
     });
   });

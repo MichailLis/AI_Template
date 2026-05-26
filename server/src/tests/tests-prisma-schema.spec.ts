@@ -41,6 +41,8 @@ describe('Prisma analysis prompt schema', () => {
     expect(migrationSql).toContain(
       '"publicTemplate" "TestPublicTemplate" NOT NULL DEFAULT \'STANDARD\'',
     );
+    expect(schema).toMatch(/publicBranding\s+Json\?/);
+    expect(migrationSql).toContain('ADD COLUMN "publicBranding" JSONB');
     expect(migrationSql).toContain('"scoringConfig" JSONB');
     expect(migrationSql).toContain('"scoringKind" "TestScoringKind" NOT NULL DEFAULT \'DEFAULT\'');
   });

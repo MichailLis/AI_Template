@@ -23,6 +23,67 @@ export const EntryProfileModeSchema = z.enum(['DEMOGRAPHIC', 'EDUCATION', 'EDUCA
 
 export const PublicTemplateSchema = z.enum(['STANDARD', 'POLUS']);
 
+const HexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+
+const PublicBrandingHttpsUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(2048)
+  .refine((value) => value.startsWith('https://'), {
+    message: 'URL must use https',
+  });
+
+export const PublicBrandingConfigSchema = z
+  .object({
+    version: z.literal(1),
+    background: z
+      .object({
+        mode: z.enum(['default', 'solid', 'image']).default('default'),
+        color: HexColorSchema.optional(),
+        imageUrl: PublicBrandingHttpsUrlSchema.optional(),
+        overlay: z.number().min(0).max(0.85).optional(),
+      })
+      .optional(),
+    header: z
+      .object({
+        logos: z
+          .array(
+            z.object({
+              url: PublicBrandingHttpsUrlSchema,
+              alt: z.string().trim().min(1).max(120),
+              size: z.enum(['sm', 'md', 'lg']).optional(),
+            }),
+          )
+          .max(2)
+          .optional(),
+      })
+      .optional(),
+    buttons: z
+      .object({
+        primaryColor: HexColorSchema.optional(),
+        textColor: HexColorSchema.optional(),
+      })
+      .optional(),
+    surfaces: z
+      .object({
+        cardColor: HexColorSchema.optional(),
+        borderColor: HexColorSchema.optional(),
+      })
+      .optional(),
+    accents: z
+      .object({
+        accentColor: HexColorSchema.optional(),
+      })
+      .optional(),
+  })
+  .strict();
+
+export type PublicBrandingConfig = z.infer<typeof PublicBrandingConfigSchema>;
+
 export const PublicStudentGenderSchema = z.enum(['MALE', 'FEMALE']);
 
 export const PublicStudentEducationLevelSchema = z.enum([
@@ -80,6 +141,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   description: z.string().nullable(),
   entryProfileMode: EntryProfileModeSchema,
   publicTemplate: PublicTemplateSchema,
+  publicBranding: PublicBrandingConfigSchema.nullable(),
   educationOrganization: z.string().nullable(),
   groupValidationMode: PublicGroupValidationModeSchema,
   groupValidationPattern: z.string().nullable(),
@@ -99,6 +161,7 @@ export const PublicSessionStateSchema = z.object({
   sessionToken: z.string(),
   shortCode: z.string(),
   publicTemplate: PublicTemplateSchema,
+  publicBranding: PublicBrandingConfigSchema.nullable(),
   attemptNumber: z.number().int().min(1),
   status: PublicSessionStatusSchema,
   startedAt: z.string(),
@@ -160,6 +223,7 @@ export const PublicSessionFinishResponseSchema = z.object({
 export const PublicSessionResultResponseSchema = z.object({
   sessionToken: z.string(),
   publicTemplate: PublicTemplateSchema,
+  publicBranding: PublicBrandingConfigSchema.nullable(),
   status: PublicSessionStatusSchema,
   finishedAt: z.string().nullable(),
   analysis: PublicSessionAnalysisSchema,
