@@ -68,13 +68,6 @@ const mockLinkAccess = {
   consentText: 'Smoke consent text',
 };
 
-const mockAdminOverview = {
-  title: 'Admin overview',
-  subtitle: 'Smoke overview',
-  cards: [],
-  shortcuts: [],
-};
-
 const mockAuthResponse = {
   accessToken: 'mock-access-token',
   user: {
@@ -237,11 +230,6 @@ const setupApiMocks = async (context, unhandledApiRequests) => {
 
     if (method === 'POST' && apiPath === '/auth/signin') {
       await fulfillJson(route, mockAuthResponse);
-      return;
-    }
-
-    if (method === 'GET' && apiPath === '/admin') {
-      await fulfillJson(route, mockAdminOverview);
       return;
     }
 

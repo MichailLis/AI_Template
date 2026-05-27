@@ -245,15 +245,6 @@ export const adminClassNames = {
     divider: 'text-admin-border',
     inactiveNotice: 'text-admin-warning-foreground',
   },
-  overview: {
-    heroRail:
-      'absolute inset-y-6 left-0 w-1 rounded-r-full bg-gradient-to-b from-admin-info via-admin-success to-admin-warning',
-    heroPulsePanel:
-      'border-t border-admin-border bg-admin-panel-muted/80 p-5 lg:border-l lg:border-t-0',
-    primaryButton: 'bg-admin-foreground text-white hover:bg-admin-foreground/90',
-    noticeCard: 'border-admin-info-border bg-admin-info-soft/80 shadow-none',
-    noticeContent: 'flex flex-col gap-3 p-4 text-admin-info-foreground sm:flex-row sm:items-center',
-  },
   table: {
     container: 'overflow-hidden rounded-lg border border-admin-border bg-admin-panel shadow-sm',
     header: 'bg-admin-panel-muted/50',
