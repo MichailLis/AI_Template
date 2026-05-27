@@ -27,6 +27,14 @@ export const AdminTestAnalyticsQuerySchema = z
         message: 'publicLinkId is required when scope is PUBLIC_LINK',
       });
     }
+
+    if (value.dateFrom && value.dateTo && value.dateTo < value.dateFrom) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['dateTo'],
+        message: 'dateTo must not be earlier than dateFrom',
+      });
+    }
   });
 
 export const AdminTestAnalyticsTopicSectionSchema = z.object({

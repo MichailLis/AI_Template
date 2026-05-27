@@ -304,6 +304,49 @@ describe('TestsPublicLinkService', () => {
     expect(result.publicBranding).toEqual(publicBranding);
   });
 
+  it('createPublicLink rejects an inverted date window', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(createPublicLinkRecordFixture());
+
+    await expect(
+      service.createPublicLink(7, {
+        publishedVersionId: 50,
+        shortCode: 'DATE2026',
+        startsAt: '2026-05-22T10:00:00.000Z',
+        endsAt: '2026-05-21T10:00:00.000Z',
+        consentVersion: 'v1',
+        consentText: 'Согласие',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.testPublicLink.create).not.toHaveBeenCalled();
+  });
+
+  it('createPublicLink rejects invalid date values before persisting', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(createPublicLinkRecordFixture());
+
+    await expect(
+      service.createPublicLink(7, {
+        publishedVersionId: 50,
+        shortCode: 'BADDATE',
+        startsAt: 'not-a-date',
+        consentVersion: 'v1',
+        consentText: 'Согласие',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.testPublicLink.create).not.toHaveBeenCalled();
+  });
+
   it('updatePublicLink resets public branding when null is provided', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue({
       id: 100,

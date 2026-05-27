@@ -45,6 +45,24 @@ describe('AdminTestAnalyticsQuerySchema', () => {
       ),
     ).toBe(true);
   });
+
+  it('rejects inverted date filters', () => {
+    const result = AdminTestAnalyticsQuerySchema.safeParse({
+      dateFrom: '2026-05-20',
+      dateTo: '2026-05-19',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(
+      result.error.issues.some(
+        (issue) => issue.path.join('.') === 'dateTo' && issue.code === 'custom',
+      ),
+    ).toBe(true);
+  });
 });
 
 describe('AdminTestAnalyticsSummarySchema', () => {
