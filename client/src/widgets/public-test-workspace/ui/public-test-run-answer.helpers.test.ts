@@ -46,6 +46,7 @@ describe('public test run answer helpers', () => {
         1: 'option_a',
         2: ['option_a', 'option_b'],
         3: 7,
+        4: '   ',
         5: { text: 'legacy payload' },
         6: Number.NaN,
       }),
