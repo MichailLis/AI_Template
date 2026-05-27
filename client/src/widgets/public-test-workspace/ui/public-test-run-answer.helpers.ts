@@ -44,7 +44,10 @@ export const buildSessionAnswers = (
     (answers, question) => {
       const answerPayload = getEffectiveQuestionAnswer(question, mergedAnswers);
 
-      if (!isPublicTestAnswerPayload(answerPayload)) {
+      if (
+        !hasMeaningfulQuestionAnswer(question.type, answerPayload) ||
+        !isPublicTestAnswerPayload(answerPayload)
+      ) {
         return answers;
       }
 

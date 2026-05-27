@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -14,13 +14,40 @@ import {
   hasMeaningfulQuestionAnswer,
   reconcileAnswerDraftAfterSave,
 } from './public-test-run-answer.helpers';
+import {
+  usePublicTestRunAutosave,
+  type SavedPublicAnswerPayload,
+} from './use-public-test-run-autosave';
 
-import type { PublicTestAnswerDraft } from './public-test-run.types';
+import type { PublicTestAnswerDraft, PublicTestSession } from './public-test-run.types';
 
 interface AnswerOverride {
   questionId: number;
   value: unknown;
 }
+
+const createServerAnswerMap = (session: PublicTestSession | null) =>
+  session?.answers.reduce<PublicTestAnswerDraft>((acc, answer) => {
+    acc[answer.questionId] = answer.answerPayload;
+    return acc;
+  }, {}) ?? {};
+
+const mergeAnswerDrafts = (
+  serverAnswerMap: PublicTestAnswerDraft,
+  answerDraft: PublicTestAnswerDraft,
+) => ({
+  ...serverAnswerMap,
+  ...answerDraft,
+});
+
+const countAnsweredQuestions = (
+  session: PublicTestSession | null,
+  effectiveAnswers: PublicTestAnswerDraft,
+) =>
+  session?.questions.reduce((acc, question) => {
+    const answer = getEffectiveQuestionAnswer(question, effectiveAnswers);
+    return hasMeaningfulQuestionAnswer(question.type, answer) ? acc + 1 : acc;
+  }, 0) ?? 0;
 
 export function usePublicTestRunWorkspace() {
   const { code, sessionToken } = useParams<{ code: string; sessionToken: string }>();
@@ -40,16 +67,23 @@ export function usePublicTestRunWorkspace() {
   const finishMutation = useTestsPublicControllerFinishSession();
   const session = sessionQuery.data?.session ?? null;
 
-  const serverAnswerMap = useMemo(() => {
-    if (!session) {
-      return {} as PublicTestAnswerDraft;
-    }
+  const serverAnswerMap = useMemo(() => createServerAnswerMap(session), [session]);
 
-    return session.answers.reduce<PublicTestAnswerDraft>((acc, answer) => {
-      acc[answer.questionId] = answer.answerPayload;
-      return acc;
-    }, {});
-  }, [session]);
+  const effectiveAnswers = useMemo(
+    () => mergeAnswerDrafts(serverAnswerMap, answerDraft),
+    [answerDraft, serverAnswerMap],
+  );
+  const handleSavedAnswers = useCallback((savedAnswers: SavedPublicAnswerPayload) => {
+    setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, savedAnswers));
+  }, []);
+  const autosave = usePublicTestRunAutosave({
+    sessionToken,
+    session,
+    answerDraft,
+    effectiveAnswers,
+    serverAnswerMap,
+    onSavedAnswers: handleSavedAnswers,
+  });
 
   const getCurrentAnswer = (questionId: number) => {
     if (Object.prototype.hasOwnProperty.call(answerDraft, questionId)) {
@@ -64,6 +98,7 @@ export function usePublicTestRunWorkspace() {
       ...prev,
       [questionId]: value,
     }));
+    autosave.markAnswerChanged();
   };
 
   const handleSaveAnswers = async () => {
@@ -71,12 +106,7 @@ export function usePublicTestRunWorkspace() {
       return;
     }
 
-    const mergedAnswers = {
-      ...serverAnswerMap,
-      ...answerDraft,
-    };
-
-    const answers = buildSessionAnswers(session.questions, mergedAnswers);
+    const answers = buildSessionAnswers(session.questions, effectiveAnswers);
 
     if (answers.length === 0) {
       toast.error('Нет данных для сохранения');
@@ -84,11 +114,14 @@ export function usePublicTestRunWorkspace() {
     }
 
     try {
+      autosave.cancelQueuedAutosave();
+      await autosave.waitForInFlightAutosave();
       const response = await saveAnswersMutation.mutateAsync({
         sessionToken,
         data: { answers },
       });
       setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, response.answers));
+      autosave.markAnswersSaved(answers);
       toast.success('Ответы сохранены');
     } catch {
       toast.error('Не удалось сохранить ответы');
@@ -100,21 +133,23 @@ export function usePublicTestRunWorkspace() {
       return;
     }
 
-    const mergedAnswers = {
-      ...serverAnswerMap,
-      ...answerDraft,
-      ...(answerOverride ? { [answerOverride.questionId]: answerOverride.value } : {}),
-    };
-
-    const answers = buildSessionAnswers(session.questions, mergedAnswers);
+    const answers = buildSessionAnswers(
+      session.questions,
+      answerOverride
+        ? { ...effectiveAnswers, [answerOverride.questionId]: answerOverride.value }
+        : effectiveAnswers,
+    );
 
     try {
+      autosave.cancelQueuedAutosave();
+      await autosave.waitForInFlightAutosave();
       if (answers.length > 0) {
         const saveResponse = await saveAnswersMutation.mutateAsync({
           sessionToken,
           data: { answers },
         });
         setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, saveResponse.answers));
+        autosave.markAnswersSaved(answers);
       }
 
       const response = await finishMutation.mutateAsync({ sessionToken });
@@ -125,15 +160,7 @@ export function usePublicTestRunWorkspace() {
   };
 
   const totalQuestionsCount = session?.questions.length ?? 0;
-  const effectiveAnswers = {
-    ...serverAnswerMap,
-    ...answerDraft,
-  };
-  const answeredQuestionsCount =
-    session?.questions.reduce((acc, question) => {
-      const answer = getEffectiveQuestionAnswer(question, effectiveAnswers);
-      return hasMeaningfulQuestionAnswer(question.type, answer) ? acc + 1 : acc;
-    }, 0) ?? 0;
+  const answeredQuestionsCount = countAnsweredQuestions(session, effectiveAnswers);
 
   return {
     code,
@@ -148,5 +175,7 @@ export function usePublicTestRunWorkspace() {
     setQuestionAnswer,
     handleSaveAnswers,
     handleFinish,
+    autosaveStatus: autosave.autosaveStatus,
+    autosaveError: autosave.autosaveError,
   };
 }
