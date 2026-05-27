@@ -29,7 +29,16 @@ const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
 type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 type PublicTemplate = 'STANDARD' | 'POLUS';
 
+const ensureValidPublicLinkDateValue = (value: Date | null) => {
+  if (value && !Number.isFinite(value.getTime())) {
+    throw new BadRequestException('Invalid public link date format');
+  }
+};
+
 const ensureValidPublicLinkDateWindow = (startsAt: Date | null, endsAt: Date | null) => {
+  ensureValidPublicLinkDateValue(startsAt);
+  ensureValidPublicLinkDateValue(endsAt);
+
   if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
     throw new BadRequestException('endsAt must be greater than startsAt');
   }
@@ -128,14 +137,18 @@ export class TestsPublicLinkService {
       entryProfileMode,
       dto.maxAttemptsPerStudent,
     );
+    const startsAt = resolveDateUpdate(dto.startsAt, null);
+    const endsAt = resolveDateUpdate(dto.endsAt, null);
+
+    ensureValidPublicLinkDateWindow(startsAt, endsAt);
 
     const created = await this.prisma.testPublicLink.create({
       data: {
         topicVersionId: dto.publishedVersionId,
         shortCode,
         isActive: dto.isActive ?? true,
-        startsAt: parseDateOrNull(dto.startsAt),
-        endsAt: parseDateOrNull(dto.endsAt),
+        startsAt,
+        endsAt,
         entryProfileMode,
         publicTemplate,
         ...(publicBranding !== undefined ? { publicBranding } : {}),
