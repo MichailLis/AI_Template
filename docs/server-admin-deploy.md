@@ -169,7 +169,19 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=1
 - Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy`.
 - Если серверная база была создана через `prisma db push` и не содержит таблицу
   `_prisma_migrations`, будущий релиз со schema change может остановиться с `P3005`.
-- Текущий релиз не меняет `schema.prisma`, поэтому новых миграций для БД не добавляет.
+- Не считайте релиз безмиграционным по старой заметке: если менялся
+  `server/prisma/schema.prisma`, в commit должна быть соответствующая migration.
+
+Перед обновлением релиза со schema change проверьте локально:
+
+```bash
+npm run verify:prisma-migrations
+```
+
+Для чистой проверки применимости миграций используйте временную пустую PostgreSQL
+базу и команду из директории `server/`:
+`npx prisma migrate deploy --schema prisma/schema.prisma`. После
+добавления/изменения миграций пересоберите и заново опубликуйте production images.
 
 ## 7. Остановить
 

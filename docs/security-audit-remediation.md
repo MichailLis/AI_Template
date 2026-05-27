@@ -2,6 +2,10 @@
 
 Date: 2026-05-12
 
+This document records the original remediation pass and the follow-up revalidation
+expectations. Treat the command outputs from the current branch as authoritative;
+do not treat this note as a permanent audit certificate.
+
 ## Scope
 
 Dependency audit remediation was run for all package scopes:
@@ -18,7 +22,7 @@ Dependency audit remediation was run for all package scopes:
 
 The Prisma override was chosen because `prisma@7.8.0` depends on `@prisma/dev@0.24.3`, which pinned `@hono/node-server@1.19.11`. The advisory is fixed in `@hono/node-server@1.19.13`. `npm audit` suggested a Prisma 6.x path as the available fix, but this branch is on the Prisma 7 baseline and a Prisma major downgrade would be a higher-risk change than a targeted patch override.
 
-## Residual Vulnerabilities
+## Original Residual Vulnerabilities
 
 No residual npm audit vulnerabilities remain after remediation.
 
@@ -50,3 +54,20 @@ The server dependency tree resolves `@prisma/dev@0.24.3 -> @hono/node-server@1.1
 
 - Revisit the server override when Prisma publishes a release that no longer pins the affected `@hono/node-server` version.
 - Keep Prisma major upgrades as an explicit migration slice with `prisma:generate`, `prisma:push`, server unit/e2e tests, and Docker smoke verification.
+- After dependency or lockfile changes, rerun:
+  - `npm run audit:all`
+  - `npm run audit:prod`
+
+## Revalidation Notes
+
+- 2026-05-23: server lockfile was updated by `Fix server qs audit advisory (#19)`.
+- 2026-05-27: revalidation was rerun on the current worktree:
+  - `npm run audit:prod` failed in the server scope.
+  - `npm run audit:all` failed in the server scope.
+  - root and client audit scopes reported `0 vulnerabilities`.
+  - server audit reported `tmp <0.2.6` high severity path traversal
+    (`GHSA-ph9p-34f9-6g65`).
+
+Treat the 2026-05-27 `tmp` advisory as the current open audit item until the
+server dependency tree or override strategy is remediated and both audit commands
+pass again.

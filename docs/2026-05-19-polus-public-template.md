@@ -29,14 +29,22 @@ This note records the current production contract for the Polus public test temp
 - `POLUS` uses branded components under `client/src/widgets/public-test-workspace/ui/polus`.
 - Polus styles are scoped through the Polus variant of `PublicThemeLayout`.
 - Polus assets and fonts belong in the production-owned Polus public-test asset folder, not in `client/public/prototypes`.
+- `POLUS` ignores the `STANDARD` public-link branding builder config (`publicBranding`).
 - Single-choice answers keep the existing auto-advance behavior.
 - Multi-choice, slider, and open-text answers keep explicit action/navigation behavior.
+- The run page participates in public-session autosave; finish waits for queued/in-flight saves before submitting.
 
 ## Data/API Surface
 
 - `publicTemplate` is exposed in admin/public link DTOs, public link access responses, session state responses, and result responses.
+- `publicBranding` is also exposed in the same DTO surfaces for `STANDARD` public pages, but the Polus runtime does not apply it.
 - API clients are generated from the backend OpenAPI contract with Orval; regenerate after DTO changes.
 - Result rendering reuses the universal analysis schema rather than introducing a Polus-only result schema.
+
+## Related Updates
+
+- Public branding and autosave contract: `docs/2026-05-27-public-test-branding-and-autosave.md`.
+- Built-in methodology contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
 
 ## Verification Snapshot
 
