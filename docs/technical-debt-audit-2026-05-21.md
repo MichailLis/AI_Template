@@ -4,6 +4,29 @@ Scope: consolidated read-only audit of the project after recent feature work.
 
 This document merges all issues found across the manual review and delegated agent audits. It is intended to be used as a remediation backlog, not as an implementation plan. No source files were changed during the audit.
 
+## Status Update - 2026-05-27
+
+This audit is now a historical backlog snapshot. Several items below were
+addressed after 2026-05-21 and should be rechecked against current code before
+being copied into new plans.
+
+Notable follow-up work since the audit:
+
+- Refresh token handling moved to an `HttpOnly` cookie; frontend code no longer
+  reads a refresh token from JavaScript-readable storage.
+- Runtime config, CORS defaults, smoke checks, package-script checks, Prisma
+  migration checks, and template verification gates were tightened.
+- OpenRouter ownership was extracted into the `openrouter` integration module,
+  and analysis prompts were moved into the `analysis-prompts` bounded context.
+- Admin route ownership and manifest/OpenAPI inventory checks were tightened.
+- Public answer validation, public-link profile modes, analytics indexes,
+  prof-orientation scoring, and analytics export coverage were expanded.
+- Several stale mock/template frontend surfaces were removed, including the mock
+  admin overview page and old Vite starter assets.
+
+Use the individual issue text below as evidence of the original finding, not as
+proof that the issue is still open.
+
 ## Verification Snapshot
 
 Last observed checks:

@@ -1,98 +1,148 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# AI Template Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend for the AI Template product workspace.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- NestJS 11
+- Prisma 7 + PostgreSQL
+- Passport/JWT auth
+- `nestjs-zod` DTO validation
+- Swagger/OpenAPI generation
+- OpenRouter integration through a backend-only module
+- Jest unit/e2e tests
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Runtime
 
-## Project setup
+Normal local startup is managed from the repository root with the root `docker-compose.yml`:
 
-```bash
-$ npm install
+```powershell
+docker compose up -d
 ```
 
-## Compile and run the project
+The backend container serves Nest on `http://localhost:3000` and Swagger on `http://localhost:3000/api`.
 
-```bash
-# development
-$ npm run start
+For host-only development inside `server/`:
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```powershell
+npm ci
+Copy-Item .env.example .env
+npm run prisma:generate
+npm run prisma:push
+npm run start:dev
 ```
 
-## Run tests
+Useful server commands:
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```powershell
+npm run prisma:generate
+npm run prisma:push
+npm run openapi:generate
+npm run lint
+npm run test
+npm run test:e2e
+npm run build
 ```
 
-## Deployment
+## Environment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Local host development uses `server/.env`. Root Docker Compose can use root `.env` overrides. Production deployment uses `.env.deploy` with `docker-compose.deploy.yml`.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Required non-local values:
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+- `DATABASE_URL`
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+- `CORS_ALLOWED_ORIGINS`
+
+OpenRouter variables are backend-only:
+
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_DEFAULT_MODEL`
+- `OPENROUTER_HTTP_REFERER`
+- `OPENROUTER_APP_NAME`
+- `OPENROUTER_TIMEOUT_MS`
+- `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS`
+- `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`
+
+Do not expose `OPENROUTER_API_KEY` through frontend/Vite env.
+
+## Domain Modules
+
+- `auth` — signup/signin/logout/refresh. Access token is returned in the JSON body; refresh token is stored in an `HttpOnly` cookie.
+- `admin` — admin shell APIs, users, and settings.
+- `app-settings` — persisted system settings such as profession atlas URL.
+- `analysis-prompts` — Prompt Studio lifecycle, model proxy, generation, and simulation endpoints.
+- `openrouter` — integration-owned OpenRouter API client/key resolution.
+- `tests` — tests authoring, public links, education organizations, public sessions, analytics, exports, and prof-orientation v3+ methodology.
+
+## Public Test API Highlights
+
+Public student API lives under `/tests/public/*` and powers frontend `/t/*` routes.
+
+Current contract highlights:
+
+- Public links expose `entryProfileMode`, `publicTemplate`, and optional `publicBranding`.
+- `STANDARD` public pages can apply `publicBranding` from `TestPublicLink.publicBranding`.
+- `POLUS` public pages use dedicated scoped assets/styles and ignore the STANDARD branding config.
+- Public run answers can be saved before finish; the frontend autosaves with debounce and waits for in-flight saves before final submit.
+- Public results include student-safe analysis fields and optional `professionAtlasUrl`.
+
+Admin analytics endpoints:
+
+- `GET /admin/tests/topics/:topicId/analytics/summary`
+- `GET /admin/tests/topics/:topicId/analytics/export.xlsx`
+- `GET /admin/tests/topics/:topicId/analytics/export.pdf`
+
+## Prisma And OpenAPI Workflow
+
+Local schema sync:
+
+```powershell
+npm run prisma:generate
+npm run prisma:push
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Production deployment uses checked-in Prisma migrations and runs:
 
-## Resources
+```bash
+npx prisma migrate deploy --schema prisma/schema.prisma
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Before release/Docker image publication when `server/prisma/schema.prisma` changes, verify that the matching migration exists and run the root gate:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```powershell
+npm run verify:prisma-migrations
+```
 
-## Support
+OpenAPI generation:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```powershell
+npm run openapi:generate
+```
 
-## Stay in touch
+Root `npm run gen:api` runs server OpenAPI generation and then regenerates the frontend Orval client.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Deployment Docs
 
-## License
+- Docker Hub deployment: `../docs/deployment-dockerhub.md`
+- Server-admin checklist: `../docs/server-admin-deploy.md`
+- Repository implementation rules: `../AI_GUIDE.md`
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Verification
+
+Common server checks:
+
+```powershell
+npm run lint
+npm run test
+npm run test:e2e
+npm run build
+```
+
+Root gates:
+
+```powershell
+npm run verify:local
+npm run verify:template
+```

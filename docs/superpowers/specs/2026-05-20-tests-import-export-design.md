@@ -1,5 +1,10 @@
 # Tests Import/Export Design
 
+Status as of 2026-05-27: design/specification only. The built-in
+prof-orientation v3+ import endpoint is implemented, but the generic JSON
+test-topic import/export workflow described below is not yet implemented in the
+current backend or admin UI.
+
 ## Summary
 
 Add a JSON-based import/export workflow for admin test topics.

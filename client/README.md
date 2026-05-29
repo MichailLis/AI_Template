@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# AI Template Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend for the AI Template product workspace.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19 + TypeScript
+- Vite 7
+- React Router 7
+- TanStack Query
+- Orval-generated API client
+- Zustand session store
+- Tailwind + shadcn/ui-style primitives
+- Vitest + Testing Library
 
-## React Compiler
+## Runtime
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Normal local startup is managed from the repository root with the root `docker-compose.yml`:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```powershell
+docker compose up -d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The frontend container serves Vite on `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+For host-only development inside `client/`:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```powershell
+npm ci
+npm run dev
 ```
+
+Useful client commands:
+
+```powershell
+npm run gen:api
+npm run lint
+npm run test:run
+npm run build
+```
+
+`npm run gen:api` clears `src/shared/api/generated` and `src/shared/api/model`, then regenerates Orval output from `../server/openapi.json`. Run root `npm run gen:api` after backend DTO/controller changes so the server OpenAPI file is regenerated first.
+
+## API Client Contract
+
+- Axios instance lives in `src/shared/api/api.ts`.
+- Browser-only auth/refresh interceptors live in `src/shared/api/interceptors.ts`.
+- `src/shared/api/api.ts` must stay Node-safe because Orval imports it during generation.
+- Access tokens are returned in auth response bodies.
+- Refresh tokens are delivered by the backend as an `HttpOnly` cookie and are not available to frontend code.
+
+## Structure
+
+The client follows the repository FSD contract:
+
+```text
+app -> pages -> widgets -> features -> entities -> shared
+```
+
+Important surfaces:
+
+- `/login` — auth UI.
+- `/admin/tests` — tests authoring workspace.
+- `/admin/prompts` — Prompt Studio.
+- `/admin/public-links` — public link lifecycle and STANDARD branding builder.
+- `/admin/public-links/stats` — student attempts table.
+- `/admin/analytics` — test analytics report and XLSX/PDF export.
+- `/admin/settings` — OpenRouter status and profession atlas URL settings.
+- `/t/:code`, `/t/:code/session/:sessionToken`, `/t/:code/result/:sessionToken` — public student flow.
+
+Public student pages are wrapped in `PublicThemeLayout`. `STANDARD` pages may receive per-link `publicBranding`; `POLUS` keeps its dedicated scoped assets/styles and ignores the branding builder. Run pages use debounce autosave before manual save or finish actions.
+
+## Verification Notes
+
+For changes under `client/`, recreate the frontend container before frontend-related verification from the repository root:
+
+```powershell
+docker compose up -d --build --force-recreate frontend
+```
+
+Then run the targeted client checks, or the root gates (`npm run verify:local`, `npm run verify:template`) when appropriate.

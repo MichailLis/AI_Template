@@ -9,10 +9,11 @@
 - `ai_template_postgres` - PostgreSQL.
 - `ai_template_adminer` - Adminer для просмотра базы.
 
-В Docker Hub публикуются два прикладных образа:
+В Docker Hub публикуются два прикладных образа. Namespace и tag задаются через
+`DOCKERHUB_NAMESPACE` и `APP_IMAGE_TAG` в `.env.deploy`:
 
-- `morro665065/ai-template-frontend:prod`
-- `morro665065/ai-template-backend:prod`
+- `${DOCKERHUB_NAMESPACE}/ai-template-frontend:${APP_IMAGE_TAG}`
+- `${DOCKERHUB_NAMESPACE}/ai-template-backend:${APP_IMAGE_TAG}`
 
 PostgreSQL и Adminer берутся из официальных Docker образов. Это правильная модель
 Docker: один контейнер - один основной сервис, а единицей развертывания является
@@ -188,7 +189,9 @@ curl -i -X POST http://localhost:8080/api/auth/signin \
 curl.exe -i -X POST http://localhost:8080/api/auth/signin -H "Content-Type: application/json" -d "{\"email\":\"admin@example.com\",\"password\":\"change-this-admin-password\"}"
 ```
 
-Успешный ответ содержит `accessToken`, `refreshToken` и объект `user`.
+Успешный ответ содержит `accessToken` и объект `user`. Refresh token не возвращается
+в JSON: backend выставляет его как `HttpOnly` cookie `refreshToken`, поэтому в
+`curl -i` проверяйте заголовок `Set-Cookie`.
 
 ## 7. Чистая проверка рядом с текущей установкой
 
@@ -307,7 +310,7 @@ docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t y
 docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t your-dockerhub/ai-template-frontend:prod --push client
 ```
 
-## 10. Важное про существующую базу
+## 10. Важное про существующую базу и миграции
 
 `docker compose pull` и `up -d` не удаляют PostgreSQL volume. Данные сохраняются в
 volume `POSTGRES_VOLUME_NAME` или, по умолчанию, `ai_template_postgres_data`.
@@ -325,6 +328,25 @@ npx prisma migrate deploy --schema prisma/schema.prisma
 
 На чистой базе backend применяет Prisma migrations автоматически.
 
+Перед сборкой и публикацией релиза, в котором менялся `server/prisma/schema.prisma`,
+обязательно проверьте, что в репозитории есть соответствующая миграция:
+
+```bash
+npm run verify:prisma-migrations
+```
+
+Для дополнительной чистой проверки можно поднять временный пустой PostgreSQL и
+прогнать:
+
+```bash
+cd server
+npx prisma migrate deploy --schema prisma/schema.prisma
+```
+
+После изменения или добавления миграций production Docker images нужно пересобрать
+и опубликовать заново, а затем обновлять сервер только на commit, содержащий эту
+миграцию.
+
 Если подключить старую непустую базу, созданную через `prisma db push`, Prisma может
 остановиться с ошибкой `P3005`, потому что в базе нет истории миграций. Для такой базы
 нужна отдельная стратегия:
@@ -335,12 +357,13 @@ npx prisma migrate deploy --schema prisma/schema.prisma
 
 Не удаляйте volume с продакшен-данными без backup.
 
-Перед будущими релизами со schema change проверяйте наличие истории миграций:
+Перед релизами со schema change также проверяйте историю миграций на целевой базе:
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec postgres \
   sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT migration_name, finished_at FROM \"_prisma_migrations\" ORDER BY finished_at DESC LIMIT 5;"'
 ```
 
-Текущий релиз меняет поведение анализа и UI, но не меняет `schema.prisma`, поэтому
-новых таблиц/колонок и миграций для серверной БД не добавляет.
+Не полагайтесь на старые заметки вида "текущий релиз не меняет schema": за последние
+итерации в проект добавлялись миграции для режимов входа, Polus/public template,
+аналитических индексов, case-insensitive identity и `publicBranding`.

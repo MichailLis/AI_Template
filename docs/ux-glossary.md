@@ -162,18 +162,85 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 
 ---
 
+### автосохранение (autosave)
+
+**Definition:** Automatic background save of student answers during a public test session.
+
+**Use when:**
+
+- Showing save state in `/t/:code/session/:sessionToken`
+- Explaining that answers are preserved before final submission
+- Displaying retry/error copy when saving answers fails
+
+**Forbidden alternates:**
+
+- `autosave` (English)
+- `автосейв` (slang)
+- `синхронизация` (too broad)
+- raw technical states such as `pending`, `saving`, `saved`, `error`
+
+**Examples:**
+
+- ✅ "Сохраняем ответы..."
+- ✅ "Ответы сохранены"
+- ✅ "Не удалось сохранить ответы. Попробуйте ещё раз."
+- ❌ "Autosave error"
+- ❌ "saving"
+
+**Mapped UI surfaces:**
+
+- `client/src/widgets/public-test-workspace/ui/public-test-autosave-status.tsx` - Student-facing autosave status
+- `client/src/widgets/public-test-workspace/ui/polus/polus-public-run.tsx` - Polus run autosave status
+
+---
+
+### конструктор брендинга (branding builder)
+
+**Definition:** Admin tool for configuring the visual theme of a `STANDARD` public link.
+
+**Use when:**
+
+- Describing the public-link action that opens the branding editor
+- Explaining background, logo, color, card, and accent settings
+- Referring to reset-to-standard behavior
+
+**Forbidden alternates:**
+
+- `branding builder` (English)
+- `кастомайзер` (informal)
+- `редактор сайта` (overpromises layout editing)
+- `конструктор Polus` (incorrect; Polus does not use this config)
+
+**Examples:**
+
+- ✅ "Конструктор брендинга"
+- ✅ "Сбросить к стандартному оформлению"
+- ✅ "Настройка применяется только к стандартному публичному шаблону"
+- ❌ "Branding builder"
+- ❌ "Редактор Polus"
+
+**Mapped UI surfaces:**
+
+- `client/src/widgets/admin-public-links-workspace/ui/public-link-branding-builder.tsx` - Admin constructor
+- `client/src/widgets/admin-public-links-workspace/ui/public-links-list-card.row.tsx` - Public link row action
+- `client/src/features/tests/public-branding.ts` - Branding-to-theme adapter
+
+---
+
 ## Mapping Table: Term → UI Surfaces
 
-| Term             | File/Location                                                                                     | Context                                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| попытка          | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Card title "Прохождения студентов", table columns "ID", "№", attempt detail dialog subtitle "прохождение #1" |
-| прохождение      | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Card description "Тестов пройдено: {count}", empty state "По выбранной ссылке пока нет прохождений."         |
-| сессия           | `client/src/app/App.tsx`                                                                          | Route `/t/:code/session/:sessionToken`                                                                       |
-| публичная ссылка | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Публичные ссылки" (id: 'public-links')                                                             |
-| публичная ссылка | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Empty state "Сначала выберите ссылку"                                                                        |
-| анализ           | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx` | Tab button "Анализ", sections "Сводка", "Исходный текст"                                                     |
-| анализ           | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Action button "Анализ"                                                                                       |
-| аналитика        | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Аналитика" (id: 'analytics' - aggregate metrics only)                                              |
+| Term                  | File/Location                                                                                     | Context                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| попытка               | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Card title "Прохождения студентов", table columns "ID", "№", attempt detail dialog subtitle "прохождение #1" |
+| прохождение           | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Card description "Тестов пройдено: {count}", empty state "По выбранной ссылке пока нет прохождений."         |
+| сессия                | `client/src/app/App.tsx`                                                                          | Route `/t/:code/session/:sessionToken`                                                                       |
+| публичная ссылка      | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Публичные ссылки" (id: 'public-links')                                                             |
+| публичная ссылка      | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Empty state "Сначала выберите ссылку"                                                                        |
+| анализ                | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx` | Tab button "Анализ", sections "Сводка", "Исходный текст"                                                     |
+| анализ                | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Action button "Анализ"                                                                                       |
+| аналитика             | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Аналитика" (id: 'analytics' - aggregate metrics only)                                              |
+| автосохранение        | `client/src/widgets/public-test-workspace/ui/public-test-autosave-status.tsx`                     | Student-facing status for background answer saves                                                            |
+| конструктор брендинга | `client/src/widgets/admin-public-links-workspace/ui/public-link-branding-builder.tsx`             | Admin editor for STANDARD public link appearance                                                             |
 
 ---
 
