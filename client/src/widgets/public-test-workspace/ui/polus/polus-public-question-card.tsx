@@ -1,18 +1,12 @@
 import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { getSliderQuestionMeta } from '../public-question-card.utils';
-import { hasMeaningfulQuestionAnswer } from '../public-test-run-answer.helpers';
+import { getPublicQuestionCardState, type AnswerOverride } from '../public-question-card-state';
 
 import { PolusPublicSliderField } from './polus-public-slider-field';
 import { getPolusSliderPresentation } from './polus-public-slider-presentation';
 
 import type { PublicTestQuestion } from '../public-test-run.types';
-
-interface AnswerOverride {
-  questionId: number;
-  value: unknown;
-}
 
 interface PolusPublicQuestionCardProps {
   question: PublicTestQuestion;
@@ -220,31 +214,20 @@ export function PolusPublicQuestionCard({
   onNext,
   onFinish,
 }: PolusPublicQuestionCardProps) {
-  const sliderMeta =
-    question.type === 'SLIDER'
-      ? getSliderQuestionMeta(question.settings, question.sliderBands, currentAnswer)
-      : null;
-  const hasAnswer = hasMeaningfulQuestionAnswer(question.type, currentAnswer);
+  const { sliderMeta, hasAnswer, needsInlineAction, inlineActionIsDisabled, handleSingleSelect } =
+    getPublicQuestionCardState({
+      question,
+      currentAnswer,
+      isLastQuestion,
+      isSubmitting,
+      onNext,
+      onFinish,
+    });
   const sliderPresentation = sliderMeta
     ? getPolusSliderPresentation(question.settings, sliderMeta.value, hasAnswer)
     : null;
-  const needsInlineAction = question.type !== 'SINGLE_CHOICE';
-  const inlineActionIsDisabled = isSubmitting || (question.required && !hasAnswer);
   const progress =
     totalQuestionsCount > 0 ? ((currentQuestionIndex + 1) / totalQuestionsCount) * 100 : 0;
-
-  const handleSingleSelect = (value: string) => {
-    if (isSubmitting) {
-      return;
-    }
-
-    if (isLastQuestion) {
-      void onFinish({ questionId: question.id, value });
-      return;
-    }
-
-    onNext();
-  };
 
   return (
     <div className="polus-question-shell">

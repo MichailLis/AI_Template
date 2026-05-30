@@ -2,29 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import type { TestQuestionType } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
+import {
+  mapQuestionToPromptPayload,
+  type TestsPromptQuestionPayload,
+} from './tests-prompt-payload.utils';
 
-export interface TestsPromptSimulationQuestionPayload {
-  id: number;
-  type: TestQuestionType;
-  title: string;
-  description: string | null;
-  required: boolean;
-  order: number;
-  settings: unknown;
-  options: Array<{
-    id: number;
-    label: string;
-    value: string;
-    order: number;
-  }>;
-  sliderBands: Array<{
-    id: number;
-    minValue: number;
-    maxValue: number;
-    label: string;
-    order: number;
-  }>;
-}
+export type TestsPromptSimulationQuestionPayload = TestsPromptQuestionPayload;
 
 export interface TestsPromptSimulationTestReadModel {
   id: number;
@@ -111,27 +94,6 @@ export class TestsPromptSimulationReadService {
       throw new BadRequestException('Some selected test questions were not found');
     }
 
-    return questions.map((question) => ({
-      id: question.id,
-      type: question.type,
-      title: question.title,
-      description: question.description,
-      required: question.required,
-      order: question.order,
-      settings: question.settings,
-      options: question.options.map((option) => ({
-        id: option.id,
-        label: option.label,
-        value: option.value,
-        order: option.order,
-      })),
-      sliderBands: question.sliderBands.map((band) => ({
-        id: band.id,
-        minValue: band.minValue,
-        maxValue: band.maxValue,
-        label: band.label,
-        order: band.order,
-      })),
-    }));
+    return questions.map(mapQuestionToPromptPayload);
   }
 }

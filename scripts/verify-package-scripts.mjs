@@ -96,6 +96,8 @@ for (const scriptName of ['verify:local', 'verify:template']) {
 }
 
 for (const expectedSegment of [
+  'npm run prisma:generate',
+  'npm run gen:api',
   'npm run test:run --prefix client',
   'npm run format:check',
   'npm run audit:all',
@@ -117,7 +119,6 @@ if (!existsSync(ciWorkflowPath)) {
     'npm ci',
     'npm ci --prefix client',
     'npm ci --prefix server',
-    'npm run gen:api',
     'npm run verify:template',
   ]) {
     if (!ciWorkflow.includes(expectedCommand)) {

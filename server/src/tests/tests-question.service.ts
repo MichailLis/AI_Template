@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import type { ReorderTestsQuestionsDto, UpsertTestsQuestionDto } from './dto/tests.dto';
 import { prepareQuestionPayload, toPrismaSettingsInput } from './tests-domain.utils';
+import { createQuestionChildren } from './tests-topic-version.utils';
 
 interface DraftQuestionRef {
   id: number;
@@ -41,30 +42,7 @@ export class TestsQuestionService {
         },
       });
 
-      if (payload.options.length > 0) {
-        await tx.testQuestionOption.createMany({
-          data: payload.options.map((option) => ({
-            questionId: createdQuestion.id,
-            label: option.label,
-            value: option.value,
-            weight: option.weight,
-            order: option.order,
-          })),
-        });
-      }
-
-      if (payload.sliderBands.length > 0) {
-        await tx.testQuestionSliderBand.createMany({
-          data: payload.sliderBands.map((band) => ({
-            questionId: createdQuestion.id,
-            minValue: band.minValue,
-            maxValue: band.maxValue,
-            label: band.label,
-            weight: band.weight,
-            order: band.order,
-          })),
-        });
-      }
+      await createQuestionChildren(tx, createdQuestion.id, payload);
     });
   }
 
@@ -98,30 +76,7 @@ export class TestsQuestionService {
         where: { questionId },
       });
 
-      if (payload.options.length > 0) {
-        await tx.testQuestionOption.createMany({
-          data: payload.options.map((option) => ({
-            questionId,
-            label: option.label,
-            value: option.value,
-            weight: option.weight,
-            order: option.order,
-          })),
-        });
-      }
-
-      if (payload.sliderBands.length > 0) {
-        await tx.testQuestionSliderBand.createMany({
-          data: payload.sliderBands.map((band) => ({
-            questionId,
-            minValue: band.minValue,
-            maxValue: band.maxValue,
-            label: band.label,
-            weight: band.weight,
-            order: band.order,
-          })),
-        });
-      }
+      await createQuestionChildren(tx, questionId, payload);
     });
   }
 

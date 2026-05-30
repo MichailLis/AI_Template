@@ -65,11 +65,5 @@ jobs:
       - name: Install Playwright system dependencies
         run: npx playwright install-deps chromium
 
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-
-      - name: Generate API client
-        run: npm run gen:api
-
       - name: Verify template release gate
         run: npm run verify:template

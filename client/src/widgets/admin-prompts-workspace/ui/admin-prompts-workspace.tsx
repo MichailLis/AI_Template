@@ -2,8 +2,8 @@ import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-t
 import { Button } from '@/shared/ui/button';
 
 import { AdminPromptsWorkspaceContent } from './admin-prompts-workspace-content';
-import { useAdminPromptsWorkspace } from './use-admin-prompts-workspace';
-export type AdminPromptsWorkspaceState = ReturnType<typeof useAdminPromptsWorkspace>;
+import { useAdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
+export type AdminPromptsWorkspaceState = ReturnType<typeof useAdminPromptsWorkspaceState>;
 
 function AdminPromptsLoadingState() {
   return (
@@ -40,7 +40,7 @@ function AdminPromptsErrorState({ onRetry }: { onRetry: () => void }) {
 }
 
 export function AdminPromptsWorkspace() {
-  const workspace = useAdminPromptsWorkspace();
+  const workspace = useAdminPromptsWorkspaceState();
 
   if (workspace.modelsQuery.isLoading) {
     return <AdminPromptsLoadingState />;

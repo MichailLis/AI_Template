@@ -9,7 +9,6 @@ import { TestsAnalyticsExportService } from './tests-analytics-export.service';
 import { TestsAnalyticsPdfRendererService } from './tests-analytics-pdf-renderer.service';
 import { TestsAnalyticsService } from './tests-analytics.service';
 import { TestsAnalysisService } from './tests-analysis.service';
-import { TestsAttemptService } from './tests-attempt.service';
 import { TestsPublicController } from './tests-public.controller';
 import { TestsPublicLinksModule } from './tests-public-links.module';
 import { TestsPublicSessionService } from './tests-public-session.service';
@@ -24,7 +23,6 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsAnalysisService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
-    TestsAttemptService,
     ProfessionAtlasSettingsService,
   ],
   exports: [
@@ -33,7 +31,6 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsAnalysisService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
-    TestsAttemptService,
   ],
 })
 export class TestsAttemptsModule {}

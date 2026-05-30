@@ -36,6 +36,37 @@ export interface PersistQuestionPayload {
   order?: number;
 }
 
+export const createQuestionChildren = async (
+  tx: TransactionClient,
+  questionId: number,
+  question: Pick<PersistQuestionPayload, 'options' | 'sliderBands'>,
+) => {
+  if (question.options.length > 0) {
+    await tx.testQuestionOption.createMany({
+      data: question.options.map((option) => ({
+        questionId,
+        label: option.label,
+        value: option.value,
+        weight: option.weight,
+        order: option.order,
+      })),
+    });
+  }
+
+  if (question.sliderBands.length > 0) {
+    await tx.testQuestionSliderBand.createMany({
+      data: question.sliderBands.map((band) => ({
+        questionId,
+        minValue: band.minValue,
+        maxValue: band.maxValue,
+        label: band.label,
+        weight: band.weight,
+        order: band.order,
+      })),
+    });
+  }
+};
+
 export const createTopicWithDraft = async (
   tx: TransactionClient,
   input: {
@@ -128,30 +159,7 @@ export const createQuestionsInVersion = async (
       },
     });
 
-    if (question.options.length > 0) {
-      await tx.testQuestionOption.createMany({
-        data: question.options.map((option) => ({
-          questionId: createdQuestion.id,
-          label: option.label,
-          value: option.value,
-          weight: option.weight,
-          order: option.order,
-        })),
-      });
-    }
-
-    if (question.sliderBands.length > 0) {
-      await tx.testQuestionSliderBand.createMany({
-        data: question.sliderBands.map((band) => ({
-          questionId: createdQuestion.id,
-          minValue: band.minValue,
-          maxValue: band.maxValue,
-          label: band.label,
-          weight: band.weight,
-          order: band.order,
-        })),
-      });
-    }
+    await createQuestionChildren(tx, createdQuestion.id, question);
   }
 };
 

@@ -1,5 +1,5 @@
 import { TestsAdminAttemptsController } from './tests-admin-attempts.controller';
-import { TestsAttemptService } from './tests-attempt.service';
+import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 
 describe('TestsAdminAttemptsController', () => {
   let controller: TestsAdminAttemptsController;
@@ -14,7 +14,9 @@ describe('TestsAdminAttemptsController', () => {
       getAttemptDetail: jest.fn(),
     };
 
-    controller = new TestsAdminAttemptsController(serviceMock as unknown as TestsAttemptService);
+    controller = new TestsAdminAttemptsController(
+      serviceMock as unknown as TestsAdminAttemptService,
+    );
   });
 
   afterEach(() => {
