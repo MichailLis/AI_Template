@@ -11,8 +11,8 @@ import {
   PublicSessionStartRequestDto,
   PublicSessionStartResponseDto,
 } from './dto/tests-public.dto';
-import { TestsAttemptService } from './tests-attempt.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
+import { TestsPublicSessionService } from './tests-public-session.service';
 import { ApiPublicErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('tests-public')
@@ -21,7 +21,7 @@ import { ApiPublicErrorResponses } from '../common/decorators/api-error-response
 export class TestsPublicController {
   constructor(
     private readonly testsPublicLinkService: TestsPublicLinkService,
-    private readonly testsAttemptService: TestsAttemptService,
+    private readonly testsPublicSessionService: TestsPublicSessionService,
   ) {}
 
   @Get('links/:code')
@@ -35,14 +35,14 @@ export class TestsPublicController {
   @ApiOperation({ summary: 'Start or resume public test session' })
   @ApiResponse({ status: 201, type: PublicSessionStartResponseDto })
   startSession(@Param('code') code: string, @Body() dto: PublicSessionStartRequestDto) {
-    return this.testsAttemptService.startSessionByCode(code, dto);
+    return this.testsPublicSessionService.startSessionByCode(code, dto);
   }
 
   @Get('sessions/:sessionToken')
   @ApiOperation({ summary: 'Get public test session state by token' })
   @ApiResponse({ status: 200, type: PublicSessionGetResponseDto })
   getSession(@Param('sessionToken') sessionToken: string) {
-    return this.testsAttemptService.getSessionByToken(sessionToken);
+    return this.testsPublicSessionService.getSessionByToken(sessionToken);
   }
 
   @Put('sessions/:sessionToken/answers')
@@ -52,7 +52,7 @@ export class TestsPublicController {
     @Param('sessionToken') sessionToken: string,
     @Body() dto: PublicSessionSaveAnswersRequestDto,
   ) {
-    return this.testsAttemptService.saveAnswers(sessionToken, dto);
+    return this.testsPublicSessionService.saveAnswers(sessionToken, dto);
   }
 
   @Post('sessions/:sessionToken/finish')
@@ -60,13 +60,13 @@ export class TestsPublicController {
   @ApiOperation({ summary: 'Finish public test session and compute analysis' })
   @ApiResponse({ status: 200, type: PublicSessionFinishResponseDto })
   finishSession(@Param('sessionToken') sessionToken: string) {
-    return this.testsAttemptService.finishSession(sessionToken);
+    return this.testsPublicSessionService.finishSession(sessionToken);
   }
 
   @Get('sessions/:sessionToken/result')
   @ApiOperation({ summary: 'Get public test session analysis result' })
   @ApiResponse({ status: 200, type: PublicSessionResultResponseDto })
   getSessionResult(@Param('sessionToken') sessionToken: string) {
-    return this.testsAttemptService.getSessionResult(sessionToken);
+    return this.testsPublicSessionService.getSessionResult(sessionToken);
   }
 }

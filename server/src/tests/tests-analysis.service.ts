@@ -1,6 +1,11 @@
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, type TestStudentAnalysis, type TestStudentAttempt } from '@prisma/client';
+import {
+  Prisma,
+  type TestQuestionType,
+  type TestStudentAnalysis,
+  type TestStudentAttempt,
+} from '@prisma/client';
 
 import {
   TestAnalysisResultJsonSchema,
@@ -22,6 +27,7 @@ import {
   scoreProfOrientationV3Plus,
 } from './prof-orientation-v3-plus.scoring';
 import type { AttemptWithSessionData } from './tests-attempt.query';
+import { mapAnswerToPromptPayload, mapQuestionToPromptPayload } from './tests-prompt-payload.utils';
 
 interface StubAnalysisInput {
   attemptId: number;
@@ -54,7 +60,7 @@ interface ProfOrientationAttemptAnalysisRecord {
   topicVersion: {
     questions: Array<{
       id: number;
-      type: string;
+      type: TestQuestionType;
       title: string;
       description: string | null;
       required: boolean;
@@ -431,34 +437,8 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     try {
       const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
       const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
-      const questions = attempt.topicVersion.questions.map((question) => ({
-        id: question.id,
-        type: question.type,
-        title: question.title,
-        description: question.description,
-        required: question.required,
-        order: question.order,
-        settings: question.settings,
-        options: question.options.map((option) => ({
-          id: option.id,
-          label: option.label,
-          value: option.value,
-          order: option.order,
-        })),
-        sliderBands: question.sliderBands.map((band) => ({
-          id: band.id,
-          minValue: band.minValue,
-          maxValue: band.maxValue,
-          label: band.label,
-          order: band.order,
-        })),
-      }));
-      const answers = attempt.answers.map((answer) => ({
-        questionId: answer.questionId,
-        questionTitle: answer.questionTitleSnapshot,
-        questionType: answer.questionTypeSnapshot,
-        answerPayload: answer.answerPayload,
-      }));
+      const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
+      const answers = attempt.answers.map(mapAnswerToPromptPayload);
       const response = await this.openRouterClient.generatePrompt(apiKey, {
         model,
         prompt: this.buildAttemptAnalysisPrompt({
@@ -513,34 +493,8 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     try {
       const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
       const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
-      const questions = attempt.topicVersion.questions.map((question) => ({
-        id: question.id,
-        type: question.type,
-        title: question.title,
-        description: question.description,
-        required: question.required,
-        order: question.order,
-        settings: question.settings,
-        options: question.options.map((option) => ({
-          id: option.id,
-          label: option.label,
-          value: option.value,
-          order: option.order,
-        })),
-        sliderBands: question.sliderBands.map((band) => ({
-          id: band.id,
-          minValue: band.minValue,
-          maxValue: band.maxValue,
-          label: band.label,
-          order: band.order,
-        })),
-      }));
-      const answers = attempt.answers.map((answer) => ({
-        questionId: answer.questionId,
-        questionTitle: answer.questionTitleSnapshot,
-        questionType: answer.questionTypeSnapshot,
-        answerPayload: answer.answerPayload,
-      }));
+      const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
+      const answers = attempt.answers.map(mapAnswerToPromptPayload);
       const response = await this.generateProfOrientationPromptWithTimeoutRetry(apiKey, {
         model,
         prompt: this.buildProfOrientationEnrichmentPrompt({

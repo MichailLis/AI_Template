@@ -3,10 +3,9 @@ import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { getSliderQuestionMeta } from './public-question-card.utils';
+import { getPublicQuestionCardState, type AnswerOverride } from './public-question-card-state';
 import { PublicQuestionChoiceGroup } from './public-question-choice-group';
 import { PublicQuestionSliderField } from './public-question-slider-field';
-import { hasMeaningfulQuestionAnswer } from './public-test-run-answer.helpers';
 
 import type { PublicTestQuestion } from './public-test-run.types';
 
@@ -19,11 +18,6 @@ interface QuestionNavigationProps {
   onBack: () => void;
   onNext: () => void;
   onFinish: () => Promise<void>;
-}
-
-interface AnswerOverride {
-  questionId: number;
-  value: unknown;
 }
 
 interface PublicQuestionCardProps {
@@ -120,25 +114,15 @@ export function PublicQuestionCard({
   onNext,
   onFinish,
 }: PublicQuestionCardProps) {
-  const sliderMeta =
-    question.type === 'SLIDER'
-      ? getSliderQuestionMeta(question.settings, question.sliderBands, currentAnswer)
-      : null;
-  const hasAnswer = hasMeaningfulQuestionAnswer(question.type, currentAnswer);
-  const needsInlineAction = question.type !== 'SINGLE_CHOICE';
-  const inlineActionIsDisabled = isSubmitting || (question.required && !hasAnswer);
-  const handleSingleSelect = (value: string) => {
-    if (isSubmitting) {
-      return;
-    }
-
-    if (isLastQuestion) {
-      void onFinish({ questionId: question.id, value });
-      return;
-    }
-
-    onNext();
-  };
+  const { sliderMeta, hasAnswer, needsInlineAction, inlineActionIsDisabled, handleSingleSelect } =
+    getPublicQuestionCardState({
+      question,
+      currentAnswer,
+      isLastQuestion,
+      isSubmitting,
+      onNext,
+      onFinish,
+    });
 
   return (
     <section className="public-glass public-question-stage flex rounded-[1.75rem] px-5 py-6 md:px-10 md:py-8">

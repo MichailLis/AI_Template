@@ -8,7 +8,7 @@ import {
   AdminPublicAttemptsListQueryDto,
   AdminPublicAttemptsListResponseDto,
 } from './dto/tests-links.dto';
-import { TestsAttemptService } from './tests-attempt.service';
+import { TestsAdminAttemptService } from './tests-admin-attempt.service';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
 @ApiTags('tests')
@@ -17,7 +17,7 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 @UseGuards(AtGuard)
 @Controller('admin/tests')
 export class TestsAdminAttemptsController {
-  constructor(private readonly testsAttemptService: TestsAttemptService) {}
+  constructor(private readonly testsAdminAttemptService: TestsAdminAttemptService) {}
 
   @Get('public-links/:linkId/attempts')
   @ApiOperation({ summary: 'List student attempts by public link' })
@@ -27,7 +27,7 @@ export class TestsAdminAttemptsController {
     @Param('linkId', ParseIntPipe) linkId: number,
     @Query() query: AdminPublicAttemptsListQueryDto,
   ) {
-    return this.testsAttemptService.listAttemptsForLink(userId, linkId, query);
+    return this.testsAdminAttemptService.listAttemptsForLink(userId, linkId, query);
   }
 
   @Get('attempts/:attemptId')
@@ -37,6 +37,6 @@ export class TestsAdminAttemptsController {
     @GetCurrentUserId() userId: number,
     @Param('attemptId', ParseIntPipe) attemptId: number,
   ) {
-    return this.testsAttemptService.getAttemptDetail(userId, attemptId);
+    return this.testsAdminAttemptService.getAttemptDetail(userId, attemptId);
   }
 }

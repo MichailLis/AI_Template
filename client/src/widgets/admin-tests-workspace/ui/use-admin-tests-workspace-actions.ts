@@ -1,15 +1,19 @@
 import {
   createHandleConfirmArchiveTopic,
-  createHandleConfirmDeleteTopic,
-  createHandleConfirmPublish,
   createHandleConfirmRestoreTopic,
+} from './admin-tests-archive-action-creators';
+import {
+  createHandleConfirmPublish,
+  createHandleReorderQuestions,
+} from './admin-tests-publish-action-creators';
+import {
+  createHandleConfirmDeleteTopic,
   createHandleConfirmTopicSwitch,
   createHandleCreateTest,
   createHandleCreateTestFromAi,
   createHandleImportProfOrientationV3Plus,
-  createHandleReorderQuestions,
   createHandleSelectTest,
-} from './admin-tests-workspace-action-creators';
+} from './admin-tests-topic-action-creators';
 import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
 
 import type { useDraftAutosave, useQuestionEditor } from '@/features/tests';
