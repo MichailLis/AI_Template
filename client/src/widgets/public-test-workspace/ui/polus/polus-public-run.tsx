@@ -1,12 +1,7 @@
-import { PublicTestAutosaveStatus } from '../public-test-autosave-status';
-
 import { PolusPublicLayout } from './polus-public-layout';
 import { PolusPublicQuestionCard } from './polus-public-question-card';
 
-import type {
-  PublicTestAutosaveStatus as PublicTestAutosaveStatusValue,
-  PublicTestSession,
-} from '../public-test-run.types';
+import type { PublicTestSession } from '../public-test-run.types';
 
 interface AnswerOverride {
   questionId: number;
@@ -20,8 +15,6 @@ interface PolusPublicRunProps {
   currentAnswer: unknown;
   questionTransitionClass: string;
   isSubmitting: boolean;
-  autosaveStatus: PublicTestAutosaveStatusValue;
-  autosaveError: string | null;
   onAnswerChange: (questionId: number, value: unknown) => void;
   onBack: () => void;
   onNext: () => void;
@@ -35,8 +28,6 @@ export function PolusPublicRun({
   currentAnswer,
   questionTransitionClass,
   isSubmitting,
-  autosaveStatus,
-  autosaveError,
   onAnswerChange,
   onBack,
   onNext,
@@ -46,11 +37,6 @@ export function PolusPublicRun({
 
   return (
     <PolusPublicLayout view="question">
-      <PublicTestAutosaveStatus
-        status={autosaveStatus}
-        error={autosaveError}
-        className="mb-4 self-end"
-      />
       <div
         key={currentQuestion.id}
         className={`public-question-transition ${questionTransitionClass}`}

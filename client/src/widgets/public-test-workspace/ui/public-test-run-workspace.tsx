@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
-import { PublicTestAutosaveStatus } from './public-test-autosave-status';
 import { PublicTestRunProgress } from './public-test-run-progress';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
 import { PublicThemeLayout } from './public-theme-layout';
@@ -21,8 +20,6 @@ export function PublicTestRunWorkspace() {
     getCurrentAnswer,
     setQuestionAnswer,
     handleFinish,
-    autosaveStatus,
-    autosaveError,
   } = usePublicTestRunWorkspace();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const { goToQuestionIndex, questionTransitionClass } = useQuestionTransition({
@@ -77,8 +74,6 @@ export function PublicTestRunWorkspace() {
         currentAnswer={getCurrentAnswer(currentQuestion.id)}
         questionTransitionClass={questionTransitionClass}
         isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
-        autosaveStatus={autosaveStatus}
-        autosaveError={autosaveError}
         onAnswerChange={setQuestionAnswer}
         onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
         onNext={() => goToQuestionIndex(currentQuestionIndex + 1)}
@@ -97,11 +92,6 @@ export function PublicTestRunWorkspace() {
           <PublicTestRunProgress
             currentQuestionIndex={currentQuestionIndex}
             totalQuestionsCount={totalQuestionsCount}
-          />
-          <PublicTestAutosaveStatus
-            status={autosaveStatus}
-            error={autosaveError}
-            className="mt-3 max-w-full"
           />
         </div>
 
