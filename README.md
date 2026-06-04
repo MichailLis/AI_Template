@@ -2,6 +2,10 @@
 
 Strict fullstack product template for AI-assisted feature delivery.
 
+This `prod_ready` branch is a deployment bundle. It intentionally contains only
+`docker-compose.deploy.yml`, `.env.deploy.example`, and this README. Use the
+main source branches for local Node development.
+
 Current project state:
 
 - Auth is fully wired: access token in response body, refresh token in an `HttpOnly` cookie
@@ -17,30 +21,49 @@ Current project state:
 - Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
 - Infra: Docker Compose (`frontend`, `backend`, `postgres`, `adminer`)
 
-## Quick Start
+## Deployment Quick Start
 
-1. Start the full Docker stack:
+1. Create a deploy env file:
 
 ```powershell
-docker compose up -d
+Copy-Item .env.deploy.example .env.deploy
 ```
 
-2. Open the app:
+2. Edit `.env.deploy` and replace the database password, JWT secrets, public
+   origin, and optional bootstrap admin credentials.
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3000`
-- Swagger: `http://localhost:3000/api`
-- Adminer: `http://localhost:8080`
-- Postgres: `localhost:5432`
+3. Pull and start the production images:
 
-The `backend` container restores server dependencies with `npm ci`, generates Prisma client, syncs the schema, and starts Nest in watch mode.
-The `frontend` container restores client dependencies with `npm ci` and starts Vite.
+```powershell
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
+```
+
+4. Open the app:
+
+- Frontend: `http://localhost:8080`
+- Login: `http://localhost:8080/login`
+- OpenAPI JSON: `http://localhost:8080/api/api-json`
+- Adminer: `http://localhost:8081`
+
+The backend container runs Prisma migrations when `RUN_DB_MIGRATIONS=true`.
+
+Port model:
+
+- `APP_HTTP_PORT` publishes the frontend/Nginx container to the host.
+- `ADMINER_PORT` publishes Adminer to the host.
+- Backend `PORT=3000` is internal to the Docker network. It is not bound to host
+  port `3000`, so a busy host `3000` does not conflict with this deploy compose.
+- Do not change backend `PORT` only to avoid a host conflict. The backend
+  healthcheck and frontend Nginx proxy expect the backend at `backend:3000`.
+  If the public app port is busy, change `APP_HTTP_PORT`.
 
 Useful commands:
 
 ```powershell
-docker compose logs -f backend frontend
-docker compose down
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f backend frontend
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml down
 ```
 
 ## Production Docker Hub Deployment
@@ -48,8 +71,13 @@ docker compose down
 Production deployment uses separate Docker Hub images for backend and frontend. The frontend
 image includes Nginx, serves the React SPA, and proxies `/api/*` to the backend container.
 
-See [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md) for build, push, and
-Linux/Windows deployment commands.
+Published images for this deployment bundle:
+
+- `morro665065/ai-template-backend:prod`
+- `morro665065/ai-template-frontend:prod`
+
+The `latest` tag is not published for these images. Keep `APP_IMAGE_TAG=prod`
+unless you have published your own immutable tag.
 
 ## Local Node Development
 
