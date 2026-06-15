@@ -543,6 +543,10 @@ describe('TestsAnalysisService', () => {
       'test-key',
       expect.objectContaining({
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
+        provider: {
+          order: ['cloudflare', 'baidu'],
+          allow_fallbacks: true,
+        },
       }),
       { timeoutMs: 180_000 },
     );

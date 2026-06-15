@@ -10,6 +10,18 @@ import {
 
 const DEFAULT_OPENROUTER_TIMEOUT_MS = 120_000;
 
+type OpenRouterProviderSort = 'price' | 'throughput' | 'latency';
+
+interface OpenRouterProviderPreferences {
+  order?: readonly string[];
+  allow_fallbacks?: boolean;
+  sort?: OpenRouterProviderSort;
+}
+
+type OpenRouterProviderRequest = OpenRouterProviderPreferences & {
+  require_parameters?: boolean;
+};
+
 export interface OpenRouterPromptRequest {
   model: string;
   prompt: string;
@@ -22,6 +34,7 @@ export interface OpenRouterPromptRequest {
   };
   requireParameters?: boolean;
   useResponseHealing?: boolean;
+  provider?: OpenRouterProviderPreferences;
 }
 
 export const resolveOpenRouterTimeoutMs = (config: ConfigService, timeoutMs?: number) => {
@@ -68,15 +81,14 @@ const buildPromptRequestBody = (dto: OpenRouterPromptRequest) => {
             schema: Record<string, unknown>;
           };
         };
-    provider?: {
-      require_parameters?: boolean;
-    };
+    provider?: OpenRouterProviderRequest;
     plugins?: Array<{ id: 'response-healing' }>;
   } = {
     model: dto.model,
     temperature: dto.temperature ?? 0.7,
     messages: [{ role: 'user', content: dto.prompt }],
   };
+  const provider: OpenRouterProviderRequest = { ...(dto.provider ?? {}) };
 
   if (responseFormat === 'json') {
     if (dto.responseSchema) {
@@ -94,15 +106,17 @@ const buildPromptRequestBody = (dto: OpenRouterPromptRequest) => {
 
     const requireParameters = dto.requireParameters ?? Boolean(dto.responseSchema);
     if (requireParameters) {
-      openRouterRequestBody.provider = {
-        require_parameters: true,
-      };
+      provider.require_parameters = true;
     }
 
     const useResponseHealing = dto.useResponseHealing ?? Boolean(dto.responseSchema);
     if (useResponseHealing) {
       openRouterRequestBody.plugins = [{ id: 'response-healing' }];
     }
+  }
+
+  if (Object.keys(provider).length > 0) {
+    openRouterRequestBody.provider = provider;
   }
 
   return {

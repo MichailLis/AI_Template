@@ -372,9 +372,10 @@ Built-in prof-orientation v3+ baseline:
 3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
    10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
    `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
-4. Built-in methodology LLM enrichment must use `openai/gpt-oss-120b`. If an
-   older published methodology prompt exists on another model, create a new
-   published prompt version for new imports instead of reusing the stale one.
+4. Built-in methodology LLM enrichment must use the analysis prompt version
+   selected on the test topic. Seed the built-in prompt with
+   `deepseek/deepseek-v4-flash` only when no published built-in prompt version
+   exists yet.
 5. Public multi-choice UI must enforce `settings.maxChoices`.
 6. For this scoring kind, `finishSession` must store deterministic algorithm
    analysis as `READY` before LLM enrichment starts.

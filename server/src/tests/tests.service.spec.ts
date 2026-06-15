@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsQuestionService } from './tests-question.service';
 import { TestsService } from './tests.service';
-import { PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL } from './prof-orientation-v3-plus.fixture';
 
 jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
@@ -313,7 +312,7 @@ describe('TestsService analysis prompt attachment', () => {
     expect(getTopicDraftSpy).toHaveBeenCalledWith(5, 1);
   });
 
-  it('importProfOrientationV3Plus creates a new prompt version when existing model is stale', async () => {
+  it('importProfOrientationV3Plus reuses the latest published prompt version model selected in UI', async () => {
     prismaMock.testTopic.findMany.mockResolvedValue([]);
     txMock.analysisPrompt.findFirst.mockResolvedValue({
       id: 70,
@@ -326,8 +325,6 @@ describe('TestsService analysis prompt attachment', () => {
         },
       ],
     });
-    txMock.analysisPromptVersion.findFirst.mockResolvedValue({ versionNumber: 1 });
-    txMock.analysisPromptVersion.create.mockResolvedValue({ id: 80 });
     txMock.testTopic.create.mockResolvedValue({ id: 1 });
     txMock.testTopicVersion.create.mockResolvedValue({
       id: 10,
@@ -352,18 +349,10 @@ describe('TestsService analysis prompt attachment', () => {
 
     await service.importProfOrientationV3Plus(5);
 
-    expect(txMock.analysisPromptVersion.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        promptId: 70,
-        versionNumber: 2,
-        status: 'PUBLISHED',
-        model: PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
-      }) as unknown,
-      select: { id: true },
-    });
+    expect(txMock.analysisPromptVersion.create).not.toHaveBeenCalled();
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        analysisPromptVersionId: 80,
+        analysisPromptVersionId: 79,
       }) as unknown,
     });
   });

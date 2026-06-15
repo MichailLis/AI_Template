@@ -82,7 +82,7 @@ export interface ProfOrientationV3PlusConfig {
 export const PROF_ORIENTATION_V3_PLUS_TITLE = 'Профориентационный тест v3+';
 export const PROF_ORIENTATION_V3_PLUS_SLUG = 'prof-orientation-v3-plus';
 export const PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE = 'Профориентация v3+: обогащение результата';
-export const PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL = 'openai/gpt-oss-120b';
+export const PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL = 'deepseek/deepseek-v4-flash';
 export const PROF_ORIENTATION_V3_PLUS_PROMPT = [
   'Ты помогаешь школьнику понять результат профориентационного теста.',
   'Работай строго в рамках методики v3+: направления, карточка результата, профессии, мини-проект, уверенность и flags уже рассчитаны алгоритмом.',

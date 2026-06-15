@@ -92,6 +92,10 @@ interface ProfOrientationAttemptAnalysisRecord {
 const PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS = 180_000;
 const PROF_ORIENTATION_TIMEOUT_RETRIES = 1;
 const PROF_ORIENTATION_MAX_TIMEOUT_RETRIES = 2;
+const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
+  order: ['cloudflare', 'baidu'],
+  allow_fallbacks: true,
+} as const;
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 
@@ -508,6 +512,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
         requireParameters: true,
         useResponseHealing: true,
+        provider: PROF_ORIENTATION_OPENROUTER_PROVIDER,
       });
       const parsedOutput = parseProfOrientationV3PlusEnrichment(JSON.parse(response.output));
       const summary = {
