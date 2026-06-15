@@ -65,6 +65,56 @@ describe('scoreProfOrientationV3Plus', () => {
     expect(buildProfOrientationV3PlusQuestionPayloads()).toHaveLength(21);
   });
 
+  it('builds importer payloads with the updated document question wording', () => {
+    const payloads = buildProfOrientationV3PlusQuestionPayloads();
+    const firstQuestion = payloads[0];
+    const controlQuestion = payloads[8];
+    const firstSlider = payloads[10];
+    const readinessSlider = payloads[20];
+
+    expect(firstQuestion.title).toBe('Что тебе интереснее делать в техническом проекте?');
+    expect(firstQuestion.options).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label:
+            'Представлять новую деталь или устройство ещё до того, как оно появится в реальности, и создавать его цифровую модель.',
+          value: 'Q1_A1',
+        }),
+        expect.objectContaining({
+          label:
+            'Управлять роботом или дроном и проверять, как он справляется с поставленной задачей.',
+          value: 'Q1_B3',
+        }),
+      ]),
+    );
+    expect(controlQuestion.title).toBe('Какой формат работы тебе ближе?');
+    expect(controlQuestion.options).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Продумывать каждую деталь будущего устройства ещё до его создания.',
+          value: 'Q9_A1',
+          weight: 2,
+        }),
+      ]),
+    );
+    expect(firstSlider.title).toBe(
+      'Насколько тебе интересно представлять будущую деталь или устройство ещё до появления в реальности и создавать его цифровую модель?',
+    );
+    expect(firstSlider.settings).toEqual(
+      expect.objectContaining({
+        methodologySliderId: 'S_A1',
+      }),
+    );
+    expect(readinessSlider.title).toBe(
+      'Насколько ты готов действовать по правилам, чек-листам и требованиям безопасности во время запуска, испытаний или работы с оборудованием?',
+    );
+    expect(readinessSlider.settings).toEqual(
+      expect.objectContaining({
+        methodologySliderId: 'R_REGULATIONS',
+      }),
+    );
+  });
+
   it('resolves persisted scoring config with fallback to the built-in methodology', () => {
     const customConfig = {
       ...PROF_ORIENTATION_V3_PLUS_CONFIG,
