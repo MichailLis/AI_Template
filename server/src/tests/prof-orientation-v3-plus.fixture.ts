@@ -97,6 +97,21 @@ export const PROF_ORIENTATION_V3_PLUS_CONFIG = rawConfig as ProfOrientationV3Plu
 
 export const toProfOrientationScoringConfig = () => PROF_ORIENTATION_V3_PLUS_CONFIG;
 
+export const getProfOrientationV3PlusProfessions = () => {
+  const professions = new Map<string, { code: string; title: string }>();
+
+  for (const direction of Object.values(PROF_ORIENTATION_V3_PLUS_CONFIG.directions)) {
+    for (const profession of direction.professions) {
+      professions.set(profession.code, {
+        code: profession.code,
+        title: profession.title,
+      });
+    }
+  }
+
+  return [...professions.values()];
+};
+
 export const toProfOrientationResultCard = (
   resultCard: SiteConfigDirection['result_card'],
 ): ProfOrientationResultCard => ({

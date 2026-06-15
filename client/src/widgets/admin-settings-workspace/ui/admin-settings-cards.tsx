@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import {
   OpenRouterStateBadge,
   OpenRouterStatusPanel,
+  ProfessionAtlasCoveragePanel,
   ProfessionAtlasForm,
   ProfessionAtlasStatusPanel,
   SettingsLoadError,
@@ -67,27 +68,31 @@ export function OpenRouterSettingsCard({
 }
 
 interface ProfessionAtlasSettingsCardProps {
+  apiUrl: string;
   canSubmit: boolean;
   isError: boolean;
   isLoading: boolean;
   isSaving: boolean;
   professionAtlas: ProfessionAtlasSettings | undefined;
-  url: string;
+  publicUrl: string;
+  onApiUrlChange: (value: string) => void;
+  onPublicUrlChange: (value: string) => void;
   onRetry: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onUrlChange: (value: string) => void;
 }
 
 export function ProfessionAtlasSettingsCard({
+  apiUrl,
   canSubmit,
   isError,
   isLoading,
   isSaving,
   professionAtlas,
-  url,
+  publicUrl,
+  onApiUrlChange,
+  onPublicUrlChange,
   onRetry,
   onSubmit,
-  onUrlChange,
 }: ProfessionAtlasSettingsCardProps) {
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
@@ -101,7 +106,7 @@ export function ProfessionAtlasSettingsCard({
           <div className="min-w-0">
             <CardTitle className="text-lg">Атлас профессий</CardTitle>
             <CardDescription>
-              Ссылка будет показана студенту на странице результата теста.
+              Карточки, предприятия, мероприятия и учебные заведения для результата Polus.
             </CardDescription>
           </div>
         </div>
@@ -120,12 +125,17 @@ export function ProfessionAtlasSettingsCard({
         ) : null}
 
         {professionAtlas ? <ProfessionAtlasStatusPanel professionAtlas={professionAtlas} /> : null}
+        {professionAtlas ? (
+          <ProfessionAtlasCoveragePanel coverage={professionAtlas.coverage} />
+        ) : null}
 
         <ProfessionAtlasForm
-          url={url}
+          apiUrl={apiUrl}
+          publicUrl={publicUrl}
           canSubmit={canSubmit}
           isSaving={isSaving}
-          onUrlChange={onUrlChange}
+          onApiUrlChange={onApiUrlChange}
+          onPublicUrlChange={onPublicUrlChange}
           onSubmit={onSubmit}
         />
       </CardContent>

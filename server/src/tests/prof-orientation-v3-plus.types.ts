@@ -44,6 +44,42 @@ export interface ProfOrientationFlag {
   directionId?: ProfOrientationDirectionId;
 }
 
+export type ProfOrientationAtlasStatus = 'ready' | 'partial' | 'unavailable';
+
+export interface ProfOrientationAtlasProfessionCard {
+  source: 'primary' | 'secondary';
+  requestedTitle: string;
+  title: string;
+  slug: string;
+  url: string;
+  summary: string | null;
+  demandLevel: string | null;
+  industry: string | null;
+  municipality: string | null;
+  skills: string[];
+}
+
+export interface ProfOrientationAtlasRecommendation {
+  title: string;
+  slug: string;
+  url: string;
+  summary: string | null;
+  subtitle: string | null;
+}
+
+export interface ProfOrientationAtlasRecommendations {
+  status: ProfOrientationAtlasStatus;
+  publicUrl: string | null;
+  apiUrl: string | null;
+  errorMessage?: string;
+  unmatchedProfessions: string[];
+  duplicateProfessions: string[];
+  professions: ProfOrientationAtlasProfessionCard[];
+  enterprises: ProfOrientationAtlasRecommendation[];
+  events: ProfOrientationAtlasRecommendation[];
+  institutions: ProfOrientationAtlasRecommendation[];
+}
+
 export interface ProfOrientationSummary {
   resultKind: typeof PROF_ORIENTATION_V3_PLUS_RESULT_KIND;
   scoringVersion: string;
@@ -73,4 +109,5 @@ export interface ProfOrientationSummary {
     analysis?: unknown;
     errorMessage?: string;
   };
+  atlas?: ProfOrientationAtlasRecommendations;
 }

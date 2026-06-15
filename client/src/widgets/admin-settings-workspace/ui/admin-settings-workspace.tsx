@@ -21,6 +21,9 @@ import { OpenRouterSettingsCard, ProfessionAtlasSettingsCard } from './admin-set
 
 import type { FormEvent } from 'react';
 
+const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
+const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
+
 const getApiErrorMessage = (error: unknown) =>
   getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
 
@@ -78,8 +81,9 @@ function AdminSettingsHero({
 export function AdminSettingsWorkspace() {
   const queryClient = useQueryClient();
   const [professionAtlasForm, setProfessionAtlasForm] = useState({
+    apiUrl: '',
     isDirty: false,
-    value: '',
+    publicUrl: '',
   });
 
   const settingsQuery = useAdminSettingsControllerGetOpenRouterSettings();
@@ -90,32 +94,41 @@ export function AdminSettingsWorkspace() {
         toast.error(getApiErrorMessage(error));
       },
       onSuccess: async () => {
-        setProfessionAtlasForm({ isDirty: false, value: '' });
+        setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' });
         await queryClient.invalidateQueries({
           queryKey: getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey(),
         });
-        toast.success('Ссылка на Атлас профессий сохранена');
+        toast.success('Настройки Атласа профессий сохранены');
       },
     },
   });
 
   const openRouter = settingsQuery.data?.openRouter;
   const professionAtlas = professionAtlasQuery.data?.professionAtlas;
-  const professionAtlasUrl = professionAtlasForm.isDirty
-    ? professionAtlasForm.value
-    : (professionAtlas?.url ?? '');
-  const normalizedProfessionAtlasUrl = professionAtlasUrl.trim();
+  const professionAtlasPublicUrl = professionAtlasForm.isDirty
+    ? professionAtlasForm.publicUrl
+    : (professionAtlas?.publicUrl ?? professionAtlas?.url ?? DEFAULT_ATLAS_PUBLIC_URL);
+  const professionAtlasApiUrl = professionAtlasForm.isDirty
+    ? professionAtlasForm.apiUrl
+    : (professionAtlas?.apiUrl ?? DEFAULT_ATLAS_API_URL);
+  const normalizedProfessionAtlasPublicUrl = professionAtlasPublicUrl.trim();
+  const normalizedProfessionAtlasApiUrl = professionAtlasApiUrl.trim();
 
   const handleProfessionAtlasSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!normalizedProfessionAtlasUrl || updateProfessionAtlasUrlMutation.isPending) {
+    if (
+      !normalizedProfessionAtlasPublicUrl ||
+      !normalizedProfessionAtlasApiUrl ||
+      updateProfessionAtlasUrlMutation.isPending
+    ) {
       return;
     }
 
     updateProfessionAtlasUrlMutation.mutate({
       data: {
-        url: normalizedProfessionAtlasUrl,
+        publicUrl: normalizedProfessionAtlasPublicUrl,
+        apiUrl: normalizedProfessionAtlasApiUrl,
       },
     });
   };
@@ -124,7 +137,9 @@ export function AdminSettingsWorkspace() {
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
       <AdminSettingsHero
         isOpenRouterConfigured={Boolean(openRouter?.isConfigured)}
-        isProfessionAtlasConfigured={Boolean(professionAtlas?.url)}
+        isProfessionAtlasConfigured={Boolean(
+          (professionAtlas?.publicUrl ?? professionAtlas?.url) && professionAtlas?.apiUrl,
+        )}
       />
 
       <OpenRouterSettingsCard
@@ -137,9 +152,11 @@ export function AdminSettingsWorkspace() {
       />
 
       <ProfessionAtlasSettingsCard
-        url={professionAtlasUrl}
+        apiUrl={professionAtlasApiUrl}
+        publicUrl={professionAtlasPublicUrl}
         canSubmit={
-          Boolean(normalizedProfessionAtlasUrl) && !updateProfessionAtlasUrlMutation.isPending
+          Boolean(normalizedProfessionAtlasPublicUrl && normalizedProfessionAtlasApiUrl) &&
+          !updateProfessionAtlasUrlMutation.isPending
         }
         isError={professionAtlasQuery.isError}
         isLoading={professionAtlasQuery.isLoading}
@@ -149,7 +166,20 @@ export function AdminSettingsWorkspace() {
           void professionAtlasQuery.refetch();
         }}
         onSubmit={handleProfessionAtlasSubmit}
-        onUrlChange={(value) => setProfessionAtlasForm({ isDirty: true, value })}
+        onApiUrlChange={(value) =>
+          setProfessionAtlasForm((current) => ({
+            apiUrl: value,
+            isDirty: true,
+            publicUrl: current.isDirty ? current.publicUrl : professionAtlasPublicUrl,
+          }))
+        }
+        onPublicUrlChange={(value) =>
+          setProfessionAtlasForm((current) => ({
+            apiUrl: current.isDirty ? current.apiUrl : professionAtlasApiUrl,
+            isDirty: true,
+            publicUrl: value,
+          }))
+        }
       />
     </div>
   );

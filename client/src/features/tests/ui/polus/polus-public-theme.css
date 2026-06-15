@@ -1454,6 +1454,26 @@
   line-height: 1.25;
 }
 
+.theme-public--polus .polus-profession-title-link {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.theme-public--polus .polus-profession-title-link:hover strong {
+  color: var(--polus-magenta);
+}
+
+.theme-public--polus .polus-profession-title-link svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: var(--polus-magenta);
+}
+
 .theme-public--polus .polus-profession-main span {
   border-radius: 999px;
   background: var(--polus-blue-soft);
@@ -1526,6 +1546,163 @@
 .theme-public--polus .polus-profession-atlas .polus-atlas-inline-action svg {
   width: 14px;
   height: 14px;
+}
+
+.theme-public--polus .polus-atlas-result-card {
+  gap: 18px;
+}
+
+.theme-public--polus .polus-atlas-note {
+  max-width: 64ch;
+  border-radius: 16px;
+  background: var(--polus-blue-soft);
+  color: rgba(5, 8, 49, 0.72);
+  padding: 10px 12px;
+  font-size: 0.92rem;
+}
+
+.theme-public--polus .polus-atlas-profession-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.theme-public--polus .polus-atlas-profession-card,
+.theme-public--polus .polus-atlas-recommendation {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  gap: 9px;
+  border: 1px solid rgba(19, 46, 113, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  color: inherit;
+  padding: 14px;
+  text-decoration: none;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.theme-public--polus .polus-atlas-profession-card:hover,
+.theme-public--polus .polus-atlas-recommendation:hover {
+  border-color: rgba(143, 35, 124, 0.34);
+  box-shadow: 0 14px 34px rgba(19, 46, 113, 0.08);
+  transform: translateY(-1px);
+}
+
+.theme-public--polus .polus-atlas-profession-card > svg,
+.theme-public--polus .polus-atlas-recommendation > svg {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: var(--polus-magenta);
+}
+
+.theme-public--polus .polus-atlas-profession-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  max-width: calc(100% - 28px);
+}
+
+.theme-public--polus .polus-atlas-profession-source,
+.theme-public--polus .polus-atlas-profession-code {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.theme-public--polus .polus-atlas-profession-source {
+  background: var(--polus-blue-soft);
+  color: var(--polus-magenta);
+}
+
+.theme-public--polus .polus-atlas-profession-code {
+  background: rgba(248, 247, 255, 0.92);
+  color: rgba(5, 8, 49, 0.72);
+}
+
+.theme-public--polus .polus-atlas-profession-card strong,
+.theme-public--polus .polus-atlas-recommendation strong {
+  max-width: calc(100% - 28px);
+  color: var(--polus-navy);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.theme-public--polus .polus-atlas-profession-card p,
+.theme-public--polus .polus-atlas-recommendation p {
+  color: rgba(5, 8, 49, 0.68);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.theme-public--polus .polus-atlas-profession-meta,
+.theme-public--polus .polus-atlas-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.theme-public--polus .polus-atlas-profession-meta span,
+.theme-public--polus .polus-atlas-skill-list span {
+  border-radius: 999px;
+  background: rgba(248, 247, 255, 0.92);
+  color: rgba(5, 8, 49, 0.72);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.theme-public--polus .polus-atlas-recommendation-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.theme-public--polus .polus-atlas-recommendation-group {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+}
+
+.theme-public--polus .polus-atlas-recommendation-group h4 {
+  margin: 0;
+  color: var(--polus-navy);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.theme-public--polus .polus-atlas-recommendation-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.theme-public--polus .polus-atlas-recommendation-group--events .polus-atlas-recommendation-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.theme-public--polus .polus-atlas-recommendation {
+  min-height: 116px;
+  padding-right: 38px;
+}
+
+.theme-public--polus .polus-atlas-recommendation span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.theme-public--polus .polus-atlas-recommendation small {
+  color: rgba(5, 8, 49, 0.58);
+  font-size: 0.78rem;
+  line-height: 1.25;
 }
 
 .theme-public--polus .polus-status-card {
@@ -1868,6 +2045,9 @@
 
   .theme-public--polus .polus-form-grid,
   .theme-public--polus .polus-result-grid,
+  .theme-public--polus .polus-atlas-profession-grid,
+  .theme-public--polus .polus-atlas-recommendation-grid,
+  .theme-public--polus .polus-atlas-recommendation-list,
   .theme-public--polus .polus-method-columns,
   .theme-public--polus .polus-match-list,
   .theme-public--polus .polus-criteria-list {

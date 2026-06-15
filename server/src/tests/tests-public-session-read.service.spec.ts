@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
+import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
@@ -66,6 +67,9 @@ describe('TestsPublicSessionService read paths', () => {
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
+      {
+        saveEnrichedAnalysis: jest.fn(),
+      } as unknown as ProfOrientationAtlasService,
     );
 
     const result = await service.getSessionByToken('session-token');
@@ -110,6 +114,9 @@ describe('TestsPublicSessionService read paths', () => {
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
+      {
+        saveEnrichedAnalysis: jest.fn(),
+      } as unknown as ProfOrientationAtlasService,
     );
 
     const result = await service.getSessionResult('session-token');
@@ -163,6 +170,9 @@ describe('TestsPublicSessionService read paths', () => {
       {} as TestsPublicLinkService,
       analysisService,
       new ProfessionAtlasSettingsService(prismaMock),
+      {
+        saveEnrichedAnalysis: jest.fn(),
+      } as unknown as ProfOrientationAtlasService,
     );
 
     const result = await service.getSessionResult('session-token');

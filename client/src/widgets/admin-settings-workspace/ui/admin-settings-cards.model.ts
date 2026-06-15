@@ -5,10 +5,26 @@ import type {
 
 export type OpenRouterSettings = AdminOpenRouterSettingsResponseDto['openRouter'];
 export type ProfessionAtlasSettings = AdminProfessionAtlasSettingsResponseDto['professionAtlas'];
+export type ProfessionAtlasCoverage = NonNullable<ProfessionAtlasSettings['coverage']>;
 
 export const sourceLabels: Record<OpenRouterSettings['source'], string> = {
   ENV: 'Переменная окружения',
   NONE: 'Не задан',
+};
+
+export const atlasCoverageStatusLabels: Record<ProfessionAtlasCoverage['status'], string> = {
+  ready: 'Готов',
+  partial: 'Частично',
+  unavailable: 'Недоступен',
+};
+
+export const atlasCoverageItemStatusLabels: Record<
+  ProfessionAtlasCoverage['items'][number]['status'],
+  string
+> = {
+  found: 'найдено',
+  missing: 'не найдено',
+  duplicate: 'дубли',
 };
 
 export const formatUpdatedAt = (value: string | null) => {

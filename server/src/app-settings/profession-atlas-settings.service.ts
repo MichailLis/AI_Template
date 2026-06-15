@@ -4,39 +4,56 @@ import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 
 const PROFESSION_ATLAS_URL_SETTING_KEY = 'professionAtlas.url';
+const PROFESSION_ATLAS_PUBLIC_URL_SETTING_KEY = 'professionAtlas.publicUrl';
+const PROFESSION_ATLAS_API_URL_SETTING_KEY = 'professionAtlas.apiUrl';
 
 type StoredProfessionAtlasUrl = {
-  url: string;
-  updatedAt: Date;
+  publicUrl: string | null;
+  apiUrl: string | null;
+  updatedAt: Date | null;
 };
 
 @Injectable()
 export class ProfessionAtlasSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async getStoredProfessionAtlasUrl(): Promise<StoredProfessionAtlasUrl | null> {
+  private async getSetting(key: string) {
     const setting = await this.prisma.appSetting.findUnique({
       where: {
-        key: PROFESSION_ATLAS_URL_SETTING_KEY,
+        key,
       },
     });
-    const url = setting?.value.trim();
 
-    if (!setting || !url) {
-      return null;
-    }
+    return setting && setting.value.trim() ? setting : null;
+  }
+
+  private async getStoredProfessionAtlasUrl(): Promise<StoredProfessionAtlasUrl> {
+    const [publicUrlSetting, apiUrlSetting, legacyUrlSetting] = await Promise.all([
+      this.getSetting(PROFESSION_ATLAS_PUBLIC_URL_SETTING_KEY),
+      this.getSetting(PROFESSION_ATLAS_API_URL_SETTING_KEY),
+      this.getSetting(PROFESSION_ATLAS_URL_SETTING_KEY),
+    ]);
+    const publicUrl = publicUrlSetting?.value.trim() ?? legacyUrlSetting?.value.trim() ?? null;
+    const apiUrl = apiUrlSetting?.value.trim() ?? null;
+    const updatedAt =
+      [publicUrlSetting?.updatedAt, apiUrlSetting?.updatedAt, legacyUrlSetting?.updatedAt]
+        .filter((value): value is Date => value instanceof Date)
+        .sort((left, right) => right.getTime() - left.getTime())[0] ?? null;
 
     return {
-      url,
-      updatedAt: setting.updatedAt,
+      publicUrl,
+      apiUrl,
+      updatedAt,
     };
   }
 
-  private toSettingsResponse(setting: StoredProfessionAtlasUrl | null) {
+  private toSettingsResponse(setting: StoredProfessionAtlasUrl) {
     return {
       professionAtlas: {
-        url: setting?.url ?? null,
-        updatedAt: setting ? setting.updatedAt.toISOString() : null,
+        url: setting.publicUrl,
+        publicUrl: setting.publicUrl,
+        apiUrl: setting.apiUrl,
+        updatedAt: setting.updatedAt ? setting.updatedAt.toISOString() : null,
       },
     };
   }
@@ -44,7 +61,16 @@ export class ProfessionAtlasSettingsService {
   async getProfessionAtlasUrl() {
     const setting = await this.getStoredProfessionAtlasUrl();
 
-    return setting?.url ?? null;
+    return setting.publicUrl;
+  }
+
+  async getProfessionAtlasConnection() {
+    const setting = await this.getStoredProfessionAtlasUrl();
+
+    return {
+      publicUrl: setting.publicUrl,
+      apiUrl: setting.apiUrl,
+    };
   }
 
   async getProfessionAtlasSettings(userId: number) {
@@ -53,31 +79,58 @@ export class ProfessionAtlasSettingsService {
     return this.toSettingsResponse(await this.getStoredProfessionAtlasUrl());
   }
 
-  async updateProfessionAtlasUrl(userId: number, url: string) {
+  async updateProfessionAtlasUrl(
+    userId: number,
+    input:
+      | string
+      | {
+          publicUrl: string;
+          apiUrl: string;
+        },
+  ) {
     await ensureAdminAccess(this.prisma, userId);
 
-    const normalizedUrl = url.trim();
+    const normalizedPublicUrl = typeof input === 'string' ? input.trim() : input.publicUrl.trim();
+    const normalizedApiUrl = typeof input === 'string' ? '' : input.apiUrl.trim();
 
-    if (!normalizedUrl) {
-      throw new BadRequestException('Profession atlas URL must not be empty');
+    if (!normalizedPublicUrl || !normalizedApiUrl) {
+      throw new BadRequestException('Profession atlas URLs must not be empty');
     }
 
-    const setting = await this.prisma.appSetting.upsert({
-      where: {
-        key: PROFESSION_ATLAS_URL_SETTING_KEY,
-      },
-      create: {
-        key: PROFESSION_ATLAS_URL_SETTING_KEY,
-        value: normalizedUrl,
-      },
-      update: {
-        value: normalizedUrl,
-      },
-    });
+    const [publicUrlSetting, apiUrlSetting] = await Promise.all([
+      this.prisma.appSetting.upsert({
+        where: {
+          key: PROFESSION_ATLAS_PUBLIC_URL_SETTING_KEY,
+        },
+        create: {
+          key: PROFESSION_ATLAS_PUBLIC_URL_SETTING_KEY,
+          value: normalizedPublicUrl,
+        },
+        update: {
+          value: normalizedPublicUrl,
+        },
+      }),
+      this.prisma.appSetting.upsert({
+        where: {
+          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
+        },
+        create: {
+          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
+          value: normalizedApiUrl,
+        },
+        update: {
+          value: normalizedApiUrl,
+        },
+      }),
+    ]);
 
     return this.toSettingsResponse({
-      url: setting.value.trim(),
-      updatedAt: setting.updatedAt,
+      publicUrl: publicUrlSetting.value.trim(),
+      apiUrl: apiUrlSetting.value.trim(),
+      updatedAt:
+        publicUrlSetting.updatedAt > apiUrlSetting.updatedAt
+          ? publicUrlSetting.updatedAt
+          : apiUrlSetting.updatedAt,
     });
   }
 }

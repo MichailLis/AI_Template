@@ -8,5 +8,7 @@
 
 export interface UpdateProfessionAtlasUrlDto {
   /** @maxLength 2048 */
-  url: string;
+  publicUrl: string;
+  /** @maxLength 2048 */
+  apiUrl: string;
 }

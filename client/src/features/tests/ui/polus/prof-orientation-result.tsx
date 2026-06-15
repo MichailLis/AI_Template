@@ -2,6 +2,7 @@ import { parseProfOrientationMethodologyEnrichment } from './prof-orientation-ll
 import { getProfessorStatusText, getProfessorText } from './prof-orientation-result.helpers';
 import {
   ProfOrientationHero,
+  ProfOrientationAtlasRecommendationsCard,
   ProfOrientationMiniProjectCard,
   ProfOrientationProfessionsCard,
   ProfOrientationProfileCard,
@@ -9,6 +10,51 @@ import {
 } from './prof-orientation-result.sections';
 
 import type { ProfOrientationSummary } from './prof-orientation-summary';
+
+type ProfOrientationProfession = NonNullable<
+  ProfOrientationSummary['primaryDirection']
+>['professions'][number];
+
+const normalizeProfessionTitle = (title: string) =>
+  title.trim().toLocaleLowerCase('ru-RU').replace(/ё/g, 'е').replace(/\s+/g, ' ');
+
+const getKeyProfessions = (summary: ProfOrientationSummary): ProfOrientationProfession[] => {
+  if (summary.profile.type !== 'mixed_profile') {
+    return summary.primaryDirection?.professions ?? [];
+  }
+
+  const seen = new Set<string>();
+
+  return summary.topDirections
+    .slice(0, 2)
+    .map((direction) => direction.professions[0])
+    .filter((profession): profession is ProfOrientationProfession => Boolean(profession))
+    .filter((profession) => {
+      const key = profession.code || normalizeProfessionTitle(profession.title);
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+};
+
+const getAtlasProfession = (
+  summary: ProfOrientationSummary,
+  profession: ProfOrientationProfession,
+) => {
+  const professionTitle = normalizeProfessionTitle(profession.title);
+
+  return (
+    summary.atlas?.professions.find(
+      (atlasProfession) =>
+        normalizeProfessionTitle(atlasProfession.requestedTitle) === professionTitle ||
+        normalizeProfessionTitle(atlasProfession.title) === professionTitle,
+    ) ?? null
+  );
+};
 
 export function ProfOrientationResult({
   professionAtlasUrl,
@@ -35,6 +81,22 @@ export function ProfOrientationResult({
   const profileItems = [...bullets, ...actions].slice(0, 4);
   const miniProject =
     llmAnalysis?.nextMiniProject ?? primary?.resultCard.miniProject ?? summary.profile.miniProject;
+  const keyProfessions = getKeyProfessions(summary).map((profession) => {
+    const atlasProfession = getAtlasProfession(summary, profession);
+
+    return {
+      ...profession,
+      atlas: atlasProfession,
+      atlasUrl: atlasProfession?.url ?? null,
+    };
+  });
+  const hasAtlasRecommendations = Boolean(
+    summary.atlas &&
+    [summary.atlas.enterprises, summary.atlas.events, summary.atlas.institutions].some(
+      (items) => items.length > 0,
+    ),
+  );
+  const hasAtlasProfessionLinks = keyProfessions.some((profession) => Boolean(profession.atlasUrl));
 
   return (
     <>
@@ -46,13 +108,16 @@ export function ProfOrientationResult({
         meaning={meaning}
         title={primary?.name ?? summary.profile.title}
       />
-      {primary ? (
+      {keyProfessions.length > 0 ? (
         <ProfOrientationProfessionsCard
           analysis={llmAnalysis}
-          primary={primary}
-          professionAtlasUrl={professionAtlasUrl}
+          professions={keyProfessions}
+          professionAtlasUrl={
+            hasAtlasRecommendations || hasAtlasProfessionLinks ? null : professionAtlasUrl
+          }
         />
       ) : null}
+      <ProfOrientationAtlasRecommendationsCard atlas={summary.atlas} />
       {miniProject ? (
         <ProfOrientationMiniProjectCard analysis={llmAnalysis} miniProject={miniProject} />
       ) : null}

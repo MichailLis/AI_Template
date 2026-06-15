@@ -10,9 +10,17 @@ import {
 
 import type { ProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
 import type { ProfOrientationProfession } from './prof-orientation-result.helpers';
-import type { ProfOrientationSummary } from './prof-orientation-summary';
+import type {
+  ProfOrientationAtlasProfessionCard,
+  ProfOrientationAtlasRecommendation,
+  ProfOrientationAtlasRecommendations,
+  ProfOrientationSummary,
+} from './prof-orientation-summary';
 
-type ProfOrientationPrimaryDirection = NonNullable<ProfOrientationSummary['primaryDirection']>;
+type ProfOrientationDisplayProfession = ProfOrientationProfession & {
+  atlas?: null | ProfOrientationAtlasProfessionCard;
+  atlasUrl?: null | string;
+};
 
 function ProfOrientationInlineList({ items }: { items: string[] }) {
   if (items.length === 0) {
@@ -87,28 +95,113 @@ function ProfOrientationAtlasAction({ url }: { url: string }) {
   );
 }
 
-function ProfOrientationProfessionRow({
+const atlasProfessionSourceLabels = {
+  primary: 'Основная',
+  secondary: 'Вторая',
+} as const;
+
+function ProfOrientationProfessionCard({
   analysis,
   index,
   profession,
 }: {
   analysis: ProfOrientationMethodologyEnrichment | null;
   index: number;
-  profession: ProfOrientationProfession;
+  profession: ProfOrientationDisplayProfession;
 }) {
   const professionNote = getProfessionNote({
     analysis,
     index,
     profession,
   });
+  const atlasProfession = profession.atlas ?? null;
+  const url = atlasProfession?.url ?? profession.atlasUrl ?? null;
+  const description = atlasProfession?.summary ?? professionNote;
+  const professionCode = formatProfessionCode(profession.code);
+  const metaItems = [atlasProfession?.industry, atlasProfession?.municipality].filter(
+    (item): item is string => Boolean(item),
+  );
+  const content = (
+    <>
+      <div className="polus-atlas-profession-header">
+        <span className="polus-atlas-profession-source">
+          {atlasProfession ? atlasProfessionSourceLabels[atlasProfession.source] : 'Специальность'}
+        </span>
+        {professionCode ? (
+          <span className="polus-atlas-profession-code">Код {professionCode}</span>
+        ) : null}
+      </div>
+      <strong>{profession.title}</strong>
+      {description ? <p>{description}</p> : null}
+      {metaItems.length > 0 ? (
+        <div className="polus-atlas-profession-meta">
+          {metaItems.map((item) => (
+            <span key={`${profession.code}-${item}`}>{item}</span>
+          ))}
+        </div>
+      ) : null}
+      {atlasProfession?.skills.length ? (
+        <div className="polus-atlas-skill-list">
+          {atlasProfession.skills.slice(0, 4).map((skill) => (
+            <span key={`${profession.code}-${skill}`}>{skill}</span>
+          ))}
+        </div>
+      ) : null}
+      {url ? <ExternalLink className="h-4 w-4" aria-hidden="true" /> : null}
+    </>
+  );
+
+  if (!url) {
+    return <div className="polus-atlas-profession-card">{content}</div>;
+  }
 
   return (
-    <div className="polus-profession-row">
-      <div className="polus-profession-main">
-        <strong>{profession.title}</strong>
-        <span>{formatProfessionCode(profession.code)}</span>
+    <a
+      aria-label={`${profession.title} в Атласе профессий`}
+      className="polus-atlas-profession-card"
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+    >
+      {content}
+    </a>
+  );
+}
+
+function ProfOrientationAtlasRecommendationList({
+  items,
+  layout = 'cards',
+  title,
+}: {
+  items: ProfOrientationAtlasRecommendation[];
+  layout?: 'cards' | 'events' | 'institutions';
+  title: string;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={`polus-atlas-recommendation-group polus-atlas-recommendation-group--${layout}`}>
+      <h4>{title}</h4>
+      <div className="polus-atlas-recommendation-list">
+        {items.slice(0, 2).map((item) => (
+          <a
+            className="polus-atlas-recommendation"
+            href={item.url}
+            key={`${title}-${item.slug}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span>
+              <strong>{item.title}</strong>
+              {item.subtitle ? <small>{item.subtitle}</small> : null}
+            </span>
+            {item.summary ? <p>{item.summary}</p> : null}
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </a>
+        ))}
       </div>
-      {professionNote ? <p className="polus-profession-note">{professionNote}</p> : null}
     </div>
   );
 }
@@ -188,19 +281,19 @@ export function ProfOrientationProfileCard({
 
 export function ProfOrientationProfessionsCard({
   analysis,
-  primary,
+  professions,
   professionAtlasUrl,
 }: {
   analysis: ProfOrientationMethodologyEnrichment | null;
-  primary: ProfOrientationPrimaryDirection;
+  professions: ProfOrientationDisplayProfession[];
   professionAtlasUrl?: null | string;
 }) {
   return (
     <section className="polus-method-card" aria-label="Подходящие специальности">
       <span className="polus-method-label">Подходящие специальности</span>
-      <div className="polus-profession-list">
-        {primary.professions.map((profession, index) => (
-          <ProfOrientationProfessionRow
+      <div className="polus-atlas-profession-grid">
+        {professions.map((profession, index) => (
+          <ProfOrientationProfessionCard
             analysis={analysis}
             index={index}
             key={`${profession.code}-${profession.title}`}
@@ -209,6 +302,47 @@ export function ProfOrientationProfessionsCard({
         ))}
       </div>
       {professionAtlasUrl ? <ProfOrientationAtlasAction url={professionAtlasUrl} /> : null}
+    </section>
+  );
+}
+
+export function ProfOrientationAtlasRecommendationsCard({
+  atlas,
+}: {
+  atlas: ProfOrientationAtlasRecommendations | null;
+}) {
+  if (!atlas) {
+    return null;
+  }
+
+  const hasItems =
+    atlas.enterprises.length > 0 || atlas.events.length > 0 || atlas.institutions.length > 0;
+
+  if (!hasItems) {
+    return null;
+  }
+
+  return (
+    <section className="polus-method-card polus-atlas-result-card" aria-label="Атлас профессий">
+      <span className="polus-method-label">Дальше в Атласе профессий</span>
+
+      {atlas.status === 'partial' ? (
+        <p className="polus-atlas-note">Показаны найденные совпадения по Атласу.</p>
+      ) : null}
+
+      <div className="polus-atlas-recommendation-grid">
+        <ProfOrientationAtlasRecommendationList title="Предприятия" items={atlas.enterprises} />
+        <ProfOrientationAtlasRecommendationList
+          layout="events"
+          title="Мероприятия"
+          items={atlas.events}
+        />
+        <ProfOrientationAtlasRecommendationList
+          layout="institutions"
+          title="Учебные заведения"
+          items={atlas.institutions}
+        />
+      </div>
     </section>
   );
 }

@@ -4,10 +4,12 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus.atlas';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import {
   AdminProfessionAtlasSettingsResponseDto,
   AdminOpenRouterSettingsResponseDto,
+  ProfessionAtlasCoverageResponseDto,
   UpdateProfessionAtlasUrlDto,
 } from './dto/admin-settings.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
@@ -21,6 +23,7 @@ export class AdminSettingsController {
   constructor(
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
+    private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
 
   @Get('openrouter')
@@ -33,8 +36,16 @@ export class AdminSettingsController {
   @Get('profession-atlas')
   @ApiOperation({ summary: 'Get profession atlas settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminProfessionAtlasSettingsResponseDto })
-  getProfessionAtlasSettings(@GetCurrentUserId() userId: number) {
-    return this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
+  async getProfessionAtlasSettings(@GetCurrentUserId() userId: number) {
+    const settings = await this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
+    const coverage = await this.profOrientationAtlasService.buildCoverageReport();
+
+    return {
+      professionAtlas: {
+        ...settings.professionAtlas,
+        coverage,
+      },
+    };
   }
 
   @Patch('profession-atlas')
@@ -44,6 +55,15 @@ export class AdminSettingsController {
     @GetCurrentUserId() userId: number,
     @Body() dto: UpdateProfessionAtlasUrlDto,
   ) {
-    return this.professionAtlasSettingsService.updateProfessionAtlasUrl(userId, dto.url);
+    return this.professionAtlasSettingsService.updateProfessionAtlasUrl(userId, dto);
+  }
+
+  @Get('profession-atlas/coverage')
+  @ApiOperation({ summary: 'Check profession atlas coverage for prof-orientation professions' })
+  @ApiResponse({ status: HttpStatus.OK, type: ProfessionAtlasCoverageResponseDto })
+  async getProfessionAtlasCoverage(@GetCurrentUserId() userId: number) {
+    await this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
+
+    return this.profOrientationAtlasService.buildCoverageReport();
   }
 }

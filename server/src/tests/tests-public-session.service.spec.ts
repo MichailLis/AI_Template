@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
+import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
@@ -52,6 +53,7 @@ describe('TestsPublicSessionService', () => {
   let toPublicAnalysisResponseMock: jest.Mock;
   let toAttemptStatusMock: jest.Mock;
   let getProfessionAtlasUrlMock: jest.Mock;
+  let saveEnrichedAnalysisMock: jest.Mock;
   let transactionMock: jest.Mock;
   let txMock: {
     testStudentAnswer: {
@@ -79,6 +81,7 @@ describe('TestsPublicSessionService', () => {
     toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
     toAttemptStatusMock = jest.fn((attempt: { status: string }) => attempt.status);
     getProfessionAtlasUrlMock = jest.fn().mockResolvedValue(null);
+    saveEnrichedAnalysisMock = jest.fn();
     txMock = {
       testStudentAnswer: {
         count: jest.fn(),
@@ -124,6 +127,9 @@ describe('TestsPublicSessionService', () => {
       {
         getProfessionAtlasUrl: getProfessionAtlasUrlMock,
       } as unknown as ProfessionAtlasSettingsService,
+      {
+        saveEnrichedAnalysis: saveEnrichedAnalysisMock,
+      } as unknown as ProfOrientationAtlasService,
     );
   });
 
@@ -720,6 +726,7 @@ describe('TestsPublicSessionService', () => {
       totalQuestionsCount: 1,
     });
     expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
+    expect(saveEnrichedAnalysisMock).not.toHaveBeenCalled();
     expect(enqueueAttemptAnalysisMock).not.toHaveBeenCalled();
     expect(result.analysis).toEqual({
       providerMode: 'STUB',
@@ -786,6 +793,7 @@ describe('TestsPublicSessionService', () => {
       promptVersionId: 42,
     });
     expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
+    expect(saveEnrichedAnalysisMock).not.toHaveBeenCalled();
     expect(enqueueAttemptAnalysisMock).toHaveBeenCalledWith(5);
     expect(result.analysis).toEqual({
       providerMode: 'LLM',
@@ -813,15 +821,28 @@ describe('TestsPublicSessionService', () => {
       id: 5,
       finishedAt: new Date('2026-05-01T10:00:00.000Z'),
     });
+    const scoredSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      primaryDirection: { id: 'A1' },
+      llm: { status: 'pending' },
+    };
+    const enrichedSummary = {
+      ...scoredSummary,
+      atlas: {
+        status: 'ready',
+        professions: [],
+        enterprises: [],
+        events: [],
+        institutions: [],
+      },
+    };
     upsertProfOrientationAnalysisMock.mockResolvedValue({
+      id: 77,
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
-      summary: {
-        resultKind: 'prof_orientation_v3_plus',
-        primaryDirection: { id: 'A1' },
-        llm: { status: 'pending' },
-      },
+      summary: scoredSummary,
     });
+    saveEnrichedAnalysisMock.mockResolvedValue(enrichedSummary);
 
     const result = await service.finishSession('session-token');
 
@@ -831,10 +852,16 @@ describe('TestsPublicSessionService', () => {
     });
     expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
     expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
+    expect(saveEnrichedAnalysisMock).toHaveBeenCalledWith(77, scoredSummary);
     expect(enqueueAttemptAnalysisMock).toHaveBeenCalledWith(5);
     expect(result.analysis).toMatchObject({
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
+      summary: {
+        atlas: {
+          status: 'ready',
+        },
+      },
     });
   });
 });

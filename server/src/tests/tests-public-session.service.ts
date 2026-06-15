@@ -17,6 +17,8 @@ import {
   toPrismaRequiredJsonInput,
 } from './tests-domain.utils';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
+import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus.scoring';
 import { TestsAnalysisService } from './tests-analysis.service';
 import {
   validatePublicAnswerPayload,
@@ -82,6 +84,7 @@ export class TestsPublicSessionService {
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
+    private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
 
   private matchesGroupPattern(groupOrClass: string, pattern: string) {
@@ -505,9 +508,28 @@ export class TestsPublicSessionService {
       return {
         updatedAttempt,
         analysis,
+        isProfOrientationScoring,
         shouldEnqueueAnalysis: Boolean(promptVersionId),
       };
     });
+
+    let analysis = finishedAttempt.analysis;
+
+    if (
+      finishedAttempt.isProfOrientationScoring &&
+      isProfOrientationV3PlusSummary(analysis.summary)
+    ) {
+      const enrichedSummary = await this.profOrientationAtlasService.saveEnrichedAnalysis(
+        analysis.id,
+        analysis.summary,
+      );
+
+      analysis = {
+        ...analysis,
+        summary: enrichedSummary as unknown as typeof analysis.summary,
+        rawText: JSON.stringify(enrichedSummary),
+      };
+    }
 
     if (finishedAttempt.shouldEnqueueAnalysis) {
       this.analysisService.enqueueAttemptAnalysis(attempt.id);
@@ -517,7 +539,7 @@ export class TestsPublicSessionService {
       sessionToken,
       status: 'COMPLETED',
       finishedAt: toOptionalIsoString(finishedAttempt.updatedAttempt.finishedAt),
-      analysis: this.analysisService.toPublicAnalysisResponse(finishedAttempt.analysis),
+      analysis: this.analysisService.toPublicAnalysisResponse(analysis),
     };
   }
 
