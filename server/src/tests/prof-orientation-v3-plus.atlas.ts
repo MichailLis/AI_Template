@@ -75,26 +75,72 @@ export const selectProfOrientationAtlasProfessions = (
     profession: ProfOrientationProfession;
   }> = [];
   const seenTitles = new Set<string>();
-  const primary = getNextProfession(summary.primaryDirection, seenTitles);
+  const addProfession = (
+    source: 'primary' | 'secondary',
+    profession: ProfOrientationProfession | null,
+  ) => {
+    if (!profession || selected.length >= 2) {
+      return;
+    }
 
-  if (primary) {
-    selected.push({ source: 'primary', profession: primary });
-    seenTitles.add(normalizeProfessionTitle(primary.title));
+    selected.push({ source, profession });
+    seenTitles.add(normalizeProfessionTitle(profession.title));
+  };
+
+  const addNextProfession = (
+    source: 'primary' | 'secondary',
+    direction: ProfOrientationDirectionSummary | null,
+  ) => addProfession(source, getNextProfession(direction, seenTitles));
+
+  if (summary.profile?.type === 'mixed_profile') {
+    addNextProfession('primary', summary.topDirections[0] ?? summary.primaryDirection);
+    addNextProfession('secondary', summary.topDirections[1] ?? summary.secondaryDirection);
+  } else {
+    for (const profession of summary.primaryDirection?.professions ?? []) {
+      addProfession(selected.length === 0 ? 'primary' : 'secondary', profession);
+    }
   }
 
-  const secondary =
-    getNextProfession(summary.secondaryDirection, seenTitles) ??
-    getNextProfession(summary.primaryDirection, seenTitles) ??
-    summary.topDirections
-      .map((direction) => getNextProfession(direction, seenTitles))
-      .find((profession): profession is ProfOrientationProfession => profession !== null) ??
-    null;
+  addNextProfession(selected.length === 0 ? 'primary' : 'secondary', summary.secondaryDirection);
+  addNextProfession(selected.length === 0 ? 'primary' : 'secondary', summary.primaryDirection);
 
-  if (secondary) {
-    selected.push({ source: 'secondary', profession: secondary });
+  for (const direction of summary.topDirections) {
+    addNextProfession(selected.length === 0 ? 'primary' : 'secondary', direction);
   }
 
   return selected.slice(0, 2);
+};
+
+export const shouldRefreshProfOrientationAtlasSummary = (summary: ProfOrientationSummary) => {
+  if (!summary.atlas) {
+    return false;
+  }
+
+  const selectedTitles = new Set(
+    selectProfOrientationAtlasProfessions(summary).map((item) =>
+      normalizeProfessionTitle(item.profession.title),
+    ),
+  );
+
+  if (selectedTitles.size === 0) {
+    return false;
+  }
+
+  const atlasTitles = new Set(
+    [
+      ...summary.atlas.professions.map((profession) =>
+        normalizeProfessionTitle(profession.requestedTitle || profession.title),
+      ),
+      ...summary.atlas.unmatchedProfessions.map(normalizeProfessionTitle),
+      ...summary.atlas.duplicateProfessions.map(normalizeProfessionTitle),
+    ].filter(Boolean),
+  );
+
+  if (atlasTitles.size !== selectedTitles.size) {
+    return true;
+  }
+
+  return [...selectedTitles].some((title) => !atlasTitles.has(title));
 };
 
 const findExactProfessionMatches = async (

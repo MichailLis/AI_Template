@@ -864,4 +864,82 @@ describe('TestsPublicSessionService', () => {
       },
     });
   });
+
+  it('getSessionResult refreshes stale prof-orientation atlas before returning analysis', async () => {
+    const staleSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      profile: {
+        type: 'broad_interest',
+      },
+      primaryDirection: {
+        professions: [
+          { code: '201524', title: 'Инженер-конструктор' },
+          { code: '204016', title: 'Техник-конструктор' },
+        ],
+      },
+      secondaryDirection: {
+        professions: [{ code: '201353', title: 'Инженер по качеству' }],
+      },
+      topDirections: [],
+      atlas: {
+        status: 'ready',
+        professions: [
+          { requestedTitle: 'Инженер-конструктор', title: 'Инженер-конструктор' },
+          { requestedTitle: 'Инженер по качеству', title: 'Инженер по качеству' },
+        ],
+        unmatchedProfessions: [],
+        duplicateProfessions: [],
+        enterprises: [],
+        events: [],
+        institutions: [],
+      },
+    };
+    const refreshedSummary = {
+      ...staleSummary,
+      atlas: {
+        ...staleSummary.atlas,
+        professions: [
+          { requestedTitle: 'Инженер-конструктор', title: 'Инженер-конструктор' },
+          { requestedTitle: 'Техник-конструктор', title: 'Техник-конструктор' },
+        ],
+      },
+    };
+    const analysis = {
+      id: 77,
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: staleSummary,
+      rawText: JSON.stringify(staleSummary),
+      errorMessage: null,
+      generatedAt: new Date('2026-06-15T22:55:29.098Z'),
+    };
+
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 7,
+      status: 'COMPLETED',
+      expiresAt: null,
+      finishedAt: new Date('2026-06-15T22:55:29.093Z'),
+      publicLink: {
+        publicTemplate: 'POLUS',
+        publicBranding: null,
+      },
+      analysis,
+    } as never);
+    saveEnrichedAnalysisMock.mockResolvedValue(refreshedSummary);
+    toAttemptStatusMock.mockReturnValue('COMPLETED');
+
+    const result = await service.getSessionResult('session-token');
+
+    expect(saveEnrichedAnalysisMock).toHaveBeenCalledWith(77, staleSummary);
+    expect(toPublicAnalysisResponseMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        summary: refreshedSummary,
+      }),
+    );
+    expect(result.analysis).toEqual(
+      expect.objectContaining({
+        summary: refreshedSummary,
+      }),
+    );
+  });
 });

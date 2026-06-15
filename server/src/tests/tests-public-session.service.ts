@@ -17,7 +17,10 @@ import {
   toPrismaRequiredJsonInput,
 } from './tests-domain.utils';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
+import {
+  ProfOrientationAtlasService,
+  shouldRefreshProfOrientationAtlasSummary,
+} from './prof-orientation-v3-plus.atlas';
 import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus.scoring';
 import { TestsAnalysisService } from './tests-analysis.service';
 import {
@@ -175,6 +178,29 @@ export class TestsPublicSessionService {
     }
 
     return this.analysisService.toPublicAnalysisResponse(analysis);
+  }
+
+  private async refreshStaleProfOrientationAtlasAnalysis(
+    analysis: Parameters<TestsAnalysisService['toPublicAnalysisResponse']>[0],
+  ) {
+    if (
+      !analysis ||
+      !isProfOrientationV3PlusSummary(analysis.summary) ||
+      !shouldRefreshProfOrientationAtlasSummary(analysis.summary)
+    ) {
+      return analysis;
+    }
+
+    const summary = await this.profOrientationAtlasService.saveEnrichedAnalysis(
+      analysis.id,
+      analysis.summary,
+    );
+
+    return {
+      ...analysis,
+      summary: summary as unknown as typeof analysis.summary,
+      rawText: JSON.stringify(summary),
+    };
   }
 
   private async allocateAttempt(client: AttemptAllocationClient, input: AttemptAllocationInput) {
@@ -551,13 +577,15 @@ export class TestsPublicSessionService {
       throw new BadRequestException('Test session is still in progress');
     }
 
+    const analysis = await this.refreshStaleProfOrientationAtlasAnalysis(attempt.analysis);
+
     return {
       sessionToken,
       publicTemplate: attempt.publicLink.publicTemplate,
       publicBranding: toPublicBrandingResponse(attempt.publicLink.publicBranding),
       status,
       finishedAt: toOptionalIsoString(attempt.finishedAt),
-      analysis: this.toSessionResultAnalysisResponse(status, attempt.analysis),
+      analysis: this.toSessionResultAnalysisResponse(status, analysis),
       professionAtlasUrl: await this.professionAtlasSettingsService.getProfessionAtlasUrl(),
     };
   }
