@@ -487,6 +487,11 @@ describe('PublicTestResultWorkspace', () => {
         name: /Инженер-конструктор в Атласе профессий/i,
       }),
     ).toHaveAttribute('href', 'https://atlas.example/professions/engineer-designer');
+    expect(
+      within(professionsSection as HTMLElement).getByText(
+        'Открыть: https://atlas.example/professions/engineer-designer',
+      ),
+    ).toHaveClass('polus-print-link');
     const professionCode = within(professionsSection as HTMLElement).getByText('Код 20.15.24');
     expect(professionCode).toHaveClass('polus-atlas-profession-code');
     expect(professionCode.closest('.polus-atlas-profession-header')).toBeInTheDocument();
@@ -501,6 +506,11 @@ describe('PublicTestResultWorkspace', () => {
       }),
     ).toHaveAttribute('href', 'https://atlas.example/enterprises#enterprise-future-plant');
     expect(
+      within(atlasSection as HTMLElement).getByText(
+        'Открыть: https://atlas.example/enterprises#enterprise-future-plant',
+      ),
+    ).toHaveClass('polus-print-link');
+    expect(
       within(atlasSection as HTMLElement)
         .getByText('Мероприятия')
         .closest('.polus-atlas-recommendation-group'),
@@ -510,6 +520,11 @@ describe('PublicTestResultWorkspace', () => {
         name: /CAD-практикум/i,
       }),
     ).toHaveAttribute('href', 'https://atlas.example/events#event-cad-practice');
+    expect(
+      within(atlasSection as HTMLElement).getByText(
+        'Открыть: https://atlas.example/events#event-cad-practice',
+      ),
+    ).toHaveClass('polus-print-link');
     expect(
       within(atlasSection as HTMLElement)
         .getByText('Учебные заведения')

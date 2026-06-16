@@ -148,6 +148,11 @@ function ProfOrientationProfessionCard({
         </div>
       ) : null}
       {url ? <ExternalLink className="h-4 w-4" aria-hidden="true" /> : null}
+      {url ? (
+        <span className="polus-print-link" aria-hidden="true">
+          Открыть: {url}
+        </span>
+      ) : null}
     </>
   );
 
@@ -199,6 +204,9 @@ function ProfOrientationAtlasRecommendationList({
             </span>
             {item.summary ? <p>{item.summary}</p> : null}
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            <span className="polus-print-link" aria-hidden="true">
+              Открыть: {item.url}
+            </span>
           </a>
         ))}
       </div>
