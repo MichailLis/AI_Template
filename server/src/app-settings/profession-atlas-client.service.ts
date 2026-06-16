@@ -30,6 +30,12 @@ export interface AtlasEducationProgram {
   };
 }
 
+export interface AtlasInstitution extends AtlasNamedSlug {
+  municipality: AtlasNamedSlug | null;
+  programsCount: number;
+  levels: AtlasNamedSlug[];
+}
+
 export interface AtlasEnterprise {
   name: string;
   slug: string;
@@ -131,6 +137,27 @@ const toProfessionDetail = (value: unknown): AtlasProfessionDetail => {
     municipality: toNamedSlug(value.municipality),
     skills: mapArray(value.skills, toNamedSlug),
     educationPrograms: mapArray(value.educationPrograms, toEducationProgram),
+  };
+};
+
+const toInstitution = (value: unknown): AtlasInstitution | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const name = getString(value.name);
+  const slug = getString(value.slug);
+
+  if (!name || !slug) {
+    return null;
+  }
+
+  return {
+    name,
+    slug,
+    municipality: toNamedSlug(value.municipality),
+    programsCount: typeof value.programsCount === 'number' ? value.programsCount : 0,
+    levels: mapArray(value.levels, toNamedSlug),
   };
 };
 
@@ -284,5 +311,19 @@ export class ProfessionAtlasClientService {
     return getCollectionItems(payload)
       .map(toEvent)
       .filter((item): item is AtlasEvent => item !== null);
+  }
+
+  async findInstitutions(
+    apiUrl: string,
+    query: { q?: string; pageSize?: number } = {},
+  ): Promise<AtlasInstitution[]> {
+    const payload = await this.fetchJson(apiUrl, 'professions/institutions', {
+      q: query.q,
+      pageSize: query.pageSize ?? 8,
+    });
+
+    return getCollectionItems(payload)
+      .map(toInstitution)
+      .filter((item): item is AtlasInstitution => item !== null);
   }
 }

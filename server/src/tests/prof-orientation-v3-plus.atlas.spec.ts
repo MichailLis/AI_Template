@@ -19,6 +19,7 @@ describe('ProfOrientationAtlasService', () => {
     getProfession: jest.fn(),
     findEnterprises: jest.fn(),
     findEvents: jest.fn(),
+    findInstitutions: jest.fn(),
   };
   const prisma = {
     testStudentAnalysis: {
@@ -77,6 +78,7 @@ describe('ProfOrientationAtlasService', () => {
       publicUrl: 'https://atlas.example',
       apiUrl: 'https://atlas.example/api-backend',
     });
+    atlasClient.findInstitutions.mockResolvedValue([]);
   });
 
   it('selects the first two primary professions for non-mixed profile result cards', () => {
@@ -311,6 +313,159 @@ describe('ProfOrientationAtlasService', () => {
       ],
     });
     expect(summary.atlas?.institutions).toHaveLength(2);
+  });
+
+  it('adds relevant institution search matches instead of only first direct programs', async () => {
+    const primaryProfession = {
+      ...createProfession('Инженер-конструктор', 'engineer-designer'),
+      industry: { name: 'Цифровое проектирование' },
+      educationPrograms: [
+        {
+          title: 'Конструкторско-технологическое обеспечение машиностроительных производств',
+          institution: {
+            name: 'Филиал САФУ в г. Северодвинске',
+            slug: 'safu-severodvinsk-branch',
+            municipality: { name: 'Северодвинск' },
+          },
+        },
+      ],
+    };
+    const secondaryProfession = {
+      ...createProfession('Техник-конструктор', 'technician-designer'),
+      educationPrograms: [
+        {
+          title: 'Технология машиностроения',
+          institution: {
+            name: 'Технический колледж филиала САФУ',
+            slug: 'safu-technical-college',
+            municipality: { name: 'Северодвинск' },
+          },
+        },
+        {
+          title: 'Технология машиностроения',
+          institution: {
+            name: 'Технический колледж филиала САФУ',
+            slug: 'safu-technical-college',
+            municipality: { name: 'Северодвинск' },
+          },
+        },
+        {
+          title: 'Технология машиностроения',
+          institution: {
+            name: 'Технический колледж филиала САФУ',
+            slug: 'safu-technical-college',
+            municipality: { name: 'Северодвинск' },
+          },
+        },
+      ],
+    };
+
+    atlasClient.findProfessions.mockImplementation((_apiUrl: string, params: { q?: string }) => {
+      if (params.q === 'Инженер-конструктор') {
+        return Promise.resolve([{ title: 'Инженер-конструктор', slug: 'engineer-designer' }]);
+      }
+
+      if (params.q === 'Техник-конструктор') {
+        return Promise.resolve([{ title: 'Техник-конструктор', slug: 'technician-designer' }]);
+      }
+
+      return Promise.resolve([]);
+    });
+    atlasClient.getProfession.mockImplementation((_apiUrl: string, slug: string) =>
+      Promise.resolve(slug === 'engineer-designer' ? primaryProfession : secondaryProfession),
+    );
+    atlasClient.findEnterprises.mockResolvedValue([]);
+    atlasClient.findEvents.mockResolvedValue([]);
+    atlasClient.findInstitutions.mockImplementation((_apiUrl: string, params: { q?: string }) => {
+      if (params.q === 'инженер') {
+        return Promise.resolve([
+          {
+            name: 'Широкий нерелевантный вуз',
+            slug: 'broad-irrelevant-university',
+            municipality: { name: 'Архангельск' },
+            programsCount: 80,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+          {
+            name: 'Нерелевантный технический институт',
+            slug: 'irrelevant-technical-institute',
+            municipality: { name: 'Северодвинск' },
+            programsCount: 50,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+          {
+            name: 'Нерелевантный колледж',
+            slug: 'irrelevant-college',
+            municipality: { name: 'Архангельск' },
+            programsCount: 30,
+            levels: [{ name: 'Среднее профессиональное образование', slug: 'spo' }],
+          },
+          {
+            name: 'Еще один вуз',
+            slug: 'another-university',
+            municipality: { name: 'Архангельск' },
+            programsCount: 40,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+          {
+            name: 'ФГАОУ ВО «Северный (Арктический) федеральный университет»',
+            slug: 'safu',
+            municipality: { name: 'Архангельск' },
+            programsCount: 179,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+        ]);
+      }
+
+      if (params.q === 'проектирование') {
+        return Promise.resolve([
+          {
+            name: 'Филиал САФУ в г. Северодвинске',
+            slug: 'safu-severodvinsk-branch',
+            municipality: { name: 'Северодвинск' },
+            programsCount: 28,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+          {
+            name: 'ФГАОУ ВО «Северный (Арктический) федеральный университет»',
+            slug: 'safu',
+            municipality: { name: 'Архангельск' },
+            programsCount: 179,
+            levels: [{ name: 'Высшее образование', slug: 'higher-education' }],
+          },
+        ]);
+      }
+
+      return Promise.resolve([]);
+    });
+
+    const summary = await createService().enrichSummary({
+      ...createSummary(),
+      primaryDirection: {
+        ...createSummary().primaryDirection,
+        professions: [{ code: 'A1-1', title: 'Инженер-конструктор', type: 'core' }],
+        resultCard: {
+          learn: [
+            'основы черчения',
+            'материаловедение',
+            'основы машиностроения',
+            'измерительный инструмент',
+          ],
+        },
+      },
+      secondaryDirection: {
+        ...createSummary().secondaryDirection,
+        professions: [{ code: 'A1-2', title: 'Техник-конструктор', type: 'core' }],
+      },
+    } as unknown as ProfOrientationSummary);
+
+    expect(summary.atlas?.institutions.map((institution) => institution.title)).toEqual([
+      'ФГАОУ ВО «Северный (Арктический) федеральный университет»',
+      'Филиал САФУ в г. Северодвинске',
+    ]);
+    expect(summary.atlas?.institutions.map((institution) => institution.title)).not.toContain(
+      'Широкий нерелевантный вуз',
+    );
   });
 
   it('returns unavailable atlas status when Atlas API fails', async () => {

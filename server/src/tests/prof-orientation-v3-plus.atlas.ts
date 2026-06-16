@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import {
   type AtlasEnterprise,
   type AtlasEvent,
+  type AtlasInstitution,
   type AtlasProfessionDetail,
   ProfessionAtlasClientService,
 } from '../app-settings/profession-atlas-client.service';
@@ -19,6 +20,8 @@ import type {
   ProfOrientationProfession,
   ProfOrientationSummary,
 } from './prof-orientation-v3-plus.types';
+
+const PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION = 6;
 
 export interface ProfessionAtlasCoverageItem {
   title: string;
@@ -116,6 +119,10 @@ export const shouldRefreshProfOrientationAtlasSummary = (summary: ProfOrientatio
     return false;
   }
 
+  if (summary.atlas.version !== PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION) {
+    return true;
+  }
+
   const selectedTitles = new Set(
     selectProfOrientationAtlasProfessions(summary).map((item) =>
       normalizeProfessionTitle(item.profession.title),
@@ -174,34 +181,216 @@ const toProfessionCard = (
   skills: profession.skills.map((skill) => skill.name).slice(0, 4),
 });
 
-const uniqueBySlug = <T extends { slug: string }>(items: T[]) => {
-  const seen = new Set<string>();
+const INSTITUTION_STOP_TERMS = new Set([
+  'основы',
+  'работа',
+  'системы',
+  'подготовка',
+  'производства',
+]);
 
-  return items.filter((item) => {
-    if (seen.has(item.slug)) {
-      return false;
+const tokenizeInstitutionTerm = (value: string) =>
+  normalizeProfessionTitle(value)
+    .split(/[^a-zа-я0-9]+/iu)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 5 && !INSTITUTION_STOP_TERMS.has(term));
+
+interface AtlasInstitutionSearchTerm {
+  term: string;
+  signalStrength: number;
+}
+
+const buildInstitutionSearchTerms = (
+  summary: ProfOrientationSummary,
+  selected: Array<{ profession: ProfOrientationProfession }>,
+  professions: AtlasProfessionDetail[],
+) => {
+  const terms = new Map<string, AtlasInstitutionSearchTerm>();
+  const addTokens = (value: string | null | undefined, signalStrength: number) => {
+    if (!value) {
+      return;
     }
 
-    seen.add(item.slug);
-    return true;
-  });
+    for (const term of tokenizeInstitutionTerm(value)) {
+      const existing = terms.get(term);
+      terms.set(term, {
+        term,
+        signalStrength: Math.max(existing?.signalStrength ?? 0, signalStrength),
+      });
+    }
+  };
+
+  for (const item of selected) {
+    addTokens(item.profession.title, 0);
+  }
+
+  for (const profession of professions) {
+    addTokens(profession.industry?.name, 2);
+
+    for (const skill of profession.skills) {
+      addTokens(skill.name, 2);
+    }
+  }
+
+  for (const direction of [summary.primaryDirection, summary.secondaryDirection]) {
+    addTokens(direction?.name, 1);
+
+    for (const term of direction?.resultCard?.learn ?? []) {
+      addTokens(term, 1);
+    }
+  }
+
+  for (const profession of professions) {
+    for (const program of profession.educationPrograms) {
+      addTokens(program.title, 1);
+    }
+  }
+
+  return [...terms.values()].slice(0, 8);
 };
+
+const hasHigherEducationLevel = (institution: AtlasInstitution) =>
+  institution.levels.some((level) => normalizeProfessionTitle(level.name).includes('высшее'));
+
+const toInstitutionSearchSummary = (institution: AtlasInstitution) => {
+  const levelNames = institution.levels.map((level) => level.name);
+  const firstLevel = levelNames[0];
+
+  return [
+    institution.programsCount > 0 ? `${institution.programsCount} программ` : null,
+    firstLevel,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+};
+
+interface AtlasInstitutionSearchMatch {
+  institution: AtlasInstitution;
+  termIndex: number;
+  resultIndex: number;
+  signalStrength: number;
+}
+
+const scoreInstitutionSearchMatch = ({
+  institution,
+  termIndex,
+  resultIndex,
+  signalStrength,
+}: AtlasInstitutionSearchMatch) =>
+  2 +
+  signalStrength * 2 +
+  Math.max(0, 4 - resultIndex) +
+  Math.max(0, 3 - termIndex) +
+  Math.min(3, Math.floor(institution.programsCount / 40)) +
+  (hasHigherEducationLevel(institution) ? 2 : 0);
 
 const selectInstitutions = (
   publicUrl: string,
   professions: AtlasProfessionDetail[],
+  searchedInstitutionMatches: AtlasInstitutionSearchMatch[],
 ): ProfOrientationAtlasRecommendation[] => {
-  const items = professions.flatMap((profession) =>
-    profession.educationPrograms.map((program) => ({
-      title: program.institution.name,
-      slug: program.institution.slug,
-      url: buildPublicUrl(publicUrl, `institutions/${program.institution.slug}`),
-      summary: program.title,
-      subtitle: program.institution.municipality?.name ?? null,
-    })),
-  );
+  const candidates = new Map<
+    string,
+    ProfOrientationAtlasRecommendation & {
+      score: number;
+      programsCount: number;
+      hasDirectMatch: boolean;
+      searchSignalStrength: number;
+    }
+  >();
+  const upsertCandidate = (
+    candidate: ProfOrientationAtlasRecommendation & {
+      score: number;
+      programsCount?: number;
+      hasDirectMatch?: boolean;
+      searchSignalStrength?: number;
+    },
+  ) => {
+    const existing = candidates.get(candidate.slug);
+    const programsCount = candidate.programsCount ?? existing?.programsCount ?? 0;
 
-  return uniqueBySlug(items).slice(0, 2);
+    if (!existing) {
+      candidates.set(candidate.slug, {
+        ...candidate,
+        programsCount,
+        hasDirectMatch: candidate.hasDirectMatch ?? false,
+        searchSignalStrength: candidate.searchSignalStrength ?? 0,
+      });
+      return;
+    }
+
+    candidates.set(candidate.slug, {
+      ...existing,
+      score: existing.score + candidate.score,
+      programsCount: Math.max(existing.programsCount, programsCount),
+      hasDirectMatch: existing.hasDirectMatch || Boolean(candidate.hasDirectMatch),
+      searchSignalStrength: Math.max(
+        existing.searchSignalStrength,
+        candidate.searchSignalStrength ?? 0,
+      ),
+      summary: existing.summary ?? candidate.summary,
+      subtitle: existing.subtitle ?? candidate.subtitle,
+    });
+  };
+
+  const directInstitutionSlugs = new Set<string>();
+
+  professions.forEach((profession, professionIndex) => {
+    for (const program of profession.educationPrograms) {
+      if (directInstitutionSlugs.has(program.institution.slug)) {
+        continue;
+      }
+
+      directInstitutionSlugs.add(program.institution.slug);
+      upsertCandidate({
+        title: program.institution.name,
+        slug: program.institution.slug,
+        url: buildPublicUrl(publicUrl, `institutions/${program.institution.slug}`),
+        summary: program.title,
+        subtitle: program.institution.municipality?.name ?? null,
+        score: professionIndex === 0 ? 10 : 7,
+        hasDirectMatch: true,
+      });
+    }
+  });
+
+  searchedInstitutionMatches.forEach((match) => {
+    const { institution } = match;
+
+    upsertCandidate({
+      title: institution.name,
+      slug: institution.slug,
+      url: buildPublicUrl(publicUrl, `institutions/${institution.slug}`),
+      summary: toInstitutionSearchSummary(institution) || null,
+      subtitle: institution.municipality?.name ?? null,
+      score: scoreInstitutionSearchMatch(match),
+      programsCount: institution.programsCount,
+      searchSignalStrength: match.signalStrength,
+    });
+  });
+
+  const candidatesList = [...candidates.values()];
+  const profileMatchedCandidates = candidatesList.filter(
+    (candidate) => candidate.hasDirectMatch || candidate.searchSignalStrength > 0,
+  );
+  const rankedCandidates =
+    profileMatchedCandidates.length >= 2 ? profileMatchedCandidates : candidatesList;
+
+  return rankedCandidates
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.programsCount - left.programsCount ||
+        left.title.localeCompare(right.title),
+    )
+    .slice(0, 2)
+    .map((candidate) => ({
+      title: candidate.title,
+      slug: candidate.slug,
+      url: candidate.url,
+      summary: candidate.summary,
+      subtitle: candidate.subtitle,
+    }));
 };
 
 const scoreEnterprise = (enterprise: AtlasEnterprise, professionSlugs: string[]) => {
@@ -398,6 +587,7 @@ export class ProfOrientationAtlasService {
       return {
         ...summary,
         atlas: {
+          version: PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
           status: 'unavailable',
           publicUrl: settings.publicUrl,
           apiUrl: settings.apiUrl,
@@ -447,19 +637,35 @@ export class ProfOrientationAtlasService {
 
       const details = matchedProfessions.map((item) => item.detail);
       const professionSlugs = details.map((profession) => profession.slug);
-      const [enterprises, events] =
+      const institutionSearchTerms = buildInstitutionSearchTerms(summary, selected, details);
+      const [enterprises, events, searchedInstitutionGroups] =
         professionSlugs.length > 0
           ? await Promise.all([
               this.atlasClient.findEnterprises(apiUrl),
               this.atlasClient.findEvents(apiUrl),
+              Promise.all(
+                institutionSearchTerms.map(({ term }) =>
+                  this.atlasClient.findInstitutions(apiUrl, { q: term, pageSize: 8 }),
+                ),
+              ),
             ])
-          : [[], []];
+          : [[], [], []];
+      const searchedInstitutionMatches = searchedInstitutionGroups.flatMap(
+        (institutions, termIndex) =>
+          institutions.map((institution, resultIndex) => ({
+            institution,
+            termIndex,
+            resultIndex,
+            signalStrength: institutionSearchTerms[termIndex]?.signalStrength ?? 0,
+          })),
+      );
       const eventContextTerms = [
         ...selected.map((item) => item.profession.title),
         summary.primaryDirection?.name,
         summary.secondaryDirection?.name,
       ].filter((term): term is string => Boolean(term));
       const atlas: ProfOrientationAtlasRecommendations = {
+        version: PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
         status:
           details.length === 0
             ? 'unavailable'
@@ -475,7 +681,7 @@ export class ProfOrientationAtlasService {
         ),
         enterprises: selectEnterprises(publicUrl, enterprises, professionSlugs),
         events: selectEvents(publicUrl, events, details, eventContextTerms),
-        institutions: selectInstitutions(publicUrl, details),
+        institutions: selectInstitutions(publicUrl, details, searchedInstitutionMatches),
       };
 
       return {
@@ -486,6 +692,7 @@ export class ProfOrientationAtlasService {
       return {
         ...summary,
         atlas: {
+          version: PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
           status: 'unavailable',
           publicUrl,
           apiUrl,

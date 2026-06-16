@@ -68,6 +68,7 @@ export interface ProfOrientationAtlasRecommendation {
 }
 
 export interface ProfOrientationAtlasRecommendations {
+  version?: number;
   status: ProfOrientationAtlasStatus;
   publicUrl: string | null;
   apiUrl: string | null;
