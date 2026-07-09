@@ -49,9 +49,26 @@ export const AdminProfessionAtlasSettingsResponseSchema = z.object({
   professionAtlas: ProfessionAtlasSettingsSchema,
 });
 
+export const PrivacyPolicySettingsSchema = z.object({
+  version: z.string(),
+  publishedAt: z.string().datetime(),
+  content: z.string(),
+  updatedAt: z.string().datetime().nullable(),
+});
+
+export const AdminPrivacyPolicySettingsResponseSchema = z.object({
+  privacyPolicy: PrivacyPolicySettingsSchema,
+});
+
 export const UpdateProfessionAtlasUrlSchema = z.object({
   publicUrl: z.string().trim().url().max(2048),
   apiUrl: z.string().trim().url().max(2048),
+});
+
+export const UpdatePrivacyPolicySchema = z.object({
+  version: z.string().trim().min(1).max(64),
+  publishedAt: z.string().datetime(),
+  content: z.string().trim().min(1).max(160000),
 });
 
 export class AdminOpenRouterSettingsResponseDto extends createZodDto(
@@ -62,8 +79,14 @@ export class AdminProfessionAtlasSettingsResponseDto extends createZodDto(
   AdminProfessionAtlasSettingsResponseSchema,
 ) {}
 
+export class AdminPrivacyPolicySettingsResponseDto extends createZodDto(
+  AdminPrivacyPolicySettingsResponseSchema,
+) {}
+
 export class ProfessionAtlasCoverageResponseDto extends createZodDto(
   ProfessionAtlasCoverageResponseSchema,
 ) {}
 
 export class UpdateProfessionAtlasUrlDto extends createZodDto(UpdateProfessionAtlasUrlSchema) {}
+
+export class UpdatePrivacyPolicyDto extends createZodDto(UpdatePrivacyPolicySchema) {}

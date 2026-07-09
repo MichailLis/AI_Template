@@ -16,6 +16,7 @@ import {
   createRandomToken,
   toPrismaRequiredJsonInput,
 } from './tests-domain.utils';
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import {
   ProfOrientationAtlasService,
@@ -86,6 +87,7 @@ export class TestsPublicSessionService {
     private readonly prisma: PrismaService,
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
+    private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
@@ -260,6 +262,7 @@ export class TestsPublicSessionService {
       link.timeLimitMinutes !== null
         ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
         : null;
+    const activePolicy = await this.privacyPolicySettingsService.getActivePolicySnapshot();
     const createdAttempt = await client.testStudentAttempt.create({
       data: {
         publicLinkId: link.id,
@@ -271,6 +274,8 @@ export class TestsPublicSessionService {
         consentAcceptedAt: now,
         consentVersion: link.consentVersion,
         consentTextSnapshot: link.consentTextSnapshot,
+        policyVersionSnapshot: activePolicy.version,
+        policyPublishedAtSnapshot: activePolicy.publishedAt,
         resumeToken: createRandomToken(24),
         startedAt: now,
         expiresAt,

@@ -1,5 +1,7 @@
 import { polusAssets } from '@/features/tests';
 
+import { PublicPrivacyConsent } from '../public-privacy-consent';
+
 import { PolusEducationDemographicFields } from './polus-public-education-demographic-fields';
 import { PolusPublicLayout } from './polus-public-layout';
 import { PolusSelectField } from './polus-public-select-field';
@@ -243,6 +245,18 @@ export function PolusPublicEntry({
   onDemographicFieldChange,
 }: PolusPublicEntryProps) {
   let profileFields;
+  const isDemographicOnly = entryProfileMode === 'DEMOGRAPHIC';
+  const consentAccepted = isDemographicOnly
+    ? demographicFormState.consentAccepted
+    : registrationFormState.consentAccepted;
+  const handleConsentChange = (checked: boolean) => {
+    if (isDemographicOnly) {
+      onDemographicFieldChange('consentAccepted', checked);
+      return;
+    }
+
+    onEducationFieldChange('consentAccepted', checked);
+  };
 
   if (entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
     profileFields = (
@@ -288,6 +302,11 @@ export function PolusPublicEntry({
           <div className="polus-start-layout">
             <form className="polus-form-grid" onSubmit={onSubmit}>
               {profileFields}
+              <PublicPrivacyConsent
+                checked={consentAccepted}
+                className="polus-field-wide"
+                onCheckedChange={handleConsentChange}
+              />
               <div className="polus-form-actions">
                 <button className="polus-primary-action" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Запускаем тест...' : 'Начать тестирование'}

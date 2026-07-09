@@ -99,6 +99,11 @@ export function PublicThemeLayout({
       <div className={cn('relative mx-auto w-full px-4 py-10', containerClassName)}>
         <PublicBrandHeader logos={resolvedBranding.logos} builderHeaderSlot={builderHeaderSlot} />
         {children}
+        <footer className="mt-8 border-t border-foreground/10 pt-4 text-center text-xs text-foreground/70">
+          <a href="/privacy" className="font-medium underline underline-offset-4">
+            Политика обработки персональных данных
+          </a>
+        </footer>
       </div>
     </main>
   );

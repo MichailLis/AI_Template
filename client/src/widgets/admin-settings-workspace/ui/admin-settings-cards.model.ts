@@ -1,11 +1,13 @@
 import type {
   AdminOpenRouterSettingsResponseDto,
+  AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
 } from '@/shared/api/model';
 
 export type OpenRouterSettings = AdminOpenRouterSettingsResponseDto['openRouter'];
 export type ProfessionAtlasSettings = AdminProfessionAtlasSettingsResponseDto['professionAtlas'];
 export type ProfessionAtlasCoverage = NonNullable<ProfessionAtlasSettings['coverage']>;
+export type PrivacyPolicySettings = AdminPrivacyPolicySettingsResponseDto['privacyPolicy'];
 
 export const sourceLabels: Record<OpenRouterSettings['source'], string> = {
   ENV: 'Переменная окружения',

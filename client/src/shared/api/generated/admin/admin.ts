@@ -25,6 +25,7 @@ import type {
   AdminControllerGetUsersParams,
   AdminOpenRouterSettingsResponseDto,
   AdminOverviewResponseDto,
+  AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
@@ -36,10 +37,12 @@ import type {
   CreateAnalysisPromptDto,
   ErrorResponseDto,
   GeneratePromptDto,
+  ProfessionAtlasCoverageResponseDto,
   PromptSimulationRequestDto,
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
   UpdateAnalysisPromptVersionDto,
+  UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
   UpdateUserRoleDto,
 } from '../../model';
@@ -772,6 +775,385 @@ export const useAdminSettingsControllerUpdateProfessionAtlasUrl = <
     queryClient,
   );
 };
+/**
+ * @summary Get privacy policy settings
+ */
+export const adminSettingsControllerGetPrivacyPolicySettings = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPrivacyPolicySettingsResponseDto>(
+    { url: `/admin/settings/privacy-policy`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey = () => {
+  return [`/admin/settings/privacy-policy`] as const;
+};
+
+export const getAdminSettingsControllerGetPrivacyPolicySettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>
+  > = ({ signal }) => adminSettingsControllerGetPrivacyPolicySettings(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminSettingsControllerGetPrivacyPolicySettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>
+>;
+export type AdminSettingsControllerGetPrivacyPolicySettingsQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminSettingsControllerGetPrivacyPolicySettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetPrivacyPolicySettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetPrivacyPolicySettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get privacy policy settings
+ */
+
+export function useAdminSettingsControllerGetPrivacyPolicySettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminSettingsControllerGetPrivacyPolicySettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update privacy policy settings
+ */
+export const adminSettingsControllerUpdatePrivacyPolicy = (
+  updatePrivacyPolicyDto: UpdatePrivacyPolicyDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPrivacyPolicySettingsResponseDto>(
+    {
+      url: `/admin/settings/privacy-policy`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updatePrivacyPolicyDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerUpdatePrivacyPolicyMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>,
+    TError,
+    { data: UpdatePrivacyPolicyDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>,
+  TError,
+  { data: UpdatePrivacyPolicyDto },
+  TContext
+> => {
+  const mutationKey = ['adminSettingsControllerUpdatePrivacyPolicy'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>,
+    { data: UpdatePrivacyPolicyDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminSettingsControllerUpdatePrivacyPolicy(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerUpdatePrivacyPolicyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>
+>;
+export type AdminSettingsControllerUpdatePrivacyPolicyMutationBody = UpdatePrivacyPolicyDto;
+export type AdminSettingsControllerUpdatePrivacyPolicyMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Update privacy policy settings
+ */
+export const useAdminSettingsControllerUpdatePrivacyPolicy = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>,
+      TError,
+      { data: UpdatePrivacyPolicyDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePrivacyPolicy>>,
+  TError,
+  { data: UpdatePrivacyPolicyDto },
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerUpdatePrivacyPolicyMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Check profession atlas coverage for prof-orientation professions
+ */
+export const adminSettingsControllerGetProfessionAtlasCoverage = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<ProfessionAtlasCoverageResponseDto>(
+    { url: `/admin/settings/profession-atlas/coverage`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey = () => {
+  return [`/admin/settings/profession-atlas/coverage`] as const;
+};
+
+export const getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>
+  > = ({ signal }) => adminSettingsControllerGetProfessionAtlasCoverage(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminSettingsControllerGetProfessionAtlasCoverageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>
+>;
+export type AdminSettingsControllerGetProfessionAtlasCoverageQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useAdminSettingsControllerGetProfessionAtlasCoverage<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetProfessionAtlasCoverage<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetProfessionAtlasCoverage<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Check profession atlas coverage for prof-orientation professions
+ */
+
+export function useAdminSettingsControllerGetProfessionAtlasCoverage<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 /**
  * @summary List analysis prompts and versions
  */

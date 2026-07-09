@@ -230,6 +230,15 @@ export const PublicSessionResultResponseSchema = z.object({
   professionAtlasUrl: z.string().url().nullable(),
 });
 
+export const PublicPrivacyPolicyResponseSchema = z.object({
+  privacyPolicy: z.object({
+    version: z.string(),
+    publishedAt: z.string().datetime(),
+    content: z.string(),
+    updatedAt: z.string().datetime().nullable(),
+  }),
+});
+
 export class PublicLinkAccessResponseDto extends createZodDto(PublicLinkAccessResponseSchema) {}
 export class PublicSessionStartRequestDto extends createZodDto(PublicSessionStartRequestSchema) {}
 export class PublicSessionStartResponseDto extends createZodDto(PublicSessionStartResponseSchema) {}
@@ -245,4 +254,7 @@ export class PublicSessionFinishResponseDto extends createZodDto(
 ) {}
 export class PublicSessionResultResponseDto extends createZodDto(
   PublicSessionResultResponseSchema,
+) {}
+export class PublicPrivacyPolicyResponseDto extends createZodDto(
+  PublicPrivacyPolicyResponseSchema,
 ) {}

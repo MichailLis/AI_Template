@@ -21,6 +21,7 @@ const AdminSettingsPage = lazy(() => import('@/pages/admin/admin-settings-page')
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/admin-users-page'));
 const LoginPage = lazy(() => import('@/pages/login'));
+const PrivacyPage = lazy(() => import('@/pages/privacy-page'));
 const PublicTestEntryPage = lazy(() => import('@/pages/t/public-test-entry-page'));
 const PublicTestResultPage = lazy(() => import('@/pages/t/public-test-result-page'));
 const PublicTestRunPage = lazy(() => import('@/pages/t/public-test-run-page'));
@@ -91,6 +92,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/t/:code" element={<PublicTestEntryPage />} />
               <Route path="/t/:code/session/:sessionToken" element={<PublicTestRunPage />} />
               <Route path="/t/:code/result/:sessionToken" element={<PublicTestResultPage />} />

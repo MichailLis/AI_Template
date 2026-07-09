@@ -7,6 +7,8 @@ import { PrismaModule } from './prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { TestsModule } from './tests/tests.module';
 import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.module';
+import { PrivacyPolicyController } from './privacy-policy.controller';
+import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-settings.service';
 
 @Module({
   imports: [
@@ -19,8 +21,9 @@ import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.modul
     AnalysisPromptsModule,
     TestsModule,
   ],
-  controllers: [],
+  controllers: [PrivacyPolicyController],
   providers: [
+    PrivacyPolicySettingsService,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,

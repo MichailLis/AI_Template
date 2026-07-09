@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-client.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { OpenRouterModule } from '../openrouter/openrouter.module';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAdminAnalyticsController } from './tests-admin-analytics.controller';
@@ -25,6 +26,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsAnalysisService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
+    PrivacyPolicySettingsService,
     ProfessionAtlasSettingsService,
     ProfessionAtlasClientService,
     ProfOrientationAtlasService,

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { PublicPrivacyConsent } from './public-privacy-consent';
 import { RegistrationDemographicFields } from './public-test-registration-demographic-fields';
 
 import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
@@ -274,6 +275,10 @@ export function PublicTestRegistrationCard({
               ) : null}
             </div>
 
+            <PublicPrivacyConsent
+              checked={formState.consentAccepted}
+              onCheckedChange={(checked) => onFieldChange('consentAccepted', checked)}
+            />
             <SubmitButton isSubmitting={isSubmitting} />
 
             <p className="mt-3 text-center text-xs text-muted-foreground">

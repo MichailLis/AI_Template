@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
@@ -64,6 +65,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
+      {} as PrivacyPolicySettingsService,
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
@@ -111,6 +113,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
+      {} as PrivacyPolicySettingsService,
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
@@ -169,6 +172,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
+      {} as PrivacyPolicySettingsService,
       new ProfessionAtlasSettingsService(prismaMock),
       {
         saveEnrichedAnalysis: jest.fn(),

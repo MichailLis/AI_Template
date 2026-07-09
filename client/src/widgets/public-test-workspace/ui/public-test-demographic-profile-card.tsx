@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { PublicPrivacyConsent } from './public-privacy-consent';
+
 import type { DemographicFormState } from './public-test-entry.types';
 import type { FormEvent } from 'react';
 
@@ -171,6 +173,10 @@ export function PublicTestDemographicProfileCard({
         <CardContent className="px-6 pb-6">
           <form className="space-y-4" onSubmit={onSubmit}>
             <DemographicProfileFields formState={formState} onFieldChange={onFieldChange} />
+            <PublicPrivacyConsent
+              checked={formState.consentAccepted}
+              onCheckedChange={(checked) => onFieldChange('consentAccepted', checked)}
+            />
             <SubmitButton isSubmitting={isSubmitting} />
 
             <p className="mt-3 text-center text-xs text-muted-foreground">

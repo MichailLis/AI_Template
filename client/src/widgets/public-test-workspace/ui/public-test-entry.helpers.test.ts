@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  initialDemographicFormState,
   initialFormState,
   normalizeInitial,
   resolveGroupValidationWarning,
 } from './public-test-entry.helpers';
 
 describe('public test entry helpers', () => {
-  it('keeps hidden consent accepted by default for public test start', () => {
-    expect(initialFormState.consentAccepted).toBe(true);
+  it('requires explicit consent by default for public test start', () => {
+    expect(initialFormState.consentAccepted).toBe(false);
+    expect(initialDemographicFormState.consentAccepted).toBe(false);
   });
 
   it('normalizes initials by trimming, taking the first symbol, and uppercasing it', () => {

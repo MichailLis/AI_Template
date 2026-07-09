@@ -271,6 +271,8 @@ model TestStudentAttempt {
   consentAcceptedAt     DateTime
   consentVersion        String
   consentTextSnapshot   String
+  policyVersionSnapshot     String?
+  policyPublishedAtSnapshot DateTime?
   resumeToken           String                     @unique
   startedAt             DateTime                   @default(now())
   expiresAt             DateTime?

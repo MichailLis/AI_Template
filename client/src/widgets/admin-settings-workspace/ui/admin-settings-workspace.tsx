@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import {
+  getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey,
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey,
+  useAdminSettingsControllerGetPrivacyPolicySettings,
   useAdminSettingsControllerGetProfessionAtlasSettings,
   useAdminSettingsControllerGetOpenRouterSettings,
+  useAdminSettingsControllerUpdatePrivacyPolicy,
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
 import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
@@ -17,7 +20,11 @@ import {
 } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 
-import { OpenRouterSettingsCard, ProfessionAtlasSettingsCard } from './admin-settings-cards';
+import {
+  OpenRouterSettingsCard,
+  PrivacyPolicySettingsCard,
+  ProfessionAtlasSettingsCard,
+} from './admin-settings-cards';
 
 import type { FormEvent } from 'react';
 
@@ -26,6 +33,34 @@ const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
 
 const getApiErrorMessage = (error: unknown) =>
   getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
+
+const toDateTimeLocalValue = (value: string | null | undefined) => {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const pad = (part: number) => part.toString().padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+};
+
+const toIsoFromDateTimeLocal = (value: string) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+};
 
 function AdminSettingsHero({
   isOpenRouterConfigured,
@@ -75,6 +110,117 @@ function AdminSettingsHero({
         </div>
       </div>
     </div>
+  );
+}
+
+function PrivacyPolicySettingsWorkspaceCard() {
+  const queryClient = useQueryClient();
+  const [privacyPolicyForm, setPrivacyPolicyForm] = useState({
+    content: '',
+    isDirty: false,
+    publishedAt: '',
+    version: '',
+  });
+  const privacyPolicyQuery = useAdminSettingsControllerGetPrivacyPolicySettings();
+  const updatePrivacyPolicyMutation = useAdminSettingsControllerUpdatePrivacyPolicy({
+    mutation: {
+      onError: (error) => {
+        toast.error(getApiErrorMessage(error));
+      },
+      onSuccess: async () => {
+        setPrivacyPolicyForm({ content: '', isDirty: false, publishedAt: '', version: '' });
+        await queryClient.invalidateQueries({
+          queryKey: getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey(),
+        });
+        toast.success('Политика персональных данных сохранена');
+      },
+    },
+  });
+
+  const privacyPolicy = privacyPolicyQuery.data?.privacyPolicy;
+  const privacyPolicyVersion = privacyPolicyForm.isDirty
+    ? privacyPolicyForm.version
+    : (privacyPolicy?.version ?? '');
+  const privacyPolicyPublishedAt = privacyPolicyForm.isDirty
+    ? privacyPolicyForm.publishedAt
+    : toDateTimeLocalValue(privacyPolicy?.publishedAt);
+  const privacyPolicyContent = privacyPolicyForm.isDirty
+    ? privacyPolicyForm.content
+    : (privacyPolicy?.content ?? '');
+  const normalizedPrivacyPolicyVersion = privacyPolicyVersion.trim();
+  const normalizedPrivacyPolicyContent = privacyPolicyContent.trim();
+  const privacyPolicyPublishedAtIso = toIsoFromDateTimeLocal(privacyPolicyPublishedAt);
+
+  const handlePrivacyPolicySubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      !normalizedPrivacyPolicyVersion ||
+      !normalizedPrivacyPolicyContent ||
+      !privacyPolicyPublishedAtIso ||
+      updatePrivacyPolicyMutation.isPending
+    ) {
+      return;
+    }
+
+    updatePrivacyPolicyMutation.mutate({
+      data: {
+        version: normalizedPrivacyPolicyVersion,
+        publishedAt: privacyPolicyPublishedAtIso,
+        content: normalizedPrivacyPolicyContent,
+      },
+    });
+  };
+
+  return (
+    <PrivacyPolicySettingsCard
+      canSubmit={
+        Boolean(
+          normalizedPrivacyPolicyVersion &&
+          normalizedPrivacyPolicyContent &&
+          privacyPolicyPublishedAtIso,
+        ) && !updatePrivacyPolicyMutation.isPending
+      }
+      content={privacyPolicyContent}
+      isError={privacyPolicyQuery.isError}
+      isLoading={privacyPolicyQuery.isLoading}
+      isSaving={updatePrivacyPolicyMutation.isPending}
+      privacyPolicy={privacyPolicy}
+      publishedAt={privacyPolicyPublishedAt}
+      version={privacyPolicyVersion}
+      onRetry={() => {
+        void privacyPolicyQuery.refetch();
+      }}
+      onSubmit={handlePrivacyPolicySubmit}
+      onContentChange={(value) =>
+        setPrivacyPolicyForm((current) => ({
+          content: value,
+          isDirty: true,
+          publishedAt: current.isDirty
+            ? current.publishedAt
+            : toDateTimeLocalValue(privacyPolicy?.publishedAt),
+          version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
+        }))
+      }
+      onPublishedAtChange={(value) =>
+        setPrivacyPolicyForm((current) => ({
+          content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
+          isDirty: true,
+          publishedAt: value,
+          version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
+        }))
+      }
+      onVersionChange={(value) =>
+        setPrivacyPolicyForm((current) => ({
+          content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
+          isDirty: true,
+          publishedAt: current.isDirty
+            ? current.publishedAt
+            : toDateTimeLocalValue(privacyPolicy?.publishedAt),
+          version: value,
+        }))
+      }
+    />
   );
 }
 
@@ -181,6 +327,8 @@ export function AdminSettingsWorkspace() {
           }))
         }
       />
+
+      <PrivacyPolicySettingsWorkspaceCard />
     </div>
   );
 }

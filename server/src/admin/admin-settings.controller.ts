@@ -3,13 +3,16 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus.atlas';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import {
+  AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
   AdminOpenRouterSettingsResponseDto,
   ProfessionAtlasCoverageResponseDto,
+  UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
 } from './dto/admin-settings.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
@@ -23,6 +26,7 @@ export class AdminSettingsController {
   constructor(
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
+    private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
 
@@ -56,6 +60,20 @@ export class AdminSettingsController {
     @Body() dto: UpdateProfessionAtlasUrlDto,
   ) {
     return this.professionAtlasSettingsService.updateProfessionAtlasUrl(userId, dto);
+  }
+
+  @Get('privacy-policy')
+  @ApiOperation({ summary: 'Get privacy policy settings' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPrivacyPolicySettingsResponseDto })
+  getPrivacyPolicySettings(@GetCurrentUserId() userId: number) {
+    return this.privacyPolicySettingsService.getAdminPrivacyPolicy(userId);
+  }
+
+  @Patch('privacy-policy')
+  @ApiOperation({ summary: 'Update privacy policy settings' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPrivacyPolicySettingsResponseDto })
+  updatePrivacyPolicy(@GetCurrentUserId() userId: number, @Body() dto: UpdatePrivacyPolicyDto) {
+    return this.privacyPolicySettingsService.updatePrivacyPolicy(userId, dto);
   }
 
   @Get('profession-atlas/coverage')

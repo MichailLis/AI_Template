@@ -1,4 +1,4 @@
-import { KeyRound, Link2 } from 'lucide-react';
+import { FileText, KeyRound, Link2 } from 'lucide-react';
 
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -11,8 +11,13 @@ import {
   ProfessionAtlasStatusPanel,
   SettingsLoadError,
 } from './admin-settings-cards.parts';
+import { PrivacyPolicyForm, PrivacyPolicyStatusPanel } from './admin-settings-privacy.parts';
 
-import type { OpenRouterSettings, ProfessionAtlasSettings } from './admin-settings-cards.model';
+import type {
+  OpenRouterSettings,
+  PrivacyPolicySettings,
+  ProfessionAtlasSettings,
+} from './admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
 interface OpenRouterSettingsCardProps {
@@ -137,6 +142,85 @@ export function ProfessionAtlasSettingsCard({
           onApiUrlChange={onApiUrlChange}
           onPublicUrlChange={onPublicUrlChange}
           onSubmit={onSubmit}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+interface PrivacyPolicySettingsCardProps {
+  canSubmit: boolean;
+  content: string;
+  isError: boolean;
+  isLoading: boolean;
+  isSaving: boolean;
+  privacyPolicy: PrivacyPolicySettings | undefined;
+  publishedAt: string;
+  version: string;
+  onContentChange: (value: string) => void;
+  onPublishedAtChange: (value: string) => void;
+  onRetry: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onVersionChange: (value: string) => void;
+}
+
+export function PrivacyPolicySettingsCard({
+  canSubmit,
+  content,
+  isError,
+  isLoading,
+  isSaving,
+  privacyPolicy,
+  publishedAt,
+  version,
+  onContentChange,
+  onPublishedAtChange,
+  onRetry,
+  onSubmit,
+  onVersionChange,
+}: PrivacyPolicySettingsCardProps) {
+  return (
+    <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
+      <CardHeader className={adminClassNames.border.bottom}>
+        <div className="flex min-w-0 items-start gap-3">
+          <div
+            className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.success.icon}`}
+          >
+            <FileText className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <CardTitle className="text-lg">Политика персональных данных</CardTitle>
+            <CardDescription>
+              Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-6 p-4">
+        {isLoading ? (
+          <div className={adminClassNames.panel.loading}>Загружаем текущую политику...</div>
+        ) : null}
+
+        {isError ? (
+          <SettingsLoadError
+            message="Не удалось загрузить политику персональных данных."
+            onRetry={onRetry}
+          />
+        ) : null}
+
+        {privacyPolicy ? <PrivacyPolicyStatusPanel privacyPolicy={privacyPolicy} /> : null}
+
+        <PrivacyPolicyForm
+          canSubmit={canSubmit}
+          content={content}
+          isSaving={isSaving}
+          publishedAt={publishedAt}
+          version={version}
+          onContentChange={onContentChange}
+          onPublishedAtChange={onPublishedAtChange}
+          onSubmit={onSubmit}
+          onVersionChange={onVersionChange}
         />
       </CardContent>
     </Card>

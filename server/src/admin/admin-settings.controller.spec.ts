@@ -1,5 +1,6 @@
 import { AdminSettingsController } from './admin-settings.controller';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus.atlas';
 
@@ -11,6 +12,10 @@ describe('AdminSettingsController', () => {
   let professionAtlasSettingsService: {
     getProfessionAtlasSettings: jest.Mock;
     updateProfessionAtlasUrl: jest.Mock;
+  };
+  let privacyPolicySettingsService: {
+    getAdminPrivacyPolicy: jest.Mock;
+    updatePrivacyPolicy: jest.Mock;
   };
   let profOrientationAtlasService: {
     buildCoverageReport: jest.Mock;
@@ -24,6 +29,10 @@ describe('AdminSettingsController', () => {
       getProfessionAtlasSettings: jest.fn(),
       updateProfessionAtlasUrl: jest.fn(),
     };
+    privacyPolicySettingsService = {
+      getAdminPrivacyPolicy: jest.fn(),
+      updatePrivacyPolicy: jest.fn(),
+    };
     profOrientationAtlasService = {
       buildCoverageReport: jest.fn(),
     };
@@ -31,6 +40,7 @@ describe('AdminSettingsController', () => {
     controller = new AdminSettingsController(
       openRouterApiKeyService as unknown as OpenRouterApiKeyService,
       professionAtlasSettingsService as unknown as ProfessionAtlasSettingsService,
+      privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
       profOrientationAtlasService as unknown as ProfOrientationAtlasService,
     );
   });
@@ -113,6 +123,45 @@ describe('AdminSettingsController', () => {
       publicUrl: 'https://atlas.example',
       apiUrl: 'https://atlas.example/api-backend',
     });
+  });
+
+  it('returns privacy policy settings', async () => {
+    privacyPolicySettingsService.getAdminPrivacyPolicy.mockResolvedValue({
+      privacyPolicy: {
+        version: '2026-07-09',
+        publishedAt: '2026-07-09T00:00:00.000Z',
+        content: 'Политика',
+        updatedAt: null,
+      },
+    });
+
+    await expect(controller.getPrivacyPolicySettings(3)).resolves.toEqual({
+      privacyPolicy: {
+        version: '2026-07-09',
+        publishedAt: '2026-07-09T00:00:00.000Z',
+        content: 'Политика',
+        updatedAt: null,
+      },
+    });
+    expect(privacyPolicySettingsService.getAdminPrivacyPolicy).toHaveBeenCalledWith(3);
+  });
+
+  it('updates privacy policy settings', async () => {
+    const dto = {
+      version: '2026-07-10',
+      publishedAt: '2026-07-10T00:00:00.000Z',
+      content: 'Новая политика',
+    };
+    privacyPolicySettingsService.updatePrivacyPolicy.mockResolvedValue({
+      privacyPolicy: {
+        ...dto,
+        updatedAt: '2026-07-10T12:00:00.000Z',
+      },
+    });
+
+    await controller.updatePrivacyPolicy(3, dto);
+
+    expect(privacyPolicySettingsService.updatePrivacyPolicy).toHaveBeenCalledWith(3, dto);
   });
 
   it('returns profession atlas coverage report', async () => {

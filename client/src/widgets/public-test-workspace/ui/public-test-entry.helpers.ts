@@ -14,7 +14,7 @@ export const initialFormState: StudentFormState = {
   studentMiddleInitial: '',
   educationOrganization: '',
   groupOrClass: '',
-  consentAccepted: true,
+  consentAccepted: false,
 };
 
 export const initialDemographicFormState: DemographicFormState = {
@@ -22,7 +22,7 @@ export const initialDemographicFormState: DemographicFormState = {
   age: '',
   residence: '',
   educationLevel: '',
-  consentAccepted: true,
+  consentAccepted: false,
 };
 
 export const normalizeInitial = (value: string) => value.trim().slice(0, 1).toUpperCase();

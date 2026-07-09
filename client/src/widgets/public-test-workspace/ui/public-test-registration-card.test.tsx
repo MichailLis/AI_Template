@@ -11,11 +11,11 @@ const formState: StudentFormState = {
   studentMiddleInitial: '',
   educationOrganization: '',
   groupOrClass: '',
-  consentAccepted: true,
+  consentAccepted: false,
 };
 
 describe('PublicTestRegistrationCard', () => {
-  it('hides personal data consent copy while keeping the public test start form visible', () => {
+  it('shows personal data consent checkbox and policy link', () => {
     render(
       <PublicTestRegistrationCard
         formState={formState}
@@ -31,8 +31,7 @@ describe('PublicTestRegistrationCard', () => {
     );
 
     expect(screen.getByRole('button', { name: /начать тестирование/i })).toBeInTheDocument();
-    expect(screen.queryByText(/согласие на обработку данных/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/персональных данных/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /политик/i })).not.toBeChecked();
+    expect(screen.getByRole('link', { name: /политик/i })).toHaveAttribute('href', '/privacy');
   });
 });

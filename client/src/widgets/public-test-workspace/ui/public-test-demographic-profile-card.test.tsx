@@ -10,7 +10,7 @@ const formState: DemographicFormState = {
   age: '',
   residence: '',
   educationLevel: '',
-  consentAccepted: true,
+  consentAccepted: false,
 };
 
 describe('PublicTestDemographicProfileCard', () => {
@@ -24,10 +24,12 @@ describe('PublicTestDemographicProfileCard', () => {
       />,
     );
 
-    expect(screen.getByLabelText(/пол/i)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^пол$/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/возраст/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/место жительства/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/уровень образования/i)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /политик/i })).not.toBeChecked();
+    expect(screen.getByRole('link', { name: /политик/i })).toHaveAttribute('href', '/privacy');
     expect(screen.getByRole('button', { name: /начать тестирование/i })).toBeInTheDocument();
   });
 });

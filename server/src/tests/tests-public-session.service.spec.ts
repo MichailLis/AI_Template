@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
@@ -52,6 +53,7 @@ describe('TestsPublicSessionService', () => {
   let enqueueAttemptAnalysisMock: jest.Mock;
   let toPublicAnalysisResponseMock: jest.Mock;
   let toAttemptStatusMock: jest.Mock;
+  let getActivePolicySnapshotMock: jest.Mock;
   let getProfessionAtlasUrlMock: jest.Mock;
   let saveEnrichedAnalysisMock: jest.Mock;
   let transactionMock: jest.Mock;
@@ -80,6 +82,11 @@ describe('TestsPublicSessionService', () => {
     enqueueAttemptAnalysisMock = jest.fn();
     toPublicAnalysisResponseMock = jest.fn((analysis: unknown) => analysis);
     toAttemptStatusMock = jest.fn((attempt: { status: string }) => attempt.status);
+    getActivePolicySnapshotMock = jest.fn().mockResolvedValue({
+      version: '2026-07-09',
+      publishedAt: new Date('2026-07-09T00:00:00.000Z'),
+      content: 'Политика',
+    });
     getProfessionAtlasUrlMock = jest.fn().mockResolvedValue(null);
     saveEnrichedAnalysisMock = jest.fn();
     txMock = {
@@ -124,6 +131,9 @@ describe('TestsPublicSessionService', () => {
       prismaMock as unknown as PrismaService,
       publicLinkServiceMock as unknown as TestsPublicLinkService,
       analysisServiceMock as unknown as TestsAnalysisService,
+      {
+        getActivePolicySnapshot: getActivePolicySnapshotMock,
+      } as unknown as PrivacyPolicySettingsService,
       {
         getProfessionAtlasUrl: getProfessionAtlasUrlMock,
       } as unknown as ProfessionAtlasSettingsService,
@@ -188,6 +198,11 @@ describe('TestsPublicSessionService', () => {
     const createCall = createAttemptMock.mock.calls[0]?.[0];
     expect(createCall?.data.educationOrganization).toBe('Лицей 42');
     expect(createCall?.data.groupOrClass).toBe('ИС-21');
+    expect(createCall?.data.policyVersionSnapshot).toBe('2026-07-09');
+    expect(createCall?.data.policyPublishedAtSnapshot).toEqual(
+      new Date('2026-07-09T00:00:00.000Z'),
+    );
+    expect(getActivePolicySnapshotMock).toHaveBeenCalledWith();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-new');
     expect(result.session.sessionToken).toBe('resume-new');
   });
