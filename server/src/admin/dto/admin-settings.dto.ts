@@ -53,6 +53,7 @@ export const PrivacyPolicySettingsSchema = z.object({
   version: z.string(),
   publishedAt: z.string().datetime(),
   content: z.string(),
+  operatorFullName: z.string(),
   updatedAt: z.string().datetime().nullable(),
 });
 
@@ -69,6 +70,7 @@ export const UpdatePrivacyPolicySchema = z.object({
   version: z.string().trim().min(1).max(64),
   publishedAt: z.string().datetime(),
   content: z.string().trim().min(1).max(160000),
+  operatorFullName: z.string().trim().min(1).max(512),
 });
 
 export class AdminOpenRouterSettingsResponseDto extends createZodDto(

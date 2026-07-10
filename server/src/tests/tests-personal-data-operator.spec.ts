@@ -16,11 +16,16 @@ describe('resolvePersonalDataOperator', () => {
 
   it('resolves the exact platform operator for PUBLIC without reading an organization', async () => {
     await expect(
-      resolvePersonalDataOperator(prismaMock as unknown as PrismaService, 'PUBLIC', 42),
+      resolvePersonalDataOperator(
+        prismaMock as unknown as PrismaService,
+        'PUBLIC',
+        42,
+        'ООО «Новый оператор»',
+      ),
     ).resolves.toEqual({
       processingMode: 'PUBLIC',
       operatorEducationOrganizationId: null,
-      operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+      operatorFullNameSnapshot: 'ООО «Новый оператор»',
       operatorShortNameSnapshot: null,
       operatorPrivacyPolicyUrlSnapshot: '/privacy',
       operatorConsentDocumentUrlSnapshot: null,

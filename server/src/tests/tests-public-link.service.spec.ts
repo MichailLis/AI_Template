@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
@@ -48,6 +49,9 @@ describe('TestsPublicLinkService', () => {
     accents: { accentColor: '#00a889' },
   };
   let service: TestsPublicLinkService;
+  let privacyPolicySettingsService: {
+    getPlatformOperatorFullName: jest.Mock;
+  };
   let prismaMock: {
     educationOrganization: PrismaEducationOrganizationDelegate;
     testPublicLink: PrismaTestPublicLinkDelegate;
@@ -76,10 +80,14 @@ describe('TestsPublicLinkService', () => {
     const educationOrganizationService = new TestsEducationOrganizationService(
       prismaMock as unknown as PrismaService,
     );
+    privacyPolicySettingsService = {
+      getPlatformOperatorFullName: jest.fn().mockResolvedValue('ООО «Новый оператор»'),
+    };
 
     service = new TestsPublicLinkService(
       prismaMock as unknown as PrismaService,
       educationOrganizationService,
+      privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
@@ -337,7 +345,7 @@ describe('TestsPublicLinkService', () => {
       expect.objectContaining({
         educationOrganizationId: 7,
         personalDataProcessingMode: 'PUBLIC',
-        operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorFullNameSnapshot: 'ООО «Новый оператор»',
         operatorShortNameSnapshot: null,
         operatorPrivacyPolicyUrlSnapshot: '/privacy',
         operatorConsentDocumentUrlSnapshot: null,
@@ -556,7 +564,7 @@ describe('TestsPublicLinkService', () => {
     expect(prismaMock.testPublicLink.update.mock.calls[0]?.[0].data).toEqual(
       expect.objectContaining({
         personalDataProcessingMode: 'PUBLIC',
-        operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorFullNameSnapshot: 'ООО «Новый оператор»',
         operatorShortNameSnapshot: null,
         operatorPrivacyPolicyUrlSnapshot: '/privacy',
         operatorConsentDocumentUrlSnapshot: null,

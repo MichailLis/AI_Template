@@ -11,19 +11,30 @@ jest.mock('../common/authz/admin-access.utils', () => ({
 describe('PrivacyPolicySettingsService', () => {
   let service: PrivacyPolicySettingsService;
   let prismaMock: {
+    $transaction: jest.Mock;
     appSetting: {
       findUnique: jest.Mock;
       upsert: jest.Mock;
+    };
+    testPublicLink: {
+      updateMany: jest.Mock;
     };
   };
 
   beforeEach(() => {
     prismaMock = {
+      $transaction: jest.fn(),
       appSetting: {
         findUnique: jest.fn(),
         upsert: jest.fn(),
       },
+      testPublicLink: {
+        updateMany: jest.fn(),
+      },
     };
+    prismaMock.$transaction.mockImplementation(
+      (callback: (transaction: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
     service = new PrivacyPolicySettingsService(prismaMock as unknown as PrismaService);
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
@@ -94,6 +105,24 @@ describe('PrivacyPolicySettingsService', () => {
     expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
   });
 
+  it('returns the default platform operator name for legacy stored policy settings', async () => {
+    prismaMock.appSetting.findUnique.mockResolvedValue({
+      key: 'privacy.policy',
+      value: JSON.stringify({
+        version: '2026-07-10',
+        publishedAt: '2026-07-10T00:00:00.000Z',
+        content: 'Опубликованная политика',
+      }),
+      updatedAt: new Date('2026-07-10T12:00:00.000Z'),
+    });
+
+    await expect(service.getAdminPrivacyPolicy(3)).resolves.toMatchObject({
+      privacyPolicy: {
+        operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+      },
+    });
+  });
+
   it('saves trimmed policy settings as JSON', async () => {
     prismaMock.appSetting.upsert.mockResolvedValue({
       key: 'privacy.policy',
@@ -110,12 +139,14 @@ describe('PrivacyPolicySettingsService', () => {
         version: ' 2026-07-10 ',
         publishedAt: '2026-07-10T00:00:00.000Z',
         content: ' Новая политика ',
+        operatorFullName: ' ООО «Новый оператор» ',
       }),
     ).resolves.toEqual({
       privacyPolicy: {
         version: '2026-07-10',
         publishedAt: '2026-07-10T00:00:00.000Z',
         content: 'Новая политика',
+        operatorFullName: 'ООО «Новый оператор»',
         updatedAt: '2026-07-10T12:00:00.000Z',
       },
     });
@@ -131,6 +162,7 @@ describe('PrivacyPolicySettingsService', () => {
           version: '2026-07-10',
           publishedAt: '2026-07-10T00:00:00.000Z',
           content: 'Новая политика',
+          operatorFullName: 'ООО «Новый оператор»',
         }),
       },
       update: {
@@ -138,8 +170,14 @@ describe('PrivacyPolicySettingsService', () => {
           version: '2026-07-10',
           publishedAt: '2026-07-10T00:00:00.000Z',
           content: 'Новая политика',
+          operatorFullName: 'ООО «Новый оператор»',
         }),
       },
+    });
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    expect(prismaMock.testPublicLink.updateMany).toHaveBeenCalledWith({
+      where: { personalDataProcessingMode: 'PUBLIC' },
+      data: { operatorFullNameSnapshot: 'ООО «Новый оператор»' },
     });
   });
 
@@ -149,10 +187,25 @@ describe('PrivacyPolicySettingsService', () => {
         version: '2026-07-10',
         publishedAt: '2026-07-10T00:00:00.000Z',
         content: '   ',
+        operatorFullName: 'ООО «Оператор»',
       }),
     ).rejects.toThrow(BadRequestException);
 
     expect(prismaMock.appSetting.upsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty platform operator name before saving', async () => {
+    await expect(
+      service.updatePrivacyPolicy(3, {
+        version: '2026-07-10',
+        publishedAt: '2026-07-10T00:00:00.000Z',
+        content: 'Политика',
+        operatorFullName: '   ',
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(prismaMock.testPublicLink.updateMany).not.toHaveBeenCalled();
   });
 
   it('returns active policy snapshot for new attempts', async () => {

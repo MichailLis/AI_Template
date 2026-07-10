@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { PersonalDataProcessingMode } from '@prisma/client';
 
+import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { PrismaService } from '../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
@@ -100,7 +101,25 @@ export class TestsPublicLinkService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly educationOrganizationService: TestsEducationOrganizationService,
+    private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
   ) {}
+
+  private async resolveOperator(
+    processingMode: PersonalDataProcessingMode,
+    educationOrganizationId?: number | null,
+  ) {
+    const platformOperatorFullName =
+      processingMode === 'PUBLIC'
+        ? await this.privacyPolicySettingsService.getPlatformOperatorFullName()
+        : undefined;
+
+    return resolvePersonalDataOperator(
+      this.prisma,
+      processingMode,
+      educationOrganizationId,
+      platformOperatorFullName,
+    );
+  }
 
   private async ensurePublishedVersion(versionId: number) {
     const version = await this.prisma.testTopicVersion.findUnique({
@@ -158,8 +177,7 @@ export class TestsPublicLinkService {
     await this.ensurePublishedVersion(dto.publishedVersionId);
     const personalDataProcessingMode: PersonalDataProcessingMode =
       dto.personalDataProcessingMode ?? DEFAULT_PERSONAL_DATA_PROCESSING_MODE;
-    const operator = await resolvePersonalDataOperator(
-      this.prisma,
+    const operator = await this.resolveOperator(
       personalDataProcessingMode,
       dto.educationOrganizationId,
     );
@@ -291,8 +309,7 @@ export class TestsPublicLinkService {
     let operator: ResolvedPersonalDataOperator | undefined;
 
     if (shouldRefreshOperator) {
-      operator = await resolvePersonalDataOperator(
-        this.prisma,
+      operator = await this.resolveOperator(
         personalDataProcessingMode,
         effectiveEducationOrganizationId,
       );
