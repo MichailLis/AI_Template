@@ -35,6 +35,11 @@ describe('PublicPrivacyConsent', () => {
     expect(checkbox).toBeRequired();
     expect(link).toHaveAttribute('href', '/privacy');
     expect(link).not.toHaveAttribute('target');
+    expect(link.closest('label')).toBeNull();
+
+    fireEvent.click(link);
+
+    expect(onCheckedChange).not.toHaveBeenCalled();
 
     fireEvent.click(checkbox);
 
@@ -60,6 +65,7 @@ describe('PublicPrivacyConsent', () => {
     expect(policyLink).toHaveAttribute('href', 'https://school.example/privacy');
     expect(consentLink).toHaveAttribute('href', 'https://school.example/consent');
     for (const link of [policyLink, consentLink]) {
+      expect(link.closest('label')).toBeNull();
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer');
     }

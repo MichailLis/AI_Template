@@ -1,7 +1,5 @@
 import { cn } from '@/shared/lib/utils';
 
-import { getPublicDocumentLinkProps } from './public-document-link';
-
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 
 interface PublicPersonalDataOperatorProps {
@@ -47,13 +45,6 @@ export function PublicPersonalDataOperator({
         ) : (
           <p className="font-semibold">{personalData.operatorFullName}</p>
         )}
-        <a
-          href={personalData.privacyPolicyUrl}
-          {...getPublicDocumentLinkProps(personalData.privacyPolicyUrl)}
-          className="inline-block font-medium text-primary underline underline-offset-4"
-        >
-          Политика обработки персональных данных
-        </a>
       </div>
     </section>
   );
