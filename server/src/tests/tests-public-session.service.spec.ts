@@ -152,7 +152,9 @@ describe('TestsPublicSessionService', () => {
     getAccessiblePublicLinkByCodeMock.mockResolvedValue(
       createAccessibleLinkFixture({
         educationOrganization: {
+          id: 42,
           name: 'Лицей 42',
+          logoUrl: null,
           groupValidationMode: 'STRICT',
           groupValidationPattern: '^\\d{2}[A-Z]$',
           groupValidationHint: 'Неверный формат группы',
@@ -174,7 +176,9 @@ describe('TestsPublicSessionService', () => {
     getAccessiblePublicLinkByCodeMock.mockResolvedValue(
       createAccessibleLinkFixture({
         educationOrganization: {
+          id: 42,
           name: 'Лицей 42',
+          logoUrl: null,
           groupValidationMode: 'NONE',
           groupValidationPattern: null,
           groupValidationHint: null,
@@ -358,7 +362,9 @@ describe('TestsPublicSessionService', () => {
         allowResume: true,
         maxAttemptsPerStudent: 3,
         educationOrganization: {
+          id: 42,
           name: 'Лицей 42',
+          logoUrl: null,
           groupValidationMode: 'NONE',
           groupValidationPattern: null,
           groupValidationHint: null,
@@ -429,6 +435,7 @@ describe('TestsPublicSessionService', () => {
     const result = await service.startSessionByCode('ABC123', createPublicSessionStartDto());
 
     expect(createAttemptMock).not.toHaveBeenCalled();
+    expect(txMock.testStudentAttempt.update).not.toHaveBeenCalled();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
     expect(result.session.sessionToken).toBe('resume-existing');
   });

@@ -1,6 +1,7 @@
 import {
   AdminCreatePublicLinkSchema,
   AdminCreateEducationOrganizationSchema,
+  AdminEducationOrganizationSchema,
   AdminPublicAttemptDetailResponseSchema,
   AdminPublicLinkSchema,
   AdminUpdateEducationOrganizationSchema,
@@ -140,6 +141,12 @@ describe('tests link DTO profile mode fields', () => {
       topicId: 2,
       educationOrganizationId: null,
       educationOrganizationName: null,
+      personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      operatorFullNameSnapshot:
+        'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
+      operatorShortNameSnapshot: 'МАОУ «Лицей № 42»',
+      operatorPrivacyPolicyUrlSnapshot: 'https://example.edu/privacy',
+      operatorConsentDocumentUrlSnapshot: null,
       entryProfileMode: 'EDUCATION',
       publicTemplate: 'POLUS',
       publicBranding,
@@ -162,6 +169,14 @@ describe('tests link DTO profile mode fields', () => {
     expect(result.entryProfileMode).toBe('EDUCATION');
     expect(result.publicTemplate).toBe('POLUS');
     expect(result.publicBranding).toEqual(publicBranding);
+    expect(result).toMatchObject({
+      personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      operatorFullNameSnapshot:
+        'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
+      operatorShortNameSnapshot: 'МАОУ «Лицей № 42»',
+      operatorPrivacyPolicyUrlSnapshot: 'https://example.edu/privacy',
+      operatorConsentDocumentUrlSnapshot: null,
+    });
   });
 
   it('returns profession atlas URL in admin attempt detail response', () => {
@@ -192,5 +207,146 @@ describe('tests link DTO profile mode fields', () => {
     });
 
     expect(result.professionAtlasUrl).toBe('https://atlas.example/professions');
+  });
+});
+
+describe('tests link DTO personal data contracts', () => {
+  const createPublicLinkInput = {
+    publishedVersionId: 10,
+    consentVersion: 'v1',
+    consentText: 'Согласие',
+  };
+  const educationOrganizationResponse = {
+    id: 42,
+    name: 'Лицей 42',
+    fullName: 'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
+    shortName: 'МАОУ «Лицей № 42»',
+    inn: '1234567890',
+    ogrn: '1234567890123',
+    legalAddress: 'Казань, ул. Примерная, 1',
+    email: 'office@example.edu',
+    phone: '+7 900 000-00-00',
+    privacyPolicyUrl: 'https://example.edu/privacy',
+    consentDocumentUrl: null,
+    logoUrl: 'http://example.edu/logo.svg',
+    personalDataReady: true,
+    isActive: true,
+    groupValidationMode: 'NONE',
+    groupValidationPattern: null,
+    groupValidationExample: null,
+    groupValidationHint: null,
+    linksCount: 1,
+    activeLinksCount: 1,
+    attemptsCount: 2,
+    createdAt: '2026-07-10T10:00:00.000Z',
+    updatedAt: '2026-07-10T10:00:00.000Z',
+  } as const;
+
+  it('defaults public links to PUBLIC personal data processing', () => {
+    const result = AdminCreatePublicLinkSchema.parse(createPublicLinkInput);
+
+    expect(result.personalDataProcessingMode).toBe('PUBLIC');
+  });
+
+  it('requires an education organization for processing on its behalf', () => {
+    expect(
+      AdminCreatePublicLinkSchema.safeParse({
+        ...createPublicLinkInput,
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      }).success,
+    ).toBe(false);
+    expect(
+      AdminUpdatePublicLinkSchema.safeParse({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      }).success,
+    ).toBe(false);
+
+    expect(
+      AdminCreatePublicLinkSchema.safeParse({
+        ...createPublicLinkInput,
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        educationOrganizationId: 42,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('continues to allow an optional education organization for PUBLIC links', () => {
+    expect(
+      AdminCreatePublicLinkSchema.safeParse({
+        ...createPublicLinkInput,
+        personalDataProcessingMode: 'PUBLIC',
+        educationOrganizationId: 42,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('accepts nullable organization identity, contact, and document fields', () => {
+    const result = AdminCreateEducationOrganizationSchema.parse({
+      name: 'Лицей 42',
+      fullName: 'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
+      shortName: 'МАОУ «Лицей № 42»',
+      inn: '1234567890',
+      ogrn: '1234567890123',
+      legalAddress: 'Казань, ул. Примерная, 1',
+      email: 'office@example.edu',
+      phone: '+7 900 000-00-00',
+      privacyPolicyUrl: 'https://example.edu/privacy',
+      consentDocumentUrl: null,
+      logoUrl: 'https://example.edu/logo.svg',
+    });
+
+    expect(result).toMatchObject({
+      shortName: 'МАОУ «Лицей № 42»',
+      consentDocumentUrl: null,
+    });
+  });
+
+  it.each(['privacyPolicyUrl', 'consentDocumentUrl', 'logoUrl'] as const)(
+    'rejects an invalid non-null %s',
+    (field) => {
+      const result = AdminUpdateEducationOrganizationSchema.safeParse({ [field]: 'not-a-url' });
+
+      expect(result.success).toBe(false);
+    },
+  );
+
+  it.each(['privacyPolicyUrl', 'consentDocumentUrl', 'logoUrl'] as const)(
+    'accepts HTTP(S) %s values in input and response schemas',
+    (field) => {
+      expect(
+        AdminUpdateEducationOrganizationSchema.safeParse({
+          [field]: 'http://example.edu/document',
+        }).success,
+      ).toBe(true);
+      expect(
+        AdminEducationOrganizationSchema.safeParse({
+          ...educationOrganizationResponse,
+          [field]: 'https://example.edu/document',
+        }).success,
+      ).toBe(true);
+    },
+  );
+
+  it.each(['javascript:alert(1)', 'data:text/plain,private', 'ftp://example.edu/document'])(
+    'rejects non-HTTP organization URLs in input and response schemas: %s',
+    (url) => {
+      for (const field of ['privacyPolicyUrl', 'consentDocumentUrl', 'logoUrl'] as const) {
+        expect(AdminUpdateEducationOrganizationSchema.safeParse({ [field]: url }).success).toBe(
+          false,
+        );
+        expect(
+          AdminEducationOrganizationSchema.safeParse({
+            ...educationOrganizationResponse,
+            [field]: url,
+          }).success,
+        ).toBe(false);
+      }
+    },
+  );
+
+  it('returns the computed personal data readiness flag for an education organization', () => {
+    const result = AdminEducationOrganizationSchema.parse(educationOrganizationResponse);
+
+    expect(result.personalDataReady).toBe(true);
   });
 });

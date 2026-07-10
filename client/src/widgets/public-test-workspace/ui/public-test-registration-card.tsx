@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { PublicPersonalDataOperator } from './public-personal-data-operator';
 import { PublicPrivacyConsent } from './public-privacy-consent';
 import { RegistrationDemographicFields } from './public-test-registration-demographic-fields';
 
 import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
+import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 
 type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
@@ -23,6 +25,7 @@ type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
 
 interface PublicTestRegistrationCardProps {
   formState: StudentFormState;
+  personalData: PublicLinkAccessResponseDtoPersonalData;
   demographicFormState?: DemographicFormState;
   lockedEducationOrganization: string | null;
   groupValidationMode: GroupValidationMode;
@@ -225,6 +228,7 @@ function SubmitButton({ isSubmitting }: SubmitButtonProps) {
 
 export function PublicTestRegistrationCard({
   formState,
+  personalData,
   demographicFormState,
   lockedEducationOrganization,
   groupValidationMode,
@@ -248,6 +252,7 @@ export function PublicTestRegistrationCard({
 
         <CardContent className="px-6 pb-6">
           <form className="space-y-4" onSubmit={onSubmit}>
+            <PublicPersonalDataOperator personalData={personalData} />
             <div className="grid gap-4 md:grid-cols-2">
               <IdentityFields
                 formState={formState}
@@ -277,6 +282,7 @@ export function PublicTestRegistrationCard({
 
             <PublicPrivacyConsent
               checked={formState.consentAccepted}
+              personalData={personalData}
               onCheckedChange={(checked) => onFieldChange('consentAccepted', checked)}
             />
             <SubmitButton isSubmitting={isSubmitting} />

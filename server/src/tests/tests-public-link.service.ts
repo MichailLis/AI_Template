@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import type { PersonalDataProcessingMode } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import type {
@@ -16,6 +17,12 @@ import { TestsEducationOrganizationService } from './tests-education-organizatio
 import { toPrismaPublicBranding, toPublicBrandingResponse } from './tests-public-branding.utils';
 import { mapAdminPublicLink } from './tests-public-link.mapper';
 import {
+  PUBLIC_OPERATOR_FULL_NAME,
+  PUBLIC_PRIVACY_POLICY_URL,
+  resolvePersonalDataOperator,
+  type ResolvedPersonalDataOperator,
+} from './tests-personal-data-operator';
+import {
   publicLinkAccessInclude,
   publicLinkAdminInclude,
   type PublicLinkWithTopicVersion,
@@ -25,9 +32,34 @@ const DEFAULT_MAX_ATTEMPTS = 1;
 const DEFAULT_ALLOW_RESUME = true;
 const DEFAULT_ENTRY_PROFILE_MODE = 'EDUCATION';
 const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
-
+const DEFAULT_PERSONAL_DATA_PROCESSING_MODE = 'PUBLIC';
 type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 type PublicTemplate = 'STANDARD' | 'POLUS';
+
+const toOperatorSnapshotData = (operator: ResolvedPersonalDataOperator) => ({
+  personalDataProcessingMode: operator.processingMode,
+  operatorFullNameSnapshot: operator.operatorFullNameSnapshot,
+  operatorShortNameSnapshot: operator.operatorShortNameSnapshot,
+  operatorPrivacyPolicyUrlSnapshot: operator.operatorPrivacyPolicyUrlSnapshot,
+  operatorConsentDocumentUrlSnapshot: operator.operatorConsentDocumentUrlSnapshot,
+});
+
+const toPublicPersonalData = (link: PublicLinkWithTopicVersion) => {
+  const isPublicProcessing = link.personalDataProcessingMode === 'PUBLIC';
+
+  return {
+    processingMode: link.personalDataProcessingMode,
+    operatorFullName: isPublicProcessing
+      ? (link.operatorFullNameSnapshot ?? PUBLIC_OPERATOR_FULL_NAME)
+      : link.operatorFullNameSnapshot!,
+    operatorShortName: link.operatorShortNameSnapshot,
+    privacyPolicyUrl: isPublicProcessing
+      ? (link.operatorPrivacyPolicyUrlSnapshot ?? PUBLIC_PRIVACY_POLICY_URL)
+      : link.operatorPrivacyPolicyUrlSnapshot!,
+    consentDocumentUrl: link.operatorConsentDocumentUrlSnapshot,
+    logoUrl: isPublicProcessing ? null : (link.educationOrganization?.logoUrl ?? null),
+  };
+};
 
 const ensureValidPublicLinkDateValue = (value: Date | null) => {
   if (value && !Number.isFinite(value.getTime())) {
@@ -124,10 +156,19 @@ export class TestsPublicLinkService {
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkDto) {
     await ensureAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
+    const personalDataProcessingMode: PersonalDataProcessingMode =
+      dto.personalDataProcessingMode ?? DEFAULT_PERSONAL_DATA_PROCESSING_MODE;
+    const operator = await resolvePersonalDataOperator(
+      this.prisma,
+      personalDataProcessingMode,
+      dto.educationOrganizationId,
+    );
     const educationOrganizationId =
-      await this.educationOrganizationService.ensureActiveEducationOrganizationIfProvided(
-        dto.educationOrganizationId,
-      );
+      personalDataProcessingMode === 'ON_BEHALF_OF_EDUCATION_ORGANIZATION'
+        ? operator.operatorEducationOrganizationId
+        : await this.educationOrganizationService.ensureActiveEducationOrganizationIfProvided(
+            dto.educationOrganizationId,
+          );
 
     const shortCode = await this.ensureUniqueShortCode(dto.shortCode);
     const entryProfileMode = dto.entryProfileMode ?? DEFAULT_ENTRY_PROFILE_MODE;
@@ -156,6 +197,7 @@ export class TestsPublicLinkService {
         timeLimitMinutes: dto.timeLimitMinutes ?? null,
         allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
         educationOrganizationId,
+        ...toOperatorSnapshotData(operator),
         consentVersion: dto.consentVersion,
         consentTextSnapshot: dto.consentText,
         createdByUserId: userId,
@@ -207,13 +249,6 @@ export class TestsPublicLinkService {
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
     await ensureAdminAccess(this.prisma, userId);
 
-    const educationOrganizationId =
-      dto.educationOrganizationId !== undefined
-        ? await this.educationOrganizationService.ensureActiveEducationOrganizationIfProvided(
-            dto.educationOrganizationId,
-          )
-        : undefined;
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: {
@@ -223,6 +258,12 @@ export class TestsPublicLinkService {
         maxAttemptsPerStudent: true,
         startsAt: true,
         endsAt: true,
+        educationOrganizationId: true,
+        personalDataProcessingMode: true,
+        operatorFullNameSnapshot: true,
+        operatorShortNameSnapshot: true,
+        operatorPrivacyPolicyUrlSnapshot: true,
+        operatorConsentDocumentUrlSnapshot: true,
       },
     });
 
@@ -232,6 +273,38 @@ export class TestsPublicLinkService {
 
     if (existing.archivedAt) {
       throw new NotFoundException('Public link not found');
+    }
+
+    const personalDataProcessingMode =
+      dto.personalDataProcessingMode ?? existing.personalDataProcessingMode;
+    const effectiveEducationOrganizationId =
+      dto.educationOrganizationId !== undefined
+        ? dto.educationOrganizationId
+        : existing.educationOrganizationId;
+    const processingModeChanged =
+      personalDataProcessingMode !== existing.personalDataProcessingMode;
+    const educationOrganizationChanged =
+      dto.educationOrganizationId !== undefined &&
+      dto.educationOrganizationId !== existing.educationOrganizationId;
+    const shouldRefreshOperator = processingModeChanged || educationOrganizationChanged;
+    let educationOrganizationId: number | null | undefined;
+    let operator: ResolvedPersonalDataOperator | undefined;
+
+    if (shouldRefreshOperator) {
+      operator = await resolvePersonalDataOperator(
+        this.prisma,
+        personalDataProcessingMode,
+        effectiveEducationOrganizationId,
+      );
+    }
+
+    if (dto.educationOrganizationId !== undefined) {
+      educationOrganizationId =
+        personalDataProcessingMode === 'ON_BEHALF_OF_EDUCATION_ORGANIZATION'
+          ? operator?.operatorEducationOrganizationId
+          : await this.educationOrganizationService.ensureActiveEducationOrganizationIfProvided(
+              dto.educationOrganizationId,
+            );
     }
 
     const entryProfileMode = dto.entryProfileMode ?? existing.entryProfileMode;
@@ -257,6 +330,8 @@ export class TestsPublicLinkService {
         ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
         ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
         ...(educationOrganizationId !== undefined ? { educationOrganizationId } : {}),
+        ...(dto.personalDataProcessingMode !== undefined ? { personalDataProcessingMode } : {}),
+        ...(operator ? toOperatorSnapshotData(operator) : {}),
         ...(dto.consentVersion !== undefined ? { consentVersion: dto.consentVersion } : {}),
         ...(dto.consentText !== undefined ? { consentTextSnapshot: dto.consentText } : {}),
       },
@@ -424,6 +499,7 @@ export class TestsPublicLinkService {
       endsAt: toOptionalIsoString(link.endsAt),
       consentVersion: link.consentVersion,
       consentText: link.consentTextSnapshot,
+      personalData: toPublicPersonalData(link),
     };
   }
 

@@ -8,6 +8,10 @@ describe('Prisma analysis prompt schema', () => {
     .filter((entry) => entry.isDirectory())
     .map((entry) => readFileSync(join(migrationsDir, entry.name, 'migration.sql'), 'utf8'))
     .join('\n');
+  const personalDataMigrationSql = readFileSync(
+    join(migrationsDir, '20260710000000_add_personal_data_processing_modes', 'migration.sql'),
+    'utf8',
+  );
 
   it('declares versioned analysis prompt models', () => {
     expect(schema).toContain('model AnalysisPrompt');
@@ -56,6 +60,67 @@ describe('Prisma analysis prompt schema', () => {
     expect(schema).toContain('@@index([publicLinkId, startedAt])');
     expect(migrationSql).toContain(
       'CREATE INDEX "test_student_attempts_publicLinkId_startedAt_idx"',
+    );
+  });
+
+  it('declares personal data processing modes and nullable operator metadata', () => {
+    expect(schema).toMatch(
+      /enum PersonalDataProcessingMode\s*{\s*PUBLIC\s+ON_BEHALF_OF_EDUCATION_ORGANIZATION\s*}/,
+    );
+    expect(schema).toMatch(
+      /personalDataProcessingMode\s+PersonalDataProcessingMode\s+@default\(PUBLIC\)/,
+    );
+
+    for (const field of [
+      'fullName',
+      'shortName',
+      'inn',
+      'ogrn',
+      'legalAddress',
+      'email',
+      'phone',
+      'privacyPolicyUrl',
+      'consentDocumentUrl',
+      'logoUrl',
+    ]) {
+      expect(schema).toMatch(new RegExp(`${field}\\s+String\\?`));
+    }
+
+    for (const field of [
+      'operatorFullNameSnapshot',
+      'operatorShortNameSnapshot',
+      'operatorPrivacyPolicyUrlSnapshot',
+      'operatorConsentDocumentUrlSnapshot',
+    ]) {
+      expect(schema.match(new RegExp(`${field}\\s+String\\?`, 'g'))).toHaveLength(2);
+    }
+  });
+
+  it('links attempt operator organizations with SetNull and indexes the nullable foreign key', () => {
+    expect(schema).toMatch(/operatorEducationOrganizationId\s+Int\?/);
+    expect(schema).toMatch(
+      /operatorEducationOrganization\s+EducationOrganization\?\s+@relation\([^\n]*onDelete:\s*SetNull\)/,
+    );
+    expect(schema).toContain('@@index([operatorEducationOrganizationId])');
+  });
+
+  it('migrates existing links to the PUBLIC operator without rewriting historical attempts', () => {
+    expect(personalDataMigrationSql).toContain('CREATE TYPE "PersonalDataProcessingMode"');
+    expect(personalDataMigrationSql).toContain(
+      '"personalDataProcessingMode" "PersonalDataProcessingMode" NOT NULL DEFAULT \'PUBLIC\'',
+    );
+    expect(personalDataMigrationSql).toContain(
+      'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+    );
+    expect(personalDataMigrationSql).toContain('"operatorPrivacyPolicyUrlSnapshot" = \'/privacy\'');
+    expect(personalDataMigrationSql).toContain(
+      'FOREIGN KEY ("operatorEducationOrganizationId") REFERENCES "education_organizations"("id") ON DELETE SET NULL',
+    );
+    expect(personalDataMigrationSql).toContain(
+      'CREATE INDEX "test_student_attempts_operatorEducationOrganizationId_idx"',
+    );
+    expect(personalDataMigrationSql).not.toMatch(
+      /UPDATE\s+"test_student_attempts"[\s\S]*operatorFullNameSnapshot/i,
     );
   });
 

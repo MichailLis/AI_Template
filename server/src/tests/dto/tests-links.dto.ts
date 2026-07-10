@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   EntryProfileModeSchema,
+  PersonalDataProcessingModeSchema,
   PublicBrandingConfigSchema,
   PublicTemplateSchema,
   PublicSessionAnalysisProviderModeSchema,
@@ -13,6 +14,15 @@ import {
 } from './tests-public.dto';
 
 const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
+
+const HttpUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(2048)
+  .refine((value) => /^https?:\/\//i.test(value), {
+    message: 'URL must use http or https',
+  });
 
 const isRegexPatternValid = (pattern: string) => {
   try {
@@ -38,6 +48,7 @@ export const AdminCreatePublicLinkSchema = z
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
     educationOrganizationId: z.number().int().min(1).nullable().optional(),
+    personalDataProcessingMode: PersonalDataProcessingModeSchema.default('PUBLIC'),
     consentVersion: z.string().trim().min(1).max(64),
     consentText: z.string().trim().min(1).max(16000),
   })
@@ -53,6 +64,15 @@ export const AdminCreatePublicLinkSchema = z
       message: 'endsAt must be greater than startsAt',
       path: ['endsAt'],
     },
+  )
+  .refine(
+    (value) =>
+      value.personalDataProcessingMode !== 'ON_BEHALF_OF_EDUCATION_ORGANIZATION' ||
+      value.educationOrganizationId != null,
+    {
+      message: 'educationOrganizationId is required for organization processing',
+      path: ['educationOrganizationId'],
+    },
   );
 
 export const AdminUpdatePublicLinkSchema = z
@@ -66,6 +86,7 @@ export const AdminUpdatePublicLinkSchema = z
     timeLimitMinutes: z.number().int().min(1).max(600).nullable().optional(),
     allowResume: z.boolean().optional(),
     educationOrganizationId: z.number().int().min(1).nullable().optional(),
+    personalDataProcessingMode: PersonalDataProcessingModeSchema.optional(),
     consentVersion: z.string().trim().min(1).max(64).optional(),
     consentText: z.string().trim().min(1).max(16000).optional(),
   })
@@ -81,6 +102,15 @@ export const AdminUpdatePublicLinkSchema = z
       message: 'endsAt must be greater than startsAt',
       path: ['endsAt'],
     },
+  )
+  .refine(
+    (value) =>
+      value.personalDataProcessingMode !== 'ON_BEHALF_OF_EDUCATION_ORGANIZATION' ||
+      value.educationOrganizationId != null,
+    {
+      message: 'educationOrganizationId is required for organization processing',
+      path: ['educationOrganizationId'],
+    },
   );
 
 export const AdminPublicLinkSchema = z.object({
@@ -89,6 +119,11 @@ export const AdminPublicLinkSchema = z.object({
   topicId: z.number(),
   educationOrganizationId: z.number().nullable(),
   educationOrganizationName: z.string().nullable(),
+  personalDataProcessingMode: PersonalDataProcessingModeSchema,
+  operatorFullNameSnapshot: z.string().nullable(),
+  operatorShortNameSnapshot: z.string().nullable(),
+  operatorPrivacyPolicyUrlSnapshot: z.string().nullable(),
+  operatorConsentDocumentUrlSnapshot: z.string().nullable(),
   entryProfileMode: EntryProfileModeSchema,
   publicTemplate: PublicTemplateSchema,
   publicBranding: PublicBrandingConfigSchema.nullable(),
@@ -111,6 +146,16 @@ export const AdminPublicLinkSchema = z.object({
 export const AdminCreateEducationOrganizationSchema = z
   .object({
     name: z.string().trim().min(2).max(300),
+    fullName: z.string().trim().min(1).max(500).nullable().optional(),
+    shortName: z.string().trim().min(1).max(300).nullable().optional(),
+    inn: z.string().trim().min(1).max(20).nullable().optional(),
+    ogrn: z.string().trim().min(1).max(20).nullable().optional(),
+    legalAddress: z.string().trim().min(1).max(500).nullable().optional(),
+    email: z.string().trim().min(1).max(320).nullable().optional(),
+    phone: z.string().trim().min(1).max(50).nullable().optional(),
+    privacyPolicyUrl: HttpUrlSchema.nullable().optional(),
+    consentDocumentUrl: HttpUrlSchema.nullable().optional(),
+    logoUrl: HttpUrlSchema.nullable().optional(),
     groupValidationMode: GroupOrClassValidationModeSchema.optional(),
     groupValidationPattern: z.string().trim().min(1).max(300).nullable().optional(),
     groupValidationExample: z.string().trim().min(1).max(120).nullable().optional(),
@@ -140,6 +185,16 @@ export const AdminCreateEducationOrganizationSchema = z
 export const AdminUpdateEducationOrganizationSchema = z
   .object({
     name: z.string().trim().min(2).max(300).optional(),
+    fullName: z.string().trim().min(1).max(500).nullable().optional(),
+    shortName: z.string().trim().min(1).max(300).nullable().optional(),
+    inn: z.string().trim().min(1).max(20).nullable().optional(),
+    ogrn: z.string().trim().min(1).max(20).nullable().optional(),
+    legalAddress: z.string().trim().min(1).max(500).nullable().optional(),
+    email: z.string().trim().min(1).max(320).nullable().optional(),
+    phone: z.string().trim().min(1).max(50).nullable().optional(),
+    privacyPolicyUrl: HttpUrlSchema.nullable().optional(),
+    consentDocumentUrl: HttpUrlSchema.nullable().optional(),
+    logoUrl: HttpUrlSchema.nullable().optional(),
     isActive: z.boolean().optional(),
     groupValidationMode: GroupOrClassValidationModeSchema.optional(),
     groupValidationPattern: z.string().trim().min(1).max(300).nullable().optional(),
@@ -161,6 +216,17 @@ export const AdminUpdateEducationOrganizationSchema = z
 export const AdminEducationOrganizationSchema = z.object({
   id: z.number(),
   name: z.string(),
+  fullName: z.string().nullable(),
+  shortName: z.string().nullable(),
+  inn: z.string().nullable(),
+  ogrn: z.string().nullable(),
+  legalAddress: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  privacyPolicyUrl: HttpUrlSchema.nullable(),
+  consentDocumentUrl: HttpUrlSchema.nullable(),
+  logoUrl: HttpUrlSchema.nullable(),
+  personalDataReady: z.boolean(),
   isActive: z.boolean(),
   groupValidationMode: GroupOrClassValidationModeSchema,
   groupValidationPattern: z.string().nullable(),

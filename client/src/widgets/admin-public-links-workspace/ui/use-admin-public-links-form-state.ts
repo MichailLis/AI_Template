@@ -4,6 +4,7 @@ import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
 import type {
   PublicLinkEntryProfileMode,
   PublicLinkTemplate,
+  PersonalDataProcessingMode,
 } from './public-link-create-card.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
@@ -22,6 +23,8 @@ export function useAdminPublicLinksFormState() {
     null,
   );
   const [newEducationOrganizationName, setNewEducationOrganizationName] = useState('');
+  const [newPersonalDataProcessingMode, setNewPersonalDataProcessingMode] =
+    useState<PersonalDataProcessingMode>('PUBLIC');
   const [groupValidationMode, setGroupValidationMode] = useState<GroupValidationMode>('NONE');
   const [groupValidationPattern, setGroupValidationPattern] = useState('');
   const [groupValidationExample, setGroupValidationExample] = useState('');
@@ -63,6 +66,11 @@ export function useAdminPublicLinksFormState() {
     setGroupValidationHint(selectedOrganization.groupValidationHint ?? '');
   };
 
+  const resetNewPublicLinkForm = () => {
+    setNewPublicShortCode('');
+    setNewPersonalDataProcessingMode('PUBLIC');
+  };
+
   return {
     selectedTopicId,
     setSelectedTopicId,
@@ -72,6 +80,8 @@ export function useAdminPublicLinksFormState() {
     setNewEducationOrganizationIdState,
     newEducationOrganizationName,
     setNewEducationOrganizationName,
+    newPersonalDataProcessingMode,
+    setNewPersonalDataProcessingMode,
     groupValidationMode,
     setGroupValidationMode,
     groupValidationPattern,
@@ -103,5 +113,6 @@ export function useAdminPublicLinksFormState() {
     publicLinksSearch,
     setPublicLinksSearch,
     applyEducationOrganizationSelection,
+    resetNewPublicLinkForm,
   };
 }

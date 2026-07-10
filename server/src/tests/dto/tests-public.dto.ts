@@ -135,6 +135,20 @@ export const PublicSessionStatusSchema = z.enum([
 
 export const PublicGroupValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
 
+export const PersonalDataProcessingModeSchema = z.enum([
+  'PUBLIC',
+  'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+]);
+
+export const PersonalDataSchema = z.object({
+  processingMode: PersonalDataProcessingModeSchema,
+  operatorFullName: z.string(),
+  operatorShortName: z.string().nullable(),
+  privacyPolicyUrl: z.string(),
+  consentDocumentUrl: z.string().nullable(),
+  logoUrl: z.string().nullable(),
+});
+
 export const PublicLinkAccessResponseSchema = z.object({
   shortCode: z.string(),
   title: z.string(),
@@ -155,6 +169,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   endsAt: z.string().nullable(),
   consentVersion: z.string(),
   consentText: z.string(),
+  personalData: PersonalDataSchema,
 });
 
 export const PublicSessionStateSchema = z.object({

@@ -15,6 +15,19 @@ const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
 const isPrismaUniqueConstraintError = (error: unknown) =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 
+const normalizeNullableString = (value?: string | null) => value?.trim() || null;
+
+const isPersonalDataReady = (organization: {
+  isActive: boolean;
+  fullName: string | null;
+  shortName: string | null;
+  privacyPolicyUrl: string | null;
+}) =>
+  organization.isActive &&
+  Boolean(organization.fullName?.trim()) &&
+  Boolean(organization.shortName?.trim()) &&
+  Boolean(organization.privacyPolicyUrl?.trim());
+
 @Injectable()
 export class TestsEducationOrganizationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -55,6 +68,16 @@ export class TestsEducationOrganizationService {
     organization: {
       id: number;
       name: string;
+      fullName: string | null;
+      shortName: string | null;
+      inn: string | null;
+      ogrn: string | null;
+      legalAddress: string | null;
+      email: string | null;
+      phone: string | null;
+      privacyPolicyUrl: string | null;
+      consentDocumentUrl: string | null;
+      logoUrl: string | null;
       isActive: boolean;
       groupValidationMode: GroupOrClassValidationMode;
       groupValidationPattern: string | null;
@@ -72,6 +95,17 @@ export class TestsEducationOrganizationService {
     return {
       id: organization.id,
       name: organization.name,
+      fullName: normalizeNullableString(organization.fullName),
+      shortName: normalizeNullableString(organization.shortName),
+      inn: normalizeNullableString(organization.inn),
+      ogrn: normalizeNullableString(organization.ogrn),
+      legalAddress: normalizeNullableString(organization.legalAddress),
+      email: normalizeNullableString(organization.email),
+      phone: normalizeNullableString(organization.phone),
+      privacyPolicyUrl: normalizeNullableString(organization.privacyPolicyUrl),
+      consentDocumentUrl: normalizeNullableString(organization.consentDocumentUrl),
+      logoUrl: normalizeNullableString(organization.logoUrl),
+      personalDataReady: isPersonalDataReady(organization),
       isActive: organization.isActive,
       groupValidationMode: organization.groupValidationMode,
       groupValidationPattern: organization.groupValidationPattern,
@@ -236,6 +270,16 @@ export class TestsEducationOrganizationService {
 
     const created = await this.createEducationOrganizationRecord({
       name,
+      fullName: normalizeNullableString(dto.fullName),
+      shortName: normalizeNullableString(dto.shortName),
+      inn: normalizeNullableString(dto.inn),
+      ogrn: normalizeNullableString(dto.ogrn),
+      legalAddress: normalizeNullableString(dto.legalAddress),
+      email: normalizeNullableString(dto.email),
+      phone: normalizeNullableString(dto.phone),
+      privacyPolicyUrl: normalizeNullableString(dto.privacyPolicyUrl),
+      consentDocumentUrl: normalizeNullableString(dto.consentDocumentUrl),
+      logoUrl: normalizeNullableString(dto.logoUrl),
       ...validationConfig,
     });
 
@@ -263,6 +307,16 @@ export class TestsEducationOrganizationService {
       select: {
         id: true,
         name: true,
+        fullName: true,
+        shortName: true,
+        inn: true,
+        ogrn: true,
+        legalAddress: true,
+        email: true,
+        phone: true,
+        privacyPolicyUrl: true,
+        consentDocumentUrl: true,
+        logoUrl: true,
         isActive: true,
         groupValidationMode: true,
         groupValidationPattern: true,
@@ -314,6 +368,22 @@ export class TestsEducationOrganizationService {
 
     const updated = await this.updateEducationOrganizationRecord(organizationId, {
       ...(dto.name !== undefined ? { name: nextName } : {}),
+      ...(dto.fullName !== undefined ? { fullName: normalizeNullableString(dto.fullName) } : {}),
+      ...(dto.shortName !== undefined ? { shortName: normalizeNullableString(dto.shortName) } : {}),
+      ...(dto.inn !== undefined ? { inn: normalizeNullableString(dto.inn) } : {}),
+      ...(dto.ogrn !== undefined ? { ogrn: normalizeNullableString(dto.ogrn) } : {}),
+      ...(dto.legalAddress !== undefined
+        ? { legalAddress: normalizeNullableString(dto.legalAddress) }
+        : {}),
+      ...(dto.email !== undefined ? { email: normalizeNullableString(dto.email) } : {}),
+      ...(dto.phone !== undefined ? { phone: normalizeNullableString(dto.phone) } : {}),
+      ...(dto.privacyPolicyUrl !== undefined
+        ? { privacyPolicyUrl: normalizeNullableString(dto.privacyPolicyUrl) }
+        : {}),
+      ...(dto.consentDocumentUrl !== undefined
+        ? { consentDocumentUrl: normalizeNullableString(dto.consentDocumentUrl) }
+        : {}),
+      ...(dto.logoUrl !== undefined ? { logoUrl: normalizeNullableString(dto.logoUrl) } : {}),
       ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
       ...validationConfig,
     });

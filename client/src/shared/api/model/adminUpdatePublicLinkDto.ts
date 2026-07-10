@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminUpdatePublicLinkDtoEntryProfileMode } from './adminUpdatePublicLinkDtoEntryProfileMode';
+import type { AdminUpdatePublicLinkDtoPersonalDataProcessingMode } from './adminUpdatePublicLinkDtoPersonalDataProcessingMode';
 import type { AdminUpdatePublicLinkDtoPublicBranding } from './adminUpdatePublicLinkDtoPublicBranding';
 
 export interface AdminUpdatePublicLinkDto {
@@ -41,6 +42,7 @@ export interface AdminUpdatePublicLinkDto {
    * @nullable
    */
   educationOrganizationId?: number | null;
+  personalDataProcessingMode?: AdminUpdatePublicLinkDtoPersonalDataProcessingMode;
   /**
    * @minLength 1
    * @maxLength 64

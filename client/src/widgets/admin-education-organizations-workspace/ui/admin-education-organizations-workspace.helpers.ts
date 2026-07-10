@@ -6,6 +6,7 @@ import {
   normalizeGroupValidationConfig,
 } from '@/shared/lib/group-validation';
 
+import type { EducationOrganizationOperatorValues } from './education-organization-operator-fields';
 import type { ValidationMode } from './education-organizations-create-card';
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
 
@@ -16,7 +17,7 @@ interface ValidationPayloadParams {
   hint: string;
 }
 
-export interface OrganizationEditorValues {
+export interface OrganizationEditorValues extends EducationOrganizationOperatorValues {
   name: string;
   isActive: boolean;
   validationMode: ValidationMode;
@@ -25,6 +26,34 @@ export interface OrganizationEditorValues {
   validationHint: string;
 }
 
+export const emptyOperatorFields = (): EducationOrganizationOperatorValues => ({
+  fullName: '',
+  shortName: '',
+  inn: '',
+  ogrn: '',
+  legalAddress: '',
+  email: '',
+  phone: '',
+  privacyPolicyUrl: '',
+  consentDocumentUrl: '',
+  logoUrl: '',
+});
+
+const toNullableTrimmedValue = (value: string) => value.trim() || null;
+
+export const normalizeOperatorFieldsPayload = (values: EducationOrganizationOperatorValues) => ({
+  fullName: toNullableTrimmedValue(values.fullName),
+  shortName: toNullableTrimmedValue(values.shortName),
+  inn: toNullableTrimmedValue(values.inn),
+  ogrn: toNullableTrimmedValue(values.ogrn),
+  legalAddress: toNullableTrimmedValue(values.legalAddress),
+  email: toNullableTrimmedValue(values.email),
+  phone: toNullableTrimmedValue(values.phone),
+  privacyPolicyUrl: toNullableTrimmedValue(values.privacyPolicyUrl),
+  consentDocumentUrl: toNullableTrimmedValue(values.consentDocumentUrl),
+  logoUrl: toNullableTrimmedValue(values.logoUrl),
+});
+
 export const modeLabel = GROUP_VALIDATION_MODE_LABELS;
 
 export const mapOrganizationToEditorValues = (
@@ -32,6 +61,16 @@ export const mapOrganizationToEditorValues = (
 ): OrganizationEditorValues => ({
   name: organization.name,
   isActive: organization.isActive,
+  fullName: organization.fullName ?? '',
+  shortName: organization.shortName ?? '',
+  inn: organization.inn ?? '',
+  ogrn: organization.ogrn ?? '',
+  legalAddress: organization.legalAddress ?? '',
+  email: organization.email ?? '',
+  phone: organization.phone ?? '',
+  privacyPolicyUrl: organization.privacyPolicyUrl ?? '',
+  consentDocumentUrl: organization.consentDocumentUrl ?? '',
+  logoUrl: organization.logoUrl ?? '',
   validationMode: organization.groupValidationMode as ValidationMode,
   validationPattern: organization.groupValidationPattern ?? '',
   validationExample: organization.groupValidationExample ?? '',

@@ -30,6 +30,10 @@ import {
 } from './tests-answer-validation';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { toPublicBrandingResponse } from './tests-public-branding.utils';
+import {
+  PUBLIC_OPERATOR_FULL_NAME,
+  PUBLIC_PRIVACY_POLICY_URL,
+} from './tests-personal-data-operator';
 
 type SessionStateResponse = {
   session: ReturnType<typeof mapSessionState>;
@@ -65,6 +69,22 @@ type AttemptAllocationInput = {
 };
 
 type AttemptAllocationClient = Pick<PrismaService, 'testStudentAttempt'>;
+
+const toAttemptOperatorSnapshot = (link: AccessiblePublicLink) => {
+  const isPublicProcessing = link.personalDataProcessingMode === 'PUBLIC';
+
+  return {
+    operatorEducationOrganizationId: isPublicProcessing ? null : link.educationOrganizationId,
+    operatorFullNameSnapshot: isPublicProcessing
+      ? (link.operatorFullNameSnapshot ?? PUBLIC_OPERATOR_FULL_NAME)
+      : link.operatorFullNameSnapshot,
+    operatorShortNameSnapshot: link.operatorShortNameSnapshot,
+    operatorPrivacyPolicyUrlSnapshot: isPublicProcessing
+      ? (link.operatorPrivacyPolicyUrlSnapshot ?? PUBLIC_PRIVACY_POLICY_URL)
+      : link.operatorPrivacyPolicyUrlSnapshot,
+    operatorConsentDocumentUrlSnapshot: link.operatorConsentDocumentUrlSnapshot,
+  };
+};
 
 const isAttemptNumberRaceError = (error: unknown) => {
   if (typeof error !== 'object' || error === null) {
@@ -276,6 +296,7 @@ export class TestsPublicSessionService {
         consentTextSnapshot: link.consentTextSnapshot,
         policyVersionSnapshot: activePolicy.version,
         policyPublishedAtSnapshot: activePolicy.publishedAt,
+        ...toAttemptOperatorSnapshot(link),
         resumeToken: createRandomToken(24),
         startedAt: now,
         expiresAt,

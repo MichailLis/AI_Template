@@ -10,6 +10,36 @@ import type { AdminEducationOrganizationDtoGroupValidationMode } from './adminEd
 export interface AdminEducationOrganizationDto {
   id: number;
   name: string;
+  /** @nullable */
+  fullName: string | null;
+  /** @nullable */
+  shortName: string | null;
+  /** @nullable */
+  inn: string | null;
+  /** @nullable */
+  ogrn: string | null;
+  /** @nullable */
+  legalAddress: string | null;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  phone: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  privacyPolicyUrl: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  consentDocumentUrl: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  logoUrl: string | null;
+  personalDataReady: boolean;
   isActive: boolean;
   groupValidationMode: AdminEducationOrganizationDtoGroupValidationMode;
   /** @nullable */

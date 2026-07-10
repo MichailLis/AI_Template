@@ -6,6 +6,11 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
 import {
+  EducationOrganizationOperatorFields,
+  type EducationOrganizationOperatorField,
+  type EducationOrganizationOperatorValues,
+} from './education-organization-operator-fields';
+import {
   EducationOrganizationValidationFields,
   type ValidationMode,
 } from './education-organization-validation-fields';
@@ -26,8 +31,39 @@ interface EducationOrganizationsEditCardProps {
   onEditValidationExampleChange: (value: string) => void;
   editValidationHint: string;
   onEditValidationHintChange: (value: string) => void;
+  operatorValues: EducationOrganizationOperatorValues;
+  onOperatorValueChange: (field: EducationOrganizationOperatorField, value: string) => void;
   isSaving: boolean;
   onSave: () => void;
+}
+
+function EducationOrganizationStatusBadges({
+  organization,
+}: {
+  organization: AdminEducationOrganizationsListResponseDtoOrganizationsItem;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Badge
+        variant="outline"
+        className={
+          organization.personalDataReady
+            ? adminBadgeClassNames.success
+            : adminBadgeClassNames.notice
+        }
+      >
+        {organization.personalDataReady ? 'Данные ПДн готовы' : 'Данные ПДн не готовы'}
+      </Badge>
+      <Badge
+        variant="outline"
+        className={
+          organization.isActive ? adminBadgeClassNames.success : adminBadgeClassNames.neutral
+        }
+      >
+        {organization.isActive ? 'Активно' : 'Отключено'}
+      </Badge>
+    </div>
+  );
 }
 
 export function EducationOrganizationsEditCard({
@@ -44,6 +80,8 @@ export function EducationOrganizationsEditCard({
   onEditValidationExampleChange,
   editValidationHint,
   onEditValidationHintChange,
+  operatorValues,
+  onOperatorValueChange,
   isSaving,
   onSave,
 }: EducationOrganizationsEditCardProps) {
@@ -60,16 +98,7 @@ export function EducationOrganizationsEditCard({
             </CardDescription>
           </div>
           {selectedOrganization ? (
-            <Badge
-              variant="outline"
-              className={
-                selectedOrganization.isActive
-                  ? adminBadgeClassNames.success
-                  : adminBadgeClassNames.neutral
-              }
-            >
-              {selectedOrganization.isActive ? 'Активно' : 'Отключено'}
-            </Badge>
+            <EducationOrganizationStatusBadges organization={selectedOrganization} />
           ) : null}
         </div>
       </CardHeader>
@@ -81,12 +110,13 @@ export function EducationOrganizationsEditCard({
         ) : null}
 
         <div className="space-y-2">
-          <Label htmlFor="edit-organization-name">Название</Label>
+          <Label htmlFor="edit-organization-name">Название *</Label>
           <Input
             id="edit-organization-name"
             value={editName}
             onChange={(event) => onEditNameChange(event.target.value)}
-            placeholder="Название учебного заведения"
+            placeholder="Например: Лицей № 42"
+            required
             disabled={!selectedOrganization}
           />
         </div>
@@ -100,6 +130,13 @@ export function EducationOrganizationsEditCard({
           />
           Заведение активно
         </label>
+
+        <EducationOrganizationOperatorFields
+          idPrefix="edit"
+          values={operatorValues}
+          onChange={onOperatorValueChange}
+          disabled={!selectedOrganization}
+        />
 
         <EducationOrganizationValidationFields
           idPrefix="edit"

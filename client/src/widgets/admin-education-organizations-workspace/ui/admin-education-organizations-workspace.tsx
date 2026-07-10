@@ -55,6 +55,8 @@ export function AdminEducationOrganizationsWorkspace() {
             onNewValidationExampleChange={(value) => updateCreateValue('validationExample', value)}
             newValidationHint={createValues.validationHint}
             onNewValidationHintChange={(value) => updateCreateValue('validationHint', value)}
+            operatorValues={createValues}
+            onOperatorValueChange={updateCreateValue}
             isCreating={isCreating}
             onCreate={handleCreateOrganization}
           />
@@ -73,6 +75,8 @@ export function AdminEducationOrganizationsWorkspace() {
             onEditValidationExampleChange={(value) => updateEditValue('validationExample', value)}
             editValidationHint={editValues.validationHint}
             onEditValidationHintChange={(value) => updateEditValue('validationHint', value)}
+            operatorValues={editValues}
+            onOperatorValueChange={updateEditValue}
             isSaving={isSaving}
             onSave={handleSaveOrganization}
           />

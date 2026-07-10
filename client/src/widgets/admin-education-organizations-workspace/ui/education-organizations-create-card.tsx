@@ -5,6 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import {
+  EducationOrganizationOperatorFields,
+  type EducationOrganizationOperatorField,
+  type EducationOrganizationOperatorValues,
+} from './education-organization-operator-fields';
 import { EducationOrganizationValidationFields } from './education-organization-validation-fields';
 
 import type { ValidationMode } from './education-organization-validation-fields';
@@ -22,6 +27,8 @@ interface EducationOrganizationsCreateCardProps {
   onNewValidationExampleChange: (value: string) => void;
   newValidationHint: string;
   onNewValidationHintChange: (value: string) => void;
+  operatorValues: EducationOrganizationOperatorValues;
+  onOperatorValueChange: (field: EducationOrganizationOperatorField, value: string) => void;
   isCreating: boolean;
   onCreate: () => void;
 }
@@ -37,6 +44,8 @@ export function EducationOrganizationsCreateCard({
   onNewValidationExampleChange,
   newValidationHint,
   onNewValidationHintChange,
+  operatorValues,
+  onOperatorValueChange,
   isCreating,
   onCreate,
 }: EducationOrganizationsCreateCardProps) {
@@ -57,14 +66,21 @@ export function EducationOrganizationsCreateCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">
-          <Label htmlFor="new-organization-name">Название</Label>
+          <Label htmlFor="new-organization-name">Название *</Label>
           <Input
             id="new-organization-name"
             value={newOrganizationName}
             onChange={(event) => onNewOrganizationNameChange(event.target.value)}
-            placeholder="Например: Колледж №1"
+            placeholder="Например: Лицей № 42"
+            required
           />
         </div>
+
+        <EducationOrganizationOperatorFields
+          idPrefix="new"
+          values={operatorValues}
+          onChange={onOperatorValueChange}
+        />
 
         <EducationOrganizationValidationFields
           idPrefix="new"

@@ -13,6 +13,63 @@ export interface AdminCreateEducationOrganizationDto {
    * @maxLength 300
    */
   name: string;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   * @nullable
+   */
+  fullName?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 300
+   * @nullable
+   */
+  shortName?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20
+   * @nullable
+   */
+  inn?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 20
+   * @nullable
+   */
+  ogrn?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   * @nullable
+   */
+  legalAddress?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 320
+   * @nullable
+   */
+  email?: string | null;
+  /**
+   * @minLength 1
+   * @maxLength 50
+   * @nullable
+   */
+  phone?: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  privacyPolicyUrl?: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  consentDocumentUrl?: string | null;
+  /**
+   * @maxLength 2048
+   * @nullable
+   */
+  logoUrl?: string | null;
   groupValidationMode?: AdminCreateEducationOrganizationDtoGroupValidationMode;
   /**
    * @minLength 1

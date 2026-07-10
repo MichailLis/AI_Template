@@ -11,6 +11,7 @@ import { Label } from '@/shared/ui/label';
 
 import type {
   EducationOrganizationOption,
+  PersonalDataProcessingMode,
   PublicLinkOrganizationSectionProps,
 } from './public-link-create-card.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
@@ -42,15 +43,52 @@ interface GroupValidationDetailsProps {
   isUpdatingEducationOrganization: boolean;
 }
 
+interface PersonalDataProcessingModeFieldProps {
+  value: PersonalDataProcessingMode;
+  onChange: (value: PersonalDataProcessingMode) => void;
+}
+
+function PersonalDataProcessingModeField({
+  value,
+  onChange,
+}: PersonalDataProcessingModeFieldProps) {
+  return (
+    <fieldset className="space-y-2 rounded-md border border-admin-border bg-admin-panel p-3">
+      <legend className={`px-1 text-sm font-medium ${adminClassNames.text.heading}`}>
+        Оператор персональных данных
+      </legend>
+      <label className={adminClassNames.form.checkboxLabel}>
+        <input
+          type="radio"
+          name="personal-data-processing-mode"
+          value="PUBLIC"
+          checked={value === 'PUBLIC'}
+          onChange={() => onChange('PUBLIC')}
+        />
+        Оператор — платформа
+      </label>
+      <label className={adminClassNames.form.checkboxLabel}>
+        <input
+          type="radio"
+          name="personal-data-processing-mode"
+          value="ON_BEHALF_OF_EDUCATION_ORGANIZATION"
+          checked={value === 'ON_BEHALF_OF_EDUCATION_ORGANIZATION'}
+          onChange={() => onChange('ON_BEHALF_OF_EDUCATION_ORGANIZATION')}
+        />
+        От имени учебного заведения
+      </label>
+      <p className={adminClassNames.form.fieldHint}>
+        Оператор и ссылки на документы фиксируются при сохранении публичной ссылки.
+      </p>
+    </fieldset>
+  );
+}
+
 function EducationOrganizationSelect({
   educationOrganizations,
   newEducationOrganizationId,
   onEducationOrganizationSelect,
 }: EducationOrganizationSelectProps) {
-  const activeEducationOrganizations = educationOrganizations.filter(
-    (organization) => organization.isActive,
-  );
-
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="education-organization">Заведение для ссылки</Label>
@@ -64,9 +102,9 @@ function EducationOrganizationSelect({
         className="flex"
       >
         <option value="">Не привязывать (студент заполнит сам)</option>
-        {activeEducationOrganizations.map((organization) => (
-          <option key={organization.id} value={organization.id}>
-            {organization.name}
+        {educationOrganizations.map((organization) => (
+          <option key={organization.id} value={organization.id} disabled={!organization.isActive}>
+            {`${organization.name} — ${organization.personalDataReady ? 'ПДн готовы' : 'ПДн не готовы'}${organization.isActive ? '' : ' (отключено)'}`}
           </option>
         ))}
       </AdminSelectField>
@@ -83,6 +121,7 @@ function EducationOrganizationCreateRow({
   return (
     <div className="flex flex-col gap-2 sm:flex-row">
       <Input
+        aria-label="Название нового учебного заведения"
         value={newEducationOrganizationName}
         onChange={(event) => onEducationOrganizationNameChange(event.target.value)}
         placeholder="Добавить новое заведение"
@@ -96,6 +135,10 @@ function EducationOrganizationCreateRow({
       >
         {isCreatingEducationOrganization ? 'Добавляем...' : 'Добавить'}
       </Button>
+      <p className={`text-xs sm:basis-full ${adminClassNames.text.muted}`}>
+        После быстрого добавления заполните реквизиты в разделе «Учебные заведения», прежде чем
+        выбрать организацию оператором ПДн.
+      </p>
     </div>
   );
 }
@@ -189,6 +232,8 @@ export function PublicLinkOrganizationSection({
   educationOrganizations,
   newEducationOrganizationId,
   onEducationOrganizationSelect,
+  newPersonalDataProcessingMode,
+  onPersonalDataProcessingModeChange,
   newEducationOrganizationName,
   onEducationOrganizationNameChange,
   groupValidationMode,
@@ -219,11 +264,21 @@ export function PublicLinkOrganizationSection({
       </div>
 
       <div className="mt-3 flex flex-col gap-3">
+        <PersonalDataProcessingModeField
+          value={newPersonalDataProcessingMode}
+          onChange={onPersonalDataProcessingModeChange}
+        />
         <EducationOrganizationSelect
           educationOrganizations={educationOrganizations}
           newEducationOrganizationId={newEducationOrganizationId}
           onEducationOrganizationSelect={onEducationOrganizationSelect}
         />
+        {newPersonalDataProcessingMode === 'PUBLIC' ? (
+          <p className={adminClassNames.form.fieldHint}>
+            Выбор заведения для анкеты не меняет оператора персональных данных: оператором остается
+            платформа.
+          </p>
+        ) : null}
         <EducationOrganizationCreateRow
           newEducationOrganizationName={newEducationOrganizationName}
           onEducationOrganizationNameChange={onEducationOrganizationNameChange}

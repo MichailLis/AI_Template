@@ -221,6 +221,14 @@ describe('Tests public sessions (e2e)', () => {
       consentVersion: 'v1',
       consentText: 'Я согласен на обработку ответов в рамках e2e теста.',
     });
+    expect(linkResponse.body.personalData).toEqual({
+      processingMode: 'PUBLIC',
+      operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+      operatorShortName: null,
+      privacyPolicyUrl: '/privacy',
+      consentDocumentUrl: null,
+      logoUrl: null,
+    });
 
     const startResponse = await startPublicSession(shortCode);
     const sessionToken = startResponse.body.session.sessionToken as string;
@@ -234,6 +242,25 @@ describe('Tests public sessions (e2e)', () => {
       timeLimitMinutes: null,
     });
     expect(startResponse.body.session.questions).toHaveLength(1);
+
+    const persistedAttempt = await prisma.testStudentAttempt.findUniqueOrThrow({
+      where: { resumeToken: sessionToken },
+      select: {
+        operatorEducationOrganizationId: true,
+        operatorFullNameSnapshot: true,
+        operatorShortNameSnapshot: true,
+        operatorPrivacyPolicyUrlSnapshot: true,
+        operatorConsentDocumentUrlSnapshot: true,
+      },
+    });
+
+    expect(persistedAttempt).toEqual({
+      operatorEducationOrganizationId: null,
+      operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+      operatorShortNameSnapshot: null,
+      operatorPrivacyPolicyUrlSnapshot: '/privacy',
+      operatorConsentDocumentUrlSnapshot: null,
+    });
 
     const sessionResponse = await request(app.getHttpServer())
       .get(`/tests/public/sessions/${sessionToken}`)

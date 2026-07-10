@@ -7,6 +7,7 @@
  */
 import type { PublicLinkAccessResponseDtoEntryProfileMode } from './publicLinkAccessResponseDtoEntryProfileMode';
 import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLinkAccessResponseDtoGroupValidationMode';
+import type { PublicLinkAccessResponseDtoPersonalData } from './publicLinkAccessResponseDtoPersonalData';
 import type { PublicLinkAccessResponseDtoPublicBranding } from './publicLinkAccessResponseDtoPublicBranding';
 import type { PublicLinkAccessResponseDtoPublicTemplate } from './publicLinkAccessResponseDtoPublicTemplate';
 
@@ -51,4 +52,5 @@ export interface PublicLinkAccessResponseDto {
   endsAt: string | null;
   consentVersion: string;
   consentText: string;
+  personalData: PublicLinkAccessResponseDtoPersonalData;
 }

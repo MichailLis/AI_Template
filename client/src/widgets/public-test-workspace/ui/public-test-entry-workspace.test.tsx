@@ -38,6 +38,14 @@ const baseLink = {
   endsAt: null,
   consentVersion: 'v1',
   consentText: 'Согласие',
+  personalData: {
+    processingMode: 'PUBLIC',
+    operatorFullName: 'ООО «Оператор тестирования»',
+    operatorShortName: null,
+    privacyPolicyUrl: '/privacy',
+    consentDocumentUrl: null,
+    logoUrl: null,
+  },
 };
 
 const mockLinkAccess = (
@@ -70,6 +78,7 @@ describe('PublicTestEntryWorkspace', () => {
     render(<PublicTestEntryWorkspace />);
 
     expect(screen.getByRole('heading', { name: 'Инженерный маршрут' })).toBeInTheDocument();
+    expect(screen.getByText('ООО «Оператор тестирования»')).toBeInTheDocument();
     expect(screen.queryByText(/Профессор Полюс/i)).not.toBeInTheDocument();
   });
 
@@ -79,6 +88,7 @@ describe('PublicTestEntryWorkspace', () => {
     render(<PublicTestEntryWorkspace />);
 
     expect(screen.getByText(/Профессор Полюс/i)).toBeInTheDocument();
+    expect(screen.getByText('ООО «Оператор тестирования»')).toBeInTheDocument();
     expect(screen.getByText(/Найди свой инженерный маршрут/i)).toBeInTheDocument();
     expect(screen.getByText('Демографическая анкета')).toBeInTheDocument();
     expect(screen.queryByText('Готовность к старту')).not.toBeInTheDocument();

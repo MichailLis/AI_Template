@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicLinkDtoEntryProfileMode } from './adminPublicLinkDtoEntryProfileMode';
+import type { AdminPublicLinkDtoPersonalDataProcessingMode } from './adminPublicLinkDtoPersonalDataProcessingMode';
 import type { AdminPublicLinkDtoPublicBranding } from './adminPublicLinkDtoPublicBranding';
 import type { AdminPublicLinkDtoPublicTemplate } from './adminPublicLinkDtoPublicTemplate';
 
@@ -17,6 +18,15 @@ export interface AdminPublicLinkDto {
   educationOrganizationId: number | null;
   /** @nullable */
   educationOrganizationName: string | null;
+  personalDataProcessingMode: AdminPublicLinkDtoPersonalDataProcessingMode;
+  /** @nullable */
+  operatorFullNameSnapshot: string | null;
+  /** @nullable */
+  operatorShortNameSnapshot: string | null;
+  /** @nullable */
+  operatorPrivacyPolicyUrlSnapshot: string | null;
+  /** @nullable */
+  operatorConsentDocumentUrlSnapshot: string | null;
   entryProfileMode: AdminPublicLinkDtoEntryProfileMode;
   publicTemplate: AdminPublicLinkDtoPublicTemplate;
   /** @nullable */

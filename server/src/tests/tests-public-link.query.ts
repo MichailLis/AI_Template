@@ -5,6 +5,11 @@ export const publicLinkAdminInclude = {
     select: {
       id: true,
       name: true,
+      fullName: true,
+      shortName: true,
+      privacyPolicyUrl: true,
+      consentDocumentUrl: true,
+      logoUrl: true,
       isActive: true,
       groupValidationMode: true,
       groupValidationPattern: true,
@@ -26,6 +31,11 @@ export const publicLinkAccessInclude = {
     select: {
       id: true,
       name: true,
+      fullName: true,
+      shortName: true,
+      privacyPolicyUrl: true,
+      consentDocumentUrl: true,
+      logoUrl: true,
       isActive: true,
       groupValidationMode: true,
       groupValidationPattern: true,

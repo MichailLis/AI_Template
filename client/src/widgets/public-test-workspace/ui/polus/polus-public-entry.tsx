@@ -1,5 +1,6 @@
 import { polusAssets } from '@/features/tests';
 
+import { PublicPersonalDataOperator } from '../public-personal-data-operator';
 import { PublicPrivacyConsent } from '../public-privacy-consent';
 
 import { PolusEducationDemographicFields } from './polus-public-education-demographic-fields';
@@ -301,10 +302,15 @@ export function PolusPublicEntry({
         <div className="polus-state-view">
           <div className="polus-start-layout">
             <form className="polus-form-grid" onSubmit={onSubmit}>
+              <PublicPersonalDataOperator
+                personalData={link.personalData}
+                className="polus-field-wide"
+              />
               {profileFields}
               <PublicPrivacyConsent
                 checked={consentAccepted}
                 className="polus-field-wide"
+                personalData={link.personalData}
                 onCheckedChange={handleConsentChange}
               />
               <div className="polus-form-actions">

@@ -127,6 +127,16 @@ describe('TestsPublicLinkService', () => {
     expect(prismaMock.educationOrganization.create).toHaveBeenCalledWith({
       data: {
         name: 'Колледж 10',
+        fullName: null,
+        shortName: null,
+        inn: null,
+        ogrn: null,
+        legalAddress: null,
+        email: null,
+        phone: null,
+        privacyPolicyUrl: null,
+        consentDocumentUrl: null,
+        logoUrl: null,
         groupValidationMode: 'NONE',
         groupValidationPattern: null,
         groupValidationExample: null,
@@ -304,6 +314,119 @@ describe('TestsPublicLinkService', () => {
     expect(result.publicBranding).toEqual(publicBranding);
   });
 
+  it('createPublicLink defaults to PUBLIC snapshots while retaining profile organization locking', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.educationOrganization.findUnique.mockResolvedValue({ id: 7, isActive: true });
+    prismaMock.testPublicLink.create.mockResolvedValue(
+      createPublicLinkRecordFixture({ educationOrganization: { id: 7, name: 'Лицей 7' } }),
+    );
+
+    await service.createPublicLink(7, {
+      publishedVersionId: 50,
+      educationOrganizationId: 7,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(prismaMock.testPublicLink.create.mock.calls[0]?.[0].data).toEqual(
+      expect.objectContaining({
+        educationOrganizationId: 7,
+        personalDataProcessingMode: 'PUBLIC',
+        operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorShortNameSnapshot: null,
+        operatorPrivacyPolicyUrlSnapshot: '/privacy',
+        operatorConsentDocumentUrlSnapshot: null,
+      }),
+    );
+  });
+
+  it('createPublicLink stores and maps an immutable on-behalf operator snapshot', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.educationOrganization.findUnique.mockResolvedValue({
+      id: 7,
+      isActive: true,
+      fullName: '  ГБОУ Полное  ',
+      shortName: '  ГБОУ  ',
+      privacyPolicyUrl: '  https://school.example/privacy  ',
+      consentDocumentUrl: null,
+      logoUrl: null,
+    });
+    prismaMock.testPublicLink.create.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        educationOrganization: { id: 7, name: 'ГБОУ' },
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        operatorFullNameSnapshot: 'ГБОУ Полное',
+        operatorShortNameSnapshot: 'ГБОУ',
+        operatorPrivacyPolicyUrlSnapshot: 'https://school.example/privacy',
+        operatorConsentDocumentUrlSnapshot: null,
+      }),
+    );
+
+    const result = await service.createPublicLink(7, {
+      publishedVersionId: 50,
+      educationOrganizationId: 7,
+      personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    expect(prismaMock.testPublicLink.create.mock.calls[0]?.[0].data).toEqual(
+      expect.objectContaining({
+        educationOrganizationId: 7,
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        operatorFullNameSnapshot: 'ГБОУ Полное',
+        operatorShortNameSnapshot: 'ГБОУ',
+        operatorPrivacyPolicyUrlSnapshot: 'https://school.example/privacy',
+        operatorConsentDocumentUrlSnapshot: null,
+      }),
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        operatorFullNameSnapshot: 'ГБОУ Полное',
+      }),
+    );
+  });
+
+  it('createPublicLink rejects an incomplete on-behalf operator', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.educationOrganization.findUnique.mockResolvedValue({
+      id: 7,
+      isActive: true,
+      fullName: 'ГБОУ Полное',
+      shortName: 'ГБОУ',
+      privacyPolicyUrl: null,
+      consentDocumentUrl: null,
+      logoUrl: null,
+    });
+
+    await expect(
+      service.createPublicLink(7, {
+        publishedVersionId: 50,
+        educationOrganizationId: 7,
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        consentVersion: 'v1',
+        consentText: 'Согласие',
+      }),
+    ).rejects.toThrow('Политику обработки ПДн');
+    expect(prismaMock.testPublicLink.create).not.toHaveBeenCalled();
+  });
+
   it('createPublicLink rejects an inverted date window', async () => {
     prismaMock.testTopicVersion.findUnique.mockResolvedValue({
       id: 50,
@@ -348,14 +471,7 @@ describe('TestsPublicLinkService', () => {
   });
 
   it('updatePublicLink resets public branding when null is provided', async () => {
-    prismaMock.testPublicLink.findUnique.mockResolvedValue({
-      id: 100,
-      archivedAt: null,
-      entryProfileMode: 'EDUCATION',
-      maxAttemptsPerStudent: 3,
-      startsAt: null,
-      endsAt: null,
-    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(createExistingPublicLinkUpdateFixture());
     prismaMock.testPublicLink.update.mockResolvedValue(
       createPublicLinkRecordFixture({
         publicBranding: null,
@@ -375,14 +491,7 @@ describe('TestsPublicLinkService', () => {
   });
 
   it('updatePublicLink keeps DEMOGRAPHIC links limited to one allowed attempt', async () => {
-    prismaMock.testPublicLink.findUnique.mockResolvedValue({
-      id: 100,
-      archivedAt: null,
-      entryProfileMode: 'EDUCATION',
-      maxAttemptsPerStudent: 3,
-      startsAt: null,
-      endsAt: null,
-    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(createExistingPublicLinkUpdateFixture());
     prismaMock.testPublicLink.update.mockResolvedValue(
       createPublicLinkRecordFixture({
         entryProfileMode: 'DEMOGRAPHIC',
@@ -405,15 +514,99 @@ describe('TestsPublicLinkService', () => {
     expect(result.maxAttemptsPerStudent).toBe(1);
   });
 
-  it('updatePublicLink rejects a partial startsAt update that would invert the stored date window', async () => {
-    prismaMock.testPublicLink.findUnique.mockResolvedValue({
-      id: 100,
-      archivedAt: null,
-      entryProfileMode: 'EDUCATION',
-      maxAttemptsPerStudent: 3,
-      startsAt: new Date('2026-05-20T10:00:00.000Z'),
-      endsAt: new Date('2026-05-21T10:00:00.000Z'),
+  it('updatePublicLink preserves operator snapshots for unrelated changes', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createExistingPublicLinkUpdateFixture({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        educationOrganizationId: 7,
+        operatorFullNameSnapshot: 'Историческое полное имя',
+        operatorShortNameSnapshot: 'Историческое имя',
+        operatorPrivacyPolicyUrlSnapshot: 'https://old.example/privacy',
+        operatorConsentDocumentUrlSnapshot: 'https://old.example/consent',
+      }),
+    );
+    prismaMock.testPublicLink.update.mockResolvedValue(
+      createPublicLinkRecordFixture({ isActive: false }),
+    );
+
+    await service.updatePublicLink(7, 100, { isActive: false });
+
+    const data = prismaMock.testPublicLink.update.mock.calls[0]?.[0].data;
+    expect(data).not.toHaveProperty('operatorFullNameSnapshot');
+    expect(data).not.toHaveProperty('operatorShortNameSnapshot');
+    expect(data).not.toHaveProperty('operatorPrivacyPolicyUrlSnapshot');
+    expect(data).not.toHaveProperty('operatorConsentDocumentUrlSnapshot');
+    expect(prismaMock.educationOrganization.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('updatePublicLink switches to PUBLIC and refreshes platform snapshots', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createExistingPublicLinkUpdateFixture({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        educationOrganizationId: 7,
+        operatorFullNameSnapshot: 'ГБОУ Полное',
+        operatorShortNameSnapshot: 'ГБОУ',
+        operatorPrivacyPolicyUrlSnapshot: 'https://school.example/privacy',
+      }),
+    );
+    prismaMock.testPublicLink.update.mockResolvedValue(createPublicLinkRecordFixture());
+
+    await service.updatePublicLink(7, 100, { personalDataProcessingMode: 'PUBLIC' });
+
+    expect(prismaMock.testPublicLink.update.mock.calls[0]?.[0].data).toEqual(
+      expect.objectContaining({
+        personalDataProcessingMode: 'PUBLIC',
+        operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorShortNameSnapshot: null,
+        operatorPrivacyPolicyUrlSnapshot: '/privacy',
+        operatorConsentDocumentUrlSnapshot: null,
+      }),
+    );
+    expect(prismaMock.educationOrganization.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('updatePublicLink refreshes on-behalf snapshots when the organization changes', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createExistingPublicLinkUpdateFixture({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        educationOrganizationId: 7,
+      }),
+    );
+    prismaMock.educationOrganization.findUnique.mockResolvedValue({
+      id: 8,
+      isActive: true,
+      fullName: 'Новое полное имя',
+      shortName: 'Новое имя',
+      privacyPolicyUrl: 'https://new.example/privacy',
+      consentDocumentUrl: 'https://new.example/consent',
+      logoUrl: null,
     });
+    prismaMock.testPublicLink.update.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      }),
+    );
+
+    await service.updatePublicLink(7, 100, { educationOrganizationId: 8 });
+
+    expect(prismaMock.testPublicLink.update.mock.calls[0]?.[0].data).toEqual(
+      expect.objectContaining({
+        educationOrganizationId: 8,
+        operatorFullNameSnapshot: 'Новое полное имя',
+        operatorShortNameSnapshot: 'Новое имя',
+        operatorPrivacyPolicyUrlSnapshot: 'https://new.example/privacy',
+        operatorConsentDocumentUrlSnapshot: 'https://new.example/consent',
+      }),
+    );
+  });
+
+  it('updatePublicLink rejects a partial startsAt update that would invert the stored date window', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createExistingPublicLinkUpdateFixture({
+        startsAt: new Date('2026-05-20T10:00:00.000Z'),
+        endsAt: new Date('2026-05-21T10:00:00.000Z'),
+      }),
+    );
     prismaMock.testPublicLink.update.mockResolvedValue(createPublicLinkRecordFixture());
 
     await expect(
@@ -425,14 +618,12 @@ describe('TestsPublicLinkService', () => {
   });
 
   it('updatePublicLink rejects a partial endsAt update that would invert the stored date window', async () => {
-    prismaMock.testPublicLink.findUnique.mockResolvedValue({
-      id: 100,
-      archivedAt: null,
-      entryProfileMode: 'EDUCATION',
-      maxAttemptsPerStudent: 3,
-      startsAt: new Date('2026-05-20T10:00:00.000Z'),
-      endsAt: new Date('2026-05-21T10:00:00.000Z'),
-    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createExistingPublicLinkUpdateFixture({
+        startsAt: new Date('2026-05-20T10:00:00.000Z'),
+        endsAt: new Date('2026-05-21T10:00:00.000Z'),
+      }),
+    );
     prismaMock.testPublicLink.update.mockResolvedValue(createPublicLinkRecordFixture());
 
     await expect(
@@ -441,6 +632,99 @@ describe('TestsPublicLinkService', () => {
       }),
     ).rejects.toThrow(BadRequestException);
     expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
+  it('getPublicLinkAccessByCode exposes stored on-behalf snapshots and only the live logo', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+        operatorFullNameSnapshot: 'Историческое полное имя школы',
+        operatorShortNameSnapshot: 'Историческое имя',
+        operatorPrivacyPolicyUrlSnapshot: 'https://old.example/privacy',
+        operatorConsentDocumentUrlSnapshot: 'https://old.example/consent',
+        educationOrganization: {
+          id: 42,
+          name: 'Новое название школы',
+          fullName: 'Новое полное имя школы',
+          shortName: 'Новое имя',
+          privacyPolicyUrl: 'https://new.example/privacy',
+          consentDocumentUrl: 'https://new.example/consent',
+          logoUrl: 'https://new.example/logo.svg',
+          inn: '1234567890',
+          ogrn: '1234567890123',
+          legalAddress: 'Секретный адрес',
+          email: 'private@example.com',
+          phone: '+70000000000',
+          isActive: true,
+          groupValidationMode: 'NONE',
+          groupValidationPattern: null,
+          groupValidationExample: null,
+          groupValidationHint: null,
+        },
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          title: 'Профориентация',
+          description: null,
+          status: 'PUBLISHED',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    const result = await service.getPublicLinkAccessByCode('demo2026');
+
+    expect(result.personalData).toEqual({
+      processingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      operatorFullName: 'Историческое полное имя школы',
+      operatorShortName: 'Историческое имя',
+      privacyPolicyUrl: 'https://old.example/privacy',
+      consentDocumentUrl: 'https://old.example/consent',
+      logoUrl: 'https://new.example/logo.svg',
+    });
+    expect(result).not.toHaveProperty('inn');
+    expect(result).not.toHaveProperty('ogrn');
+    expect(result).not.toHaveProperty('legalAddress');
+    expect(result).not.toHaveProperty('email');
+    expect(result).not.toHaveProperty('phone');
+  });
+
+  it('getPublicLinkAccessByCode applies exact platform fallbacks for a legacy PUBLIC link', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        operatorFullNameSnapshot: null,
+        operatorPrivacyPolicyUrlSnapshot: null,
+        educationOrganization: {
+          id: 42,
+          name: 'Лицей 42',
+          logoUrl: 'https://school.example/logo.svg',
+          isActive: true,
+          groupValidationMode: 'NONE',
+          groupValidationPattern: null,
+          groupValidationExample: null,
+          groupValidationHint: null,
+        },
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          title: 'Профориентация',
+          description: null,
+          status: 'PUBLISHED',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    const result = await service.getPublicLinkAccessByCode('demo2026');
+
+    expect(result.personalData).toEqual({
+      processingMode: 'PUBLIC',
+      operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+      operatorShortName: null,
+      privacyPolicyUrl: '/privacy',
+      consentDocumentUrl: null,
+      logoUrl: null,
+    });
   });
 
   it('getAccessiblePublicLinkByCode allows immutable archived published snapshots', async () => {
@@ -494,6 +778,11 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
     title: 'Профориентация',
   },
   educationOrganization: null,
+  personalDataProcessingMode: 'PUBLIC',
+  operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+  operatorShortNameSnapshot: null,
+  operatorPrivacyPolicyUrlSnapshot: '/privacy',
+  operatorConsentDocumentUrlSnapshot: null,
   shortCode: 'DEMO2026',
   isActive: true,
   archivedAt: null,
@@ -509,5 +798,21 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
   consentTextSnapshot: 'Согласие',
   updatedAt: new Date('2026-05-14T10:00:00.000Z'),
   createdAt: new Date('2026-05-14T10:00:00.000Z'),
+  ...overrides,
+});
+
+const createExistingPublicLinkUpdateFixture = (overrides: Record<string, unknown> = {}) => ({
+  id: 100,
+  archivedAt: null,
+  entryProfileMode: 'EDUCATION',
+  maxAttemptsPerStudent: 3,
+  startsAt: null,
+  endsAt: null,
+  educationOrganizationId: null,
+  personalDataProcessingMode: 'PUBLIC',
+  operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+  operatorShortNameSnapshot: null,
+  operatorPrivacyPolicyUrlSnapshot: '/privacy',
+  operatorConsentDocumentUrlSnapshot: null,
   ...overrides,
 });

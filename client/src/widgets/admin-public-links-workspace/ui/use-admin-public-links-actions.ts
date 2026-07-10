@@ -25,6 +25,8 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     publishedVersionId,
     newPublicShortCode,
     newEducationOrganizationId,
+    educationOrganizations,
+    newPersonalDataProcessingMode,
     newPublicTemplate,
     newPublicEntryProfileMode,
     newPublicMaxAttempts,
@@ -35,6 +37,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     setPublicLinksTab,
     setSelectedPublicLinkId,
     setNewPublicShortCode,
+    setNewPersonalDataProcessingMode,
     refetchPublicLinks,
     onPublicLinkCreated,
   } = params;
@@ -45,6 +48,8 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
       educationOrganizationId: newEducationOrganizationId,
+      educationOrganizations,
+      personalDataProcessingMode: newPersonalDataProcessingMode,
       maxAttemptsRaw: newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts,
       timeLimitRaw: newPublicTimeLimit,
     });
@@ -59,6 +64,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
         data: {
           publishedVersionId: validation.publishedVersionId,
           educationOrganizationId: validation.educationOrganizationId,
+          personalDataProcessingMode: newPersonalDataProcessingMode,
           shortCode: newPublicShortCode.trim() || undefined,
           publicTemplate: newPublicTemplate,
           entryProfileMode: newPublicEntryProfileMode,
@@ -76,6 +82,7 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
           setPublicLinksTab('active');
           setSelectedPublicLinkId(link.id);
           setNewPublicShortCode('');
+          setNewPersonalDataProcessingMode('PUBLIC');
           refetchPublicLinks();
           onPublicLinkCreated?.();
         },

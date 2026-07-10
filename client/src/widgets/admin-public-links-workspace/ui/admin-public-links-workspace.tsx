@@ -21,6 +21,8 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   onSelectTopic: state.setSelectedTopicId,
   newEducationOrganizationId: state.newEducationOrganizationId,
   onEducationOrganizationSelect: state.setNewEducationOrganizationId,
+  newPersonalDataProcessingMode: state.newPersonalDataProcessingMode,
+  onPersonalDataProcessingModeChange: state.setNewPersonalDataProcessingMode,
   newEducationOrganizationName: state.newEducationOrganizationName,
   onEducationOrganizationNameChange: state.setNewEducationOrganizationName,
   groupValidationMode: state.groupValidationMode,

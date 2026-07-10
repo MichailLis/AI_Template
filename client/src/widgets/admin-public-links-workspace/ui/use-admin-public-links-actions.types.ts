@@ -2,6 +2,8 @@ import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
 import type {
   PublicLinkEntryProfileMode,
   PublicLinkTemplate,
+  PersonalDataProcessingMode,
+  EducationOrganizationOption,
 } from './public-link-create-card.types';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
@@ -9,6 +11,8 @@ export interface UseAdminPublicLinksActionsParams {
   publishedVersionId: number | undefined;
   newPublicShortCode: string;
   newEducationOrganizationId: number | null;
+  educationOrganizations: EducationOrganizationOption[];
+  newPersonalDataProcessingMode: PersonalDataProcessingMode;
   newEducationOrganizationName: string;
   groupValidationMode: GroupValidationMode;
   groupValidationPattern: string;
@@ -27,6 +31,7 @@ export interface UseAdminPublicLinksActionsParams {
   setSelectedPublicLinkId: (value: number | null) => void;
   setPendingDeletePublicLinkId: (value: number | null) => void;
   setNewPublicShortCode: (value: string) => void;
+  setNewPersonalDataProcessingMode: (value: PersonalDataProcessingMode) => void;
   setNewEducationOrganizationId: (value: number | null) => void;
   setNewEducationOrganizationName: (value: string) => void;
   setGroupValidationMode: (value: GroupValidationMode) => void;

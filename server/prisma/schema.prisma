@@ -87,6 +87,11 @@ enum GroupOrClassValidationMode {
   STRICT
 }
 
+enum PersonalDataProcessingMode {
+  PUBLIC
+  ON_BEHALF_OF_EDUCATION_ORGANIZATION
+}
+
 model User {
   id                 Int     @id @default(autoincrement())
   /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
@@ -201,25 +206,30 @@ model TestQuestionSliderBand {
 }
 
 model TestPublicLink {
-  id                      Int                  @id @default(autoincrement())
-  topicVersionId          Int
-  educationOrganizationId Int?
-  shortCode               String               @unique
-  isActive                Boolean              @default(true)
-  startsAt                DateTime?
-  endsAt                  DateTime?
-  maxAttemptsPerStudent   Int                  @default(1)
-  timeLimitMinutes        Int?
-  allowResume             Boolean              @default(true)
-  entryProfileMode        TestEntryProfileMode @default(EDUCATION)
-  publicTemplate          TestPublicTemplate   @default(STANDARD)
-  publicBranding          Json?
-  consentVersion          String
-  consentTextSnapshot     String
-  createdByUserId         Int?
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-  archivedAt              DateTime?
+  id                                 Int                        @id @default(autoincrement())
+  topicVersionId                     Int
+  educationOrganizationId            Int?
+  personalDataProcessingMode         PersonalDataProcessingMode @default(PUBLIC)
+  operatorFullNameSnapshot           String?
+  operatorShortNameSnapshot          String?
+  operatorPrivacyPolicyUrlSnapshot   String?
+  operatorConsentDocumentUrlSnapshot String?
+  shortCode                          String                     @unique
+  isActive                           Boolean                    @default(true)
+  startsAt                           DateTime?
+  endsAt                             DateTime?
+  maxAttemptsPerStudent              Int                        @default(1)
+  timeLimitMinutes                   Int?
+  allowResume                        Boolean                    @default(true)
+  entryProfileMode                   TestEntryProfileMode       @default(EDUCATION)
+  publicTemplate                     TestPublicTemplate         @default(STANDARD)
+  publicBranding                     Json?
+  consentVersion                     String
+  consentTextSnapshot                String
+  createdByUserId                    Int?
+  createdAt                          DateTime                   @default(now())
+  updatedAt                          DateTime                   @updatedAt
+  archivedAt                         DateTime?
 
   topicVersion          TestTopicVersion       @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
   educationOrganization EducationOrganization? @relation(fields: [educationOrganizationId], references: [id], onDelete: SetNull)
@@ -237,6 +247,16 @@ model EducationOrganization {
   id                     Int                        @id @default(autoincrement())
   /// Application trims names; citext keeps database uniqueness case-insensitive.
   name                   String                     @unique @db.Citext
+  fullName               String?
+  shortName              String?
+  inn                    String?
+  ogrn                   String?
+  legalAddress           String?
+  email                  String?
+  phone                  String?
+  privacyPolicyUrl       String?
+  consentDocumentUrl     String?
+  logoUrl                String?
   isActive               Boolean                    @default(true)
   groupValidationMode    GroupOrClassValidationMode @default(NONE)
   groupValidationPattern String?
@@ -245,7 +265,8 @@ model EducationOrganization {
   createdAt              DateTime                   @default(now())
   updatedAt              DateTime                   @updatedAt
 
-  publicLinks TestPublicLink[]
+  publicLinks      TestPublicLink[]
+  operatorAttempts TestStudentAttempt[]
 
   @@index([isActive])
   @@index([groupValidationMode])
@@ -253,44 +274,51 @@ model EducationOrganization {
 }
 
 model TestStudentAttempt {
-  id                    Int                        @id @default(autoincrement())
-  publicLinkId          Int
-  topicVersionId        Int
-  attemptNumber         Int
-  status                TestStudentAttemptStatus   @default(IN_PROGRESS)
-  studentName           String?
-  studentLastInitial    String?
-  studentMiddleInitial  String?
-  educationOrganization String?
-  groupOrClass          String?
-  studentGender         TestStudentGender?
-  studentAge            Int?
-  studentResidence      String?
-  studentEducationLevel TestStudentEducationLevel?
-  studentKeyHash        String
-  consentAcceptedAt     DateTime
-  consentVersion        String
-  consentTextSnapshot   String
-  policyVersionSnapshot     String?
-  policyPublishedAtSnapshot DateTime?
-  resumeToken           String                     @unique
-  startedAt             DateTime                   @default(now())
-  expiresAt             DateTime?
-  finishedAt            DateTime?
-  anonymizedAt          DateTime?
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
+  id                                 Int                        @id @default(autoincrement())
+  publicLinkId                       Int
+  topicVersionId                     Int
+  attemptNumber                      Int
+  status                             TestStudentAttemptStatus   @default(IN_PROGRESS)
+  studentName                        String?
+  studentLastInitial                 String?
+  studentMiddleInitial               String?
+  educationOrganization              String?
+  groupOrClass                       String?
+  studentGender                      TestStudentGender?
+  studentAge                         Int?
+  studentResidence                   String?
+  studentEducationLevel              TestStudentEducationLevel?
+  studentKeyHash                     String
+  consentAcceptedAt                  DateTime
+  consentVersion                     String
+  consentTextSnapshot                String
+  operatorEducationOrganizationId    Int?
+  operatorFullNameSnapshot           String?
+  operatorShortNameSnapshot          String?
+  operatorPrivacyPolicyUrlSnapshot   String?
+  operatorConsentDocumentUrlSnapshot String?
+  policyVersionSnapshot              String?
+  policyPublishedAtSnapshot          DateTime?
+  resumeToken                        String                     @unique
+  startedAt                          DateTime                   @default(now())
+  expiresAt                          DateTime?
+  finishedAt                         DateTime?
+  anonymizedAt                       DateTime?
+  createdAt                          DateTime                   @default(now())
+  updatedAt                          DateTime                   @updatedAt
 
-  publicLink   TestPublicLink       @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
-  topicVersion TestTopicVersion     @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
-  answers      TestStudentAnswer[]
-  analysis     TestStudentAnalysis?
+  publicLink                    TestPublicLink         @relation(fields: [publicLinkId], references: [id], onDelete: Cascade)
+  topicVersion                  TestTopicVersion       @relation(fields: [topicVersionId], references: [id], onDelete: Cascade)
+  operatorEducationOrganization EducationOrganization? @relation(fields: [operatorEducationOrganizationId], references: [id], onDelete: SetNull)
+  answers                       TestStudentAnswer[]
+  analysis                      TestStudentAnalysis?
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
   @@index([publicLinkId, studentKeyHash])
   @@index([publicLinkId, startedAt])
   @@index([status, startedAt])
   @@index([topicVersionId])
+  @@index([operatorEducationOrganizationId])
   @@map("test_student_attempts")
 }
 

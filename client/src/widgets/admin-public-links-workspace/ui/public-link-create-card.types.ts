@@ -2,6 +2,7 @@ import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 export type PublicLinkTemplate = 'STANDARD' | 'POLUS';
+export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
 
 export interface TopicOption {
   id: number;
@@ -12,6 +13,7 @@ export interface EducationOrganizationOption {
   id: number;
   name: string;
   isActive: boolean;
+  personalDataReady: boolean;
 }
 
 export interface PublicLinkCreateCardProps {
@@ -21,6 +23,8 @@ export interface PublicLinkCreateCardProps {
   onSelectTopic: (topicId: number) => void;
   newEducationOrganizationId: number | null;
   onEducationOrganizationSelect: (organizationId: number | null) => void;
+  newPersonalDataProcessingMode: PersonalDataProcessingMode;
+  onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
   newEducationOrganizationName: string;
   onEducationOrganizationNameChange: (value: string) => void;
   groupValidationMode: GroupValidationMode;
@@ -66,6 +70,8 @@ export interface PublicLinkOrganizationSectionProps {
   educationOrganizations: EducationOrganizationOption[];
   newEducationOrganizationId: number | null;
   onEducationOrganizationSelect: (organizationId: number | null) => void;
+  newPersonalDataProcessingMode: PersonalDataProcessingMode;
+  onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
   newEducationOrganizationName: string;
   onEducationOrganizationNameChange: (value: string) => void;
   groupValidationMode: GroupValidationMode;

@@ -28,6 +28,7 @@ const EDUCATION_ORGANIZATIONS_COLUMNS = [
   { id: 'mode', header: 'Режим' },
   { id: 'links', header: 'Ссылки' },
   { id: 'attempts', header: 'Попытки' },
+  { id: 'personal-data', header: 'ПДн' },
   { id: 'status', header: 'Статус' },
 ];
 
@@ -81,6 +82,13 @@ export function EducationOrganizationsListCard({
               <TableCell>{modeLabel[organization.groupValidationMode]}</TableCell>
               <TableCell>{`${organization.activeLinksCount}/${organization.linksCount}`}</TableCell>
               <TableCell>{organization.attemptsCount}</TableCell>
+              <TableCell>
+                {organization.personalDataReady ? (
+                  <span className={adminBadgeClassNames.pillSuccess}>ПДн готовы</span>
+                ) : (
+                  <span className={adminBadgeClassNames.pillNeutral}>ПДн не готовы</span>
+                )}
+              </TableCell>
               <TableCell>
                 {organization.isActive ? (
                   <span className={adminBadgeClassNames.pillSuccess}>Активно</span>

@@ -4,6 +4,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
 
 import type { DemographicFormState } from './public-test-entry.types';
+import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
+
+const personalData: PublicLinkAccessResponseDtoPersonalData = {
+  processingMode: 'PUBLIC',
+  operatorFullName: 'ООО «Оператор тестирования»',
+  operatorShortName: null,
+  privacyPolicyUrl: '/privacy',
+  consentDocumentUrl: null,
+  logoUrl: null,
+};
 
 const formState: DemographicFormState = {
   gender: '',
@@ -18,6 +28,7 @@ describe('PublicTestDemographicProfileCard', () => {
     render(
       <PublicTestDemographicProfileCard
         formState={formState}
+        personalData={personalData}
         isSubmitting={false}
         onSubmit={vi.fn()}
         onFieldChange={vi.fn()}
@@ -29,7 +40,10 @@ describe('PublicTestDemographicProfileCard', () => {
     expect(screen.getByLabelText(/место жительства/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/уровень образования/i)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /политик/i })).not.toBeChecked();
-    expect(screen.getByRole('link', { name: /политик/i })).toHaveAttribute('href', '/privacy');
+    expect(screen.getAllByRole('link', { name: /политик/i })).toHaveLength(2);
+    for (const link of screen.getAllByRole('link', { name: /политик/i })) {
+      expect(link).toHaveAttribute('href', '/privacy');
+    }
     expect(screen.getByRole('button', { name: /начать тестирование/i })).toBeInTheDocument();
   });
 });

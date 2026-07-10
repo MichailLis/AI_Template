@@ -1,4 +1,5 @@
 import {
+  PersonalDataSchema,
   PublicBrandingConfigSchema,
   PublicLinkAccessResponseSchema,
   PublicTestQuestionSchema,
@@ -147,11 +148,54 @@ describe('tests public DTO schemas', () => {
       endsAt: null,
       consentVersion: 'v1',
       consentText: 'Согласие',
+      personalData: {
+        processingMode: 'PUBLIC',
+        operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorShortName: null,
+        privacyPolicyUrl: '/privacy',
+        consentDocumentUrl: null,
+        logoUrl: null,
+      },
     });
 
     expect(result.entryProfileMode).toBe('DEMOGRAPHIC');
     expect(result.publicTemplate).toBe('POLUS');
     expect(result.publicBranding).toEqual(publicBranding);
+    expect(result.personalData.processingMode).toBe('PUBLIC');
+  });
+
+  it('exposes a reusable personal data contract for an education organization operator', () => {
+    const result = PersonalDataSchema.parse({
+      processingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      operatorFullName: 'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
+      operatorShortName: 'МАОУ «Лицей № 42»',
+      privacyPolicyUrl: 'https://example.edu/privacy',
+      consentDocumentUrl: 'https://example.edu/consent',
+      logoUrl: 'https://example.edu/logo.svg',
+    });
+
+    expect(result.operatorShortName).toBe('МАОУ «Лицей № 42»');
+  });
+
+  it('requires nullable personal data fields to be present while accepting null', () => {
+    expect(
+      PersonalDataSchema.safeParse({
+        processingMode: 'PUBLIC',
+        operatorFullName: 'Platform operator',
+        privacyPolicyUrl: '/privacy',
+      }).success,
+    ).toBe(false);
+
+    expect(
+      PersonalDataSchema.safeParse({
+        processingMode: 'PUBLIC',
+        operatorFullName: 'Platform operator',
+        operatorShortName: null,
+        privacyPolicyUrl: '/privacy',
+        consentDocumentUrl: null,
+        logoUrl: null,
+      }).success,
+    ).toBe(true);
   });
 
   it('exposes public template in session state and result responses', () => {

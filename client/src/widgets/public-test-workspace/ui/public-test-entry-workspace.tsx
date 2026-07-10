@@ -133,6 +133,7 @@ function StandardPublicTestEntry({
         {entryProfileMode === 'DEMOGRAPHIC' ? (
           <PublicTestDemographicProfileCard
             formState={demographicFormState}
+            personalData={link.personalData}
             isSubmitting={isSubmitting}
             onSubmit={onSubmit}
             onFieldChange={onDemographicFieldChange}
@@ -140,6 +141,7 @@ function StandardPublicTestEntry({
         ) : (
           <PublicTestRegistrationCard
             formState={registrationFormState}
+            personalData={link.personalData}
             demographicFormState={demographicFormState}
             lockedEducationOrganization={link.educationOrganization}
             groupValidationMode={link.groupValidationMode}

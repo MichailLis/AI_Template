@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { PublicPersonalDataOperator } from './public-personal-data-operator';
 import { PublicPrivacyConsent } from './public-privacy-consent';
 
 import type { DemographicFormState } from './public-test-entry.types';
+import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 
 type FormFieldChangeHandler = <K extends keyof DemographicFormState>(
@@ -17,6 +19,7 @@ type FormFieldChangeHandler = <K extends keyof DemographicFormState>(
 
 interface PublicTestDemographicProfileCardProps {
   formState: DemographicFormState;
+  personalData: PublicLinkAccessResponseDtoPersonalData;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFieldChange: FormFieldChangeHandler;
@@ -160,6 +163,7 @@ function DemographicProfileFields({ formState, onFieldChange }: DemographicProfi
 
 export function PublicTestDemographicProfileCard({
   formState,
+  personalData,
   isSubmitting,
   onSubmit,
   onFieldChange,
@@ -172,9 +176,11 @@ export function PublicTestDemographicProfileCard({
 
         <CardContent className="px-6 pb-6">
           <form className="space-y-4" onSubmit={onSubmit}>
+            <PublicPersonalDataOperator personalData={personalData} />
             <DemographicProfileFields formState={formState} onFieldChange={onFieldChange} />
             <PublicPrivacyConsent
               checked={formState.consentAccepted}
+              personalData={personalData}
               onCheckedChange={(checked) => onFieldChange('consentAccepted', checked)}
             />
             <SubmitButton isSubmitting={isSubmitting} />

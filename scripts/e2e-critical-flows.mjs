@@ -66,6 +66,14 @@ const mockLinkAccess = {
   endsAt: null,
   consentVersion: 'v1',
   consentText: 'Smoke consent text',
+  personalData: {
+    processingMode: 'PUBLIC',
+    operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+    operatorShortName: null,
+    privacyPolicyUrl: '/privacy',
+    consentDocumentUrl: null,
+    logoUrl: null,
+  },
 };
 
 const mockAuthResponse = {
@@ -375,6 +383,7 @@ const runPublicSessionSmoke = async (browser) => {
     await page.getByLabel('Отчество (1-я буква)').fill('О');
     await page.getByLabel('Учебное заведение').fill('Школа');
     await page.getByLabel('Группа / класс').fill('СМ-1');
+    await page.getByRole('checkbox', { name: /политик/i }).check();
     await page.getByRole('button', { name: /Начать тестирование/ }).click();
 
     await page

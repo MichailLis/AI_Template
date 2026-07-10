@@ -6,6 +6,12 @@ export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAP
 export type AccessibleLinkFixture = {
   id: number;
   topicVersionId: number;
+  educationOrganizationId: number | null;
+  personalDataProcessingMode: 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
+  operatorFullNameSnapshot: string | null;
+  operatorShortNameSnapshot: string | null;
+  operatorPrivacyPolicyUrlSnapshot: string | null;
+  operatorConsentDocumentUrlSnapshot: string | null;
   entryProfileMode: EntryProfileMode;
   allowResume: boolean;
   maxAttemptsPerStudent: number;
@@ -13,7 +19,9 @@ export type AccessibleLinkFixture = {
   consentVersion: string;
   consentTextSnapshot: string;
   educationOrganization: {
+    id: number;
     name: string;
+    logoUrl: string | null;
     groupValidationMode: GroupValidationMode;
     groupValidationPattern: string | null;
     groupValidationHint: string | null;
@@ -25,6 +33,12 @@ export const createAccessibleLinkFixture = (
 ): AccessibleLinkFixture => ({
   id: 100,
   topicVersionId: 200,
+  educationOrganizationId: 42,
+  personalDataProcessingMode: 'PUBLIC',
+  operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+  operatorShortNameSnapshot: null,
+  operatorPrivacyPolicyUrlSnapshot: '/privacy',
+  operatorConsentDocumentUrlSnapshot: null,
   entryProfileMode: 'EDUCATION',
   allowResume: false,
   maxAttemptsPerStudent: 3,
@@ -32,7 +46,9 @@ export const createAccessibleLinkFixture = (
   consentVersion: 'v1',
   consentTextSnapshot: 'consent',
   educationOrganization: {
+    id: 42,
     name: 'Лицей 42',
+    logoUrl: null,
     groupValidationMode: 'NONE',
     groupValidationPattern: null,
     groupValidationHint: null,
@@ -99,6 +115,16 @@ export const createPublicSessionStateResponse = (sessionToken: string) => ({
 export type EducationOrganizationRecordFixture = {
   id: number;
   name: string;
+  fullName: string | null;
+  shortName: string | null;
+  inn: string | null;
+  ogrn: string | null;
+  legalAddress: string | null;
+  email: string | null;
+  phone: string | null;
+  privacyPolicyUrl: string | null;
+  consentDocumentUrl: string | null;
+  logoUrl: string | null;
   isActive: boolean;
   groupValidationMode: GroupValidationMode;
   groupValidationPattern: string | null;
@@ -113,6 +139,16 @@ export const createEducationOrganizationRecordFixture = (
 ): EducationOrganizationRecordFixture => ({
   id: 1,
   name: 'Лицей 42',
+  fullName: null,
+  shortName: null,
+  inn: null,
+  ogrn: null,
+  legalAddress: null,
+  email: null,
+  phone: null,
+  privacyPolicyUrl: null,
+  consentDocumentUrl: null,
+  logoUrl: null,
   isActive: true,
   groupValidationMode: 'NONE',
   groupValidationPattern: null,

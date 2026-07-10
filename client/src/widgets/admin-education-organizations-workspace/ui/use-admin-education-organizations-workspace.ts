@@ -10,17 +10,20 @@ import { parseApiError } from '@/shared/lib/api-error';
 
 import {
   mapOrganizationToEditorValues,
+  emptyOperatorFields,
+  normalizeOperatorFieldsPayload,
   normalizeValidationPayload,
   type OrganizationEditorValues,
 } from './admin-education-organizations-workspace.helpers';
 
+import type { EducationOrganizationOperatorValues } from './education-organization-operator-fields';
 import type { ValidationMode } from './education-organizations-create-card';
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
 
 const ORGANIZATIONS_LIMIT = 10;
 type EducationOrganizationItem = AdminEducationOrganizationsListResponseDtoOrganizationsItem;
 
-interface CreateOrganizationValues {
+interface CreateOrganizationValues extends EducationOrganizationOperatorValues {
   name: string;
   validationMode: ValidationMode;
   validationPattern: string;
@@ -30,6 +33,7 @@ interface CreateOrganizationValues {
 
 const defaultCreateOrganizationValues = (): CreateOrganizationValues => ({
   name: '',
+  ...emptyOperatorFields(),
   validationMode: 'NONE',
   validationPattern: '',
   validationExample: '',
@@ -39,6 +43,7 @@ const defaultCreateOrganizationValues = (): CreateOrganizationValues => ({
 const defaultEditOrganizationValues = (): OrganizationEditorValues => ({
   name: '',
   isActive: true,
+  ...emptyOperatorFields(),
   validationMode: 'NONE',
   validationPattern: '',
   validationExample: '',
@@ -111,7 +116,13 @@ const useEducationOrganizationsMutations = ({
     }
 
     createOrganizationMutation.mutate(
-      { data: { name, ...validationPayload } },
+      {
+        data: {
+          name,
+          ...normalizeOperatorFieldsPayload(createValues),
+          ...validationPayload,
+        },
+      },
       {
         onSuccess: (organization) => {
           toast.success('Учебное заведение добавлено');
@@ -149,7 +160,12 @@ const useEducationOrganizationsMutations = ({
     updateOrganizationMutation.mutate(
       {
         organizationId: selectedOrganizationId,
-        data: { name, isActive: editValues.isActive, ...validationPayload },
+        data: {
+          name,
+          isActive: editValues.isActive,
+          ...normalizeOperatorFieldsPayload(editValues),
+          ...validationPayload,
+        },
       },
       {
         onSuccess: (organization) => {

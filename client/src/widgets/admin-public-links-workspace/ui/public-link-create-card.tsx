@@ -51,6 +51,8 @@ export function PublicLinkCreateDialog({
   onSelectTopic,
   newEducationOrganizationId,
   onEducationOrganizationSelect,
+  newPersonalDataProcessingMode,
+  onPersonalDataProcessingModeChange,
   newEducationOrganizationName,
   onEducationOrganizationNameChange,
   groupValidationMode,
@@ -103,6 +105,8 @@ export function PublicLinkCreateDialog({
             educationOrganizations={educationOrganizations}
             newEducationOrganizationId={newEducationOrganizationId}
             onEducationOrganizationSelect={onEducationOrganizationSelect}
+            newPersonalDataProcessingMode={newPersonalDataProcessingMode}
+            onPersonalDataProcessingModeChange={onPersonalDataProcessingModeChange}
             newEducationOrganizationName={newEducationOrganizationName}
             onEducationOrganizationNameChange={onEducationOrganizationNameChange}
             groupValidationMode={groupValidationMode}

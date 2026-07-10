@@ -57,6 +57,8 @@ const createParams = (
     publishedVersionId: 10,
     newPublicShortCode: 'POLUS2026',
     newEducationOrganizationId: 4,
+    educationOrganizations: [{ id: 4, name: 'Лицей 4', isActive: true, personalDataReady: true }],
+    newPersonalDataProcessingMode: 'PUBLIC',
     newEducationOrganizationName: '',
     groupValidationMode: 'NONE',
     groupValidationPattern: '',
@@ -75,6 +77,7 @@ const createParams = (
     setSelectedPublicLinkId: vi.fn(),
     setPendingDeletePublicLinkId: vi.fn(),
     setNewPublicShortCode: vi.fn(),
+    setNewPersonalDataProcessingMode: vi.fn(),
     setNewEducationOrganizationId: vi.fn(),
     setNewEducationOrganizationName: vi.fn(),
     setGroupValidationMode: vi.fn(),
@@ -99,10 +102,32 @@ describe('useAdminPublicLinksActions', () => {
       {
         data: expect.objectContaining({
           publicTemplate: 'POLUS',
+          personalDataProcessingMode: 'PUBLIC',
+          educationOrganizationId: 4,
         }),
       },
       expect.any(Object),
     );
+  });
+
+  it('blocks an incomplete organization selected as the personal-data operator', () => {
+    createPublicLinkMutate.mockClear();
+    const { result } = renderHook(() =>
+      useAdminPublicLinksActions(
+        createParams({
+          newPersonalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+          educationOrganizations: [
+            { id: 4, name: 'Лицей 4', isActive: true, personalDataReady: false },
+          ],
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.handleCreatePublicLink();
+    });
+
+    expect(createPublicLinkMutate).not.toHaveBeenCalled();
   });
 
   it('submits public branding updates for the constructor', () => {
