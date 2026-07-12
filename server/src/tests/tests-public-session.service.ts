@@ -261,7 +261,7 @@ export class TestsPublicSessionService {
       },
     });
 
-    if (link.allowResume) {
+    if (link.allowResume && link.entryProfileMode !== 'DEMOGRAPHIC') {
       const resumableAttempt = previousAttempts.find(
         (attempt) =>
           attempt.status === 'IN_PROGRESS' &&

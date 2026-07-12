@@ -261,6 +261,31 @@ describe('TestsPublicSessionService', () => {
     expect(result.session.sessionToken).toBe('resume-demo');
   });
 
+  it('does not resume DEMOGRAPHIC sessions from matching profiles', async () => {
+    const link = createAccessibleLinkFixture({ entryProfileMode: 'DEMOGRAPHIC' });
+    link.allowResume = true;
+    link.maxAttemptsPerStudent = 1;
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(link);
+    findManyMock.mockResolvedValue([
+      {
+        id: 1,
+        attemptNumber: 1,
+        status: 'IN_PROGRESS',
+        resumeToken: 'another-participant-token',
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    ]);
+
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('another-participant-token'));
+
+    await expect(
+      service.startSessionByCode('DEMO2026', createPublicSessionDemographicStartDto()),
+    ).rejects.toThrow('Attempts limit reached for this test link');
+    expect(getSessionByTokenSpy).not.toHaveBeenCalled();
+  });
+
   it('startSessionByCode builds a stable DEMOGRAPHIC key from normalized profile and link', async () => {
     getAccessiblePublicLinkByCodeMock
       .mockResolvedValueOnce(
