@@ -117,7 +117,7 @@ describe('PublicLinksAttemptDetailDialog', () => {
     expect(professorImage).toBeInTheDocument();
     expect(professorImage).toHaveAttribute('src', expect.stringContaining('professor-polus'));
     expect(professionsSection).toBeInTheDocument();
-    expect(within(professionsSection as HTMLElement).getByText('20.15.24')).toBeInTheDocument();
+    expect(within(professionsSection as HTMLElement).getByText('Код 20.15.24')).toBeInTheDocument();
     expect(
       within(professionsSection as HTMLElement).getByRole('link', {
         name: /перейти в атлас профессий/i,
