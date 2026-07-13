@@ -21,7 +21,7 @@ const AdminSettingsPage = lazy(() => import('@/pages/admin/admin-settings-page')
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/admin-users-page'));
 const LoginPage = lazy(() => import('@/pages/login'));
-const PrivacyPage = lazy(() => import('@/pages/privacy-page'));
+const PrivacyPage = lazy(() => import('@/pages/privacy'));
 const PublicTestEntryPage = lazy(() => import('@/pages/t/public-test-entry-page'));
 const PublicTestResultPage = lazy(() => import('@/pages/t/public-test-result-page'));
 const PublicTestRunPage = lazy(() => import('@/pages/t/public-test-run-page'));
