@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
 import { attemptWithSessionInclude, type AttemptWithSessionData } from './tests-attempt.query';
+import { ensurePublicLinkAccessible } from './tests-public-link-access';
 
 export const getSessionAttemptByTokenOrThrow = async (
   prisma: PrismaService,
@@ -15,6 +16,8 @@ export const getSessionAttemptByTokenOrThrow = async (
   if (!attempt) {
     throw new NotFoundException('Test session not found');
   }
+
+  ensurePublicLinkAccessible(attempt.publicLink, attempt.topicVersion.status);
 
   return attempt;
 };

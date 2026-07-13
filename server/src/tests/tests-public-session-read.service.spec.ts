@@ -10,6 +10,15 @@ import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
 
 describe('TestsPublicSessionService read paths', () => {
+  const accessiblePublicLinkState = {
+    isActive: true,
+    archivedAt: null,
+    startsAt: null,
+    endsAt: null,
+  };
+  const publishedTopicVersionState = {
+    status: 'PUBLISHED',
+  };
   const publicBranding = {
     version: 1,
     buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
@@ -28,6 +37,7 @@ describe('TestsPublicSessionService read paths', () => {
       id: 5,
       resumeToken: 'session-token',
       publicLink: {
+        ...accessiblePublicLinkState,
         shortCode: 'ABC123',
         publicTemplate: 'POLUS',
         publicBranding,
@@ -39,6 +49,7 @@ describe('TestsPublicSessionService read paths', () => {
       expiresAt: new Date('2026-05-12T11:59:00.000Z'),
       finishedAt: null,
       topicVersion: {
+        ...publishedTopicVersionState,
         questions: [],
       },
       answers: [],
@@ -91,9 +102,11 @@ describe('TestsPublicSessionService read paths', () => {
       expiresAt: new Date('2026-05-12T11:59:00.000Z'),
       finishedAt: null,
       publicLink: {
+        ...accessiblePublicLinkState,
         publicTemplate: 'POLUS',
         publicBranding,
       },
+      topicVersion: publishedTopicVersionState,
       analysis: null,
     };
     const findUniqueMock = jest.fn().mockResolvedValue(attempt);
@@ -139,9 +152,11 @@ describe('TestsPublicSessionService read paths', () => {
       expiresAt: null,
       finishedAt: new Date('2026-05-12T12:00:00.000Z'),
       publicLink: {
+        ...accessiblePublicLinkState,
         publicTemplate: 'POLUS',
         publicBranding,
       },
+      topicVersion: publishedTopicVersionState,
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
