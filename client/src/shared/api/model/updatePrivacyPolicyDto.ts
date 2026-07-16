@@ -19,4 +19,9 @@ export interface UpdatePrivacyPolicyDto {
    * @maxLength 160000
    */
   content: string;
+  /**
+   * @minLength 1
+   * @maxLength 512
+   */
+  operatorFullName: string;
 }

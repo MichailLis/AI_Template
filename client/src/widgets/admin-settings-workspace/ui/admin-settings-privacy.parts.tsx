@@ -46,9 +46,11 @@ interface PrivacyPolicyFormProps {
   canSubmit: boolean;
   content: string;
   isSaving: boolean;
+  operatorFullName: string;
   publishedAt: string;
   version: string;
   onContentChange: (value: string) => void;
+  onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onVersionChange: (value: string) => void;
@@ -58,9 +60,11 @@ export function PrivacyPolicyForm({
   canSubmit,
   content,
   isSaving,
+  operatorFullName,
   publishedAt,
   version,
   onContentChange,
+  onOperatorFullNameChange,
   onPublishedAtChange,
   onSubmit,
   onVersionChange,
@@ -88,6 +92,22 @@ export function PrivacyPolicyForm({
             onChange={(event) => onPublishedAtChange(event.target.value)}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="privacy-policy-operator-full-name">
+          Наименование оператора персональных данных
+        </Label>
+        <Input
+          id="privacy-policy-operator-full-name"
+          value={operatorFullName}
+          onChange={(event) => onOperatorFullNameChange(event.target.value)}
+          maxLength={512}
+          autoComplete="organization"
+        />
+        <p className={adminClassNames.form.fieldHint}>
+          Отображается в публичных тестах, где оператором персональных данных выступает платформа.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">

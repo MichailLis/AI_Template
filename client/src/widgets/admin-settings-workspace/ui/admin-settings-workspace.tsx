@@ -30,6 +30,13 @@ import type { FormEvent } from 'react';
 
 const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
 const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
+const EMPTY_PRIVACY_POLICY_FORM = {
+  content: '',
+  isDirty: false,
+  operatorFullName: '',
+  publishedAt: '',
+  version: '',
+};
 
 const getApiErrorMessage = (error: unknown) =>
   getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
@@ -115,12 +122,7 @@ function AdminSettingsHero({
 
 function PrivacyPolicySettingsWorkspaceCard() {
   const queryClient = useQueryClient();
-  const [privacyPolicyForm, setPrivacyPolicyForm] = useState({
-    content: '',
-    isDirty: false,
-    publishedAt: '',
-    version: '',
-  });
+  const [privacyPolicyForm, setPrivacyPolicyForm] = useState(EMPTY_PRIVACY_POLICY_FORM);
   const privacyPolicyQuery = useAdminSettingsControllerGetPrivacyPolicySettings();
   const updatePrivacyPolicyMutation = useAdminSettingsControllerUpdatePrivacyPolicy({
     mutation: {
@@ -128,7 +130,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
         toast.error(getApiErrorMessage(error));
       },
       onSuccess: async () => {
-        setPrivacyPolicyForm({ content: '', isDirty: false, publishedAt: '', version: '' });
+        setPrivacyPolicyForm(EMPTY_PRIVACY_POLICY_FORM);
         await queryClient.invalidateQueries({
           queryKey: getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey(),
         });
@@ -147,9 +149,23 @@ function PrivacyPolicySettingsWorkspaceCard() {
   const privacyPolicyContent = privacyPolicyForm.isDirty
     ? privacyPolicyForm.content
     : (privacyPolicy?.content ?? '');
+  const privacyPolicyOperatorFullName = privacyPolicyForm.isDirty
+    ? privacyPolicyForm.operatorFullName
+    : (privacyPolicy?.operatorFullName ?? '');
   const normalizedPrivacyPolicyVersion = privacyPolicyVersion.trim();
   const normalizedPrivacyPolicyContent = privacyPolicyContent.trim();
+  const normalizedPrivacyPolicyOperatorFullName = privacyPolicyOperatorFullName.trim();
   const privacyPolicyPublishedAtIso = toIsoFromDateTimeLocal(privacyPolicyPublishedAt);
+  const getPrivacyPolicyDraft = (current: typeof privacyPolicyForm) => ({
+    content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
+    operatorFullName: current.isDirty
+      ? current.operatorFullName
+      : (privacyPolicy?.operatorFullName ?? ''),
+    publishedAt: current.isDirty
+      ? current.publishedAt
+      : toDateTimeLocalValue(privacyPolicy?.publishedAt),
+    version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
+  });
 
   const handlePrivacyPolicySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -157,6 +173,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
     if (
       !normalizedPrivacyPolicyVersion ||
       !normalizedPrivacyPolicyContent ||
+      !normalizedPrivacyPolicyOperatorFullName ||
       !privacyPolicyPublishedAtIso ||
       updatePrivacyPolicyMutation.isPending
     ) {
@@ -168,6 +185,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
         version: normalizedPrivacyPolicyVersion,
         publishedAt: privacyPolicyPublishedAtIso,
         content: normalizedPrivacyPolicyContent,
+        operatorFullName: normalizedPrivacyPolicyOperatorFullName,
       },
     });
   };
@@ -178,6 +196,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
         Boolean(
           normalizedPrivacyPolicyVersion &&
           normalizedPrivacyPolicyContent &&
+          normalizedPrivacyPolicyOperatorFullName &&
           privacyPolicyPublishedAtIso,
         ) && !updatePrivacyPolicyMutation.isPending
       }
@@ -185,6 +204,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
       isError={privacyPolicyQuery.isError}
       isLoading={privacyPolicyQuery.isLoading}
       isSaving={updatePrivacyPolicyMutation.isPending}
+      operatorFullName={privacyPolicyOperatorFullName}
       privacyPolicy={privacyPolicy}
       publishedAt={privacyPolicyPublishedAt}
       version={privacyPolicyVersion}
@@ -194,29 +214,29 @@ function PrivacyPolicySettingsWorkspaceCard() {
       onSubmit={handlePrivacyPolicySubmit}
       onContentChange={(value) =>
         setPrivacyPolicyForm((current) => ({
-          content: value,
+          ...getPrivacyPolicyDraft(current),
           isDirty: true,
-          publishedAt: current.isDirty
-            ? current.publishedAt
-            : toDateTimeLocalValue(privacyPolicy?.publishedAt),
-          version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
+          content: value,
+        }))
+      }
+      onOperatorFullNameChange={(value) =>
+        setPrivacyPolicyForm((current) => ({
+          ...getPrivacyPolicyDraft(current),
+          isDirty: true,
+          operatorFullName: value,
         }))
       }
       onPublishedAtChange={(value) =>
         setPrivacyPolicyForm((current) => ({
-          content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
+          ...getPrivacyPolicyDraft(current),
           isDirty: true,
           publishedAt: value,
-          version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
         }))
       }
       onVersionChange={(value) =>
         setPrivacyPolicyForm((current) => ({
-          content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
+          ...getPrivacyPolicyDraft(current),
           isDirty: true,
-          publishedAt: current.isDirty
-            ? current.publishedAt
-            : toDateTimeLocalValue(privacyPolicy?.publishedAt),
           version: value,
         }))
       }

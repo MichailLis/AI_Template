@@ -17,17 +17,15 @@ const publicPersonalData: PublicLinkAccessResponseDtoPersonalData = {
 describe('PublicPersonalDataOperator', () => {
   afterEach(cleanup);
 
-  it('shows the platform operator and keeps its local privacy policy in the same tab', () => {
+  it('shows the platform operator without duplicating the privacy policy link', () => {
     render(<PublicPersonalDataOperator personalData={publicPersonalData} />);
 
     expect(screen.getByText('ООО «Платформа диагностики»')).toBeInTheDocument();
-    const policyLink = screen.getByRole('link', { name: /политика обработки/i });
-    expect(policyLink).toHaveAttribute('href', '/privacy');
-    expect(policyLink).not.toHaveAttribute('target');
+    expect(screen.queryByRole('link', { name: /политика обработки/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
-  it('names the represented organization and safely opens its external documents', () => {
+  it('names the represented organization without duplicating document links', () => {
     const personalData: PublicLinkAccessResponseDtoPersonalData = {
       processingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
       operatorFullName: 'Государственное бюджетное общеобразовательное учреждение «Лицей № 1»',
@@ -48,13 +46,6 @@ describe('PublicPersonalDataOperator', () => {
       'src',
       personalData.logoUrl,
     );
-    expect(screen.getByRole('link', { name: /политика обработки/i })).toHaveAttribute(
-      'target',
-      '_blank',
-    );
-    expect(screen.getByRole('link', { name: /политика обработки/i })).toHaveAttribute(
-      'rel',
-      'noreferrer',
-    );
+    expect(screen.queryByRole('link', { name: /политика обработки/i })).not.toBeInTheDocument();
   });
 });

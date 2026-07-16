@@ -11,11 +11,69 @@ interface ApiErrorMessageOptions {
   requestMessage?: string;
 }
 
+const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  name: 'Название',
+  fullName: 'Полное наименование',
+  shortName: 'Сокращённое наименование',
+  inn: 'ИНН',
+  ogrn: 'ОГРН',
+  legalAddress: 'Юридический адрес',
+  email: 'Email',
+  phone: 'Телефон',
+  privacyPolicyUrl: 'Политика обработки ПДн',
+  consentDocumentUrl: 'Документ согласия',
+  logoUrl: 'Логотип',
+  groupValidationPattern: 'Шаблон группы/класса',
+};
+
+const normalizeValidationMessage = (message: string) => {
+  if (message === 'Invalid URL' || message === 'URL must use http or https') {
+    return 'укажите полный адрес, начинающийся с http:// или https://';
+  }
+
+  return message;
+};
+
+const extractValidationDetails = (error: Record<string, unknown>) => {
+  if (error.code !== 'VALIDATION_ERROR' || !Array.isArray(error.details)) {
+    return null;
+  }
+
+  const messagesByPath = new Map<string, Set<string>>();
+
+  for (const detail of error.details) {
+    if (!isRecord(detail) || typeof detail.message !== 'string') {
+      continue;
+    }
+
+    const path = typeof detail.path === 'string' && detail.path ? detail.path : 'Данные';
+    const messages = messagesByPath.get(path) ?? new Set<string>();
+    messages.add(normalizeValidationMessage(detail.message));
+    messagesByPath.set(path, messages);
+  }
+
+  if (messagesByPath.size === 0) {
+    return null;
+  }
+
+  return Array.from(messagesByPath, ([path, messages]) => {
+    const label = VALIDATION_FIELD_LABELS[path] ?? path;
+    return `${label}: ${Array.from(messages).join('; ')}`;
+  }).join('. ');
+};
+
 const extractErrorMessage = (data: Record<string, unknown>) => {
   const nestedError = data.error;
 
-  if (isRecord(nestedError) && 'message' in nestedError) {
-    return String(nestedError.message);
+  if (isRecord(nestedError)) {
+    const validationDetails = extractValidationDetails(nestedError);
+    if (validationDetails) {
+      return validationDetails;
+    }
+
+    if ('message' in nestedError) {
+      return String(nestedError.message);
+    }
   }
 
   if ('message' in data) {

@@ -40,10 +40,7 @@ describe('PublicTestDemographicProfileCard', () => {
     expect(screen.getByLabelText(/место жительства/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/уровень образования/i)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /политик/i })).not.toBeChecked();
-    expect(screen.getAllByRole('link', { name: /политик/i })).toHaveLength(2);
-    for (const link of screen.getAllByRole('link', { name: /политик/i })) {
-      expect(link).toHaveAttribute('href', '/privacy');
-    }
+    expect(screen.getByRole('link', { name: /политик/i })).toHaveAttribute('href', '/privacy');
     expect(screen.getByRole('button', { name: /начать тестирование/i })).toBeInTheDocument();
   });
 });

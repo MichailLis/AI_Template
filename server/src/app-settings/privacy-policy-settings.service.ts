@@ -8,13 +8,16 @@ import {
   DEFAULT_PRIVACY_POLICY_PUBLISHED_AT,
   DEFAULT_PRIVACY_POLICY_VERSION,
 } from './privacy-policy.default';
-
-const PRIVACY_POLICY_SETTING_KEY = 'privacy.policy';
+import {
+  DEFAULT_PLATFORM_OPERATOR_FULL_NAME,
+  PRIVACY_POLICY_SETTING_KEY,
+} from './privacy-policy.constants';
 
 const PrivacyPolicyPayloadSchema = z.object({
   version: z.string().trim().min(1).max(64),
   publishedAt: z.string().datetime(),
   content: z.string().trim().min(1).max(160000),
+  operatorFullName: z.string().trim().min(1).max(512).default(DEFAULT_PLATFORM_OPERATOR_FULL_NAME),
 });
 
 type PrivacyPolicyPayload = z.infer<typeof PrivacyPolicyPayloadSchema>;
@@ -34,6 +37,7 @@ export class PrivacyPolicySettingsService {
         version: DEFAULT_PRIVACY_POLICY_VERSION,
         publishedAt: DEFAULT_PRIVACY_POLICY_PUBLISHED_AT,
         content: DEFAULT_PRIVACY_POLICY_CONTENT,
+        operatorFullName: DEFAULT_PLATFORM_OPERATOR_FULL_NAME,
       },
       updatedAt: null,
     };
@@ -50,6 +54,7 @@ export class PrivacyPolicySettingsService {
       version: parsed.data.version.trim(),
       publishedAt: new Date(parsed.data.publishedAt).toISOString(),
       content: parsed.data.content.trim().replace(/\r\n?/g, '\n'),
+      operatorFullName: parsed.data.operatorFullName.trim(),
     };
   }
 
@@ -88,7 +93,7 @@ export class PrivacyPolicySettingsService {
     return (await this.getStoredPolicy()) ?? this.getDefaultPolicy();
   }
 
-  private toResponse(policy: StoredPolicy) {
+  private toPublicResponse(policy: StoredPolicy) {
     return {
       privacyPolicy: {
         version: policy.payload.version,
@@ -99,14 +104,23 @@ export class PrivacyPolicySettingsService {
     };
   }
 
+  private toAdminResponse(policy: StoredPolicy) {
+    return {
+      privacyPolicy: {
+        ...this.toPublicResponse(policy).privacyPolicy,
+        operatorFullName: policy.payload.operatorFullName,
+      },
+    };
+  }
+
   async getPublicPrivacyPolicy() {
-    return this.toResponse(await this.getEffectivePolicy());
+    return this.toPublicResponse(await this.getEffectivePolicy());
   }
 
   async getAdminPrivacyPolicy(userId: number) {
     await ensureAdminAccess(this.prisma, userId);
 
-    return this.toResponse(await this.getEffectivePolicy());
+    return this.toAdminResponse(await this.getEffectivePolicy());
   }
 
   async updatePrivacyPolicy(userId: number, input: unknown) {
@@ -114,23 +128,38 @@ export class PrivacyPolicySettingsService {
 
     const payload = this.normalizePayload(input);
     const value = JSON.stringify(payload);
-    const setting = await this.prisma.appSetting.upsert({
-      where: {
-        key: PRIVACY_POLICY_SETTING_KEY,
-      },
-      create: {
-        key: PRIVACY_POLICY_SETTING_KEY,
-        value,
-      },
-      update: {
-        value,
-      },
+    const setting = await this.prisma.$transaction(async (transaction) => {
+      const saved = await transaction.appSetting.upsert({
+        where: {
+          key: PRIVACY_POLICY_SETTING_KEY,
+        },
+        create: {
+          key: PRIVACY_POLICY_SETTING_KEY,
+          value,
+        },
+        update: {
+          value,
+        },
+      });
+
+      await transaction.testPublicLink.updateMany({
+        where: { personalDataProcessingMode: 'PUBLIC' },
+        data: { operatorFullNameSnapshot: payload.operatorFullName },
+      });
+
+      return saved;
     });
 
-    return this.toResponse({
+    return this.toAdminResponse({
       payload,
       updatedAt: setting.updatedAt,
     });
+  }
+
+  async getPlatformOperatorFullName() {
+    const policy = await this.getEffectivePolicy();
+
+    return policy.payload.operatorFullName;
   }
 
   async getActivePolicySnapshot() {

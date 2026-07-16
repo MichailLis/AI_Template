@@ -131,6 +131,7 @@ describe('AdminSettingsController', () => {
         version: '2026-07-09',
         publishedAt: '2026-07-09T00:00:00.000Z',
         content: 'Политика',
+        operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
         updatedAt: null,
       },
     });
@@ -140,6 +141,7 @@ describe('AdminSettingsController', () => {
         version: '2026-07-09',
         publishedAt: '2026-07-09T00:00:00.000Z',
         content: 'Политика',
+        operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
         updatedAt: null,
       },
     });
@@ -151,6 +153,7 @@ describe('AdminSettingsController', () => {
       version: '2026-07-10',
       publishedAt: '2026-07-10T00:00:00.000Z',
       content: 'Новая политика',
+      operatorFullName: 'ООО «Новый оператор»',
     };
     privacyPolicySettingsService.updatePrivacyPolicy.mockResolvedValue({
       privacyPolicy: {

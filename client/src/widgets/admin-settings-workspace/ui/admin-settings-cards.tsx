@@ -154,10 +154,12 @@ interface PrivacyPolicySettingsCardProps {
   isError: boolean;
   isLoading: boolean;
   isSaving: boolean;
+  operatorFullName: string;
   privacyPolicy: PrivacyPolicySettings | undefined;
   publishedAt: string;
   version: string;
   onContentChange: (value: string) => void;
+  onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
   onRetry: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -170,10 +172,12 @@ export function PrivacyPolicySettingsCard({
   isError,
   isLoading,
   isSaving,
+  operatorFullName,
   privacyPolicy,
   publishedAt,
   version,
   onContentChange,
+  onOperatorFullNameChange,
   onPublishedAtChange,
   onRetry,
   onSubmit,
@@ -215,9 +219,11 @@ export function PrivacyPolicySettingsCard({
           canSubmit={canSubmit}
           content={content}
           isSaving={isSaving}
+          operatorFullName={operatorFullName}
           publishedAt={publishedAt}
           version={version}
           onContentChange={onContentChange}
+          onOperatorFullNameChange={onOperatorFullNameChange}
           onPublishedAtChange={onPublishedAtChange}
           onSubmit={onSubmit}
           onVersionChange={onVersionChange}

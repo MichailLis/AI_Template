@@ -48,6 +48,25 @@ describe('getApiErrorMessage', () => {
       ),
     ).toBe('Request failed');
   });
+
+  it('shows a readable field message for validation details', () => {
+    expect(
+      getApiErrorMessage({
+        response: {
+          data: {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Validation failed',
+              details: [
+                { path: 'privacyPolicyUrl', message: 'Invalid URL' },
+                { path: 'privacyPolicyUrl', message: 'URL must use http or https' },
+              ],
+            },
+          },
+        },
+      }),
+    ).toBe('Политика обработки ПДн: укажите полный адрес, начинающийся с http:// или https://');
+  });
 });
 
 describe('parseApiError', () => {

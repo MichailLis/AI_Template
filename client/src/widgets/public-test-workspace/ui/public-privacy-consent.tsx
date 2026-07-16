@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { cn } from '@/shared/lib/utils';
 
 import { getPublicDocumentLinkProps } from './public-document-link';
@@ -17,22 +19,28 @@ export function PublicPrivacyConsent({
   personalData,
   onCheckedChange,
 }: PublicPrivacyConsentProps) {
+  const checkboxId = useId();
+
   return (
-    <label
+    <div
       className={cn(
         'flex items-start gap-3 rounded-md border border-border/70 bg-background/80 p-3 text-sm leading-6 text-foreground shadow-sm',
         className,
       )}
     >
       <input
+        id={checkboxId}
         type="checkbox"
         checked={checked}
         required
+        aria-label="Я ознакомлен(а) с Политикой обработки персональных данных и даю согласие на обработку персональных данных."
         onChange={(event) => onCheckedChange(event.target.checked)}
         className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <span>
-        Я ознакомлен(а) с{' '}
+        <label htmlFor={checkboxId} className="cursor-pointer">
+          Я ознакомлен(а) с
+        </label>{' '}
         <a
           href={personalData.privacyPolicyUrl}
           {...getPublicDocumentLinkProps(personalData.privacyPolicyUrl)}
@@ -40,7 +48,9 @@ export function PublicPrivacyConsent({
         >
           Политикой обработки персональных данных
         </a>{' '}
-        и{' '}
+        <label htmlFor={checkboxId} className="cursor-pointer">
+          и
+        </label>{' '}
         {personalData.consentDocumentUrl ? (
           <a
             href={personalData.consentDocumentUrl}
@@ -50,10 +60,14 @@ export function PublicPrivacyConsent({
             даю согласие на обработку персональных данных
           </a>
         ) : (
-          'даю согласие на обработку персональных данных'
+          <label htmlFor={checkboxId} className="cursor-pointer">
+            даю согласие на обработку персональных данных
+          </label>
         )}
-        .
+        <label htmlFor={checkboxId} className="cursor-pointer">
+          .
+        </label>
       </span>
-    </label>
+    </div>
   );
 }
