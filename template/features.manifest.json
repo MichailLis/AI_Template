@@ -4,8 +4,13 @@
     "requiredRoutes": ["/login"],
     "requiredBackendModule": "AuthModule"
   },
-  "publicRoutes": ["/t/:code", "/t/:code/session/:sessionToken", "/t/:code/result/:sessionToken"],
-  "generatedApiDirs": ["tests-public"],
+  "publicRoutes": [
+    "/privacy",
+    "/t/:code",
+    "/t/:code/session/:sessionToken",
+    "/t/:code/result/:sessionToken"
+  ],
+  "generatedApiDirs": ["privacy-policy", "tests-public"],
   "integrationModules": [
     {
       "name": "openrouter",
@@ -98,6 +103,16 @@
         },
         {
           "path": "/admin/settings/profession-atlas",
+          "methods": ["get", "patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/profession-atlas/coverage",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/privacy-policy",
           "methods": ["get", "patch"],
           "protected": true
         }

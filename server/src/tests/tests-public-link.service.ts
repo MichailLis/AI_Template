@@ -17,6 +17,7 @@ import { createShortCodeCandidate } from './tests-domain.utils';
 import { TestsEducationOrganizationService } from './tests-education-organization.service';
 import { toPrismaPublicBranding, toPublicBrandingResponse } from './tests-public-branding.utils';
 import { mapAdminPublicLink } from './tests-public-link.mapper';
+import { ensurePublicLinkAccessible } from './tests-public-link-access';
 import {
   PUBLIC_OPERATOR_FULL_NAME,
   PUBLIC_PRIVACY_POLICY_URL,
@@ -468,27 +469,7 @@ export class TestsPublicLinkService {
       throw new NotFoundException('Public test link not found');
     }
 
-    if (link.archivedAt) {
-      throw new NotFoundException('Public test link not found');
-    }
-
-    if (!link.isActive) {
-      throw new BadRequestException('Public test link is disabled');
-    }
-
-    if (link.topicVersion.status === 'DRAFT') {
-      throw new BadRequestException('Public test link points to draft test version');
-    }
-
-    const now = new Date();
-
-    if (link.startsAt && now < link.startsAt) {
-      throw new BadRequestException('Public test link is not active yet');
-    }
-
-    if (link.endsAt && now > link.endsAt) {
-      throw new BadRequestException('Public test link has expired');
-    }
+    ensurePublicLinkAccessible(link, link.topicVersion.status);
 
     return link;
   }
