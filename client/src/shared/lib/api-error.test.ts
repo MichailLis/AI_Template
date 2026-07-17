@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getApiErrorMessage, parseApiError } from './api-error';
+import { extractApiValidationIssues, getApiErrorMessage, parseApiError } from './api-error';
 
 describe('getApiErrorMessage', () => {
   it('reads nested server error messages', () => {
@@ -89,5 +89,40 @@ describe('parseApiError', () => {
     expect(parseApiError({ request: {} })).toBe(
       'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.',
     );
+  });
+});
+
+describe('extractApiValidationIssues', () => {
+  it('returns normalized field issues for a validation response', () => {
+    expect(
+      extractApiValidationIssues({
+        response: {
+          data: {
+            error: {
+              code: 'VALIDATION_ERROR',
+              details: [
+                { path: 'name', message: 'Название слишком короткое' },
+                { path: 'privacyPolicyUrl', message: 'Invalid URL' },
+                { path: 'privacyPolicyUrl', message: 'URL must use http or https' },
+              ],
+            },
+          },
+        },
+      }),
+    ).toEqual([
+      { path: 'name', message: 'Название слишком короткое' },
+      {
+        path: 'privacyPolicyUrl',
+        message: 'укажите полный адрес, начинающийся с http:// или https://',
+      },
+    ]);
+  });
+
+  it('returns an empty array for non-validation errors', () => {
+    expect(
+      extractApiValidationIssues({
+        response: { data: { error: { code: 'HTTP_ERROR', details: [] } } },
+      }),
+    ).toEqual([]);
   });
 });

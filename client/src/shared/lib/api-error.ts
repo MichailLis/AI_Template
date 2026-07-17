@@ -11,6 +11,11 @@ interface ApiErrorMessageOptions {
   requestMessage?: string;
 }
 
+export interface ApiValidationIssue {
+  path: string;
+  message: string;
+}
+
 const VALIDATION_FIELD_LABELS: Record<string, string> = {
   name: 'Название',
   fullName: 'Полное наименование',
@@ -34,9 +39,9 @@ const normalizeValidationMessage = (message: string) => {
   return message;
 };
 
-const extractValidationDetails = (error: Record<string, unknown>) => {
+const extractValidationDetails = (error: Record<string, unknown>): ApiValidationIssue[] => {
   if (error.code !== 'VALIDATION_ERROR' || !Array.isArray(error.details)) {
-    return null;
+    return [];
   }
 
   const messagesByPath = new Map<string, Set<string>>();
@@ -52,14 +57,33 @@ const extractValidationDetails = (error: Record<string, unknown>) => {
     messagesByPath.set(path, messages);
   }
 
-  if (messagesByPath.size === 0) {
+  return Array.from(messagesByPath, ([path, messages]) => ({
+    path,
+    message: Array.from(messages).join('; '),
+  }));
+};
+
+const formatValidationDetails = (issues: ApiValidationIssue[]) =>
+  issues
+    .map(({ path, message }) => `${VALIDATION_FIELD_LABELS[path] ?? path}: ${message}`)
+    .join('. ');
+
+const extractNestedApiError = (error: unknown) => {
+  if (!isRecord(error) || !('response' in error) || !isRecord(error.response)) {
     return null;
   }
 
-  return Array.from(messagesByPath, ([path, messages]) => {
-    const label = VALIDATION_FIELD_LABELS[path] ?? path;
-    return `${label}: ${Array.from(messages).join('; ')}`;
-  }).join('. ');
+  const response = error.response;
+  if (!('data' in response) || !isRecord(response.data) || !isRecord(response.data.error)) {
+    return null;
+  }
+
+  return response.data.error;
+};
+
+export const extractApiValidationIssues = (error: unknown): ApiValidationIssue[] => {
+  const nestedError = extractNestedApiError(error);
+  return nestedError ? extractValidationDetails(nestedError) : [];
 };
 
 const extractErrorMessage = (data: Record<string, unknown>) => {
@@ -67,8 +91,8 @@ const extractErrorMessage = (data: Record<string, unknown>) => {
 
   if (isRecord(nestedError)) {
     const validationDetails = extractValidationDetails(nestedError);
-    if (validationDetails) {
-      return validationDetails;
+    if (validationDetails.length > 0) {
+      return formatValidationDetails(validationDetails);
     }
 
     if ('message' in nestedError) {

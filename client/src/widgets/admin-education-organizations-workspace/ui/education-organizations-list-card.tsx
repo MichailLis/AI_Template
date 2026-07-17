@@ -1,22 +1,23 @@
+import { Pencil } from 'lucide-react';
+
+import { GROUP_VALIDATION_MODE_LABELS } from '@/shared/lib/group-validation';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
-
-import { modeLabel } from './admin-education-organizations-workspace.helpers';
 
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
 
 interface EducationOrganizationsListCardProps {
   organizations: AdminEducationOrganizationsListResponseDtoOrganizationsItem[];
-  selectedOrganizationId: number | null;
   page: number;
   total: number;
   totalPages: number;
   isFetching: boolean;
-  onSelectOrganization: (
+  onEditOrganization: (
     organization: AdminEducationOrganizationsListResponseDtoOrganizationsItem,
   ) => void;
   onPreviousPage: () => void;
@@ -25,21 +26,21 @@ interface EducationOrganizationsListCardProps {
 
 const EDUCATION_ORGANIZATIONS_COLUMNS = [
   { id: 'organization', header: 'Заведение' },
-  { id: 'mode', header: 'Режим' },
+  { id: 'mode', header: 'Режим', className: 'hidden md:table-cell' },
   { id: 'links', header: 'Ссылки' },
-  { id: 'attempts', header: 'Попытки' },
+  { id: 'attempts', header: 'Попытки', className: 'hidden md:table-cell' },
   { id: 'personal-data', header: 'ПДн' },
   { id: 'status', header: 'Статус' },
+  { id: 'actions', header: 'Действия', className: 'text-right' },
 ];
 
 export function EducationOrganizationsListCard({
   organizations,
-  selectedOrganizationId,
   page,
   total,
   totalPages,
   isFetching,
-  onSelectOrganization,
+  onEditOrganization,
   onPreviousPage,
   onNextPage,
 }: EducationOrganizationsListCardProps) {
@@ -49,9 +50,7 @@ export function EducationOrganizationsListCard({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="text-base">Список заведений</CardTitle>
-            <CardDescription>
-              Всего: {total}. Нажмите на строку, чтобы открыть настройки.
-            </CardDescription>
+            <CardDescription>{`Всего: ${total}`}</CardDescription>
           </div>
           {isFetching ? (
             <Badge variant="outline" className={adminBadgeClassNames.info}>
@@ -65,12 +64,6 @@ export function EducationOrganizationsListCard({
           columns={EDUCATION_ORGANIZATIONS_COLUMNS}
           items={organizations}
           getRowKey={(organization) => organization.id}
-          getRowClassName={(organization) =>
-            selectedOrganizationId === organization.id
-              ? adminClassNames.panel.selectedRow
-              : undefined
-          }
-          onRowClick={onSelectOrganization}
           emptyMessage="Пока нет учебных заведений"
           renderRow={(organization) => (
             <>
@@ -79,9 +72,11 @@ export function EducationOrganizationsListCard({
               >
                 {organization.name}
               </TableCell>
-              <TableCell>{modeLabel[organization.groupValidationMode]}</TableCell>
+              <TableCell className="hidden md:table-cell">
+                {GROUP_VALIDATION_MODE_LABELS[organization.groupValidationMode]}
+              </TableCell>
               <TableCell>{`${organization.activeLinksCount}/${organization.linksCount}`}</TableCell>
-              <TableCell>{organization.attemptsCount}</TableCell>
+              <TableCell className="hidden md:table-cell">{organization.attemptsCount}</TableCell>
               <TableCell>
                 {organization.personalDataReady ? (
                   <span className={adminBadgeClassNames.pillSuccess}>ПДн готовы</span>
@@ -95,6 +90,20 @@ export function EducationOrganizationsListCard({
                 ) : (
                   <span className={adminBadgeClassNames.pillNeutral}>Отключено</span>
                 )}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="whitespace-nowrap"
+                  aria-label={`Редактировать ${organization.name}`}
+                  title={`Редактировать ${organization.name}`}
+                  onClick={() => onEditOrganization(organization)}
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                  <span className="hidden lg:inline">Редактировать</span>
+                </Button>
               </TableCell>
             </>
           )}

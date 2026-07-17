@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
@@ -41,12 +42,11 @@ describe('EducationOrganizationsListCard', () => {
     render(
       <EducationOrganizationsListCard
         organizations={[createOrganization(1, true), createOrganization(2, false)]}
-        selectedOrganizationId={null}
         page={1}
         total={2}
         totalPages={1}
         isFetching={false}
-        onSelectOrganization={vi.fn()}
+        onEditOrganization={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
       />,
@@ -54,5 +54,30 @@ describe('EducationOrganizationsListCard', () => {
 
     expect(screen.getByText('ПДн готовы')).toBeInTheDocument();
     expect(screen.getByText('ПДн не готовы')).toBeInTheDocument();
+  });
+
+  it('opens the requested organization from a keyboard-accessible edit button', async () => {
+    const user = userEvent.setup();
+    const onEditOrganization = vi.fn();
+    const organization = createOrganization(42, true);
+
+    render(
+      <EducationOrganizationsListCard
+        organizations={[organization]}
+        page={1}
+        total={1}
+        totalPages={1}
+        isFetching={false}
+        onEditOrganization={onEditOrganization}
+        onPreviousPage={vi.fn()}
+        onNextPage={vi.fn()}
+      />,
+    );
+
+    const editButton = screen.getByRole('button', { name: 'Редактировать Лицей 42' });
+    editButton.focus();
+    await user.keyboard('{Enter}');
+
+    expect(onEditOrganization).toHaveBeenCalledWith(organization);
   });
 });
