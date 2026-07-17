@@ -58,6 +58,12 @@ const createTopicSnapshot = () => ({
 
 describe('TestsService analysis prompt attachment', () => {
   let service: TestsService;
+  let testsQuestionServiceMock: {
+    createQuestion: jest.Mock;
+    updateQuestion: jest.Mock;
+    deleteQuestion: jest.Mock;
+    reorderQuestions: jest.Mock;
+  };
   let prismaMock: {
     $transaction: jest.Mock;
     analysisPromptVersion: {
@@ -103,6 +109,12 @@ describe('TestsService analysis prompt attachment', () => {
   };
 
   beforeEach(() => {
+    testsQuestionServiceMock = {
+      createQuestion: jest.fn(),
+      updateQuestion: jest.fn(),
+      deleteQuestion: jest.fn(),
+      reorderQuestions: jest.fn(),
+    };
     txMock = {
       testTopic: {
         create: jest.fn(),
@@ -149,7 +161,7 @@ describe('TestsService analysis prompt attachment', () => {
 
     service = new TestsService(
       prismaMock as unknown as PrismaService,
-      {} as unknown as TestsQuestionService,
+      testsQuestionServiceMock as unknown as TestsQuestionService,
     );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
@@ -239,6 +251,161 @@ describe('TestsService analysis prompt attachment', () => {
     });
   });
 
+  it.each([
+    [
+      'getTopicDraft',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+
+        await service.getTopicDraft(5, 1);
+      },
+    ],
+    [
+      'createTopic',
+      async () => {
+        prismaMock.testTopic.findMany.mockResolvedValue([]);
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        txMock.testTopic.create.mockResolvedValue({ id: 1 });
+        txMock.testTopicVersion.create.mockResolvedValue({ id: 10 });
+        txMock.testTopic.update.mockResolvedValue({});
+
+        await service.createTopic(5, {
+          title: 'Career skills',
+          description: null,
+        });
+      },
+    ],
+    [
+      'createTopicFromAi',
+      async () => {
+        prismaMock.testTopic.findMany.mockResolvedValue([]);
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        txMock.testTopic.create.mockResolvedValue({ id: 1 });
+        txMock.testTopicVersion.create.mockResolvedValue({ id: 10 });
+        txMock.testTopic.update.mockResolvedValue({});
+        txMock.testQuestion.create.mockResolvedValue({ id: 100 });
+
+        await service.createTopicFromAi(5, {
+          title: 'Career skills',
+          description: null,
+          questions: [
+            {
+              type: 'OPEN_TEXT',
+              title: 'What is easy for you?',
+              required: true,
+            },
+          ],
+        });
+      },
+    ],
+    [
+      'importProfOrientationV3Plus',
+      async () => {
+        prismaMock.testTopic.findMany.mockResolvedValue([]);
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        txMock.analysisPrompt.findFirst.mockResolvedValue({
+          id: 70,
+          versions: [{ id: 79 }],
+        });
+        txMock.testTopic.create.mockResolvedValue({ id: 1 });
+        txMock.testTopicVersion.create.mockResolvedValue({ id: 10 });
+        txMock.testTopic.update.mockResolvedValue({});
+        txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
+          Promise.resolve({ id: data.order }),
+        );
+
+        await service.importProfOrientationV3Plus(5);
+      },
+    ],
+    [
+      'updateTopicDraft',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        prismaMock.analysisPromptVersion.findFirst.mockResolvedValue(publishedPromptVersion);
+        prismaMock.testTopicVersion.update.mockResolvedValue({});
+
+        await service.updateTopicDraft(5, 1, {
+          title: 'Updated career skills',
+          analysisPromptVersionId: 42,
+        });
+      },
+    ],
+    [
+      'createQuestion',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        testsQuestionServiceMock.createQuestion.mockResolvedValue(undefined);
+
+        await service.createQuestion(5, 1, {
+          type: 'OPEN_TEXT',
+          title: 'What is easy for you?',
+          required: true,
+        });
+      },
+    ],
+    [
+      'updateQuestion',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        testsQuestionServiceMock.updateQuestion.mockResolvedValue(undefined);
+
+        await service.updateQuestion(5, 1, 100, {
+          type: 'OPEN_TEXT',
+          title: 'What is easiest for you?',
+          required: true,
+        });
+      },
+    ],
+    [
+      'deleteQuestion',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        testsQuestionServiceMock.deleteQuestion.mockResolvedValue(undefined);
+
+        await service.deleteQuestion(5, 1, 100);
+      },
+    ],
+    [
+      'reorderQuestions',
+      async () => {
+        prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+        testsQuestionServiceMock.reorderQuestions.mockResolvedValue(undefined);
+
+        await service.reorderQuestions(5, 1, {
+          questionIds: [100],
+        });
+      },
+    ],
+  ])('%s checks admin access exactly once', async (_name, act) => {
+    await act();
+
+    expect(ensureAdminAccess).toHaveBeenCalledTimes(1);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 5);
+  });
+
+  it('does not write when admin access is rejected before updating a draft', async () => {
+    const accessError = new Error('forbidden');
+    jest.mocked(ensureAdminAccess).mockRejectedValue(accessError);
+
+    await expect(
+      service.updateTopicDraft(5, 1, {
+        title: 'Blocked update',
+      }),
+    ).rejects.toThrow(accessError);
+
+    expect(prismaMock.testTopic.update).not.toHaveBeenCalled();
+    expect(prismaMock.testTopic.delete).not.toHaveBeenCalled();
+    expect(prismaMock.testTopicVersion.update).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(txMock.testTopic.create).not.toHaveBeenCalled();
+    expect(txMock.testTopic.update).not.toHaveBeenCalled();
+    expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
+    expect(txMock.testTopicVersion.update).not.toHaveBeenCalled();
+    expect(txMock.testQuestion.create).not.toHaveBeenCalled();
+    expect(txMock.testQuestionOption.createMany).not.toHaveBeenCalled();
+    expect(txMock.testQuestionSliderBand.createMany).not.toHaveBeenCalled();
+  });
+
   it('publishTopic carries selected prompt version into the next draft', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     txMock.testTopicVersion.update.mockResolvedValue({});
@@ -280,6 +447,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
       Promise.resolve({ id: data.order }),
     );
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     const getTopicDraftSpy = jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
       topicId: 1,
       slug: 'prof-orientation-v3-plus',
@@ -309,7 +477,11 @@ describe('TestsService analysis prompt attachment', () => {
     expect(txMock.testQuestion.create).toHaveBeenCalledTimes(21);
     expect(txMock.testQuestionOption.createMany).toHaveBeenCalledTimes(10);
     expect(txMock.testQuestionSliderBand.createMany).toHaveBeenCalledTimes(11);
-    expect(getTopicDraftSpy).toHaveBeenCalledWith(5, 1);
+    expect(getTopicDraftSpy).not.toHaveBeenCalled();
+    expect(prismaMock.testTopic.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+      include: expect.any(Object) as unknown,
+    });
   });
 
   it('importProfOrientationV3Plus reuses the latest published prompt version model selected in UI', async () => {
@@ -333,6 +505,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
       Promise.resolve({ id: data.order }),
     );
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
       topicId: 1,
       slug: 'prof-orientation-v3-plus',
