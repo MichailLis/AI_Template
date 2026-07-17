@@ -170,6 +170,27 @@ describe('TestsService analysis prompt attachment', () => {
     jest.clearAllMocks();
   });
 
+  const expectNoQuestionServiceCalls = () => {
+    expect(testsQuestionServiceMock.createQuestion).not.toHaveBeenCalled();
+    expect(testsQuestionServiceMock.updateQuestion).not.toHaveBeenCalled();
+    expect(testsQuestionServiceMock.deleteQuestion).not.toHaveBeenCalled();
+    expect(testsQuestionServiceMock.reorderQuestions).not.toHaveBeenCalled();
+  };
+
+  const expectNoPrismaWrites = () => {
+    expect(prismaMock.testTopic.update).not.toHaveBeenCalled();
+    expect(prismaMock.testTopic.delete).not.toHaveBeenCalled();
+    expect(prismaMock.testTopicVersion.update).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(txMock.testTopic.create).not.toHaveBeenCalled();
+    expect(txMock.testTopic.update).not.toHaveBeenCalled();
+    expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
+    expect(txMock.testTopicVersion.update).not.toHaveBeenCalled();
+    expect(txMock.testQuestion.create).not.toHaveBeenCalled();
+    expect(txMock.testQuestionOption.createMany).not.toHaveBeenCalled();
+    expect(txMock.testQuestionSliderBand.createMany).not.toHaveBeenCalled();
+  };
+
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
@@ -383,6 +404,59 @@ describe('TestsService analysis prompt attachment', () => {
     expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 5);
   });
 
+  it.each([
+    [
+      'createQuestion',
+      async (accessError: Error) => {
+        await expect(
+          service.createQuestion(5, 1, {
+            type: 'OPEN_TEXT',
+            title: 'Blocked question',
+            required: true,
+          }),
+        ).rejects.toBe(accessError);
+      },
+    ],
+    [
+      'updateQuestion',
+      async (accessError: Error) => {
+        await expect(
+          service.updateQuestion(5, 1, 100, {
+            type: 'OPEN_TEXT',
+            title: 'Blocked update',
+            required: true,
+          }),
+        ).rejects.toBe(accessError);
+      },
+    ],
+    [
+      'deleteQuestion',
+      async (accessError: Error) => {
+        await expect(service.deleteQuestion(5, 1, 100)).rejects.toBe(accessError);
+      },
+    ],
+    [
+      'reorderQuestions',
+      async (accessError: Error) => {
+        await expect(
+          service.reorderQuestions(5, 1, {
+            questionIds: [100],
+          }),
+        ).rejects.toBe(accessError);
+      },
+    ],
+  ])('%s does not call question writers when admin access is rejected', async (_name, act) => {
+    const accessError = new Error('forbidden');
+    jest.mocked(ensureAdminAccess).mockRejectedValue(accessError);
+
+    await act(accessError);
+
+    expect(ensureAdminAccess).toHaveBeenCalledTimes(1);
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 5);
+    expectNoQuestionServiceCalls();
+    expectNoPrismaWrites();
+  });
+
   it('does not write when admin access is rejected before updating a draft', async () => {
     const accessError = new Error('forbidden');
     jest.mocked(ensureAdminAccess).mockRejectedValue(accessError);
@@ -393,17 +467,7 @@ describe('TestsService analysis prompt attachment', () => {
       }),
     ).rejects.toThrow(accessError);
 
-    expect(prismaMock.testTopic.update).not.toHaveBeenCalled();
-    expect(prismaMock.testTopic.delete).not.toHaveBeenCalled();
-    expect(prismaMock.testTopicVersion.update).not.toHaveBeenCalled();
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
-    expect(txMock.testTopic.create).not.toHaveBeenCalled();
-    expect(txMock.testTopic.update).not.toHaveBeenCalled();
-    expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
-    expect(txMock.testTopicVersion.update).not.toHaveBeenCalled();
-    expect(txMock.testQuestion.create).not.toHaveBeenCalled();
-    expect(txMock.testQuestionOption.createMany).not.toHaveBeenCalled();
-    expect(txMock.testQuestionSliderBand.createMany).not.toHaveBeenCalled();
+    expectNoPrismaWrites();
   });
 
   it('publishTopic carries selected prompt version into the next draft', async () => {
