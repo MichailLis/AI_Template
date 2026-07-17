@@ -4,10 +4,12 @@ import { join } from 'node:path';
 const root = process.cwd();
 
 const aiGuidePath = join(root, 'AI_GUIDE.md');
+const agentPath = join(root, 'AGENT.md');
 const readmePath = join(root, 'README.md');
 
-const [aiGuide, readme] = await Promise.all([
+const [aiGuide, agent, readme] = await Promise.all([
   readFile(aiGuidePath, 'utf-8'),
+  readFile(agentPath, 'utf-8'),
   readFile(readmePath, 'utf-8'),
 ]);
 
@@ -21,6 +23,8 @@ const requiredAiGuideTokens = [
 ];
 
 const requiredReadmeTokens = ['Use `AI_GUIDE.md` as the source of truth for implementation rules.'];
+const requiredAgentTokens = ['AGENTS.md', 'AI_GUIDE.md'];
+const forbiddenAgentTokens = ['ULTRATHINK', 'Senior Frontend Architect'];
 
 const errors = [];
 
@@ -33,6 +37,18 @@ for (const token of requiredAiGuideTokens) {
 for (const token of requiredReadmeTokens) {
   if (!readme.includes(token)) {
     errors.push(`README.md: expected to include "${token}"`);
+  }
+}
+
+for (const token of requiredAgentTokens) {
+  if (!agent.includes(token)) {
+    errors.push(`AGENT.md: expected to include "${token}"`);
+  }
+}
+
+for (const token of forbiddenAgentTokens) {
+  if (agent.includes(token)) {
+    errors.push(`AGENT.md: expected not to include "${token}"`);
   }
 }
 
