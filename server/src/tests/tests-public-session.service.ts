@@ -9,14 +9,7 @@ import { mapSessionState } from './tests-attempt.mapper';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ensureAttemptCanAcceptAnswers } from './tests-attempt.guards';
 import { toOptionalIsoString } from './tests-date.utils';
-import {
-  buildDemographicStudentKeyHash,
-  buildEducationDemographicStudentKeyHash,
-  buildStudentKeyHash,
-  createRandomToken,
-  toPrismaRequiredJsonInput,
-} from './tests-domain.utils';
-import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
+import { toPrismaRequiredJsonInput } from './tests-domain.utils';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import {
   ProfOrientationAtlasService,
@@ -28,78 +21,14 @@ import {
   validatePublicAnswerPayload,
   validatePublicAttemptAnswersForFinish,
 } from './tests-answer-validation';
+import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { toPublicBrandingResponse } from './tests-public-branding.utils';
 import {
-  PUBLIC_OPERATOR_FULL_NAME,
-  PUBLIC_PRIVACY_POLICY_URL,
-} from './tests-personal-data-operator';
-
-type SessionStateResponse = {
-  session: ReturnType<typeof mapSessionState>;
-};
-
-type AccessiblePublicLink = Awaited<
-  ReturnType<TestsPublicLinkService['getAccessiblePublicLinkByCode']>
->;
-
-type DemographicProfile = {
-  studentGender: NonNullable<PublicSessionStartRequestDto['gender']>;
-  studentAge: number;
-  studentResidence: string;
-  studentEducationLevel: NonNullable<PublicSessionStartRequestDto['educationLevel']>;
-};
-
-type AttemptProfileSnapshot = {
-  studentName: string | null;
-  studentLastInitial: string | null;
-  studentMiddleInitial: string | null;
-  educationOrganization: string | null;
-  groupOrClass: string | null;
-  studentGender: DemographicProfile['studentGender'] | null;
-  studentAge: number | null;
-  studentResidence: string | null;
-  studentEducationLevel: DemographicProfile['studentEducationLevel'] | null;
-};
-
-type AttemptAllocationInput = {
-  link: AccessiblePublicLink;
-  studentKeyHash: string;
-  profile: AttemptProfileSnapshot;
-};
-
-type AttemptAllocationClient = Pick<PrismaService, 'testStudentAttempt'>;
-
-const toAttemptOperatorSnapshot = (link: AccessiblePublicLink) => {
-  const isPublicProcessing = link.personalDataProcessingMode === 'PUBLIC';
-
-  return {
-    operatorEducationOrganizationId: isPublicProcessing ? null : link.educationOrganizationId,
-    operatorFullNameSnapshot: isPublicProcessing
-      ? (link.operatorFullNameSnapshot ?? PUBLIC_OPERATOR_FULL_NAME)
-      : link.operatorFullNameSnapshot,
-    operatorShortNameSnapshot: link.operatorShortNameSnapshot,
-    operatorPrivacyPolicyUrlSnapshot: isPublicProcessing
-      ? (link.operatorPrivacyPolicyUrlSnapshot ?? PUBLIC_PRIVACY_POLICY_URL)
-      : link.operatorPrivacyPolicyUrlSnapshot,
-    operatorConsentDocumentUrlSnapshot: link.operatorConsentDocumentUrlSnapshot,
-  };
-};
-
-const isAttemptNumberRaceError = (error: unknown) => {
-  if (typeof error !== 'object' || error === null) {
-    return false;
-  }
-
-  const prismaError = error as { code?: unknown; meta?: { target?: unknown } };
-  const target = prismaError.meta?.target;
-
-  return (
-    prismaError.code === 'P2002' &&
-    Array.isArray(target) &&
-    ['publicLinkId', 'studentKeyHash', 'attemptNumber'].every((field) => target.includes(field))
-  );
-};
+  PublicSessionProfileValidationError,
+  resolvePublicSessionStartProfile,
+} from './tests-public-session-profile';
+import type { SessionStateResponse } from './tests-public-session.types';
 
 @Injectable()
 export class TestsPublicSessionService {
@@ -107,83 +36,10 @@ export class TestsPublicSessionService {
     private readonly prisma: PrismaService,
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
-    private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
+    private readonly attemptAllocationService: TestsPublicAttemptAllocationService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
-
-  private matchesGroupPattern(groupOrClass: string, pattern: string) {
-    try {
-      return new RegExp(pattern, 'u').test(groupOrClass);
-    } catch {
-      return true;
-    }
-  }
-
-  private validateGroupOrClassForLink(groupOrClass: string, link: AccessiblePublicLink) {
-    const validationMode = link.educationOrganization?.groupValidationMode ?? 'NONE';
-    const validationPattern = link.educationOrganization?.groupValidationPattern;
-
-    if (validationMode !== 'STRICT' || !validationPattern) {
-      return;
-    }
-
-    if (!this.matchesGroupPattern(groupOrClass, validationPattern)) {
-      throw new BadRequestException(
-        link.educationOrganization?.groupValidationHint ||
-          'Формат поля "Группа / класс" не соответствует требованиям учебного заведения',
-      );
-    }
-  }
-
-  private normalizeRequiredString(value: string | undefined, message: string) {
-    const normalizedValue = value?.trim() ?? '';
-
-    if (!normalizedValue) {
-      throw new BadRequestException(message);
-    }
-
-    return normalizedValue;
-  }
-
-  private validateEntryProfileMode(link: AccessiblePublicLink, dto: PublicSessionStartRequestDto) {
-    if (dto.entryProfileMode && dto.entryProfileMode !== link.entryProfileMode) {
-      throw new BadRequestException('Анкета не соответствует настройкам ссылки');
-    }
-  }
-
-  private resolveDemographicProfile(dto: PublicSessionStartRequestDto): DemographicProfile {
-    if (!dto.gender) {
-      throw new BadRequestException('Укажите пол');
-    }
-
-    const studentAge = dto.age;
-
-    if (
-      studentAge === undefined ||
-      !Number.isInteger(studentAge) ||
-      studentAge < 1 ||
-      studentAge > 120
-    ) {
-      throw new BadRequestException('Укажите корректный возраст');
-    }
-
-    const studentResidence = this.normalizeRequiredString(
-      dto.residence,
-      'Укажите место жительства',
-    );
-
-    if (!dto.educationLevel) {
-      throw new BadRequestException('Укажите уровень образования');
-    }
-
-    return {
-      studentGender: dto.gender,
-      studentAge,
-      studentResidence,
-      studentEducationLevel: dto.educationLevel,
-    };
-  }
 
   private toSessionResultAnalysisResponse(
     status: ReturnType<TestsAnalysisService['toAttemptStatus']>,
@@ -225,105 +81,12 @@ export class TestsPublicSessionService {
     };
   }
 
-  private async allocateAttempt(client: AttemptAllocationClient, input: AttemptAllocationInput) {
-    const { link, profile, studentKeyHash } = input;
-    const now = new Date();
-
-    await client.testStudentAttempt.updateMany({
-      where: {
-        publicLinkId: link.id,
-        studentKeyHash,
-        status: 'IN_PROGRESS',
-        expiresAt: {
-          lt: now,
-        },
-      },
-      data: {
-        status: 'EXPIRED',
-        finishedAt: now,
-      },
-    });
-
-    const previousAttempts = await client.testStudentAttempt.findMany({
-      where: {
-        publicLinkId: link.id,
-        studentKeyHash,
-      },
-      select: {
-        id: true,
-        attemptNumber: true,
-        status: true,
-        resumeToken: true,
-        expiresAt: true,
-      },
-      orderBy: {
-        attemptNumber: 'desc',
-      },
-    });
-
-    if (link.allowResume && link.entryProfileMode !== 'DEMOGRAPHIC') {
-      const resumableAttempt = previousAttempts.find(
-        (attempt) =>
-          attempt.status === 'IN_PROGRESS' &&
-          (!attempt.expiresAt || attempt.expiresAt.getTime() > now.getTime()),
-      );
-
-      if (resumableAttempt) {
-        return { resumeToken: resumableAttempt.resumeToken };
-      }
-    }
-
-    if (previousAttempts.length >= link.maxAttemptsPerStudent) {
-      throw new BadRequestException('Attempts limit reached for this test link');
-    }
-
-    const nextAttemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;
-    const expiresAt =
-      link.timeLimitMinutes !== null
-        ? new Date(now.getTime() + link.timeLimitMinutes * 60 * 1000)
-        : null;
-    const activePolicy = await this.privacyPolicySettingsService.getActivePolicySnapshot();
-    const createdAttempt = await client.testStudentAttempt.create({
-      data: {
-        publicLinkId: link.id,
-        topicVersionId: link.topicVersionId,
-        attemptNumber: nextAttemptNumber,
-        status: 'IN_PROGRESS',
-        ...profile,
-        studentKeyHash,
-        consentAcceptedAt: now,
-        consentVersion: link.consentVersion,
-        consentTextSnapshot: link.consentTextSnapshot,
-        policyVersionSnapshot: activePolicy.version,
-        policyPublishedAtSnapshot: activePolicy.publishedAt,
-        ...toAttemptOperatorSnapshot(link),
-        resumeToken: createRandomToken(24),
-        startedAt: now,
-        expiresAt,
-      },
-    });
-
-    return { resumeToken: createdAttempt.resumeToken };
-  }
-
   private async startAllocatedSession(
-    input: AttemptAllocationInput,
+    input: Parameters<TestsPublicAttemptAllocationService['allocate']>[0],
   ): Promise<SessionStateResponse> {
-    for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
-      try {
-        const allocatedAttempt = await this.prisma.$transaction((tx) =>
-          this.allocateAttempt(tx, input),
-        );
+    const allocatedAttempt = await this.attemptAllocationService.allocate(input);
 
-        return this.getSessionByToken(allocatedAttempt.resumeToken);
-      } catch (error) {
-        if (!isAttemptNumberRaceError(error)) {
-          throw error;
-        }
-      }
-    }
-
-    throw new BadRequestException('Не удалось начать попытку. Попробуйте ещё раз.');
+    return this.getSessionByToken(allocatedAttempt.resumeToken);
   }
 
   async startSessionByCode(
@@ -331,99 +94,16 @@ export class TestsPublicSessionService {
     dto: PublicSessionStartRequestDto,
   ): Promise<SessionStateResponse> {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
-    this.validateEntryProfileMode(link, dto);
 
-    if (link.entryProfileMode === 'DEMOGRAPHIC') {
-      return this.startDemographicSession(link, dto);
+    try {
+      return await this.startAllocatedSession(resolvePublicSessionStartProfile(link, dto));
+    } catch (error) {
+      if (error instanceof PublicSessionProfileValidationError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
     }
-
-    const isEducationDemographicMode = link.entryProfileMode === 'EDUCATION_DEMOGRAPHIC';
-    const resolvedEducationOrganization =
-      link.educationOrganization?.name ??
-      this.normalizeRequiredString(
-        dto.educationOrganization,
-        'Учебное заведение обязательно для начала теста',
-      );
-    const studentName = this.normalizeRequiredString(dto.studentName, 'Укажите имя участника');
-    const normalizedGroupOrClass = this.normalizeRequiredString(
-      dto.groupOrClass,
-      'Укажите группу или класс',
-    );
-    const demographicProfile = isEducationDemographicMode
-      ? this.resolveDemographicProfile(dto)
-      : null;
-    let studentLastInitial: string | null = null;
-    let studentMiddleInitial: string | null = null;
-    let studentKeyHash: string;
-
-    if (demographicProfile) {
-      studentKeyHash = buildEducationDemographicStudentKeyHash({
-        studentName,
-        studentAge: demographicProfile.studentAge,
-        educationOrganization: resolvedEducationOrganization,
-        groupOrClass: normalizedGroupOrClass,
-      });
-    } else {
-      studentLastInitial = this.normalizeRequiredString(
-        dto.studentLastInitial,
-        'Укажите первую букву фамилии',
-      );
-      studentMiddleInitial = this.normalizeRequiredString(
-        dto.studentMiddleInitial,
-        'Укажите первую букву отчества',
-      );
-      studentKeyHash = buildStudentKeyHash({
-        studentName,
-        studentLastInitial,
-        studentMiddleInitial,
-        educationOrganization: resolvedEducationOrganization,
-        groupOrClass: normalizedGroupOrClass,
-      });
-    }
-
-    this.validateGroupOrClassForLink(normalizedGroupOrClass, link);
-
-    return this.startAllocatedSession({
-      link,
-      studentKeyHash,
-      profile: {
-        studentName,
-        studentLastInitial,
-        studentMiddleInitial,
-        educationOrganization: resolvedEducationOrganization,
-        groupOrClass: normalizedGroupOrClass,
-        studentGender: demographicProfile?.studentGender ?? null,
-        studentAge: demographicProfile?.studentAge ?? null,
-        studentResidence: demographicProfile?.studentResidence ?? null,
-        studentEducationLevel: demographicProfile?.studentEducationLevel ?? null,
-      },
-    });
-  }
-
-  private async startDemographicSession(
-    link: AccessiblePublicLink,
-    dto: PublicSessionStartRequestDto,
-  ): Promise<SessionStateResponse> {
-    const demographicProfile = this.resolveDemographicProfile(dto);
-
-    return this.startAllocatedSession({
-      link,
-      studentKeyHash: buildDemographicStudentKeyHash({
-        publicLinkId: link.id,
-        ...demographicProfile,
-      }),
-      profile: {
-        studentName: null,
-        studentLastInitial: null,
-        studentMiddleInitial: null,
-        educationOrganization: null,
-        groupOrClass: null,
-        studentGender: demographicProfile.studentGender,
-        studentAge: demographicProfile.studentAge,
-        studentResidence: demographicProfile.studentResidence,
-        studentEducationLevel: demographicProfile.studentEducationLevel,
-      },
-    });
   }
 
   async getSessionByToken(sessionToken: string): Promise<SessionStateResponse> {

@@ -3,7 +3,9 @@ import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas
 import { PrismaService } from '../prisma.service';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
+import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
+import { PUBLIC_OPERATOR_FULL_NAME } from './tests-personal-data-operator';
 import { TestsPublicSessionService } from './tests-public-session.service';
 import {
   createAccessibleLinkFixture,
@@ -49,21 +51,22 @@ describe('TestsPublicSessionService personal-data snapshots', () => {
       $transaction: jest.fn((callback: (tx: typeof transactionClient) => unknown) =>
         callback(transactionClient),
       ),
-    };
+    } as unknown as PrismaService;
+    const privacyPolicySettingsServiceMock = {
+      getActivePolicySnapshot: jest.fn().mockResolvedValue({
+        version: '2026-07-09',
+        publishedAt: new Date('2026-07-09T00:00:00.000Z'),
+        content: 'Политика',
+      }),
+    } as unknown as PrivacyPolicySettingsService;
 
     service = new TestsPublicSessionService(
-      prismaMock as unknown as PrismaService,
+      prismaMock,
       {
         getAccessiblePublicLinkByCode: getAccessiblePublicLinkByCodeMock,
       } as unknown as TestsPublicLinkService,
       {} as TestsAnalysisService,
-      {
-        getActivePolicySnapshot: jest.fn().mockResolvedValue({
-          version: '2026-07-09',
-          publishedAt: new Date('2026-07-09T00:00:00.000Z'),
-          content: 'Политика',
-        }),
-      } as unknown as PrivacyPolicySettingsService,
+      new TestsPublicAttemptAllocationService(prismaMock, privacyPolicySettingsServiceMock),
       {} as ProfessionAtlasSettingsService,
       {} as ProfOrientationAtlasService,
     );
@@ -131,7 +134,7 @@ describe('TestsPublicSessionService personal-data snapshots', () => {
     expect(createAttemptMock.mock.calls[0]?.[0].data).toEqual(
       expect.objectContaining({
         operatorEducationOrganizationId: null,
-        operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
+        operatorFullNameSnapshot: PUBLIC_OPERATOR_FULL_NAME,
         operatorShortNameSnapshot: null,
         operatorPrivacyPolicyUrlSnapshot: '/privacy',
         operatorConsentDocumentUrlSnapshot: null,

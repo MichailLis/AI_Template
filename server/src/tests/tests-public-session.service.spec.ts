@@ -7,6 +7,7 @@ import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
+import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
 import {
   createAccessibleLinkFixture,
@@ -127,13 +128,18 @@ describe('TestsPublicSessionService', () => {
     };
     analysisServiceMock.enqueueAttemptAnalysis = enqueueAttemptAnalysisMock;
 
+    const privacyPolicySettingsServiceMock = {
+      getActivePolicySnapshot: getActivePolicySnapshotMock,
+    } as unknown as PrivacyPolicySettingsService;
+
     service = new TestsPublicSessionService(
       prismaMock as unknown as PrismaService,
       publicLinkServiceMock as unknown as TestsPublicLinkService,
       analysisServiceMock as unknown as TestsAnalysisService,
-      {
-        getActivePolicySnapshot: getActivePolicySnapshotMock,
-      } as unknown as PrivacyPolicySettingsService,
+      new TestsPublicAttemptAllocationService(
+        prismaMock as unknown as PrismaService,
+        privacyPolicySettingsServiceMock,
+      ),
       {
         getProfessionAtlasUrl: getProfessionAtlasUrlMock,
       } as unknown as ProfessionAtlasSettingsService,

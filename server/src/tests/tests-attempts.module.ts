@@ -12,6 +12,7 @@ import { TestsAnalyticsExportService } from './tests-analytics-export.service';
 import { TestsAnalyticsPdfRendererService } from './tests-analytics-pdf-renderer.service';
 import { TestsAnalyticsService } from './tests-analytics.service';
 import { TestsAnalysisService } from './tests-analysis.service';
+import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicController } from './tests-public.controller';
 import { TestsPublicLinksModule } from './tests-public-links.module';
 import { TestsPublicSessionService } from './tests-public-session.service';
@@ -24,6 +25,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsAnalyticsExportService,
     TestsAnalyticsPdfRendererService,
     TestsAnalysisService,
+    TestsPublicAttemptAllocationService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
     PrivacyPolicySettingsService,
@@ -35,6 +37,7 @@ import { TestsPublicSessionService } from './tests-public-session.service';
     TestsAnalyticsService,
     TestsAnalyticsExportService,
     TestsAnalysisService,
+    TestsPublicAttemptAllocationService,
     TestsPublicSessionService,
     TestsAdminAttemptService,
   ],
