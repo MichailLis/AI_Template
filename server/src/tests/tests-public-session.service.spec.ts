@@ -1,14 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
 import { getSessionAttemptByTokenOrThrow } from './tests-attempt-access';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
-import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
+import { createAttemptAllocator } from './tests-public-session.spec-helpers';
 import {
   createAccessibleLinkFixture,
   createPublicSessionDemographicStartDto,
@@ -128,18 +127,11 @@ describe('TestsPublicSessionService', () => {
     };
     analysisServiceMock.enqueueAttemptAnalysis = enqueueAttemptAnalysisMock;
 
-    const privacyPolicySettingsServiceMock = {
-      getActivePolicySnapshot: getActivePolicySnapshotMock,
-    } as unknown as PrivacyPolicySettingsService;
-
     service = new TestsPublicSessionService(
       prismaMock as unknown as PrismaService,
       publicLinkServiceMock as unknown as TestsPublicLinkService,
       analysisServiceMock as unknown as TestsAnalysisService,
-      new TestsPublicAttemptAllocationService(
-        prismaMock as unknown as PrismaService,
-        privacyPolicySettingsServiceMock,
-      ),
+      createAttemptAllocator(prismaMock, getActivePolicySnapshotMock),
       {
         getProfessionAtlasUrl: getProfessionAtlasUrlMock,
       } as unknown as ProfessionAtlasSettingsService,
@@ -620,7 +612,7 @@ describe('TestsPublicSessionService', () => {
 
     await expect(
       service.saveAnswers('session-token', {
-        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+        answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
     ).rejects.toThrow(BadRequestException);
     expect(transactionMock).not.toHaveBeenCalled();
@@ -640,7 +632,7 @@ describe('TestsPublicSessionService', () => {
 
     await expect(
       service.saveAnswers('session-token', {
-        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+        answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
     ).rejects.toThrow(BadRequestException);
     expect(transactionMock).not.toHaveBeenCalled();

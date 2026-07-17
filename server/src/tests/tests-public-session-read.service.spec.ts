@@ -1,13 +1,10 @@
-import { ConfigService } from '@nestjs/config';
-
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { PrismaService } from '../prisma.service';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
-import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicAttemptAllocationService } from './tests-public-attempt-allocation.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';
+import { createTestsAnalysisService } from './tests-public-session.spec-helpers';
 
 describe('TestsPublicSessionService read paths', () => {
   const accessiblePublicLinkState = {
@@ -67,11 +64,7 @@ describe('TestsPublicSessionService read paths', () => {
         update: updateMock,
       },
     } as unknown as PrismaService;
-    const analysisService = new TestsAnalysisService(
-      prismaMock,
-      {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-    );
+    const analysisService = createTestsAnalysisService(prismaMock);
     const service = new TestsPublicSessionService(
       prismaMock,
       {} as TestsPublicLinkService,
@@ -117,11 +110,7 @@ describe('TestsPublicSessionService read paths', () => {
         update: updateMock,
       },
     } as unknown as PrismaService;
-    const analysisService = new TestsAnalysisService(
-      prismaMock,
-      {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-    );
+    const analysisService = createTestsAnalysisService(prismaMock);
     const service = new TestsPublicSessionService(
       prismaMock,
       {} as TestsPublicLinkService,
@@ -178,11 +167,7 @@ describe('TestsPublicSessionService read paths', () => {
         findUnique: jest.fn().mockResolvedValue(attempt),
       },
     } as unknown as PrismaService;
-    const analysisService = new TestsAnalysisService(
-      prismaMock,
-      {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-    );
+    const analysisService = createTestsAnalysisService(prismaMock);
     const service = new TestsPublicSessionService(
       prismaMock,
       {} as TestsPublicLinkService,

@@ -1,4 +1,5 @@
 import type { PublicSessionStartRequestDto } from './dto/tests-public.dto';
+import type { SessionStateResponse } from './tests-public-session.types';
 
 export type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
 export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
@@ -96,11 +97,12 @@ export const createPublicSessionEducationDemographicStartDto = (
   ...overrides,
 });
 
-export const createPublicSessionStateResponse = (sessionToken: string) => ({
+export const createPublicSessionStateResponse = (sessionToken: string): SessionStateResponse => ({
   session: {
     sessionToken,
     shortCode: 'ABC123',
     publicTemplate: 'STANDARD' as const,
+    publicBranding: null,
     attemptNumber: 1,
     status: 'IN_PROGRESS' as const,
     startedAt: new Date('2026-02-15T10:00:00.000Z').toISOString(),
