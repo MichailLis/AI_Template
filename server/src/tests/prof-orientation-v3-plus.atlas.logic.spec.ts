@@ -1,4 +1,5 @@
 import {
+  buildProfOrientationAtlasInstitutionSearchTerms,
   buildProfOrientationAtlasRecommendations,
   createUnavailableAtlasRecommendations,
   selectProfOrientationAtlasProfessions,
@@ -191,6 +192,22 @@ describe('prof-orientation Atlas pure logic', () => {
     const selected = selectProfOrientationAtlasProfessions(createSummary());
     const engineer = createProfessionDetail('Engineer', 'engineer', 'engineer-program');
     const analyst = createProfessionDetail('Analyst', 'analyst', 'analyst-program');
+
+    expect(
+      buildProfOrientationAtlasInstitutionSearchTerms(createSummary(), selected, [
+        engineer,
+        analyst,
+      ]),
+    ).toEqual([
+      { term: 'engineer', signalStrength: 1 },
+      { term: 'analyst', signalStrength: 1 },
+      { term: 'digital', signalStrength: 2 },
+      { term: 'design', signalStrength: 2 },
+      { term: 'robotics', signalStrength: 2 },
+      { term: 'systems', signalStrength: 2 },
+      { term: 'models', signalStrength: 2 },
+      { term: 'extra', signalStrength: 2 },
+    ]);
 
     const atlas = buildProfOrientationAtlasRecommendations({
       summary: createSummary(),

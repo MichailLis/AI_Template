@@ -9,6 +9,7 @@ import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas
 import { PrismaService } from '../prisma.service';
 import { getProfOrientationV3PlusProfessions } from './prof-orientation-v3-plus.fixture';
 import {
+  buildProfOrientationAtlasInstitutionSearchTerms,
   buildProfOrientationAtlasRecommendations,
   createUnavailableAtlasRecommendations,
   selectProfOrientationAtlasProfessions,
@@ -196,8 +197,11 @@ export class ProfOrientationAtlasService {
 
       const details = matchedProfessions.map((item) => item.detail);
       const professionSlugs = details.map((profession) => profession.slug);
-      const institutionSearchTerms =
-        buildProfOrientationAtlasRecommendations.institutionSearchTerms(summary, selected, details);
+      const institutionSearchTerms = buildProfOrientationAtlasInstitutionSearchTerms(
+        summary,
+        selected,
+        details,
+      );
       const [enterprises, events, searchedInstitutionGroups] =
         professionSlugs.length > 0
           ? await Promise.all([

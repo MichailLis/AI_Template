@@ -247,7 +247,7 @@ const tokenizeInstitutionTerm = (value: string) =>
     .map((term) => term.trim())
     .filter((term) => term.length >= 5 && !INSTITUTION_STOP_TERMS.has(term));
 
-const buildProfOrientationAtlasInstitutionSearchTerms = (
+export const buildProfOrientationAtlasInstitutionSearchTerms = (
   summary: ProfOrientationSummary,
   selected: Array<{ profession: ProfOrientationProfession }>,
   professions: ProfOrientationAtlasProfessionDetail[],
@@ -537,7 +537,7 @@ const selectEvents = (
     }));
 };
 
-const buildProfOrientationAtlasRecommendationsBase = ({
+export const buildProfOrientationAtlasRecommendations = ({
   summary,
   publicUrl,
   apiUrl,
@@ -577,13 +577,6 @@ const buildProfOrientationAtlasRecommendationsBase = ({
     institutions: selectInstitutions(publicUrl, details, searchedInstitutionMatches),
   };
 };
-
-export const buildProfOrientationAtlasRecommendations = Object.assign(
-  buildProfOrientationAtlasRecommendationsBase,
-  {
-    institutionSearchTerms: buildProfOrientationAtlasInstitutionSearchTerms,
-  },
-);
 
 export const createUnavailableAtlasRecommendations = ({
   publicUrl,
