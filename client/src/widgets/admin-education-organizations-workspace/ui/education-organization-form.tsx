@@ -1,4 +1,3 @@
-import { CheckCircle2, Circle } from 'lucide-react';
 import { useWatch } from 'react-hook-form';
 
 import { GROUP_VALIDATION_MODE_OPTIONS } from '@/shared/lib/group-validation';
@@ -15,10 +14,10 @@ import {
 import { Input } from '@/shared/ui/input';
 
 import {
-  getPersonalDataReadiness,
   type EducationOrganizationFormValues,
   type OrganizationEditorMode,
 } from './education-organization-form.schema';
+import { EducationOrganizationPersonalDataFieldsCompletion } from './education-organization-personal-data-fields-completion';
 
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -91,44 +90,6 @@ type FormSectionProps = Pick<EducationOrganizationFormProps, 'form'> & {
   disabled: boolean;
 };
 
-function PersonalDataReadiness({ values }: { values: EducationOrganizationFormValues }) {
-  const readiness = getPersonalDataReadiness(values);
-  const items = [
-    { label: 'Полное наименование', ready: Boolean(values.fullName.trim()) },
-    { label: 'Сокращённое наименование', ready: Boolean(values.shortName.trim()) },
-    { label: 'Политика обработки ПДн', ready: Boolean(values.privacyPolicyUrl.trim()) },
-  ];
-
-  return (
-    <div
-      className="rounded-md border border-admin-border bg-admin-panel-muted/40 p-3"
-      aria-live="polite"
-    >
-      <p className="text-sm font-medium text-admin-foreground">
-        {`Готовность ПДн: ${readiness.completed} из ${readiness.total}`}
-      </p>
-      <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
-        {items.map((item) => {
-          const Icon = item.ready ? CheckCircle2 : Circle;
-          return (
-            <span
-              key={item.label}
-              className={
-                item.ready
-                  ? 'flex gap-1.5 text-xs text-admin-success-foreground'
-                  : 'flex gap-1.5 text-xs text-admin-muted'
-              }
-            >
-              <Icon className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-              {item.label}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function MainDataSection({
   form,
   mode,
@@ -182,10 +143,10 @@ function OperatorSection({ form, disabled }: FormSectionProps) {
   return (
     <fieldset className={sectionClassName} disabled={disabled}>
       <legend className={legendClassName}>Оператор персональных данных</legend>
-      <PersonalDataReadiness values={values} />
+      <EducationOrganizationPersonalDataFieldsCompletion values={values} />
       <p className="text-xs text-admin-muted">
-        Эти поля не блокируют сохранение. Заполните все три, чтобы организация была готова к
-        обработке персональных данных.
+        Эти поля не блокируют сохранение. Для статуса «ПДн готовы» нужны все три поля и активное
+        заведение.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <OrganizationTextField

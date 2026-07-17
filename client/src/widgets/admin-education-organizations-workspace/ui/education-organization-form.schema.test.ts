@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createEducationOrganizationFormValues,
   educationOrganizationFormSchema,
-  getPersonalDataReadiness,
+  getPersonalDataFieldsCompletion,
   toCreateEducationOrganizationPayload,
 } from './education-organization-form.schema';
 
@@ -73,14 +73,14 @@ describe('educationOrganizationFormSchema', () => {
   });
 });
 
-describe('getPersonalDataReadiness', () => {
+describe('getPersonalDataFieldsCompletion', () => {
   it('returns 0 of 3 for an empty operator profile', () => {
-    expect(getPersonalDataReadiness(validValues())).toEqual({ completed: 0, total: 3 });
+    expect(getPersonalDataFieldsCompletion(validValues())).toEqual({ completed: 0, total: 3 });
   });
 
   it('returns 3 of 3 when all required operator fields are filled', () => {
     expect(
-      getPersonalDataReadiness({
+      getPersonalDataFieldsCompletion({
         ...validValues(),
         fullName: 'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
         shortName: 'МАОУ «Лицей № 42»',

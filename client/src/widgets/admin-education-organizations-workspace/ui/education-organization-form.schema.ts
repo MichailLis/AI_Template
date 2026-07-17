@@ -224,7 +224,7 @@ export const toUpdateEducationOrganizationPayload = (
   isActive: values.isActive,
 });
 
-export const getPersonalDataReadiness = (values: EducationOrganizationFormValues) => ({
+export const getPersonalDataFieldsCompletion = (values: EducationOrganizationFormValues) => ({
   completed: [values.fullName, values.shortName, values.privacyPolicyUrl].filter((value) =>
     Boolean(value.trim()),
   ).length,

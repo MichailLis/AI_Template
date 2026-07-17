@@ -55,7 +55,7 @@ describe('EducationOrganizationEditorSheet', () => {
 
     expect(screen.getByRole('dialog', { name: 'Новое учебное заведение' })).toBeInTheDocument();
     expect(screen.getByLabelText('Название *')).toHaveValue('');
-    expect(screen.getByText('Готовность ПДн: 0 из 3')).toBeInTheDocument();
+    expect(screen.getByText('Заполнение данных ПДн: 0 из 3')).toBeInTheDocument();
   });
 
   it('opens a populated edit form', () => {
@@ -71,7 +71,30 @@ describe('EducationOrganizationEditorSheet', () => {
 
     expect(screen.getByRole('dialog', { name: 'Редактирование заведения' })).toBeInTheDocument();
     expect(screen.getByLabelText('Название *')).toHaveValue('Лицей 42');
-    expect(screen.getByText('Готовность ПДн: 3 из 3')).toBeInTheDocument();
+    expect(screen.getByText('Заполнение данных ПДн: 3 из 3')).toBeInTheDocument();
+  });
+
+  it('describes filled privacy fields without claiming an inactive organization is ready', () => {
+    render(
+      <EducationOrganizationEditorSheet
+        open
+        mode="edit"
+        organization={{ ...organization, isActive: false }}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Заполнение данных ПДн: 3 из 3')).toBeInTheDocument();
+    expect(screen.queryByText('Готовность ПДн: 3 из 3')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Эти поля не блокируют сохранение. Для статуса «ПДн готовы» нужны все три поля и активное заведение.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Заполните все три, чтобы организация была готова/),
+    ).not.toBeInTheDocument();
   });
 
   it('shows validation messages next to fields and focuses the first error', async () => {
