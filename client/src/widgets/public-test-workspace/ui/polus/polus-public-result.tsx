@@ -3,7 +3,7 @@ import { Download } from 'lucide-react';
 import {
   parseAnalysisResult,
   parseProfOrientationSummary,
-  polusAssets,
+  PolusResultHero,
   ProfOrientationResult,
 } from '@/features/tests';
 
@@ -51,29 +51,6 @@ const getProfileDescription = (analysis: AnalysisResult | null) =>
   analysis?.thinkingType.description ??
   analysis?.introduction ??
   'Вы хорошо видите устройство системы целиком и можете связывать идеи, данные и практические шаги в одно решение.';
-
-function PolusResultHero({ analysis }: { analysis: AnalysisResult | null }) {
-  return (
-    <div className="polus-result-hero" aria-label="Профессор Полюс рассказывает результат">
-      <div className="polus-result-message">
-        <p className="polus-speaker-label">Профессор Полюс говорит:</p>
-        <h1>{getProfileTitle(analysis)}</h1>
-        <p>{getProfileDescription(analysis)}</p>
-      </div>
-      <div className="polus-result-professor" aria-hidden="true">
-        <div className="polus-result-speech-bubble">
-          <span className="polus-result-speech-dot" />
-          <span className="polus-result-speech-dot" />
-          <span className="polus-result-speech-dot" />
-        </div>
-        <div className="polus-result-professor-meta">
-          <img className="polus-result-professor-figure" src={polusAssets.professor} alt="" />
-          <span className="polus-result-professor-name">Профессор Полюс</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function PolusResultTiles({ analysis }: { analysis: AnalysisResult | null }) {
   const topSkills = getTopSkills(analysis);
@@ -150,7 +127,10 @@ export function PolusPublicResult({ result }: PolusPublicResultProps) {
               />
             ) : (
               <>
-                <PolusResultHero analysis={parsedAnalysis} />
+                <PolusResultHero
+                  headline={getProfileTitle(parsedAnalysis)}
+                  professorSummary={getProfileDescription(parsedAnalysis)}
+                />
                 <PolusResultTiles analysis={parsedAnalysis} />
                 <PolusProfileCard analysis={parsedAnalysis} />
                 <PolusMatchCard analysis={parsedAnalysis} />

@@ -1,7 +1,7 @@
+import { PolusResultHero } from './polus-result-hero';
 import { parseProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
 import { getProfessorStatusText, getProfessorText } from './prof-orientation-result.helpers';
 import {
-  ProfOrientationHero,
   ProfOrientationAtlasRecommendationsCard,
   ProfOrientationMiniProjectCard,
   ProfOrientationProfessionsCard,
@@ -100,7 +100,7 @@ export function ProfOrientationResult({
 
   return (
     <>
-      <ProfOrientationHero headline={headline} professorSummary={professorSummary} />
+      <PolusResultHero headline={headline} professorSummary={professorSummary} />
       <ProfOrientationScoreGrid directions={summary.topDirections} />
       <ProfOrientationProfileCard
         analysis={llmAnalysis}

@@ -1,3 +1,8 @@
+import {
+  studentEducationLevelOptions,
+  studentGenderOptions,
+} from '../public-test-demographic-options';
+
 import { PolusSelectField } from './polus-public-select-field';
 
 import type { DemographicFormState, StudentFormState } from '../public-test-entry.types';
@@ -22,19 +27,6 @@ interface PolusEducationDemographicFieldsProps {
   onDemographicFieldChange: DemographicFieldChangeHandler;
 }
 
-const educationLevelOptions = [
-  { value: 'BASIC_GENERAL', label: 'Основное общее' },
-  { value: 'SECONDARY_GENERAL', label: 'Среднее общее' },
-  { value: 'SECONDARY_SPECIAL', label: 'Среднее специальное' },
-  { value: 'INCOMPLETE_HIGHER_FROM_YEAR_3', label: 'Неоконченное высшее (начиная с 3 курса)' },
-  { value: 'HIGHER', label: 'Высшее' },
-] as const;
-
-const genderOptions = [
-  { value: 'MALE', label: 'Мужской' },
-  { value: 'FEMALE', label: 'Женский' },
-] as const;
-
 interface PolusDemographicSelectFieldsProps {
   demographicFormState: DemographicFormState;
   onDemographicFieldChange: DemographicFieldChangeHandler;
@@ -50,7 +42,7 @@ function PolusDemographicSelectFields({
         <label htmlFor="polus-student-gender">Пол</label>
         <PolusSelectField
           id="polus-student-gender"
-          options={genderOptions}
+          options={studentGenderOptions}
           placeholder="Выберите пол"
           required
           value={demographicFormState.gender}
@@ -63,7 +55,7 @@ function PolusDemographicSelectFields({
         <label htmlFor="polus-student-education-level">Уровень образования</label>
         <PolusSelectField
           id="polus-student-education-level"
-          options={educationLevelOptions}
+          options={studentEducationLevelOptions}
           placement="top"
           placeholder="Выберите уровень"
           required

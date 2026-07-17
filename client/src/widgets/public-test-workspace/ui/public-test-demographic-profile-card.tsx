@@ -7,6 +7,10 @@ import { Label } from '@/shared/ui/label';
 
 import { PublicPersonalDataOperator } from './public-personal-data-operator';
 import { PublicPrivacyConsent } from './public-privacy-consent';
+import {
+  studentEducationLevelOptions,
+  studentGenderOptions,
+} from './public-test-demographic-options';
 
 import type { DemographicFormState } from './public-test-entry.types';
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
@@ -29,14 +33,6 @@ interface DemographicProfileFieldsProps {
   formState: DemographicFormState;
   onFieldChange: FormFieldChangeHandler;
 }
-
-const educationLevelOptions = [
-  { value: 'BASIC_GENERAL', label: 'Основное общее' },
-  { value: 'SECONDARY_GENERAL', label: 'Среднее общее' },
-  { value: 'SECONDARY_SPECIAL', label: 'Среднее специальное' },
-  { value: 'INCOMPLETE_HIGHER_FROM_YEAR_3', label: 'Неоконченное высшее (начиная с 3 курса)' },
-  { value: 'HIGHER', label: 'Высшее' },
-] as const;
 
 function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (
@@ -97,8 +93,11 @@ function DemographicProfileFields({ formState, onFieldChange }: DemographicProfi
           className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="">Выберите пол</option>
-          <option value="MALE">Мужской</option>
-          <option value="FEMALE">Женский</option>
+          {studentGenderOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -150,7 +149,7 @@ function DemographicProfileFields({ formState, onFieldChange }: DemographicProfi
           className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="">Выберите уровень образования</option>
-          {educationLevelOptions.map((option) => (
+          {studentEducationLevelOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

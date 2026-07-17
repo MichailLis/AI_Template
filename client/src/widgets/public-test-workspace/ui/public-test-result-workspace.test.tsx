@@ -26,6 +26,22 @@ vi.mock('@/features/tests', async () => {
   };
 });
 
+const expectAccessiblePolusHero = (container: HTMLElement, headingPattern: RegExp) => {
+  const hero = container.querySelector(
+    '.polus-result-hero[aria-label="Профессор Полюс рассказывает результат"]',
+  );
+
+  expect(hero).toBeInTheDocument();
+  expect(within(hero as HTMLElement).getByText('Профессор Полюс говорит:')).toHaveClass(
+    'polus-speaker-label',
+  );
+  expect(
+    within(hero as HTMLElement).getByRole('heading', { name: headingPattern }),
+  ).toBeInTheDocument();
+  expect(hero?.querySelector('.polus-result-professor')).toHaveAttribute('aria-hidden', 'true');
+  expect(hero?.querySelector('img.polus-result-professor-figure')).toHaveAttribute('alt', '');
+};
+
 describe('PublicTestResultWorkspace', () => {
   it('shows a full processing screen while analysis is still pending', () => {
     mockSessionResult({
@@ -60,10 +76,11 @@ describe('PublicTestResultWorkspace', () => {
   it('renders the Polus result template when the session uses POLUS', () => {
     mockSessionResult({ publicTemplate: 'POLUS' });
 
-    render(<PublicTestResultWorkspace />);
+    const { container } = render(<PublicTestResultWorkspace />);
 
     expect(screen.getByText(/Профессор Полюс говорит/i)).toBeInTheDocument();
     expect(screen.getByText(/Персональная карта развития/i)).toBeInTheDocument();
+    expectAccessiblePolusHero(container, /Ваш профиль: исследователь решений/i);
   });
 
   it('renders prof-orientation Polus summary when algorithm result is available', () => {
@@ -131,6 +148,7 @@ describe('PublicTestResultWorkspace', () => {
     const view = within(container);
 
     expect(view.getByRole('heading', { name: /профиль: проектирование/i })).toBeInTheDocument();
+    expectAccessiblePolusHero(container, /профиль: проектирование/i);
     const heroText = container.querySelector('.polus-result-message')?.textContent ?? '';
     expect(heroText).toContain('идеи хочется превращать в понятные цифровые модели');
     expect(heroText).toContain('практическую пробу');
