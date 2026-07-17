@@ -4,13 +4,28 @@ import { useEffect, useState } from 'react';
 import { polusAssets, type PublicBrandingConfig } from '@/features/tests';
 
 import { PolusPublicLayout } from './polus/polus-public-layout';
-import { analysisProcessingSteps } from './public-test-analysis.mock';
 import { PublicThemeLayout } from './public-theme-layout';
 
 import type { ReactNode } from 'react';
 
 const stepDurationMs = 8_000;
 const longWaitThresholdMs = 35_000;
+
+interface AnalysisProcessingStep {
+  id: string;
+  text: string;
+}
+
+const analysisProcessingSteps: AnalysisProcessingStep[] = [
+  { id: 'prepare', text: 'Р“РѕС‚РѕРІРёРј РѕС‚РІРµС‚С‹ Рє Р°РЅР°Р»РёР·Сѓ' },
+  { id: 'patterns', text: 'Р’С‹РґРµР»СЏРµРј РєР»СЋС‡РµРІС‹Рµ Р·Р°РєРѕРЅРѕРјРµСЂРЅРѕСЃС‚Рё' },
+  { id: 'strengths', text: 'РЎРѕР±РёСЂР°РµРј РІС‹РІРѕРґС‹ Рѕ СЃРёР»СЊРЅС‹С… СЃС‚РѕСЂРѕРЅР°С…' },
+  { id: 'directions', text: 'РџРѕРґР±РёСЂР°РµРј РЅР°РїСЂР°РІР»РµРЅРёСЏ СЂР°Р·РІРёС‚РёСЏ' },
+  {
+    id: 'report',
+    text: 'РџСЂРѕС„РµСЃСЃРѕСЂ С„РѕСЂРјСѓР»РёСЂСѓРµС‚ РїРѕРЅСЏС‚РЅРѕРµ РїРѕСЏСЃРЅРµРЅРёРµ',
+  },
+];
 
 type ProcessingStepState = 'done' | 'current' | 'waiting';
 
