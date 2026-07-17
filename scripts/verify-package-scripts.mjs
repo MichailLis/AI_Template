@@ -28,6 +28,12 @@ const requireRootScriptSegment = (scriptName, expectedSegment) => {
   }
 };
 
+const splitScriptSegments = (script) =>
+  script
+    .split('&&')
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
 if (!serverLint) {
   fail('server package must define lint script');
 }
@@ -88,11 +94,23 @@ if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migr
   fail('root package must define verify:prisma-migrations script');
 }
 
+if (rootScripts['verify:contracts'] !== 'npm run gen:openapi && npm run verify:architecture') {
+  fail('verify:contracts must run gen:openapi then verify:architecture');
+}
+
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
+}
+
+requireRootScriptSegment('verify:local', 'npm run verify:contracts');
+
+if (
+  splitScriptSegments(rootScripts['verify:local'] ?? '').includes('npm run verify:architecture')
+) {
+  fail('verify:local must use verify:contracts instead of running verify:architecture directly');
 }
 
 for (const expectedSegment of [

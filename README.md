@@ -371,10 +371,12 @@ npm run verify:e2e:critical
 npm run verify:template
 ```
 
-`verify:local` is the default daily development loop.
-`verify:template` is the release-level full pipeline, including Prisma sync, API regeneration,
-architecture/smoke checks, server tests, client Vitest, formatting, dependency audit, and critical
-browser flows.
+`verify:local` is the default daily development loop. It regenerates only the ignored backend
+OpenAPI contract (`server/openapi.json`) before architecture checks; it does not regenerate the
+Orval client or run client Vitest.
+`verify:template` is the release-level full pipeline, including Prisma sync, full API regeneration
+through Orval, architecture/smoke checks, server tests, client Vitest, formatting, dependency audit,
+and critical browser flows.
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json`.
 

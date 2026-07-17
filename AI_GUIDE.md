@@ -522,7 +522,7 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 
 Use these commands during local AI-agent development:
 
-1. Fast local gate (no DB reset, no API regeneration):
+1. Fast local gate (no DB reset, no Orval/client API regeneration):
    ```powershell
    npm run verify:local
    ```
@@ -531,8 +531,11 @@ Use these commands during local AI-agent development:
    npm run verify:template
    ```
 
-`verify:local` is the default loop for daily implementation.
-`verify:template` is mandatory before finalizing branch state.
+`verify:local` is the default loop for daily implementation. It regenerates only the ignored backend
+OpenAPI contract (`server/openapi.json`) before architecture checks; it does not regenerate the
+Orval client or run client Vitest.
+`verify:template` is mandatory before finalizing branch state. It regenerates the Orval client and
+runs client Vitest as part of the release-level gate.
 
 ## PR-Ready Checklist (Feature Delivery)
 

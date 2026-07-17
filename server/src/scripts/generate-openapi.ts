@@ -8,6 +8,8 @@ const outputPath = resolve(process.cwd(), 'openapi.json');
 
 async function generateOpenApi() {
   process.env.SKIP_DB_CONNECT = 'true';
+  process.env.JWT_ACCESS_SECRET ??= 'dev-access-secret-change-me';
+  process.env.JWT_REFRESH_SECRET ??= 'dev-refresh-secret-change-me';
 
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn'],
