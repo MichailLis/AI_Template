@@ -7,9 +7,12 @@ import {
 } from './prof-orientation-v3-plus.atlas.logic';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './prof-orientation-v3-plus.types';
 
-import type { ProfOrientationSummary } from './prof-orientation-v3-plus.types';
+import type {
+  ProfOrientationDirectionSummary,
+  ProfOrientationSummary,
+} from './prof-orientation-v3-plus.types';
 
-const createDirection = (name: string, titles: string[]) => ({
+const createDirection = (name: string, titles: string[]): ProfOrientationDirectionSummary => ({
   id: 'A1',
   block: name,
   name,
