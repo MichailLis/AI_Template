@@ -49,6 +49,32 @@ const mockTopicList = {
   ],
 };
 
+const mockEducationOrganization = {
+  id: 1,
+  name: 'Smoke School',
+  fullName: null,
+  shortName: null,
+  inn: null,
+  ogrn: null,
+  legalAddress: null,
+  email: null,
+  phone: null,
+  privacyPolicyUrl: null,
+  consentDocumentUrl: null,
+  logoUrl: null,
+  personalDataReady: false,
+  isActive: true,
+  groupValidationMode: 'NONE',
+  groupValidationPattern: null,
+  groupValidationExample: null,
+  groupValidationHint: null,
+  linksCount: 0,
+  activeLinksCount: 0,
+  attemptsCount: 0,
+  createdAt: '2026-05-12T10:00:00Z',
+  updatedAt: '2026-05-12T10:00:00Z',
+};
+
 const mockLinkAccess = {
   shortCode: 'SMOKE',
   title: 'Smoke Public Test',
@@ -214,6 +240,8 @@ const getApiPath = (url) =>
   url.pathname.startsWith('/api/') ? url.pathname.slice(4) : url.pathname;
 
 const setupApiMocks = async (context, unhandledApiRequests) => {
+  let educationOrganizations = [{ ...mockEducationOrganization }];
+
   await context.route('**/*', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -243,6 +271,61 @@ const setupApiMocks = async (context, unhandledApiRequests) => {
 
     if (method === 'GET' && apiPath === '/admin/tests') {
       await fulfillJson(route, mockTopicList);
+      return;
+    }
+
+    if (method === 'GET' && apiPath === '/admin/tests/education-organizations') {
+      await fulfillJson(route, {
+        organizations: educationOrganizations,
+        page: 1,
+        limit: 10,
+        total: educationOrganizations.length,
+        totalPages: 1,
+      });
+      return;
+    }
+
+    if (method === 'POST' && apiPath === '/admin/tests/education-organizations') {
+      const payload = request.postDataJSON();
+      const now = new Date().toISOString();
+      const organization = {
+        ...mockEducationOrganization,
+        ...payload,
+        id: Math.max(...educationOrganizations.map((item) => item.id), 0) + 1,
+        isActive: true,
+        personalDataReady: Boolean(
+          payload.fullName && payload.shortName && payload.privacyPolicyUrl,
+        ),
+        createdAt: now,
+        updatedAt: now,
+      };
+      educationOrganizations = [organization, ...educationOrganizations];
+      await fulfillJson(route, organization, 201);
+      return;
+    }
+
+    if (method === 'PATCH' && apiPath.startsWith('/admin/tests/education-organizations/')) {
+      const organizationId = Number(apiPath.split('/').at(-1));
+      const payload = request.postDataJSON();
+      const existingOrganization = educationOrganizations.find(
+        (organization) => organization.id === organizationId,
+      );
+      const organization = {
+        ...existingOrganization,
+        ...payload,
+        id: organizationId,
+        personalDataReady: Boolean(
+          payload.isActive !== false &&
+          payload.fullName &&
+          payload.shortName &&
+          payload.privacyPolicyUrl,
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+      educationOrganizations = educationOrganizations.map((item) =>
+        item.id === organizationId ? organization : item,
+      );
+      await fulfillJson(route, organization);
       return;
     }
 
@@ -367,6 +450,37 @@ const runAuthenticatedAdminTestsSmoke = async (browser) => {
   }
 };
 
+const runEducationOrganizationsEditorSmoke = async (browser) => {
+  const unhandledApiRequests = [];
+  const browserErrors = [];
+  const context = await createContext(browser, { authenticated: true });
+  await setupApiMocks(context, unhandledApiRequests);
+  const page = await context.newPage();
+  watchPageHealth(page, browserErrors);
+
+  try {
+    await page.goto(`${targetUrl}/admin/public-links/organizations`);
+    await page.getByRole('button', { name: 'Добавить заведение' }).waitFor({ timeout: 10000 });
+
+    await page.getByRole('button', { name: 'Добавить заведение' }).click();
+    await page.getByRole('dialog', { name: 'Новое учебное заведение' }).waitFor();
+    await page.getByLabel('Название *').fill('Smoke Academy');
+    await page.getByRole('button', { name: 'Создать заведение' }).click();
+    await page.getByText('Smoke Academy', { exact: true }).waitFor({ timeout: 10000 });
+
+    await page.getByRole('button', { name: 'Редактировать Smoke Academy' }).click();
+    await page.getByRole('dialog', { name: 'Редактирование заведения' }).waitFor();
+    await page.getByLabel('Название *').fill('Smoke Academy Updated');
+    await page.getByRole('button', { name: 'Сохранить изменения' }).click();
+    await page.getByText('Smoke Academy Updated', { exact: true }).waitFor({ timeout: 10000 });
+
+    assertNoBrowserErrors(browserErrors);
+    assertNoUnhandledApiRequests(unhandledApiRequests);
+  } finally {
+    await context.close();
+  }
+};
+
 const runPublicSessionSmoke = async (browser) => {
   const unhandledApiRequests = [];
   const browserErrors = [];
@@ -438,6 +552,9 @@ const main = async () => {
 
       await runAuthenticatedAdminTestsSmoke(browser);
       console.log('✓ authenticated /admin/tests smoke passed');
+
+      await runEducationOrganizationsEditorSmoke(browser);
+      console.log('✓ education organizations create/edit smoke passed');
 
       await runPublicSessionSmoke(browser);
       console.log('✓ /t/:code -> /t/:code/session/:sessionToken smoke passed');

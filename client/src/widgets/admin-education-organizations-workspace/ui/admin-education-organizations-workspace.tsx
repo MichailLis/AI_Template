@@ -1,5 +1,4 @@
-import { EducationOrganizationsCreateCard } from './education-organizations-create-card';
-import { EducationOrganizationsEditCard } from './education-organizations-edit-card';
+import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
 import { EducationOrganizationsNavigationCard } from './education-organizations-navigation-card';
 import { useAdminEducationOrganizationsWorkspace } from './use-admin-education-organizations-workspace';
@@ -7,81 +6,53 @@ import { useAdminEducationOrganizationsWorkspace } from './use-admin-education-o
 export function AdminEducationOrganizationsWorkspace() {
   const {
     organizations,
-    selectedOrganization,
-    selectedOrganizationId,
+    editorState,
     organizationsPage,
     organizationsTotal,
     organizationsTotalPages,
     isFetchingOrganizations,
-    createValues,
-    editValues,
-    isCreating,
-    isSaving,
-    updateCreateValue,
-    updateEditValue,
-    handleSelectOrganization,
-    handleCreateOrganization,
-    handleSaveOrganization,
+    openCreateEditor,
+    openEditEditor,
+    closeEditor,
+    createOrganization,
+    updateOrganization,
     handlePreviousPage,
     handleNextPage,
   } = useAdminEducationOrganizationsWorkspace();
 
   return (
-    <div className="flex flex-col gap-4">
-      <EducationOrganizationsNavigationCard />
+    <div className="flex min-w-0 flex-col gap-4">
+      <EducationOrganizationsNavigationCard onCreateOrganization={openCreateEditor} />
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <EducationOrganizationsListCard
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          page={organizationsPage}
-          total={organizationsTotal}
-          totalPages={organizationsTotalPages}
-          isFetching={isFetchingOrganizations}
-          onSelectOrganization={handleSelectOrganization}
-          onPreviousPage={handlePreviousPage}
-          onNextPage={handleNextPage}
+      <EducationOrganizationsListCard
+        organizations={organizations}
+        page={organizationsPage}
+        total={organizationsTotal}
+        totalPages={organizationsTotalPages}
+        isFetching={isFetchingOrganizations}
+        onEditOrganization={openEditEditor}
+        onPreviousPage={handlePreviousPage}
+        onNextPage={handleNextPage}
+      />
+
+      {editorState !== 'closed' && editorState.mode === 'create' ? (
+        <EducationOrganizationEditorSheet
+          open
+          mode="create"
+          onClose={closeEditor}
+          onSubmit={createOrganization}
         />
+      ) : null}
 
-        <div className="flex min-w-0 flex-col gap-4">
-          <EducationOrganizationsCreateCard
-            newOrganizationName={createValues.name}
-            onNewOrganizationNameChange={(value) => updateCreateValue('name', value)}
-            newValidationMode={createValues.validationMode}
-            onNewValidationModeChange={(value) => updateCreateValue('validationMode', value)}
-            newValidationPattern={createValues.validationPattern}
-            onNewValidationPatternChange={(value) => updateCreateValue('validationPattern', value)}
-            newValidationExample={createValues.validationExample}
-            onNewValidationExampleChange={(value) => updateCreateValue('validationExample', value)}
-            newValidationHint={createValues.validationHint}
-            onNewValidationHintChange={(value) => updateCreateValue('validationHint', value)}
-            operatorValues={createValues}
-            onOperatorValueChange={updateCreateValue}
-            isCreating={isCreating}
-            onCreate={handleCreateOrganization}
-          />
-
-          <EducationOrganizationsEditCard
-            selectedOrganization={selectedOrganization}
-            editName={editValues.name}
-            onEditNameChange={(value) => updateEditValue('name', value)}
-            editIsActive={editValues.isActive}
-            onEditIsActiveChange={(value) => updateEditValue('isActive', value)}
-            editValidationMode={editValues.validationMode}
-            onEditValidationModeChange={(value) => updateEditValue('validationMode', value)}
-            editValidationPattern={editValues.validationPattern}
-            onEditValidationPatternChange={(value) => updateEditValue('validationPattern', value)}
-            editValidationExample={editValues.validationExample}
-            onEditValidationExampleChange={(value) => updateEditValue('validationExample', value)}
-            editValidationHint={editValues.validationHint}
-            onEditValidationHintChange={(value) => updateEditValue('validationHint', value)}
-            operatorValues={editValues}
-            onOperatorValueChange={updateEditValue}
-            isSaving={isSaving}
-            onSave={handleSaveOrganization}
-          />
-        </div>
-      </div>
+      {editorState !== 'closed' && editorState.mode === 'edit' ? (
+        <EducationOrganizationEditorSheet
+          open
+          mode="edit"
+          organization={editorState.organization}
+          onClose={closeEditor}
+          onSubmit={(payload) => updateOrganization(editorState.organization.id, payload)}
+        />
+      ) : null}
     </div>
   );
 }
