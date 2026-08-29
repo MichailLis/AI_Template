@@ -2,8 +2,8 @@ import {
   PROF_ORIENTATION_DIRECTIONS,
   type ProfOrientationDirectionId,
   type ProfOrientationSummary,
-} from './prof-orientation-v3-plus.types';
-import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus.scoring';
+} from './prof-orientation-v3-plus/types';
+import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus/scoring';
 import type {
   AnalyticsAttemptRecord,
   DirectionPairItem,

@@ -7,10 +7,10 @@ import {
   type AtlasInstitution,
   type AtlasProfessionDetail,
   ProfessionAtlasClientService,
-} from '../app-settings/profession-atlas-client.service';
-import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { PrismaService } from '../prisma.service';
-import { getProfOrientationV3PlusProfessions } from './prof-orientation-v3-plus.fixture';
+} from '../../app-settings/profession-atlas-client.service';
+import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import { PrismaService } from '../../prisma.service';
+import { getProfOrientationV3PlusProfessions } from './fixture';
 
 import type {
   ProfOrientationAtlasProfessionCard,
@@ -19,7 +19,7 @@ import type {
   ProfOrientationDirectionSummary,
   ProfOrientationProfession,
   ProfOrientationSummary,
-} from './prof-orientation-v3-plus.types';
+} from './types';
 
 const PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION = 6;
 

@@ -2,7 +2,7 @@ import type {
   ProfOrientationDirectionId,
   ProfOrientationProfileType,
   ProfOrientationSummary,
-} from './prof-orientation-v3-plus.types';
+} from './prof-orientation-v3-plus/types';
 
 export type AnalyticsAttemptRecord = {
   attemptId: number;

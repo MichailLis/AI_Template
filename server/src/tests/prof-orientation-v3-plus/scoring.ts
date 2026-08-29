@@ -2,7 +2,7 @@ import {
   PROF_ORIENTATION_V3_PLUS_CONFIG,
   toProfOrientationResultCard,
   type ProfOrientationV3PlusConfig,
-} from './prof-orientation-v3-plus.fixture';
+} from './fixture';
 import {
   PROF_ORIENTATION_DIRECTIONS,
   PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
@@ -11,7 +11,7 @@ import {
   type ProfOrientationFlag,
   type ProfOrientationProfileType,
   type ProfOrientationSummary,
-} from './prof-orientation-v3-plus.types';
+} from './types';
 
 type QuestionType = 'OPEN_TEXT' | 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'SLIDER';
 

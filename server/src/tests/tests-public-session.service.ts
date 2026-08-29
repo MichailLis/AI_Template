@@ -21,8 +21,8 @@ import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas
 import {
   ProfOrientationAtlasService,
   shouldRefreshProfOrientationAtlasSummary,
-} from './prof-orientation-v3-plus.atlas';
-import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus.scoring';
+} from './prof-orientation-v3-plus/atlas';
+import { isProfOrientationV3PlusSummary } from './prof-orientation-v3-plus/scoring';
 import { TestsAnalysisService } from './tests-analysis.service';
 import {
   validatePublicAnswerPayload,

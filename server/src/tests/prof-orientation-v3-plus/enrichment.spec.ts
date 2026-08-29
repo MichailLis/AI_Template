@@ -1,4 +1,4 @@
-import { parseProfOrientationV3PlusEnrichment } from './prof-orientation-v3-plus.enrichment';
+import { parseProfOrientationV3PlusEnrichment } from './enrichment';
 
 describe('parseProfOrientationV3PlusEnrichment', () => {
   it('normalizes common OpenRouter methodology enrichment shape drift', () => {

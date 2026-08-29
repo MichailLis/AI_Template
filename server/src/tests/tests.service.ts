@@ -14,7 +14,7 @@ import type {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from './dto/tests.dto';
-import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus.enrichment';
+import { ProfOrientationV3PlusEnrichmentJsonSchema } from './prof-orientation-v3-plus/enrichment';
 import {
   buildProfOrientationV3PlusQuestionPayloads,
   PROF_ORIENTATION_V3_PLUS_CONFIG,
@@ -24,7 +24,7 @@ import {
   PROF_ORIENTATION_V3_PLUS_SLUG,
   PROF_ORIENTATION_V3_PLUS_TITLE,
   toProfOrientationScoringConfig,
-} from './prof-orientation-v3-plus.fixture';
+} from './prof-orientation-v3-plus/fixture';
 import {
   buildAiQuestionPayloads,
   cloneQuestionsToVersion,

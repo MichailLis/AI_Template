@@ -1,10 +1,7 @@
-import rawConfig from './prof-orientation-v3-plus/site-config.json';
+import rawConfig from './site-config.json';
 
-import type { PersistQuestionPayload } from './tests-topic-version.utils';
-import type {
-  ProfOrientationDirectionId,
-  ProfOrientationResultCard,
-} from './prof-orientation-v3-plus.types';
+import type { PersistQuestionPayload } from '../tests-topic-version.utils';
+import type { ProfOrientationDirectionId, ProfOrientationResultCard } from './types';
 
 interface SiteConfigAnswer {
   id: string;

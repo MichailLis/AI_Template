@@ -1,7 +1,7 @@
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../prisma.service';
-import { ProfOrientationAtlasService } from './prof-orientation-v3-plus.atlas';
+import { ProfOrientationAtlasService } from './prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from './tests-analysis.service';
 import { TestsPublicLinkService } from './tests-public-link.service';
 import { TestsPublicSessionService } from './tests-public-session.service';

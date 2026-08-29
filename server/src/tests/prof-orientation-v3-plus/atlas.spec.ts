@@ -1,14 +1,14 @@
-import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-client.service';
-import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { PrismaService } from '../prisma.service';
+import { ProfessionAtlasClientService } from '../../app-settings/profession-atlas-client.service';
+import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import { PrismaService } from '../../prisma.service';
 import {
   ProfOrientationAtlasService,
   selectProfOrientationAtlasProfessions,
   shouldRefreshProfOrientationAtlasSummary,
-} from './prof-orientation-v3-plus.atlas';
-import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './prof-orientation-v3-plus.types';
+} from './atlas';
+import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './types';
 
-import type { ProfOrientationSummary } from './prof-orientation-v3-plus.types';
+import type { ProfOrientationSummary } from './types';
 
 describe('ProfOrientationAtlasService', () => {
   const settingsService = {

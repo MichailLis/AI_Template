@@ -1,4 +1,4 @@
-import { PROF_ORIENTATION_DIRECTIONS } from './prof-orientation-v3-plus.types';
+import { PROF_ORIENTATION_DIRECTIONS } from './prof-orientation-v3-plus/types';
 import {
   buildCountShares,
   buildV3AnalyticsSections,

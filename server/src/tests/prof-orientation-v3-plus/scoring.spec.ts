@@ -1,11 +1,8 @@
 import {
   buildProfOrientationV3PlusQuestionPayloads,
   PROF_ORIENTATION_V3_PLUS_CONFIG,
-} from './prof-orientation-v3-plus.fixture';
-import {
-  resolveProfOrientationV3PlusConfig,
-  scoreProfOrientationV3Plus,
-} from './prof-orientation-v3-plus.scoring';
+} from './fixture';
+import { resolveProfOrientationV3PlusConfig, scoreProfOrientationV3Plus } from './scoring';
 
 const questions = buildProfOrientationV3PlusQuestionPayloads().map((question, index) => ({
   id: index + 1,

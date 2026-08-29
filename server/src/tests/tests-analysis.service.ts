@@ -20,12 +20,12 @@ import { PrismaService } from '../prisma.service';
 import {
   ProfOrientationV3PlusEnrichmentJsonSchema,
   parseProfOrientationV3PlusEnrichment,
-} from './prof-orientation-v3-plus.enrichment';
+} from './prof-orientation-v3-plus/enrichment';
 import {
   isProfOrientationV3PlusSummary,
   resolveProfOrientationV3PlusConfig,
   scoreProfOrientationV3Plus,
-} from './prof-orientation-v3-plus.scoring';
+} from './prof-orientation-v3-plus/scoring';
 import type { AttemptWithSessionData } from './tests-attempt.query';
 import { mapAnswerToPromptPayload, mapQuestionToPromptPayload } from './tests-prompt-payload.utils';
 

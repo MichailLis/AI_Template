@@ -3,7 +3,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestsAnalyticsService } from './tests-analytics.service';
-import { PROF_ORIENTATION_DIRECTIONS } from './prof-orientation-v3-plus.types';
+import { PROF_ORIENTATION_DIRECTIONS } from './prof-orientation-v3-plus/types';
 
 jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn(),
