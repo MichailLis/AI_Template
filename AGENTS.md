@@ -34,7 +34,7 @@ Do not use `.devcontainer/docker-compose.devcontainer.yml` to run the project. T
 exists only for the VS Code "Reopen in Container" workflow and is not the project runtime topology.
 
 After changing files under `client/`, rebuild/recreate the frontend container before any
-browser-level verification (`verify:template`, `verify:smoke:client`, `verify:e2e:critical`):
+browser-level verification (`verify:template`, `verify:e2e:critical`):
 
 ```powershell
 docker compose up -d --build --force-recreate frontend

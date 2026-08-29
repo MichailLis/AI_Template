@@ -1,4 +1,4 @@
-import { access, readFile } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -67,7 +67,8 @@ const collectPaths = (markdown) => {
   const found = new Set();
 
   for (const [, candidate] of withoutIllustrativeSections(markdown).matchAll(PATH_PATTERN)) {
-    if (REPO_ROOTED.test(candidate)) {
+    // Globs such as `scripts/verify-*.mjs` name a family, not a file.
+    if (REPO_ROOTED.test(candidate) && !candidate.includes('*')) {
       found.add(candidate);
     }
   }
@@ -84,9 +85,41 @@ const exists = async (relativePath) => {
   }
 };
 
+/**
+ * Live documentation is checked alongside the guide. docs/archive/ is exempt on purpose: it
+ * records finished work and is expected to name paths the tree no longer has.
+ */
+const liveDocs = async () => {
+  const docsRoot = join(root, 'docs');
+  const found = [];
+
+  const walk = async (dir, relative) => {
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      const nextRelative = relative ? `${relative}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (nextRelative !== 'archive') await walk(join(dir, entry.name), nextRelative);
+      } else if (entry.name.endsWith('.md')) {
+        found.push([`docs/${nextRelative}`, await readFile(join(dir, entry.name), 'utf-8')]);
+      }
+    }
+  };
+
+  await walk(docsRoot, '');
+  return found;
+};
+
 for (const [label, markdown] of [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
+  ['AGENTS.md', await readFile(join(root, 'AGENTS.md'), 'utf-8')],
+  ...(await liveDocs()),
 ]) {
   const paths = collectPaths(markdown);
   const checks = await Promise.all(paths.map(async (path) => [path, await exists(path)]));

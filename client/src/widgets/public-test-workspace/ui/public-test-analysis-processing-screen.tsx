@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { polusAssets, type PublicBrandingConfig } from '@/features/tests';
 
 import { PolusPublicLayout } from './polus/polus-public-layout';
-import { analysisProcessingSteps } from './public-test-analysis.mock';
+import { analysisProcessingSteps } from './public-test-analysis-processing-steps';
 import { PublicThemeLayout } from './public-theme-layout';
 
 import type { ReactNode } from 'react';

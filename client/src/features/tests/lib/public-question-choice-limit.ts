@@ -8,17 +8,17 @@
  * a rule that belongs to the domain rather than to a visual style.
  */
 export const getMaxChoices = (settings: unknown): number | null => {
-  if (typeof settings !== 'object' || settings === null) {
+  if (typeof settings !== 'object' || settings === null || Array.isArray(settings)) {
     return null;
   }
 
   const value = (settings as Record<string, unknown>).maxChoices;
 
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-
-  return Math.floor(value);
+  // Deliberately identical to getMaxChoices in server/src/tests/tests-answer-validation.ts,
+  // including the rejection of non-integers. Rounding a fractional cap here instead would
+  // make the UI stricter than the server for 2.5, and for a value below 1 it would floor to
+  // zero and lock the student out of answering at all.
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 };
 
 /** True when the student has reached the cap and may only deselect from here. */
