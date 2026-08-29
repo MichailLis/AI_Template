@@ -6,10 +6,15 @@ on:
     branches:
       - main
       - master
-      - 'codex/**'
 
 permissions:
   contents: read
+
+# A push that supersedes an in-flight run makes that run pointless; the release gate is long
+# enough that leaving both to finish wastes real minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -61,6 +66,15 @@ jobs:
 
       - name: Install server dependencies
         run: npm ci --prefix server
+
+      # setup-node caches npm only. Without this, verify:e2e:critical downloads Chromium on
+      # every run, because `playwright install` writes outside the npm cache.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: playwright-${{ runner.os }}-
 
       - name: Install Playwright system dependencies
         run: npx playwright install-deps chromium
