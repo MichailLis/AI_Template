@@ -545,6 +545,14 @@ Use this checklist before opening PR or finalizing work.
   - frontend page + create form
   - generated API file from Orval
   - route wiring in `client/src/app/App.tsx`
+- `backendFiles` and `frontendFiles` are **entrypoint lists, not inventories**. For a feature that
+  declares `ownedRoots`, those roots define what the feature owns; the file lists name the modules,
+  controllers and pages an agent should start from. `server/src/tests` alone holds more than eighty
+  files and is not meant to be enumerated by hand. Keep every module and controller listed, and do
+  not read a short list as evidence that the rest of the feature does not exist.
+- A file belongs to exactly one feature's `frontendFiles`. Shared frames such as
+  `client/src/features/admin/ui/admin-shell.tsx` stay with their owning feature; other features
+  reference them without claiming them.
 - Every declared `publicRoutes` entry must be wired in `client/src/app/App.tsx`.
 - Every generated API directory outside feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - `npm run verify:architecture` fails if any of these constraints are broken.

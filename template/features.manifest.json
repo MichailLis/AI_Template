@@ -232,7 +232,16 @@
       },
       "backendFiles": [
         "server/src/tests/tests.module.ts",
+        "server/src/tests/tests-attempts.module.ts",
+        "server/src/tests/tests-public-links.module.ts",
+        "server/src/tests/tests-topics.module.ts",
+        "server/src/tests/tests-prompt-simulation-read.module.ts",
         "server/src/tests/tests.controller.ts",
+        "server/src/tests/tests-public.controller.ts",
+        "server/src/tests/tests-admin-analytics.controller.ts",
+        "server/src/tests/tests-admin-attempts.controller.ts",
+        "server/src/tests/tests-admin-education-organizations.controller.ts",
+        "server/src/tests/tests-admin-public-links.controller.ts",
         "server/src/tests/tests.service.ts",
         "server/src/tests/dto/tests.dto.ts"
       ],
@@ -240,8 +249,7 @@
         "client/src/pages/admin/admin-tests-page.tsx",
         "client/src/pages/admin/admin-public-links-page.tsx",
         "client/src/pages/admin/admin-public-links-stats-page.tsx",
-        "client/src/pages/admin/admin-public-links-organizations-page.tsx",
-        "client/src/features/admin/ui/admin-shell.tsx"
+        "client/src/pages/admin/admin-public-links-organizations-page.tsx"
       ],
       "generatedApiFile": "client/src/shared/api/generated/tests/tests.ts",
       "openApiOperations": [
