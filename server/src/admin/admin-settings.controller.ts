@@ -5,7 +5,7 @@ import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus.atlas';
+import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import {
   AdminPrivacyPolicySettingsResponseDto,

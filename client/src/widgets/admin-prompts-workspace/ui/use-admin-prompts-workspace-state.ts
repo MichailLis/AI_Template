@@ -129,3 +129,5 @@ export function useAdminPromptsWorkspaceState() {
     ...actions,
   };
 }
+
+export type AdminPromptsWorkspaceState = ReturnType<typeof useAdminPromptsWorkspaceState>;

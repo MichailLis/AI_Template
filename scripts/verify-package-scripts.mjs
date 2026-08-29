@@ -18,6 +18,7 @@ const clientScripts = clientPackage.scripts ?? {};
 const clientLint = clientScripts.lint ?? '';
 const serverLint = serverScripts.lint ?? '';
 const serverLintFix = serverScripts['lint:fix'] ?? '';
+const serverTypecheck = serverScripts.typecheck ?? '';
 const auditCommandPattern = /(?:^|&&|\|\||;)\s*npm(?:\s+run)?\s+audit(?::|\b)/;
 const ciWorkflowPath = join(rootDir, '.github', 'workflows', 'ci.yml');
 const requireRootScriptSegment = (scriptName, expectedSegment) => {
@@ -54,6 +55,21 @@ if (!serverLintFix.includes('--fix')) {
 
 if (!serverLintFix.includes('src/**/*.ts')) {
   fail('server lint:fix script must lint src/**/*.ts');
+}
+
+// `nest build` compiles through tsconfig.build.json, which excludes **/*spec.ts. Without a
+// separate full-program typecheck the specs are the one part of the server no gate ever
+// compiles, and type errors accumulate there unseen.
+if (!serverTypecheck) {
+  fail('server package must define typecheck script');
+}
+
+if (!serverTypecheck.includes('--noEmit')) {
+  fail('server typecheck script must run tsc --noEmit');
+}
+
+if (serverTypecheck.includes('tsconfig.build.json')) {
+  fail('server typecheck must use tsconfig.json, which includes specs, not tsconfig.build.json');
 }
 
 if (!clientLint) {
@@ -93,6 +109,7 @@ for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
+  requireRootScriptSegment(scriptName, 'npm run typecheck');
 }
 
 for (const expectedSegment of [

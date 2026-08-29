@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { OpenRouterModule } from '../openrouter/openrouter.module';
-import { TestsPromptSimulationReadModule } from '../tests/tests-prompt-simulation-read.module';
+import { TestsPromptSimulationReadModule } from '../tests/analysis/prompt-simulation-read.module';
 import { AnalysisPromptsController } from './analysis-prompts.controller';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 

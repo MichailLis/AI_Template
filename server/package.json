@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build:schematics": "tsc -p schematics/tsconfig.json && node scripts/copy-schematics-assets.mjs",
     "gen:nest": "npx nest g -c ./schematics/collection.json resource",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -22,6 +23,7 @@
     "prisma:studio": "npx prisma studio --schema prisma/schema.prisma",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "lint:staged": "eslint --fix --no-warn-ignored",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -75,10 +77,8 @@
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
-    "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
@@ -88,6 +88,9 @@
     "uuid": "11.1.1",
     "@prisma/dev": {
       "@hono/node-server": "1.19.13"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
     }
   },
   "jest": {

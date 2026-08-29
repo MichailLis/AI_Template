@@ -1,53 +1,44 @@
-# Project Overview (updated 2026-02-15)
+# AI_Template — project overview
 
-- Name: `fullstack-project` (workspace `AI_Template`).
-- Purpose: stable fullstack template for AI-assisted delivery with strict architecture + verification guardrails.
-- Branch currently contains active business modules (`admin`, `tests`, `public links`, `public student flow`) for product development; final auth-only baseline remains a separate cleanup target.
+Last verified against the repository on 2026-08-29 (branch `MichailLis/sargassum`).
 
-## Core stack
-- Backend: NestJS 11, Prisma 7, PostgreSQL, JWT/Passport, Swagger, `nestjs-zod`.
-- Frontend: React 19 + Vite, TanStack Query, Orval-generated API hooks, Zustand, Tailwind/shadcn.
-- Infra: Docker Compose (`postgres`, `adminer`).
+A strict fullstack product template that also carries a real product: a career-orientation testing
+platform with an operator admin area under `/admin` and a public student flow under `/t/*`.
 
-## Source of truth
-- `AI_GUIDE.md` is the repo-level operating contract for AI agents.
-- Architecture contract: `template/features.manifest.json` + `template/fsd.rules.json` + `scripts/verify-architecture.mjs`.
-- API mutator contract: `scripts/verify-api-mutator.mjs`.
+## Stack
 
-## Current product capabilities
-- Admin modules:
-  - `/admin/users`
-  - `/admin/prompts`
-  - `/admin/tests`
-  - `/admin/public-links`
-  - `/admin/public-links/stats`
-- Public student flow:
-  - `/t/:code`
-  - `/t/:code/session/:sessionToken`
-  - `/t/:code/result/:sessionToken`
+- Backend: NestJS 11, Prisma 7, PostgreSQL, JWT via Passport, `nestjs-zod`, Swagger.
+- Frontend: React 19, Vite 7, TanStack Query, Orval (API client generated from OpenAPI), Zustand,
+  Tailwind 3, shadcn/ui. Strict Feature-Sliced Design.
+- Infrastructure: Docker Compose with four containers — `ai_template_frontend` (5173),
+  `ai_template_backend` (3000), `ai_template_postgres` (5432), `ai_template_adminer` (8080).
+- Integration: OpenRouter for LLM calls, proxied through the backend only; the API key never
+  reaches the frontend.
 
-## Recent major upgrades
-1. Large frontend refactor completed (decomposition into hooks/helpers/action-creators across tests/public/admin workspaces).
-2. Route-level lazy loading added in `client/src/app/App.tsx` (initial bundle reduced, chunk warning removed).
-3. Prisma teardown hardened (`pool.end()` on module destroy) to avoid e2e worker/open-handle instability.
-4. AI-agent governance added:
-   - `verify:ai-guide`
-   - `verify:maintainability`
-   - `verify:local`
-5. Public links now support managed educational organizations:
-   - Admin can create/list organizations.
-   - Public link can be bound to one organization.
-   - Student entry uses link-bound organization (manual typing reduced).
-6. Public test completion flow hardened:
-   - Finish action auto-saves current answers before finalizing session.
-   - Manual "Save answers" action removed from student run bar to reduce user error.
+## Bounded contexts
 
-## Quality gates
-- Daily local gate: `npm run verify:local`.
-- Release-level gate: `npm run verify:template`.
-- Additional targeted checks used frequently:
-  - `npm run verify:api-mutator`
-  - `npm run verify:architecture`
-  - `npm run verify:maintainability`
-  - `npm run verify:smoke:server`
-  - `npm run verify:smoke:client`
+- `auth` — authentication, JWT and session behavior, the `/login` route.
+- `admin` — admin shell, users, settings. `/admin/*` is a route namespace for operator UI, not a
+  claim of ownership: pages under it can belong to other features.
+- `tests` — test authoring and publishing, public links, education organizations, attempt/session/
+  result flows, and the public `/t/*` routes. The largest context by far.
+- `analysis-prompts` — prompt lifecycle and simulation, the `/admin/prompts` workspace.
+- `openrouter` — integration module, declared in the manifest under `integrationModules`.
+- `app-settings` — system configuration.
+
+## Sources of truth
+
+`AI_GUIDE.md` for implementation rules, `CLAUDE.md` for the short form, and two machine-readable
+files that the verification scripts actually enforce: `template/features.manifest.json` (feature
+inventory, routes, module wiring, `publicRoutes`, `generatedApiDirs`) and `template/fsd.rules.json`
+(layer rules, `mode: "strict"`). Read those two files directly rather than any prose summary.
+
+Note that for features declaring `ownedRoots.backend`, the manifest's `backendFiles` lists
+entrypoints only — `server/src/tests` alone holds well over eighty files.
+
+## Verification
+
+`npm run verify:local` is the daily loop and needs a running PostgreSQL. `npm run verify:template`
+is the release gate. Neither may be weakened or bypassed to make a check pass.
+
+Codex is not used in this repository.

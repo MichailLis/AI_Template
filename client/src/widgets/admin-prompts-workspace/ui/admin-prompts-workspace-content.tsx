@@ -2,7 +2,7 @@ import { PromptEditorCard } from './prompt-editor-card';
 import { PromptLibraryCard } from './prompt-library-card';
 import { SimulationOutputCard } from './simulation-output-card';
 
-import type { AdminPromptsWorkspaceState } from './admin-prompts-workspace';
+import type { AdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
 
 interface AdminPromptsWorkspaceContentProps {
   workspace: AdminPromptsWorkspaceState;

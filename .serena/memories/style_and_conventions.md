@@ -1,62 +1,56 @@
-# Style and Conventions
+# AI_Template — style and conventions
 
-## General
-- TypeScript across frontend and backend.
-- Prettier from root `.prettierrc` (single quotes, semicolons, trailing commas, width 100).
-- Avoid `any` (lint-enforced).
+Last verified against the repository on 2026-08-29 (branch `MichailLis/sargassum`).
 
-## Frontend
-- Use alias imports (`@/...`) and keep import order lint-compliant (eslint `import/order`).
-- Keep route wiring aligned with manifest (`/login` + declared feature routes in `App.tsx`).
-- Forms/schemas should use Zod schemas from `client/src/shared/api/schemas.ts` where applicable.
-- API hooks are generated under `client/src/shared/api/generated` and consumed directly.
-- For larger admin UI pages, prefer splitting into focused page-local components (e.g., `client/src/pages/admin/prompt-studio/*`) while keeping `admin-prompts-page.tsx` as orchestration container.
-- Admin QA screens are currently Russian-localized; keep UX copy consistent on touched screens.
-- For `admin-tests-page`, question create/edit should stay modal-first (avoid always-visible full editor blocks).
-- For choice/slider question builders, prefer explicit structured inputs over delimiter-based text parsing UI.
-- Hide non-essential technical fields from content managers; keep advanced fields collapsed by default.
+## Frontend layout
 
-## Backend
-- Feature modules under `server/src/<feature>`.
-- DTOs use `createZodDto(...)`.
-- Response DTO dates should be `z.string()` for OpenAPI compatibility.
-- Controllers should include `@ApiOperation` + `@ApiResponse`.
+Strict FSD: `app → pages → widgets → features → entities → shared`. Imports flow downward only,
+and cross-slice imports go through the slice public API (`index.ts`). `pages/*` are thin route
+entrypoints; composition and domain logic live in `widgets/*` and `features/*`.
 
-## API mutator contract
-- `client/src/shared/api/api.ts` must remain Node-safe for Orval.
-- No browser-specific logic in `api.ts`.
-- Must export `customInstance`, default `api`, and `configureApiBaseUrl`.
-- Interceptors live in `client/src/shared/api/interceptors.ts`.
-- `App.tsx` must call `configureApiBaseUrl(import.meta.env.VITE_API_URL)` and `setupInterceptors(api)`.
+Real locations worth knowing:
 
-## Architecture strictness
-- `verify:architecture` validates route/module/schema/model consistency against manifest.
-- It fails on stale artifacts (extra backend feature modules, extra feature/page dirs, stale generated API dirs, unexpected routes).
-- For non-empty manifest features, `client/src/pages/dashboard.tsx` must include links to declared feature routes.
+- Admin workspaces: `client/src/widgets/admin-tests-workspace`, `admin-prompts-workspace`,
+  `admin-public-links-workspace`, `admin-public-links-stats-workspace`,
+  `admin-education-organizations-workspace`, `admin-users-workspace`, `admin-settings-workspace`,
+  `admin-page-layout`.
+- Public student flow: `client/src/widgets/public-test-workspace` (with a `ui/polus/*` variant for
+  the branded template) and `client/src/pages/t`.
+- Admin shell: `client/src/features/admin/ui/admin-shell.tsx`.
+- Design tokens: `client/src/shared/ui/admin-design-tokens.ts`.
+- Public theme: `client/src/features/tests/ui/public-theme.css` (scoped under `.theme-public`),
+  with the Polus variant alongside it in `client/src/features/tests/ui/polus/`.
+  These tokens must not move into the global `client/src/app/index.css`.
+- Generated API client: `client/src/shared/api/generated/{admin,auth,tests,tests-public,privacy-policy}`.
 
-## Prompt Studio safety rules
-- OpenRouter API key is backend-only (`server/.env`).
-- Frontend must use backend proxy endpoints only (`/admin/prompts/*`).
-- Prefer free-model defaults to reduce accidental spend.
-- Prompt variables must have unique keys before running simulation.
-- For strict JSON automation flows, prefer `response_format: json_schema` with explicit schema + `strict=true`.
-- Avoid OpenRouter web-search for tests generation flows (no `web` plugin and no `:online` model suffixes).
+## Hard rules
 
-## Public links + public student UX rules
-- Keep admin public-link management and stats as separate pages (`/admin/public-links`, `/admin/public-links/stats`).
-- For link lifecycle, prefer archive/restore over destructive delete when history must be preserved.
-- Stats page should remain table-first with compact filters; avoid large decorative blocks that reduce data density.
-- Public `/t/*` pages must use `PublicThemeLayout` and scoped tokens from `client/src/widgets/public-test-workspace/ui/public-theme.css`.
-- Do not leak scoped public theme into global styles (`client/src/app/index.css`).
-- Student-facing copy should be product language; avoid raw backend/status enums in visible UI.
-- Keep entry page centered and mobile-safe (no horizontal overflow, stable CTA prominence).
+1. `client/src/shared/api/api.ts` contains only the Axios instance — no `window`, no
+   `localStorage`, no `import.meta`, because Orval imports it in a Node process. Browser
+   interceptors belong in `client/src/shared/api/interceptors.ts`. Enforced by
+   `npm run verify:api-mutator`.
+2. Storage access goes through `safeStorage` from `@/shared/lib/storage`, never through
+   `localStorage` or `sessionStorage` directly.
+3. Do not copy React Query data into form state with `setState` inside `useEffect`. Derive the
+   effective value at the render or submit boundary.
+4. Use `import type` for type-only imports.
+5. Backend response DTOs convert Prisma `Date` fields to `z.string()`; every controller endpoint
+   carries `@ApiOperation` and a typed `@ApiResponse`.
+6. Server errors keep a single shape: `{ success: false, error: { code, message } }`.
+7. Public `/t/*` DTOs expose student-safe fields only — raw provider output, prompts and scoring
+   internals stay in admin DTOs behind admin guards.
+8. When a UI library primitive exists (shadcn/ui, Radix), use it rather than hand-rolling a
+   modal, dropdown or button.
 
-## Tests workspace UX rules
-- Keep test-topic deletion explicit: icon action + destructive confirmation dialog.
-- Sidebar cards must wrap long titles/slugs without overflow outside card bounds.
-- AI test generation should use preview-first UX and transactional commit endpoint.
+## Maintainability thresholds
 
-## Testing baseline
-- Keep auth unit + e2e coverage passing.
-- Admin e2e coverage includes users-management paths.
-- `verify:template` is the required final gate.
+Client source files are capped at 420 effective lines, server sources at 700, specs at 900, and a
+file should hold no more than fourteen `useState` calls. Prefer extraction before a file reaches
+the limit rather than under pressure from a failing gate.
+
+## Feature pipeline
+
+Classify the change first (`existing-feature-change` or `new-feature`), then follow the order:
+`schema.prisma` → `npm run prisma:generate` → backend → `npm run gen:api` → frontend →
+verification. Regenerate the API client before any frontend lint, build or test step whenever
+backend DTOs or controllers changed.

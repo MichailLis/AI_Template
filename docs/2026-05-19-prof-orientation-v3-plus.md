@@ -2,7 +2,7 @@
 
 This note records the production contract for the built-in Polus prof-orientation
 methodology. Runtime code must not read the external source package from
-`Методика теста + вопросы`; the committed fixture is the source used by the app.
+`docs/archive/prof-orientation-v3-plus/`; the committed fixture is the source used by the app.
 
 ## Runtime Ownership
 

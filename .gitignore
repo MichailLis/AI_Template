@@ -12,8 +12,6 @@ server/openapi.json
 Design/
 
 # Local AI/QA artifacts
-.codex-artifacts/
-.codex/state/
 .omx/
 .playwright-cli/
 .playwright-mcp/
@@ -29,3 +27,6 @@ vectors.db
 vectors.db-shm
 vectors.db-wal
 .codegraph/
+
+# Claude Code local overrides
+.claude/settings.local.json

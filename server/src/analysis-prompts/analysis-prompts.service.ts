@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { OpenRouterClientService } from '../openrouter/openrouter.client';
-import { TestsPromptSimulationReadService } from '../tests/tests-prompt-simulation-read.service';
+import { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 
 import type {

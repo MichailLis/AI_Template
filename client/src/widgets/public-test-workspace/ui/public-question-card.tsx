@@ -166,6 +166,7 @@ export function PublicQuestionCard({
                 questionId={question.id}
                 options={question.options}
                 currentAnswer={currentAnswer}
+                settings={question.settings}
                 onAnswerChange={onAnswerChange}
               />
             ) : null}

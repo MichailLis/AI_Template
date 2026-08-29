@@ -17,6 +17,7 @@ export { useDraftAutosave } from './model/use-draft-autosave';
 export { useQuestionEditor } from './model/use-question-editor';
 
 export { hasDraftEdits } from './lib/tests-utils';
+export { getMaxChoices, isChoiceLimitReached } from './lib/public-question-choice-limit';
 export { parseAnalysisResult } from './lib/test-analysis-result-parser';
 export { getProfOrientationLlmStatus } from './ui/polus/prof-orientation-llm-data';
 export { hexToHslToken, resolvePublicBrandingTheme } from './public-branding';

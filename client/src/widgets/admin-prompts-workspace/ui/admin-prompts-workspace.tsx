@@ -3,7 +3,6 @@ import { Button } from '@/shared/ui/button';
 
 import { AdminPromptsWorkspaceContent } from './admin-prompts-workspace-content';
 import { useAdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
-export type AdminPromptsWorkspaceState = ReturnType<typeof useAdminPromptsWorkspaceState>;
 
 function AdminPromptsLoadingState() {
   return (

@@ -54,3 +54,6 @@ export const INITIAL_RUNS: SimulationRun[] = [
     errorMessage: 'Для проверки промпта выберите хотя бы один вопрос.',
   },
 ];
+
+export const DEFAULT_PROMPT_TITLE = 'Карьерный анализ по тесту';
+export const DEFAULT_PROMPT_DESCRIPTION = 'Промпт анализа студенческих ответов';

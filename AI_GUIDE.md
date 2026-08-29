@@ -58,6 +58,21 @@ Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project 
 That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
 `workspace` container that runs frontend and backend together. It is not the project runtime topology.
 
+### OpenRouter Configuration
+
+The API key is backend-only and must never reach the frontend. Prompt behaviour itself is
+documented in [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md).
+
+```env
+OPENROUTER_API_KEY=
+OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
+OPENROUTER_HTTP_REFERER="http://localhost:5173"
+OPENROUTER_APP_NAME="AI Template Admin"
+OPENROUTER_TIMEOUT_MS=120000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+```
+
 ### Frontend Container Rebuild Before Tests
 
 When files under `client/` are changed, rebuild/recreate the frontend container before running
@@ -68,8 +83,8 @@ frontend-related verification such as lint, build, Vitest/Jest, Playwright, smok
 docker compose up -d --build --force-recreate frontend
 ```
 
-Use the root `docker-compose.yml` only. The project Codex hook in `.codex/hooks.json` enforces this
-guard before frontend-related test commands.
+Use the root `docker-compose.yml` only. Host-level checks - Vitest, ESLint and `tsc` - run against
+the sources directly and need no container rebuild; the rule applies to browser-level verification.
 
 ## Search Mode (Exhaustive, For Non-Trivial Tasks)
 
@@ -94,40 +109,6 @@ Stop conditions for search:
 - Additional searches return repetitive information.
 - Required external behavior is confirmed by official docs.
 
-## CodeGraph Usage Recommendations
-
-CodeGraph is an optional local code-intelligence index and MCP navigation tool for this repository.
-Use it to speed up discovery, not to replace source reading or verification gates.
-
-Preferred use cases:
-
-1. Start non-trivial codebase discovery with `codegraph_status` and `codegraph_files` when the MCP
-   tools are available. If MCP is not loaded in the current agent session, use the CLI equivalents
-   `codegraph status` and `codegraph files`.
-2. Use `codegraph_context` for "how does this feature work?" questions before opening many files.
-   Prefer queries that include real code terms: feature names, route segments, symbols, DTO names,
-   generated client names, or file names.
-3. Use `codegraph_search` or `codegraph query` for exact symbol lookup, NestJS route lookup, and
-   generated API hook discovery. Route searches such as `education-organizations` or `public-links`
-   are useful; broad punctuation-only searches are not.
-4. Use `codegraph_explore` after a context/search result when several related symbols need source
-   snippets in one call. Keep the query symbol/file-oriented instead of natural-language heavy.
-5. Use CodeGraph route results as a fast endpoint map, especially for NestJS controllers, then
-   confirm behavior in the controller/service/DTO source before editing.
-
-Trust boundaries:
-
-1. Do not rely on `codegraph affected`, `codegraph_impact`, `codegraph_callers`, or
-   `codegraph_callees` as the only test-impact signal. They can miss Jest specs, NestJS dependency
-   injection chains, and generated-client relationships.
-2. Always confirm affected tests with `rg`, imports, neighboring specs, and the relevant package
-   test commands.
-3. After file deletions or renames, run `codegraph index --force` if results look stale. A full
-   reindex is fast enough for this repo and clears stale symbols reliably.
-4. Keep `.codegraph/` local and ignored. Never commit the index database.
-5. CodeGraph findings do not waive required project gates such as `npm run verify:local`,
-   `npm run verify:template`, lint, build, or targeted tests.
-
 ## Refactor Debt Prevention (Always-On)
 
 Goal: avoid another large refactor wave by enforcing guardrails continuously.
@@ -145,6 +126,33 @@ Maintainability thresholds for proactive extraction:
   client source at 420, server source at 700 during backend extraction, server specs at 900.
 - Prefer reducer/extraction when a module accumulates more than ~14 `useState` calls.
 - Treat complexity warnings as mandatory refactor candidates for the next small PR.
+
+## Verifying A Change (Always-On)
+
+Every rule below exists because it was violated in this repository and cost a red CI run, a
+regression, or a false green. They are cheap to follow and expensive to skip.
+
+1. **Verify from the state CI has, not the state you are in.** Your working tree accumulates
+   generated artifacts — `server/openapi.json`, `client/dist`, `server/dist` — from earlier steps
+   in the session. CI starts clean. Before trusting a gate you changed, delete those and run it
+   again. A check that passes only because you generated something an hour ago is not a check.
+2. **When extracting shared logic from two implementations, the extraction must match the
+   authority, and you must diff it against every original.** If the server validates the same
+   rule, the server is the authority and the client copy mirrors it exactly, non-obvious branches
+   included. Writing a "cleaner" version silently changes behaviour for whichever caller already
+   agreed with the authority.
+3. **Deleting code means deleting its exports and its mentions, in the same change.** A file with
+   no importers is one kind of dead code; an exported symbol nobody imports is another, and a
+   scan for orphaned _files_ will not see it. Grep the documentation for the name of every script,
+   command or path you remove — a guide that names a deleted command reads as an instruction.
+4. **Prove a mechanical refactor by equality, not by absence of complaints.** Record the baseline
+   first — error count, test count, test names — then require the number after the move to be
+   _the same_, not merely small. "It builds" hides a lost test; "33 before, 33 after, same files"
+   does not.
+5. **Reproduce a reported failure with the system's own input before acting on it.** A claim built
+   from a hand-written example can be confidently wrong about a tool that produces different input
+   in reality. Run the real command, read the real arguments, then decide. This applies equally to
+   findings from other agents and to your own hypotheses.
 
 ## Frontend Architecture Contract (Strict FSD)
 
@@ -293,162 +301,15 @@ Verification gates:
 2. Implement UI/domain composition in `widgets/*` and `features/*`; keep `pages/*` as thin route entrypoints.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
-## OpenRouter Prompt Studio Foundation (Current Branch)
+## Product Contracts
 
-Current prompt foundation is implemented as the `analysis-prompts` bounded context under:
+These describe the product built on this template rather than the template itself. Read the one
+you are touching; do not load them all up front.
 
-- Backend: `server/src/analysis-prompts/*`
-- Frontend page wrapper: `client/src/pages/admin/admin-prompts-page.tsx`
-- Frontend workspace: `client/src/widgets/admin-prompts-workspace/*`
-- Route: `"/admin/prompts"`
-
-Required behavior:
-
-1. OpenRouter key is backend-only (`OPENROUTER_API_KEY` in `server/.env`).
-2. Model catalog must be loaded through backend proxy (`GET /admin/prompts/models`).
-3. Prompt generation must be proxied via backend (`POST /admin/prompts/generate`).
-4. Frontend must never call OpenRouter directly.
-5. Prefer free models by default to reduce accidental spend.
-6. Prompt test variables are local UI helpers until question system is integrated.
-7. For strict machine-parseable output, use `response_format: json_schema` + `strict: true` with explicit schema.
-8. When schema is required, set `provider.require_parameters=true` to avoid routing to providers that ignore required params.
-9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
-10. Archived prompt versions remain valid for already published test versions that reference them; archive hides prompt versions from future selection/editing workflows, it must not break historical runtime analysis.
-
-Recommended env vars for prompt foundation:
-
-```env
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
-OPENROUTER_HTTP_REFERER="http://localhost:5173"
-OPENROUTER_APP_NAME="AI Template Admin"
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
-```
-
-## Tests Module Foundation (Current Branch)
-
-Current tests implementation is wired as a dedicated backend module + admin workspace:
-
-- Backend module: `server/src/tests/*`
-- Frontend page wrapper: `client/src/pages/admin/admin-tests-page.tsx`
-- Frontend workspace: `client/src/widgets/admin-tests-workspace/*`
-- Admin route: `"/admin/tests"`
-- Manifest feature entry: `tests` (`template/features.manifest.json`)
-
-Domain/versioning baseline:
-
-1. Single active draft per topic (`activeDraftVersionId`).
-2. Optional active published version (`activePublishedVersionId`).
-3. Publish action archives prior published version (if exists), promotes draft, then clones a new draft.
-4. Question weights are `Int`.
-5. Branching configurator is intentionally out of scope for this stage.
-
-Frontend UX baseline for tests editor:
-
-1. Question add/edit must happen in modal UI (avoid oversized inline editor blocks).
-2. Choice-type options should use explicit row-based inputs, not manual delimiter syntax.
-3. Service-side option code should be auto-generated when not explicitly required in UI.
-4. Advanced JSON settings should be collapsible by default ("Advanced settings").
-5. Keep labels and helper copy clear enough for non-technical content managers.
-6. Topic list must support safe deletion with explicit confirmation.
-7. Sidebar cards must gracefully handle long titles/slugs (no overflow beyond card bounds).
-
-AI-assisted tests generation baseline:
-
-1. Trigger from tests workspace via dedicated modal (`Создать тест с ИИ`).
-2. Flow is two-phase: generate preview -> commit via transactional backend endpoint.
-3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
-4. Model selector must show only models with structured-output capability.
-
-Built-in prof-orientation v3+ baseline:
-
-1. Runtime methodology data must come from the committed fixture at
-   `server/src/tests/prof-orientation-v3-plus/site-config.json`; do not read from
-   the external `Методика теста + вопросы` package at runtime.
-2. Admin import endpoint:
-   `POST /admin/tests/methodologies/prof-orientation-v3-plus/import`.
-3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
-   10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
-   `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
-4. Built-in methodology LLM enrichment must use the analysis prompt version
-   selected on the test topic. Seed the built-in prompt with
-   `deepseek/deepseek-v4-flash` only when no published built-in prompt version
-   exists yet.
-5. Public multi-choice UI must enforce `settings.maxChoices`.
-6. For this scoring kind, `finishSession` must store deterministic algorithm
-   analysis as `READY` before LLM enrichment starts.
-7. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
-   direction, score, confidence, profile, or profession fields.
-8. Prof-orientation OpenRouter calls may use
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for
-   `OpenRouter request timeout` and must stay capped at 2.
-9. Polus result UI should merge LLM explanations into existing methodology blocks
-   and avoid exposing raw method internals to students.
-10. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
-
-## Admin Public Links + Stats Contract (Current Branch)
-
-Routes and ownership:
-
-- `"/admin/public-links"` -> link lifecycle workspace
-- `"/admin/public-links/stats"` -> dedicated statistics workspace
-- Admin shell navigation must keep links/stats as separate menu entries.
-
-Behavior baseline:
-
-1. Public link lifecycle is `create/regenerate/archive/restore`.
-2. Archive must disable student access without deleting historical attempts/results.
-3. Stats page is table-first (avoid oversized decorative summary blocks above core filters/table).
-4. Filters must support both test and public link selection.
-5. Link labels in selectors should use business copy (`тестов пройдено`).
-6. Student row actions must provide direct access to analysis and answers.
-7. Public links have a public template:
-   - `STANDARD` -> current public template; default for existing rows and new links unless explicitly changed.
-   - `POLUS` -> branded Polus public template; selected during public-link creation only.
-8. Public link DTOs and responses must expose `publicTemplate` through admin link lists, public link access, session state, and result fetches without changing `/t/*` routes.
-9. Public links have an entry profile mode:
-   - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`.
-   - `EDUCATION` -> collect the current education-based profile before the test.
-   - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior.
-10. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
-
-## Public Student UX Contract (`/t/*`)
-
-Target routes:
-
-- `"/t/:code"` -> entry form
-- `"/t/:code/session/:sessionToken"` -> run workspace
-- `"/t/:code/result/:sessionToken"` -> result workspace
-
-Security model:
-
-- Public session/result URLs are bearer-style links: anyone with a valid `sessionToken`
-  can open the active session or final result until normal session/link rules block access.
-- Do not log, display, or send public session/result URLs outside the student-facing flow.
-- Public result DTOs must expose only student-safe analysis fields: status, provider mode,
-  generated timestamp, safe summary blocks, and user-facing error text.
-- Raw provider output, prompts, scoring internals, and debug-only fields belong only in
-  admin/internal DTOs protected by admin guards.
-
-UI/theming rules:
-
-1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
-2. Scoped theme tokens are defined in `client/src/features/tests/ui/public-theme.css` under `.theme-public`.
-3. Do not place public-theme tokens in global `client/src/app/index.css`.
-4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
-5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
-6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
-7. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
-   - `STANDARD` preserves the existing public components.
-   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`.
-8. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
-9. Entry page must branch by the link `entryProfileMode` without changing public routes:
-   - `DEMOGRAPHIC` shows the demographic profile form.
-   - `EDUCATION` shows the education profile form.
-   - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry includes name, surname initial, and patronymic initial.
+- [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md) — working on `/admin/prompts`, prompt versioning, or OpenRouter calls.
+- [`docs/specs/tests-module.md`](docs/specs/tests-module.md) — working on test authoring, publishing, or the built-in prof-orientation methodology.
+- [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
+- [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.
 
 ## Reference Example For AI Agents (Illustrative)
 
@@ -484,8 +345,9 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 
 ## Stability Rules
 
-1. Core lint/test/build commands must pass during implementation loops:
+1. Core typecheck/lint/test/build commands must pass during implementation loops:
    ```powershell
+   npm run typecheck
    npm run lint
    npm run test --prefix server
    npm run test:e2e --prefix server
@@ -494,10 +356,15 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    npm run build --prefix client
    ```
 2. End-to-end template verification must pass:
+
    ```powershell
    npm run verify:template
    ```
-   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
+
+   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, typecheck, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
+
+   `npm run typecheck` is not redundant with `npm run build --prefix server`. `nest build` compiles through `server/tsconfig.build.json`, which excludes `**/*spec.ts`, so the server specs are the one part of the tree no other gate ever compiles. Type errors accumulate there silently while every check stays green — thirty-three of them had, before the gate was added. `npm run typecheck` runs `tsc --noEmit` over `server/tsconfig.json`, which includes them.
+
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.
@@ -533,6 +400,11 @@ Use these commands during local AI-agent development:
 
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
+
+Because `verify:local` skips API regeneration, it _consumes_ `server/openapi.json` rather
+than producing it. The file is gitignored, so on a fresh checkout — or after deleting
+generated artifacts — `verify:architecture` fails until you run `npm run gen:openapi` once.
+`verify:template` has no such prerequisite: it runs `gen:api` itself.
 
 ## PR-Ready Checklist (Feature Delivery)
 
@@ -579,6 +451,14 @@ Use this checklist before opening PR or finalizing work.
   - frontend page + create form
   - generated API file from Orval
   - route wiring in `client/src/app/App.tsx`
+- `backendFiles` and `frontendFiles` are **entrypoint lists, not inventories**. For a feature that
+  declares `ownedRoots`, those roots define what the feature owns; the file lists name the modules,
+  controllers and pages an agent should start from. `server/src/tests` alone holds more than eighty
+  files and is not meant to be enumerated by hand. Keep every module and controller listed, and do
+  not read a short list as evidence that the rest of the feature does not exist.
+- A file belongs to exactly one feature's `frontendFiles`. Shared frames such as
+  `client/src/features/admin/ui/admin-shell.tsx` stay with their owning feature; other features
+  reference them without claiming them.
 - Every declared `publicRoutes` entry must be wired in `client/src/app/App.tsx`.
 - Every generated API directory outside feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - `npm run verify:architecture` fails if any of these constraints are broken.

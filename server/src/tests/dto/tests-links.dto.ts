@@ -340,6 +340,18 @@ export const AdminPublicAttemptDetailResponseSchema = z.object({
 
 export class AdminCreatePublicLinkDto extends createZodDto(AdminCreatePublicLinkSchema) {}
 export class AdminUpdatePublicLinkDto extends createZodDto(AdminUpdatePublicLinkSchema) {}
+
+/**
+ * What `createPublicLink` receives. `publicTemplate` and `personalDataProcessingMode` carry
+ * schema defaults, so they are optional on the way in and guaranteed on the way out, and the
+ * service applies the same two defaults itself. Everything else stays as parsed, so this is a
+ * narrow relaxation of the DTO rather than the whole input side of the schema.
+ */
+export type AdminCreatePublicLinkInput = Omit<
+  AdminCreatePublicLinkDto,
+  'publicTemplate' | 'personalDataProcessingMode'
+> &
+  Partial<Pick<AdminCreatePublicLinkDto, 'publicTemplate' | 'personalDataProcessingMode'>>;
 export class AdminPublicLinkDto extends createZodDto(AdminPublicLinkSchema) {}
 export class AdminPublicLinksListResponseDto extends createZodDto(
   AdminPublicLinksListResponseSchema,

@@ -1,5 +1,5 @@
 {
-  "client/src/**/*.{ts,tsx}": ["npm run lint --prefix client", "prettier --write"],
-  "server/{src,test}/**/*.ts": ["npm run lint --prefix server", "prettier --write"],
-  "*.{js,jsx,mjs,cjs,json,md,mdx,css,scss,yaml,yml,html}": ["prettier --write"]
+  "client/src/**/*.{ts,tsx}": ["npm run lint:staged --prefix client --", "prettier --write"],
+  "server/src/**/*.ts": ["npm run lint:staged --prefix server --", "prettier --write"],
+  "**/*.{js,jsx,mjs,cjs,json,md,mdx,css,scss,yaml,yml,html}": ["prettier --write"]
 }
