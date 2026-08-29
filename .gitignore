@@ -29,3 +29,6 @@ vectors.db
 vectors.db-shm
 vectors.db-wal
 .codegraph/
+
+# Claude Code local overrides
+.claude/settings.local.json

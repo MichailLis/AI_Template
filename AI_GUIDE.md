@@ -94,40 +94,6 @@ Stop conditions for search:
 - Additional searches return repetitive information.
 - Required external behavior is confirmed by official docs.
 
-## CodeGraph Usage Recommendations
-
-CodeGraph is an optional local code-intelligence index and MCP navigation tool for this repository.
-Use it to speed up discovery, not to replace source reading or verification gates.
-
-Preferred use cases:
-
-1. Start non-trivial codebase discovery with `codegraph_status` and `codegraph_files` when the MCP
-   tools are available. If MCP is not loaded in the current agent session, use the CLI equivalents
-   `codegraph status` and `codegraph files`.
-2. Use `codegraph_context` for "how does this feature work?" questions before opening many files.
-   Prefer queries that include real code terms: feature names, route segments, symbols, DTO names,
-   generated client names, or file names.
-3. Use `codegraph_search` or `codegraph query` for exact symbol lookup, NestJS route lookup, and
-   generated API hook discovery. Route searches such as `education-organizations` or `public-links`
-   are useful; broad punctuation-only searches are not.
-4. Use `codegraph_explore` after a context/search result when several related symbols need source
-   snippets in one call. Keep the query symbol/file-oriented instead of natural-language heavy.
-5. Use CodeGraph route results as a fast endpoint map, especially for NestJS controllers, then
-   confirm behavior in the controller/service/DTO source before editing.
-
-Trust boundaries:
-
-1. Do not rely on `codegraph affected`, `codegraph_impact`, `codegraph_callers`, or
-   `codegraph_callees` as the only test-impact signal. They can miss Jest specs, NestJS dependency
-   injection chains, and generated-client relationships.
-2. Always confirm affected tests with `rg`, imports, neighboring specs, and the relevant package
-   test commands.
-3. After file deletions or renames, run `codegraph index --force` if results look stale. A full
-   reindex is fast enough for this repo and clears stale symbols reliably.
-4. Keep `.codegraph/` local and ignored. Never commit the index database.
-5. CodeGraph findings do not waive required project gates such as `npm run verify:local`,
-   `npm run verify:template`, lint, build, or targeted tests.
-
 ## Refactor Debt Prevention (Always-On)
 
 Goal: avoid another large refactor wave by enforcing guardrails continuously.
