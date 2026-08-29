@@ -12,8 +12,6 @@ server/openapi.json
 Design/
 
 # Local AI/QA artifacts
-.codex-artifacts/
-.codex/state/
 .omx/
 .playwright-cli/
 .playwright-mcp/

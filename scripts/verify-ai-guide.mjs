@@ -39,7 +39,7 @@ for (const token of requiredReadmeTokens) {
 // Paths the documents point at must exist. Documentation that names a file which was renamed or
 // deleted is worse than no documentation: an agent follows it and reasons about the wrong tree.
 const REPO_ROOTED =
-  /^(?:client|server|scripts|docs|template|prisma)\/|^\.(?:github|claude|codex|devcontainer|husky)\//;
+  /^(?:client|server|scripts|docs|template|prisma)\/|^\.(?:github|claude|devcontainer|husky)\//;
 const PATH_PATTERN = /`([^`\s]+\.(?:md|json|ts|tsx|mjs|cjs|js|yml|yaml|py|sh|css|prisma))`/g;
 
 /**
