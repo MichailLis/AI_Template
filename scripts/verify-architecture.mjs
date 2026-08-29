@@ -660,14 +660,15 @@ const verify = async () => {
   const openApiExists = await existsFromRoot('server/openapi.json');
   const openApiDoc = openApiExists ? JSON.parse(await readFromRoot('server/openapi.json')) : null;
 
-  // This gate consumes server/openapi.json but never produces it. verify:template regenerates it
-  // through gen:api beforehand; verify:local deliberately skips API regeneration, so on a clean
-  // checkout the artifact is simply absent. Say so once, with the command that fixes it, instead
-  // of letting every feature that declares openApiOperations report the same missing file.
+  // This gate consumes server/openapi.json but never produces it, and the file is gitignored. Both
+  // gates regenerate it first — verify:local through verify:contracts, verify:template through
+  // gen:api — so reaching this branch means the check was run on its own. Say so once, with the
+  // command that fixes it, instead of letting every feature that declares openApiOperations report
+  // the same missing file.
   if (!openApiExists) {
     errors.push(
-      'server/openapi.json is missing. Run `npm run gen:openapi` (or `npm run gen:api` to refresh ' +
-        'the client too) before this gate. verify:local does not regenerate it by design.',
+      'server/openapi.json is missing. Run `npm run verify:contracts` to regenerate it and rerun ' +
+        'this check, or `npm run gen:openapi` on its own.',
     );
   }
 

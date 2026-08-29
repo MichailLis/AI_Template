@@ -21,6 +21,11 @@ const serverLintFix = serverScripts['lint:fix'] ?? '';
 const serverTypecheck = serverScripts.typecheck ?? '';
 const auditCommandPattern = /(?:^|&&|\|\||;)\s*npm(?:\s+run)?\s+audit(?::|\b)/;
 const ciWorkflowPath = join(rootDir, '.github', 'workflows', 'ci.yml');
+const splitScriptSegments = (script) =>
+  script
+    .split('&&')
+    .map((segment) => segment.trim())
+    .filter(Boolean);
 const requireRootScriptSegment = (scriptName, expectedSegment) => {
   const script = rootScripts[scriptName] ?? '';
 
@@ -125,6 +130,41 @@ for (const expectedSegment of [
 
 if (auditCommandPattern.test(rootScripts['verify:local'] ?? '')) {
   fail('verify:local must stay practical and must not include audit scripts');
+}
+
+// verify:architecture reads server/openapi.json but never writes it, and the file is gitignored.
+// Every gate that runs the check must therefore regenerate the document first, or it validates a
+// stale artifact — or, on a clean checkout, fails on a missing one. verify:contracts pairs the two
+// so a gate cannot pick up the check without the generation.
+const CONTRACTS_SCRIPT = 'npm run gen:openapi && npm run verify:architecture';
+const OPENAPI_PRODUCERS = new Set(['npm run gen:openapi', 'npm run gen:api']);
+
+if (rootScripts['verify:contracts'] !== CONTRACTS_SCRIPT) {
+  fail(`root verify:contracts script must be "${CONTRACTS_SCRIPT}"`);
+}
+
+for (const scriptName of ['verify:local', 'verify:template']) {
+  const segments = splitScriptSegments(rootScripts[scriptName] ?? '');
+  const architectureIndex = segments.indexOf('npm run verify:architecture');
+
+  if (architectureIndex === -1) {
+    if (!segments.includes('npm run verify:contracts')) {
+      fail(`${scriptName} must verify the architecture, via npm run verify:contracts`);
+    }
+    continue;
+  }
+
+  // Calling the check directly is allowed only where the document is already fresh.
+  const regeneratedBefore = segments
+    .slice(0, architectureIndex)
+    .some((segment) => OPENAPI_PRODUCERS.has(segment));
+
+  if (!regeneratedBefore) {
+    fail(
+      `${scriptName} runs verify:architecture without regenerating server/openapi.json first; ` +
+        'use npm run verify:contracts',
+    );
+  }
 }
 
 if (!existsSync(ciWorkflowPath)) {

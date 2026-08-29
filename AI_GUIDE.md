@@ -401,10 +401,12 @@ Use these commands during local AI-agent development:
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
 
-Because `verify:local` skips API regeneration, it _consumes_ `server/openapi.json` rather
-than producing it. The file is gitignored, so on a fresh checkout — or after deleting
-generated artifacts — `verify:architecture` fails until you run `npm run gen:openapi` once.
-`verify:template` has no such prerequisite: it runs `gen:api` itself.
+`verify:architecture` reads `server/openapi.json`, which is gitignored and regenerated rather
+than committed. `npm run verify:contracts` pairs the generation with the check so neither gate
+can validate a stale document: `verify:local` calls it, and `verify:template` reaches the same
+state through `gen:api`, which regenerates the client as well. Run `npm run verify:contracts`
+on its own after changing a controller or DTO to see the architecture result without paying
+for the full loop.
 
 ## PR-Ready Checklist (Feature Delivery)
 
