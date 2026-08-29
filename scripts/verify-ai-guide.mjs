@@ -1,4 +1,5 @@
 import { access, readdir, readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -86,6 +87,34 @@ const exists = async (relativePath) => {
 };
 
 /**
+ * Build artifacts are legitimately named by the documentation but are absent from a clean
+ * checkout, and this check runs before the pipeline generates them. Anything git ignores is
+ * an artifact by definition, so its absence says nothing about the documentation being stale.
+ */
+const gitIgnored = (paths) => {
+  if (paths.length === 0) return new Set();
+
+  const result = spawnSync('git', ['check-ignore', '--stdin'], {
+    cwd: root,
+    input: `${paths.join('\n')}\n`,
+    encoding: 'utf8',
+  });
+
+  // Exit code 1 simply means nothing matched; anything else means git could not answer,
+  // and we would rather check every path than silently skip them all.
+  if (result.error || (result.status !== 0 && result.status !== 1)) {
+    return new Set();
+  }
+
+  return new Set(
+    result.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+  );
+};
+
+/**
  * Live documentation is checked alongside the guide. docs/archive/ is exempt on purpose: it
  * records finished work and is expected to name paths the tree no longer has.
  */
@@ -122,7 +151,9 @@ for (const [label, markdown] of [
   ...(await liveDocs()),
 ]) {
   const paths = collectPaths(markdown);
-  const checks = await Promise.all(paths.map(async (path) => [path, await exists(path)]));
+  const ignored = gitIgnored(paths);
+  const tracked = paths.filter((path) => !ignored.has(path));
+  const checks = await Promise.all(tracked.map(async (path) => [path, await exists(path)]));
 
   for (const [path, found] of checks) {
     if (!found) {
