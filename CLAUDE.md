@@ -101,6 +101,14 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The three that bite most o
   reference lookup, renames and safe deletes: `find_symbol`, `find_referencing_symbols`,
   `find_implementations`, `get_diagnostics_for_file`, `rename_symbol`, `safe_delete_symbol`.
   Grep is still right for text, config and non-symbol search.
+
+  Its memories under `.serena/memories/` are a thin orientation map, nothing more. Rules belong
+  in `AI_GUIDE.md`: only Claude Code loads Serena, memories are read on request rather than
+  injected, and a rule kept in two places drifts — two memory files were deleted from this
+  repository for being stale copies of guide sections. Do not cache facts about the code there
+  either; `find_referencing_symbols` answers from the current tree, a memory answers from
+  whenever it was written. `verify:ai-guide` now checks these files for stale paths.
+
 - **rtk** wraps shell output to cut tokens. A global hook rewrites commands automatically;
   `rtk test <cmd>`, `rtk lint`, `rtk tsc`, `rtk vitest`, `rtk prisma`, `rtk git diff` are the
   ones that pay off most here.

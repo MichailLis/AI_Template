@@ -114,12 +114,9 @@ const gitIgnored = (paths) => {
   );
 };
 
-/**
- * Live documentation is checked alongside the guide. docs/archive/ is exempt on purpose: it
- * records finished work and is expected to name paths the tree no longer has.
- */
-const liveDocs = async () => {
-  const docsRoot = join(root, 'docs');
+/** Every markdown file under `base`, skipping the directory names in `skipDirs`. */
+const markdownFilesIn = async (base, skipDirs = []) => {
+  const skip = new Set(skipDirs);
   const found = [];
 
   const walk = async (dir, relative) => {
@@ -133,22 +130,35 @@ const liveDocs = async () => {
     for (const entry of entries) {
       const nextRelative = relative ? `${relative}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        if (nextRelative !== 'archive') await walk(join(dir, entry.name), nextRelative);
+        if (!skip.has(nextRelative)) await walk(join(dir, entry.name), nextRelative);
       } else if (entry.name.endsWith('.md')) {
-        found.push([`docs/${nextRelative}`, await readFile(join(dir, entry.name), 'utf-8')]);
+        found.push([`${base}/${nextRelative}`, await readFile(join(dir, entry.name), 'utf-8')]);
       }
     }
   };
 
-  await walk(docsRoot, '');
+  await walk(join(root, base), '');
   return found;
 };
+
+/**
+ * Live documentation is checked alongside the guide. docs/archive/ is exempt on purpose: it
+ * records finished work and is expected to name paths the tree no longer has.
+ *
+ * Serena's memories are checked for the same reason the guide is. They are prose an agent
+ * trusts, they are not regenerated from the code, and the last time they went unchecked they
+ * ended up pointing at files that had been deleted months earlier.
+ */
+const proseDocuments = async () => [
+  ...(await markdownFilesIn('docs', ['archive'])),
+  ...(await markdownFilesIn('.serena/memories')),
+];
 
 for (const [label, markdown] of [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
   ['AGENTS.md', await readFile(join(root, 'AGENTS.md'), 'utf-8')],
-  ...(await liveDocs()),
+  ...(await proseDocuments()),
 ]) {
   const paths = collectPaths(markdown);
   const ignored = gitIgnored(paths);
