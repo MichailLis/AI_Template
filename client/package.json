@@ -9,6 +9,7 @@
     "dev:force": "node -e \"const fs=require('node:fs');fs.rmSync('node_modules/.vite',{recursive:true,force:true});\" && vite --force",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:staged": "eslint --fix --no-warn-ignored",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:api": "node -e \"const fs=require('node:fs');fs.rmSync('src/shared/api/generated',{recursive:true,force:true});fs.rmSync('src/shared/api/model',{recursive:true,force:true});\" && orval",
