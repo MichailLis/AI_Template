@@ -58,6 +58,21 @@ Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project 
 That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
 `workspace` container that runs frontend and backend together. It is not the project runtime topology.
 
+### OpenRouter Configuration
+
+The API key is backend-only and must never reach the frontend. Prompt behaviour itself is
+documented in [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md).
+
+```env
+OPENROUTER_API_KEY=
+OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
+OPENROUTER_HTTP_REFERER="http://localhost:5173"
+OPENROUTER_APP_NAME="AI Template Admin"
+OPENROUTER_TIMEOUT_MS=120000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
+OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+```
+
 ### Frontend Container Rebuild Before Tests
 
 When files under `client/` are changed, rebuild/recreate the frontend container before running
@@ -68,8 +83,8 @@ frontend-related verification such as lint, build, Vitest/Jest, Playwright, smok
 docker compose up -d --build --force-recreate frontend
 ```
 
-Use the root `docker-compose.yml` only. The project Codex hook in `.codex/hooks.json` enforces this
-guard before frontend-related test commands.
+Use the root `docker-compose.yml` only. Host-level checks - Vitest, ESLint and `tsc` - run against
+the sources directly and need no container rebuild; the rule applies to browser-level verification.
 
 ## Search Mode (Exhaustive, For Non-Trivial Tasks)
 
@@ -259,162 +274,15 @@ Verification gates:
 2. Implement UI/domain composition in `widgets/*` and `features/*`; keep `pages/*` as thin route entrypoints.
 3. Use `shared/api/schemas.ts` for client form validation schemas.
 
-## OpenRouter Prompt Studio Foundation (Current Branch)
+## Product Contracts
 
-Current prompt foundation is implemented as the `analysis-prompts` bounded context under:
+These describe the product built on this template rather than the template itself. Read the one
+you are touching; do not load them all up front.
 
-- Backend: `server/src/analysis-prompts/*`
-- Frontend page wrapper: `client/src/pages/admin/admin-prompts-page.tsx`
-- Frontend workspace: `client/src/widgets/admin-prompts-workspace/*`
-- Route: `"/admin/prompts"`
-
-Required behavior:
-
-1. OpenRouter key is backend-only (`OPENROUTER_API_KEY` in `server/.env`).
-2. Model catalog must be loaded through backend proxy (`GET /admin/prompts/models`).
-3. Prompt generation must be proxied via backend (`POST /admin/prompts/generate`).
-4. Frontend must never call OpenRouter directly.
-5. Prefer free models by default to reduce accidental spend.
-6. Prompt test variables are local UI helpers until question system is integrated.
-7. For strict machine-parseable output, use `response_format: json_schema` + `strict: true` with explicit schema.
-8. When schema is required, set `provider.require_parameters=true` to avoid routing to providers that ignore required params.
-9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
-10. Archived prompt versions remain valid for already published test versions that reference them; archive hides prompt versions from future selection/editing workflows, it must not break historical runtime analysis.
-
-Recommended env vars for prompt foundation:
-
-```env
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
-OPENROUTER_HTTP_REFERER="http://localhost:5173"
-OPENROUTER_APP_NAME="AI Template Admin"
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
-```
-
-## Tests Module Foundation (Current Branch)
-
-Current tests implementation is wired as a dedicated backend module + admin workspace:
-
-- Backend module: `server/src/tests/*`
-- Frontend page wrapper: `client/src/pages/admin/admin-tests-page.tsx`
-- Frontend workspace: `client/src/widgets/admin-tests-workspace/*`
-- Admin route: `"/admin/tests"`
-- Manifest feature entry: `tests` (`template/features.manifest.json`)
-
-Domain/versioning baseline:
-
-1. Single active draft per topic (`activeDraftVersionId`).
-2. Optional active published version (`activePublishedVersionId`).
-3. Publish action archives prior published version (if exists), promotes draft, then clones a new draft.
-4. Question weights are `Int`.
-5. Branching configurator is intentionally out of scope for this stage.
-
-Frontend UX baseline for tests editor:
-
-1. Question add/edit must happen in modal UI (avoid oversized inline editor blocks).
-2. Choice-type options should use explicit row-based inputs, not manual delimiter syntax.
-3. Service-side option code should be auto-generated when not explicitly required in UI.
-4. Advanced JSON settings should be collapsible by default ("Advanced settings").
-5. Keep labels and helper copy clear enough for non-technical content managers.
-6. Topic list must support safe deletion with explicit confirmation.
-7. Sidebar cards must gracefully handle long titles/slugs (no overflow beyond card bounds).
-
-AI-assisted tests generation baseline:
-
-1. Trigger from tests workspace via dedicated modal (`Создать тест с ИИ`).
-2. Flow is two-phase: generate preview -> commit via transactional backend endpoint.
-3. Transactional create endpoint: `POST /admin/tests/ai/create` (topic + draft + questions in one transaction).
-4. Model selector must show only models with structured-output capability.
-
-Built-in prof-orientation v3+ baseline:
-
-1. Runtime methodology data must come from the committed fixture at
-   `server/src/tests/prof-orientation-v3-plus/site-config.json`; do not read from
-   the archived source package at `docs/archive/prof-orientation-v3-plus/` at runtime.
-2. Admin import endpoint:
-   `POST /admin/tests/methodologies/prof-orientation-v3-plus/import`.
-3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
-   10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
-   `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
-4. Built-in methodology LLM enrichment must use the analysis prompt version
-   selected on the test topic. Seed the built-in prompt with
-   `deepseek/deepseek-v4-flash` only when no published built-in prompt version
-   exists yet.
-5. Public multi-choice UI must enforce `settings.maxChoices`.
-6. For this scoring kind, `finishSession` must store deterministic algorithm
-   analysis as `READY` before LLM enrichment starts.
-7. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
-   direction, score, confidence, profile, or profession fields.
-8. Prof-orientation OpenRouter calls may use
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for
-   `OpenRouter request timeout` and must stay capped at 2.
-9. Polus result UI should merge LLM explanations into existing methodology blocks
-   and avoid exposing raw method internals to students.
-10. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
-
-## Admin Public Links + Stats Contract (Current Branch)
-
-Routes and ownership:
-
-- `"/admin/public-links"` -> link lifecycle workspace
-- `"/admin/public-links/stats"` -> dedicated statistics workspace
-- Admin shell navigation must keep links/stats as separate menu entries.
-
-Behavior baseline:
-
-1. Public link lifecycle is `create/regenerate/archive/restore`.
-2. Archive must disable student access without deleting historical attempts/results.
-3. Stats page is table-first (avoid oversized decorative summary blocks above core filters/table).
-4. Filters must support both test and public link selection.
-5. Link labels in selectors should use business copy (`тестов пройдено`).
-6. Student row actions must provide direct access to analysis and answers.
-7. Public links have a public template:
-   - `STANDARD` -> current public template; default for existing rows and new links unless explicitly changed.
-   - `POLUS` -> branded Polus public template; selected during public-link creation only.
-8. Public link DTOs and responses must expose `publicTemplate` through admin link lists, public link access, session state, and result fetches without changing `/t/*` routes.
-9. Public links have an entry profile mode:
-   - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`.
-   - `EDUCATION` -> collect the current education-based profile before the test.
-   - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior.
-10. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
-
-## Public Student UX Contract (`/t/*`)
-
-Target routes:
-
-- `"/t/:code"` -> entry form
-- `"/t/:code/session/:sessionToken"` -> run workspace
-- `"/t/:code/result/:sessionToken"` -> result workspace
-
-Security model:
-
-- Public session/result URLs are bearer-style links: anyone with a valid `sessionToken`
-  can open the active session or final result until normal session/link rules block access.
-- Do not log, display, or send public session/result URLs outside the student-facing flow.
-- Public result DTOs must expose only student-safe analysis fields: status, provider mode,
-  generated timestamp, safe summary blocks, and user-facing error text.
-- Raw provider output, prompts, scoring internals, and debug-only fields belong only in
-  admin/internal DTOs protected by admin guards.
-
-UI/theming rules:
-
-1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
-2. Scoped theme tokens are defined in `client/src/features/tests/ui/public-theme.css` under `.theme-public`.
-3. Do not place public-theme tokens in global `client/src/app/index.css`.
-4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
-5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
-6. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
-7. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
-   - `STANDARD` preserves the existing public components.
-   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`.
-8. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
-9. Entry page must branch by the link `entryProfileMode` without changing public routes:
-   - `DEMOGRAPHIC` shows the demographic profile form.
-   - `EDUCATION` shows the education profile form.
-   - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry includes name, surname initial, and patronymic initial.
+- [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md) — working on `/admin/prompts`, prompt versioning, or OpenRouter calls.
+- [`docs/specs/tests-module.md`](docs/specs/tests-module.md) — working on test authoring, publishing, or the built-in prof-orientation methodology.
+- [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
+- [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.
 
 ## Reference Example For AI Agents (Illustrative)
 
