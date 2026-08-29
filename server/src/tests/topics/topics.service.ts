@@ -328,7 +328,7 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async createTopicFromAi(
@@ -353,7 +353,7 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async importProfOrientationV3Plus(userId: number): Promise<TestsTopicDetailResponseDto> {
@@ -378,7 +378,7 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async deleteTopic(userId: number, topicId: number): Promise<DeleteTestsTopicResponseDto> {
@@ -422,6 +422,17 @@ export class TestsService {
   async getTopicDraft(userId: number, topicId: number): Promise<TestsTopicDetailResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
+    return this.buildTopicDetailResponse(topicId);
+  }
+
+  /**
+   * The same response, without the access check. Every mutation below already ran
+   * ensureAdminAccess — a database read of the caller's role — before touching anything, so
+   * returning through getTopicDraft made each of them pay for that lookup twice.
+   *
+   * Not public: the check belongs on the way in, and this bypasses it.
+   */
+  private async buildTopicDetailResponse(topicId: number): Promise<TestsTopicDetailResponseDto> {
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
 
@@ -491,7 +502,7 @@ export class TestsService {
       data: updateData,
     });
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async createQuestion(
@@ -504,7 +515,7 @@ export class TestsService {
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.createQuestion(topic.activeDraftVersion, dto);
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async updateQuestion(
@@ -518,7 +529,7 @@ export class TestsService {
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.updateQuestion(topic.activeDraftVersion, questionId, dto);
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async deleteQuestion(
@@ -531,7 +542,7 @@ export class TestsService {
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.deleteQuestion(topic.activeDraftVersion, questionId);
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async reorderQuestions(
@@ -544,7 +555,7 @@ export class TestsService {
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.reorderQuestions(topic.activeDraftVersion, dto);
 
-    return this.getTopicDraft(userId, topicId);
+    return this.buildTopicDetailResponse(topicId);
   }
 
   async publishTopic(userId: number, topicId: number): Promise<PublishTestsTopicResponseDto> {

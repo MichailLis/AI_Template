@@ -24,6 +24,7 @@ export { hexToHslToken, resolvePublicBrandingTheme } from './public-branding';
 export { parseProfOrientationSummary } from './ui/polus/prof-orientation-summary';
 export { ProfOrientationResult } from './ui/polus/prof-orientation-result';
 export { polusAssets } from './ui/polus/polus-public-assets';
+export { PolusResultHero } from './ui/polus/polus-result-hero';
 
 export type { AnalysisPayload, AnalysisResult } from './lib/test-analysis-result-parser';
 export type {
