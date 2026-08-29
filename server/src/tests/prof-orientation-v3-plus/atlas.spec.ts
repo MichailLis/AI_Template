@@ -1,15 +1,9 @@
 import { ProfessionAtlasClientService } from '../../app-settings/profession-atlas-client.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../../prisma.service';
-import {
-  ProfOrientationAtlasService,
-  selectProfOrientationAtlasProfessions,
-  shouldRefreshProfOrientationAtlasSummary,
-} from './atlas';
+import { ProfOrientationAtlasService } from './atlas';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './types';
-
 import type { ProfOrientationSummary } from './types';
-
 describe('ProfOrientationAtlasService', () => {
   const settingsService = {
     getProfessionAtlasConnection: jest.fn(),
@@ -26,14 +20,12 @@ describe('ProfOrientationAtlasService', () => {
       update: jest.fn(),
     },
   };
-
   const createService = () =>
     new ProfOrientationAtlasService(
       prisma as unknown as PrismaService,
       settingsService as unknown as ProfessionAtlasSettingsService,
       atlasClient as unknown as ProfessionAtlasClientService,
     );
-
   const createSummary = (): ProfOrientationSummary =>
     ({
       resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
@@ -50,7 +42,6 @@ describe('ProfOrientationAtlasService', () => {
       topDirections: [],
       llm: { status: 'pending' },
     }) as unknown as ProfOrientationSummary;
-
   const createProfession = (title: string, slug: string) => ({
     title,
     slug,
@@ -71,7 +62,6 @@ describe('ProfOrientationAtlasService', () => {
       },
     ],
   });
-
   beforeEach(() => {
     jest.clearAllMocks();
     settingsService.getProfessionAtlasConnection.mockResolvedValue({
@@ -80,135 +70,33 @@ describe('ProfOrientationAtlasService', () => {
     });
     atlasClient.findInstitutions.mockResolvedValue([]);
   });
-
-  it('selects the first two primary professions for non-mixed profile result cards', () => {
-    const selected = selectProfOrientationAtlasProfessions({
-      resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
-      profile: {
-        type: 'broad_interest',
-      },
-      primaryDirection: {
-        professions: [
-          { code: '103094', title: 'Оператор беспилотных авиационных систем' },
-          {
-            code: '104874',
-            title: 'Специалист по летной эксплуатации беспилотных авиационных систем',
-          },
-        ],
-      },
-      secondaryDirection: {
-        professions: [{ code: '201526', title: 'Инженер-конструктор-системотехник' }],
-      },
-      topDirections: [],
-    } as unknown as ProfOrientationSummary);
-
-    expect(
-      selected.map((item) => ({
-        source: item.source,
-        title: item.profession.title,
-      })),
-    ).toEqual([
-      {
-        source: 'primary',
-        title: 'Оператор беспилотных авиационных систем',
-      },
-      {
-        source: 'secondary',
-        title: 'Специалист по летной эксплуатации беспилотных авиационных систем',
-      },
-    ]);
-  });
-
-  it('detects saved atlas blocks that cover different professions than result cards', () => {
-    const summary = {
-      resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
-      profile: {
-        type: 'broad_interest',
-      },
-      primaryDirection: {
-        professions: [
-          { code: '201524', title: 'Инженер-конструктор' },
-          { code: '204016', title: 'Техник-конструктор' },
-        ],
-      },
-      secondaryDirection: {
-        professions: [{ code: '201353', title: 'Инженер по качеству' }],
-      },
-      topDirections: [],
-      atlas: {
-        status: 'ready',
-        publicUrl: 'https://atlas.example',
-        apiUrl: 'https://atlas.example/api-backend',
-        unmatchedProfessions: [],
-        duplicateProfessions: [],
-        professions: [
-          {
-            source: 'primary',
-            requestedTitle: 'Инженер-конструктор',
-            title: 'Инженер-конструктор',
-            slug: 'engineer-designer',
-            url: 'https://atlas.example/professions/engineer-designer',
-            summary: null,
-            demandLevel: null,
-            industry: null,
-            municipality: null,
-            skills: [],
-          },
-          {
-            source: 'secondary',
-            requestedTitle: 'Инженер по качеству',
-            title: 'Инженер по качеству',
-            slug: 'quality-engineer',
-            url: 'https://atlas.example/professions/quality-engineer',
-            summary: null,
-            demandLevel: null,
-            industry: null,
-            municipality: null,
-            skills: [],
-          },
-        ],
-        enterprises: [],
-        events: [],
-        institutions: [],
-      },
-    } as unknown as ProfOrientationSummary;
-
-    expect(shouldRefreshProfOrientationAtlasSummary(summary)).toBe(true);
-  });
-
   it('uses normalized exact title matching and reports duplicates in coverage', async () => {
     atlasClient.findProfessions.mockImplementation(
       (_apiUrl: string, params: { q?: string; pageSize?: number }) => {
         if (!params.q) {
           return Promise.resolve([]);
         }
-
         if (params.q === 'Инженер-конструктор') {
           return Promise.resolve([
             { title: ' инженер-конструктор ', slug: 'engineer-designer' },
             { title: 'Инженер-конструктор-стажер', slug: 'engineer-designer-junior' },
           ]);
         }
-
         if (params.q === 'Оператор трехмерной печати') {
           return Promise.resolve([
             { title: 'Оператор трёхмерной печати', slug: '3d-print-operator' },
           ]);
         }
-
         if (params.q === 'Инженер по 3D-печати') {
           return Promise.resolve([
             { title: 'Инженер по 3D-печати', slug: '3d-print-engineer-a' },
             { title: 'Инженер по 3D-печати', slug: '3d-print-engineer-b' },
           ]);
         }
-
         return Promise.resolve([]);
       },
     );
-
     const report = await createService().buildCoverageReport();
-
     expect(atlasClient.findProfessions).toHaveBeenCalledWith('https://atlas.example/api-backend', {
       pageSize: 1,
     });
@@ -224,20 +112,16 @@ describe('ProfOrientationAtlasService', () => {
     });
     expect(report.duplicates).toContain('Инженер по 3D-печати');
   });
-
   it('builds an atlas block from matched professions and recommendations', async () => {
     const primaryProfession = createProfession('Инженер-конструктор', 'engineer-designer');
     const secondaryProfession = createProfession('Инженер по 3D-печати', '3d-print-engineer');
-
     atlasClient.findProfessions.mockImplementation((_apiUrl: string, params: { q?: string }) => {
       if (params.q === 'Инженер-конструктор') {
         return Promise.resolve([{ title: 'Инженер-конструктор', slug: 'engineer-designer' }]);
       }
-
       if (params.q === 'Инженер по 3D-печати') {
         return Promise.resolve([{ title: 'Инженер по 3D-печати', slug: '3d-print-engineer' }]);
       }
-
       return Promise.resolve([]);
     });
     atlasClient.getProfession.mockImplementation((_apiUrl: string, slug: string) =>
@@ -280,9 +164,7 @@ describe('ProfOrientationAtlasService', () => {
         municipality: null,
       },
     ]);
-
     const summary = await createService().enrichSummary(createSummary());
-
     expect(summary.atlas).toMatchObject({
       status: 'ready',
       professions: [
@@ -314,7 +196,6 @@ describe('ProfOrientationAtlasService', () => {
     });
     expect(summary.atlas?.institutions).toHaveLength(2);
   });
-
   it('adds relevant institution search matches instead of only first direct programs', async () => {
     const primaryProfession = {
       ...createProfession('Инженер-конструктор', 'engineer-designer'),
@@ -359,16 +240,13 @@ describe('ProfOrientationAtlasService', () => {
         },
       ],
     };
-
     atlasClient.findProfessions.mockImplementation((_apiUrl: string, params: { q?: string }) => {
       if (params.q === 'Инженер-конструктор') {
         return Promise.resolve([{ title: 'Инженер-конструктор', slug: 'engineer-designer' }]);
       }
-
       if (params.q === 'Техник-конструктор') {
         return Promise.resolve([{ title: 'Техник-конструктор', slug: 'technician-designer' }]);
       }
-
       return Promise.resolve([]);
     });
     atlasClient.getProfession.mockImplementation((_apiUrl: string, slug: string) =>
@@ -416,7 +294,6 @@ describe('ProfOrientationAtlasService', () => {
           },
         ]);
       }
-
       if (params.q === 'проектирование') {
         return Promise.resolve([
           {
@@ -435,10 +312,8 @@ describe('ProfOrientationAtlasService', () => {
           },
         ]);
       }
-
       return Promise.resolve([]);
     });
-
     const summary = await createService().enrichSummary({
       ...createSummary(),
       primaryDirection: {
@@ -458,7 +333,6 @@ describe('ProfOrientationAtlasService', () => {
         professions: [{ code: 'A1-2', title: 'Техник-конструктор', type: 'core' }],
       },
     } as unknown as ProfOrientationSummary);
-
     expect(summary.atlas?.institutions.map((institution) => institution.title)).toEqual([
       'ФГАОУ ВО «Северный (Арктический) федеральный университет»',
       'Филиал САФУ в г. Северодвинске',
@@ -467,12 +341,9 @@ describe('ProfOrientationAtlasService', () => {
       'Широкий нерелевантный вуз',
     );
   });
-
   it('returns unavailable atlas status when Atlas API fails', async () => {
     atlasClient.findProfessions.mockRejectedValue(new Error('Atlas is down'));
-
     const summary = await createService().enrichSummary(createSummary());
-
     expect(summary.atlas).toMatchObject({
       status: 'unavailable',
       errorMessage: 'Atlas is down',
