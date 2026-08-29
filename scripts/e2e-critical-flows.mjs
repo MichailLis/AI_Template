@@ -158,7 +158,17 @@ const waitForClient = async (url, timeoutMs) => {
   throw new Error(`Client preview did not become ready: ${url}`);
 };
 
+// verify:template builds the client immediately before this step, so it passes
+// --skip-build rather than paying for a second full tsc + vite build. Standalone
+// runs still build, because nothing else guarantees dist/ matches the sources.
+const skipClientBuild = process.argv.includes('--skip-build');
+
 const buildClient = () => {
+  if (skipClientBuild) {
+    console.log('Skipping client build (--skip-build).');
+    return;
+  }
+
   const buildArgs = ['run', 'build', '--prefix', 'client'];
   const buildProcess = spawnSyncNpm(buildArgs, {
     stdio: 'inherit',
