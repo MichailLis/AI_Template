@@ -48,6 +48,21 @@ docker compose down
 Production deployment uses separate Docker Hub images for backend and frontend. The frontend
 image includes Nginx, serves the React SPA, and proxies `/api/*` to the backend container.
 
+Published images for the current production bundle:
+
+- `morro665065/ai-template-backend:prod`
+- `morro665065/ai-template-frontend:prod`
+
+The `latest` tag is not published for these images. Keep `APP_IMAGE_TAG=prod`
+unless you have published your own immutable tag.
+
+Deploy port model:
+
+- `APP_HTTP_PORT` publishes the frontend/Nginx container to the host.
+- `ADMINER_PORT` publishes Adminer to the host.
+- Backend `PORT=3000` is internal to the Docker network and is not bound to host
+  port `3000`; change `APP_HTTP_PORT` if the public app port is busy.
+
 See [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md) for build, push, and
 Linux/Windows deployment commands.
 

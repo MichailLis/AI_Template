@@ -1,8 +1,26 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".codex/hooks/karpathy_guidelines_prompt.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Karpathy coding guidelines"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude",
+            "timeout": 10,
+            "statusMessage": "Applying RTK shell command rewrite"
+          },
           {
             "type": "command",
             "command": "python \".codex/hooks/frontend_container_rebuild_guard.py\"",

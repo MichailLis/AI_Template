@@ -6,6 +6,8 @@ dist/
 !server/.env.example
 !.env.deploy.example
 *.log
+__pycache__/
+*.py[cod]
 .prisma/
 client/dist/
 server/openapi.json
@@ -20,6 +22,8 @@ Design/
 .sisyphus/
 .sisyphusnotepads*
 client/public/prototypes/
+graphify-out/
+output/
 README_tmp.html
 issues.md
 nul
@@ -29,3 +33,6 @@ vectors.db
 vectors.db-shm
 vectors.db-wal
 .codegraph/
+
+# Local source asset drops
+01_брендинг/
