@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 
+import { DEFAULT_PROMPT_DESCRIPTION } from '../lib/constants';
 import { getApiErrorMessage } from '../lib/utils';
 
 import {
@@ -7,7 +8,6 @@ import {
   preparePromptPayload,
   publishDraftPromptVersion,
 } from './use-admin-prompts-actions.utils';
-import { DEFAULT_PROMPT_DESCRIPTION } from './use-admin-prompts-editor-state';
 
 import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
 

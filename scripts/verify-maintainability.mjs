@@ -114,7 +114,10 @@ for (const file of files) {
   }
 
   if (file.relativePath.startsWith('client/src/') && /\.(ts|tsx)$/.test(file.relativePath)) {
-    const useStateCount = (source.match(/\buseState\s*\(/g) ?? []).length;
+    // Generic calls such as useState<Foo | null>(null) must count too, otherwise the
+    // guard silently passes files that carry twenty independent pieces of state.
+    const useStateCount = (source.match(/\b(?:React\.)?useState\s*(?:<[\s\S]*?>)?\s*\(/g) ?? [])
+      .length;
     if (useStateCount > MAX_USE_STATE_PER_FILE) {
       errors.push(
         `${file.relativePath}: ${useStateCount} useState calls (max ${MAX_USE_STATE_PER_FILE}). Consider useReducer or state extraction.`,

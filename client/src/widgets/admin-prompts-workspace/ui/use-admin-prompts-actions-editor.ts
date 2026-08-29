@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 
-import { INITIAL_PROMPT } from '../lib/constants';
+import { DEFAULT_PROMPT_TITLE, INITIAL_PROMPT } from '../lib/constants';
 import { getApiErrorMessage } from '../lib/utils';
 
 import {
@@ -8,7 +8,6 @@ import {
   getDefaultModel,
   getPromptModelFilter,
 } from './use-admin-prompts-actions.utils';
-import { DEFAULT_PROMPT_TITLE } from './use-admin-prompts-editor-state';
 
 import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
 import type { ModelFilter } from '../model/types';
