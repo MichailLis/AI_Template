@@ -119,7 +119,20 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
   2. **You are about to move or delete an exported symbol.** Grep shows lines; Serena names the
      enclosing method, which is the thing that tells you whether the move is safe.
 
-  For a symbol whose name is unique, grep is correct and about four times cheaper. Use it.
+  For a symbol whose name is unique, grep is correct and about four times cheaper. Use it. Roughly
+  a quarter of one session's greps were identifier lookups; the rest were paths, flags, UI strings
+  and pipelines filtering command output, where Serena does not apply at all.
+
+  Two frictions worth knowing before you start, because both cost a wasted call:
+  - The tools are deferred, so the first use costs a schema fetch before the query itself. Decide
+    to use Serena at the start of a refactor, not halfway through it.
+  - The parameter is **not** named consistently across siblings: `find_symbol` and
+    `safe_delete_symbol` take `name_path_pattern`, `find_referencing_symbols` takes `name_path`.
+    Passing the wrong one fails validation.
+
+  `get_diagnostics_for_file` returns compiler errors grouped by enclosing symbol for one file.
+  `npm run typecheck` covers the whole server in about five seconds, so reach for diagnostics when
+  you want one file's errors without the other files' noise, not for speed.
 
   Its memories under `.serena/memories/` are a thin orientation map, nothing more. Rules belong
   in `AI_GUIDE.md`: only Claude Code loads Serena, memories are read on request rather than
