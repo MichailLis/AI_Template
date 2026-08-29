@@ -6,7 +6,7 @@ import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import type { OpenRouterClientService } from '../openrouter/openrouter.client';
-import type { TestsPromptSimulationReadService } from '../tests/tests-prompt-simulation-read.service';
+import type { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';
 
 type PublishVersionUpdate = (args: {
   data: { status: string; publishedAt: Date };

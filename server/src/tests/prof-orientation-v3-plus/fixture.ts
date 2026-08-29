@@ -1,6 +1,6 @@
 import rawConfig from './site-config.json';
 
-import type { PersistQuestionPayload } from '../tests-topic-version.utils';
+import type { PersistQuestionPayload } from '../topics/topic-version.utils';
 import type { ProfOrientationDirectionId, ProfOrientationResultCard } from './types';
 
 interface SiteConfigAnswer {

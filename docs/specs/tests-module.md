@@ -2,7 +2,23 @@
 
 Current tests implementation is wired as a dedicated backend module + admin workspace:
 
-- Backend module: `server/src/tests/*`
+- Backend module: `server/src/tests/*`, organised by area:
+
+  | Directory                   | Holds                                                                       |
+  | --------------------------- | --------------------------------------------------------------------------- |
+  | `topics/`                   | Authoring: topics, versions, questions, publishing                          |
+  | `public-links/`             | Link lifecycle, link access, education organizations                        |
+  | `session/`                  | The student runtime behind `/t/*`: start, answer, finish                    |
+  | `analysis/`                 | Explaining **one** attempt — LLM and algorithm pipelines, prompt simulation |
+  | `reporting/`                | Aggregating **many** attempts — analytics, XLSX and PDF export              |
+  | `attempts/`                 | Operator-facing view of a single attempt                                    |
+  | `prof-orientation-v3-plus/` | The built-in methodology and its committed fixture                          |
+  | `shared/`                   | Helpers used across more than one of the above                              |
+
+  `analysis` and `reporting` are named apart on purpose: one explains a single student's
+  attempt, the other aggregates across attempts. The two Nest modules that wire these areas
+  together, `tests.module.ts` and `tests-attempts.module.ts`, stay at the root.
+
 - Frontend page wrapper: `client/src/pages/admin/admin-tests-page.tsx`
 - Frontend workspace: `client/src/widgets/admin-tests-workspace/*`
 - Admin route: `"/admin/tests"`
