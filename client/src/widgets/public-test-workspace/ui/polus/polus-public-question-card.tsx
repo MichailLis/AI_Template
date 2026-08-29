@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { getMaxChoices, isChoiceLimitReached } from '@/features/tests';
+
 import { getPublicQuestionCardState, type AnswerOverride } from '../public-question-card-state';
 
 import { PolusPublicSliderField } from './polus-public-slider-field';
@@ -23,16 +25,6 @@ interface PolusPublicQuestionCardProps {
 }
 
 const markerLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
-
-const getMaxChoices = (settings: unknown) => {
-  if (typeof settings !== 'object' || settings === null || Array.isArray(settings)) {
-    return null;
-  }
-
-  const value = (settings as Record<string, unknown>).maxChoices;
-
-  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
-};
 
 function getPrimaryActionContent(isSubmitting: boolean, isLastQuestion: boolean) {
   if (isSubmitting) {
@@ -158,7 +150,7 @@ function PolusChoiceAnswers({
             mode === 'single'
               ? currentAnswer === option.value
               : selectedValues.includes(option.value);
-          const limitReached = Boolean(maxChoices && selectedCount >= maxChoices);
+          const limitReached = isChoiceLimitReached(selectedCount, maxChoices);
           const disabled = isSubmitting || (mode === 'multi' && !selected && limitReached);
 
           return (
