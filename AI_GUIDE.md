@@ -332,7 +332,7 @@ Built-in prof-orientation v3+ baseline:
 
 1. Runtime methodology data must come from the committed fixture at
    `server/src/tests/prof-orientation-v3-plus/site-config.json`; do not read from
-   the external `Методика теста + вопросы` package at runtime.
+   the archived source package at `docs/archive/prof-orientation-v3-plus/` at runtime.
 2. Admin import endpoint:
    `POST /admin/tests/methodologies/prof-orientation-v3-plus/import`.
 3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
