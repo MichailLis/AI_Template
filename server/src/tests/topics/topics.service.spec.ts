@@ -197,6 +197,17 @@ describe('TestsService analysis prompt attachment', () => {
     });
   });
 
+  // updateTopicDraft used to return through getTopicDraft, which runs the check again. The check
+  // is a prisma.user.findUnique, so every topic and question mutation paid for two.
+  it('updateTopicDraft checks admin access once, not once per response build', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+    prismaMock.testTopicVersion.update.mockResolvedValue({});
+
+    await service.updateTopicDraft(5, 1, { title: 'Career skills' });
+
+    expect(jest.mocked(ensureAdminAccess)).toHaveBeenCalledTimes(1);
+  });
+
   it('updateTopicDraft rejects missing or unpublished prompt versions', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     prismaMock.analysisPromptVersion.findFirst.mockResolvedValue(null);
@@ -280,21 +291,9 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
       Promise.resolve({ id: data.order }),
     );
-    const getTopicDraftSpy = jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
-      topicId: 1,
-      slug: 'prof-orientation-v3-plus',
-      draft: {
-        id: 10,
-        versionNumber: 1,
-        title: 'Профориентационный тест v3+',
-        description: null,
-        analysisPromptVersion: null,
-        questions: [],
-      },
-      published: null,
-    });
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
-    await service.importProfOrientationV3Plus(5);
+    const result = await service.importProfOrientationV3Plus(5);
 
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -309,7 +308,8 @@ describe('TestsService analysis prompt attachment', () => {
     expect(txMock.testQuestion.create).toHaveBeenCalledTimes(21);
     expect(txMock.testQuestionOption.createMany).toHaveBeenCalledTimes(10);
     expect(txMock.testQuestionSliderBand.createMany).toHaveBeenCalledTimes(11);
-    expect(getTopicDraftSpy).toHaveBeenCalledWith(5, 1);
+    expect(result.topicId).toBe(1);
+    expect(result.draft.id).toBe(10);
   });
 
   it('importProfOrientationV3Plus reuses the latest published prompt version model selected in UI', async () => {
@@ -333,19 +333,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testQuestion.create.mockImplementation(({ data }: { data: { order: number } }) =>
       Promise.resolve({ id: data.order }),
     );
-    jest.spyOn(service, 'getTopicDraft').mockResolvedValue({
-      topicId: 1,
-      slug: 'prof-orientation-v3-plus',
-      draft: {
-        id: 10,
-        versionNumber: 1,
-        title: 'Профориентационный тест v3+',
-        description: null,
-        analysisPromptVersion: null,
-        questions: [],
-      },
-      published: null,
-    });
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
     await service.importProfOrientationV3Plus(5);
 

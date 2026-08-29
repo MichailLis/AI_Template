@@ -1,3 +1,7 @@
+import {
+  studentEducationLevelOptions,
+  studentGenderOptions,
+} from '@/shared/lib/public-test-labels';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
@@ -12,14 +16,6 @@ interface RegistrationDemographicFieldsProps {
   formState: DemographicFormState;
   onFieldChange: DemographicFieldChangeHandler;
 }
-
-const educationLevelOptions = [
-  { value: 'BASIC_GENERAL', label: 'Основное общее' },
-  { value: 'SECONDARY_GENERAL', label: 'Среднее общее' },
-  { value: 'SECONDARY_SPECIAL', label: 'Среднее специальное' },
-  { value: 'INCOMPLETE_HIGHER_FROM_YEAR_3', label: 'Неоконченное высшее (начиная с 3 курса)' },
-  { value: 'HIGHER', label: 'Высшее' },
-] as const;
 
 export function RegistrationDemographicFields({
   formState,
@@ -44,8 +40,11 @@ export function RegistrationDemographicFields({
           className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="">Выберите пол</option>
-          <option value="MALE">Мужской</option>
-          <option value="FEMALE">Женский</option>
+          {studentGenderOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
       <div className="space-y-2">
@@ -94,7 +93,7 @@ export function RegistrationDemographicFields({
           className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="">Выберите уровень образования</option>
-          {educationLevelOptions.map((option) => (
+          {studentEducationLevelOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
