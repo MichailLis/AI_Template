@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { TestsPublicLinkService } from '../public-links/public-link.service';
+import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 
 import type { AccessibleLinkFixture } from '../session/spec-fixtures';
@@ -124,19 +125,29 @@ export const createPublicSessionHarness = (): PublicSessionHarness => {
     toAttemptStatus: toAttemptStatusMock,
   };
 
+  const privacyPolicySettingsServiceMock = {
+    getActivePolicySnapshot: getActivePolicySnapshotMock,
+  } as unknown as PrivacyPolicySettingsService;
+
+  // The real allocator on the same mocked Prisma: these suites assert on what lands in
+  // testStudentAttempt.create, so stubbing it out would remove the behaviour under test.
+  const attemptAllocationService = new TestsPublicAttemptAllocationService(
+    prismaMock as unknown as PrismaService,
+    privacyPolicySettingsServiceMock,
+  );
+
   const service = new TestsPublicSessionService(
     prismaMock as unknown as PrismaService,
     publicLinkServiceMock as unknown as TestsPublicLinkService,
     analysisServiceMock as unknown as TestsAnalysisService,
-    {
-      getActivePolicySnapshot: getActivePolicySnapshotMock,
-    } as unknown as PrivacyPolicySettingsService,
+    privacyPolicySettingsServiceMock,
     {
       getProfessionAtlasUrl: getProfessionAtlasUrlMock,
     } as unknown as ProfessionAtlasSettingsService,
     {
       saveEnrichedAnalysis: saveEnrichedAnalysisMock,
     } as unknown as ProfOrientationAtlasService,
+    attemptAllocationService,
   );
 
   return {
