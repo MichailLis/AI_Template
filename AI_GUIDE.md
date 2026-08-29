@@ -127,6 +127,33 @@ Maintainability thresholds for proactive extraction:
 - Prefer reducer/extraction when a module accumulates more than ~14 `useState` calls.
 - Treat complexity warnings as mandatory refactor candidates for the next small PR.
 
+## Verifying A Change (Always-On)
+
+Every rule below exists because it was violated in this repository and cost a red CI run, a
+regression, or a false green. They are cheap to follow and expensive to skip.
+
+1. **Verify from the state CI has, not the state you are in.** Your working tree accumulates
+   generated artifacts — `server/openapi.json`, `client/dist`, `server/dist` — from earlier steps
+   in the session. CI starts clean. Before trusting a gate you changed, delete those and run it
+   again. A check that passes only because you generated something an hour ago is not a check.
+2. **When extracting shared logic from two implementations, the extraction must match the
+   authority, and you must diff it against every original.** If the server validates the same
+   rule, the server is the authority and the client copy mirrors it exactly, non-obvious branches
+   included. Writing a "cleaner" version silently changes behaviour for whichever caller already
+   agreed with the authority.
+3. **Deleting code means deleting its exports and its mentions, in the same change.** A file with
+   no importers is one kind of dead code; an exported symbol nobody imports is another, and a
+   scan for orphaned _files_ will not see it. Grep the documentation for the name of every script,
+   command or path you remove — a guide that names a deleted command reads as an instruction.
+4. **Prove a mechanical refactor by equality, not by absence of complaints.** Record the baseline
+   first — error count, test count, test names — then require the number after the move to be
+   _the same_, not merely small. "It builds" hides a lost test; "33 before, 33 after, same files"
+   does not.
+5. **Reproduce a reported failure with the system's own input before acting on it.** A claim built
+   from a hand-written example can be confidently wrong about a tool that produces different input
+   in reality. Run the real command, read the real arguments, then decide. This applies equally to
+   findings from other agents and to your own hypotheses.
+
 ## Frontend Architecture Contract (Strict FSD)
 
 Source of truth:

@@ -79,6 +79,22 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
+Before trusting a gate you just changed, delete the generated artifacts your session created —
+`server/openapi.json`, `client/dist`, `server/dist` — and run it again. CI starts from a clean
+checkout; a check that passes only on your populated tree is not a check.
+
+## Verifying your own work
+
+The long form is `AI_GUIDE.md`, "Verifying A Change". The three that bite most often:
+
+1. Extracting shared logic from two implementations? Match the authority — usually the server
+   validator — and diff against **both** originals. A "cleaner" rewrite silently changes behaviour
+   for whichever caller already agreed with the authority.
+2. Deleting code? Its dead exports and its mentions in the docs go in the same change. A scan for
+   orphaned files will not find an exported symbol nobody imports.
+3. Moving files? Record the baseline first (error count, test count, test names) and require the
+   number afterwards to be _the same_, not merely small.
+
 ## Tools in this repo
 
 - **Serena** (MCP, symbolic navigation over the TypeScript LSP). Prefer it over grep for
