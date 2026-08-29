@@ -1,4 +1,5 @@
 import type { PublicSessionStartRequestDto } from '../dto/tests-public.dto';
+import type { SessionStateResponse } from '../session/public-session.service';
 
 export type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
 export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
@@ -96,13 +97,19 @@ export const createPublicSessionEducationDemographicStartDto = (
   ...overrides,
 });
 
-export const createPublicSessionStateResponse = (sessionToken: string) => ({
+/**
+ * Annotated with the service's own return type so the fixture cannot drift away from what
+ * getSessionByToken actually resolves to. Without the annotation a spec could stub the method
+ * with a shape the real one never produces, and the stub would still compile.
+ */
+export const createPublicSessionStateResponse = (sessionToken: string): SessionStateResponse => ({
   session: {
     sessionToken,
     shortCode: 'ABC123',
-    publicTemplate: 'STANDARD' as const,
+    publicTemplate: 'STANDARD',
+    publicBranding: null,
     attemptNumber: 1,
-    status: 'IN_PROGRESS' as const,
+    status: 'IN_PROGRESS',
     startedAt: new Date('2026-02-15T10:00:00.000Z').toISOString(),
     expiresAt: null,
     finishedAt: null,

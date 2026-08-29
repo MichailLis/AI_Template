@@ -34,14 +34,7 @@ describe('TestsAdminEducationOrganizationsController', () => {
     const query = { page: 2, limit: 10 };
     serviceMock.listEducationOrganizations.mockResolvedValue(response);
 
-    await expect(
-      (
-        controller.listEducationOrganizations as (
-          userId: number,
-          query: typeof query,
-        ) => Promise<typeof response>
-      )(7, query),
-    ).resolves.toEqual(response);
+    await expect(controller.listEducationOrganizations(7, query)).resolves.toEqual(response);
     expect(serviceMock.listEducationOrganizations).toHaveBeenCalledWith(7, query);
   });
 

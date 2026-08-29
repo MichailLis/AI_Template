@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
+import { OpenRouterClientService } from '../../openrouter/openrouter.client';
 import { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
@@ -71,6 +72,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as ConfigService,
       {} as OpenRouterApiKeyService,
+      {} as OpenRouterClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -121,6 +123,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as ConfigService,
       {} as OpenRouterApiKeyService,
+      {} as OpenRouterClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -182,6 +185,7 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as ConfigService,
       {} as OpenRouterApiKeyService,
+      {} as OpenRouterClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,

@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build:schematics": "tsc -p schematics/tsconfig.json && node scripts/copy-schematics-assets.mjs",
     "gen:nest": "npx nest g -c ./schematics/collection.json resource",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

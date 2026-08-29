@@ -180,12 +180,7 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.educationOrganization.create.mockResolvedValue(createdOrganization);
     prismaMock.testPublicLink.findMany.mockResolvedValue([]);
 
-    await (
-      service.createEducationOrganization as (
-        userId: number,
-        dto: Record<string, unknown>,
-      ) => Promise<unknown>
-    )(7, {
+    await service.createEducationOrganization(7, {
       name: '  Лицей 42  ',
       fullName: '  Муниципальный лицей № 42  ',
       shortName: '  Лицей № 42  ',

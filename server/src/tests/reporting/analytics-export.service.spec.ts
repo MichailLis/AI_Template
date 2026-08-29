@@ -85,7 +85,6 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       groupOrClass: '10А',
       attemptsTotal: 2,
       attemptsCompleted: 1,
-      analysisReady: 1,
       share: 66.7,
     },
   ],
@@ -148,7 +147,13 @@ describe('TestsAnalyticsExportService', () => {
     const buffer = await service.toExcel(summary);
     const workbook = new ExcelJS.Workbook();
 
-    await workbook.xlsx.load(buffer);
+    // exceljs types its reader parameter as `interface Buffer extends ArrayBuffer`, which a Node
+    // Buffer (a Uint8Array view) does not satisfy. Copy the bytes into a plain ArrayBuffer
+    // instead of casting, so the call stays true at runtime as well as at compile time.
+    const bytes = new ArrayBuffer(buffer.byteLength);
+    new Uint8Array(bytes).set(buffer);
+
+    await workbook.xlsx.load(bytes);
 
     const sheetNames = workbook.worksheets.map((sheet) => sheet.name);
 

@@ -10,10 +10,11 @@ import { createEducationOrganizationRecordFixture } from '../session/spec-fixtur
 
 import type {
   AdminCreateEducationOrganizationDto,
-  AdminCreatePublicLinkDto,
+  AdminCreatePublicLinkInput,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
+import type { PublicBrandingConfig } from '../dto/tests-public.dto';
 
 jest.mock('../../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
@@ -43,7 +44,7 @@ type PrismaTestTopicVersionDelegate = {
 };
 
 describe('TestsPublicLinkService', () => {
-  const publicBranding = {
+  const publicBranding: PublicBrandingConfig = {
     version: 1,
     buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
     accents: { accentColor: '#00a889' },
@@ -224,7 +225,7 @@ describe('TestsPublicLinkService', () => {
       }),
     );
 
-    const dto: AdminCreatePublicLinkDto = {
+    const dto: AdminCreatePublicLinkInput = {
       publishedVersionId: 50,
       shortCode: 'DEMO2026',
       entryProfileMode: 'DEMOGRAPHIC',
@@ -256,7 +257,7 @@ describe('TestsPublicLinkService', () => {
       }),
     );
 
-    const dto: AdminCreatePublicLinkDto = {
+    const dto: AdminCreatePublicLinkInput = {
       publishedVersionId: 50,
       publicTemplate: 'POLUS',
       consentVersion: 'v1',
@@ -280,7 +281,7 @@ describe('TestsPublicLinkService', () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
     prismaMock.testPublicLink.create.mockResolvedValue(createPublicLinkRecordFixture());
 
-    const dto: AdminCreatePublicLinkDto = {
+    const dto: AdminCreatePublicLinkInput = {
       publishedVersionId: 50,
       consentVersion: 'v1',
       consentText: 'Согласие',
@@ -307,7 +308,7 @@ describe('TestsPublicLinkService', () => {
       }),
     );
 
-    const dto: AdminCreatePublicLinkDto = {
+    const dto: AdminCreatePublicLinkInput = {
       publishedVersionId: 50,
       publicBranding,
       consentVersion: 'v1',

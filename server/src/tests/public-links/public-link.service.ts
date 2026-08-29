@@ -5,7 +5,7 @@ import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-
 import { PrismaService } from '../../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
-  AdminCreatePublicLinkDto,
+  AdminCreatePublicLinkInput,
   AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
@@ -173,7 +173,7 @@ export class TestsPublicLinkService {
     throw new BadRequestException('Unable to generate unique short code for public link');
   }
 
-  async createPublicLink(userId: number, dto: AdminCreatePublicLinkDto) {
+  async createPublicLink(userId: number, dto: AdminCreatePublicLinkInput) {
     await ensureAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
     const personalDataProcessingMode: PersonalDataProcessingMode =

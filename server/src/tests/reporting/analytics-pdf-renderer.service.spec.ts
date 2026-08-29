@@ -63,7 +63,6 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       groupOrClass: '10А',
       attemptsTotal: 2,
       attemptsCompleted: 1,
-      analysisReady: 1,
       share: 100,
     },
   ],

@@ -35,7 +35,7 @@ import {
   PUBLIC_PRIVACY_POLICY_URL,
 } from '../shared/personal-data-operator';
 
-type SessionStateResponse = {
+export type SessionStateResponse = {
   session: ReturnType<typeof mapSessionState>;
 };
 

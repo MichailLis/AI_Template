@@ -318,7 +318,6 @@ export class TestsAnalyticsService {
         groupOrClass: string | null;
         attemptsTotal: number;
         attemptsCompleted: number;
-        analysisReady: number;
       }
     >();
 
@@ -354,12 +353,10 @@ export class TestsAnalyticsService {
         groupOrClass: attempt.groupOrClass,
         attemptsTotal: 0,
         attemptsCompleted: 0,
-        analysisReady: 0,
       };
 
       current.attemptsTotal += 1;
       current.attemptsCompleted += attempt.status === 'COMPLETED' ? 1 : 0;
-      current.analysisReady += attempt.analysis?.status === 'READY' ? 1 : 0;
       groupsMap.set(key, current);
     }
 

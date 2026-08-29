@@ -345,8 +345,9 @@ Example goal: implement `news` feature with editor UI (example only, not part of
 
 ## Stability Rules
 
-1. Core lint/test/build commands must pass during implementation loops:
+1. Core typecheck/lint/test/build commands must pass during implementation loops:
    ```powershell
+   npm run typecheck
    npm run lint
    npm run test --prefix server
    npm run test:e2e --prefix server
@@ -355,10 +356,15 @@ Example goal: implement `news` feature with editor UI (example only, not part of
    npm run build --prefix client
    ```
 2. End-to-end template verification must pass:
+
    ```powershell
    npm run verify:template
    ```
-   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
+
+   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, typecheck, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
+
+   `npm run typecheck` is not redundant with `npm run build --prefix server`. `nest build` compiles through `server/tsconfig.build.json`, which excludes `**/*spec.ts`, so the server specs are the one part of the tree no other gate ever compiles. Type errors accumulate there silently while every check stays green — thirty-three of them had, before the gate was added. `npm run typecheck` runs `tsc --noEmit` over `server/tsconfig.json`, which includes them.
+
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
 5. Use `import type` for type-only imports.

@@ -88,7 +88,7 @@ describe('TestsPublicSessionService lifecycle', () => {
 
     await expect(
       service.saveAnswers('session-token', {
-        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+        answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
     ).rejects.toThrow(BadRequestException);
     expect(transactionMock).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('TestsPublicSessionService lifecycle', () => {
 
     await expect(
       service.saveAnswers('session-token', {
-        answers: [{ questionId: 100, answerPayload: { value: 'A' } }],
+        answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
     ).rejects.toThrow(BadRequestException);
     expect(transactionMock).not.toHaveBeenCalled();

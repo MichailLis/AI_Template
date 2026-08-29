@@ -1,4 +1,5 @@
 import {
+  AdminCreatePublicLinkSchema,
   type AdminCreatePublicLinkDto,
   type AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
@@ -38,11 +39,13 @@ describe('TestsAdminPublicLinksController', () => {
   });
 
   it('createPublicLink delegates to service', async () => {
-    const dto: AdminCreatePublicLinkDto = {
+    // Parsed rather than hand-written: the controller is reached only through
+    // ZodValidationPipe, so the schema's defaults are part of what it actually receives.
+    const dto: AdminCreatePublicLinkDto = AdminCreatePublicLinkSchema.parse({
       publishedVersionId: 12,
       consentVersion: 'v1',
       consentText: 'consent',
-    };
+    });
     const response = { id: 9 };
 
     serviceMock.createPublicLink.mockResolvedValue(response);

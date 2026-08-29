@@ -76,6 +76,9 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 
 - `npm run verify:local` — the daily loop. Needs a running PostgreSQL.
 - `npm run verify:template` — release gate, mandatory before finalizing branch state.
+- `npm run typecheck` — `tsc --noEmit` over `server/tsconfig.json`. Both gates run it, and it
+  is the only one that compiles the server specs: `nest build` uses `tsconfig.build.json`,
+  which excludes `**/*spec.ts`. Do not "simplify" it away as duplicating the build.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
