@@ -136,6 +136,13 @@ regression, or a false green. They are cheap to follow and expensive to skip.
    generated artifacts — `server/openapi.json`, `client/dist`, `server/dist` — from earlier steps
    in the session. CI starts clean. Before trusting a gate you changed, delete those and run it
    again. A check that passes only because you generated something an hour ago is not a check.
+
+   Ask `git check-ignore` which ones those are, rather than deciding by the word "generated".
+   `client/src/shared/api/generated/**` and `client/src/shared/api/model/**` are produced by Orval
+   and **committed**; `verify:api-mutator` reads them before `gen:api` ever runs. Deleting them to
+   "start clean" breaks the gate with an `ENOENT` that looks like a repository fault and is not
+   one. Generated and gitignored are different properties here.
+
 2. **When extracting shared logic from two implementations, the extraction must match the
    authority, and you must diff it against every original.** If the server validates the same
    rule, the server is the authority and the client copy mirrors it exactly, non-obvious branches
@@ -153,6 +160,18 @@ regression, or a false green. They are cheap to follow and expensive to skip.
    from a hand-written example can be confidently wrong about a tool that produces different input
    in reality. Run the real command, read the real arguments, then decide. This applies equally to
    findings from other agents and to your own hypotheses.
+6. **Say what a number counts before you report it.** A measurement can be arithmetically right and
+   still answer the wrong question. "Twelve of the thirteen files this branch touches are gone from
+   `main`" means the branch is stale; the same query run over files the branch _adds_ means nothing
+   at all, because a file it creates is supposed to be absent. Separate the categories, then count.
+   The same applies to a green check: `MERGEABLE` says two diffs do not overlap textually, not that
+   the merged result is correct. When both sides edited one file, merge locally and run the gate
+   before merging for real.
+7. **Editing files with a script is fine; guessing their line endings is not.** This tree is CRLF.
+   Reading with `newline=''`, splitting on `\r\n` and writing with `newline='\r\n'` doubles every
+   carriage return, and `$` under `re.MULTILINE` does not anchor before a `\r`, so replacements
+   silently miss. Normalise to `\n` in memory, do the work, convert once on write — and prefer
+   moving a block of bytes over retyping it, so Cyrillic strings and shell quoting stay out of it.
 
 ## Frontend Architecture Contract (Strict FSD)
 
