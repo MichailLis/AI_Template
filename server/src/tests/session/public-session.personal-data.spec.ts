@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { TestsPublicLinkService } from '../public-links/public-link.service';
+import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 import {
   createAccessibleLinkFixture,
@@ -51,21 +52,27 @@ describe('TestsPublicSessionService personal-data snapshots', () => {
       ),
     };
 
+    const privacyPolicySettingsServiceMock = {
+      getActivePolicySnapshot: jest.fn().mockResolvedValue({
+        version: '2026-07-09',
+        publishedAt: new Date('2026-07-09T00:00:00.000Z'),
+        content: 'Политика',
+      }),
+    } as unknown as PrivacyPolicySettingsService;
+
     service = new TestsPublicSessionService(
       prismaMock as unknown as PrismaService,
       {
         getAccessiblePublicLinkByCode: getAccessiblePublicLinkByCodeMock,
       } as unknown as TestsPublicLinkService,
       {} as TestsAnalysisService,
-      {
-        getActivePolicySnapshot: jest.fn().mockResolvedValue({
-          version: '2026-07-09',
-          publishedAt: new Date('2026-07-09T00:00:00.000Z'),
-          content: 'Политика',
-        }),
-      } as unknown as PrivacyPolicySettingsService,
+      privacyPolicySettingsServiceMock,
       {} as ProfessionAtlasSettingsService,
       {} as ProfOrientationAtlasService,
+      new TestsPublicAttemptAllocationService(
+        prismaMock as unknown as PrismaService,
+        privacyPolicySettingsServiceMock,
+      ),
     );
   });
 

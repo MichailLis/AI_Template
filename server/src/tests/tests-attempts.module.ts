@@ -14,6 +14,7 @@ import { TestsAnalyticsService } from './reporting/analytics.service';
 import { TestsAnalysisService } from './analysis/analysis.service';
 import { TestsPublicController } from './session/public.controller';
 import { TestsPublicLinksModule } from './public-links/public-links.module';
+import { TestsPublicAttemptAllocationService } from './session/attempt-allocation.service';
 import { TestsPublicSessionService } from './session/public-session.service';
 
 @Module({
@@ -25,6 +26,7 @@ import { TestsPublicSessionService } from './session/public-session.service';
     TestsAnalyticsPdfRendererService,
     TestsAnalysisService,
     TestsPublicSessionService,
+    TestsPublicAttemptAllocationService,
     TestsAdminAttemptService,
     PrivacyPolicySettingsService,
     ProfessionAtlasSettingsService,

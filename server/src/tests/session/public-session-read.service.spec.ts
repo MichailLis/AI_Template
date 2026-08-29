@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { TestsPublicLinkService } from '../public-links/public-link.service';
+import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 
 describe('TestsPublicSessionService read paths', () => {
@@ -85,6 +86,8 @@ describe('TestsPublicSessionService read paths', () => {
       {
         saveEnrichedAnalysis: jest.fn(),
       } as unknown as ProfOrientationAtlasService,
+      // These cases only read an existing session; nothing here allocates an attempt.
+      {} as TestsPublicAttemptAllocationService,
     );
 
     const result = await service.getSessionByToken('session-token');
@@ -136,6 +139,8 @@ describe('TestsPublicSessionService read paths', () => {
       {
         saveEnrichedAnalysis: jest.fn(),
       } as unknown as ProfOrientationAtlasService,
+      // These cases only read an existing session; nothing here allocates an attempt.
+      {} as TestsPublicAttemptAllocationService,
     );
 
     const result = await service.getSessionResult('session-token');
@@ -196,6 +201,8 @@ describe('TestsPublicSessionService read paths', () => {
       {
         saveEnrichedAnalysis: jest.fn(),
       } as unknown as ProfOrientationAtlasService,
+      // These cases only read an existing session; nothing here allocates an attempt.
+      {} as TestsPublicAttemptAllocationService,
     );
 
     const result = await service.getSessionResult('session-token');
