@@ -88,7 +88,7 @@ checkout; a check that passes only on your populated tree is not a check.
 
 ## Verifying your own work
 
-The long form is `AI_GUIDE.md`, "Verifying A Change". The three that bite most often:
+The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most often:
 
 1. Extracting shared logic from two implementations? Match the authority — usually the server
    validator — and diff against **both** originals. A "cleaner" rewrite silently changes behaviour
@@ -97,6 +97,11 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The three that bite most o
    orphaned files will not find an exported symbol nobody imports.
 3. Moving files? Record the baseline first (error count, test count, test names) and require the
    number afterwards to be _the same_, not merely small.
+4. Clearing generated artifacts? Ask `git check-ignore`, do not go by the name.
+   `client/src/shared/api/generated/**` and `.../model/**` are generated **and committed**, and
+   `verify:api-mutator` reads them before `gen:api` runs.
+5. Editing files with a script? This tree is CRLF. Normalise to `\n` in memory and convert once on
+   write, or you will write `\r\r\n` and `$` will stop matching under `re.MULTILINE`.
 
 ## Tools in this repo
 
