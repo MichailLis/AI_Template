@@ -401,6 +401,11 @@ Use these commands during local AI-agent development:
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
 
+Because `verify:local` skips API regeneration, it _consumes_ `server/openapi.json` rather
+than producing it. The file is gitignored, so on a fresh checkout — or after deleting
+generated artifacts — `verify:architecture` fails until you run `npm run gen:openapi` once.
+`verify:template` has no such prerequisite: it runs `gen:api` itself.
+
 ## PR-Ready Checklist (Feature Delivery)
 
 Use this checklist before opening PR or finalizing work.

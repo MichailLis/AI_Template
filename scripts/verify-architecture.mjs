@@ -195,8 +195,8 @@ const verifyOpenApiOperations = (errors, openApiDoc, feature, featurePrefix) => 
     return;
   }
 
+  // A missing server/openapi.json is reported once, up front. Nothing to add per feature.
   if (!openApiDoc) {
-    errors.push(`${featurePrefix}: server/openapi.json is required for openApiOperations`);
     return;
   }
 
@@ -414,9 +414,6 @@ const verifyOpenApiInventoryCoverage = (errors, openApiDoc, features) => {
   }
 
   if (!openApiDoc) {
-    errors.push(
-      'template/features.manifest.json: server/openapi.json is required for OpenAPI inventory coverage',
-    );
     return;
   }
 
@@ -662,6 +659,17 @@ const verify = async () => {
 
   const openApiExists = await existsFromRoot('server/openapi.json');
   const openApiDoc = openApiExists ? JSON.parse(await readFromRoot('server/openapi.json')) : null;
+
+  // This gate consumes server/openapi.json but never produces it. verify:template regenerates it
+  // through gen:api beforehand; verify:local deliberately skips API regeneration, so on a clean
+  // checkout the artifact is simply absent. Say so once, with the command that fixes it, instead
+  // of letting every feature that declares openApiOperations report the same missing file.
+  if (!openApiExists) {
+    errors.push(
+      'server/openapi.json is missing. Run `npm run gen:openapi` (or `npm run gen:api` to refresh ' +
+        'the client too) before this gate. verify:local does not regenerate it by design.',
+    );
+  }
 
   for (const integrationModule of integrationModules) {
     const integrationPrefix = `integration:${integrationModule.name ?? '<unknown>'}`;
