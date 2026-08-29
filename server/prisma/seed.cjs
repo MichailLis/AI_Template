@@ -254,7 +254,10 @@ const main = async () => {
     throw new Error('DATABASE_URL is required to seed demo data.');
   }
 
-  const hashedAdminPassword = await argon2.hash('admin');
+  // Must satisfy the same minimum the server enforces when a password is created
+  // (SignupSchema and bootstrap-admin both require 8), otherwise the seeded admin
+  // cannot be used against a stack that applies those rules.
+  const hashedAdminPassword = await argon2.hash('admin123456');
   const hashedDemoPassword = await argon2.hash('password123');
 
   await prisma.$transaction(async (tx) => {
@@ -544,7 +547,7 @@ const main = async () => {
   console.log(
     `Users: ${users}, topics: ${topics}, public links: ${publicLinks}, attempts: ${attempts}`,
   );
-  console.log('Admin login: admin@admin.admin / admin');
+  console.log('Admin login: admin@admin.admin / admin123456');
   console.log('Demo user password: password123');
   console.log('Public test URL: http://localhost:5173/t/DEMO2026');
 };
