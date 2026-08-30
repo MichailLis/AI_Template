@@ -82,6 +82,36 @@ describe('PublicTestEntryWorkspace', () => {
     expect(screen.queryByText(/Профессор Полюс/i)).not.toBeInTheDocument();
   });
 
+  // The hybrid profile mode reaches the standard template through a different branch than the
+  // Polus one, and the two disagree on purpose: the standard card passes
+  // showInitialFields={!showDemographicFields}, so asking for the demographic block here drops
+  // the surname and patronymic initials that the Polus hybrid keeps.
+  it('swaps initials for the demographic block on STANDARD hybrid links', () => {
+    mockLinkAccess('STANDARD', 'EDUCATION_DEMOGRAPHIC');
+
+    render(<PublicTestEntryWorkspace />);
+
+    expect(screen.queryByText(/Профессор Полюс/i)).not.toBeInTheDocument();
+
+    expect(screen.getByLabelText('Имя')).toBeInTheDocument();
+    expect(screen.getByLabelText('Учебное заведение')).toBeInTheDocument();
+    expect(screen.getByLabelText('Группа / класс')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Фамилия (1-я буква)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Отчество (1-я буква)')).not.toBeInTheDocument();
+
+    expect(screen.getByText('Дополнительная анкета')).toBeInTheDocument();
+    expect(screen.getByLabelText('Пол')).toBeInTheDocument();
+    expect(screen.getByLabelText('Возраст')).toBeInTheDocument();
+    expect(screen.getByLabelText('Место жительства')).toBeInTheDocument();
+
+    // Both selects read from the shared option source, so the student-facing wording of the
+    // education level is the long one rather than the short label the admin tables use.
+    expect(
+      screen.getByRole('option', { name: 'Неоконченное высшее (начиная с 3 курса)' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Неоконченное высшее' })).not.toBeInTheDocument();
+  });
+
   it('renders the Polus entry template for POLUS public links', () => {
     mockLinkAccess('POLUS');
 
