@@ -105,10 +105,34 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
 
 ## Tools in this repo
 
-- **Serena** (MCP, symbolic navigation over the TypeScript LSP). Prefer it over grep for
-  reference lookup, renames and safe deletes: `find_symbol`, `find_referencing_symbols`,
-  `find_implementations`, `get_diagnostics_for_file`, `rename_symbol`, `safe_delete_symbol`.
-  Grep is still right for text, config and non-symbol search.
+- **Serena** (MCP, symbolic navigation over the TypeScript LSP): `find_symbol`,
+  `find_referencing_symbols`, `find_implementations`, `get_diagnostics_for_file`, `rename_symbol`,
+  `safe_delete_symbol`.
+
+  Reach for it on two triggers, not as a blanket replacement for grep — a measured session used it
+  once against 341 greps, because "prefer it generally" is not a decision anyone makes:
+  1. **The name is not unique across the repo.** `getMaxChoices` exists in
+     `client/src/features/tests/lib/` and in `server/src/tests/session/answer-validation.ts` as
+     two different implementations of one rule. Grep returns 14 hits and cannot say which tree
+     owns which; `find_referencing_symbols` scoped to the server file returns the one real call
+     site. Getting this wrong is how the client copy drifted from the server authority once.
+  2. **You are about to move or delete an exported symbol.** Grep shows lines; Serena names the
+     enclosing method, which is the thing that tells you whether the move is safe.
+
+  For a symbol whose name is unique, grep is correct and about four times cheaper. Use it. Roughly
+  a quarter of one session's greps were identifier lookups; the rest were paths, flags, UI strings
+  and pipelines filtering command output, where Serena does not apply at all.
+
+  Two frictions worth knowing before you start, because both cost a wasted call:
+  - The tools are deferred, so the first use costs a schema fetch before the query itself. Decide
+    to use Serena at the start of a refactor, not halfway through it.
+  - The parameter is **not** named consistently across siblings: `find_symbol` and
+    `safe_delete_symbol` take `name_path_pattern`, `find_referencing_symbols` takes `name_path`.
+    Passing the wrong one fails validation.
+
+  `get_diagnostics_for_file` returns compiler errors grouped by enclosing symbol for one file.
+  `npm run typecheck` covers the whole server in about five seconds, so reach for diagnostics when
+  you want one file's errors without the other files' noise, not for speed.
 
   Its memories under `.serena/memories/` are a thin orientation map, nothing more. Rules belong
   in `AI_GUIDE.md`: only Claude Code loads Serena, memories are read on request rather than
@@ -120,4 +144,22 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
 - **rtk** wraps shell output to cut tokens. A global hook rewrites commands automatically;
   `rtk test <cmd>`, `rtk lint`, `rtk tsc`, `rtk vitest`, `rtk prisma`, `rtk git diff` are the
   ones that pay off most here.
+
+  **rtk needs `rg` on PATH.** Without ripgrep it falls back to raw execution and its grep output
+  becomes unreliable rather than merely unfiltered — in one session it reported "0 matches" for a
+  symbol present three times in the file it was given, and printed a whole file with the newlines
+  stripped when asked for twelve lines. If you see
+  `Failed to resolve 'rg' via PATH`, do not trust search results until it is installed
+  (`winget install BurntSushi.ripgrep.MSVC`, then restart the session so child processes inherit
+  the new PATH).
+
+  **Search with `rtk rg`, not `rtk grep`.** They are separate subcommands: `rtk rg` runs ripgrep
+  itself, while `rtk grep` proxies a native `grep`, which Windows PowerShell does not have — it
+  fails with `Failed to resolve 'grep' via PATH` and returns nothing.
+
+  **Keep rtk at 0.46 or newer** (`rtk --version`; it has no self-update, so replace the binary in
+  `~/.local/bin` by hand). Up to 0.40 it truncated `git push` output, reporting a branch name cut
+  mid-word as success while the commit never reached the remote — a push is only confirmed by
+  comparing local `HEAD` against `origin/<branch>`, which is worth doing regardless of version.
+
 - Codex is not used in this repository.
