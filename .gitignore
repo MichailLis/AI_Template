@@ -6,18 +6,24 @@ dist/
 !server/.env.example
 !.env.deploy.example
 *.log
+__pycache__/
+*.py[cod]
 .prisma/
 client/dist/
 server/openapi.json
 Design/
 
 # Local AI/QA artifacts
+.codex-artifacts/
+.codex/state/
 .omx/
 .playwright-cli/
 .playwright-mcp/
 .sisyphus/
 .sisyphusnotepads*
 client/public/prototypes/
+graphify-out/
+output/
 README_tmp.html
 issues.md
 nul
@@ -30,3 +36,6 @@ vectors.db-wal
 
 # Claude Code local overrides
 .claude/settings.local.json
+
+# Local source asset drops
+01_брендинг/
