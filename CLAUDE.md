@@ -153,4 +153,13 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
   (`winget install BurntSushi.ripgrep.MSVC`, then restart the session so child processes inherit
   the new PATH).
 
+  **Search with `rtk rg`, not `rtk grep`.** They are separate subcommands: `rtk rg` runs ripgrep
+  itself, while `rtk grep` proxies a native `grep`, which Windows PowerShell does not have — it
+  fails with `Failed to resolve 'grep' via PATH` and returns nothing.
+
+  **Keep rtk at 0.46 or newer** (`rtk --version`; it has no self-update, so replace the binary in
+  `~/.local/bin` by hand). Up to 0.40 it truncated `git push` output, reporting a branch name cut
+  mid-word as success while the commit never reached the remote — a push is only confirmed by
+  comparing local `HEAD` against `origin/<branch>`, which is worth doing regardless of version.
+
 - Codex is not used in this repository.
