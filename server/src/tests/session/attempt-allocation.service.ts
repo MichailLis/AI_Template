@@ -15,9 +15,9 @@ import type { AccessiblePublicLink, DemographicProfile } from '../session/sessio
  * that is still open, refuse once the link's limit is reached, and otherwise create the next one.
  *
  * It lives apart from TestsPublicSessionService because it is the only part of starting a session
- * that runs inside a transaction and races with itself. Two students submitting the same link at
- * once collide on (publicLinkId, studentKeyHash, attemptNumber); the unique constraint is what
- * makes that safe, and the retry below is what makes it invisible.
+ * that runs inside a transaction and races with itself. Two concurrent requests from the same
+ * student on the same link collide on (publicLinkId, studentKeyHash, attemptNumber); the unique
+ * constraint is what makes that safe, and the retry below is what makes it invisible.
  */
 export type AttemptProfileSnapshot = {
   studentName: string | null;

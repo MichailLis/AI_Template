@@ -158,6 +158,9 @@ for (const [label, markdown] of [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
   ['AGENTS.md', await readFile(join(root, 'AGENTS.md'), 'utf-8')],
+  // CLAUDE.md is the first file an agent reads and names more paths than any other document
+  // here, so it has the most to lose from a rename it did not follow.
+  ['CLAUDE.md', await readFile(join(root, 'CLAUDE.md'), 'utf-8')],
   ...(await proseDocuments()),
 ]) {
   const paths = collectPaths(markdown);

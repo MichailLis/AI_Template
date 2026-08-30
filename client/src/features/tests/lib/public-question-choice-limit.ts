@@ -1,6 +1,6 @@
 /**
  * A MULTI_CHOICE question may cap how many options a student can pick, via
- * `settings.maxChoices`. The server enforces the cap in tests-answer-validation.ts and
+ * `settings.maxChoices`. The server enforces the cap in session/answer-validation.ts and
  * rejects an over-long answer, so any public template that lets the student exceed it
  * produces a rejection they could not have anticipated.
  *
@@ -14,7 +14,7 @@ export const getMaxChoices = (settings: unknown): number | null => {
 
   const value = (settings as Record<string, unknown>).maxChoices;
 
-  // Deliberately identical to getMaxChoices in server/src/tests/tests-answer-validation.ts,
+  // Deliberately identical to getMaxChoices in server/src/tests/session/answer-validation.ts,
   // including the rejection of non-integers. Rounding a fractional cap here instead would
   // make the UI stricter than the server for 2.5, and for a value below 1 it would floor to
   // zero and lock the student out of answering at all.

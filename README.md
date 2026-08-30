@@ -428,7 +428,9 @@ Use this before opening PR or finalizing a feature branch:
 - Source of truth for public student routes: `template/features.manifest.json` (`publicRoutes`)
 - Source of truth for non-feature generated API dirs: `template/features.manifest.json` (`generatedApiDirs`)
 - Frontend layer rules source of truth: `template/fsd.rules.json`
-- Hard check command: `npm run verify:architecture`
+- Hard check command: `npm run verify:contracts` (regenerates `server/openapi.json`, then runs
+  `verify:architecture`; the check alone fails on a clean checkout because the document is
+  gitignored)
 - If a feature is added/removed, update manifest and wiring in the same change.
 - In an explicit auth-only cleanup branch, keep manifest `features` empty.
 - `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
