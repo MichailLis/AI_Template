@@ -79,6 +79,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run typecheck` — `tsc --noEmit` over `server/tsconfig.json`. Both gates run it, and it
   is the only one that compiles the server specs: `nest build` uses `tsconfig.build.json`,
   which excludes `**/*spec.ts`. Do not "simplify" it away as duplicating the build.
+- `npm run verify:invariants` — checks non-obvious invariants (Swagger completeness, no `z.date()`, storage discipline, single error shape, public DTO safety, no React Query state mirroring).
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 

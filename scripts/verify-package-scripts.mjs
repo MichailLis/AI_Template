@@ -108,12 +108,16 @@ if (!rootScripts['audit:prod']) {
 if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migrations.mjs') {
   fail('root package must define verify:prisma-migrations script');
 }
+if (rootScripts['verify:invariants'] !== 'node scripts/verify-invariants.mjs') {
+  fail('root package must define verify:invariants script');
+}
 
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
+  requireRootScriptSegment(scriptName, 'npm run verify:invariants');
   requireRootScriptSegment(scriptName, 'npm run typecheck');
 }
 

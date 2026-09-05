@@ -426,6 +426,7 @@ can validate a stale document: `verify:local` calls it, and `verify:template` re
 state through `gen:api`, which regenerates the client as well. Run `npm run verify:contracts`
 on its own after changing a controller or DTO to see the architecture result without paying
 for the full loop.
+`npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
 
 ## PR-Ready Checklist (Feature Delivery)
 
