@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { getUniqueOptionValue } from './unique-option-value';
+
 import type {
   CreateTestsTopicFromAiDtoQuestionsItem,
   CreateTestsTopicFromAiDtoQuestionsItemType,
@@ -46,25 +48,6 @@ const extractFencedJson = (value: string) => {
   }
 
   return fencedContent || null;
-};
-
-const getUniqueOptionValue = (proposed: string, usedValues: Set<string>, index: number) => {
-  const base = proposed || `option_${index + 1}`;
-
-  if (!usedValues.has(base)) {
-    usedValues.add(base);
-    return base;
-  }
-
-  let suffix = 2;
-  let candidate = `${base}_${suffix}`;
-  while (usedValues.has(candidate)) {
-    suffix += 1;
-    candidate = `${base}_${suffix}`;
-  }
-
-  usedValues.add(candidate);
-  return candidate;
 };
 
 const AiOptionSchema = z.object({
