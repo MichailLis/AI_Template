@@ -570,8 +570,13 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   From the wider `orca` CLI only a little is relevant here. `worktree current` and `worktree ps`
   are worth knowing — this machine carries five Orca worktrees of this repo and `ps` tells you
   which branch each one sits on, which matters because the graph keys its project on the worktree
-  path. `terminal read`/`send`/`wait` exist for driving a non-agent shell and `file diff` opens a
-  diff in the Orca editor; neither was exercised. The `repo`, `artifact` and remote-environment
+  path. `terminal list` and `terminal read` work and are worth knowing: the first showed the nine live
+  terminals on this machine with their handles and titles, the second returns a `terminal` object
+  whose `tail` carries the live output — 826 characters of a running omp worker's screen — beside
+  `status`, `returnedLineCount` and `oldestCursor`/`nextCursor`/`latestCursor` for paging. One
+  trap: pass a truncated handle and it fails with `terminal_handle_stale`, which misnames the
+  problem — the handle is not stale, it is incomplete, and the full UUID from `terminal list`
+  works. `terminal send`/`wait` and `file diff` were not exercised. The `repo`, `artifact` and remote-environment
   commands have no place in this repository's workflow.
 
   Two failure modes, and only one of them is recoverable. A `worker-start` that dies at launch with
