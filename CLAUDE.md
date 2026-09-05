@@ -576,7 +576,14 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   `status`, `returnedLineCount` and `oldestCursor`/`nextCursor`/`latestCursor` for paging. One
   trap: pass a truncated handle and it fails with `terminal_handle_stale`, which misnames the
   problem — the handle is not stale, it is incomplete, and the full UUID from `terminal list`
-  works. `terminal send`/`wait` and `file diff` were not exercised. The `repo`, `artifact` and remote-environment
+  works. `terminal send` works — text sent with `--enter` reached a terminal created for the purpose and
+  the marker showed up in its `tail`. `terminal wait` is for agent TUIs, not shells: both
+  `--for tui-idle` and `--for exit` simply time out against a bare PowerShell prompt, which is
+  correct behaviour rather than a fault. The thing to know before you create one: **there is no
+  per-terminal stop.** `terminal stop` takes only `--worktree`, so closing a terminal you made for
+  a probe means stopping every terminal in that worktree, your own session included; passing
+  `--terminal` is rejected as `invalid_argument`. Create terminals sparingly and close them from
+  the Orca UI. `file diff` was not exercised. The `repo`, `artifact` and remote-environment
   commands have no place in this repository's workflow.
 
   Two failure modes, and only one of them is recoverable. A `worker-start` that dies at launch with
