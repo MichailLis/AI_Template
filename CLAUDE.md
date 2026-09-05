@@ -361,8 +361,11 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   rewrites bare commands**, and this is the thing to internalise: `rg`→`rtk rg`, `cat`→`rtk read`,
   `git`→`rtk git`, `ls`→`rtk ls`, `grep`→`rtk grep`, `npm`→`rtk npm`, `docker`→`rtk docker`, and
   **`npx tsc`→`rtk tsc`**. Verified live in `rtk gain --history`, which logged this session's own
-  bare `git status` and `rg` as `rtk` calls. A command wrapped in `timeout …` with redirections is
-  left alone, which is the only reason the measurements in this section are raw. The consequence
+  bare `git status` and `rg` as `rtk` calls. The rewrite reaches inside pipelines — `tasklist | grep -ci …` had its
+  `grep` turned into `rtk grep` — but the `timeout <cmd> > file 2>&1 </dev/null` form is left
+  alone, verified by running one in that shape and finding no new row in `rtk gain --history`.
+  Every measurement quoted in this section used that form, so the numbers here are raw rather
+  than rtk's. The consequence
   is sharp: typing `npx tsc --noEmit` gets you `rtk tsc`, which reports "No errors found" when the
   compiler never ran — you never asked for rtk and are never told. `sed` is not rewritten;
   `rtk test <cmd>`, `rtk lint`, `rtk vitest`, `rtk prisma` and `rtk git diff` are the ones that
