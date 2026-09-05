@@ -457,4 +457,23 @@ useEffect(() => {
       [],
     );
   });
+
+  it('reports error when useEffect mirrors Orval mutation hook data into state', () => {
+    const source = `
+import { useTestsControllerUpdateTopicDraft } from '@/shared/api/generated/tests/tests';
+
+const { data } = useTestsControllerUpdateTopicDraft();
+useEffect(() => {
+  if (data) {
+    setTitle(data.title);
+  }
+}, [data]);
+`;
+    const errors = checkReactQueryStateMirroring({
+      relativePath: 'client/src/features/tests/model/use-draft-autosave.ts',
+      source,
+    });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /useEffect mirrors React Query data "data" into state via "setTitle"/);
+  });
 });

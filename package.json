@@ -19,6 +19,7 @@
     "verify:invariants": "node scripts/verify-invariants.mjs",
     "verify:architecture": "node scripts/verify-architecture.mjs",
     "verify:contracts": "npm run gen:openapi && npm run verify:architecture",
+    "verify:diff": "node scripts/verify-diff.mjs",
     "verify:maintainability": "node scripts/verify-maintainability.mjs",
     "verify:package-scripts": "node scripts/verify-package-scripts.mjs",
     "verify:prisma-migrations": "node scripts/verify-prisma-migrations.mjs",

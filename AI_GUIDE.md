@@ -427,6 +427,7 @@ state through `gen:api`, which regenerates the client as well. Run `npm run veri
 on its own after changing a controller or DTO to see the architecture result without paying
 for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
+`npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 
 ## PR-Ready Checklist (Feature Delivery)
 

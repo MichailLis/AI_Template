@@ -112,6 +112,19 @@ if (rootScripts['verify:invariants'] !== 'node scripts/verify-invariants.mjs') {
   fail('root package must define verify:invariants script');
 }
 
+if (rootScripts['verify:diff'] !== 'node scripts/verify-diff.mjs') {
+  fail('root package must define verify:diff script as "node scripts/verify-diff.mjs"');
+}
+
+for (const scriptName of ['verify:local', 'verify:template']) {
+  const script = rootScripts[scriptName] ?? '';
+  if (script.includes('verify:diff')) {
+    fail(
+      `${scriptName} must not include verify:diff (verify:diff is an auxiliary pre-flight, not a gate)`,
+    );
+  }
+}
+
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');

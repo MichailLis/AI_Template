@@ -317,12 +317,6 @@ export const checkPublicDtoSafety = ({ relativePath, source }) => {
 
 const NON_STATE_SETTERS = new Set(['setTimeout', 'setInterval', 'setImmediate']);
 
-const isGeneratedMutationHook = (name) => {
-  return /Controller(?:Create|Update|Delete|Patch|Post|Put|Remove|Restore|Archive|Publish|Reorder|Import|Generate|Simulate|Signin|Signup|Logout|RefreshTokens|Save|Finish|Start)/.test(
-    name,
-  );
-};
-
 export const checkReactQueryStateMirroring = ({ relativePath, source }) => {
   const clean = stripComments(source);
 
@@ -338,7 +332,7 @@ export const checkReactQueryStateMirroring = ({ relativePath, source }) => {
       }
       const matchAs = trimmed.match(/\bas\s+([A-Za-z0-9_$]+)/);
       const importedIdent = matchAs ? matchAs[1] : trimmed.split(/\s+/)[0];
-      if (/^use[A-Z]/.test(importedIdent) && !isGeneratedMutationHook(importedIdent)) {
+      if (/^use[A-Z]/.test(importedIdent)) {
         generatedHooks.add(importedIdent);
       }
     }
