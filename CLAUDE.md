@@ -276,7 +276,11 @@ true` drops documentation hits that `rg` would return.
     paths live in decorator arguments the graph does not keep. Splitting them does not help: with
     `client/` and `server/` indexed as two separate projects (3717 and 1897 nodes) the schema
     still carries no `CROSS_*` edge type of any kind, and the same trace still stops at
-    `customInstance`. Nor do the routes improve — a server-only project yields 26 `Route` nodes
+    `customInstance`. Nor does a second whole copy help: another git worktree of this repository
+    indexed as its own project (6370 nodes, 22776 edges) again reports 21 edge types and no
+    `CROSS_*`, `cross_service` from the first project still ends at `customInstance`, and a query
+    in the first project for any node whose path belongs to the second returns zero. Projects are
+    sealed off from one another. Nor do the routes improve — a server-only project yields 26 `Route` nodes
     that still have null `file_path` and `source`, and one of them is
     `/tests/public/sessions/not-a-real-token`, a string that exists only inside a test.
     `template/features.manifest.json` plus `verify-architecture`'s OpenAPI inventory stay the only
@@ -309,10 +313,12 @@ true` drops documentation hits that `rg` would return.
     restarted, fresh workers connected to it happily, and this session's tools stayed gone for the
     rest of its life. The fallback is the same binary:
     `codebase-memory-mcp.exe cli <tool> '<json args>'` reads the identical graph, at a ~1.9 s cold
-    start per call. The three `codebase-memory-*` subagents do **not** inherit that broken
-    connection: a scout dispatched from a session whose graph tools had long since vanished
-    opened its own and made nine successful MCP calls. Losing the server costs you the tools
-    in the parent, not in its children.
+    start per call. What a subagent gets depends on its definition. A
+    `codebase-memory-scout`, whose frontmatter names the `mcp__codebase-memory-mcp__*` tools
+    explicitly, was dispatched from this broken session and made nine successful MCP calls. A
+    `general-purpose` agent dispatched minutes later, with the daemon demonstrably alive and seven
+    cbm processes running, inherited the parent's failure and reported the server unavailable. So
+    an agent that declares the tools gets them; a generic one inherits your breakage.
   - The Cypher subset is small — no `EXISTS { … }` past a single hop, `NOT (a)<-[:X]-()` is
     rejected outright, and there is no `id()`, no `MATCH path = …`, and no property-to-property
     comparison (`WHERE a.lines < b.lines`). Express a set difference as two queries and diff the
@@ -513,7 +519,11 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   while invoking the exact same command line from settings.json by hand produced both the marker
   and the correct augmentation. Hooks added to `~/.claude/settings.json` mid-session are picked up
   by a genuinely new session, not by `--continue`/`--resume`. If you have just installed or
-  changed a hook, start a fresh session before concluding anything about whether it works.
+  changed a hook, start a fresh session before concluding anything about whether it works. The
+  dead zone extends to that session's children: a subagent asked to quote any `[codebase-memory]`
+  text in its context found none, and its `Grep` came back as bare paths with no augmentation
+  attached — so neither `SubagentStart` nor `PreToolUse` reaches a subagent of a session where the
+  hooks are not live.
 
 - **omp** (Oh My Pi) is the agent the Orca workers run on. It reads three things from
   `~/.omp/agent/`, and a dispatched worker confirmed all three from inside its own context:
