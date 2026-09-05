@@ -525,6 +525,12 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   attached — so neither `SubagentStart` nor `PreToolUse` reaches a subagent of a session where the
   hooks are not live.
 
+  To settle it in a fresh session, which is the only place it can be settled: append
+  `echo fired %TIME% >> "%TEMP%\cbm-hook.txt"` to `~/.claude/hooks/cbm-code-discovery-gate.cmd`,
+  start a new session, run one `Grep`, and look at that file. Present means the hook fires and the
+  `[codebase-memory]` block you see alongside the search is real; absent means the dead zone
+  described here is not specific to one session. Remove the line afterwards.
+
 - **omp** (Oh My Pi) is the agent the Orca workers run on. It reads three things from
   `~/.omp/agent/`, and a dispatched worker confirmed all three from inside its own context:
   `mcp.json` (the MCP servers), `AGENTS.md` (loaded verbatim into a `<repo-rules>` block), and
