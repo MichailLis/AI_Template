@@ -165,8 +165,9 @@ true` drops documentation hits that `rg` would return.
   `replace_in_files` is the one to reach for on a repeated small edit across files: run it with
   `dry_run: true` first and it returns every prospective change as a line diff with an occurrence
   id, then re-issue with `occurrence_ids` to apply only the ones you picked — verified by
-  replacing exactly one of two matches. `insert_before_symbol` and `replace_content` are the same
-  family but were not individually exercised.
+  replacing exactly one of two matches. `insert_before_symbol` and `replace_content` behave the
+  same way: the first inserted a comment above a symbol and the second removed it again with a
+  `\r?\n` regex, both leaving the file at 0 bare LF and byte-identical to where it started.
 
   It scales unevenly on the generated API client, this tree's biggest source at 116 KB.
   `search_for_pattern` handles it without complaint — 19 hits with line numbers for 1.7 KB — but
