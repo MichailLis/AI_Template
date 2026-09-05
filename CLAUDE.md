@@ -425,8 +425,13 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   and `rg`. End to end, `npx tsc --noEmit -p server/tsconfig.json` now fails visibly with the
   decoy package's own banner and exit 1 instead of answering `TypeScript: No errors found`. If you
   meet a machine where it still lies, that config file is the lever. There is no equivalent setting for `rtk rg`
-  filenames (pass a path argument instead), and `rtk trust --list` reports no project-local TOML
-  filters, so that route is unused here.
+  filenames (pass a path argument instead), and a project TOML filter is the wrong tool for this
+  job — proven, not assumed. A filter lives in `.rtk/filters.toml` and needs `schema_version = 1`
+  plus a `[filters.<name>]` table with `match_command`; `rtk trust -y` accepts it and says plainly
+  what it does — "they rewrite matching command output". With one trusted and active for `tsc`,
+  `rtk tsc` still answered `TypeScript: No errors found` on a project where the real compiler
+  reports two errors. Filters shape output; the defect is that the wrong binary runs, so only
+  `hooks.exclude_commands` closes it.
 
   Running each of the eleven subcommands that apply to this stack against a deliberately failing
   invocation sorts them cleanly. Honest, with the real error and a non-zero exit: `docker` ("no
