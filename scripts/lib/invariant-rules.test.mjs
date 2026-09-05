@@ -399,4 +399,62 @@ useEffect(() => {
       [],
     );
   });
+  it('reports error when useEffect mirrors Orval generated query hook data into state', () => {
+    const source = `
+import { usePrivacyPolicyControllerGetPrivacyPolicy } from '@/shared/api/generated/privacy-policy/privacy-policy';
+
+const { data } = usePrivacyPolicyControllerGetPrivacyPolicy();
+useEffect(() => {
+  if (data) {
+    setTitle(data.title);
+  }
+}, [data]);
+`;
+    const errors = checkReactQueryStateMirroring({
+      relativePath: 'client/src/pages/privacy/privacy-page.tsx',
+      source,
+    });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /useEffect mirrors React Query data "data" into state via "setTitle"/);
+  });
+
+  it('accepts rendering derived data from Orval generated query hook without state mirroring', () => {
+    const source = `
+import { usePrivacyPolicyControllerGetPrivacyPolicy } from '@/shared/api/generated/privacy-policy/privacy-policy';
+
+const { data } = usePrivacyPolicyControllerGetPrivacyPolicy();
+const title = data?.title ?? '';
+`;
+    assert.deepEqual(
+      checkReactQueryStateMirroring({
+        relativePath: 'client/src/pages/privacy/privacy-page.tsx',
+        source,
+      }),
+      [],
+    );
+  });
+
+  it('accepts Orval mutation hook in useEffect with timer without false positive', () => {
+    const source = `
+import { useTestsControllerUpdateTopicDraft } from '@/shared/api/generated/tests/tests';
+
+const updateDraftMutation = useTestsControllerUpdateTopicDraft();
+useEffect(() => {
+  if (updateDraftMutation.isPending) {
+    return;
+  }
+  const timer = window.setTimeout(() => {
+    saveDraft();
+  }, 1000);
+  return () => window.clearTimeout(timer);
+}, [updateDraftMutation.isPending]);
+`;
+    assert.deepEqual(
+      checkReactQueryStateMirroring({
+        relativePath: 'client/src/features/tests/model/use-draft-autosave.ts',
+        source,
+      }),
+      [],
+    );
+  });
 });

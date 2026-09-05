@@ -315,14 +315,53 @@ export const checkPublicDtoSafety = ({ relativePath, source }) => {
   return errors;
 };
 
+const NON_STATE_SETTERS = new Set(['setTimeout', 'setInterval', 'setImmediate']);
+
+const isGeneratedMutationHook = (name) => {
+  return /Controller(?:Create|Update|Delete|Patch|Post|Put|Remove|Restore|Archive|Publish|Reorder|Import|Generate|Simulate|Signin|Signup|Logout|RefreshTokens|Save|Finish|Start)/.test(
+    name,
+  );
+};
+
 export const checkReactQueryStateMirroring = ({ relativePath, source }) => {
   const clean = stripComments(source);
+
+  const generatedHooks = new Set();
+  const importRegex =
+    /import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]@\/shared\/api\/generated\/[^'"]*['"]/g;
+  for (const match of clean.matchAll(importRegex)) {
+    const specifiers = match[1].split(',');
+    for (const spec of specifiers) {
+      const trimmed = spec.trim();
+      if (!trimmed || trimmed.startsWith('type ')) {
+        continue;
+      }
+      const matchAs = trimmed.match(/\bas\s+([A-Za-z0-9_$]+)/);
+      const importedIdent = matchAs ? matchAs[1] : trimmed.split(/\s+/)[0];
+      if (/^use[A-Z]/.test(importedIdent) && !isGeneratedMutationHook(importedIdent)) {
+        generatedHooks.add(importedIdent);
+      }
+    }
+  }
+
+  const hookPatterns = ['use[A-Za-z0-9_$]*Query'];
+  for (const hook of generatedHooks) {
+    hookPatterns.push(hook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  }
+  const hookRegexPart = `(?:${hookPatterns.join('|')})`;
+
   const queryIds = new Set();
-  const directRegex = /(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*use[A-Za-z0-9_$]*Query\s*\(/g;
+  const directRegex = new RegExp(
+    `(?:const|let|var)\\s+([A-Za-z0-9_$]+)\\s*=\\s*${hookRegexPart}\\s*\\(`,
+    'g',
+  );
   for (const match of clean.matchAll(directRegex)) {
     queryIds.add(match[1]);
   }
-  const destructRegex = /(?:const|let|var)\s*\{([^}]+)\}\s*=\s*use[A-Za-z0-9_$]*Query\s*\(/g;
+  const destructRegex = new RegExp(
+    `(?:const|let|var)\\s*\\{([^}]+)\\}\\s*=\\s*${hookRegexPart}\\s*\\(`,
+    'g',
+  );
   for (const match of clean.matchAll(destructRegex)) {
     const parts = match[1].split(',');
     for (const part of parts) {
@@ -389,12 +428,15 @@ export const checkReactQueryStateMirroring = ({ relativePath, source }) => {
     const body =
       firstBrace !== -1 && lastBrace !== -1 ? effectCall.slice(firstBrace, lastBrace) : effectCall;
 
-    const setterMatch = body.match(/\b(set[A-Z][a-zA-Z0-9_$]*)\s*\(/);
-    if (setterMatch) {
-      const line = getLineNumber(source, idx);
-      errors.push(
-        `${relativePath}:${line}: useEffect mirrors React Query data "${matchingDep}" into state via "${setterMatch[1]}". Derive state at render/submit boundary instead.`,
-      );
+    const setterMatches = body.matchAll(/(?<![.\w])(set[A-Z][a-zA-Z0-9_$]*)\s*\(/g);
+    for (const sm of setterMatches) {
+      if (!NON_STATE_SETTERS.has(sm[1])) {
+        const line = getLineNumber(source, idx);
+        errors.push(
+          `${relativePath}:${line}: useEffect mirrors React Query data "${matchingDep}" into state via "${sm[1]}". Derive state at render/submit boundary instead.`,
+        );
+        break;
+      }
     }
   }
 
