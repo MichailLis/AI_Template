@@ -80,6 +80,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
   is the only one that compiles the server specs: `nest build` uses `tsconfig.build.json`,
   which excludes `**/*spec.ts`. Do not "simplify" it away as duplicating the build.
 - `npm run verify:invariants` — checks non-obvious invariants (Swagger completeness, no `z.date()`, storage discipline, single error shape, public DTO safety, no React Query state mirroring).
+- `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
