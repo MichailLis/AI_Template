@@ -93,6 +93,7 @@ Use exhaustive search mode when request touches unfamiliar areas, multiple modul
 Execution protocol:
 
 1. Run parallel internal discovery first:
+   - symbol uniqueness check via `npm run find:symbol -- <name>` before refactoring or renaming
    - codebase search (`grep` / `rg` / AST search)
    - structure scan (feature, widget, page, shared layers)
    - existing pattern lookup in neighboring modules
@@ -428,6 +429,7 @@ on its own after changing a controller or DTO to see the architecture result wit
 for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
+`npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
 
 ## PR-Ready Checklist (Feature Delivery)
 

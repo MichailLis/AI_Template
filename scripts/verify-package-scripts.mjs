@@ -116,11 +116,20 @@ if (rootScripts['verify:diff'] !== 'node scripts/verify-diff.mjs') {
   fail('root package must define verify:diff script as "node scripts/verify-diff.mjs"');
 }
 
+if (rootScripts['find:symbol'] !== 'node scripts/find-symbol.mjs') {
+  fail('root package must define find:symbol script as "node scripts/find-symbol.mjs"');
+}
+
 for (const scriptName of ['verify:local', 'verify:template']) {
   const script = rootScripts[scriptName] ?? '';
   if (script.includes('verify:diff')) {
     fail(
       `${scriptName} must not include verify:diff (verify:diff is an auxiliary pre-flight, not a gate)`,
+    );
+  }
+  if (script.includes('find:symbol')) {
+    fail(
+      `${scriptName} must not include find:symbol (find:symbol is a developer tool, not a gate)`,
     );
   }
 }

@@ -52,9 +52,14 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     ]);
   });
 
-  it('triggers test:scripts and verify:package-scripts for scripts/**', () => {
+  it('triggers test:scripts, verify:package-scripts and verify:invariants for scripts/**', () => {
     const scripts = getOrderedScripts(['scripts/verify-diff.mjs']);
-    assert.deepEqual(scripts, ['verify:package-scripts', 'test:scripts', 'format:check']);
+    assert.deepEqual(scripts, [
+      'verify:package-scripts',
+      'test:scripts',
+      'verify:invariants',
+      'format:check',
+    ]);
   });
 
   it('triggers verify:package-scripts for any package.json or ci.yml', () => {
@@ -101,11 +106,12 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     const scripts = getOrderedScripts(changed);
 
     // Expected relative order according to verify:local:
-    // verify:ai-guide, verify:package-scripts, test:scripts, format:check
+    // verify:ai-guide, verify:package-scripts, test:scripts, verify:invariants, format:check
     assert.deepEqual(scripts, [
       'verify:ai-guide',
       'verify:package-scripts',
       'test:scripts',
+      'verify:invariants',
       'format:check',
     ]);
     // Server/client tests and prisma:generate must NOT be present

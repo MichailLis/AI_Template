@@ -34,7 +34,7 @@ export const VERIFY_LOCAL_ORDER = [
  * - server/src/** -> verify:invariants, typecheck, lint, server tests
  * - client/src/shared/api/api.ts or interceptors.ts -> verify:api-mutator
  * - client/src/** -> verify:invariants, lint, client tests
- * - scripts/** -> test:scripts, verify:package-scripts
+ * - scripts/** -> test:scripts, verify:package-scripts, verify:invariants
  * - any package.json -> verify:package-scripts
  * - template/*.json -> verify:contracts
  * - .github/workflows/ci.yml -> verify:package-scripts
@@ -89,6 +89,7 @@ export const getScriptsForFile = (filePath) => {
   if (norm.startsWith('scripts/')) {
     scripts.add('test:scripts');
     scripts.add('verify:package-scripts');
+    scripts.add('verify:invariants');
   }
 
   if (norm === 'package.json' || norm.endsWith('/package.json')) {

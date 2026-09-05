@@ -13,6 +13,7 @@
     "gen:api": "npm run gen:openapi && npm run gen:api:client",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
     "test:scripts": "node --test scripts/lib/*.test.mjs",
+    "find:symbol": "node scripts/find-symbol.mjs",
     "typecheck": "npm run typecheck --prefix server",
     "verify:ai-guide": "node scripts/verify-ai-guide.mjs",
     "verify:api-mutator": "node scripts/verify-api-mutator.mjs",
