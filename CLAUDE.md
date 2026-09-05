@@ -283,10 +283,16 @@ true` drops documentation hits that `rg` would return.
     mechanism for that question.
   - **It cannot index the main checkout.** `index_repository` on
     `C:/Users/admin/Documents/WebAI/AI_Template` fails in both `full` and `fast` mode with nothing
-    but `status: "error"` and a generic "Pipeline failed. Check repo_path exists and contains
+    but `status: "error"` and a generic "Pipeline failed. Check repo*path exists and contains
     source files" — and `CBM_LOG_LEVEL=debug` adds not one extra line. The worktree at
-    `orca/workspaces/AI_Template/sargassum` indexes fine, as do `client/` and `server/` taken
-    alone, so the failure is specific to that root and undiagnosable from the outside.
+    `orca/workspaces/AI_Template/sargassum` indexes fine, and so does every part of the main
+    checkout taken separately — `server/` alone gives 1664 nodes, and `01*брендинг`, `Design`,
+`docs`, `graphify-out`and`output` each index without complaint. Five explanations were
+    tested and none holds: it is not the Cyrillic directory name (a scratch repo containing one
+    indexes fine), not scale (1256 non-ignored files against the worktree's 939), not any single
+    top-level directory, not the repository owning git worktrees (reproduced in a scratch repo,
+    which indexes fine), and not an oversized root file (the largest is 1.1 MB). Only the root
+    itself fails, and it fails silently.
   - **`check_index_coverage` cries wolf.** For every valid, unmodified file it returns
     `freshness: "metadata_changed"` with `recommended_action: "read_source_and_reindex"`, and for
     a path that does not exist at all it answers `status: "no_recorded_issue"`. The agent
@@ -549,10 +555,16 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   diff in the Orca editor; neither was exercised. The `repo`, `artifact` and remote-environment
   commands have no place in this repository's workflow.
 
-  Two more things learned the hard way. A worker whose machine sleeps is simply gone: the task
-  stays `dispatched` for ever, `worker-read` returns an empty transcript, `task-update` refuses
-  the transition and `worker-release` answers `dispatch_inactive`, so the row cannot be closed at
-  all. Do **not** judge liveness by `last_heartbeat_at` — it was set and stale on the worker that
+  Two failure modes, and only one of them is recoverable. A `worker-start` that dies at launch with
+  `agent_prompt_stalled` leaves the task `failed` with its dispatch settled; a retry is then
+  refused with `task_not_startable` until you run `task-update --id <task> --status ready`, after
+  which `worker-start` succeeds — that worked first time here. A worker that dies mid-run, because
+  the machine slept, is a genuine deadlock: the task sits in `dispatched`, `worker-read` returns
+  an empty transcript, and every exit is refused. `task-update` to `ready`, `failed`, `completed`
+  or `blocked` all answer `task_not_startable — cannot move ... while Dispatch <id> is active`,
+  while `worker-release` answers `dispatch_inactive — Dispatch <id> is ready; only a settled
+  worker can release`. Only the worker can settle its own dispatch, and it is dead, so the row
+  stays open for ever. Do **not** judge liveness by `last_heartbeat_at` — it was set and stale on the worker that
   had died, and `None` on a worker that was demonstrably working. The reliable test is
   `worker-read --dispatch <id>`: a live worker's transcript grows new tool calls between two
   checks, a dead one returns nothing. And `ask`/`reply` does work: a worker's `orchestration ask` reached the coordinator
