@@ -1,6 +1,8 @@
 import { parseApiError } from '@/shared/lib/api-error';
 import { isRecord } from '@/shared/lib/type-guards';
 
+import { getUniqueOptionValue } from './unique-option-value';
+
 import type {
   QuestionFormState,
   QuestionOptionDraft,
@@ -154,25 +156,6 @@ const parseSliderSettings = (
 const normalizeOptionValue = (label: string) =>
   label.trim().toLowerCase().replace(/\s+/g, '_').replace(/\|/g, '');
 
-const getUniqueValue = (baseValue: string, usedValues: Set<string>, index: number) => {
-  const normalizedBase = baseValue || `option_${index + 1}`;
-
-  if (!usedValues.has(normalizedBase)) {
-    usedValues.add(normalizedBase);
-    return normalizedBase;
-  }
-
-  let suffix = 2;
-  let candidate = `${normalizedBase}_${suffix}`;
-  while (usedValues.has(candidate)) {
-    suffix += 1;
-    candidate = `${normalizedBase}_${suffix}`;
-  }
-
-  usedValues.add(candidate);
-  return candidate;
-};
-
 const parseOptionsDraft = (drafts: QuestionOptionDraft[]) => {
   const nonEmptyDrafts = drafts.filter(
     (option) => option.label.trim() || option.value.trim() || option.weight.trim(),
@@ -191,7 +174,7 @@ const parseOptionsDraft = (drafts: QuestionOptionDraft[]) => {
     }
 
     const rawValue = option.value.trim() || normalizeOptionValue(label);
-    const value = getUniqueValue(rawValue, usedValues, index);
+    const value = getUniqueOptionValue(rawValue, usedValues, index);
 
     const weight = Number.parseInt(option.weight.trim() || '0', 10);
     if (Number.isNaN(weight)) {
