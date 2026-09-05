@@ -385,7 +385,11 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   that matters:
   - **Never use these — they report success or emptiness when the run failed.** `rtk tsc`, as
     above. `rtk find`, which exits 0 with no output when the directory does not exist, so a typo
-    in a path reads as "no files match". `rtk read -l aggressive`, which cuts function bodies and
+    in a path reads as "no files match". `rtk tree`, which is simply broken on Windows — it hands
+    its exclude list to the native `tree` as one pipe-separated argument, so it answers
+    "слишком много параметров" and exits 0 for a real directory and a missing one alike.
+    `rtk playwright`, which prints `PASS (0) FAIL (0)` and a timing line for a spec file that does
+    not exist. `rtk read -l aggressive`, which cuts function bodies and
     closing braces out of TypeScript — 64% smaller and syntactically invalid, with the security
     checks in `setup-app.ts` silently gone. `rtk wc` over several files, which drops the missing
     one and totals the rest as if all were read. And `rtk vitest` / `rtk jest` to prove tests
@@ -408,6 +412,13 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   meet a machine where it still lies, that config file is the lever. There is no equivalent setting for `rtk rg`
   filenames (pass a path argument instead), and `rtk trust --list` reports no project-local TOML
   filters, so that route is unused here.
+
+  Running each of the eleven subcommands that apply to this stack against a deliberately failing
+  invocation sorts them cleanly. Honest, with the real error and a non-zero exit: `docker` ("no
+  configuration file provided"), `psql`, `npx` ("npm error code E404"), `format`, `pipe` (which
+  even lists the valid filters), `log`, `smart` and `curl` (exit 7). Uninformative but not
+  misleading: `prettier` prints zero bytes, `summary` an empty first line. Actively misreporting:
+  `playwright` and `tree`, both covered above.
 
   Where a binary is simply absent, rtk is honest. Across a sweep of 25 further subcommands the
   ones whose tool was genuinely missing — `docker`, `psql`, `npx`, `playwright`, `wget`, `grep`,
@@ -508,7 +519,11 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   codebase-memory tool schemas total 20,646 characters — roughly 5–6k tokens — but the system
   prompt carries only about 2,000 characters of one-line catalogue entries for them under
   `## Additional devices (docs on demand)`; the full schema arrives only when the agent reads
-  `xd://<tool>`. So adding an MCP server to omp costs a catalogue line per tool, not its schema.
+  `xd://<tool>`. The mechanism is in `tools/xdev.ts`: `shouldInlineXdevTool` inlines a tool only
+  when the mode is `inline`, or the tool is a built-in, or it matches `tools.xdevInlineDevices` —
+  which is empty here. Under `builtins` an MCP tool satisfies none of those, so it always lands
+  in the overflow catalogue. Adding an MCP server to omp therefore costs a catalogue line per
+  tool, not its schema.
   That is what makes a fifteen-tool server affordable for short-lived workers.
 
 - **Orca orchestration** is how workers get dispatched here; `orca skills get orchestration`
