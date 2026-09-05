@@ -53,6 +53,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'User successfully logged out' })
   async logout(@GetCurrentUserId() userId: number, @Res({ passthrough: true }) response: Response) {
     await this.authService.logout(userId);
     clearRefreshTokenCookie(response);
