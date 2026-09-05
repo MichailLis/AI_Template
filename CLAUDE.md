@@ -303,10 +303,10 @@ true` drops documentation hits that `rg` would return.
     restarted, fresh workers connected to it happily, and this session's tools stayed gone for the
     rest of its life. The fallback is the same binary:
     `codebase-memory-mcp.exe cli <tool> '<json args>'` reads the identical graph, at a ~1.9 s cold
-    start per call. The three `codebase-memory-*` subagents cbm installs inherit the session's MCP
-    state, so once this happens they are left with only `Read`/`Grep`/`Glob` while their own
-    definitions instruct them to lead with graph tools — judge them in a fresh session or not at
-    all.
+    start per call. The three `codebase-memory-*` subagents do **not** inherit that broken
+    connection: a scout dispatched from a session whose graph tools had long since vanished
+    opened its own and made nine successful MCP calls. Losing the server costs you the tools
+    in the parent, not in its children.
   - The Cypher subset is small — no `EXISTS { … }` past a single hop, `NOT (a)<-[:X]-()` is
     rejected outright, and there is no `id()`, no `MATCH path = …`, and no property-to-property
     comparison (`WHERE a.lines < b.lines`). Express a set difference as two queries and diff the
@@ -483,8 +483,13 @@ yet implemented"}`, so it accepts input and does nothing. `get_architecture` wit
   about 320 tokens through the graph against about 500 through `rg`. The agents differ less than
   their names suggest: `codebase-memory` and `codebase-memory-auditor` declare an identical
   fourteen-tool list and are separated only by their prompts, while `-scout` drops four tools.
-  All three list `mcp__codebase-memory-mcp__*` tools they cannot get if the session's MCP
-  connection has dropped.
+  Run on a real question — where is `parseSliderSettings` defined and who calls it — `-scout`
+  earned its keep in nine tool calls and about 30k of its own tokens: it separated the exported
+  server implementation from an unrelated same-named local one in the client, listed the three
+  real callers, cross-checked the graph against grep and got the same eight occurrences, and
+  closed by naming its own limits. The value is not speed, it is that the tier prompt makes it
+  run `check_index_coverage` and the source fallback without being told — the discipline this
+  file argues for, applied by something other than your own memory.
 
   **They do not fire in a resumed session.** Proven rather than assumed: instrumenting
   `cbm-code-discovery-gate.cmd` to touch a marker file produced nothing across a real `Grep` call,
