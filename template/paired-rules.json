@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "name": "getMaxChoices",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/public-question-choice-limit.ts",
+        "testFile": "client/src/features/tests/lib/public-question-choice-limit.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/session/answer-validation.ts",
+        "testFile": "server/src/tests/session/answer-validation.spec.ts"
+      },
+      "reason": "Ограничение на количество выборов в вопросах MULTI_CHOICE. Сервер является авторитетным источником при валидации ответов сессии; клиент дублирует проверку для превентивного UI-контроля."
+    },
+    {
+      "name": "matchesGroupPattern",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/widgets/public-test-workspace/ui/public-test-entry.helpers.ts",
+        "testFile": "client/src/widgets/public-test-workspace/ui/public-test-entry.helpers.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/session/session-profile.ts",
+        "testFile": "server/src/tests/session/session-profile.spec.ts"
+      },
+      "reason": "Проверка соответствия группы/класса регулярному выражению организации. Сервер авторитетно валидирует запуск сессии; клиент отображает предупреждение в форме."
+    },
+    {
+      "name": "MAX_SKILLS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит количества навыков в результатах анализа теста (6). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "MAX_THINKING_STRENGTHS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит количества сильных сторон мышления в результатах теста (4). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "MAX_TRAITS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит количества черт характера в результатах теста (6). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "MAX_RECOMMENDED_DIRECTIONS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит рекомендуемых направлений в результатах анализа (6). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит рекомендаций по развитию в результатах анализа (6). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "MAX_PROFESSIONAL_NEXT_STEPS_COUNT",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/common/analysis/test-analysis-result.contract.ts"
+      },
+      "reason": "Лимит шагов профессионального развития в результатах анализа (3). Серверный контракт авторитетен, клиентский парсер дублирует лимит."
+    },
+    {
+      "name": "parseSliderSettings",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/features/tests/lib/tests-utils.ts"
+      },
+      "server": {
+        "file": "server/src/tests/shared/domain.utils.ts"
+      },
+      "reason": "Функции решают разные задачи с несовпадающими сигнатурами: клиентская объединяет состояние формы со шкалой слайдера для сборки payload, серверная валидирует неизвестный JSON и извлекает диапазон { min, max, step } (или null). Никакое свойство корректности системы не зависит от тождественности их поведения."
+    },
+    {
+      "name": "getSettingsRecord",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/widgets/public-test-workspace/ui/polus/polus-public-slider-presentation.ts"
+      },
+      "server": {
+        "file": "server/src/tests/prof-orientation-v3-plus/scoring.ts"
+      },
+      "reason": "Функции работают с разными типами аргументов и решают независимые задачи: клиентский хелпер проверяет произвольное значение unknown для UI слайдера, серверная функция извлекает поле settings из типизированного объекта ScoringQuestion. Ни инварианты скоринга, ни протоколы доверия не зависят от эквивалентности этих функций."
+    },
+    {
+      "name": "getString",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/features/tests/lib/test-analysis-result-parser.ts"
+      },
+      "server": {
+        "file": "server/src/app-settings/profession-atlas-client.service.ts"
+      },
+      "reason": "Функции имеют разные сигнатуры (чтение ключа из объекта против унарного тайпгарда) и противоположную семантику (клиент отбрасывает пустые строки после trim, сервер возвращает любую строку). Клиент разбирает готовый отчёт анализа, сервер валидирует поля внешнего API Атласа. Никакое сквозное свойство корректности не зависит от согласованности их результатов."
+    },
+    {
+      "name": "isRecord",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/type-guards.ts"
+      },
+      "server": {
+        "file": "server/src/app-settings/profession-atlas-client.service.ts"
+      },
+      "reason": "Случайное совпадение стандартного TypeScript-тайпгарда typeof === 'object' && !== null && !Array.isArray. На сервере дублируется локально в 4 файлах, на клиенте экспортируется как общая утилита. Не является бизнес-правилом на границе доверия."
+    },
+    {
+      "name": "normalizeProfessionTitle",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/ui/polus/prof-orientation-result.helpers.ts",
+        "testFile": "client/src/features/tests/ui/polus/prof-orientation-result.helpers.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/prof-orientation-v3-plus/atlas.logic.ts",
+        "testFile": "server/src/tests/prof-orientation-v3-plus/atlas.logic.spec.ts"
+      },
+      "reason": "Единое правило нормализации названий профессий (trim, toLocaleLowerCase ru-RU, замена ё на е, схлопывание пробелов). Клиентский UI дедуплицирует карточки профессий, уже обработанные сервером; расхождение реализаций приведёт к рассинхронизации интерфейса (задвоению или ошибочной склейке профессий). Сервер является авторитетным источником."
+    },
+    {
+      "name": "toShare",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/widgets/admin-public-links-stats-workspace/ui/test-analytics-summary-card.tsx"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-summary.ts"
+      },
+      "reason": "Локальные утилиты расчёта процентных долей для изолированных контекстов: клиентская функция вычисляет проценты выполнения для плашек карточки покрытия в админке, серверная рассчитывает доли для элементов списочных DTO. Клиент не перепроверяет расчёты бэкенда, сервер не зависит от клиентского UI; изменение формулы или точности в интерфейсе не нарушает бизнес-инварианты системы."
+    }
+  ]
+}

@@ -256,6 +256,30 @@ export const GATE_MUTATIONS = [
     requiredFile: 'server/openapi.json',
     skipReason: 'server/openapi.json is missing (requires gen:openapi)',
   },
+
+  // 12. verify-paired-rules.mjs
+  {
+    id: 'paired-rules-constant-mismatch',
+    gate: 'verify-paired-rules.mjs',
+    script: 'scripts/verify-paired-rules.mjs',
+    npmScript: 'verify:paired-rules',
+    file: 'client/src/features/tests/lib/test-analysis-result-parser.ts',
+    description: 'Change MAX_TRAITS_COUNT on client from 6 to 99 causing constant divergence',
+    action: 'replace',
+    search: 'const MAX_TRAITS_COUNT = 6;',
+    replace: 'const MAX_TRAITS_COUNT = 99;',
+  },
+  {
+    id: 'paired-rules-undeclared-pair',
+    gate: 'verify-paired-rules.mjs',
+    script: 'scripts/verify-paired-rules.mjs',
+    npmScript: 'verify:paired-rules',
+    file: 'client/src/features/tests/lib/public-question-choice-limit.ts',
+    description:
+      'Declare an unlisted top-level symbol getQuestionLabel matching existing server symbol',
+    action: 'append',
+    append: "\nexport const getQuestionLabel = () => 'undeclared';\n",
+  },
 ];
 
 /**

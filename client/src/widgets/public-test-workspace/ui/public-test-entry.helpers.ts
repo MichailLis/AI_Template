@@ -27,7 +27,7 @@ export const initialDemographicFormState: DemographicFormState = {
 
 export const normalizeInitial = (value: string) => value.trim().slice(0, 1).toUpperCase();
 
-const matchesGroupPattern = (value: string, pattern: string) => {
+export const matchesGroupPattern = (value: string, pattern: string) => {
   try {
     return new RegExp(pattern, 'u').test(value);
   } catch {

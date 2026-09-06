@@ -27,7 +27,7 @@ export type DemographicProfile = {
   studentEducationLevel: NonNullable<PublicSessionStartRequestDto['educationLevel']>;
 };
 
-const matchesGroupPattern = (groupOrClass: string, pattern: string) => {
+export const matchesGroupPattern = (groupOrClass: string, pattern: string) => {
   try {
     return new RegExp(pattern, 'u').test(groupOrClass);
   } catch {

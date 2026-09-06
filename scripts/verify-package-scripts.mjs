@@ -111,6 +111,9 @@ if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migr
 if (rootScripts['verify:invariants'] !== 'node scripts/verify-invariants.mjs') {
   fail('root package must define verify:invariants script');
 }
+if (rootScripts['verify:paired-rules'] !== 'node scripts/verify-paired-rules.mjs') {
+  fail('root package must define verify:paired-rules script');
+}
 if (rootScripts['verify:gates'] !== 'node scripts/verify-gates.mjs') {
   fail('root package must define verify:gates script as "node scripts/verify-gates.mjs"');
 }
@@ -156,6 +159,7 @@ for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
   requireRootScriptSegment(scriptName, 'npm run verify:invariants');
+  requireRootScriptSegment(scriptName, 'npm run verify:paired-rules');
   requireRootScriptSegment(scriptName, 'npm run typecheck');
   requireRootScriptSegment(scriptName, 'npm run verify:gates');
 }

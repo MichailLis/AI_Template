@@ -97,6 +97,9 @@ export const formatProfessionCode = (code: string) => {
   return `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
 };
 
+export const normalizeProfessionTitle = (title: string) =>
+  title.trim().toLocaleLowerCase('ru-RU').replace(/ё/g, 'е').replace(/\s+/g, ' ');
+
 const stripTextPrefix = (value: string, prefix: string) => {
   const trimmedStartValue = value.trimStart();
   const leadingWhitespaceLength = value.length - trimmedStartValue.length;

@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "vectors": {
+    "getMaxChoices": [
+      {
+        "description": "Standard positive integer cap",
+        "input": { "maxChoices": 3 },
+        "expected": 3
+      },
+      {
+        "description": "Single choice cap",
+        "input": { "maxChoices": 1 },
+        "expected": 1
+      },
+      {
+        "description": "Large integer cap",
+        "input": { "maxChoices": 100 },
+        "expected": 100
+      },
+      {
+        "description": "Zero cap is below 1 and must be rejected",
+        "input": { "maxChoices": 0 },
+        "expected": null
+      },
+      {
+        "description": "Negative integer cap is below 1 and must be rejected",
+        "input": { "maxChoices": -1 },
+        "expected": null
+      },
+      {
+        "description": "Fractional non-integer cap above 1 must be rejected",
+        "input": { "maxChoices": 2.5 },
+        "expected": null
+      },
+      {
+        "description": "Fractional non-integer cap below 1 must be rejected",
+        "input": { "maxChoices": 0.5 },
+        "expected": null
+      },
+      {
+        "description": "Negative fractional cap must be rejected",
+        "input": { "maxChoices": -2.5 },
+        "expected": null
+      },
+      {
+        "description": "String number cap must be rejected",
+        "input": { "maxChoices": "3" },
+        "expected": null
+      },
+      {
+        "description": "Missing maxChoices in settings object",
+        "input": {},
+        "expected": null
+      },
+      {
+        "description": "Settings with other fields but no maxChoices",
+        "input": { "other": 42 },
+        "expected": null
+      },
+      {
+        "description": "Settings is null",
+        "input": null,
+        "expected": null
+      },
+      {
+        "description": "Settings is a primitive string",
+        "input": "invalid-settings",
+        "expected": null
+      },
+      {
+        "description": "Settings is an array",
+        "input": [],
+        "expected": null
+      }
+    ],
+    "matchesGroupPattern": [
+      {
+        "description": "Exact match against pattern",
+        "input": {
+          "value": "ИС-21",
+          "pattern": "^ИС-\\d+$"
+        },
+        "expected": true
+      },
+      {
+        "description": "Non-matching group code",
+        "input": {
+          "value": "БИ-21",
+          "pattern": "^ИС-\\d+$"
+        },
+        "expected": false
+      },
+      {
+        "description": "Unicode character matching with u flag",
+        "input": {
+          "value": "Группа-🎉",
+          "pattern": "^Группа-\\p{Emoji}$"
+        },
+        "expected": true
+      },
+      {
+        "description": "Invalid regular expression syntax falls back to true",
+        "input": {
+          "value": "любая группа",
+          "pattern": "[invalid-unclosed"
+        },
+        "expected": true
+      },
+      {
+        "description": "Empty string value matching wildcard pattern",
+        "input": {
+          "value": "",
+          "pattern": ".*"
+        },
+        "expected": true
+      },
+      {
+        "description": "Empty pattern matches any non-empty string",
+        "input": {
+          "value": "любая группа",
+          "pattern": ""
+        },
+        "expected": true
+      },
+      {
+        "description": "Case-sensitive mismatch",
+        "input": {
+          "value": "ис-21",
+          "pattern": "^ИС-\\d+$"
+        },
+        "expected": false
+      },
+      {
+        "description": "Prefix mismatch on anchored pattern",
+        "input": {
+          "value": "префикс-ИС-21",
+          "pattern": "^ИС-\\d+$"
+        },
+        "expected": false
+      }
+    ],
+    "normalizeProfessionTitle": [
+      {
+        "description": "Standard multi-word profession title without special characters",
+        "input": "Инженер-конструктор",
+        "expected": "инженер-конструктор"
+      },
+      {
+        "description": "Profession title with lowercase letter yo (ё)",
+        "input": "Монтёр радиоэлектронной аппаратуры",
+        "expected": "монтер радиоэлектронной аппаратуры"
+      },
+      {
+        "description": "Profession title with leading and trailing whitespace",
+        "input": "   Агроном   ",
+        "expected": "агроном"
+      },
+      {
+        "description": "Profession title with multiple consecutive whitespace characters",
+        "input": "Инженер    по    качеству",
+        "expected": "инженер по качеству"
+      },
+      {
+        "description": "Profession title in uppercase",
+        "input": "ВРАЧ-ПЕДИАТР",
+        "expected": "врач-педиатр"
+      },
+      {
+        "description": "Empty string",
+        "input": "",
+        "expected": ""
+      },
+      {
+        "description": "Profession title with uppercase YO (Ё) and multiple occurrences",
+        "input": "Ёмкостный аппаратчик и самолётостроитель",
+        "expected": "емкостный аппаратчик и самолетостроитель"
+      },
+      {
+        "description": "Whitespace-only string",
+        "input": "   \t   ",
+        "expected": ""
+      }
+    ]
+  }
+}

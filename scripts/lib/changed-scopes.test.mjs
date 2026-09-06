@@ -251,6 +251,11 @@ describe('reachability of verify:local pipeline gates from changed-scopes', () =
       reason:
         'Full Vite production bundle is a release/packaging step; pre-flight relies on typecheck and client tests instead',
     },
+    {
+      gate: 'verify:paired-rules',
+      reason:
+        'Full repository cross-tree parity scan; runs in pipeline gates (verify:local, verify:template) rather than diff pre-flight',
+    },
   ];
 
   it('ensures every gate in verify:local is reachable from changed-scopes or documented as an exception', () => {

@@ -1,5 +1,9 @@
 import { parseProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
-import { getProfessorStatusText, getProfessorText } from './prof-orientation-result.helpers';
+import {
+  getProfessorStatusText,
+  getProfessorText,
+  normalizeProfessionTitle,
+} from './prof-orientation-result.helpers';
 import {
   ProfOrientationHero,
   ProfOrientationAtlasRecommendationsCard,
@@ -14,9 +18,6 @@ import type { ProfOrientationSummary } from './prof-orientation-summary';
 type ProfOrientationProfession = NonNullable<
   ProfOrientationSummary['primaryDirection']
 >['professions'][number];
-
-const normalizeProfessionTitle = (title: string) =>
-  title.trim().toLocaleLowerCase('ru-RU').replace(/ё/g, 'е').replace(/\s+/g, ' ');
 
 const getKeyProfessions = (summary: ProfOrientationSummary): ProfOrientationProfession[] => {
   if (summary.profile.type !== 'mixed_profile') {

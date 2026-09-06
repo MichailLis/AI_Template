@@ -1,9 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 
 import {
+  getMaxChoices,
   validatePublicAnswerPayload,
   validatePublicAttemptAnswersForFinish,
 } from '../session/answer-validation';
+
+import pairedRulesVectors from '../../../../template/paired-rules.vectors.json';
 
 const createQuestion = (overrides: Partial<Parameters<typeof validatePublicAnswerPayload>[0]>) => ({
   id: 1,
@@ -110,5 +113,14 @@ describe('tests answer validation', () => {
         { questionId: 2, answerPayload: 'A' },
       ]),
     ).not.toThrow();
+  });
+
+  describe('shared paired-rules getMaxChoices vectors', () => {
+    it.each(pairedRulesVectors.vectors.getMaxChoices)(
+      'satisfies shared vector: $description',
+      ({ input, expected }) => {
+        expect(getMaxChoices(input)).toBe(expected);
+      },
+    );
   });
 });

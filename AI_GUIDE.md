@@ -428,6 +428,7 @@ state through `gen:api`, which regenerates the client as well. Run `npm run veri
 on its own after changing a controller or DTO to see the architecture result without paying
 for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
+`npm run verify:paired-rules` runs `scripts/verify-paired-rules.mjs` to ensure paired implementations and constants across client and server remain synchronized against `template/paired-rules.json` and `template/paired-rules.vectors.json`.
 `npm run verify:gates` runs `scripts/verify-gates.mjs` to verify via in-memory mutation testing that repository verification gates detect real invariant violations and maintain full gate coverage.
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.

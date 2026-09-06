@@ -23,7 +23,7 @@ type PublicAttemptAnswer = {
 const getQuestionLabel = (question: PublicAnswerQuestion) =>
   question.title || `Question ${question.id}`;
 
-const getMaxChoices = (settings: unknown) => {
+export const getMaxChoices = (settings: unknown) => {
   if (typeof settings !== 'object' || settings === null) {
     return null;
   }
