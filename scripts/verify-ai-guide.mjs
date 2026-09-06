@@ -30,6 +30,9 @@ const [aiGuide, readme, claudeMdBuffer, agentsMd, rtkFiltersContent] = await Pro
 const claudeMd = claudeMdBuffer.toString('utf-8');
 const rtkFilters = JSON.parse(rtkFiltersContent);
 const unsafeRtkFilters = Array.isArray(rtkFilters.unsafe) ? rtkFilters.unsafe : [];
+const warningDocuments = new Set(
+  Array.isArray(rtkFilters.warningDocuments) ? rtkFilters.warningDocuments : [],
+);
 
 const requiredAiGuideTokens = [
   '## AI Agent Operating Mode (Local Development)',
@@ -63,18 +66,6 @@ for (const token of requiredReadmeTokens) {
 for (const command of unsafeRtkFilters) {
   if (!claudeMd.includes(command)) {
     errors.push(`CLAUDE.md: missing warning for unsafe rtk command "${command}"`);
-  }
-}
-
-for (const [docName, docContent] of [
-  ['AGENTS.md', agentsMd],
-  ['README.md', readme],
-  ['AI_GUIDE.md', aiGuide],
-]) {
-  for (const command of unsafeRtkFilters) {
-    if (docContent.includes(command)) {
-      errors.push(`${docName}: references unsafe rtk command "${command}"`);
-    }
   }
 }
 
@@ -192,19 +183,32 @@ const markdownFilesIn = async (base, skipDirs = []) => {
  *
  * Serena's memories are checked for the same reason the guide is. They are prose an agent
  * trusts, they are not regenerated from the code, and the last time they went unchecked they
- * ended up pointing at files that had been deleted months earlier.
+ * ended up pointing at files that had been deleted months earlier. Skills are checked for the
+ * same reason: they are prose an agent trusts and are not regenerated from code.
  */
 const proseDocuments = async () => [
   ...(await markdownFilesIn('docs', ['archive'])),
   ...(await markdownFilesIn('.serena/memories')),
+  ...(await markdownFilesIn('.claude/skills')),
 ];
 
-for (const [label, markdown] of [
+const checkedDocuments = [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
   ['AGENTS.md', agentsMd],
   ...(await proseDocuments()),
-]) {
+];
+
+for (const [docName, docContent] of [['CLAUDE.md', claudeMd], ...checkedDocuments]) {
+  if (warningDocuments.has(docName)) continue;
+  for (const command of unsafeRtkFilters) {
+    if (docContent.includes(command)) {
+      errors.push(`${docName}: references unsafe rtk command "${command}"`);
+    }
+  }
+}
+
+for (const [label, markdown] of checkedDocuments) {
   const paths = collectPaths(markdown);
   const ignored = gitIgnored(paths);
   const tracked = paths.filter((path) => !ignored.has(path));

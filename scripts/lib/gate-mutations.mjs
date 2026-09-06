@@ -138,6 +138,27 @@ export const GATE_MUTATIONS = [
     search: 'and `rtk vitest` / `rtk jest`',
     replace: 'and `vitest` / `jest`',
   },
+  {
+    id: 'ai-guide-skills-nonexistent-path',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: '.claude/skills/feature-pipeline/SKILL.md',
+    description:
+      'Add backtick reference to nonexistent file docs/this-file-does-not-exist.md in .claude/skills/feature-pipeline/SKILL.md',
+    action: 'append',
+    append: '\nReference: `docs/this-file-does-not-exist.md`\n',
+  },
+  {
+    id: 'ai-guide-serena-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: '.serena/memories/project_overview.md',
+    description: 'Add unsafe rtk command recommendation to .serena/memories/project_overview.md',
+    action: 'append',
+    append: '\nUse `rtk tsc` to check compiler output.\n',
+  },
 
   // 5. verify-runtime-config.mjs
   {
