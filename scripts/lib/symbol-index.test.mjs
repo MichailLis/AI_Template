@@ -127,6 +127,37 @@ describe('indexSymbol', () => {
     assert.equal(result.declarations[0].isExported, true);
     assert.equal(result.isCandidateUnusedExport, true);
   });
+  it('does NOT detect candidate for unused export when referenced in generated API files', () => {
+    const files = [
+      {
+        relativePath: 'client/src/shared/api/mock-api.ts',
+        source: 'export const mockCustomInstance = () => {};\n',
+      },
+      {
+        relativePath: 'client/src/shared/api/generated/users.ts',
+        source: 'const res = mockCustomInstance();\n',
+      },
+    ];
+
+    const result = indexSymbol(files, 'mockCustomInstance');
+    assert.equal(result.declarationsCount, 1);
+    assert.equal(result.declarations[0].isExported, true);
+    assert.equal(result.isCandidateUnusedExport, false);
+    assert.equal(result.generatedReferencesCount, 1);
+  });
+
+  it('ignores declarations inside generated files', () => {
+    const files = [
+      {
+        relativePath: 'client/src/shared/api/generated/users.ts',
+        source: 'export const mockGeneratedHelper = () => 1;\n',
+      },
+    ];
+
+    const result = indexSymbol(files, 'mockGeneratedHelper');
+    assert.equal(result.declarationsCount, 0);
+    assert.equal(result.generatedReferencesCount, 1);
+  });
 
   it('handles local unexported declaration in a single file', () => {
     const files = [
@@ -311,6 +342,40 @@ describe('formatSymbolReport', () => {
     const output = formatSymbolReport(result);
     assert.ok(output.includes('NOTICE   Exported with no imports in other scanned files'));
     assert.ok(output.includes('candidate for'));
+    assert.ok(!output.includes('Further tools not needed'));
+  });
+
+  it('formats summary line for generated API client references without line-by-line listing', () => {
+    const result = {
+      symbol: 'mockCustomInstance',
+      isIdentifier: true,
+      declarations: [
+        {
+          relativePath: 'client/src/shared/api/api.ts',
+          line: 26,
+          isExported: true,
+        },
+      ],
+      declarationsCount: 1,
+      referencesCount: 6,
+      referencesByFile: {
+        'client/src/shared/api/api.ts': [{ line: 26 }],
+      },
+      generatedReferencesCount: 5,
+      filesCount: 3,
+      verdict: 'one_declaration',
+      hasClientServerDrift: false,
+      isCandidateUnusedExport: false,
+    };
+
+    const output = formatSymbolReport(result);
+    assert.ok(output.includes('+5 references in the generated API client'));
+    assert.ok(output.includes('client/src/shared/api/api.ts:26'));
+    assert.ok(
+      output.includes(
+        'NEXT     Single declaration found — question resolved here. Further tools not needed.',
+      ),
+    );
   });
 
   it('formats UI string verdict recommending rg', () => {

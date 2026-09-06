@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
@@ -46,6 +48,7 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     const scripts = getOrderedScripts(['client/src/entities/user/ui/user-card.tsx']);
     assert.deepEqual(scripts, [
       'verify:invariants',
+      'verify:maintainability',
       'lint',
       'npm run test:run --prefix client',
       'format:check',
@@ -58,6 +61,7 @@ describe('getScriptsForFile and getOrderedScripts', () => {
       'verify:package-scripts',
       'test:scripts',
       'verify:invariants',
+      'verify:maintainability',
       'format:check',
     ]);
   });
@@ -67,10 +71,36 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     assert.deepEqual(rootPkg, ['verify:package-scripts', 'format:check']);
 
     const serverPkg = getOrderedScripts(['server/package.json']);
-    assert.deepEqual(serverPkg, ['verify:package-scripts', 'format:check']);
+    assert.deepEqual(serverPkg, [
+      'verify:package-scripts',
+      'verify:runtime-config',
+      'format:check',
+    ]);
 
     const ciYml = getOrderedScripts(['.github/workflows/ci.yml']);
     assert.deepEqual(ciYml, ['verify:package-scripts', 'format:check']);
+  });
+  it('triggers verify:runtime-config on docker-compose.yml, Dockerfiles, vite.config.ts, server/package.json', () => {
+    const compose = getOrderedScripts(['docker-compose.yml']);
+    assert.ok(compose.includes('verify:runtime-config'));
+
+    const serverDocker = getOrderedScripts(['server/Dockerfile']);
+    assert.ok(serverDocker.includes('verify:runtime-config'));
+
+    const clientDocker = getOrderedScripts(['client/Dockerfile']);
+    assert.ok(clientDocker.includes('verify:runtime-config'));
+
+    const viteConfig = getOrderedScripts(['client/vite.config.ts']);
+    assert.ok(viteConfig.includes('verify:runtime-config'));
+
+    const serverPkg = getOrderedScripts(['server/package.json']);
+    assert.ok(serverPkg.includes('verify:runtime-config'));
+  });
+
+  it('triggers verify:maintainability on client/src/**, server/src/**, scripts/**', () => {
+    assert.ok(getOrderedScripts(['client/src/app/App.tsx']).includes('verify:maintainability'));
+    assert.ok(getOrderedScripts(['server/src/main.ts']).includes('verify:maintainability'));
+    assert.ok(getOrderedScripts(['scripts/verify-diff.mjs']).includes('verify:maintainability'));
   });
 
   it('triggers verify:contracts for template/*.json', () => {
@@ -112,6 +142,7 @@ describe('getScriptsForFile and getOrderedScripts', () => {
       'verify:package-scripts',
       'test:scripts',
       'verify:invariants',
+      'verify:maintainability',
       'format:check',
     ]);
     // Server/client tests and prisma:generate must NOT be present
@@ -200,5 +231,92 @@ describe('differsOnlyByLineEndings', () => {
   it('handles non-string inputs safely', () => {
     assert.equal(differsOnlyByLineEndings(null, 'test'), false);
     assert.equal(differsOnlyByLineEndings('test', undefined), false);
+  });
+});
+
+describe('reachability of verify:local pipeline gates from changed-scopes', () => {
+  const UNLINKED_GATE_EXCEPTIONS = [
+    {
+      gate: 'verify:gates',
+      reason:
+        'Mutation verification runner mutates files intentionally; omitted from diff pre-flight',
+    },
+    {
+      gate: 'build --prefix server',
+      reason:
+        'Full NestJS production build is a release/packaging step; pre-flight relies on typecheck and tests instead',
+    },
+    {
+      gate: 'build --prefix client',
+      reason:
+        'Full Vite production bundle is a release/packaging step; pre-flight relies on typecheck and client tests instead',
+    },
+  ];
+
+  it('ensures every gate in verify:local is reachable from changed-scopes or documented as an exception', () => {
+    const pkgPath = resolve(process.cwd(), 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    const verifyLocal = pkg.scripts?.['verify:local'] ?? '';
+
+    assert.ok(verifyLocal, 'verify:local script must exist in package.json');
+
+    const pipelineCommands = verifyLocal
+      .split('&&')
+      .map((seg) => seg.trim())
+      .filter((seg) => seg.startsWith('npm run '));
+
+    // Representative sample paths testing all scopes and triggers in changed-scopes.mjs
+    const samplePaths = [
+      'server/prisma/schema.prisma',
+      'server/prisma/migrations/20250101_init/migration.sql',
+      'server/src/users/users.controller.ts',
+      'server/src/users/users.dto.ts',
+      'server/src/main.ts',
+      'client/src/shared/api/api.ts',
+      'client/src/shared/api/interceptors.ts',
+      'client/src/app/App.tsx',
+      'scripts/verify-diff.mjs',
+      'package.json',
+      'server/package.json',
+      'client/package.json',
+      'template/features.manifest.json',
+      '.github/workflows/ci.yml',
+      'AI_GUIDE.md',
+      'README.md',
+      'AGENTS.md',
+      'docs/adr/001.md',
+      '.serena/memories/tech-stack.md',
+      'docker-compose.yml',
+      'server/Dockerfile',
+      'client/Dockerfile',
+      'client/vite.config.ts',
+    ];
+
+    const reachableCommands = new Set();
+    for (const p of samplePaths) {
+      for (const s of getScriptsForFile(p)) {
+        reachableCommands.add(scriptToCommand(s));
+      }
+    }
+
+    const unreachedGates = [];
+    for (const cmd of pipelineCommands) {
+      const isExcepted = UNLINKED_GATE_EXCEPTIONS.some(
+        (exc) => exc.gate === cmd || `npm run ${exc.gate}` === cmd,
+      );
+      if (isExcepted) {
+        continue;
+      }
+      if (!reachableCommands.has(cmd)) {
+        unreachedGates.push(cmd);
+      }
+    }
+
+    assert.deepEqual(
+      unreachedGates,
+      [],
+      `Unreachable gate(s) in verify:local: ${unreachedGates.join(', ')}. ` +
+        'Every pipeline gate must be reachable from changed-scopes or explicitly excepted with a reason.',
+    );
   });
 });

@@ -215,7 +215,9 @@ const main = () => {
   const scopes = getAffectedScopes(changedFiles);
   const scripts = getOrderedScripts(changedFiles);
   const commands = scripts.map(scriptToCommand);
-
+  console.log(
+    'npm run verify:diff — pre-flight scoped to diff, not a gate; npm run verify:template remains the release gate.\n',
+  );
   console.log(`Base: ${base}`);
   console.log(`Changed files: ${changedFiles.length}`);
   if (changedFiles.length > 0) {
@@ -274,7 +276,10 @@ const main = () => {
     }
   }
 
-  console.log('\nAll verification commands passed.');
+  console.log('\nAll scoped verification commands passed.');
+  console.log(
+    'Ran only gates relevant to changed scopes; this does not replace npm run verify:template.',
+  );
   process.exit(0);
 };
 

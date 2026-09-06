@@ -198,8 +198,13 @@ const main = () => {
     }
     process.exit(1);
   }
-
-  console.log('\nAll gate mutations were successfully caught.');
+  if (skippedCount > 0) {
+    console.log(
+      `\nGate mutation run was incomplete: ${skippedCount} mutation(s) skipped (${passedCount} caught).`,
+    );
+  } else {
+    console.log('\nAll gate mutations were successfully caught.');
+  }
 };
 
 main();

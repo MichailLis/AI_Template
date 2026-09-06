@@ -15,8 +15,10 @@ const SCAN_DIRS = [
 
 const EXTENSIONS = new Set(['.ts', '.tsx', '.mjs', '.js']);
 
-const IGNORED_PREFIXES = ['client/src/shared/api/generated/', 'client/src/shared/api/model/'];
+const GENERATED_PREFIXES = ['client/src/shared/api/generated/', 'client/src/shared/api/model/'];
 
+const isGeneratedPath = (relPath) =>
+  GENERATED_PREFIXES.some((prefix) => relPath.startsWith(prefix));
 const IGNORED_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git']);
 
 const toPosix = (path) => path.replace(/\\/g, '/');
@@ -31,24 +33,17 @@ const collectFiles = async (dir) => {
         continue;
       }
       const fullPath = join(dir, entry.name);
-      const relPath = toPosix(fullPath.slice(rootDir.length + 1));
-      if (
-        IGNORED_PREFIXES.some(
-          (prefix) => relPath.startsWith(prefix) || (relPath + '/').startsWith(prefix),
-        )
-      ) {
-        continue;
-      }
       files.push(...(await collectFiles(fullPath)));
     } else if (entry.isFile()) {
       const ext = entry.name.slice(entry.name.lastIndexOf('.'));
       if (EXTENSIONS.has(ext)) {
         const fullPath = join(dir, entry.name);
         const relPath = toPosix(fullPath.slice(rootDir.length + 1));
-        if (IGNORED_PREFIXES.some((prefix) => relPath.startsWith(prefix))) {
-          continue;
-        }
-        files.push({ fullPath, relativePath: relPath });
+        files.push({
+          fullPath,
+          relativePath: relPath,
+          isGenerated: isGeneratedPath(relPath),
+        });
       }
     }
   }
@@ -77,9 +72,9 @@ const main = async () => {
   }
 
   const files = await Promise.all(
-    collected.map(async ({ fullPath, relativePath }) => {
+    collected.map(async ({ fullPath, relativePath, isGenerated }) => {
       const source = await readFile(fullPath, 'utf8');
-      return { relativePath, source };
+      return { relativePath, source, isGenerated };
     }),
   );
 

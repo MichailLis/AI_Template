@@ -31,10 +31,11 @@ export const VERIFY_LOCAL_ORDER = [
  * - server/prisma/schema.prisma -> prisma:generate, verify:prisma-migrations
  * - server/prisma/migrations/** -> verify:prisma-migrations
  * - server/src/** /*.controller.ts or dto.ts -> verify:contracts
- * - server/src/** -> verify:invariants, typecheck, lint, server tests
+ * - server/src/** -> verify:invariants, verify:maintainability, typecheck, lint, server tests
  * - client/src/shared/api/api.ts or interceptors.ts -> verify:api-mutator
- * - client/src/** -> verify:invariants, lint, client tests
- * - scripts/** -> test:scripts, verify:package-scripts, verify:invariants
+ * - client/src/** -> verify:invariants, verify:maintainability, lint, client tests
+ * - scripts/** -> test:scripts, verify:package-scripts, verify:invariants, verify:maintainability
+ * - docker-compose.yml, server/Dockerfile, client/Dockerfile, client/vite.config.ts, server/package.json -> verify:runtime-config
  * - any package.json -> verify:package-scripts
  * - template/*.json -> verify:contracts
  * - .github/workflows/ci.yml -> verify:package-scripts
@@ -66,6 +67,7 @@ export const getScriptsForFile = (filePath) => {
 
   if (norm.startsWith('server/src/')) {
     scripts.add('verify:invariants');
+    scripts.add('verify:maintainability');
     scripts.add('typecheck');
     scripts.add('lint');
     scripts.add('npm run test --prefix server');
@@ -82,6 +84,7 @@ export const getScriptsForFile = (filePath) => {
 
   if (norm.startsWith('client/src/')) {
     scripts.add('verify:invariants');
+    scripts.add('verify:maintainability');
     scripts.add('lint');
     scripts.add('npm run test:run --prefix client');
   }
@@ -90,6 +93,7 @@ export const getScriptsForFile = (filePath) => {
     scripts.add('test:scripts');
     scripts.add('verify:package-scripts');
     scripts.add('verify:invariants');
+    scripts.add('verify:maintainability');
   }
 
   if (norm === 'package.json' || norm.endsWith('/package.json')) {
@@ -102,6 +106,15 @@ export const getScriptsForFile = (filePath) => {
 
   if (norm === '.github/workflows/ci.yml') {
     scripts.add('verify:package-scripts');
+  }
+  if (
+    norm === 'docker-compose.yml' ||
+    norm === 'server/Dockerfile' ||
+    norm === 'client/Dockerfile' ||
+    norm === 'client/vite.config.ts' ||
+    norm === 'server/package.json'
+  ) {
+    scripts.add('verify:runtime-config');
   }
 
   if (

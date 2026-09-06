@@ -28,6 +28,19 @@ export const buildDeclPattern = (symbolName) => {
   );
 };
 
+const GENERATED_PREFIXES = ['client/src/shared/api/generated/', 'client/src/shared/api/model/'];
+
+export const isGeneratedFile = (fileOrPath) => {
+  if (!fileOrPath) return false;
+  if (typeof fileOrPath === 'object' && typeof fileOrPath.isGenerated === 'boolean') {
+    return fileOrPath.isGenerated;
+  }
+  const path = typeof fileOrPath === 'string' ? fileOrPath : fileOrPath.relativePath;
+  if (!path) return false;
+  const norm = path.replace(/\\/g, '/');
+  return GENERATED_PREFIXES.some((prefix) => norm.startsWith(prefix));
+};
+
 /**
  * Pure logic without I/O: analyzes a collection of files for a given symbol name.
  *
@@ -44,11 +57,14 @@ export const indexSymbol = (files, symbolName) => {
   const declarations = [];
   const references = [];
   const referencesByFile = {};
+  let generatedReferencesCount = 0;
   const imports = [];
   const exports = [];
   const filesWithOccurrences = new Set();
 
-  for (const { relativePath, source } of files) {
+  for (const file of files) {
+    const { relativePath, source } = file;
+    const isGenerated = isGeneratedFile(file);
     const stripped = stripComments(source);
     const sourceLines = source.split(/\r?\n/);
     const strippedLines = stripped.split(/\r?\n/);
@@ -56,7 +72,7 @@ export const indexSymbol = (files, symbolName) => {
     // Check if this file exports the symbol via a separate export statement:
     // e.g. export { sym } (without "from") or export default sym;
     let fileHasSeparateExport = false;
-    if (validId) {
+    if (validId && !isGenerated) {
       const separateExportRegex = new RegExp(
         `\\bexport\\s*\\{[^}]*\\b${escapeRegex(sym)}\\b[^}]*\\}(?!\\s*from\\b)|\\bexport\\s+default\\s+${escapeRegex(sym)}\\b`,
       );
@@ -84,23 +100,25 @@ export const indexSymbol = (files, symbolName) => {
         }
       }
 
-      // Extract exports / re-exports
-      const exportStatementRegex = /\bexport\s+\{([^}]+)\}(?:\s+from\s+['"]([^'"]+)['"])?/gs;
-      while ((m = exportStatementRegex.exec(stripped)) !== null) {
-        const clause = m[1];
-        const fromPath = m[2];
-        const idRegex = new RegExp(`\\b${escapeRegex(sym)}\\b`);
-        if (idRegex.test(clause)) {
-          const before = source.slice(0, m.index);
-          const lineNum = before.split(/\r?\n/).length;
-          exports.push({
-            relativePath,
-            line: lineNum,
-            from: fromPath || null,
-            isReexport: Boolean(fromPath),
-            clause: clause.trim(),
-            text: sourceLines[lineNum - 1]?.trim() || clause.trim(),
-          });
+      // Extract exports / re-exports (skip in generated files)
+      if (!isGenerated) {
+        const exportStatementRegex = /\bexport\s+\{([^}]+)\}(?:\s+from\s+['"]([^'"]+)['"])?/gs;
+        while ((m = exportStatementRegex.exec(stripped)) !== null) {
+          const clause = m[1];
+          const fromPath = m[2];
+          const idRegex = new RegExp(`\\b${escapeRegex(sym)}\\b`);
+          if (idRegex.test(clause)) {
+            const before = source.slice(0, m.index);
+            const lineNum = before.split(/\r?\n/).length;
+            exports.push({
+              relativePath,
+              line: lineNum,
+              from: fromPath || null,
+              isReexport: Boolean(fromPath),
+              clause: clause.trim(),
+              text: sourceLines[lineNum - 1]?.trim() || clause.trim(),
+            });
+          }
         }
       }
     }
@@ -114,8 +132,12 @@ export const indexSymbol = (files, symbolName) => {
       const matches = [...rawLine.matchAll(refRegex)];
       if (matches.length > 0) {
         filesWithOccurrences.add(relativePath);
-        if (!referencesByFile[relativePath]) {
-          referencesByFile[relativePath] = [];
+        if (isGenerated) {
+          generatedReferencesCount += matches.length;
+        } else {
+          if (!referencesByFile[relativePath]) {
+            referencesByFile[relativePath] = [];
+          }
         }
         for (const match of matches) {
           const ref = {
@@ -123,14 +145,18 @@ export const indexSymbol = (files, symbolName) => {
             line: lineNum,
             column: (match.index ?? 0) + 1,
             text: trimmed,
+            isGenerated,
           };
           references.push(ref);
-          referencesByFile[relativePath].push(ref);
+          if (!isGenerated) {
+            referencesByFile[relativePath].push(ref);
+          }
         }
       }
 
       // Declarations (checked on stripped source to avoid comments/strings)
-      if (declPattern) {
+      // Declarations (checked on stripped source; NEVER in generated files)
+      if (declPattern && !isGenerated) {
         const strippedLine = strippedLines[idx] ?? '';
         const declMatch = strippedLine.match(declPattern);
         if (declMatch) {
@@ -171,9 +197,8 @@ export const indexSymbol = (files, symbolName) => {
   if (declarationsCount === 1 && declarations[0].isExported) {
     const declFile = declarations[0].relativePath;
     const externalImports = imports.filter((imp) => imp.relativePath !== declFile);
-    isCandidateUnusedExport = externalImports.length === 0;
+    isCandidateUnusedExport = externalImports.length === 0 && generatedReferencesCount === 0;
   }
-
   return {
     symbol: sym,
     isIdentifier: validId,
@@ -183,6 +208,7 @@ export const indexSymbol = (files, symbolName) => {
     referencesCount,
     referencesByFile,
     filesCount,
+    generatedReferencesCount,
     imports,
     exports,
     verdict,
@@ -207,6 +233,7 @@ export const formatSymbolReport = (result) => {
     declarationsCount,
     referencesCount,
     referencesByFile,
+    generatedReferencesCount = 0,
     filesCount,
     verdict,
     hasClientServerDrift,
@@ -256,11 +283,17 @@ export const formatSymbolReport = (result) => {
       const lineNums = [...new Set(refs.map((r) => r.line))].sort((a, b) => a - b);
       lines.push(`  ${file}:${lineNums.join(', ')}`);
     }
+    if (generatedReferencesCount > 0) {
+      const genRefWord = generatedReferencesCount === 1 ? 'reference' : 'references';
+      lines.push(`  +${generatedReferencesCount} ${genRefWord} in the generated API client`);
+    }
     lines.push('');
 
-    lines.push(
-      'NEXT     Single declaration found — question resolved here. Further tools not needed.',
-    );
+    if (!isCandidateUnusedExport) {
+      lines.push(
+        'NEXT     Single declaration found — question resolved here. Further tools not needed.',
+      );
+    }
   } else if (verdict === 'multiple_declarations') {
     if (hasClientServerDrift) {
       lines.push(
