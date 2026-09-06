@@ -60,5 +60,19 @@
   "enabledMcpjsonServers": ["serena"],
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/claude-write-guard.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }

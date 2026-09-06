@@ -174,6 +174,28 @@ regression, or a false green. They are cheap to follow and expensive to skip.
    silently miss. Normalise to `\n` in memory, do the work, convert once on write — and prefer
    moving a block of bytes over retyping it, so Cyrillic strings and shell quoting stay out of it.
 
+## Write-Time Guard (Hint, Not A Gate)
+
+`scripts/claude-write-guard.mjs` runs as a Claude Code `PreToolUse` hook on every `Edit`/`Write`
+(wired in `.claude/settings.json`) and can deny a write before it lands. It checks the content
+being added against `scripts/lib/write-guard.mjs`, which rejects exactly four cases: editing the
+generated API client (`client/src/shared/api/generated/**`, `client/src/shared/api/model/**`),
+adding `window`/`localStorage`/`sessionStorage`/`import.meta` to `client/src/shared/api/api.ts`
+(INV-1), direct `localStorage`/`sessionStorage` use outside `safeStorage` (INV-2), and
+`z.date()`/`z.coerce.date()` in a server DTO (INV-4b).
+
+This guard is a convenience, not a source of truth, for two reasons:
+
+1. **It does not run in a resumed session.** Hooks configured in settings are not picked up by
+   `--continue`/`--resume`, and a spawned subagent inherits that inactive state.
+2. **It is deliberately conservative.** It only sees the text being added, not the whole file or
+   the rest of the invariant surface, and a false positive here blocks a write outright — so it
+   errs toward letting a doubtful case through rather than guessing.
+
+`npm run verify:invariants` remains the only authoritative check for these invariants; do not
+treat a clean write as proof the invariant holds, and do not skip running the gate because the
+guard stayed quiet.
+
 ## Frontend Architecture Contract (Strict FSD)
 
 Source of truth:
@@ -417,9 +439,18 @@ Use these commands during local AI-agent development:
    ```powershell
    npm run verify:template
    ```
+3. Scoped pre-flight over the git diff, also wired to the `pre-push` hook:
+   ```powershell
+   npm run verify:diff -- --run
+   ```
 
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
+
+`.husky/pre-push` runs `npm run verify:diff -- --run` on every `git push`. It checks only the
+scopes the diff touches — 60 seconds on a branch of 38 changed files — and stays a pre-flight,
+not a gate: `verify:template` remains the release gate, and `scripts/verify-package-scripts.mjs`
+keeps `verify:diff` out of both pipelines on purpose.
 
 `verify:architecture` reads `server/openapi.json`, which is gitignored and regenerated rather
 than committed. `npm run verify:contracts` pairs the generation with the check so neither gate
