@@ -1,7 +1,9 @@
 import {
+  normalizeProfessionTitle,
   selectProfOrientationAtlasProfessions,
   shouldRefreshProfOrientationAtlasSummary,
 } from './atlas.logic';
+import pairedRulesVectors from '../../../../template/paired-rules.vectors.json';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './types';
 import type { ProfOrientationSummary } from './types';
 /**
@@ -100,5 +102,14 @@ describe('prof-orientation atlas logic', () => {
       },
     } as unknown as ProfOrientationSummary;
     expect(shouldRefreshProfOrientationAtlasSummary(summary)).toBe(true);
+  });
+
+  describe('shared paired-rules normalizeProfessionTitle vectors', () => {
+    it.each(pairedRulesVectors.vectors.normalizeProfessionTitle)(
+      'satisfies shared vector: $description',
+      ({ input, expected }) => {
+        expect(normalizeProfessionTitle(input)).toBe(expected);
+      },
+    );
   });
 });

@@ -1,11 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 
 import {
+  matchesGroupPattern,
   normalizeRequiredString,
   resolveDemographicProfile,
   validateEntryProfileMode,
   validateGroupOrClassForLink,
 } from '../session/session-profile';
+
+import pairedRulesVectors from '../../../../template/paired-rules.vectors.json';
 
 import type { AccessiblePublicLink } from '../session/session-profile';
 import type { PublicSessionStartRequestDto } from '../dto/tests-public.dto';
@@ -177,5 +180,14 @@ describe('public session entry profile rules', () => {
     it.each([1, 120])('accepts age %p at the boundary', (age) => {
       expect(resolveDemographicProfile(dto({ age }))).toMatchObject({ studentAge: age });
     });
+  });
+
+  describe('shared paired-rules matchesGroupPattern vectors', () => {
+    it.each(pairedRulesVectors.vectors.matchesGroupPattern)(
+      'satisfies shared vector: $description',
+      ({ input, expected }) => {
+        expect(matchesGroupPattern(input.value, input.pattern)).toBe(expected);
+      },
+    );
   });
 });

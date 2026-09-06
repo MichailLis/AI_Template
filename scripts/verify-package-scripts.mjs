@@ -108,13 +108,60 @@ if (!rootScripts['audit:prod']) {
 if (rootScripts['verify:prisma-migrations'] !== 'node scripts/verify-prisma-migrations.mjs') {
   fail('root package must define verify:prisma-migrations script');
 }
+if (rootScripts['verify:invariants'] !== 'node scripts/verify-invariants.mjs') {
+  fail('root package must define verify:invariants script');
+}
+if (rootScripts['verify:paired-rules'] !== 'node scripts/verify-paired-rules.mjs') {
+  fail('root package must define verify:paired-rules script');
+}
+if (rootScripts['verify:gates'] !== 'node scripts/verify-gates.mjs') {
+  fail('root package must define verify:gates script as "node scripts/verify-gates.mjs"');
+}
+
+if (rootScripts['verify:diff'] !== 'node scripts/verify-diff.mjs') {
+  fail('root package must define verify:diff script as "node scripts/verify-diff.mjs"');
+}
+
+if (rootScripts['find:symbol'] !== 'node scripts/find-symbol.mjs') {
+  fail('root package must define find:symbol script as "node scripts/find-symbol.mjs"');
+}
+
+// audit:explain reads the live advisory registry to explain a red audit:all: which findings this
+// branch introduced, which it inherited, which it fixed. It gates nothing, and keeping it out of
+// verify:local and verify:template below is the whole point — a check that asks a registry can go
+// red on a tree nobody touched, which is the problem this tool diagnoses rather than repeats.
+if (rootScripts['audit:explain'] !== 'node scripts/audit-explain.mjs') {
+  fail('root package must define audit:explain script as "node scripts/audit-explain.mjs"');
+}
+
+for (const scriptName of ['verify:local', 'verify:template']) {
+  const script = rootScripts[scriptName] ?? '';
+  if (script.includes('verify:diff')) {
+    fail(
+      `${scriptName} must not include verify:diff (verify:diff is an auxiliary pre-flight, not a gate)`,
+    );
+  }
+  if (script.includes('find:symbol')) {
+    fail(
+      `${scriptName} must not include find:symbol (find:symbol is a developer tool, not a gate)`,
+    );
+  }
+  if (script.includes('audit:explain')) {
+    fail(
+      `${scriptName} must not include audit:explain (audit:explain is a diagnostic, not a gate)`,
+    );
+  }
+}
 
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');
+  requireRootScriptSegment(scriptName, 'npm run verify:invariants');
+  requireRootScriptSegment(scriptName, 'npm run verify:paired-rules');
   requireRootScriptSegment(scriptName, 'npm run typecheck');
+  requireRootScriptSegment(scriptName, 'npm run verify:gates');
 }
 
 for (const expectedSegment of [

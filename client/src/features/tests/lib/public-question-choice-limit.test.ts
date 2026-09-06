@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import pairedRulesVectors from '../../../../../template/paired-rules.vectors.json';
+
 import { getMaxChoices, isChoiceLimitReached } from './public-question-choice-limit';
 
 describe('getMaxChoices', () => {
@@ -30,6 +32,15 @@ describe('getMaxChoices', () => {
     ['a fractional cap below one', { maxChoices: 0.5 }],
   ])('matches the server and ignores %s', (_label, settings) => {
     expect(getMaxChoices(settings)).toBeNull();
+  });
+
+  describe('shared paired-rules vectors', () => {
+    it.each(pairedRulesVectors.vectors.getMaxChoices)(
+      'satisfies shared vector: $description',
+      ({ input, expected }) => {
+        expect(getMaxChoices(input)).toBe(expected);
+      },
+    );
   });
 });
 

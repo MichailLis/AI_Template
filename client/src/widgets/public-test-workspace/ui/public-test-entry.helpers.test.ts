@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import pairedRulesVectors from '../../../../../template/paired-rules.vectors.json';
+
 import {
   initialDemographicFormState,
   initialFormState,
+  matchesGroupPattern,
   normalizeInitial,
   resolveGroupValidationWarning,
 } from './public-test-entry.helpers';
@@ -56,5 +59,14 @@ describe('public test entry helpers', () => {
         groupValidationHint: 'Use ИС-21',
       }),
     ).toBeNull();
+  });
+
+  describe('shared paired-rules matchesGroupPattern vectors', () => {
+    it.each(pairedRulesVectors.vectors.matchesGroupPattern)(
+      'satisfies shared vector: $description',
+      ({ input, expected }) => {
+        expect(matchesGroupPattern(input.value, input.pattern)).toBe(expected);
+      },
+    );
   });
 });

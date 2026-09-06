@@ -4,12 +4,24 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 
+/**
+ * Byte size budget for CLAUDE.md.
+ *
+ * CLAUDE.md is loaded in full at session startup before any code is read,
+ * imposing a permanent token tax on every turn. The file must grow deliberately
+ * rather than accumulate ad-hoc content. Move empirical evidence, benchmarks,
+ * and measurement details to docs/tooling-evidence.md instead of expanding this budget.
+ */
+const CLAUDE_MD_MAX_BYTES = 18_500;
+
 const aiGuidePath = join(root, 'AI_GUIDE.md');
 const readmePath = join(root, 'README.md');
+const claudeMdPath = join(root, 'CLAUDE.md');
 
-const [aiGuide, readme] = await Promise.all([
+const [aiGuide, readme, claudeMdBuffer] = await Promise.all([
   readFile(aiGuidePath, 'utf-8'),
   readFile(readmePath, 'utf-8'),
+  readFile(claudeMdPath),
 ]);
 
 const requiredAiGuideTokens = [
@@ -24,6 +36,11 @@ const requiredAiGuideTokens = [
 const requiredReadmeTokens = ['Use `AI_GUIDE.md` as the source of truth for implementation rules.'];
 
 const errors = [];
+if (claudeMdBuffer.length > CLAUDE_MD_MAX_BYTES) {
+  errors.push(
+    `CLAUDE.md: size ${claudeMdBuffer.length} bytes exceeds budget of ${CLAUDE_MD_MAX_BYTES} bytes. Move empirical evidence and measurements to docs/tooling-evidence.md instead of expanding the budget.`,
+  );
+}
 
 for (const token of requiredAiGuideTokens) {
   if (!aiGuide.includes(token)) {
