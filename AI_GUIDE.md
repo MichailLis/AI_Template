@@ -452,6 +452,7 @@ scopes the diff touches — 60 seconds on a branch of 38 changed files — and s
 not a gate: `verify:template` remains the release gate, and `scripts/verify-package-scripts.mjs`
 keeps `verify:diff` out of both pipelines on purpose.
 
+`npm run doctor:agent-tooling` runs `scripts/doctor-agent-tooling.mjs` to diagnose machine-local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). Run it once when onboarding a new machine. Like `audit:explain`, it is a diagnostic rather than a gate: it exits 0 whatever it finds, and `scripts/verify-package-scripts.mjs` keeps it out of both `verify:local` and `verify:template` so machine state never breaks a clean tree.
 `verify:architecture` reads `server/openapi.json`, which is gitignored and regenerated rather
 than committed. `npm run verify:contracts` pairs the generation with the check so neither gate
 can validate a stale document: `verify:local` calls it, and `verify:template` reaches the same
@@ -464,6 +465,7 @@ for the full loop.
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
 `npm run audit:explain [-- --base <ref>]` runs `scripts/audit-explain.mjs` to split the vulnerabilities npm reports into the ones this branch introduced, inherited, and fixed, per lock file; it is a diagnostic for a red `audit:all`, never a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
+`npm run doctor:agent-tooling` runs `scripts/doctor-agent-tooling.mjs` to diagnose machine-local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name); like `audit:explain`, it is a diagnostic, not a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
 
 ## PR-Ready Checklist (Feature Delivery)
 

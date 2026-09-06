@@ -66,4 +66,6 @@ The root `.mcp.json` calls the installed binary directly: running through `uvx -
 a network git fetch on every start (99s on warm cache, over 5 minutes on cold cache) and exceeds the
 30-second MCP connection timeout, whereas the installed binary starts in 1.4s.
 
+Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, and compose project name).
+
 Codex is not used in this repository.

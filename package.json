@@ -37,6 +37,7 @@
     "audit:all": "npm audit && npm --prefix client audit && npm --prefix server audit",
     "audit:prod": "npm audit --omit=dev && npm --prefix client audit --omit=dev && npm --prefix server audit --omit=dev",
     "audit:explain": "node scripts/audit-explain.mjs",
+    "doctor:agent-tooling": "node scripts/doctor-agent-tooling.mjs",
     "prisma:generate": "npm run prisma:generate --prefix server",
     "prisma:push": "npm run prisma:push --prefix server",
     "prisma:studio": "npm run prisma:studio --prefix server",

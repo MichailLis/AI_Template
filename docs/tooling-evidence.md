@@ -349,3 +349,15 @@ Reference gate timings on the `ai_template` stack prior to tooling alignment:
 - In a git worktree, `docker compose ps` displays an empty table despite four healthy containers (`ai_template_frontend`, `ai_template_backend`, `ai_template_postgres`, `ai_template_adminer`) running from the main checkout.
 - Running `docker compose --dry-run up -d frontend` proposes allocating separate `sargassum_*` volumes and recreating containers, while active `up` commands fail on global `container_name` collisions.
 - Resolution: Pinning `name: ai_template` in `docker-compose.yml` forces Docker Compose to target the unified project namespace from any worktree or branch, maintaining container sharing and preventing orphaned parallel stacks.
+
+### TypeScript LSP Cold vs Warm Reference Measurements
+
+Empirical evaluation of the `typescript-lsp` plugin on server and client symbols (2026-09-06):
+
+- **Cold-start reference elision and ripgrep overcounting on `getMaxChoices`:**
+  - First query immediately following language server startup returned 2 references in 1 file (`server/src/tests/session/answer-validation.ts`), omitting the test spec that imports and invokes it.
+  - Second query on the warmed server returned the accurate 4 references across 2 files (`server/src/tests/session/answer-validation.ts` and `server/src/tests/session/answer-validation.spec.ts`).
+  - Ripgrep search (`rg -w getMaxChoices`): returned 6 occurrences across matched files, overcounting against the 4 authentic references by matching a `describe` test suite string and an object property name.
+  - Failure mode: Incomplete reference resolution on a cold server is more hazardous than total failure when planning renames or moves. Initial LSP queries must be re-queried once to guarantee a fully populated project index.
+- **Precision on `safeStorage` (client storage utility):**
+  - `typescript-lsp` (`findReferences`): 43 references across 7 files.

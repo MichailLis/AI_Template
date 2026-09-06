@@ -89,6 +89,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
+- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
@@ -123,20 +124,25 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
 
 - **Tool selection overview:**
 
-  | Question                                               | Reach for                                                 | Why not the others                                                                                                          |
-  | ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-  | Is the symbol name unique (first step)                 | **`npm run find:symbol -- <name>`**                       | Answers uniqueness in milliseconds without external binaries, reports declarations, warns on drift, routes to Serena or rg. |
-  | Who uses this symbol — before a rename, move or delete | **Serena** `find_referencing_symbols`                     | Only tool that resolves all callback uses (`.map(fn)`) and names the enclosing method. The graph misses callbacks.          |
-  | How deep does the call chain go, what is hop distance  | **graph** `trace_path`, always with `include_tests: true` | Nothing else ranks by hop. Positives only — absence proves nothing, and default parameters miss product code.               |
-  | Where is X handled, when you do not know the name      | **graph** `search_graph query=`                           | BM25 and vector ranking surface relevant symbols without exact name matching.                                               |
-  | A property of the whole tree at once                   | **graph** `query_graph`                                   | Neither grep nor Serena can express it across the entire AST.                                                               |
-  | A symbol whose name is unique                          | **`rg --with-filename`**                                  | Four times cheaper and exact.                                                                                               |
-  | Literals, UI strings, config keys, non-code files      | **`rg`**                                                  | Not in the graph, not symbols.                                                                                              |
-  | Read a function you already located                    | **`sed -n 'a,bp'`**                                       | `get_code_snippet` costs ~2.4x for the same lines and needs a `qualified_name` first.                                       |
-  | Compiler errors in one file                            | **Serena** `get_diagnostics_for_file`                     | `npm run typecheck` covers the server in ~5s; use diagnostics for one file's noise, not for speed.                          |
-  | Typecheck the whole server                             | **`npm run typecheck`**                                   | `rtk tsc` prints "No errors found" when the compiler never ran.                                                             |
-  | What is in this file / this class                      | **Serena** `get_symbols_overview`, `find_symbol depth:1`  | ~200 bytes against several KB for reading the file.                                                                         |
-  | Command output                                         | **rtk**, but only the safe filters listed below           | Compresses command output — but `tsc`, `find`, `wc`, `vitest`/`jest` and `read -l aggressive` misreport failure as success. |
+  | Question                                               | Reach for                                                                  | Why not the others                                                                                                          |
+  | ------------------------------------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+  | Is the symbol name unique (first step)                 | **`npm run find:symbol -- <name>`**                                        | Answers uniqueness in milliseconds without external binaries, reports declarations, warns on drift, routes to Serena or rg. |
+  | Who uses this symbol — before a rename, move or delete | **`typescript-lsp`** (`findReferences`, `incomingCalls`, `goToDefinition`) | Local answer without network; resolves references and callers. Graph misses callbacks. Re-query once on cold start.         |
+  | How deep does the call chain go, what is hop distance  | **graph** `trace_path`, always with `include_tests: true`                  | Nothing else ranks by hop. Positives only — absence proves nothing, and default parameters miss product code.               |
+  | Where is X handled, when you do not know the name      | **graph** `search_graph query=`                                            | BM25 and vector ranking surface relevant symbols without exact name matching.                                               |
+  | A property of the whole tree at once                   | **graph** `query_graph`                                                    | Neither grep nor Serena can express it across the entire AST.                                                               |
+  | A symbol whose name is unique                          | **`rg --with-filename`**                                                   | Four times cheaper and exact.                                                                                               |
+  | Literals, UI strings, config keys, non-code files      | **`rg`**                                                                   | Not in the graph, not symbols.                                                                                              |
+  | Read a function you already located                    | **`sed -n 'a,bp'`**                                                        | `get_code_snippet` costs ~2.4x for the same lines and needs a `qualified_name` first.                                       |
+  | Compiler errors in one file                            | **Serena** `get_diagnostics_for_file`                                      | `npm run typecheck` covers the server in ~5s; use diagnostics for one file's noise, not for speed.                          |
+  | Typecheck the whole server                             | **`npm run typecheck`**                                                    | `rtk tsc` prints "No errors found" when the compiler never ran.                                                             |
+  | What is in this file / CRLF-safe symbol edit           | **Serena** (`replace_*`, `get_symbols_overview`)                           | Remaining uniqueness is CRLF-safe symbol editing (avoids `\r\r\n` corruption) and cheap structure overview (~200 bytes).    |
+  | Command output                                         | **rtk**, but only the safe filters listed below                            | Compresses command output — but `tsc`, `find`, `wc`, `vitest`/`jest` and `read -l aggressive` misreport failure as success. |
+
+- **typescript-lsp** (language server plugin):
+  - **Local symbol resolution:** Answers "who uses this symbol" locally without network via `findReferences`, `incomingCalls`, `goToDefinition`.
+  - **Cold-start trap — first query may return incomplete results:** Measured: `findReferences` on server `getMaxChoices` returned 2 references in 1 file on cold start, omitting the test spec that imports and calls it; a repeated query on the warmed server returned the true 4 references in 2 files. For renames and moves, an incomplete reference list is worse than none. Always re-query the first LSP response.
+  - Detailed measurements: `docs/tooling-evidence.md#8-tooling-audit-2026-09-06`.
 
 - **Serena** (MCP, symbolic navigation over TypeScript LSP):
   - **Symbol discovery:** To choose between tools for finding a symbol, run `npm run find:symbol -- <name>`.
