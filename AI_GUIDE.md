@@ -186,8 +186,14 @@ adding `window`/`localStorage`/`sessionStorage`/`import.meta` to `client/src/sha
 
 This guard is a convenience, not a source of truth, for two reasons:
 
-1. **It does not run in a resumed session.** Hooks configured in settings are not picked up by
-   `--continue`/`--resume`, and a spawned subagent inherits that inactive state.
+1. **Silence from the guard does not mean the write was verified.** Hooks configured in user-level
+   `~/.claude/settings.json` were previously recorded as not being picked up by `--continue`/`--resume`,
+   and a spawned subagent inherits that inactive state. Conversely, on 2026-09-06, the project hook
+   in `.claude/settings.json` was observed active in a resumed session (`SessionStart` with
+   `"source": "resume"`): an attempt to write a new file into `client/src/shared/api/generated/`
+   was denied with `[generated-api-client]`, leaving no file created. A single observation refutes
+   "never" without establishing "always." Silence from the guard means either "no violation found"
+   or "guard did not run" — and only `npm run verify:invariants` can distinguish the two.
 2. **It is deliberately conservative.** It only sees the text being added, not the whole file or
    the rest of the invariant surface, and a false positive here blocks a write outright — so it
    errs toward letting a doubtful case through rather than guessing.

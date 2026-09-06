@@ -157,6 +157,7 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
   - **Functions passed as bare callbacks get no inbound edges:** `.map(fn)` is invisible to the graph (`mapQuestionToPromptPayload` has 3 call sites and 0 inbound `CALLS` edges). Consequence: automated dead-code detection is unusable (produces false positives), and caller traces miss callback usages.
   - **`Route` nodes are not the route table:** Generated from call sites in tests/client code with null `path` and `file_path`. Authorities are `template/features.manifest.json` and `server/openapi.json`.
   - **No cross-service linking:** The graph contains zero client-to-server edges; `trace_path` with `mode: "cross_service"` stops at `customInstance`.
+  - **Index lags behind the working tree:** `check_index_coverage` reports per-path freshness; a `metadata_changed` response means the graph reflects an older version of the file. Query coverage before relying on graph results for recently modified code.
   - Detailed findings (main checkout indexing failure, Cypher subset, daemon lifecycle): `docs/tooling-evidence.md#2-codebase-memory`.
 
 - **rtk** (wraps shell output to cut tokens):
@@ -170,7 +171,7 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
   - Detailed sweeps and compression stats: `docs/tooling-evidence.md#3-rtk`.
 
 - **Claude Code hooks:**
-  - **Hooks do not fire in a resumed session:** Hooks configured in `~/.claude/settings.json` are not picked up by `--continue` or `--resume`, and spawned subagents inherit this inactive state. If you change or rely on hooks, verify in a fresh session.
+  - **User-level hooks do not fire in a resumed session:** Hooks configured in user-level `~/.claude/settings.json` are not picked up by `--continue` or `--resume`, and spawned subagents inherit this inactive state. In contrast, project hooks in `.claude/settings.json` were observed firing after resume. Verify hook behavior rather than assuming execution.
   - Cost and latency measurements: `docs/tooling-evidence.md#4-claude-code-hooks`.
 
 - **omp (Oh My Pi):**
