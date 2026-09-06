@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseProfOrientationMethodologyEnrichment } from './prof-orientation-llm-data';
+import pairedRulesVectors from '../../../../../../template/paired-rules.vectors.json';
+
+import {
+  getProfOrientationLlmStatus,
+  parseProfOrientationMethodologyEnrichment,
+} from './prof-orientation-llm-data';
 
 const getValidEnrichment = (summary: string) => ({
   summary,
@@ -16,7 +21,6 @@ describe('parseProfOrientationMethodologyEnrichment', () => {
     const parsed = parseProfOrientationMethodologyEnrichment(
       getValidEnrichment('Подходит инженерный маршрут (Q1_A1, Q2_A1, Q3_A1) сохранен'),
     );
-
     expect(parsed?.summary).toBe('Подходит инженерный маршрут сохранен');
   });
 
@@ -31,7 +35,6 @@ describe('parseProfOrientationMethodologyEnrichment', () => {
         `Подходит инженерный маршрут (${longInternalChoiceNoise}, важный вывод сохранен`,
       ),
     );
-
     expect(parsed?.summary).toBe('Подходит инженерный маршрут важный вывод сохранен');
   });
 
@@ -39,7 +42,15 @@ describe('parseProfOrientationMethodologyEnrichment', () => {
     const parsed = parseProfOrientationMethodologyEnrichment(
       getValidEnrichment('Важно учитывать (выбор, выборка профессий показывает контекст).'),
     );
-
     expect(parsed?.summary).toBe('Важно учитывать (выбор, выборка профессий показывает контекст).');
   });
+});
+
+describe('getProfOrientationLlmStatus', () => {
+  it.each(pairedRulesVectors.vectors.getProfOrientationLlmStatus)(
+    'satisfies shared vector: $description',
+    ({ input, expected }) => {
+      expect(getProfOrientationLlmStatus(input)).toBe(expected);
+    },
+  );
 });

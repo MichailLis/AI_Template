@@ -15,6 +15,9 @@ interface PublicAttemptRow {
   attemptNumber: number;
   status: string;
   analysisStatus: string | null;
+
+  llmStatus?: string | null;
+
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   studentName: string | null;
   studentLastInitial: string | null;
@@ -93,6 +96,39 @@ const getAnalysisStatusBadgeClassName = (status: string | null) => {
   }
 
   return adminBadgeClassNames.neutral;
+};
+
+const getLlmStatusBadgeConfig = (status: string | null | undefined) => {
+  switch (status) {
+    case 'ready':
+      return { label: 'ИИ готов', className: adminBadgeClassNames.success };
+
+    case 'pending':
+      return { label: 'ИИ в обработке', className: adminBadgeClassNames.warning };
+
+    case 'failed':
+      return { label: 'ИИ ошибка', className: adminBadgeClassNames.danger };
+
+    case 'not_requested':
+      return { label: 'ИИ не запрашивался', className: adminBadgeClassNames.neutral };
+
+    default:
+      return null;
+  }
+};
+
+const LlmStatusBadge = ({ status }: { status: string | null | undefined }) => {
+  const config = getLlmStatusBadgeConfig(status);
+
+  if (!config) {
+    return null;
+  }
+
+  return (
+    <Badge variant="outline" className={config.className}>
+      {config.label}
+    </Badge>
+  );
 };
 
 const getAttemptProfilePrimary = (attempt: PublicAttemptRow) => {
@@ -197,12 +233,15 @@ export function PublicLinksAttemptsTableCard({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
-                  >
-                    {attempt.analysisStatus ?? 'NONE'}
-                  </Badge>
+                  <div className="flex flex-col items-start gap-1">
+                    <Badge
+                      variant="outline"
+                      className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
+                    >
+                      {attempt.analysisStatus ?? 'NONE'}
+                    </Badge>
+                    <LlmStatusBadge status={attempt.llmStatus} />
+                  </div>
                 </TableCell>
                 <TableCell className="min-w-56 max-w-72 truncate">
                   {getAttemptProfilePrimary(attempt) || '—'}

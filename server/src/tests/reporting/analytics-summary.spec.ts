@@ -89,6 +89,7 @@ const createAttempt = (id: number, summary: unknown) => ({
   attemptId: id,
   status: 'COMPLETED' as const,
   analysisStatus: 'READY' as const,
+  llmStatus: null,
   summary,
 });
 
@@ -104,7 +105,6 @@ describe('getV3Summary', () => {
     );
     const invalid = getV3Summary({ resultKind: 'other' });
     const partial = getV3Summary({ resultKind: 'prof_orientation_v3_plus' });
-
     expect(valid).not.toBeNull();
     expect(valid?.resultKind).toBe('prof_orientation_v3_plus');
     expect(invalid).toBeNull();
@@ -128,7 +128,6 @@ describe('buildCountShares', () => {
       ]),
       3,
     );
-
     expect(result).toEqual([
       { id: 'A2', label: 'A2', count: 2, share: 66.7 },
       { id: 'B1', label: 'B1', count: 1, share: 33.3 },
@@ -139,7 +138,6 @@ describe('buildCountShares', () => {
 describe('buildV3AnalyticsSections', () => {
   it('returns empty aggregate arrays when there are no valid v3 summaries', () => {
     const result = buildV3AnalyticsSections([createAttempt(1, null)]);
-
     expect(result.directions).toEqual([]);
     expect(result.directionPairs).toEqual([]);
     expect(result.scoreAverages).toEqual([]);
@@ -194,7 +192,6 @@ describe('buildV3AnalyticsSections', () => {
     expect(byDirection.A1).toMatchObject({ count: 1, share: 50 });
     expect(byDirection.B3).toMatchObject({ count: 1, share: 50 });
     expect(byDirection.A2).toMatchObject({ count: 0, share: 0 });
-
     expect(result.directionPairs).toEqual(
       expect.arrayContaining([
         {
@@ -221,14 +218,12 @@ describe('buildV3AnalyticsSections', () => {
     expect(scores.B1).toBe(42);
     expect(scores.B2).toBe(51);
     expect(scores.B3).toBe(61);
-
     expect(result.profiles).toEqual(
       expect.arrayContaining([
         { profileType: 'mixed_profile', label: 'Mixed profile', count: 1, share: 50 },
         { profileType: 'single_profile', label: 'Single profile', count: 1, share: 50 },
       ]),
     );
-
     expect(result.confidence.levels).toEqual(
       expect.arrayContaining([
         { label: 'high', count: 1, share: 50 },
@@ -238,7 +233,6 @@ describe('buildV3AnalyticsSections', () => {
     expect(result.confidence.gap).toMatchObject({ value: 10, total: 2 });
     expect(result.confidence.consistencyIndex).toMatchObject({ value: 0.7, total: 2 });
     expect(result.confidence.readinessTop).toMatchObject({ value: 5, total: 2 });
-
     expect(result.flags).toEqual(
       expect.arrayContaining([
         {
@@ -255,7 +249,6 @@ describe('buildV3AnalyticsSections', () => {
         },
       ]),
     );
-
     expect(result.directionPairs).toHaveLength(2);
     expect(result.profiles).toHaveLength(2);
     expect(result.flags).toHaveLength(2);

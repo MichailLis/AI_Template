@@ -7,6 +7,7 @@
  */
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode } from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemLlmStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentGender } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentGender';
@@ -47,6 +48,14 @@ export type AdminPublicAttemptsListResponseDtoAttemptsItem = {
   finishedAt: string | null;
   /** @nullable */
   expiresAt: string | null;
-  /** @nullable */
+  /**
+   * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
+   * @nullable
+   */
   analysisStatus: AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus;
+  /**
+   * Статус асинхронного LLM-обогащения для двухфазного анализа
+   * @nullable
+   */
+  llmStatus: AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus;
 };

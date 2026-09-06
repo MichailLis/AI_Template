@@ -24,7 +24,19 @@ export const getProfOrientationLlmStatus = (summary: unknown) => {
   }
 
   const llm = isRecord(summary.llm) ? summary.llm : null;
-  return typeof llm?.status === 'string' ? llm.status : 'not_requested';
+
+  const status = llm?.status;
+
+  if (
+    status === 'not_requested' ||
+    status === 'pending' ||
+    status === 'ready' ||
+    status === 'failed'
+  ) {
+    return status;
+  }
+
+  return 'not_requested';
 };
 
 const internalTermReplacements = [

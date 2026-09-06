@@ -281,6 +281,7 @@ export class TestsAnalyticsExportService {
       { header: 'Завершение', width: 28 },
       { header: 'Статус', width: 14 },
       { header: 'Анализ', width: 12 },
+      { header: 'Статус ИИ', width: 14 },
     ]);
 
     addHeaderRow(sheet, [
@@ -291,7 +292,9 @@ export class TestsAnalyticsExportService {
       'Завершение',
       'Статус',
       'Анализ',
+      'Статус ИИ',
     ]);
+
     for (const row of summary.attempts) {
       sheet.addRow([
         row.attemptId,
@@ -301,6 +304,7 @@ export class TestsAnalyticsExportService {
         toDisplayValue(row.finishedAt),
         row.status,
         toDisplayValue(row.analysisStatus),
+        toDisplayValue(row.llmStatus),
       ]);
     }
   }

@@ -3,6 +3,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma.service';
+import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
+
 import { buildV3AnalyticsSections, getV3Summary, toShare } from '../reporting/analytics-summary';
 import type {
   AdminTestAnalyticsQueryDto,
@@ -132,6 +134,7 @@ const toAttemptRecord = (attempt: AttemptRecord) => ({
   finishedAt: attempt.finishedAt ? attempt.finishedAt.toISOString() : null,
   status: attempt.status,
   analysisStatus: attempt.analysis?.status ?? null,
+  llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
 });
 
 const buildShareSection = (counts: Map<string, number>, total: number) =>
@@ -377,6 +380,7 @@ export class TestsAnalyticsService {
         attemptId: attempt.id,
         status: attempt.status,
         analysisStatus: attempt.analysis?.status ?? null,
+        llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
         summary: attempt.analysis?.summary,
       })),
     );
