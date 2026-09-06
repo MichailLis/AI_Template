@@ -107,6 +107,16 @@ export const GATE_MUTATIONS = [
     search: '## Local Verification Entry Points',
     replace: '## Renamed Local Verification Entry Points',
   },
+  {
+    id: 'ai-guide-claude-size-budget',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'CLAUDE.md',
+    description: 'Append content to CLAUDE.md exceeding the byte budget limit',
+    action: 'append',
+    append: '\n' + '# Budget overflow padding line\n'.repeat(200),
+  },
 
   // 5. verify-runtime-config.mjs
   {
