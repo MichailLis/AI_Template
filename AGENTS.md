@@ -33,8 +33,13 @@ The expected runtime topology is four separate containers:
 Do not use `.devcontainer/docker-compose.devcontainer.yml` to run the project. That compose file
 exists only for the VS Code "Reopen in Container" workflow and is not the project runtime topology.
 
-After changing files under `client/`, rebuild/recreate the frontend container before any
-browser-level verification (`verify:template`, `verify:e2e:critical`):
+The project name is pinned in `docker-compose.yml` with `name: ai_template`, ensuring that any
+checkout or worktree targets the exact same project and containers. Parallel compose stacks are
+not possible because `container_name` values are fixed globally.
+
+Browser-level gates (`verify:template`, `verify:e2e:critical`) build the client independently via
+`vite preview` and do not use Docker. Rebuilding/recreating the frontend container is required
+only for manual browser testing on `http://localhost:5173`:
 
 ```powershell
 docker compose up -d --build --force-recreate frontend
@@ -49,7 +54,18 @@ Host-level checks — Vitest, ESLint, `tsc` — do not need a container rebuild.
 
 ## Tooling
 
-Use `rtk` to keep shell output small: `rtk test <cmd>`, `rtk lint`, `rtk tsc`, `rtk vitest`,
-`rtk prisma`, `rtk git diff`, `rtk grep`.
+`rtk` compresses shell output, but several of its filters report success instead of error. The
+list of safe filters is fixed and defined in `template/rtk-filters.json`. Only `rtk run`, `rtk err`,
+`rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, and `rtk read` are safe; run everything else without
+a wrapper. Consult `CLAUDE.md` and `template/rtk-filters.json` for the full list and empirical findings.
+
+Run `npm run find:symbol -- <name>` to check whether a symbol name is unique before renaming.
+
+Install Serena once with `uv tool install serena-agent --from git+https://github.com/oraios/serena`.
+The root `.mcp.json` calls the installed binary directly: running through `uvx --from git+…` executes
+a network git fetch on every start (99s on warm cache, over 5 minutes on cold cache) and exceeds the
+30-second MCP connection timeout, whereas the installed binary starts in 1.4s.
+
+Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, and compose project name).
 
 Codex is not used in this repository.

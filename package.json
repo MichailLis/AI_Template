@@ -37,6 +37,7 @@
     "audit:all": "npm audit && npm --prefix client audit && npm --prefix server audit",
     "audit:prod": "npm audit --omit=dev && npm --prefix client audit --omit=dev && npm --prefix server audit --omit=dev",
     "audit:explain": "node scripts/audit-explain.mjs",
+    "doctor:agent-tooling": "node scripts/doctor-agent-tooling.mjs",
     "prisma:generate": "npm run prisma:generate --prefix server",
     "prisma:push": "npm run prisma:push --prefix server",
     "prisma:studio": "npm run prisma:studio --prefix server",
@@ -48,6 +49,7 @@
     "lint-staged": "^16.2.7",
     "playwright": "^1.60.0",
     "prettier": "^3.4.2",
-    "prettier-plugin-prisma": "^5.0.0"
+    "prettier-plugin-prisma": "^5.0.0",
+    "typescript": "~5.9.3"
   }
 }

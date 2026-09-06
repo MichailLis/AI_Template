@@ -174,6 +174,34 @@ regression, or a false green. They are cheap to follow and expensive to skip.
    silently miss. Normalise to `\n` in memory, do the work, convert once on write — and prefer
    moving a block of bytes over retyping it, so Cyrillic strings and shell quoting stay out of it.
 
+## Write-Time Guard (Hint, Not A Gate)
+
+`scripts/claude-write-guard.mjs` runs as a Claude Code `PreToolUse` hook on every `Edit`/`Write`
+(wired in `.claude/settings.json`) and can deny a write before it lands. It checks the content
+being added against `scripts/lib/write-guard.mjs`, which rejects exactly four cases: editing the
+generated API client (`client/src/shared/api/generated/**`, `client/src/shared/api/model/**`),
+adding `window`/`localStorage`/`sessionStorage`/`import.meta` to `client/src/shared/api/api.ts`
+(INV-1), direct `localStorage`/`sessionStorage` use outside `safeStorage` (INV-2), and
+`z.date()`/`z.coerce.date()` in a server DTO (INV-4b).
+
+This guard is a convenience, not a source of truth, for two reasons:
+
+1. **Silence from the guard does not mean the write was verified.** Hooks configured in user-level
+   `~/.claude/settings.json` were previously recorded as not being picked up by `--continue`/`--resume`,
+   and a spawned subagent inherits that inactive state. Conversely, on 2026-09-06, the project hook
+   in `.claude/settings.json` was observed active in a resumed session (`SessionStart` with
+   `"source": "resume"`): an attempt to write a new file into `client/src/shared/api/generated/`
+   was denied with `[generated-api-client]`, leaving no file created. A single observation refutes
+   "never" without establishing "always." Silence from the guard means either "no violation found"
+   or "guard did not run" — and only `npm run verify:invariants` can distinguish the two.
+2. **It is deliberately conservative.** It only sees the text being added, not the whole file or
+   the rest of the invariant surface, and a false positive here blocks a write outright — so it
+   errs toward letting a doubtful case through rather than guessing.
+
+`npm run verify:invariants` remains the only authoritative check for these invariants; do not
+treat a clean write as proof the invariant holds, and do not skip running the gate because the
+guard stayed quiet.
+
 ## Frontend Architecture Contract (Strict FSD)
 
 Source of truth:
@@ -417,10 +445,20 @@ Use these commands during local AI-agent development:
    ```powershell
    npm run verify:template
    ```
+3. Scoped pre-flight over the git diff, also wired to the `pre-push` hook:
+   ```powershell
+   npm run verify:diff -- --run
+   ```
 
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
 
+`.husky/pre-push` runs `npm run verify:diff -- --run` on every `git push`. It checks only the
+scopes the diff touches — 60 seconds on a branch of 38 changed files — and stays a pre-flight,
+not a gate: `verify:template` remains the release gate, and `scripts/verify-package-scripts.mjs`
+keeps `verify:diff` out of both pipelines on purpose.
+
+`npm run doctor:agent-tooling` runs `scripts/doctor-agent-tooling.mjs` to diagnose machine-local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). Run it once when onboarding a new machine. Like `audit:explain`, it is a diagnostic rather than a gate: it exits 0 whatever it finds, and `scripts/verify-package-scripts.mjs` keeps it out of both `verify:local` and `verify:template` so machine state never breaks a clean tree.
 `verify:architecture` reads `server/openapi.json`, which is gitignored and regenerated rather
 than committed. `npm run verify:contracts` pairs the generation with the check so neither gate
 can validate a stale document: `verify:local` calls it, and `verify:template` reaches the same
@@ -433,6 +471,7 @@ for the full loop.
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
 `npm run audit:explain [-- --base <ref>]` runs `scripts/audit-explain.mjs` to split the vulnerabilities npm reports into the ones this branch introduced, inherited, and fixed, per lock file; it is a diagnostic for a red `audit:all`, never a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
+`npm run doctor:agent-tooling` runs `scripts/doctor-agent-tooling.mjs` to diagnose machine-local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name); like `audit:explain`, it is a diagnostic, not a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
 
 ## PR-Ready Checklist (Feature Delivery)
 

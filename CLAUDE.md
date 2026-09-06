@@ -63,8 +63,13 @@ Four containers: `ai_template_frontend` (5173), `ai_template_backend` (3000),
 `ai_template_postgres` (5432), `ai_template_adminer` (8080).
 `.devcontainer/` is for VS Code "Reopen in Container" only — never use it to run the project.
 
-After changing files under `client/`, rebuild the frontend container before browser-level
-verification (`verify:template`, `verify:e2e:critical`):
+The project name is pinned in `docker-compose.yml` with `name: ai_template`, ensuring that any
+checkout or worktree targets the same project and containers. Parallel compose stacks are not
+possible because `container_name` values are fixed globally.
+
+Browser-level gates (`verify:template`, `verify:e2e:critical`) build the client independently via
+`vite preview` and do not use Docker. Rebuilding the frontend container is required only for
+manual browser testing on `http://localhost:5173`:
 
 ```powershell
 docker compose up -d --build --force-recreate frontend
@@ -84,6 +89,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
+- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
@@ -118,20 +124,25 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
 
 - **Tool selection overview:**
 
-  | Question                                               | Reach for                                                 | Why not the others                                                                                                          |
-  | ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-  | Is the symbol name unique (first step)                 | **`npm run find:symbol -- <name>`**                       | Answers uniqueness in milliseconds without external binaries, reports declarations, warns on drift, routes to Serena or rg. |
-  | Who uses this symbol — before a rename, move or delete | **Serena** `find_referencing_symbols`                     | Only tool that resolves all callback uses (`.map(fn)`) and names the enclosing method. The graph misses callbacks.          |
-  | How deep does the call chain go, what is hop distance  | **graph** `trace_path`, always with `include_tests: true` | Nothing else ranks by hop. Positives only — absence proves nothing, and default parameters miss product code.               |
-  | Where is X handled, when you do not know the name      | **graph** `search_graph query=`                           | BM25 and vector ranking surface relevant symbols without exact name matching.                                               |
-  | A property of the whole tree at once                   | **graph** `query_graph`                                   | Neither grep nor Serena can express it across the entire AST.                                                               |
-  | A symbol whose name is unique                          | **`rg --with-filename`**                                  | Four times cheaper and exact.                                                                                               |
-  | Literals, UI strings, config keys, non-code files      | **`rg`**                                                  | Not in the graph, not symbols.                                                                                              |
-  | Read a function you already located                    | **`sed -n 'a,bp'`**                                       | `get_code_snippet` costs ~2.4x for the same lines and needs a `qualified_name` first.                                       |
-  | Compiler errors in one file                            | **Serena** `get_diagnostics_for_file`                     | `npm run typecheck` covers the server in ~5s; use diagnostics for one file's noise, not for speed.                          |
-  | Typecheck the whole server                             | **`npm run typecheck`**                                   | `rtk tsc` prints "No errors found" when the compiler never ran.                                                             |
-  | What is in this file / this class                      | **Serena** `get_symbols_overview`, `find_symbol depth:1`  | ~200 bytes against several KB for reading the file.                                                                         |
-  | Command output                                         | **rtk**, but only the safe filters listed below           | Compresses command output — but `tsc`, `find`, `wc`, `vitest`/`jest` and `read -l aggressive` misreport failure as success. |
+  | Question                                               | Reach for                                                                  | Why not the others                                                                                                          |
+  | ------------------------------------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+  | Is the symbol name unique (first step)                 | **`npm run find:symbol -- <name>`**                                        | Answers uniqueness in milliseconds without external binaries, reports declarations, warns on drift, routes to Serena or rg. |
+  | Who uses this symbol — before a rename, move or delete | **`typescript-lsp`** (`findReferences`, `incomingCalls`, `goToDefinition`) | Local answer without network; resolves references and callers. Graph misses callbacks. Re-query once on cold start.         |
+  | How deep does the call chain go, what is hop distance  | **graph** `trace_path`, always with `include_tests: true`                  | Nothing else ranks by hop. Positives only — absence proves nothing, and default parameters miss product code.               |
+  | Where is X handled, when you do not know the name      | **graph** `search_graph query=`                                            | BM25 and vector ranking surface relevant symbols without exact name matching.                                               |
+  | A property of the whole tree at once                   | **graph** `query_graph`                                                    | Neither grep nor Serena can express it across the entire AST.                                                               |
+  | A symbol whose name is unique                          | **`rg --with-filename`**                                                   | Four times cheaper and exact.                                                                                               |
+  | Literals, UI strings, config keys, non-code files      | **`rg`**                                                                   | Not in the graph, not symbols.                                                                                              |
+  | Read a function you already located                    | **`sed -n 'a,bp'`**                                                        | `get_code_snippet` costs ~2.4x for the same lines and needs a `qualified_name` first.                                       |
+  | Compiler errors in one file                            | **Serena** `get_diagnostics_for_file`                                      | `npm run typecheck` covers the server in ~5s; use diagnostics for one file's noise, not for speed.                          |
+  | Typecheck the whole server                             | **`npm run typecheck`**                                                    | `rtk tsc` prints "No errors found" when the compiler never ran.                                                             |
+  | What is in this file / CRLF-safe symbol edit           | **Serena** (`replace_*`, `get_symbols_overview`)                           | Remaining uniqueness is CRLF-safe symbol editing (avoids `\r\r\n` corruption) and cheap structure overview (~200 bytes).    |
+  | Command output                                         | **rtk**, but only the safe filters listed below                            | Compresses command output — but `tsc`, `find`, `wc`, `vitest`/`jest` and `read -l aggressive` misreport failure as success. |
+
+- **typescript-lsp** (language server plugin):
+  - **Local symbol resolution:** Answers "who uses this symbol" locally without network via `findReferences`, `incomingCalls`, `goToDefinition`.
+  - **Cold-start trap — first query may return incomplete results:** Measured: `findReferences` on server `getMaxChoices` returned 2 references in 1 file on cold start, omitting the test spec that imports and calls it; a repeated query on the warmed server returned the true 4 references in 2 files. For renames and moves, an incomplete reference list is worse than none. Always re-query the first LSP response.
+  - Detailed measurements: `docs/tooling-evidence.md#8-tooling-audit-2026-09-06`.
 
 - **Serena** (MCP, symbolic navigation over TypeScript LSP):
   - **Symbol discovery:** To choose between tools for finding a symbol, run `npm run find:symbol -- <name>`.
@@ -146,6 +157,7 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
   - **Functions passed as bare callbacks get no inbound edges:** `.map(fn)` is invisible to the graph (`mapQuestionToPromptPayload` has 3 call sites and 0 inbound `CALLS` edges). Consequence: automated dead-code detection is unusable (produces false positives), and caller traces miss callback usages.
   - **`Route` nodes are not the route table:** Generated from call sites in tests/client code with null `path` and `file_path`. Authorities are `template/features.manifest.json` and `server/openapi.json`.
   - **No cross-service linking:** The graph contains zero client-to-server edges; `trace_path` with `mode: "cross_service"` stops at `customInstance`.
+  - **Index lags behind the working tree:** `check_index_coverage` reports per-path freshness; a `metadata_changed` response means the graph reflects an older version of the file. Query coverage before relying on graph results for recently modified code.
   - Detailed findings (main checkout indexing failure, Cypher subset, daemon lifecycle): `docs/tooling-evidence.md#2-codebase-memory`.
 
 - **rtk** (wraps shell output to cut tokens):
@@ -159,7 +171,7 @@ Empirical measurements, benchmarks, and experimental findings behind tool choice
   - Detailed sweeps and compression stats: `docs/tooling-evidence.md#3-rtk`.
 
 - **Claude Code hooks:**
-  - **Hooks do not fire in a resumed session:** Hooks configured in `~/.claude/settings.json` are not picked up by `--continue` or `--resume`, and spawned subagents inherit this inactive state. If you change or rely on hooks, verify in a fresh session.
+  - **User-level hooks do not fire in a resumed session:** Hooks configured in user-level `~/.claude/settings.json` are not picked up by `--continue` or `--resume`, and spawned subagents inherit this inactive state. In contrast, project hooks in `.claude/settings.json` were observed firing after resume. Verify hook behavior rather than assuming execution.
   - Cost and latency measurements: `docs/tooling-evidence.md#4-claude-code-hooks`.
 
 - **omp (Oh My Pi):**

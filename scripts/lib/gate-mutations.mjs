@@ -83,6 +83,17 @@ export const GATE_MUTATIONS = [
     search: '"lint": "eslint \\"src/**/*.ts\\""',
     replace: '"lint": "eslint \\"src/**/*.ts\\" --fix"',
   },
+  {
+    id: 'package-scripts-claude-hook-nonexistent-script',
+    gate: 'verify-package-scripts.mjs',
+    script: 'scripts/verify-package-scripts.mjs',
+    npmScript: 'verify:package-scripts',
+    file: '.claude/settings.json',
+    description: 'Point Claude hook command to nonexistent script in .claude/settings.json',
+    action: 'replace',
+    search: 'node scripts/claude-write-guard.mjs',
+    replace: 'node scripts/nonexistent-claude-guard.mjs',
+  },
 
   // 4. verify-ai-guide.mjs
   {
@@ -116,6 +127,48 @@ export const GATE_MUTATIONS = [
     description: 'Append content to CLAUDE.md exceeding the byte budget limit',
     action: 'append',
     append: '\n' + '# Budget overflow padding line\n'.repeat(200),
+  },
+  {
+    id: 'ai-guide-agents-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'AGENTS.md',
+    description: 'Add unsafe rtk command recommendation to AGENTS.md',
+    action: 'append',
+    append: '\nUse `rtk tsc` to check compiler output.\n',
+  },
+  {
+    id: 'ai-guide-claude-missing-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'CLAUDE.md',
+    description: 'Remove rtk vitest and rtk jest warnings from CLAUDE.md',
+    action: 'replace',
+    search: 'and `rtk vitest` / `rtk jest`',
+    replace: 'and `vitest` / `jest`',
+  },
+  {
+    id: 'ai-guide-skills-nonexistent-path',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: '.claude/skills/feature-pipeline/SKILL.md',
+    description:
+      'Add backtick reference to nonexistent file docs/this-file-does-not-exist.md in .claude/skills/feature-pipeline/SKILL.md',
+    action: 'append',
+    append: '\nReference: `docs/this-file-does-not-exist.md`\n',
+  },
+  {
+    id: 'ai-guide-serena-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: '.serena/memories/project_overview.md',
+    description: 'Add unsafe rtk command recommendation to .serena/memories/project_overview.md',
+    action: 'append',
+    append: '\nUse `rtk tsc` to check compiler output.\n',
   },
 
   // 5. verify-runtime-config.mjs

@@ -17,12 +17,22 @@ const CLAUDE_MD_MAX_BYTES = 18_500;
 const aiGuidePath = join(root, 'AI_GUIDE.md');
 const readmePath = join(root, 'README.md');
 const claudeMdPath = join(root, 'CLAUDE.md');
+const agentsMdPath = join(root, 'AGENTS.md');
+const rtkFiltersPath = join(root, 'template', 'rtk-filters.json');
 
-const [aiGuide, readme, claudeMdBuffer] = await Promise.all([
+const [aiGuide, readme, claudeMdBuffer, agentsMd, rtkFiltersContent] = await Promise.all([
   readFile(aiGuidePath, 'utf-8'),
   readFile(readmePath, 'utf-8'),
   readFile(claudeMdPath),
+  readFile(agentsMdPath, 'utf-8'),
+  readFile(rtkFiltersPath, 'utf-8'),
 ]);
+const claudeMd = claudeMdBuffer.toString('utf-8');
+const rtkFilters = JSON.parse(rtkFiltersContent);
+const unsafeRtkFilters = Array.isArray(rtkFilters.unsafe) ? rtkFilters.unsafe : [];
+const warningDocuments = new Set(
+  Array.isArray(rtkFilters.warningDocuments) ? rtkFilters.warningDocuments : [],
+);
 
 const requiredAiGuideTokens = [
   '## AI Agent Operating Mode (Local Development)',
@@ -52,6 +62,15 @@ for (const token of requiredReadmeTokens) {
   if (!readme.includes(token)) {
     errors.push(`README.md: expected to include "${token}"`);
   }
+}
+for (const command of unsafeRtkFilters) {
+  if (!claudeMd.includes(command)) {
+    errors.push(`CLAUDE.md: missing warning for unsafe rtk command "${command}"`);
+  }
+}
+
+if (!agentsMd.includes('template/rtk-filters.json')) {
+  errors.push('AGENTS.md: expected to include reference to "template/rtk-filters.json"');
 }
 
 // Paths the documents point at must exist. Documentation that names a file which was renamed or
@@ -164,19 +183,32 @@ const markdownFilesIn = async (base, skipDirs = []) => {
  *
  * Serena's memories are checked for the same reason the guide is. They are prose an agent
  * trusts, they are not regenerated from the code, and the last time they went unchecked they
- * ended up pointing at files that had been deleted months earlier.
+ * ended up pointing at files that had been deleted months earlier. Skills are checked for the
+ * same reason: they are prose an agent trusts and are not regenerated from code.
  */
 const proseDocuments = async () => [
   ...(await markdownFilesIn('docs', ['archive'])),
   ...(await markdownFilesIn('.serena/memories')),
+  ...(await markdownFilesIn('.claude/skills')),
 ];
 
-for (const [label, markdown] of [
+const checkedDocuments = [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
-  ['AGENTS.md', await readFile(join(root, 'AGENTS.md'), 'utf-8')],
+  ['AGENTS.md', agentsMd],
   ...(await proseDocuments()),
-]) {
+];
+
+for (const [docName, docContent] of [['CLAUDE.md', claudeMd], ...checkedDocuments]) {
+  if (warningDocuments.has(docName)) continue;
+  for (const command of unsafeRtkFilters) {
+    if (docContent.includes(command)) {
+      errors.push(`${docName}: references unsafe rtk command "${command}"`);
+    }
+  }
+}
+
+for (const [label, markdown] of checkedDocuments) {
   const paths = collectPaths(markdown);
   const ignored = gitIgnored(paths);
   const tracked = paths.filter((path) => !ignored.has(path));

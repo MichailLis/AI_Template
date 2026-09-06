@@ -134,6 +134,15 @@ if (rootScripts['audit:explain'] !== 'node scripts/audit-explain.mjs') {
   fail('root package must define audit:explain script as "node scripts/audit-explain.mjs"');
 }
 
+// doctor:agent-tooling diagnoses machine-local agent preconditions (rtk hook exclusions, serena binary,
+// root typescript, compose project name). It gates nothing, and keeping it out of verify:local and
+// verify:template below is intentional — machine configuration should not fail builds on a clean tree.
+if (rootScripts['doctor:agent-tooling'] !== 'node scripts/doctor-agent-tooling.mjs') {
+  fail(
+    'root package must define doctor:agent-tooling script as "node scripts/doctor-agent-tooling.mjs"',
+  );
+}
+
 for (const scriptName of ['verify:local', 'verify:template']) {
   const script = rootScripts[scriptName] ?? '';
   if (script.includes('verify:diff')) {
@@ -149,6 +158,11 @@ for (const scriptName of ['verify:local', 'verify:template']) {
   if (script.includes('audit:explain')) {
     fail(
       `${scriptName} must not include audit:explain (audit:explain is a diagnostic, not a gate)`,
+    );
+  }
+  if (script.includes('doctor:agent-tooling')) {
+    fail(
+      `${scriptName} must not include doctor:agent-tooling (doctor:agent-tooling is a diagnostic, not a gate)`,
     );
   }
 }
@@ -228,6 +242,49 @@ if (!existsSync(ciWorkflowPath)) {
     if (!ciWorkflow.includes(expectedCommand)) {
       fail(`.github/workflows/ci.yml must include ${expectedCommand}`);
     }
+  }
+}
+
+const claudeSettingsPath = join(rootDir, '.claude', 'settings.json');
+if (existsSync(claudeSettingsPath)) {
+  try {
+    const claudeSettings = JSON.parse(readFileSync(claudeSettingsPath, 'utf8'));
+    const hooksConfig = claudeSettings.hooks;
+    if (hooksConfig && typeof hooksConfig === 'object') {
+      const SCRIPT_EXTENSIONS = /\.(?:mjs|cjs|js|ts|sh|cmd)$/i;
+      const IGNORED_PREFIX = /^(?:\/|~|%|\\|[a-zA-Z]:)/;
+
+      for (const [eventName, eventEntries] of Object.entries(hooksConfig)) {
+        if (!Array.isArray(eventEntries)) continue;
+        for (const entry of eventEntries) {
+          const hooksList = Array.isArray(entry?.hooks)
+            ? entry.hooks
+            : entry?.command
+              ? [entry]
+              : [];
+          for (const hook of hooksList) {
+            const command = hook?.command;
+            if (typeof command !== 'string') continue;
+
+            const tokens = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+            for (const token of tokens) {
+              const cleanToken = token.replace(/^["']|["']$/g, '').trim();
+              if (!SCRIPT_EXTENSIONS.test(cleanToken)) continue;
+              if (IGNORED_PREFIX.test(cleanToken)) continue;
+
+              const scriptPath = join(rootDir, cleanToken);
+              if (!existsSync(scriptPath)) {
+                fail(
+                  `.claude/settings.json hook for "${eventName}" references missing script "${cleanToken}" in command "${command}"`,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    fail(`Failed to parse .claude/settings.json: ${err.message}`);
   }
 }
 
