@@ -2,7 +2,13 @@ import {
   buildProfOrientationV3PlusQuestionPayloads,
   PROF_ORIENTATION_V3_PLUS_CONFIG,
 } from './fixture';
-import { resolveProfOrientationV3PlusConfig, scoreProfOrientationV3Plus } from './scoring';
+import {
+  getProfOrientationLlmStatus,
+  resolveProfOrientationV3PlusConfig,
+  scoreProfOrientationV3Plus,
+} from './scoring';
+
+import pairedRulesVectors from '../../../../template/paired-rules.vectors.json';
 
 const questions = buildProfOrientationV3PlusQuestionPayloads().map((question, index) => ({
   id: index + 1,
@@ -144,7 +150,6 @@ describe('scoreProfOrientationV3Plus', () => {
         },
       }),
     });
-
     expect(result.resultKind).toBe('prof_orientation_v3_plus');
     expect(result.primaryDirection?.id).toBe('A1');
     expect(result.profile.type).toBe('single_profile');
@@ -167,7 +172,6 @@ describe('scoreProfOrientationV3Plus', () => {
         },
       }),
     });
-
     expect(result.profile.type).toBe('broad_interest');
     expect(result.flags.some((flag) => flag.code === 'overchoice')).toBe(true);
   });
@@ -187,7 +191,6 @@ describe('scoreProfOrientationV3Plus', () => {
         },
       }),
     });
-
     expect(result.profile.type).toBe('low_definition');
     expect(result.confidence.level).toBe('low');
   });
@@ -207,8 +210,50 @@ describe('scoreProfOrientationV3Plus', () => {
         },
       }),
     });
-
     expect(result.flags.some((flag) => flag.code === 'interest_slider_conflict')).toBe(true);
     expect(result.confidence.level).not.toBe('high');
   });
+});
+
+describe('getProfOrientationLlmStatus', () => {
+  it('returns null for non-prof-orientation-v3-plus summaries or non-object values', () => {
+    expect(getProfOrientationLlmStatus(null)).toBeNull();
+    expect(getProfOrientationLlmStatus(undefined)).toBeNull();
+    expect(getProfOrientationLlmStatus('string')).toBeNull();
+    expect(getProfOrientationLlmStatus(123)).toBeNull();
+    expect(getProfOrientationLlmStatus({})).toBeNull();
+    expect(getProfOrientationLlmStatus({ resultKind: 'standard_stub' })).toBeNull();
+    expect(getProfOrientationLlmStatus({ providerMode: 'LLM' })).toBeNull();
+  });
+
+  it('extracts valid statuses for prof_orientation_v3_plus summaries', () => {
+    const base = { resultKind: 'prof_orientation_v3_plus' };
+
+    expect(getProfOrientationLlmStatus({ ...base, llm: { status: 'pending' } })).toBe('pending');
+    expect(getProfOrientationLlmStatus({ ...base, llm: { status: 'ready' } })).toBe('ready');
+    expect(getProfOrientationLlmStatus({ ...base, llm: { status: 'failed' } })).toBe('failed');
+    expect(getProfOrientationLlmStatus({ ...base, llm: { status: 'not_requested' } })).toBe(
+      'not_requested',
+    );
+  });
+
+  it('falls back to not_requested when llm is missing or status is unrecognized', () => {
+    const base = { resultKind: 'prof_orientation_v3_plus' };
+
+    expect(getProfOrientationLlmStatus(base)).toBe('not_requested');
+    expect(getProfOrientationLlmStatus({ ...base, llm: null })).toBe('not_requested');
+    expect(getProfOrientationLlmStatus({ ...base, llm: {} })).toBe('not_requested');
+    expect(getProfOrientationLlmStatus({ ...base, llm: { status: 'unknown_status' } })).toBe(
+      'not_requested',
+    );
+  });
+});
+
+describe('getProfOrientationLlmStatus shared paired-rules vectors', () => {
+  it.each(pairedRulesVectors.vectors.getProfOrientationLlmStatus)(
+    'satisfies shared vector: $description',
+    ({ input, expected }) => {
+      expect(getProfOrientationLlmStatus(input)).toBe(expected);
+    },
+  );
 });

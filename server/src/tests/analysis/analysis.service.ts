@@ -377,8 +377,6 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     const staleBefore = new Date(now.getTime() - STALE_PENDING_ANALYSIS_MINUTES * 60 * 1000);
     const analyses = await this.prisma.testStudentAnalysis.findMany({
       where: {
-        status: 'PENDING',
-        providerMode: 'LLM',
         updatedAt: {
           lt: staleBefore,
         },
@@ -390,6 +388,20 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
             },
           },
         },
+        OR: [
+          {
+            status: 'PENDING',
+            providerMode: 'LLM',
+          },
+          {
+            status: 'READY',
+            providerMode: 'ALGORITHM_LLM',
+            summary: {
+              path: ['llm', 'status'],
+              equals: 'pending',
+            },
+          },
+        ],
       },
       select: {
         attemptId: true,

@@ -7,6 +7,7 @@ import {
   PublicBrandingConfigSchema,
   PublicTemplateSchema,
   PublicSessionAnalysisProviderModeSchema,
+  PublicAnalysisLlmStatusSchema,
   PublicSessionAnalysisStatusSchema,
   PublicSessionStatusSchema,
   PublicStudentEducationLevelSchema,
@@ -277,7 +278,12 @@ export const AdminPublicAttemptSummarySchema = z.object({
   startedAt: z.string(),
   finishedAt: z.string().nullable(),
   expiresAt: z.string().nullable(),
-  analysisStatus: PublicSessionAnalysisStatusSchema.nullable(),
+  analysisStatus: PublicSessionAnalysisStatusSchema.nullable().describe(
+    'Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)',
+  ),
+  llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
+    'Статус асинхронного LLM-обогащения для двухфазного анализа',
+  ),
 });
 
 export const AdminPublicAttemptsListQuerySchema = z.object({

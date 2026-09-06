@@ -91,7 +91,6 @@ describe('TestsAdminAttemptService', () => {
     ]);
 
     const response = await service.listAttemptsForLink(7, 13, { page: 3, limit: 10 });
-
     expect(prismaMock.testStudentAttempt.count).toHaveBeenCalledWith({
       where: { publicLinkId: 13 },
     });
@@ -126,9 +125,49 @@ describe('TestsAdminAttemptService', () => {
           finishedAt: finishedAt.toISOString(),
           expiresAt: expiresAt.toISOString(),
           analysisStatus: 'READY',
+          llmStatus: null,
         },
       ],
     });
+  });
+
+  it('maps attempt with prof-orientation summary to correct llmStatus (ready, failed, pending)', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
+
+    prismaMock.testStudentAttempt.count.mockResolvedValue(1);
+
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([
+      {
+        id: 102,
+        status: 'COMPLETED',
+        attemptNumber: 1,
+        studentName: 'Иван',
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: null,
+        groupOrClass: null,
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
+        startedAt: new Date('2026-01-01T10:00:00.000Z'),
+        finishedAt: null,
+        expiresAt: null,
+        analysis: {
+          status: 'READY',
+          summary: {
+            resultKind: 'prof_orientation_v3_plus',
+            llm: { status: 'failed', errorMessage: 'OpenRouter timeout' },
+          },
+        },
+      },
+    ]);
+
+    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+    expect(response.attempts[0].analysisStatus).toBe('READY');
+    expect(response.attempts[0].llmStatus).toBe('failed');
   });
 
   it('returns demographic profile fields in attempt detail', async () => {
@@ -166,7 +205,6 @@ describe('TestsAdminAttemptService', () => {
     );
 
     const response = await service.getAttemptDetail(7, 202);
-
     expect(response).toMatchObject({
       attemptId: 202,
       professionAtlasUrl: 'https://atlas.example/professions',
@@ -211,7 +249,6 @@ describe('TestsAdminAttemptService', () => {
     ]);
 
     const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
-
     expect(response.attempts[0]).toMatchObject({
       attemptId: 303,
       entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
@@ -254,7 +291,6 @@ describe('TestsAdminAttemptService', () => {
     ]);
 
     const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
-
     expect(response.attempts[0]?.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
   });
 
@@ -291,7 +327,6 @@ describe('TestsAdminAttemptService', () => {
     });
 
     const response = await service.getAttemptDetail(7, 505);
-
     expect(response.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
   });
 });

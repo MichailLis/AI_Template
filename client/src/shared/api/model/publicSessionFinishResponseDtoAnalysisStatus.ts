@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1.0
  */
 
+/**
+ * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
+ */
 export type PublicSessionFinishResponseDtoAnalysisStatus =
   (typeof PublicSessionFinishResponseDtoAnalysisStatus)[keyof typeof PublicSessionFinishResponseDtoAnalysisStatus];
 

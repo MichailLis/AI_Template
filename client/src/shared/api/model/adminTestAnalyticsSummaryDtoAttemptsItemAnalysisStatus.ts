@@ -7,6 +7,7 @@
  */
 
 /**
+ * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
  * @nullable
  */
 export type AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus =
