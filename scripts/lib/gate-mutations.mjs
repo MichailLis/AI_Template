@@ -166,6 +166,66 @@ export const GATE_MUTATIONS = [
     action: 'append',
     append: "\n// Storage discipline violation\nlocalStorage.getItem('x');\n",
   },
+  {
+    id: 'invariants-controller-non-standard-filename',
+    gate: 'verify-invariants.mjs',
+    script: 'scripts/verify-invariants.mjs',
+    npmScript: 'verify:invariants',
+    file: 'server/src/auth/auth.service.ts',
+    description:
+      'Add controller with undocumented handler to server/src/auth/auth.service.ts outside *.controller.ts',
+    action: 'append',
+    append:
+      "\n// Non-standard controller file violation\n@Controller('sneaky')\nexport class SneakyController {\n  @Get('secret')\n  secret() {\n    return { ok: true };\n  }\n}\n",
+  },
+  {
+    id: 'invariants-dto-zod-coerce-date',
+    gate: 'verify-invariants.mjs',
+    script: 'scripts/verify-invariants.mjs',
+    npmScript: 'verify:invariants',
+    file: 'server/src/tests/dto/tests.dto.ts',
+    description: 'Use z.coerce.date() in server/src/tests/dto/tests.dto.ts',
+    action: 'replace',
+    search: 'updatedAt: z.string(),',
+    replace: 'updatedAt: z.coerce.date(),',
+  },
+  {
+    id: 'invariants-public-dto-snake-case-forbidden-field',
+    gate: 'verify-invariants.mjs',
+    script: 'scripts/verify-invariants.mjs',
+    npmScript: 'verify:invariants',
+    file: 'server/src/tests/dto/tests-public.dto.ts',
+    description:
+      'Add forbidden snake_case field system_prompt to server/src/tests/dto/tests-public.dto.ts',
+    action: 'replace',
+    search: 'order: z.number(),',
+    replace: 'order: z.number(),\n  system_prompt: z.string().optional(),',
+  },
+  {
+    id: 'invariants-setup-app-multiple-global-filters',
+    gate: 'verify-invariants.mjs',
+    script: 'scripts/verify-invariants.mjs',
+    npmScript: 'verify:invariants',
+    file: 'server/src/setup-app.ts',
+    description: 'Register multiple global filters in server/src/setup-app.ts',
+    action: 'replace',
+    search: 'app.useGlobalFilters(new AllExceptionsFilter());',
+    replace:
+      'app.useGlobalFilters(new AllExceptionsFilter());\n  app.useGlobalFilters(new AllExceptionsFilter());',
+  },
+  {
+    id: 'invariants-react-query-mirroring-custom-setter-space',
+    gate: 'verify-invariants.mjs',
+    script: 'scripts/verify-invariants.mjs',
+    npmScript: 'verify:invariants',
+    file: 'client/src/pages/privacy/privacy-page.tsx',
+    description:
+      'Mirror React Query data in useEffect with space before parenthesis using custom setter name',
+    action: 'replace',
+    search: 'const policy = privacyPolicyQuery.data?.privacyPolicy;',
+    replace:
+      "const policy = privacyPolicyQuery.data?.privacyPolicy;\n  const [, putPolicyTitle] = useState('');\n  useEffect (() => {\n    if (privacyPolicyQuery) {\n      putPolicyTitle(policy?.title ?? '');\n    }\n  }, [privacyPolicyQuery]);",
+  },
 
   // 7. verify-architecture.mjs
   {

@@ -36,41 +36,35 @@ const collectFiles = async (dir, filter) => {
 
 const errors = [];
 
-// 1. INV-4a: Controller Swagger Completeness
-const controllerFiles = await collectFiles(join(root, 'server', 'src'), (name) =>
-  name.endsWith('.controller.ts'),
+// 1. INV-4a: Controller Swagger Completeness, INV-4b: No z.date() / z.coerce.date(), INV-6: Public DTO Safety
+const serverFiles = await collectFiles(
+  join(root, 'server', 'src'),
+  (name) => name.endsWith('.ts') && !name.endsWith('.spec.ts'),
 );
 
 let handlerCount = 0;
 
-for (const absolutePath of controllerFiles) {
+for (const absolutePath of serverFiles) {
   const relativePath = toPosix(absolutePath.slice(root.length + 1));
   const source = await readFile(absolutePath, 'utf-8');
-  const handlers = parseControllerHandlers(source, relativePath);
-  handlerCount += handlers.length;
-  errors.push(...checkControllerSwagger({ relativePath, source }));
-}
 
-if (handlerCount < 58) {
-  errors.push(
-    `Controller parser found only ${handlerCount} HTTP handlers; expected at least 58. Parser may be degraded.`,
-  );
-}
-
-// 2. INV-4b: No z.date() in DTOs & INV-6: Public DTO Safety
-const dtoFiles = await collectFiles(join(root, 'server', 'src'), (name) =>
-  name.endsWith('.dto.ts'),
-);
-
-for (const absolutePath of dtoFiles) {
-  const relativePath = toPosix(absolutePath.slice(root.length + 1));
-  const source = await readFile(absolutePath, 'utf-8');
+  if (/@Controller\s*\(/.test(source)) {
+    const handlers = parseControllerHandlers(source, relativePath);
+    handlerCount += handlers.length;
+    errors.push(...checkControllerSwagger({ relativePath, source }));
+  }
 
   errors.push(...checkDtoNoZodDate({ relativePath, source }));
 
   if (isPublicDtoFile(relativePath)) {
     errors.push(...checkPublicDtoSafety({ relativePath, source }));
   }
+}
+
+if (handlerCount < 58) {
+  errors.push(
+    `Controller parser found only ${handlerCount} HTTP handlers; expected at least 58. Parser may be degraded.`,
+  );
 }
 
 // 3. INV-2: Client Storage Discipline & INV-3: React Query State Mirroring

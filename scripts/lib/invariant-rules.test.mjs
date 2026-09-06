@@ -10,6 +10,7 @@ import {
   checkPublicDtoSafety,
   checkReactQueryStateMirroring,
   checkSetupAppErrorFilter,
+  isPublicDtoFile,
   parseControllerHandlers,
 } from './invariant-rules.mjs';
 
@@ -151,6 +152,18 @@ export const UserSchema = z.object({
     assert.match(errors[0], /z\.date\(\) is forbidden in DTOs/);
   });
 
+  it('reports error when z.coerce.date() is used', () => {
+    const source = `
+export const UserSchema = z.object({
+  id: z.number(),
+  updatedAt: z.coerce.date(),
+});
+`;
+    const errors = checkDtoNoZodDate({ relativePath: 'user.dto.ts', source });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /z\.coerce\.date\(\) is forbidden in DTOs/);
+  });
+
   it('ignores z.date() inside comments', () => {
     const source = `
 // Prisma produces Date, do not use z.date() here
@@ -271,6 +284,19 @@ export const setupApp = (app: INestApplication) => {
     assert.match(errors[0], /must import AllExceptionsFilter/);
   });
 
+  it('reports error when setup-app.ts has multiple app.useGlobalFilters calls', () => {
+    const source = `
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+export const setupApp = (app: INestApplication) => {
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new CustomFilter());
+};
+`;
+    const errors = checkSetupAppErrorFilter({ relativePath: 'server/src/setup-app.ts', source });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /expected exactly one app\.useGlobalFilters/);
+  });
+
   it('accepts valid error-response.dto.ts', () => {
     const source = `
 export const ErrorResponseSchema = z.object({
@@ -355,6 +381,30 @@ export const PublicQuestionOptionSchema = z.object({
       checkPublicDtoSafety({ relativePath: 'server/src/tests/dto/tests-public.dto.ts', source }),
       [],
     );
+  });
+
+  it('reports error for sensitive forbidden field in snake_case', () => {
+    const source = `
+export const PublicQuestionOptionSchema = z.object({
+  id: z.number(),
+  system_prompt: z.string(),
+  api_key: z.string(),
+});
+`;
+    const errors = checkPublicDtoSafety({
+      relativePath: 'server/src/public-links/dto/links.dto.ts',
+      source,
+    });
+    assert.equal(errors.length, 2);
+    assert.match(errors[0], /forbidden sensitive field "system_prompt"/);
+    assert.match(errors[1], /forbidden sensitive field "api_key"/);
+  });
+
+  it('isPublicDtoFile identifies public DTO by filename or path segment', () => {
+    assert.equal(isPublicDtoFile('server/src/tests/dto/tests-public.dto.ts'), true);
+    assert.equal(isPublicDtoFile('server/src/public-links/dto/links.dto.ts'), true);
+    assert.equal(isPublicDtoFile('server/src/tests/dto/tests.dto.ts'), false);
+    assert.equal(isPublicDtoFile('server/src/tests/public-links/service.ts'), false);
   });
 });
 
@@ -475,5 +525,24 @@ useEffect(() => {
     });
     assert.equal(errors.length, 1);
     assert.match(errors[0], /useEffect mirrors React Query data "data" into state via "setTitle"/);
+  });
+  it('reports error when useEffect has space before paren and uses custom useState setter', () => {
+    const source = `
+import { useTopicQuery } from '@/shared/api/generated/topics/topics';
+
+const { data: topic } = useTopicQuery(1);
+const [title, putTitle] = useState('');
+useEffect (() => {
+  if (topic) {
+    putTitle(topic.title);
+  }
+}, [topic]);
+`;
+    const errors = checkReactQueryStateMirroring({
+      relativePath: 'client/src/widget.tsx',
+      source,
+    });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /useEffect mirrors React Query data "topic" into state via "putTitle"/);
   });
 });
