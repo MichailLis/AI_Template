@@ -82,6 +82,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:invariants` — checks non-obvious invariants (Swagger completeness, no `z.date()`, storage discipline, single error shape, public DTO safety, no React Query state mirroring).
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
+- `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 

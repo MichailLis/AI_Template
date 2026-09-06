@@ -123,6 +123,14 @@ if (rootScripts['find:symbol'] !== 'node scripts/find-symbol.mjs') {
   fail('root package must define find:symbol script as "node scripts/find-symbol.mjs"');
 }
 
+// audit:explain reads the live advisory registry to explain a red audit:all: which findings this
+// branch introduced, which it inherited, which it fixed. It gates nothing, and keeping it out of
+// verify:local and verify:template below is the whole point — a check that asks a registry can go
+// red on a tree nobody touched, which is the problem this tool diagnoses rather than repeats.
+if (rootScripts['audit:explain'] !== 'node scripts/audit-explain.mjs') {
+  fail('root package must define audit:explain script as "node scripts/audit-explain.mjs"');
+}
+
 for (const scriptName of ['verify:local', 'verify:template']) {
   const script = rootScripts[scriptName] ?? '';
   if (script.includes('verify:diff')) {
@@ -133,6 +141,11 @@ for (const scriptName of ['verify:local', 'verify:template']) {
   if (script.includes('find:symbol')) {
     fail(
       `${scriptName} must not include find:symbol (find:symbol is a developer tool, not a gate)`,
+    );
+  }
+  if (script.includes('audit:explain')) {
+    fail(
+      `${scriptName} must not include audit:explain (audit:explain is a diagnostic, not a gate)`,
     );
   }
 }

@@ -431,6 +431,7 @@ for the full loop.
 `npm run verify:gates` runs `scripts/verify-gates.mjs` to verify via in-memory mutation testing that repository verification gates detect real invariant violations and maintain full gate coverage.
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
+`npm run audit:explain [-- --base <ref>]` runs `scripts/audit-explain.mjs` to split the vulnerabilities npm reports into the ones this branch introduced, inherited, and fixed, per lock file; it is a diagnostic for a red `audit:all`, never a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
 
 ## PR-Ready Checklist (Feature Delivery)
 
