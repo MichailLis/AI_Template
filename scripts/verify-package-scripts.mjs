@@ -245,6 +245,49 @@ if (!existsSync(ciWorkflowPath)) {
   }
 }
 
+const claudeSettingsPath = join(rootDir, '.claude', 'settings.json');
+if (existsSync(claudeSettingsPath)) {
+  try {
+    const claudeSettings = JSON.parse(readFileSync(claudeSettingsPath, 'utf8'));
+    const hooksConfig = claudeSettings.hooks;
+    if (hooksConfig && typeof hooksConfig === 'object') {
+      const SCRIPT_EXTENSIONS = /\.(?:mjs|cjs|js|ts|sh|cmd)$/i;
+      const IGNORED_PREFIX = /^(?:\/|~|%|\\|[a-zA-Z]:)/;
+
+      for (const [eventName, eventEntries] of Object.entries(hooksConfig)) {
+        if (!Array.isArray(eventEntries)) continue;
+        for (const entry of eventEntries) {
+          const hooksList = Array.isArray(entry?.hooks)
+            ? entry.hooks
+            : entry?.command
+              ? [entry]
+              : [];
+          for (const hook of hooksList) {
+            const command = hook?.command;
+            if (typeof command !== 'string') continue;
+
+            const tokens = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+            for (const token of tokens) {
+              const cleanToken = token.replace(/^["']|["']$/g, '').trim();
+              if (!SCRIPT_EXTENSIONS.test(cleanToken)) continue;
+              if (IGNORED_PREFIX.test(cleanToken)) continue;
+
+              const scriptPath = join(rootDir, cleanToken);
+              if (!existsSync(scriptPath)) {
+                fail(
+                  `.claude/settings.json hook for "${eventName}" references missing script "${cleanToken}" in command "${command}"`,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    fail(`Failed to parse .claude/settings.json: ${err.message}`);
+  }
+}
+
 if (failures.length > 0) {
   console.error('Package scripts verification failed:');
   for (const failure of failures) {

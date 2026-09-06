@@ -6,6 +6,7 @@ import {
   checkRootTypescript,
   checkRtkHookExclusions,
   checkSerenaBinary,
+  deriveRtkHookExclusions,
   extractExcludeCommands,
   formatReport,
   runAgentToolingChecks,
@@ -31,6 +32,47 @@ exclude_commands = [
     assert.deepEqual(extractExcludeCommands(null), []);
     assert.deepEqual(extractExcludeCommands(undefined), []);
     assert.deepEqual(extractExcludeCommands('[hooks]\nenabled = true'), []);
+  });
+});
+
+describe('deriveRtkHookExclusions', () => {
+  it('extracts single-word subcommands from rtk commands (e.g. rtk tsc -> tsc)', () => {
+    assert.deepEqual(deriveRtkHookExclusions(['rtk tsc']), ['tsc']);
+  });
+
+  it('discards multi-word or flagged commands like rtk read -l aggressive', () => {
+    assert.deepEqual(deriveRtkHookExclusions(['rtk read -l aggressive']), []);
+    assert.deepEqual(deriveRtkHookExclusions(['rtk tsc', 'rtk read -l aggressive', 'rtk vitest']), [
+      'tsc',
+      'vitest',
+    ]);
+  });
+
+  it('automatically includes hypothetical new commands like rtk newdanger', () => {
+    assert.deepEqual(deriveRtkHookExclusions(['rtk tsc', 'rtk newdanger']), ['tsc', 'newdanger']);
+  });
+
+  it('returns empty array when input is empty or invalid', () => {
+    assert.deepEqual(deriveRtkHookExclusions([]), []);
+    assert.deepEqual(deriveRtkHookExclusions(null), []);
+    assert.deepEqual(deriveRtkHookExclusions(undefined), []);
+    assert.deepEqual(deriveRtkHookExclusions('invalid'), []);
+    assert.deepEqual(deriveRtkHookExclusions(123), []);
+    assert.deepEqual(deriveRtkHookExclusions([null, 123, {}, '   ']), []);
+  });
+
+  it('derives expected default exclusions from standard unsafe filter list', () => {
+    const unsafe = [
+      'rtk tsc',
+      'rtk vitest',
+      'rtk jest',
+      'rtk playwright',
+      'rtk find',
+      'rtk wc',
+      'rtk tree',
+      'rtk read -l aggressive',
+    ];
+    assert.deepEqual(deriveRtkHookExclusions(unsafe), REQUIRED_EXCLUSIONS);
   });
 });
 

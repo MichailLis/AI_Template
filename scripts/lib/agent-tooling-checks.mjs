@@ -31,6 +31,34 @@ export const extractExcludeCommands = (configText) => {
 };
 
 /**
+ * Derives the list of subcommands that must be present in rtk's `hooks.exclude_commands`
+ * from the `unsafe` filters array.
+ *
+ * Only single-word subcommands of the form `rtk <word>` (letters, digits, hyphens)
+ * are extracted. Multi-word entries or entries with flags (e.g. `rtk read -l aggressive`)
+ * are excluded by design: rtk hooks only rewrite whole command invocations like `rtk <subcommand>`
+ * (or `rtk read <file>`), never generating flag-specific variations like `rtk read -l aggressive`.
+ *
+ * @param {unknown} unsafe
+ * @returns {string[]}
+ */
+export const deriveRtkHookExclusions = (unsafe) => {
+  if (!Array.isArray(unsafe)) return [];
+  const exclusions = [];
+  const pattern = /^rtk\s+([a-zA-Z0-9-]+)$/;
+
+  for (const entry of unsafe) {
+    if (typeof entry !== 'string') continue;
+    const match = entry.trim().match(pattern);
+    if (match) {
+      exclusions.push(match[1]);
+    }
+  }
+
+  return exclusions;
+};
+
+/**
  * Checks whether rtk config contains all required hook exclusions.
  *
  * @param {string | null | undefined} configText

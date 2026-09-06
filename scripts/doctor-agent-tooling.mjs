@@ -3,7 +3,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
-import { formatReport, runAgentToolingChecks } from './lib/agent-tooling-checks.mjs';
+import {
+  deriveRtkHookExclusions,
+  formatReport,
+  runAgentToolingChecks,
+} from './lib/agent-tooling-checks.mjs';
 
 /**
  * `npm run doctor:agent-tooling` — diagnostic, not a gate.
@@ -62,15 +66,13 @@ if (rtkConfigPath && existsSync(rtkConfigPath)) {
   }
 }
 
-// Required hook exclusions from template/rtk-filters.json
+// Required hook exclusions derived from template/rtk-filters.json (unsafe list)
 let requiredHookExclusions = [];
 const filtersPath = join(rootDir, 'template', 'rtk-filters.json');
 if (existsSync(filtersPath)) {
   try {
     const filtersData = JSON.parse(readFileSync(filtersPath, 'utf8'));
-    if (Array.isArray(filtersData.requiredHookExclusions)) {
-      requiredHookExclusions = filtersData.requiredHookExclusions;
-    }
+    requiredHookExclusions = deriveRtkHookExclusions(filtersData.unsafe);
   } catch {
     requiredHookExclusions = [];
   }

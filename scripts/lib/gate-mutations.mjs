@@ -83,6 +83,17 @@ export const GATE_MUTATIONS = [
     search: '"lint": "eslint \\"src/**/*.ts\\""',
     replace: '"lint": "eslint \\"src/**/*.ts\\" --fix"',
   },
+  {
+    id: 'package-scripts-claude-hook-nonexistent-script',
+    gate: 'verify-package-scripts.mjs',
+    script: 'scripts/verify-package-scripts.mjs',
+    npmScript: 'verify:package-scripts',
+    file: '.claude/settings.json',
+    description: 'Point Claude hook command to nonexistent script in .claude/settings.json',
+    action: 'replace',
+    search: 'node scripts/claude-write-guard.mjs',
+    replace: 'node scripts/nonexistent-claude-guard.mjs',
+  },
 
   // 4. verify-ai-guide.mjs
   {

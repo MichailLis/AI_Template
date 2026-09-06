@@ -10,6 +10,5 @@
     "rtk read -l aggressive"
   ],
   "safe": ["rtk run", "rtk err", "rtk json", "rtk prisma", "rtk npm", "rtk ls", "rtk read"],
-  "warningDocuments": ["CLAUDE.md", "docs/tooling-evidence.md"],
-  "requiredHookExclusions": ["tsc", "vitest", "jest", "playwright", "find", "wc", "tree"]
+  "warningDocuments": ["CLAUDE.md", "docs/tooling-evidence.md"]
 }
