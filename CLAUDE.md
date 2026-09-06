@@ -63,8 +63,13 @@ Four containers: `ai_template_frontend` (5173), `ai_template_backend` (3000),
 `ai_template_postgres` (5432), `ai_template_adminer` (8080).
 `.devcontainer/` is for VS Code "Reopen in Container" only — never use it to run the project.
 
-After changing files under `client/`, rebuild the frontend container before browser-level
-verification (`verify:template`, `verify:e2e:critical`):
+The project name is pinned in `docker-compose.yml` with `name: ai_template`, ensuring that any
+checkout or worktree targets the same project and containers. Parallel compose stacks are not
+possible because `container_name` values are fixed globally.
+
+Browser-level gates (`verify:template`, `verify:e2e:critical`) build the client independently via
+`vite preview` and do not use Docker. Rebuilding the frontend container is required only for
+manual browser testing on `http://localhost:5173`:
 
 ```powershell
 docker compose up -d --build --force-recreate frontend

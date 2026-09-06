@@ -1,0 +1,13 @@
+{
+  "unsafe": [
+    "rtk tsc",
+    "rtk vitest",
+    "rtk jest",
+    "rtk playwright",
+    "rtk find",
+    "rtk wc",
+    "rtk tree",
+    "rtk read -l aggressive"
+  ],
+  "safe": ["rtk run", "rtk err", "rtk json", "rtk prisma", "rtk npm", "rtk ls", "rtk read"]
+}

@@ -286,3 +286,66 @@ If the host sleeps during a worker run, the worker process may terminate while t
 | Full server typechecking                       | `npm run typecheck`                                  | Direct compiler invocation; bypasses `rtk tsc` decoy package failure.                                                                                                                  |
 | File symbol inventory / class members          | Serena `get_symbols_overview`, `find_symbol depth:1` | ~200 bytes output vs reading multiple kilobytes of source code.                                                                                                                        |
 | Filter command output                          | `rtk` (safe filters only)                            | Compresses test and linter outputs; avoid filters that mask errors (`tsc`, `find`, `wc`, `vitest`).                                                                                    |
+
+---
+
+## 8. Tooling audit, 2026-09-06
+
+Empirical audit of agent tooling, command rewrites, hook latencies, and runtime behaviors.
+
+### rtk Command Rewriting via PreToolUse Hook
+
+A global `PreToolUse` hook intercepts shell execution and rewrites commands before execution:
+
+| Agent Input | Rewritten Command | Execution Behavior & Failure Mode                                         |
+| ----------- | ----------------- | ------------------------------------------------------------------------- |
+| `rg`        | `rtk rg`          | Drops file names and line numbers unless explicit path is provided        |
+| `cat`       | `rtk read`        | `-l aggressive` strips braces and function bodies, corrupting syntax      |
+| `git`       | `rtk git`         | Strips context lines, making `git diff` incompatible with `git apply`     |
+| `ls`        | `rtk ls`          | Compresses dirent listing                                                 |
+| `grep`      | `rtk grep`        | Fails on Windows without native grep on PATH (`Failed to resolve 'grep'`) |
+| `npm`       | `rtk npm`         | Compresses npm script output                                              |
+| `docker`    | `rtk docker`      | Compresses container logs                                                 |
+| `npx tsc`   | `rtk tsc`         | Silent failure: pulls npm decoy package and reports "No errors found"     |
+
+Commands wrapped as `timeout <cmd> > file 2>&1 </dev/null` bypass hook rewriting.
+
+### Hook Invocation Overhead per Tool Call
+
+Measured latency incurred on each tool invocation across active hooks:
+
+| Hook Component                   | Measured Latency | Purpose / Behavior                                       |
+| -------------------------------- | ---------------- | -------------------------------------------------------- |
+| `codebase-memory hook-augment`   | 1272 ms          | Symbol and graph context extraction                      |
+| `orca claude-hook`               | 221 ms           | Orchestration state and transcript capture               |
+| `rtk hook claude`                | 67 ms            | Command interception and rewrite logic                   |
+| **Total Hook Overhead per Call** | **1560 ms**      | Cumulative latency penalty per tool invocation (~1.56 s) |
+
+### Serena Startup Latency and MCP Timeout
+
+Connecting Serena via `uvx` triggers network fetches that exceed client timeouts:
+
+- `uvx --from git+https://github.com/oraios/serena` (warm cache): 99 s (runs git fetch over network on every invocation).
+- `uvx --from git+https://github.com/oraios/serena` (cold cache): >5 minutes.
+- MCP client connection timeout: 30 s (consistently fails with timeout under `uvx`).
+- Pre-installed binary via `uv tool install serena-agent --from git+https://github.com/oraios/serena`: 1.4 s startup, reliably completing well inside the 30 s threshold.
+- Repository configuration: root `.mcp.json` points to the pre-installed executable directly.
+
+### Measured Baseline Gate Latencies (2026-09-06)
+
+Reference gate timings on the `ai_template` stack prior to tooling alignment:
+
+| Verification Target      | Command                   | Result / Measurement                                      |
+| ------------------------ | ------------------------- | --------------------------------------------------------- |
+| Local daily verification | `npm run verify:local`    | rc=0, 74 973 ms                                           |
+| Script test suite        | `npm run test:scripts`    | 160 tests, 37 suites, 0 fail                              |
+| Gate mutation testing    | `npm run verify:gates`    | All gate mutations were successfully caught, 4 594 ms     |
+| AI guide compliance      | `npm run verify:ai-guide` | rc=0, 799 ms                                              |
+| CLAUDE.md byte size      | `wc -c CLAUDE.md`         | 16 185 bytes (budget: 18 500 bytes, reserve: 2 315 bytes) |
+
+### Compose Project Name Isolation in Worktrees
+
+- Docker Compose derives project name from the parent directory by default (`ai_template` in main checkout, `sargassum` in this worktree).
+- In a git worktree, `docker compose ps` displays an empty table despite four healthy containers (`ai_template_frontend`, `ai_template_backend`, `ai_template_postgres`, `ai_template_adminer`) running from the main checkout.
+- Running `docker compose --dry-run up -d frontend` proposes allocating separate `sargassum_*` volumes and recreating containers, while active `up` commands fail on global `container_name` collisions.
+- Resolution: Pinning `name: ai_template` in `docker-compose.yml` forces Docker Compose to target the unified project namespace from any worktree or branch, maintaining container sharing and preventing orphaned parallel stacks.

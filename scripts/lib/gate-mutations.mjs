@@ -117,6 +117,27 @@ export const GATE_MUTATIONS = [
     action: 'append',
     append: '\n' + '# Budget overflow padding line\n'.repeat(200),
   },
+  {
+    id: 'ai-guide-agents-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'AGENTS.md',
+    description: 'Add unsafe rtk command recommendation to AGENTS.md',
+    action: 'append',
+    append: '\nUse `rtk tsc` to check compiler output.\n',
+  },
+  {
+    id: 'ai-guide-claude-missing-unsafe-rtk',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'CLAUDE.md',
+    description: 'Remove rtk vitest and rtk jest warnings from CLAUDE.md',
+    action: 'replace',
+    search: 'and `rtk vitest` / `rtk jest`',
+    replace: 'and `vitest` / `jest`',
+  },
 
   // 5. verify-runtime-config.mjs
   {

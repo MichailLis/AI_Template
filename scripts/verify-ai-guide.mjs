@@ -17,12 +17,19 @@ const CLAUDE_MD_MAX_BYTES = 18_500;
 const aiGuidePath = join(root, 'AI_GUIDE.md');
 const readmePath = join(root, 'README.md');
 const claudeMdPath = join(root, 'CLAUDE.md');
+const agentsMdPath = join(root, 'AGENTS.md');
+const rtkFiltersPath = join(root, 'template', 'rtk-filters.json');
 
-const [aiGuide, readme, claudeMdBuffer] = await Promise.all([
+const [aiGuide, readme, claudeMdBuffer, agentsMd, rtkFiltersContent] = await Promise.all([
   readFile(aiGuidePath, 'utf-8'),
   readFile(readmePath, 'utf-8'),
   readFile(claudeMdPath),
+  readFile(agentsMdPath, 'utf-8'),
+  readFile(rtkFiltersPath, 'utf-8'),
 ]);
+const claudeMd = claudeMdBuffer.toString('utf-8');
+const rtkFilters = JSON.parse(rtkFiltersContent);
+const unsafeRtkFilters = Array.isArray(rtkFilters.unsafe) ? rtkFilters.unsafe : [];
 
 const requiredAiGuideTokens = [
   '## AI Agent Operating Mode (Local Development)',
@@ -52,6 +59,27 @@ for (const token of requiredReadmeTokens) {
   if (!readme.includes(token)) {
     errors.push(`README.md: expected to include "${token}"`);
   }
+}
+for (const command of unsafeRtkFilters) {
+  if (!claudeMd.includes(command)) {
+    errors.push(`CLAUDE.md: missing warning for unsafe rtk command "${command}"`);
+  }
+}
+
+for (const [docName, docContent] of [
+  ['AGENTS.md', agentsMd],
+  ['README.md', readme],
+  ['AI_GUIDE.md', aiGuide],
+]) {
+  for (const command of unsafeRtkFilters) {
+    if (docContent.includes(command)) {
+      errors.push(`${docName}: references unsafe rtk command "${command}"`);
+    }
+  }
+}
+
+if (!agentsMd.includes('template/rtk-filters.json')) {
+  errors.push('AGENTS.md: expected to include reference to "template/rtk-filters.json"');
 }
 
 // Paths the documents point at must exist. Documentation that names a file which was renamed or
@@ -174,7 +202,7 @@ const proseDocuments = async () => [
 for (const [label, markdown] of [
   ['AI_GUIDE.md', aiGuide],
   ['README.md', readme],
-  ['AGENTS.md', await readFile(join(root, 'AGENTS.md'), 'utf-8')],
+  ['AGENTS.md', agentsMd],
   ...(await proseDocuments()),
 ]) {
   const paths = collectPaths(markdown);
