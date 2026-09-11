@@ -6,11 +6,12 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface SignupDto {
+export interface UpdateUserDto {
   /** @pattern ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$ */
   email?: string;
-  /** @minLength 8 */
-  password: string;
-  /** @minLength 2 */
-  name?: string;
+  /**
+   * @minLength 2
+   * @nullable
+   */
+  name?: string | null;
 }

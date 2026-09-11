@@ -14,6 +14,10 @@ export type AdminUsersResponseDtoUsersItem = {
   /** @nullable */
   name: string | null;
   role: AdminUsersResponseDtoUsersItemRole;
+  /** @nullable */
+  deactivatedAt: string | null;
+  /** @nullable */
+  lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

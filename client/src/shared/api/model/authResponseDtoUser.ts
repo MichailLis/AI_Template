@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { AuthResponseDtoUserRole } from './authResponseDtoUserRole';
 
 export type AuthResponseDtoUser = {
   id: number;
@@ -12,4 +13,5 @@ export type AuthResponseDtoUser = {
   email: string;
   /** @nullable */
   name?: string | null;
+  role: AuthResponseDtoUserRole;
 };

@@ -69,8 +69,8 @@ Do not expose `OPENROUTER_API_KEY` through frontend/Vite env.
 
 ## Domain Modules
 
-- `auth` — signup/signin/logout/refresh. Access token is returned in the JSON body; refresh token is stored in an `HttpOnly` cookie.
-- `admin` — admin shell APIs, users, and settings.
+- `auth` — signin/logout/refresh. Access token is returned in the JSON body; refresh token is stored in an `HttpOnly` cookie. There is no public signup.
+- `admin` — admin shell APIs, user management (create, edit, reset password, deactivate, end sessions, role), and settings.
 - `app-settings` — persisted system settings such as profession atlas URL.
 - `analysis-prompts` — Prompt Studio lifecycle, model proxy, generation, and simulation endpoints.
 - `openrouter` — integration-owned OpenRouter API client/key resolution.

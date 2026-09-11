@@ -255,7 +255,7 @@ const main = async () => {
   }
 
   // Must satisfy the same minimum the server enforces when a password is created
-  // (SignupSchema and bootstrap-admin both require 8), otherwise the seeded admin
+  // (NewPasswordSchema and bootstrap-admin both require 8), otherwise the seeded admin
   // cannot be used against a stack that applies those rules.
   const hashedAdminPassword = await argon2.hash('admin123456');
   const hashedDemoPassword = await argon2.hash('password123');

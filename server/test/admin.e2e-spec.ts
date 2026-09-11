@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { setupApp } from '../src/setup-app';
+import { createE2eUser } from './helpers/create-e2e-user';
 
 describe('Admin (e2e)', () => {
   let app: INestApplication;
@@ -14,6 +15,7 @@ describe('Admin (e2e)', () => {
   const adminEmail = `admin-e2e-${suffix}@example.com`;
   const memberEmail = `member-e2e-${suffix}@example.com`;
   const viewerEmail = `viewer-e2e-${suffix}@example.com`;
+  const managedEmailPrefix = `managed-e2e-${suffix}`;
   const testsSlugPrefix = `e2e-tests-${suffix}`;
   const password = 'Password123';
 
@@ -23,9 +25,10 @@ describe('Admin (e2e)', () => {
   const cleanupUsers = async () => {
     await prisma.user.deleteMany({
       where: {
-        email: {
-          in: [adminEmail, memberEmail, viewerEmail],
-        },
+        OR: [
+          { email: { in: [adminEmail, memberEmail, viewerEmail] } },
+          { email: { startsWith: managedEmailPrefix } },
+        ],
       },
     });
   };
@@ -40,19 +43,6 @@ describe('Admin (e2e)', () => {
     });
   };
 
-  const signup = async (email: string, name: string) => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        email,
-        password,
-        name,
-      })
-      .expect(201);
-
-    return response.body;
-  };
-
   const signin = async (email: string) => {
     const response = await request(app.getHttpServer())
       .post('/auth/signin')
@@ -63,6 +53,15 @@ describe('Admin (e2e)', () => {
       .expect(200);
 
     return response.body.accessToken as string;
+  };
+
+  const getRefreshCookie = (response: request.Response) => {
+    const setCookieHeader = response.headers['set-cookie'] as unknown as string[] | undefined;
+    const refreshCookie = setCookieHeader?.find((cookie) => cookie.startsWith('refreshToken='));
+
+    expect(refreshCookie).toBeDefined();
+
+    return refreshCookie!.split(';')[0];
   };
 
   beforeAll(async () => {
@@ -78,17 +77,13 @@ describe('Admin (e2e)', () => {
     await cleanupTestTopics();
     await cleanupUsers();
 
-    const adminSignup = await signup(adminEmail, 'Admin E2E');
-    const memberSignup = await signup(memberEmail, 'Member E2E');
-    await signup(viewerEmail, 'Viewer E2E');
-
-    adminUserId = adminSignup.user.id;
-    memberUserId = memberSignup.user.id;
-
-    await prisma.user.update({
-      where: { id: adminUserId },
-      data: { role: 'ADMIN' },
-    });
+    adminUserId = (
+      await createE2eUser(prisma, { email: adminEmail, password, name: 'Admin E2E', role: 'ADMIN' })
+    ).id;
+    memberUserId = (
+      await createE2eUser(prisma, { email: memberEmail, password, name: 'Member E2E' })
+    ).id;
+    await createE2eUser(prisma, { email: viewerEmail, password, name: 'Viewer E2E' });
   });
 
   afterAll(async () => {
@@ -167,6 +162,238 @@ describe('Admin (e2e)', () => {
       success: false,
       error: { message: 'Admin cannot revoke own admin role' },
     });
+  });
+
+  it('POST /admin/users should create a user whose generated password signs in', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-created@example.com`;
+
+    const response = await request(app.getHttpServer())
+      .post('/admin/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: ` ${email.toUpperCase()} `, name: 'Managed E2E' })
+      .expect(201);
+
+    expect(response.body.user).toMatchObject({
+      email,
+      name: 'Managed E2E',
+      role: 'USER',
+      deactivatedAt: null,
+      lastLoginAt: null,
+    });
+    expect(typeof response.body.generatedPassword).toBe('string');
+
+    const signinResponse = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({ email, password: response.body.generatedPassword as string })
+      .expect(200);
+
+    expect(signinResponse.body.user).toMatchObject({ email, role: 'USER' });
+  });
+
+  it('POST /admin/users should keep a supplied password and reject a taken email', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-supplied@example.com`;
+
+    const response = await request(app.getHttpServer())
+      .post('/admin/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email, password, role: 'ADMIN' })
+      .expect(201);
+
+    expect(response.body.generatedPassword).toBeNull();
+    expect(response.body.user.role).toBe('ADMIN');
+    await signin(email);
+
+    const duplicate = await request(app.getHttpServer())
+      .post('/admin/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email, password })
+      .expect(409);
+
+    expect(duplicate.body).toMatchObject({
+      success: false,
+      error: { message: 'Email already exists' },
+    });
+  });
+
+  it('POST /admin/users should reject non-admin token', async () => {
+    const viewerToken = await signin(viewerEmail);
+
+    await request(app.getHttpServer())
+      .post('/admin/users')
+      .set('Authorization', `Bearer ${viewerToken}`)
+      .send({ email: `${managedEmailPrefix}-forbidden@example.com` })
+      .expect(403);
+  });
+
+  it('PATCH /admin/users/:id should update email and clear name', async () => {
+    const adminToken = await signin(adminEmail);
+    const user = await createE2eUser(prisma, {
+      email: `${managedEmailPrefix}-edit@example.com`,
+      password,
+      name: 'Before Edit',
+    });
+    const nextEmail = `${managedEmailPrefix}-edited@example.com`;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/admin/users/${user.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: nextEmail, name: null })
+      .expect(200);
+
+    expect(response.body).toMatchObject({ id: user.id, email: nextEmail, name: null });
+
+    await request(app.getHttpServer())
+      .patch(`/admin/users/${user.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: adminEmail })
+      .expect(409);
+
+    await request(app.getHttpServer())
+      .patch('/admin/users/2147483647')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Nobody' })
+      .expect(404);
+  });
+
+  it('POST /admin/users/:id/password should replace the password and end sessions', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-reset@example.com`;
+    const user = await createE2eUser(prisma, { email, password });
+
+    const userSignin = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({ email, password })
+      .expect(200);
+    const refreshCookie = getRefreshCookie(userSignin);
+
+    const response = await request(app.getHttpServer())
+      .post(`/admin/users/${user.id}/password`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({})
+      .expect(200);
+    const nextPassword = response.body.generatedPassword as string;
+
+    expect(nextPassword).toHaveLength(12);
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', refreshCookie)
+      .expect(403);
+    await request(app.getHttpServer()).post('/auth/signin').send({ email, password }).expect(403);
+    await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({ email, password: nextPassword })
+      .expect(200);
+  });
+
+  it('PATCH /admin/users/:id/status should lock a user out until reactivated', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-status@example.com`;
+    const user = await createE2eUser(prisma, { email, password });
+
+    const deactivated = await request(app.getHttpServer())
+      .patch(`/admin/users/${user.id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'DEACTIVATED' })
+      .expect(200);
+
+    expect(typeof deactivated.body.deactivatedAt).toBe('string');
+
+    const rejected = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({ email, password })
+      .expect(403);
+
+    expect(rejected.body).toMatchObject({
+      success: false,
+      error: { message: 'Account is deactivated' },
+    });
+
+    const filtered = await request(app.getHttpServer())
+      .get('/admin/users')
+      .query({ status: 'DEACTIVATED', search: managedEmailPrefix })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const filteredUsers = filtered.body.users as Array<{ id: number; deactivatedAt: unknown }>;
+
+    expect(filteredUsers.map((item) => item.id)).toContain(user.id);
+    expect(filteredUsers.every((item) => item.deactivatedAt !== null)).toBe(true);
+
+    const reactivated = await request(app.getHttpServer())
+      .patch(`/admin/users/${user.id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'ACTIVE' })
+      .expect(200);
+
+    expect(reactivated.body.deactivatedAt).toBeNull();
+    await signin(email);
+  });
+
+  it('PATCH /admin/users/:id/status should cut a deactivated admin off at once', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-admin-status@example.com`;
+    const secondAdmin = await createE2eUser(prisma, { email, password, role: 'ADMIN' });
+    const secondAdminToken = await signin(email);
+
+    await request(app.getHttpServer())
+      .get('/admin/users')
+      .set('Authorization', `Bearer ${secondAdminToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/admin/users/${secondAdmin.id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'DEACTIVATED' })
+      .expect(200);
+
+    // The access token is still inside its 15 minutes, but the admin check reads the database.
+    const response = await request(app.getHttpServer())
+      .get('/admin/users')
+      .set('Authorization', `Bearer ${secondAdminToken}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin area only' },
+    });
+  });
+
+  it('PATCH /admin/users/:id/status should block self deactivation', async () => {
+    const adminToken = await signin(adminEmail);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/admin/users/${adminUserId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'DEACTIVATED' })
+      .expect(403);
+
+    expect(response.body).toMatchObject({
+      success: false,
+      error: { message: 'Admin cannot deactivate own account' },
+    });
+  });
+
+  it('POST /admin/users/:id/sessions/revoke should invalidate the refresh token', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-sessions@example.com`;
+    const user = await createE2eUser(prisma, { email, password });
+
+    const userSignin = await request(app.getHttpServer())
+      .post('/auth/signin')
+      .send({ email, password })
+      .expect(200);
+    const refreshCookie = getRefreshCookie(userSignin);
+
+    await request(app.getHttpServer())
+      .post(`/admin/users/${user.id}/sessions/revoke`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', refreshCookie)
+      .expect(403);
   });
 
   it('tests module should reject non-admin token', async () => {
@@ -412,8 +639,11 @@ describe('Admin (e2e)', () => {
     const lifecycleTopicSlug = `${testsSlugPrefix}-archive-restore-${lifecycleSuffix}`;
     const lifecycleTopicTitle = `Archive Restore E2E ${lifecycleSuffix}`;
 
-    await signup(lifecycleAdminEmail, 'Archive Admin E2E');
-    await signin(lifecycleAdminEmail);
+    await createE2eUser(prisma, {
+      email: lifecycleAdminEmail,
+      password,
+      name: 'Archive Admin E2E',
+    });
 
     const lifecycleAdmin = await prisma.user.findUniqueOrThrow({
       where: { email: lifecycleAdminEmail },

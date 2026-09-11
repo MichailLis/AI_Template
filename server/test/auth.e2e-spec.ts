@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { setupApp } from '../src/setup-app';
+import { createE2eUser } from './helpers/create-e2e-user';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -61,10 +62,20 @@ describe('Auth (e2e)', () => {
       where: { email: { in: [testEmail, refreshEmail, normalizedEmail] } },
     });
 
-    await request(app.getHttpServer()).post('/auth/signup').send({
+    await createE2eUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+      name: 'Auth E2E User',
+    });
+    await createE2eUser(prisma, {
       email: refreshEmail,
       password: testPassword,
       name: 'Auth Refresh E2E User',
+    });
+    await createE2eUser(prisma, {
+      email: normalizedEmail,
+      password: testPassword,
+      name: 'Normalized Auth E2E User',
     });
   });
 
@@ -75,23 +86,14 @@ describe('Auth (e2e)', () => {
     await app.close();
   });
 
-  it('POST /auth/signup should register user and return auth tokens', async () => {
-    const response = await request(app.getHttpServer())
+  it('POST /auth/signup should not exist: only admins create accounts', async () => {
+    await request(app.getHttpServer())
       .post('/auth/signup')
       .send({
-        email: testEmail,
+        email: `auth-signup-closed-e2e-${Date.now()}@example.com`,
         password: testPassword,
-        name: 'Auth E2E User',
       })
-      .expect(201);
-
-    expect(response.body.user).toMatchObject({
-      email: testEmail,
-      name: 'Auth E2E User',
-    });
-    expect(typeof response.body.accessToken).toBe('string');
-    expect(response.body.refreshToken).toBeUndefined();
-    getRefreshCookie(response);
+      .expect(404);
   });
 
   it('POST /auth/signin should login existing user and set an HttpOnly refresh cookie', async () => {
@@ -112,23 +114,8 @@ describe('Auth (e2e)', () => {
     getRefreshCookie(response);
   });
 
-  it('POST /auth/signup and /auth/signin should normalize email case and whitespace', async () => {
+  it('POST /auth/signin should normalize email case and whitespace', async () => {
     const mixedCaseEmail = ` ${normalizedEmail.toUpperCase()} `;
-
-    const signupResponse = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        email: mixedCaseEmail,
-        password: testPassword,
-        name: 'Normalized Auth E2E User',
-      })
-      .expect(201);
-
-    expect(signupResponse.body.user).toMatchObject({
-      email: normalizedEmail,
-      name: 'Normalized Auth E2E User',
-    });
-    getRefreshCookie(signupResponse);
 
     const signinResponse = await request(app.getHttpServer())
       .post('/auth/signin')

@@ -5,6 +5,7 @@ export const UserResponseSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string().optional().nullable(),
+  role: z.enum(['USER', 'ADMIN']),
 });
 
 export const AuthResponseSchema = z.object({

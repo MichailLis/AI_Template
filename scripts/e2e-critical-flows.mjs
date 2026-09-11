@@ -108,6 +108,7 @@ const mockAuthResponse = {
     id: 1,
     email: 'admin@example.com',
     name: 'Admin User',
+    role: 'ADMIN',
   },
 };
 

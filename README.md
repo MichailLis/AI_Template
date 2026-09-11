@@ -110,12 +110,14 @@ Current UI note:
 
 - This branch exposes `/login` and a protected admin workspace under `/admin`.
 - `/admin` redirects to `/admin/tests`; there is no separate mock dashboard/overview page.
-- Signup is available as backend API (`POST /auth/signup`) and can be tested via Swagger.
+- There is no public signup. Admins create accounts on `/admin/users` (`POST /admin/users`); the
+  first admin comes from `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` or the seed.
 - Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
 
 ## Auth Session Contract
 
-- `POST /auth/signup` and `POST /auth/signin` return `accessToken` and `user` in the JSON body.
+- `POST /auth/signin` returns `accessToken` and `user` (including `role`) in the JSON body. A
+  deactivated account is rejected with `403 Account is deactivated`.
 - The refresh token is set only as an `HttpOnly` cookie named `refreshToken`.
 - `POST /auth/refresh` reads the refresh cookie and returns a new `accessToken`; it does not return a refresh token in the response body.
 - Browser refresh handling lives in `client/src/shared/api/interceptors.ts`; generated API code and `client/src/shared/api/api.ts` must not read browser storage directly.

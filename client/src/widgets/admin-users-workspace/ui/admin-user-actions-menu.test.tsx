@@ -5,24 +5,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminUserActionsMenu } from './admin-user-actions-menu';
 
 const onToggleOpen = vi.fn();
+const onEdit = vi.fn();
 const onToggleRole = vi.fn();
+const onResetPassword = vi.fn();
+const onRevokeSessions = vi.fn();
+const onToggleStatus = vi.fn();
 const onCopyEmail = vi.fn();
 const onClose = vi.fn();
 
 const CURRENT_ADMIN_ID = 1;
 
 const renderMenu = (
-  user: { id: number; email: string; role: 'USER' | 'ADMIN' },
+  user: { id: number; email: string; role: 'USER' | 'ADMIN'; deactivatedAt?: string | null },
   overrides: { pendingUserId?: number | null; isOpen?: boolean } = {},
 ) =>
   render(
     <AdminUserActionsMenu
-      user={user}
+      user={{ deactivatedAt: null, ...user }}
       currentUserId={CURRENT_ADMIN_ID}
       pendingUserId={overrides.pendingUserId ?? null}
       isOpen={overrides.isOpen ?? true}
       onToggleOpen={onToggleOpen}
+      onEdit={onEdit}
       onToggleRole={onToggleRole}
+      onResetPassword={onResetPassword}
+      onRevokeSessions={onRevokeSessions}
+      onToggleStatus={onToggleStatus}
       onCopyEmail={onCopyEmail}
       onClose={onClose}
     />,
@@ -81,6 +89,42 @@ describe('AdminUserActionsMenu', () => {
 
     expect(onCopyEmail).toHaveBeenCalledWith('member@example.com');
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not offer an admin actions that would lock themselves out', () => {
+    renderMenu({ id: CURRENT_ADMIN_ID, email: 'me@example.com', role: 'ADMIN' });
+
+    expect(screen.getByRole('button', { name: /сбросить пароль/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /завершить сеансы/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /отключить доступ/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /изменить данные/i })).toBeEnabled();
+  });
+
+  it('routes each management action to its handler and closes the menu', async () => {
+    renderMenu({ id: 3, email: 'member@example.com', role: 'USER' });
+
+    await userEvent.click(screen.getByRole('button', { name: /изменить данные/i }));
+    await userEvent.click(screen.getByRole('button', { name: /сбросить пароль/i }));
+    await userEvent.click(screen.getByRole('button', { name: /завершить сеансы/i }));
+    await userEvent.click(screen.getByRole('button', { name: /отключить доступ/i }));
+
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onResetPassword).toHaveBeenCalledTimes(1);
+    expect(onRevokeSessions).toHaveBeenCalledTimes(1);
+    expect(onToggleStatus).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(4);
+  });
+
+  it('offers to switch access back on for a deactivated user', () => {
+    renderMenu({
+      id: 3,
+      email: 'member@example.com',
+      role: 'USER',
+      deactivatedAt: '2026-09-01T00:00:00.000Z',
+    });
+
+    expect(screen.getByRole('button', { name: /включить доступ/i })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: /отключить доступ/i })).not.toBeInTheDocument();
   });
 
   it('renders no actions until the menu is opened', () => {

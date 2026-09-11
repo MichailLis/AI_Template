@@ -15,6 +15,7 @@ interface SigninOptions {
       id: number;
       email: string;
       name: string;
+      role: 'USER' | 'ADMIN';
     };
   }) => void;
   onError?: (error: unknown) => void;
@@ -69,6 +70,7 @@ describe('LoginForm', () => {
           email: 'manager@example.com',
           id: 7,
           name: 'Manager',
+          role: 'ADMIN',
         },
       });
     });
@@ -79,6 +81,40 @@ describe('LoginForm', () => {
     vi.clearAllMocks();
     safeStorage.clear();
     useAuthStore.setState({ isAuthenticated: false, user: null });
+  });
+
+  const renderLoginRoute = () =>
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+  it('greets an admin after a successful login', async () => {
+    renderLoginRoute();
+
+    await submitLogin();
+
+    expect(toastMock.success).toHaveBeenCalledWith('С возвращением!');
+  });
+
+  it('does not greet a user who is about to see the access-pending screen', async () => {
+    authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
+      options?.onSuccess?.({
+        accessToken: 'access-token',
+        user: { email: 'student@example.com', id: 3, name: 'Student', role: 'USER' },
+      });
+    });
+
+    renderLoginRoute();
+
+    await submitLogin();
+
+    expect(await screen.findByTestId('current-location')).toHaveTextContent('/admin');
+    expect(toastMock.success).not.toHaveBeenCalled();
   });
 
   it('returns to the protected URL from router state after successful login', async () => {
@@ -180,6 +216,28 @@ describe('LoginForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Неверный email или пароль');
     expect(toastMock.error).toHaveBeenCalledWith('Неверный email или пароль');
+  });
+
+  it('tells a deactivated user why they cannot sign in', async () => {
+    authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
+      options?.onError?.({
+        response: { data: { error: { code: 'HTTP_ERROR', message: 'Account is deactivated' } } },
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await submitLogin();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Аккаунт отключён. Обратитесь к администратору.',
+    );
   });
 
   it('shows Russian validation messages for an empty form', async () => {

@@ -51,6 +51,9 @@ const EXACT_MESSAGE_TRANSLATIONS: Record<string, string> = {
   'Admin area only': 'Раздел доступен только администраторам',
   'Email already exists': 'Пользователь с таким email уже есть',
   'User not found': 'Пользователь не найден',
+  'Account is deactivated': 'Аккаунт отключён. Обратитесь к администратору.',
+  'Admin cannot revoke own admin role': 'Нельзя снять права администратора с самого себя',
+  'Admin cannot deactivate own account': 'Нельзя отключить собственный аккаунт',
   'Education organization with this name already exists':
     'Учебное заведение с таким названием уже есть',
   'Public link not found': 'Публичная ссылка не найдена. Возможно, ее уже удалили.',

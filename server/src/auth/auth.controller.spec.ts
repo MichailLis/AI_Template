@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { AuthController } from './auth.controller';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth-cookie';
 import { AuthService } from './auth.service';
-import { SigninDto, SignupDto } from './dto/auth.dto';
+import { SigninDto } from './dto/auth.dto';
 
 type MockResponse = Response & {
   clearCookie: jest.Mock;
@@ -19,7 +19,6 @@ const createMockResponse = (): MockResponse =>
 describe('AuthController', () => {
   let controller: AuthController;
   let authServiceMock: {
-    signup: jest.Mock;
     signin: jest.Mock;
     logout: jest.Mock;
     refreshTokens: jest.Mock;
@@ -27,7 +26,6 @@ describe('AuthController', () => {
 
   beforeEach(() => {
     authServiceMock = {
-      signup: jest.fn(),
       signin: jest.fn(),
       logout: jest.fn(),
       refreshTokens: jest.fn(),
@@ -38,41 +36,6 @@ describe('AuthController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('signup should delegate to auth service', async () => {
-    const responseMock = createMockResponse();
-    const dto: SignupDto = {
-      email: 'signup@example.com',
-      password: 'Password123',
-      name: 'Signup User',
-    };
-    const response = {
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-      user: {
-        id: 1,
-        email: dto.email,
-        name: dto.name,
-      },
-    };
-
-    authServiceMock.signup.mockResolvedValue(response);
-
-    await expect(controller.signup(dto, responseMock)).resolves.toEqual({
-      accessToken: response.accessToken,
-      user: response.user,
-    });
-    expect(authServiceMock.signup).toHaveBeenCalledWith(dto);
-    expect(responseMock.cookie).toHaveBeenCalledWith(
-      REFRESH_TOKEN_COOKIE_NAME,
-      response.refreshToken,
-      expect.objectContaining({
-        httpOnly: true,
-        path: '/auth/refresh',
-        sameSite: 'lax',
-      }),
-    );
   });
 
   it('signin should delegate to auth service', async () => {

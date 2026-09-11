@@ -29,22 +29,27 @@ import type {
   AdminProfessionAtlasSettingsResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
+  AdminUserCredentialsResponseDto,
   AdminUserResponseDto,
   AdminUsersResponseDto,
   AnalysisPromptListResponseDto,
   AnalysisPromptResponseDto,
   AnalysisPromptVersionResponseDto,
   CreateAnalysisPromptDto,
+  CreateUserDto,
   ErrorResponseDto,
   GeneratePromptDto,
   ProfessionAtlasCoverageResponseDto,
   PromptSimulationRequestDto,
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
+  ResetUserPasswordDto,
   UpdateAnalysisPromptVersionDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
+  UpdateUserDto,
   UpdateUserRoleDto,
+  UpdateUserStatusDto,
 } from '../../model';
 
 import { customInstance } from '../../api';
@@ -321,6 +326,450 @@ export function useAdminControllerGetUsers<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+/**
+ * @summary Create a user account
+ */
+export const adminControllerCreateUser = (
+  createUserDto: CreateUserDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserCredentialsResponseDto>(
+    {
+      url: `/admin/users`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createUserDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminControllerCreateUserMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerCreateUser>>,
+    TError,
+    AdminControllerCreateUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerCreateUser>>,
+  TError,
+  AdminControllerCreateUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['adminControllerCreateUser'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerCreateUser>>,
+    AdminControllerCreateUserMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminControllerCreateUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerCreateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerCreateUser>>
+>;
+export type AdminControllerCreateUserMutationBody = CreateUserDto;
+export type AdminControllerCreateUserMutationError = ErrorType<ErrorResponseDto>;
+export type AdminControllerCreateUserMutationVariables = { data: CreateUserDto };
+
+/**
+ * @summary Create a user account
+ */
+export const useAdminControllerCreateUser = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerCreateUser>>,
+      TError,
+      AdminControllerCreateUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerCreateUser>>,
+  TError,
+  AdminControllerCreateUserMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminControllerCreateUserMutationOptions(options), queryClient);
+};
+/**
+ * @summary Update user email and name
+ */
+export const adminControllerUpdateUser = (
+  id: number,
+  updateUserDto: UpdateUserDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserResponseDto>(
+    {
+      url: `/admin/users/${id}`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateUserDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminControllerUpdateUserMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerUpdateUser>>,
+    TError,
+    AdminControllerUpdateUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerUpdateUser>>,
+  TError,
+  AdminControllerUpdateUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['adminControllerUpdateUser'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerUpdateUser>>,
+    AdminControllerUpdateUserMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminControllerUpdateUser(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerUpdateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerUpdateUser>>
+>;
+export type AdminControllerUpdateUserMutationBody = UpdateUserDto;
+export type AdminControllerUpdateUserMutationError = ErrorType<ErrorResponseDto>;
+export type AdminControllerUpdateUserMutationVariables = { id: number; data: UpdateUserDto };
+
+/**
+ * @summary Update user email and name
+ */
+export const useAdminControllerUpdateUser = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerUpdateUser>>,
+      TError,
+      AdminControllerUpdateUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerUpdateUser>>,
+  TError,
+  AdminControllerUpdateUserMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminControllerUpdateUserMutationOptions(options), queryClient);
+};
+/**
+ * @summary Reset user password and end their sessions
+ */
+export const adminControllerResetUserPassword = (
+  id: number,
+  resetUserPasswordDto: ResetUserPasswordDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserCredentialsResponseDto>(
+    {
+      url: `/admin/users/${id}/password`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: resetUserPasswordDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminControllerResetUserPasswordMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerResetUserPassword>>,
+    TError,
+    AdminControllerResetUserPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerResetUserPassword>>,
+  TError,
+  AdminControllerResetUserPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['adminControllerResetUserPassword'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerResetUserPassword>>,
+    AdminControllerResetUserPasswordMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminControllerResetUserPassword(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerResetUserPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerResetUserPassword>>
+>;
+export type AdminControllerResetUserPasswordMutationBody = ResetUserPasswordDto;
+export type AdminControllerResetUserPasswordMutationError = ErrorType<ErrorResponseDto>;
+export type AdminControllerResetUserPasswordMutationVariables = {
+  id: number;
+  data: ResetUserPasswordDto;
+};
+
+/**
+ * @summary Reset user password and end their sessions
+ */
+export const useAdminControllerResetUserPassword = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerResetUserPassword>>,
+      TError,
+      AdminControllerResetUserPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerResetUserPassword>>,
+  TError,
+  AdminControllerResetUserPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminControllerResetUserPasswordMutationOptions(options), queryClient);
+};
+/**
+ * @summary Activate or deactivate a user account
+ */
+export const adminControllerUpdateUserStatus = (
+  id: number,
+  updateUserStatusDto: UpdateUserStatusDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserResponseDto>(
+    {
+      url: `/admin/users/${id}/status`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateUserStatusDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminControllerUpdateUserStatusMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>,
+    TError,
+    AdminControllerUpdateUserStatusMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>,
+  TError,
+  AdminControllerUpdateUserStatusMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['adminControllerUpdateUserStatus'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>,
+    AdminControllerUpdateUserStatusMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminControllerUpdateUserStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerUpdateUserStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>
+>;
+export type AdminControllerUpdateUserStatusMutationBody = UpdateUserStatusDto;
+export type AdminControllerUpdateUserStatusMutationError = ErrorType<ErrorResponseDto>;
+export type AdminControllerUpdateUserStatusMutationVariables = {
+  id: number;
+  data: UpdateUserStatusDto;
+};
+
+/**
+ * @summary Activate or deactivate a user account
+ */
+export const useAdminControllerUpdateUserStatus = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>,
+      TError,
+      AdminControllerUpdateUserStatusMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerUpdateUserStatus>>,
+  TError,
+  AdminControllerUpdateUserStatusMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminControllerUpdateUserStatusMutationOptions(options), queryClient);
+};
+/**
+ * Invalidates the refresh token; an issued access token expires within 15 minutes.
+ * @summary End user sessions
+ */
+export const adminControllerRevokeUserSessions = (
+  id: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminUserResponseDto>(
+    { url: `/admin/users/${id}/sessions/revoke`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminControllerRevokeUserSessionsMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>,
+    TError,
+    AdminControllerRevokeUserSessionsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>,
+  TError,
+  AdminControllerRevokeUserSessionsMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['adminControllerRevokeUserSessions'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>,
+    AdminControllerRevokeUserSessionsMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminControllerRevokeUserSessions(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminControllerRevokeUserSessionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>
+>;
+
+export type AdminControllerRevokeUserSessionsMutationError = ErrorType<ErrorResponseDto>;
+export type AdminControllerRevokeUserSessionsMutationVariables = { id: number };
+
+/**
+ * @summary End user sessions
+ */
+export const useAdminControllerRevokeUserSessions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>,
+      TError,
+      AdminControllerRevokeUserSessionsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminControllerRevokeUserSessions>>,
+  TError,
+  AdminControllerRevokeUserSessionsMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminControllerRevokeUserSessionsMutationOptions(options), queryClient);
+};
 /**
  * @summary Update user role
  */

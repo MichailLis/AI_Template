@@ -8,6 +8,7 @@
 import type { AdminControllerGetUsersRole } from './adminControllerGetUsersRole';
 import type { AdminControllerGetUsersSortBy } from './adminControllerGetUsersSortBy';
 import type { AdminControllerGetUsersSortOrder } from './adminControllerGetUsersSortOrder';
+import type { AdminControllerGetUsersStatus } from './adminControllerGetUsersStatus';
 
 export type AdminControllerGetUsersParams = {
   /**
@@ -16,6 +17,7 @@ export type AdminControllerGetUsersParams = {
    */
   search?: string;
   role?: AdminControllerGetUsersRole;
+  status?: AdminControllerGetUsersStatus;
   sortBy?: AdminControllerGetUsersSortBy;
   sortOrder?: AdminControllerGetUsersSortOrder;
   /**

@@ -2,33 +2,26 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
-import {
-  useAdminControllerGetUsers,
-  useAdminControllerUpdateUserRole,
-} from '@/shared/api/generated/admin/admin';
+import { useAdminControllerGetUsers } from '@/shared/api/generated/admin/admin';
 
-import { buildUsersQueryParams, getApiErrorMessage } from './admin-users-workspace.utils';
+import { buildUsersQueryParams } from './admin-users-workspace.utils';
 
-import type { RoleFilter, SortBy, SortOrder } from './admin-users-workspace.types';
+import type { RoleFilter, SortBy, SortOrder, StatusFilter } from './admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 const LIMIT = 10;
 
-const ROLE_LABEL_BY_CODE: Record<'USER' | 'ADMIN', string> = {
-  USER: 'Пользователь',
-  ADMIN: 'Администратор',
-};
-
+/** Список, фильтры и меню строк. Изменения пользователей живут в `useAdminUserActions`. */
 export function useAdminUsersWorkspace() {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('updatedAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [page, setPage] = useState(1);
   const [activeActionsUserId, setActiveActionsUserId] = useState<number | null>(null);
-  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
 
   const queryParams = useMemo(() => {
     return buildUsersQueryParams({
@@ -38,15 +31,15 @@ export function useAdminUsersWorkspace() {
       sortOrder,
       searchQuery,
       roleFilter,
+      statusFilter,
     });
-  }, [page, roleFilter, searchQuery, sortBy, sortOrder]);
+  }, [page, roleFilter, searchQuery, sortBy, sortOrder, statusFilter]);
 
   const usersQuery = useAdminControllerGetUsers(queryParams, {
     query: {
       placeholderData: (previousData) => previousData,
     },
   });
-  const updateRoleMutation = useAdminControllerUpdateUserRole();
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
@@ -63,10 +56,16 @@ export function useAdminUsersWorkspace() {
     setPage(1);
   };
 
+  const handleStatusFilterChange = (nextStatus: StatusFilter) => {
+    setStatusFilter(nextStatus);
+    setPage(1);
+  };
+
   const handleResetFilters = () => {
     setSearchInput('');
     setSearchQuery('');
     setRoleFilter('ALL');
+    setStatusFilter('ALL');
     setSortBy('updatedAt');
     setSortOrder('desc');
     setPage(1);
@@ -90,30 +89,6 @@ export function useAdminUsersWorkspace() {
     setActiveActionsUserId(null);
   };
 
-  const handleRoleToggle = (targetUserId: number, nextRole: 'USER' | 'ADMIN') => {
-    setPendingUserId(targetUserId);
-
-    updateRoleMutation.mutate(
-      {
-        id: targetUserId,
-        data: { role: nextRole },
-      },
-      {
-        onSuccess: () => {
-          toast.success(`Роль обновлена: ${ROLE_LABEL_BY_CODE[nextRole]}`);
-          usersQuery.refetch();
-        },
-        onError: (error: unknown) => {
-          toast.error(getApiErrorMessage(error));
-        },
-        onSettled: () => {
-          setPendingUserId(null);
-          setActiveActionsUserId(null);
-        },
-      },
-    );
-  };
-
   const handleCopyEmail = async (email: string) => {
     try {
       await navigator.clipboard.writeText(email);
@@ -135,20 +110,20 @@ export function useAdminUsersWorkspace() {
     currentUserId,
     searchInput,
     roleFilter,
+    statusFilter,
     sortBy,
     sortOrder,
     activeActionsUserId,
-    pendingUserId,
     usersQuery,
     handleSearchInputChange,
     handleSearchSubmit,
     handleRoleFilterChange,
+    handleStatusFilterChange,
     handleResetFilters,
     handleSortByChange,
     handleSortOrderToggle,
     handleToggleActionsMenu,
     handleCloseActionsMenu,
-    handleRoleToggle,
     handleCopyEmail,
     handlePreviousPage,
     handleNextPage,

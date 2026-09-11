@@ -8,6 +8,7 @@ interface UsersQueryParamsInput {
   sortOrder: 'asc' | 'desc';
   searchQuery: string;
   roleFilter: 'ALL' | 'USER' | 'ADMIN';
+  statusFilter: 'ALL' | 'ACTIVE' | 'DEACTIVATED';
 }
 
 export { formatDateTime };
@@ -21,6 +22,7 @@ export const buildUsersQueryParams = ({
   sortOrder,
   searchQuery,
   roleFilter,
+  statusFilter,
 }: UsersQueryParamsInput) => {
   return {
     page,
@@ -29,5 +31,6 @@ export const buildUsersQueryParams = ({
     sortOrder,
     ...(searchQuery ? { search: searchQuery } : {}),
     ...(roleFilter !== 'ALL' ? { role: roleFilter } : {}),
+    ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
   };
 };
