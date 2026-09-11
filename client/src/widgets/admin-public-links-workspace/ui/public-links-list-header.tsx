@@ -22,8 +22,7 @@ export function PublicLinksListHeader({
 }: PublicLinksListHeaderProps) {
   return (
     <AdminListToolbar
-      title="Публичные ссылки"
-      description="Публикация тестов и управление доступом"
+      tabsLabel="Область публичных ссылок"
       searchId="public-links-search"
       searchValue={searchValue}
       searchPlaceholder="Поиск по коду, тесту или заведению"
@@ -38,7 +37,7 @@ export function PublicLinksListHeader({
             <Link to="/admin/public-links/organizations">Учебные заведения</Link>
           </Button>
           <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-            <Link to="/admin/public-links/stats">Статистика</Link>
+            <Link to="/admin/analytics?tab=attempts">Статистика</Link>
           </Button>
           <Button type="button" size="sm" className="w-full sm:w-auto" onClick={onOpenCreateDialog}>
             Создать

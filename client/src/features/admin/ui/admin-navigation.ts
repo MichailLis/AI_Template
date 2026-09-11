@@ -66,17 +66,9 @@ export const navItems: AdminNavItem[] = [
   {
     id: 'analytics',
     label: 'Аналитика',
-    description: 'Отчеты и срезы',
+    description: 'Сводные отчеты и прохождения',
     icon: BarChart3,
     href: '/admin/analytics',
-    group: 'analytics',
-  },
-  {
-    id: 'public-links-stats',
-    label: 'Статистика ссылок',
-    description: 'Попытки и результаты',
-    icon: BarChart3,
-    href: '/admin/public-links/stats',
     group: 'analytics',
   },
   {

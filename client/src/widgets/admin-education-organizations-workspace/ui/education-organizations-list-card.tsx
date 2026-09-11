@@ -6,7 +6,7 @@ import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
@@ -26,10 +26,10 @@ interface EducationOrganizationsListCardProps {
 
 const EDUCATION_ORGANIZATIONS_COLUMNS = [
   { id: 'organization', header: 'Заведение' },
-  { id: 'mode', header: 'Режим', className: 'hidden md:table-cell' },
-  { id: 'links', header: 'Ссылки' },
+  { id: 'mode', header: 'Формат группы', className: 'hidden md:table-cell' },
+  { id: 'links', header: 'Ссылки: активные / всего', className: 'whitespace-nowrap' },
   { id: 'attempts', header: 'Попытки', className: 'hidden md:table-cell' },
-  { id: 'personal-data', header: 'ПДн' },
+  { id: 'personal-data', header: 'Персональные данные', className: 'whitespace-nowrap' },
   { id: 'status', header: 'Статус' },
   { id: 'actions', header: 'Действия', className: 'text-right' },
 ];
@@ -47,11 +47,8 @@ export function EducationOrganizationsListCard({
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <CardTitle className="text-base">Список заведений</CardTitle>
-            <CardDescription>{`Всего: ${total}`}</CardDescription>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardDescription>{`Всего заведений: ${total}`}</CardDescription>
           {isFetching ? (
             <Badge variant="outline" className={adminBadgeClassNames.info}>
               Обновляем
@@ -79,9 +76,11 @@ export function EducationOrganizationsListCard({
               <TableCell className="hidden md:table-cell">{organization.attemptsCount}</TableCell>
               <TableCell>
                 {organization.personalDataReady ? (
-                  <span className={adminBadgeClassNames.pillSuccess}>ПДн готовы</span>
+                  <span className={adminBadgeClassNames.pillSuccess}>Реквизиты заполнены</span>
                 ) : (
-                  <span className={adminBadgeClassNames.pillNeutral}>ПДн не готовы</span>
+                  /* Незаполненные реквизиты блокируют публикацию от имени заведения — это
+                     предупреждение, а не нейтральное состояние. */
+                  <span className={adminBadgeClassNames.pillWarning}>Реквизиты не заполнены</span>
                 )}
               </TableCell>
               <TableCell>

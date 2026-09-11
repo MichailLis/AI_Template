@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
 type PublicLinksTab = 'active' | 'archived';
+type AnalyticsTab = 'report' | 'attempts';
 type AnalyticsScope = 'TOPIC' | 'PUBLIC_LINK';
 type AnalyticsLinkStatus = 'ALL' | 'ACTIVE' | 'ARCHIVED';
 
@@ -45,10 +47,22 @@ interface AnalyticsReportFiltersProps {
   onAnalyticsDateToChange: (dateTo: string) => void;
 }
 
-type PublicLinksStatsFiltersCardProps = LinkNavigationFiltersProps;
+interface AdminAnalyticsNavigationCardProps extends LinkNavigationFiltersProps {
+  analyticsTab: AnalyticsTab;
+  onAnalyticsTabChange: (tab: AnalyticsTab) => void;
+}
 
-interface TestAnalyticsReportFiltersCardProps
-  extends LinkNavigationFiltersProps, AnalyticsReportFiltersProps {}
+export const ANALYTICS_PANEL_ID = 'admin-analytics-panel';
+
+const ANALYTICS_TABS: Array<{ value: AnalyticsTab; label: string }> = [
+  { value: 'report', label: 'Сводный отчет' },
+  { value: 'attempts', label: 'Прохождения' },
+];
+
+const ANALYTICS_TAB_HINTS: Record<AnalyticsTab, string> = {
+  report: 'Отчет строится по выбранному тесту целиком или по одной публичной ссылке.',
+  attempts: 'Показаны прохождения выбранной публичной ссылки.',
+};
 
 function LinkNavigationFilters({
   publicLinksTab,
@@ -84,7 +98,7 @@ function LinkNavigationFilters({
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
-          <Label htmlFor="stats-topic-select">Тест (контекст)</Label>
+          <Label htmlFor="stats-topic-select">Тест</Label>
           <AdminSelectField
             id="stats-topic-select"
             value={effectiveTopicId ? String(effectiveTopicId) : ''}
@@ -104,7 +118,7 @@ function LinkNavigationFilters({
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
-          <Label htmlFor="stats-link-select">Публичная ссылка (число попыток)</Label>
+          <Label htmlFor="stats-link-select">Публичная ссылка</Label>
           <AdminSelectField
             id="stats-link-select"
             value={effectivePublicLinkId ? String(effectivePublicLinkId) : ''}
@@ -120,7 +134,7 @@ function LinkNavigationFilters({
 
               return (
                 <option key={link.id} value={link.id}>
-                  {`${link.shortCode} (${attemptsCount})`}
+                  {`${link.shortCode} — ${attemptsCount} попыток`}
                 </option>
               );
             })}
@@ -131,7 +145,7 @@ function LinkNavigationFilters({
   );
 }
 
-function AnalyticsReportFilters({
+export function AnalyticsReportFiltersSection({
   analyticsScope,
   onAnalyticsScopeChange,
   analyticsLinkStatus,
@@ -203,65 +217,41 @@ function AnalyticsReportFilters({
   );
 }
 
-export function PublicLinksStatsFiltersCard(props: PublicLinksStatsFiltersCardProps) {
+export function AdminAnalyticsNavigationCard({
+  analyticsTab,
+  onAnalyticsTabChange,
+  ...navigationProps
+}: AdminAnalyticsNavigationCardProps) {
   return (
     <Card className={adminClassNames.panel.card}>
-      <CardHeader className="pb-3">
+      <CardHeader className="flex flex-col gap-4 pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-base">
               <BarChart3 className="size-4" />
-              Статистика публичных ссылок
+              Аналитика тестов
             </CardTitle>
             <CardDescription>
-              Выберите область, тест и ссылку для просмотра попыток.
-            </CardDescription>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-              <Link to="/admin/analytics">Сводный отчет</Link>
-            </Button>
-            <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-              <Link to="/admin/public-links">Управление ссылками</Link>
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <LinkNavigationFilters {...props} />
-        <p className={`text-sm ${adminClassNames.text.muted}`}>
-          Таблица ниже показывает прохождения выбранной публичной ссылки. Сводные отчеты доступны в
-          разделе аналитики.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function TestAnalyticsReportFiltersCard(props: TestAnalyticsReportFiltersCardProps) {
-  return (
-    <Card className={adminClassNames.panel.card}>
-      <CardHeader className="pb-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="size-4" />
-              Сводный аналитический отчет
-            </CardTitle>
-            <CardDescription>
-              Выберите тест целиком или отдельную публичную ссылку для отчета.
+              Выберите область, тест и ссылку — они действуют на обеих вкладках.
             </CardDescription>
           </div>
           <Button asChild type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-            <Link to="/admin/public-links/stats">Статистика ссылок</Link>
+            <Link to="/admin/public-links">Управление ссылками</Link>
           </Button>
         </div>
+
+        <AdminTabs
+          ariaLabel="Разделы аналитики"
+          tabs={ANALYTICS_TABS}
+          activeTab={analyticsTab}
+          onTabChange={onAnalyticsTabChange}
+          panelId={ANALYTICS_PANEL_ID}
+        />
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        <LinkNavigationFilters {...props} />
-        <AnalyticsReportFilters {...props} />
+        <LinkNavigationFilters {...navigationProps} />
         <p className={`text-sm ${adminClassNames.text.muted}`}>
-          По умолчанию отчет строится по тесту целиком со всеми публичными ссылками.
+          {ANALYTICS_TAB_HINTS[analyticsTab]}
         </p>
       </CardContent>
     </Card>

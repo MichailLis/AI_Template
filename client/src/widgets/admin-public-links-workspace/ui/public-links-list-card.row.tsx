@@ -7,6 +7,7 @@ import {
   RefreshCcw,
   RotateCcw,
 } from 'lucide-react';
+import { useState } from 'react';
 
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -82,7 +83,7 @@ function ActivePublicLinkActions({
           onClick={() => onOpenBrandingBuilder(link)}
         >
           <Palette className="mr-2 h-3.5 w-3.5" />
-          Конструктор
+          Оформление страницы
         </Button>
       ) : null}
       <Button
@@ -109,7 +110,7 @@ function ActivePublicLinkActions({
         disabled={isRegeneratingShortCode}
       >
         <RefreshCcw className="mr-2 h-3.5 w-3.5" />
-        Новый код
+        Перевыпустить код
       </Button>
       <Button
         type="button"
@@ -147,8 +148,21 @@ function ArchivedPublicLinkActions({
 }
 
 function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkActionMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  /**
+   * Меню закрывается вместе с запуском действия: команды открывают диалог поверх списка, и
+   * оставшийся открытым поповер висел под ним чужим слоем.
+   */
+  const closeAfter =
+    <TArgs extends unknown[]>(action: (...args: TArgs) => void) =>
+    (...args: TArgs) => {
+      setIsOpen(false);
+      action(...args);
+    };
+
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -163,11 +177,18 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
       <PopoverContent className="w-56 p-1" align="end">
         <div className="flex flex-col">
           {publicLinksTab === 'active' ? (
-            <ActivePublicLinkActions link={link} {...handlers} />
+            <ActivePublicLinkActions
+              link={link}
+              {...handlers}
+              onOpenBrandingBuilder={closeAfter(handlers.onOpenBrandingBuilder)}
+              onTogglePublicLink={closeAfter(handlers.onTogglePublicLink)}
+              onRegenerateShortCode={closeAfter(handlers.onRegenerateShortCode)}
+              onArchivePublicLink={closeAfter(handlers.onArchivePublicLink)}
+            />
           ) : (
             <ArchivedPublicLinkActions
               link={link}
-              onRestorePublicLink={handlers.onRestorePublicLink}
+              onRestorePublicLink={closeAfter(handlers.onRestorePublicLink)}
               isRestoringPublicLink={handlers.isRestoringPublicLink}
             />
           )}

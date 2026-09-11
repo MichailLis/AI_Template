@@ -1,12 +1,20 @@
+import { useMemo, useState } from 'react';
+
+import { getAnalysisStatusLabel, getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
+import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
+
+import { ATTEMPTS_LIMIT_OPTIONS } from './use-admin-public-links-stats-workspace.model';
+
+import type { AdminDataTableSortDirection } from '@/shared/ui/admin-data-table';
 
 type AttemptDetailView = 'analysis' | 'answers';
 
@@ -49,26 +57,38 @@ interface PublicLinksAttemptsTableCardProps {
   isLoading: boolean;
   isFetching: boolean;
   page: number;
+  pageSize: number;
   total: number;
   totalPages: number;
   formatDateTime: (value: string | null) => string;
   onOpenAttemptDetails: (attemptId: number, view: AttemptDetailView) => void;
   onPreviousPage: () => void;
   onNextPage: () => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
-const PUBLIC_ATTEMPTS_COLUMNS = [
-  { id: 'id', header: 'ID', className: 'whitespace-nowrap' },
-  { id: 'number', header: '№', className: 'whitespace-nowrap' },
-  { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
-  { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
-  { id: 'student', header: 'Профиль', className: 'min-w-56' },
-  { id: 'profileDetails', header: 'Детали профиля', className: 'min-w-64' },
-  { id: 'started', header: 'Начало работы', className: 'whitespace-nowrap' },
-  { id: 'finished', header: 'Завершение работы', className: 'whitespace-nowrap' },
-  { id: 'expires', header: 'Истекает через', className: 'whitespace-nowrap' },
-  { id: 'view', header: 'Просмотр', className: 'min-w-36 text-right' },
-];
+type AttemptsSortField = 'attempt' | 'started';
+
+/**
+ * Сортировка идет по строкам текущей страницы. Сервер отдает попытки постранично и порядок не
+ * параметризует, поэтому колоночная сортировка честно объявлена как сортировка видимой страницы —
+ * иначе она врала бы про весь набор.
+ */
+const sortAttempts = (
+  attempts: PublicAttemptRow[],
+  field: AttemptsSortField,
+  direction: AdminDataTableSortDirection,
+) => {
+  const sign = direction === 'asc' ? 1 : -1;
+
+  return [...attempts].sort((left, right) => {
+    if (field === 'attempt') {
+      return (left.attemptNumber - right.attemptNumber) * sign;
+    }
+
+    return left.startedAt.localeCompare(right.startedAt) * sign;
+  });
+};
 
 const getAttemptStatusBadgeClassName = (status: string) => {
   if (status === 'COMPLETED' || status === 'FINISHED') {
@@ -183,29 +203,135 @@ const getAttemptProfileSecondary = (attempt: PublicAttemptRow) => {
   return educationDetails.filter(Boolean).join(' • ');
 };
 
+function AttemptRowCells({
+  attempt,
+  formatDateTime,
+  onOpenAttemptDetails,
+}: {
+  attempt: PublicAttemptRow;
+  formatDateTime: (value: string | null) => string;
+  onOpenAttemptDetails: (attemptId: number, view: AttemptDetailView) => void;
+}) {
+  const profileSecondary = getAttemptProfileSecondary(attempt);
+
+  return (
+    <>
+      <TableCell className="whitespace-nowrap">
+        <span className={adminClassNames.text.heading}>#{attempt.attemptNumber}</span>
+        <span className={`ml-2 text-xs ${adminClassNames.text.muted}`}>ID {attempt.attemptId}</span>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className={getAttemptStatusBadgeClassName(attempt.status)}>
+          {getAttemptStatusLabel(attempt.status)}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col items-start gap-1">
+          <Badge
+            variant="outline"
+            className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
+          >
+            {getAnalysisStatusLabel(attempt.analysisStatus)}
+          </Badge>
+          <LlmStatusBadge status={attempt.llmStatus} />
+        </div>
+      </TableCell>
+      <TableCell className="min-w-64 max-w-96">
+        <p className={`truncate ${adminClassNames.text.heading}`}>
+          {getAttemptProfilePrimary(attempt) || '—'}
+        </p>
+        {profileSecondary ? (
+          <p className={`truncate text-xs ${adminClassNames.text.muted}`} title={profileSecondary}>
+            {profileSecondary}
+          </p>
+        ) : null}
+      </TableCell>
+      <TableCell className="whitespace-nowrap">{formatDateTime(attempt.startedAt)}</TableCell>
+      <TableCell className="text-right">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenAttemptDetails(attempt.attemptId, 'answers');
+          }}
+        >
+          Ответы
+        </Button>
+      </TableCell>
+    </>
+  );
+}
+
 export function PublicLinksAttemptsTableCard({
   selectedPublicLink,
   publicAttempts,
   isLoading,
   isFetching,
   page,
+  pageSize,
   total,
   totalPages,
   formatDateTime,
   onOpenAttemptDetails,
   onPreviousPage,
   onNextPage,
+  onPageSizeChange,
 }: PublicLinksAttemptsTableCardProps) {
+  const [sortField, setSortField] = useState<AttemptsSortField>('attempt');
+  const [sortDirection, setSortDirection] = useState<AdminDataTableSortDirection>('asc');
+
+  const sortedAttempts = useMemo(
+    () => sortAttempts(publicAttempts, sortField, sortDirection),
+    [publicAttempts, sortDirection, sortField],
+  );
+
+  const toggleSort = (field: AttemptsSortField) => {
+    if (field === sortField) {
+      setSortDirection((previous) => (previous === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortField(field);
+    setSortDirection('asc');
+  };
+
+  const columns = [
+    {
+      id: 'attempt',
+      header: 'Попытка',
+      className: 'whitespace-nowrap',
+      onSort: () => toggleSort('attempt'),
+      sortDirection: sortField === 'attempt' ? sortDirection : null,
+    },
+    { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
+    { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
+    { id: 'student', header: 'Студент', className: 'min-w-64' },
+    {
+      id: 'started',
+      header: 'Начало работы',
+      className: 'whitespace-nowrap',
+      onSort: () => toggleSort('started'),
+      sortDirection: sortField === 'started' ? sortDirection : null,
+    },
+    { id: 'view', header: 'Ответы', className: 'min-w-24 text-right' },
+  ];
+
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader>
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
-          {selectedPublicLink ? `Тестов пройдено: ${total}` : 'Сначала выберите ссылку'}
+          {selectedPublicLink
+            ? `Тестов пройдено: ${total}. Клик по строке открывает анализ; сортировка действует в пределах страницы.`
+            : 'Сначала выберите ссылку'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? <AdminStateBlock>Загружаем данные прохождений...</AdminStateBlock> : null}
+        {isLoading ? (
+          <AdminSkeletonRows rows={5} columns={5} label="Загружаем прохождения" />
+        ) : null}
 
         {!isLoading && !selectedPublicLink ? (
           <AdminStateBlock>
@@ -215,70 +341,18 @@ export function PublicLinksAttemptsTableCard({
 
         {!isLoading && selectedPublicLink ? (
           <AdminDataTable
-            columns={PUBLIC_ATTEMPTS_COLUMNS}
-            items={publicAttempts}
+            columns={columns}
+            items={sortedAttempts}
             getRowKey={(attempt) => attempt.attemptId}
             emptyMessage="По выбранной ссылке пока нет прохождений. Студенты могут начать тестирование по ссылке."
-            className="overflow-x-auto"
+            stickyHeader
+            onRowClick={(attempt) => onOpenAttemptDetails(attempt.attemptId, 'analysis')}
             renderRow={(attempt) => (
-              <>
-                <TableCell className="whitespace-nowrap">{attempt.attemptId}</TableCell>
-                <TableCell className="whitespace-nowrap">#{attempt.attemptNumber}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={getAttemptStatusBadgeClassName(attempt.status)}
-                  >
-                    {attempt.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col items-start gap-1">
-                    <Badge
-                      variant="outline"
-                      className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
-                    >
-                      {attempt.analysisStatus ?? 'NONE'}
-                    </Badge>
-                    <LlmStatusBadge status={attempt.llmStatus} />
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-56 max-w-72 truncate">
-                  {getAttemptProfilePrimary(attempt) || '—'}
-                </TableCell>
-                <TableCell className="min-w-64 max-w-96 truncate">
-                  {getAttemptProfileSecondary(attempt) || '—'}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatDateTime(attempt.startedAt)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatDateTime(attempt.finishedAt)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatDateTime(attempt.expiresAt)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onOpenAttemptDetails(attempt.attemptId, 'analysis')}
-                    >
-                      Анализ
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onOpenAttemptDetails(attempt.attemptId, 'answers')}
-                    >
-                      Ответы
-                    </Button>
-                  </div>
-                </TableCell>
-              </>
+              <AttemptRowCells
+                attempt={attempt}
+                formatDateTime={formatDateTime}
+                onOpenAttemptDetails={onOpenAttemptDetails}
+              />
             )}
           />
         ) : null}
@@ -288,6 +362,9 @@ export function PublicLinksAttemptsTableCard({
             page={page}
             totalPages={totalPages}
             isFetching={isFetching}
+            pageSize={pageSize}
+            pageSizeOptions={ATTEMPTS_LIMIT_OPTIONS}
+            onPageSizeChange={onPageSizeChange}
             onPrevious={onPreviousPage}
             onNext={onNextPage}
           />

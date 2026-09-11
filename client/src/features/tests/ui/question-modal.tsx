@@ -143,12 +143,14 @@ export function QuestionModal({
 
           {submitError ? <p className={adminClassNames.panel.dangerInline}>{submitError}</p> : null}
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button onClick={onSubmit} disabled={isSubmitting}>
-              {submitLabel}
-            </Button>
+          {/* Порядок кнопок общий для всех диалогов админки: отмена слева, основное действие
+              справа — как в мастере создания ссылки и в редакторе заведения. */}
+          <div className="flex flex-wrap justify-end gap-2 pt-1">
             <Button variant="outline" onClick={onRequestClose} disabled={isSubmitting}>
               Отмена
+            </Button>
+            <Button onClick={onSubmit} disabled={isSubmitting}>
+              {submitLabel}
             </Button>
           </div>
         </div>

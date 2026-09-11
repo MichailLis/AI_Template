@@ -1,4 +1,4 @@
-import { LogOut, Search } from 'lucide-react';
+import { LogOut, Menu, Search } from 'lucide-react';
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -28,6 +28,7 @@ interface AdminShellProps {
 interface AdminNavGroupsProps {
   activeNavHref: string;
   mobile?: boolean;
+  onNavigate?: () => void;
 }
 
 interface AdminHeaderProps {
@@ -41,10 +42,12 @@ function AdminNavButton({
   item,
   isActive,
   mobile,
+  onNavigate,
 }: {
   item: AdminNavItem;
   isActive: boolean;
   mobile?: boolean;
+  onNavigate?: () => void;
 }) {
   const Icon = item.icon;
   const tone = navToneClassNames[item.group];
@@ -60,7 +63,7 @@ function AdminNavButton({
         isActive && tone.active,
       )}
     >
-      <Link to={item.href} aria-current={isActive ? 'page' : undefined}>
+      <Link to={item.href} aria-current={isActive ? 'page' : undefined} onClick={onNavigate}>
         <span className={cn(adminClassNames.nav.icon, isActive && tone.icon)}>
           <Icon aria-hidden="true" />
         </span>
@@ -70,7 +73,7 @@ function AdminNavButton({
   );
 }
 
-function AdminNavGroups({ activeNavHref, mobile = false }: AdminNavGroupsProps) {
+function AdminNavGroups({ activeNavHref, mobile = false, onNavigate }: AdminNavGroupsProps) {
   return (
     <div className="flex flex-col gap-4">
       {navGroups.map((group) => {
@@ -98,6 +101,7 @@ function AdminNavGroups({ activeNavHref, mobile = false }: AdminNavGroupsProps) 
                   item={item}
                   isActive={item.href === activeNavHref}
                   mobile={mobile}
+                  onNavigate={onNavigate}
                 />
               ))}
             </div>
@@ -125,15 +129,6 @@ function DesktopSidebar({ activeNavHref }: { activeNavHref: string }) {
       <nav className={adminClassNames.sidebar.nav}>
         <AdminNavGroups activeNavHref={activeNavHref} />
       </nav>
-      <div className={adminClassNames.sidebar.footer}>
-        <div className={adminClassNames.sidebar.workspaceCard}>
-          <p className={adminClassNames.sidebar.workspaceLabel}>
-            <span className={adminClassNames.sidebar.workspaceDot} />
-            Workspace
-          </p>
-          <p className={adminClassNames.sidebar.workspaceTitle}>Панель управления</p>
-        </div>
-      </div>
     </aside>
   );
 }
@@ -141,6 +136,7 @@ function DesktopSidebar({ activeNavHref }: { activeNavHref: string }) {
 function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: AdminHeaderProps) {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const activeNavItem = navItems.find((item) => item.href === activeNavHref);
   const searchSuggestion = useMemo(() => findNavItem(searchValue), [searchValue]);
 
@@ -171,7 +167,7 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               className={adminClassNames.header.input}
-              placeholder="Найти раздел"
+              placeholder="Раздел…"
               aria-label="Найти раздел админки"
             />
             <datalist id="admin-search-options">
@@ -203,8 +199,32 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
           </Button>
         </div>
       </div>
+      {/* На узком экране меню было развернуто всегда и занимало весь первый экран: до содержимого
+          страницы приходилось прокручивать восемь пунктов на каждом разделе. */}
       <div className={adminClassNames.header.mobileNav}>
-        <AdminNavGroups activeNavHref={activeNavHref} mobile />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={`w-full justify-between ${adminClassNames.header.button}`}
+          aria-expanded={isMobileNavOpen}
+          aria-controls="admin-mobile-nav"
+          onClick={() => setIsMobileNavOpen((previous) => !previous)}
+        >
+          <span className="flex items-center gap-2">
+            <Menu aria-hidden="true" />
+            Разделы
+          </span>
+          <span className={adminClassNames.text.muted}>{activeNavItem?.label ?? ''}</span>
+        </Button>
+
+        <div id="admin-mobile-nav" hidden={!isMobileNavOpen} className="pt-3">
+          <AdminNavGroups
+            activeNavHref={activeNavHref}
+            mobile
+            onNavigate={() => setIsMobileNavOpen(false)}
+          />
+        </div>
       </div>
     </header>
   );

@@ -37,7 +37,6 @@ interface AdminTestsSettingsCardProps {
   onDraftTitleChange: (value: string) => void;
   onDraftDescriptionChange: (value: string) => void;
   onDraftAnalysisPromptVersionChange: (value: number | null) => void;
-  onSaveDraft: () => void;
   onRequestPublish: () => void;
   onToggleTopicActive: () => void;
 }
@@ -59,7 +58,6 @@ export function AdminTestsSettingsCard({
   onDraftTitleChange,
   onDraftDescriptionChange,
   onDraftAnalysisPromptVersionChange,
-  onSaveDraft,
   onRequestPublish,
   onToggleTopicActive,
 }: AdminTestsSettingsCardProps) {
@@ -67,35 +65,31 @@ export function AdminTestsSettingsCard({
     <Card className={adminClassNames.panel.card}>
       <CardHeader className={adminClassNames.border.bottom}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 gap-3">
-            <div
-              className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminClassNames.panel.compactSection}`}
-            >
-              <Settings2 className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle>Настройки теста</CardTitle>
-                <Badge
-                  variant="outline"
-                  className={
-                    isSelectedTopicArchived
-                      ? adminBadgeClassNames.neutral
-                      : adminBadgeClassNames.success
-                  }
-                >
-                  {isSelectedTopicArchived ? 'В архиве' : 'Активен'}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <Settings2 className="size-4 shrink-0 text-admin-muted" />
+                Настройки теста
+              </CardTitle>
+              <Badge
+                variant="outline"
+                className={
+                  isSelectedTopicArchived
+                    ? adminBadgeClassNames.neutral
+                    : adminBadgeClassNames.success
+                }
+              >
+                {isSelectedTopicArchived ? 'В архиве' : 'Активен'}
+              </Badge>
+              {isDraftDirty ? (
+                <Badge variant="outline" className={adminBadgeClassNames.warning}>
+                  Есть правки
                 </Badge>
-                {isDraftDirty ? (
-                  <Badge variant="outline" className={adminBadgeClassNames.warning}>
-                    Есть правки
-                  </Badge>
-                ) : null}
-              </div>
-              <CardDescription>
-                Метаданные, промпт анализа, публикация и доступность теста.
-              </CardDescription>
+              ) : null}
             </div>
+            <CardDescription>
+              Метаданные, промпт анализа, публикация и доступность теста.
+            </CardDescription>
           </div>
           <Button
             type="button"
@@ -118,7 +112,6 @@ export function AdminTestsSettingsCard({
           autosaveHint={autosaveHint}
           onDraftTitleChange={onDraftTitleChange}
           onDraftDescriptionChange={onDraftDescriptionChange}
-          onSaveDraft={onSaveDraft}
         />
         <AdminTestsAnalysisPromptSettingsSection
           selectedAnalysisPromptVersion={draftAnalysisPromptVersion}

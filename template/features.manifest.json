@@ -250,7 +250,6 @@
       "frontendFiles": [
         "client/src/pages/admin/admin-tests-page.tsx",
         "client/src/pages/admin/admin-public-links-page.tsx",
-        "client/src/pages/admin/admin-public-links-stats-page.tsx",
         "client/src/pages/admin/admin-public-links-organizations-page.tsx"
       ],
       "generatedApiFile": "client/src/shared/api/generated/tests/tests.ts",

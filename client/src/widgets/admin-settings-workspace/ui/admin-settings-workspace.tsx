@@ -18,6 +18,8 @@ import {
   adminClassNames,
   adminToneClassNames,
 } from '@/shared/ui/admin-design-tokens';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
+import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
 import { Badge } from '@/shared/ui/badge';
 
 import {
@@ -27,6 +29,16 @@ import {
 } from './admin-settings-cards';
 
 import type { FormEvent } from 'react';
+
+type AdminSettingsTab = 'integrations' | 'atlas' | 'privacy';
+
+const SETTINGS_PANEL_ID = 'admin-settings-panel';
+
+const SETTINGS_TABS: Array<{ value: AdminSettingsTab; label: string }> = [
+  { value: 'integrations', label: 'Интеграции' },
+  { value: 'atlas', label: 'Атлас профессий' },
+  { value: 'privacy', label: 'Политика данных' },
+];
 
 const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
 const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
@@ -246,6 +258,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
 
 export function AdminSettingsWorkspace() {
   const queryClient = useQueryClient();
+  const [settingsTab, setSettingsTab] = useState<AdminSettingsTab>('integrations');
   const [professionAtlasForm, setProfessionAtlasForm] = useState({
     apiUrl: '',
     isDirty: false,
@@ -300,7 +313,7 @@ export function AdminSettingsWorkspace() {
   };
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4">
+    <div className={`mx-auto max-w-4xl ${adminClassNames.layout.page}`}>
       <AdminSettingsHero
         isOpenRouterConfigured={Boolean(openRouter?.isConfigured)}
         isProfessionAtlasConfigured={Boolean(
@@ -308,47 +321,64 @@ export function AdminSettingsWorkspace() {
         )}
       />
 
-      <OpenRouterSettingsCard
-        isError={settingsQuery.isError}
-        isLoading={settingsQuery.isLoading}
-        openRouter={openRouter}
-        onRetry={() => {
-          void settingsQuery.refetch();
-        }}
+      <AdminTabs
+        ariaLabel="Разделы настроек"
+        tabs={SETTINGS_TABS}
+        activeTab={settingsTab}
+        onTabChange={setSettingsTab}
+        panelId={SETTINGS_PANEL_ID}
       />
 
-      <ProfessionAtlasSettingsCard
-        apiUrl={professionAtlasApiUrl}
-        publicUrl={professionAtlasPublicUrl}
-        canSubmit={
-          Boolean(normalizedProfessionAtlasPublicUrl && normalizedProfessionAtlasApiUrl) &&
-          !updateProfessionAtlasUrlMutation.isPending
-        }
-        isError={professionAtlasQuery.isError}
-        isLoading={professionAtlasQuery.isLoading}
-        isSaving={updateProfessionAtlasUrlMutation.isPending}
-        professionAtlas={professionAtlas}
-        onRetry={() => {
-          void professionAtlasQuery.refetch();
-        }}
-        onSubmit={handleProfessionAtlasSubmit}
-        onApiUrlChange={(value) =>
-          setProfessionAtlasForm((current) => ({
-            apiUrl: value,
-            isDirty: true,
-            publicUrl: current.isDirty ? current.publicUrl : professionAtlasPublicUrl,
-          }))
-        }
-        onPublicUrlChange={(value) =>
-          setProfessionAtlasForm((current) => ({
-            apiUrl: current.isDirty ? current.apiUrl : professionAtlasApiUrl,
-            isDirty: true,
-            publicUrl: value,
-          }))
-        }
-      />
+      <div
+        {...getAdminTabPanelProps(SETTINGS_PANEL_ID, settingsTab)}
+        className={adminClassNames.layout.page}
+      >
+        {settingsTab === 'integrations' ? (
+          <OpenRouterSettingsCard
+            isError={settingsQuery.isError}
+            isLoading={settingsQuery.isLoading}
+            openRouter={openRouter}
+            onRetry={() => {
+              void settingsQuery.refetch();
+            }}
+          />
+        ) : null}
 
-      <PrivacyPolicySettingsWorkspaceCard />
+        {settingsTab === 'atlas' ? (
+          <ProfessionAtlasSettingsCard
+            apiUrl={professionAtlasApiUrl}
+            publicUrl={professionAtlasPublicUrl}
+            canSubmit={
+              Boolean(normalizedProfessionAtlasPublicUrl && normalizedProfessionAtlasApiUrl) &&
+              !updateProfessionAtlasUrlMutation.isPending
+            }
+            isError={professionAtlasQuery.isError}
+            isLoading={professionAtlasQuery.isLoading}
+            isSaving={updateProfessionAtlasUrlMutation.isPending}
+            professionAtlas={professionAtlas}
+            onRetry={() => {
+              void professionAtlasQuery.refetch();
+            }}
+            onSubmit={handleProfessionAtlasSubmit}
+            onApiUrlChange={(value) =>
+              setProfessionAtlasForm((current) => ({
+                apiUrl: value,
+                isDirty: true,
+                publicUrl: current.isDirty ? current.publicUrl : professionAtlasPublicUrl,
+              }))
+            }
+            onPublicUrlChange={(value) =>
+              setProfessionAtlasForm((current) => ({
+                apiUrl: current.isDirty ? current.apiUrl : professionAtlasApiUrl,
+                isDirty: true,
+                publicUrl: value,
+              }))
+            }
+          />
+        ) : null}
+
+        {settingsTab === 'privacy' ? <PrivacyPolicySettingsWorkspaceCard /> : null}
+      </div>
     </div>
   );
 }

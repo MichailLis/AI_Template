@@ -24,12 +24,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
-    --admin-canvas: 210 100% 99%;
-    --admin-canvas-soft: 214 45% 97%;
-    --admin-canvas-warm: 158 35% 96%;
+    --admin-canvas: 210 44% 98%;
+    --admin-canvas-soft: 214 40% 96%;
+    --admin-canvas-warm: 158 30% 95%;
     --admin-panel: 0 0% 100%;
-    --admin-panel-muted: 210 40% 98%;
-    --admin-border: 214 32% 91%;
+    --admin-panel-muted: 210 38% 97%;
+    --admin-border: 214 25% 85%;
     --admin-foreground: 222.2 84% 4.9%;
     --admin-muted: 215.4 16.3% 46.9%;
     --admin-info: 199 89% 48%;
@@ -52,6 +52,20 @@
     --admin-accent-soft: 183 100% 96%;
     --admin-accent-border: 185 70% 82%;
     --admin-accent-foreground: 186 80% 24%;
+  }
+}
+
+@layer base {
+  /**
+   * Единственное место, где админка переопределяет общие shadcn-токены. Основное действие в
+   * пастельной админской палитре не должно быть почти чёрным: primary уводится в тот же
+   * бирюзовый тон, что и --admin-accent, но темнее, чтобы белый текст сохранял контраст.
+   * Класс висит на корне AdminShell, поэтому публичные страницы /t/* и вход не затронуты.
+   */
+  .admin-surface {
+    --primary: 190 80% 30%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 190 80% 30%;
   }
 }
 

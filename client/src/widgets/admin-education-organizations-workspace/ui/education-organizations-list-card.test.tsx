@@ -52,8 +52,8 @@ describe('EducationOrganizationsListCard', () => {
       />,
     );
 
-    expect(screen.getByText('ПДн готовы')).toBeInTheDocument();
-    expect(screen.getByText('ПДн не готовы')).toBeInTheDocument();
+    expect(screen.getByText('Реквизиты заполнены')).toBeInTheDocument();
+    expect(screen.getByText('Реквизиты не заполнены')).toBeInTheDocument();
   });
 
   it('opens the requested organization from a keyboard-accessible edit button', async () => {

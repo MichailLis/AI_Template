@@ -231,6 +231,7 @@ export function EducationOrganizationEditorSheet(props: EducationOrganizationEdi
         }}
       >
         <SheetContent
+          className="admin-surface"
           closeDisabled={isSubmitting}
           onEscapeKeyDown={(event) => {
             if (isSubmitting) {

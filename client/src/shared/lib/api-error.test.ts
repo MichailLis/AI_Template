@@ -126,3 +126,37 @@ describe('extractApiValidationIssues', () => {
     ).toEqual([]);
   });
 });
+
+describe('переводы прикладных ошибок сервера', () => {
+  const apiError = (message: string) => ({
+    response: { data: { error: { code: 'HTTP_ERROR', message } } },
+  });
+
+  it('переводит занятый короткий код и сохраняет сам код', () => {
+    expect(parseApiError(apiError('Public link short code "MC5CKWDB" already exists'))).toBe(
+      'Короткий код «MC5CKWDB» уже занят. Укажите другой.',
+    );
+  });
+
+  it('переводит отказ входа', () => {
+    expect(parseApiError(apiError('Invalid credentials'))).toBe('Неверный email или пароль');
+  });
+
+  it('переводит частые прикладные отказы админки', () => {
+    expect(parseApiError(apiError('Public link not found'))).toBe(
+      'Публичная ссылка не найдена. Возможно, ее уже удалили.',
+    );
+    expect(parseApiError(apiError('Topic has no active draft version'))).toBe(
+      'У теста нет версии в работе',
+    );
+    expect(parseApiError(apiError('Admin area only'))).toBe(
+      'Раздел доступен только администраторам',
+    );
+  });
+
+  it('оставляет незнакомое сообщение как есть, чтобы не скрыть новую ошибку', () => {
+    expect(parseApiError(apiError('Something entirely new happened'))).toBe(
+      'Something entirely new happened',
+    );
+  });
+});

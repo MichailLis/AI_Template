@@ -24,8 +24,7 @@ export function TestsListHeader({
 }: TestsListHeaderProps) {
   return (
     <AdminListToolbar
-      title="Тесты"
-      description="Создание и управление тестами"
+      tabsLabel="Область тестов"
       searchId="tests-search"
       searchValue={searchValue}
       searchPlaceholder="Поиск по названию теста"

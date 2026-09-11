@@ -1,39 +1,29 @@
-import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
 
 import { AdminPromptsWorkspaceContent } from './admin-prompts-workspace-content';
 import { useAdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
 
-function AdminPromptsLoadingState() {
+/**
+ * Каталог моделей OpenRouter нужен одному выпадающему списку в редакторе, а библиотека промптов и
+ * их версии лежат в собственной базе. Раньше недоступный каталог гасил весь раздел целиком, и
+ * админ не мог даже прочитать сохраненный промпт; теперь ошибка каталога — это полоса
+ * предупреждения над рабочей областью.
+ */
+function AdminPromptsModelsWarning({ onRetry }: { onRetry: () => void }) {
   return (
     <div
-      className={`flex min-h-[400px] items-center justify-center p-8 ${adminClassNames.panel.card}`}
+      className={`flex flex-wrap items-center justify-between gap-3 ${adminClassNames.panel.warningInline}`}
     >
-      <div className={`text-center text-sm ${adminClassNames.text.muted}`}>
-        Загрузка каталога моделей...
-      </div>
-    </div>
-  );
-}
-
-function AdminPromptsErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div
-      className={`flex min-h-[400px] items-center justify-center p-8 ${adminClassNames.panel.errorCard}`}
-    >
-      <div className="space-y-4 text-center">
-        <p className={`text-sm ${adminToneClassNames.danger.text}`}>
-          Не удалось загрузить модели OpenRouter.
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          className={adminToneClassNames.danger.active}
-          onClick={onRetry}
-        >
-          Повторить
-        </Button>
-      </div>
+      <p>
+        Каталог моделей OpenRouter недоступен. Промпты и версии открыты для чтения и правки, выбор
+        модели временно недоступен.
+      </p>
+      <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+        Повторить
+      </Button>
     </div>
   );
 }
@@ -42,12 +32,26 @@ export function AdminPromptsWorkspace() {
   const workspace = useAdminPromptsWorkspaceState();
 
   if (workspace.modelsQuery.isLoading) {
-    return <AdminPromptsLoadingState />;
+    return (
+      <Card className={adminClassNames.panel.card}>
+        <CardContent className="p-4">
+          <AdminSkeletonRows rows={6} columns={3} label="Загружаем промпты" />
+        </CardContent>
+      </Card>
+    );
   }
 
-  if (workspace.modelsQuery.isError || !workspace.modelsQuery.data) {
-    return <AdminPromptsErrorState onRetry={() => workspace.modelsQuery.refetch()} />;
-  }
+  return (
+    <div className={adminClassNames.layout.page}>
+      {workspace.modelsQuery.isError ? (
+        <AdminPromptsModelsWarning
+          onRetry={() => {
+            void workspace.modelsQuery.refetch();
+          }}
+        />
+      ) : null}
 
-  return <AdminPromptsWorkspaceContent workspace={workspace} />;
+      <AdminPromptsWorkspaceContent workspace={workspace} />
+    </div>
+  );
 }

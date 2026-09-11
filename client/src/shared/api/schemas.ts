@@ -10,8 +10,9 @@ import { z } from 'zod';
  * here would be a second source of truth, and the copy that used to exist had already drifted.
  */
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Enter your password'),
+  // Сообщения видит пользователь на русскоязычном экране входа, поэтому они на русском.
+  email: z.string().email('Введите корректный email'),
+  password: z.string().min(1, 'Введите пароль'),
 });
 
 /**

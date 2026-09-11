@@ -1,4 +1,5 @@
 import { PublicTestStudentAnalysisView } from '@/features/tests';
+import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
@@ -30,6 +31,10 @@ interface AttemptAnalysis {
 }
 
 interface AttemptDetail {
+  attemptId: number;
+  startedAt: string;
+  finishedAt: string | null;
+  expiresAt: string | null;
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   professionAtlasUrl: string | null;
   studentName: string | null;
@@ -97,6 +102,16 @@ const getAttemptProfileText = (attempt: AttemptDetail) => {
   return educationDetails.filter(Boolean).join(' • ');
 };
 
+const getAttemptTimingItems = (
+  attempt: AttemptDetail,
+  formatDateTime: (value: string | null) => string,
+) => [
+  { label: 'ID попытки', value: String(attempt.attemptId) },
+  { label: 'Начало работы', value: formatDateTime(attempt.startedAt) },
+  { label: 'Завершение работы', value: formatDateTime(attempt.finishedAt) },
+  { label: 'Истекает через', value: formatDateTime(attempt.expiresAt) },
+];
+
 interface PublicLinksAttemptDetailDialogProps {
   isOpen: boolean;
   detailView: AttemptDetailView | null;
@@ -153,13 +168,21 @@ export function PublicLinksAttemptDetailDialog({
               <p className={`mt-1 text-sm ${adminClassNames.text.muted}`}>
                 {getAttemptProfileText(detailAttempt) || '—'}
               </p>
+              <dl className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
+                {getAttemptTimingItems(detailAttempt, formatDateTime).map((item) => (
+                  <div key={item.label}>
+                    <dt className={adminClassNames.text.kicker}>{item.label}</dt>
+                    <dd className={`text-sm ${adminClassNames.text.heading}`}>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           ) : null}
 
           {!isLoading && detailAttempt && detailView === 'analysis' ? (
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline">{detailAttempt.status}</Badge>
+                <Badge variant="outline">{getAttemptStatusLabel(detailAttempt.status)}</Badge>
               </div>
 
               <PublicTestStudentAnalysisView

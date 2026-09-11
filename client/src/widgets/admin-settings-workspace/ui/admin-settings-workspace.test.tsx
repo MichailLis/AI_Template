@@ -50,6 +50,48 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
   }),
 }));
 
+const renderWorkspace = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AdminSettingsWorkspace />
+    </QueryClientProvider>,
+  );
+};
+
+describe('AdminSettingsWorkspace tabs', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  const OPEN_ROUTER_CARD = 'Ключ берется только из переменной окружения сервера.';
+  const ATLAS_CARD = 'Карточки, предприятия, мероприятия и учебные заведения для результата Polus.';
+  const PRIVACY_CARD =
+    'Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.';
+
+  it('shows only the integrations tab content by default', () => {
+    renderWorkspace();
+
+    expect(screen.getByText(OPEN_ROUTER_CARD)).toBeInTheDocument();
+    expect(screen.queryByText(ATLAS_CARD)).not.toBeInTheDocument();
+    expect(screen.queryByText(PRIVACY_CARD)).not.toBeInTheDocument();
+  });
+
+  it('opens one settings domain at a time', () => {
+    renderWorkspace();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Атлас профессий' }));
+
+    expect(screen.getByText(ATLAS_CARD)).toBeInTheDocument();
+    expect(screen.queryByText(OPEN_ROUTER_CARD)).not.toBeInTheDocument();
+    expect(screen.queryByText(PRIVACY_CARD)).not.toBeInTheDocument();
+  });
+});
+
 describe('AdminSettingsWorkspace privacy policy', () => {
   afterEach(() => {
     cleanup();
@@ -57,15 +99,9 @@ describe('AdminSettingsWorkspace privacy policy', () => {
   });
 
   it('submits the edited platform operator name with the policy', () => {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
+    renderWorkspace();
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminSettingsWorkspace />
-      </QueryClientProvider>,
-    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Политика данных' }));
 
     fireEvent.change(
       screen.getByRole('textbox', { name: 'Наименование оператора персональных данных' }),

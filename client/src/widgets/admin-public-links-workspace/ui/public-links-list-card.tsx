@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
@@ -41,7 +42,12 @@ export function PublicLinksListCard({
   if (publicLinksLoading) {
     return (
       <CardContent className="p-0">
-        <AdminStateBlock>Загрузка публичных ссылок... Пожалуйста, подождите.</AdminStateBlock>
+        <AdminSkeletonRows
+          rows={5}
+          columns={3}
+          label="Загружаем публичные ссылки"
+          className="p-4"
+        />
       </CardContent>
     );
   }

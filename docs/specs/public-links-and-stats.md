@@ -3,15 +3,22 @@
 Routes and ownership:
 
 - `"/admin/public-links"` -> link lifecycle workspace
-- `"/admin/public-links/stats"` -> dedicated statistics workspace
-- Admin shell navigation must keep links/stats as separate menu entries.
+- `"/admin/analytics"` -> analytics workspace with two tabs over one link selection: the summary
+  report (default) and the attempts table (`?tab=attempts`)
+- `"/admin/public-links/stats"` -> legacy entry point; redirects to `/admin/analytics?tab=attempts`
+- Admin shell navigation must keep link management and analytics as separate menu entries, and
+  must not split the analytics tabs into separate menu entries.
 
 Behavior baseline:
 
 1. Public link lifecycle is `create/regenerate/archive/restore`.
 2. Archive must disable student access without deleting historical attempts/results.
-3. Stats page is table-first (avoid oversized decorative summary blocks above core filters/table).
-4. Filters must support both test and public link selection.
+3. The attempts tab is table-first (avoid oversized decorative summary blocks above core
+   filters/table). Its table stays narrow enough to read without horizontal scrolling: attempt
+   number with id, attempt status, analysis status, student, start time, and row actions.
+   Completion and expiry timing belong to the attempt card, not to the table.
+4. Filters must support both test and public link selection, and one selection must serve both
+   analytics tabs.
 5. Link labels in selectors should use business copy (`тестов пройдено`).
 6. Student row actions must provide direct access to analysis and answers.
 7. Public links have a public template:

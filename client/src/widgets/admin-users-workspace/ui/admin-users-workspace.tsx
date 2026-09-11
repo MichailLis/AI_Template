@@ -2,7 +2,7 @@ import { adminClassNames, getAdminRoleBadgeClassName } from '@/shared/ui/admin-d
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 
 import { AdminUsersFilters } from './admin-users-filters';
 import { AdminUsersTable } from './admin-users-table';
@@ -72,24 +72,17 @@ export function AdminUsersWorkspace() {
 
   return (
     <Card className={adminClassNames.panel.card}>
-      <CardHeader>
-        <CardTitle>Пользователи</CardTitle>
-        <CardDescription>Поиск, фильтры, пагинация и управление ролями.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-4 p-4">
         <AdminUsersFilters
           searchInput={searchInput}
           roleFilter={roleFilter}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
           total={usersQuery.data.total}
           isFetching={usersQuery.isFetching}
+          hasActiveFilters={roleFilter !== 'ALL' || searchInput.trim().length > 0}
           onSearchInputChange={handleSearchInputChange}
           onSearchSubmit={handleSearchSubmit}
           onResetFilters={handleResetFilters}
           onRoleFilterChange={handleRoleFilterChange}
-          onSortByChange={handleSortByChange}
-          onSortOrderToggle={handleSortOrderToggle}
         />
 
         <AdminUsersTable
@@ -104,6 +97,11 @@ export function AdminUsersWorkspace() {
           formatDateTime={formatDateTime}
           getRoleBadgeClass={getAdminRoleBadgeClassName}
           getRoleLabel={roleLabel}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortByChange={(nextSortBy) =>
+            nextSortBy === sortBy ? handleSortOrderToggle() : handleSortByChange(nextSortBy)
+          }
         />
 
         <AdminPagination

@@ -1,5 +1,4 @@
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
-import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
@@ -21,17 +20,29 @@ interface AdminTestsMetadataSettingsSectionProps {
   autosaveHint?: string | null;
   onDraftTitleChange: (value: string) => void;
   onDraftDescriptionChange: (value: string) => void;
-  onSaveDraft: () => void;
 }
 
-function getDraftStatusText(isSelectedTopicArchived: boolean, isDraftDirty: boolean) {
+/**
+ * У экрана одна модель сохранения: черновик сохраняется сам. Раньше рядом с автосохранением стояла
+ * кнопка «Сохранить изменения», и по интерфейсу нельзя было понять, что уже записано, а что нет.
+ */
+function getDraftStatusText(
+  isSelectedTopicArchived: boolean,
+  isDraftDirty: boolean,
+  isSavingDraft: boolean,
+  autosaveHint: string | null | undefined,
+) {
   if (isSelectedTopicArchived) {
     return 'Редактирование отключено: тест в архиве';
   }
-  if (isDraftDirty) {
-    return 'Есть несохраненные изменения';
+  if (isSavingDraft) {
+    return 'Сохранение...';
   }
-  return 'Изменения сохранены';
+  if (isDraftDirty) {
+    return 'Изменения сохранятся автоматически';
+  }
+
+  return autosaveHint ?? 'Все изменения сохранены';
 }
 
 export function AdminTestsMetadataSettingsSection({
@@ -43,9 +54,13 @@ export function AdminTestsMetadataSettingsSection({
   autosaveHint,
   onDraftTitleChange,
   onDraftDescriptionChange,
-  onSaveDraft,
 }: AdminTestsMetadataSettingsSectionProps) {
-  const draftStatusText = getDraftStatusText(isSelectedTopicArchived, isDraftDirty);
+  const draftStatusText = getDraftStatusText(
+    isSelectedTopicArchived,
+    isDraftDirty,
+    isSavingDraft,
+    autosaveHint,
+  );
 
   return (
     <AdminTestsSettingsPanel
@@ -72,19 +87,12 @@ export function AdminTestsMetadataSettingsSection({
             onChange={(event) => onDraftDescriptionChange(event.target.value)}
           />
         </div>
-        <div
-          className={`flex flex-wrap items-center justify-between gap-2 ${adminClassNames.panel.mutedSection}`}
+        <p
+          className={`${adminClassNames.form.fieldHint} ${adminClassNames.panel.mutedSection}`}
+          aria-live="polite"
         >
-          <Button
-            type="button"
-            onClick={onSaveDraft}
-            disabled={isSelectedTopicArchived || !isDraftDirty || isSavingDraft}
-          >
-            {isSavingDraft ? 'Сохранение...' : 'Сохранить изменения'}
-          </Button>
-          <p className={adminClassNames.form.fieldHint}>{draftStatusText}</p>
-        </div>
-        {autosaveHint ? <p className={adminClassNames.form.fieldHint}>{autosaveHint}</p> : null}
+          {draftStatusText}
+        </p>
         {autoSaveError ? (
           <p className={`text-xs ${adminToneClassNames.danger.text}`}>
             Автосохранение не удалось: {autoSaveError}

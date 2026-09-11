@@ -40,7 +40,9 @@ export function ConfirmActionDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="max-w-md border-slate-200">
+      {/* `admin-surface` — тот же портальный случай, что и у обычных диалогов: без него кнопка
+          подтверждения выпадает из админской палитры. */}
+      <AlertDialogContent className="admin-surface max-w-md border-admin-border">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

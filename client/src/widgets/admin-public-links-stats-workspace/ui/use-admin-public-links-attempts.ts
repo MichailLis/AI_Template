@@ -12,10 +12,11 @@ import type { AttemptDetailView } from './use-admin-public-links-stats-workspace
 export const usePaginatedPublicAttempts = (
   effectivePublicLinkId: number | null,
   attemptsPage: number,
+  attemptsLimit: number = ATTEMPTS_LIMIT,
 ) => {
   const publicAttemptsQuery = useTestsAdminAttemptsControllerListPublicLinkAttempts(
     effectivePublicLinkId ?? 0,
-    { page: attemptsPage, limit: ATTEMPTS_LIMIT },
+    { page: attemptsPage, limit: attemptsLimit },
     { query: { enabled: Boolean(effectivePublicLinkId) } },
   );
   const publicAttempts = useMemo(
