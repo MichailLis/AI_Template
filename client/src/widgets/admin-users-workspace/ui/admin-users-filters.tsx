@@ -56,17 +56,26 @@ export function AdminUsersFilters({
   onStatusFilterChange,
   onCreateUser,
 }: AdminUsersFiltersProps) {
+  // Два ряда, а не один: когда поиск, статус, итог и кнопка создания стояли в одной строке с
+  // вкладками, на обычной ширине экрана вкладки ролей переносились на вторую строку.
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <AdminTabs
-        ariaLabel="Роль пользователя"
-        tabs={ROLE_TABS}
-        activeTab={roleFilter}
-        onTabChange={onRoleFilterChange}
-      />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <AdminTabs
+          ariaLabel="Роль пользователя"
+          tabs={ROLE_TABS}
+          activeTab={roleFilter}
+          onTabChange={onRoleFilterChange}
+        />
+
+        <Button type="button" size="sm" onClick={onCreateUser}>
+          <UserPlus aria-hidden="true" className="size-4" />
+          Добавить пользователя
+        </Button>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <form onSubmit={onSearchSubmit} className="flex items-center gap-2">
+        <form onSubmit={onSearchSubmit} className="flex w-full items-center gap-2 sm:w-auto">
           <Input
             value={searchInput}
             onChange={(event) => onSearchInputChange(event.target.value)}
@@ -101,11 +110,6 @@ export function AdminUsersFilters({
         <p className={adminClassNames.filters.total}>
           {isFetching ? 'Обновляем…' : `Всего: ${formatTotal(total)}`}
         </p>
-
-        <Button type="button" size="sm" onClick={onCreateUser}>
-          <UserPlus aria-hidden="true" className="size-4" />
-          Добавить пользователя
-        </Button>
       </div>
     </div>
   );

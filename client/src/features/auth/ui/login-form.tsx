@@ -70,7 +70,13 @@ export const LoginForm = () => {
       {
         onSuccess: (data) => {
           setAuth(data.user, data.accessToken);
-          toast.success('С возвращением!');
+
+          // Приветствуем только тех, кого пустят дальше: пользователь без роли администратора
+          // попадает на экран «Доступ пока не выдан», и «С возвращением!» над ним звучит как ошибка.
+          if (data.user.role === 'ADMIN') {
+            toast.success('С возвращением!');
+          }
+
           navigate(redirectTo);
         },
         onError: (error: unknown) => {
