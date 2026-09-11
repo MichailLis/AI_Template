@@ -28,6 +28,15 @@ const [aiGuide, readme, claudeMdBuffer, agentsMd, rtkFiltersContent] = await Pro
   readFile(rtkFiltersPath, 'utf-8'),
 ]);
 const claudeMd = claudeMdBuffer.toString('utf-8');
+
+/**
+ * The budget is measured on LF-normalized content, which is what the repository stores.
+ *
+ * `.gitattributes` has `* text=auto`, so a Windows checkout materializes CLAUDE.md with CRLF and
+ * the same commit weighs ~200 bytes more on disk than on Linux. Measuring the raw buffer made the
+ * gate pass in CI and fail locally for reasons that have nothing to do with the content.
+ */
+const claudeMdByteLength = Buffer.byteLength(claudeMd.replace(/\r\n/g, '\n'), 'utf-8');
 const rtkFilters = JSON.parse(rtkFiltersContent);
 const unsafeRtkFilters = Array.isArray(rtkFilters.unsafe) ? rtkFilters.unsafe : [];
 const warningDocuments = new Set(
@@ -46,9 +55,9 @@ const requiredAiGuideTokens = [
 const requiredReadmeTokens = ['Use `AI_GUIDE.md` as the source of truth for implementation rules.'];
 
 const errors = [];
-if (claudeMdBuffer.length > CLAUDE_MD_MAX_BYTES) {
+if (claudeMdByteLength > CLAUDE_MD_MAX_BYTES) {
   errors.push(
-    `CLAUDE.md: size ${claudeMdBuffer.length} bytes exceeds budget of ${CLAUDE_MD_MAX_BYTES} bytes. Move empirical evidence and measurements to docs/tooling-evidence.md instead of expanding the budget.`,
+    `CLAUDE.md: size ${claudeMdByteLength} bytes exceeds budget of ${CLAUDE_MD_MAX_BYTES} bytes. Move empirical evidence and measurements to docs/tooling-evidence.md instead of expanding the budget.`,
   );
 }
 
