@@ -13,104 +13,13 @@ import type {
   UseMutationResult,
 } from '@tanstack/react-query';
 
-import type {
-  AuthResponseDto,
-  ErrorResponseDto,
-  RefreshResponseDto,
-  SigninDto,
-  SignupDto,
-} from '../../model';
+import type { AuthResponseDto, ErrorResponseDto, RefreshResponseDto, SigninDto } from '../../model';
 
 import { customInstance } from '../../api';
 import type { ErrorType } from '../../api';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-/**
- * @summary Register a new user
- */
-export const authControllerSignup = (
-  signupDto: SignupDto,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<AuthResponseDto>(
-    {
-      url: `/auth/signup`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      data: signupDto,
-      signal,
-    },
-    options,
-  );
-};
-
-export const getAuthControllerSignupMutationOptions = <
-  TError = ErrorType<ErrorResponseDto>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof authControllerSignup>>,
-    TError,
-    AuthControllerSignupMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof authControllerSignup>>,
-  TError,
-  AuthControllerSignupMutationVariables,
-  TContext
-> => {
-  const mutationKey = ['authControllerSignup'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof authControllerSignup>>,
-    AuthControllerSignupMutationVariables
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return authControllerSignup(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type AuthControllerSignupMutationResult = NonNullable<
-  Awaited<ReturnType<typeof authControllerSignup>>
->;
-export type AuthControllerSignupMutationBody = SignupDto;
-export type AuthControllerSignupMutationError = ErrorType<ErrorResponseDto>;
-export type AuthControllerSignupMutationVariables = { data: SignupDto };
-
-/**
- * @summary Register a new user
- */
-export const useAuthControllerSignup = <TError = ErrorType<ErrorResponseDto>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof authControllerSignup>>,
-      TError,
-      AuthControllerSignupMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof authControllerSignup>>,
-  TError,
-  AuthControllerSignupMutationVariables,
-  TContext
-> => {
-  return useMutation(getAuthControllerSignupMutationOptions(options), queryClient);
-};
 /**
  * @summary Login
  */

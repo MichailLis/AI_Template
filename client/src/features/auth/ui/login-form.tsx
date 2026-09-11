@@ -25,6 +25,12 @@ interface AuthError {
 
 const DEFAULT_LOGIN_REDIRECT = '/admin';
 
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  'Invalid credentials': 'Неверный email или пароль',
+  'Access Denied': 'Неверный email или пароль',
+  'Account is deactivated': 'Аккаунт отключён. Обратитесь к администратору.',
+};
+
 const resolveLoginRedirect = (state: unknown) => {
   if (typeof state !== 'object' || state === null || !('from' in state)) {
     return DEFAULT_LOGIN_REDIRECT;
@@ -70,10 +76,10 @@ export const LoginForm = () => {
         onError: (error: unknown) => {
           const authError = error as AuthError;
           const backendMessage = authError.response?.data?.error?.message;
-          const credentialErrors = ['Invalid credentials', 'Access Denied'];
-          const message = credentialErrors.includes(backendMessage || '')
-            ? 'Неверный email или пароль'
-            : (backendMessage ?? 'Не удалось войти. Попробуйте еще раз.');
+          const message =
+            (backendMessage ? LOGIN_ERROR_MESSAGES[backendMessage] : undefined) ??
+            backendMessage ??
+            'Не удалось войти. Попробуйте еще раз.';
 
           /**
            * Ошибка входа остается на форме, а не только всплывает тостом: тост исчезает через

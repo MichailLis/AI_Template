@@ -6,6 +6,8 @@ export const AdminUserResponseSchema = z.object({
   email: z.string().email(),
   name: z.string().nullable(),
   role: z.enum(['USER', 'ADMIN']),
+  deactivatedAt: z.string().nullable(),
+  lastLoginAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

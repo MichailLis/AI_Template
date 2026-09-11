@@ -182,6 +182,28 @@ describe('LoginForm', () => {
     expect(toastMock.error).toHaveBeenCalledWith('Неверный email или пароль');
   });
 
+  it('tells a deactivated user why they cannot sign in', async () => {
+    authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
+      options?.onError?.({
+        response: { data: { error: { code: 'HTTP_ERROR', message: 'Account is deactivated' } } },
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await submitLogin();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Аккаунт отключён. Обратитесь к администратору.',
+    );
+  });
+
   it('shows Russian validation messages for an empty form', async () => {
     const user = userEvent.setup();
 

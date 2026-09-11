@@ -6,6 +6,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { setupApp } from '../src/setup-app';
+import { createE2eUser } from './helpers/create-e2e-user';
 
 describe('Tests public sessions (e2e)', () => {
   let app: INestApplication;
@@ -180,18 +181,11 @@ describe('Tests public sessions (e2e)', () => {
     await cleanupTestTopics();
     await cleanupUsers();
 
-    const signupResponse = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        email: adminEmail,
-        password,
-        name: 'Public Session Admin E2E',
-      })
-      .expect(201);
-
-    await prisma.user.update({
-      where: { id: signupResponse.body.user.id as number },
-      data: { role: 'ADMIN' },
+    await createE2eUser(prisma, {
+      email: adminEmail,
+      password,
+      name: 'Public Session Admin E2E',
+      role: 'ADMIN',
     });
 
     adminToken = await signin();

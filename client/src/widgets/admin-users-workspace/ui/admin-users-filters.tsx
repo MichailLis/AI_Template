@@ -1,14 +1,18 @@
+import { UserPlus } from 'lucide-react';
+
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
-import type { RoleFilter } from './admin-users-workspace.types';
+import type { RoleFilter, StatusFilter } from './admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 interface AdminUsersFiltersProps {
   searchInput: string;
   roleFilter: RoleFilter;
+  statusFilter: StatusFilter;
   total: number;
   isFetching: boolean;
   hasActiveFilters: boolean;
@@ -16,12 +20,20 @@ interface AdminUsersFiltersProps {
   onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onResetFilters: () => void;
   onRoleFilterChange: (nextRole: RoleFilter) => void;
+  onStatusFilterChange: (nextStatus: StatusFilter) => void;
+  onCreateUser: () => void;
 }
 
 const ROLE_TABS: Array<{ value: RoleFilter; label: string }> = [
   { value: 'ALL', label: 'Все' },
   { value: 'ADMIN', label: 'Администраторы' },
   { value: 'USER', label: 'Пользователи' },
+];
+
+const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
+  { value: 'ALL', label: 'Любой статус' },
+  { value: 'ACTIVE', label: 'Активные' },
+  { value: 'DEACTIVATED', label: 'Отключённые' },
 ];
 
 const formatTotal = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
@@ -33,6 +45,7 @@ const formatTotal = (value: number) => new Intl.NumberFormat('ru-RU').format(val
 export function AdminUsersFilters({
   searchInput,
   roleFilter,
+  statusFilter,
   total,
   isFetching,
   hasActiveFilters,
@@ -40,6 +53,8 @@ export function AdminUsersFilters({
   onSearchSubmit,
   onResetFilters,
   onRoleFilterChange,
+  onStatusFilterChange,
+  onCreateUser,
 }: AdminUsersFiltersProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -64,6 +79,19 @@ export function AdminUsersFilters({
           </Button>
         </form>
 
+        <AdminSelectField
+          value={statusFilter}
+          onChange={(event) => onStatusFilterChange(event.target.value as StatusFilter)}
+          aria-label="Статус пользователя"
+          className="w-auto"
+        >
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminSelectField>
+
         {hasActiveFilters ? (
           <Button type="button" size="sm" variant="ghost" onClick={onResetFilters}>
             Сбросить
@@ -73,6 +101,11 @@ export function AdminUsersFilters({
         <p className={adminClassNames.filters.total}>
           {isFetching ? 'Обновляем…' : `Всего: ${formatTotal(total)}`}
         </p>
+
+        <Button type="button" size="sm" onClick={onCreateUser}>
+          <UserPlus aria-hidden="true" className="size-4" />
+          Добавить пользователя
+        </Button>
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ interface User {
   id: number;
   email: string;
   name?: string | null;
+  /** Absent in sessions persisted before signin started returning the role. */
+  role?: 'USER' | 'ADMIN';
 }
 
 interface AuthState {

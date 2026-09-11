@@ -4,7 +4,8 @@ This template is a stable product-oriented base for AI-driven development.
 
 Current branch baseline:
 
-- Auth flow (`/auth/signup`, `/auth/signin`, `/auth/logout`, `/auth/refresh`)
+- Auth flow (`/auth/signin`, `/auth/logout`, `/auth/refresh`); there is no public signup — accounts
+  are created by an admin through `POST /admin/users`
 - Frontend auth UI route: `/login`
 - Admin workspace, Prompt Studio, tests editor, public links, analytics, public student flow, and Polus public template
 

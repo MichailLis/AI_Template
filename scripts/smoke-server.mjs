@@ -11,7 +11,6 @@ const reuseExistingServer = process.env.SMOKE_SERVER_REUSE_EXISTING === '1';
 let port = requestedPort;
 let targetUrl = '';
 const authApiOperations = [
-  { path: '/auth/signup', methods: ['post'] },
   { path: '/auth/signin', methods: ['post'] },
   { path: '/auth/logout', methods: ['post'] },
   { path: '/auth/refresh', methods: ['post'] },

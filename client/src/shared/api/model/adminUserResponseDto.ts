@@ -14,6 +14,10 @@ export interface AdminUserResponseDto {
   /** @nullable */
   name: string | null;
   role: AdminUserResponseDtoRole;
+  /** @nullable */
+  deactivatedAt: string | null;
+  /** @nullable */
+  lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { setupApp } from '../src/setup-app';
+import { createE2eUser } from './helpers/create-e2e-user';
 
 describe('Tests Archive/Restore (e2e)', () => {
   let app: INestApplication;
@@ -39,19 +40,6 @@ describe('Tests Archive/Restore (e2e)', () => {
         },
       },
     });
-  };
-
-  const signup = async (email: string, name: string) => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        email,
-        password,
-        name,
-      })
-      .expect(201);
-
-    return response.body;
   };
 
   const signin = async (email: string) => {
@@ -122,16 +110,17 @@ describe('Tests Archive/Restore (e2e)', () => {
     await cleanupTestTopics();
     await cleanupUsers();
 
-    const adminSignup = await signup(adminEmail, 'Admin Archive E2E');
-    const memberSignup = await signup(memberEmail, 'Member Archive E2E');
-
-    adminUserId = adminSignup.user.id;
-    memberUserId = memberSignup.user.id;
-
-    await prisma.user.update({
-      where: { id: adminUserId },
-      data: { role: 'ADMIN' },
-    });
+    adminUserId = (
+      await createE2eUser(prisma, {
+        email: adminEmail,
+        password,
+        name: 'Admin Archive E2E',
+        role: 'ADMIN',
+      })
+    ).id;
+    memberUserId = (
+      await createE2eUser(prisma, { email: memberEmail, password, name: 'Member Archive E2E' })
+    ).id;
 
     adminToken = await signin(adminEmail);
     memberToken = await signin(memberEmail);

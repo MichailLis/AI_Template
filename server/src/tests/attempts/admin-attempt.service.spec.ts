@@ -64,7 +64,7 @@ describe('TestsAdminAttemptService', () => {
     const finishedAt = new Date('2026-01-01T10:30:00.000Z');
     const expiresAt = new Date('2026-01-01T11:00:00.000Z');
 
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
     prismaMock.testStudentAttempt.count.mockResolvedValue(23);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([
@@ -132,7 +132,7 @@ describe('TestsAdminAttemptService', () => {
   });
 
   it('maps attempt with prof-orientation summary to correct llmStatus (ready, failed, pending)', async () => {
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
 
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
 
@@ -174,7 +174,7 @@ describe('TestsAdminAttemptService', () => {
     const startedAt = new Date('2026-01-02T10:00:00.000Z');
     const consentAcceptedAt = new Date('2026-01-02T09:59:00.000Z');
 
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 202,
       status: 'COMPLETED',
@@ -224,7 +224,7 @@ describe('TestsAdminAttemptService', () => {
   it('marks attempts with education and demographic fields as EDUCATION_DEMOGRAPHIC', async () => {
     const startedAt = new Date('2026-01-03T10:00:00.000Z');
 
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
     prismaMock.testStudentAttempt.count.mockResolvedValue(1);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([
@@ -263,7 +263,7 @@ describe('TestsAdminAttemptService', () => {
   it('uses the public link entry profile mode for partially filled hybrid attempt rows', async () => {
     const startedAt = new Date('2026-01-04T10:00:00.000Z');
 
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
     prismaMock.testStudentAttempt.count.mockResolvedValue(1);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([
@@ -298,7 +298,7 @@ describe('TestsAdminAttemptService', () => {
     const startedAt = new Date('2026-01-05T10:00:00.000Z');
     const consentAcceptedAt = new Date('2026-01-05T09:59:00.000Z');
 
-    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 505,
       status: 'COMPLETED',

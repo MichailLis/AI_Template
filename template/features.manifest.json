@@ -62,12 +62,18 @@
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin-settings.controller.ts",
         "server/src/admin/admin.service.ts",
+        "server/src/admin/admin-password.utils.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
         "server/src/admin/dto/admin-settings.dto.ts",
         "server/src/admin/dto/admin-users-query.dto.ts",
         "server/src/admin/dto/admin-user-response.dto.ts",
+        "server/src/admin/dto/admin-user-credentials-response.dto.ts",
         "server/src/admin/dto/admin-users-response.dto.ts",
+        "server/src/admin/dto/create-user.dto.ts",
+        "server/src/admin/dto/reset-user-password.dto.ts",
+        "server/src/admin/dto/update-user.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
+        "server/src/admin/dto/update-user-status.dto.ts",
         "server/src/app-settings/profession-atlas-settings.service.ts"
       ],
       "frontendFiles": [
@@ -88,7 +94,27 @@
         },
         {
           "path": "/admin/users",
-          "methods": ["get"],
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users/{id}",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users/{id}/password",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users/{id}/status",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/users/{id}/sessions/revoke",
+          "methods": ["post"],
           "protected": true
         },
         {

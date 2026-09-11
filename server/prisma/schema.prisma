@@ -93,13 +93,16 @@ enum PersonalDataProcessingMode {
 }
 
 model User {
-  id                 Int     @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
-  email              String  @unique @db.Citext
+  email              String    @unique @db.Citext
   name               String?
   password           String
   hashedRefreshToken String?
-  role               Role    @default(USER)
+  role               Role      @default(USER)
+  /// Set by an admin to switch the account off; signin, refresh and admin access reject it.
+  deactivatedAt      DateTime?
+  lastLoginAt        DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,30 +1,25 @@
 import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
-import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { TableCell } from '@/shared/ui/table';
 
 import { AdminUserActionsMenu } from './admin-user-actions-menu';
 
-import type { SortBy, SortOrder } from './admin-users-workspace.types';
-
-interface AdminUsersTableUser {
-  id: number;
-  email: string;
-  name: string | null;
-  role: 'USER' | 'ADMIN';
-  createdAt: string;
-  updatedAt: string;
-}
+import type { AdminUser, SortBy, SortOrder, UserRole } from './admin-users-workspace.types';
 
 interface AdminUsersTableProps {
-  users: AdminUsersTableUser[];
+  users: AdminUser[];
   currentUserId?: number;
   pendingUserId: number | null;
   activeActionsUserId: number | null;
   onToggleActionsMenu: (userId: number) => void;
   onCloseActionsMenu: () => void;
-  onToggleRole: (targetUserId: number, nextRole: 'USER' | 'ADMIN') => void;
+  onEditUser: (user: AdminUser) => void;
+  onToggleRole: (targetUserId: number, nextRole: UserRole) => void;
+  onResetPassword: (user: AdminUser) => void;
+  onRevokeSessions: (user: AdminUser) => void;
+  onToggleStatus: (user: AdminUser) => void;
   onCopyEmail: (email: string) => Promise<void>;
   formatDateTime: (value: string) => string;
   getRoleBadgeClass: (role: string) => string;
@@ -41,6 +36,8 @@ const buildColumns = ({
 }: Pick<AdminUsersTableProps, 'sortBy' | 'sortOrder' | 'onSortByChange'>) => [
   { id: 'user', header: 'Пользователь', className: 'w-32 sm:min-w-48' },
   { id: 'role', header: 'Роль', className: 'w-20 sm:w-36' },
+  { id: 'status', header: 'Статус', className: 'hidden w-32 md:table-cell' },
+  { id: 'last-login', header: 'Последний вход', className: 'hidden xl:table-cell' },
   {
     id: 'created',
     header: 'Создан',
@@ -77,7 +74,11 @@ export function AdminUsersTable({
   activeActionsUserId,
   onToggleActionsMenu,
   onCloseActionsMenu,
+  onEditUser,
   onToggleRole,
+  onResetPassword,
+  onRevokeSessions,
+  onToggleStatus,
   onCopyEmail,
   formatDateTime,
   getRoleBadgeClass,
@@ -119,6 +120,21 @@ export function AdminUsersTable({
               <span className="sm:hidden">{getMobileRoleLabel(user.role)}</span>
             </Badge>
           </TableCell>
+          <TableCell className="hidden w-32 md:table-cell">
+            <Badge
+              variant="outline"
+              className={
+                user.deactivatedAt === null
+                  ? adminBadgeClassNames.active
+                  : adminBadgeClassNames.inactive
+              }
+            >
+              {user.deactivatedAt === null ? 'Активен' : 'Отключён'}
+            </Badge>
+          </TableCell>
+          <TableCell className={cn('hidden xl:table-cell', adminClassNames.table.mutedCell)}>
+            {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Не входил'}
+          </TableCell>
           <TableCell className={cn('hidden lg:table-cell', adminClassNames.table.mutedCell)}>
             {formatDateTime(user.createdAt)}
           </TableCell>
@@ -127,12 +143,16 @@ export function AdminUsersTable({
           </TableCell>
           <TableCell className="w-10 text-right sm:w-12">
             <AdminUserActionsMenu
-              user={{ id: user.id, email: user.email, role: user.role }}
+              user={user}
               currentUserId={currentUserId}
               pendingUserId={pendingUserId}
               isOpen={activeActionsUserId === user.id}
               onToggleOpen={onToggleActionsMenu}
+              onEdit={() => onEditUser(user)}
               onToggleRole={onToggleRole}
+              onResetPassword={() => onResetPassword(user)}
+              onRevokeSessions={() => onRevokeSessions(user)}
+              onToggleStatus={() => onToggleStatus(user)}
               onCopyEmail={onCopyEmail}
               onClose={onCloseActionsMenu}
             />

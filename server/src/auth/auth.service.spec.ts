@@ -5,7 +5,7 @@ import * as argon2 from 'argon2';
 
 import { PrismaService } from '../prisma.service';
 import { AuthService } from './auth.service';
-import { SigninDto, SignupDto } from './dto/auth.dto';
+import { SigninDto } from './dto/auth.dto';
 
 jest.mock('argon2', () => ({
   hash: jest.fn(),
@@ -18,6 +18,8 @@ type TestUser = {
   name: string | null;
   password: string;
   hashedRefreshToken: string | null;
+  role: 'USER' | 'ADMIN';
+  deactivatedAt: Date | null;
 };
 
 type PrismaUserDelegate = {
@@ -33,6 +35,8 @@ const createTestUser = (overrides: Partial<TestUser> = {}): TestUser => ({
   name: 'User',
   password: 'hashed-password',
   hashedRefreshToken: 'hashed-refresh-token',
+  role: 'USER',
+  deactivatedAt: null,
   ...overrides,
 });
 
@@ -80,64 +84,6 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  it('signup should create user with normalized email and return tokens with public user fields', async () => {
-    const dto: SignupDto = {
-      email: ' New.User@Example.COM ',
-      password: 'Password123',
-      name: 'New User',
-    };
-    const createdUser = createTestUser({
-      id: 7,
-      email: 'new.user@example.com',
-      name: dto.name ?? null,
-      password: 'stored-hash',
-    });
-
-    jest.mocked(argon2.hash).mockResolvedValue('stored-hash');
-    prismaMock.user.create.mockResolvedValue(createdUser);
-    jest.spyOn(service, 'getTokens').mockResolvedValue({
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-    });
-    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
-
-    const result = await service.signup(dto);
-
-    expect(prismaMock.user.create).toHaveBeenCalledWith({
-      data: {
-        email: 'new.user@example.com',
-        password: 'stored-hash',
-        name: dto.name,
-      },
-    });
-    expect(updateRefreshTokenSpy).toHaveBeenCalledWith(7, 'refresh-token');
-    expect(result).toEqual({
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-      user: {
-        id: 7,
-        email: 'new.user@example.com',
-        name: dto.name,
-      },
-    });
-  });
-
-  it('signup should throw ForbiddenException when email already exists', async () => {
-    const dto: SignupDto = {
-      email: 'duplicate@example.com',
-      password: 'Password123',
-      name: 'Duplicate User',
-    };
-
-    jest.mocked(argon2.hash).mockResolvedValue('stored-hash');
-    prismaMock.user.create.mockRejectedValue({ code: 'P2002' });
-
-    const signupPromise = service.signup(dto);
-
-    await expect(signupPromise).rejects.toThrow(ForbiddenException);
-    await expect(signupPromise).rejects.toThrow('Email already exists');
-  });
-
   it('signin should throw ForbiddenException when user does not exist', async () => {
     const dto: SigninDto = {
       email: 'missing@example.com',
@@ -173,14 +119,21 @@ describe('AuthService', () => {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     });
-    const updateRefreshTokenSpy = jest.spyOn(service, 'updateRefreshToken').mockResolvedValue();
+    jest.mocked(argon2.hash).mockResolvedValue('hashed-refresh-token');
 
     const result = await service.signin(dto);
 
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
       where: { email: 'user@example.com' },
     });
-    expect(updateRefreshTokenSpy).toHaveBeenCalledWith(1, 'refresh-token');
+    expect(argon2.hash).toHaveBeenCalledWith('refresh-token');
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        hashedRefreshToken: 'hashed-refresh-token',
+        lastLoginAt: expect.any(Date) as Date,
+      },
+    });
     expect(result).toEqual({
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -188,8 +141,34 @@ describe('AuthService', () => {
         id: 1,
         email: 'user@example.com',
         name: 'User',
+        role: 'USER',
       },
     });
+  });
+
+  it('signin should reject a deactivated account without issuing tokens', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      createTestUser({ deactivatedAt: new Date('2026-09-01T00:00:00.000Z') }),
+    );
+    jest.mocked(argon2.verify).mockResolvedValue(true);
+    const getTokensSpy = jest.spyOn(service, 'getTokens');
+
+    await expect(
+      service.signin({ email: 'user@example.com', password: 'Password123' }),
+    ).rejects.toThrow('Account is deactivated');
+    expect(getTokensSpy).not.toHaveBeenCalled();
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it('signin should not reveal deactivation to a wrong password', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      createTestUser({ deactivatedAt: new Date('2026-09-01T00:00:00.000Z') }),
+    );
+    jest.mocked(argon2.verify).mockResolvedValue(false);
+
+    await expect(
+      service.signin({ email: 'user@example.com', password: 'wrong-password' }),
+    ).rejects.toThrow('Access Denied');
   });
 
   it('logout should clear user refresh token hash', async () => {
@@ -207,6 +186,16 @@ describe('AuthService', () => {
     prismaMock.user.findUnique.mockResolvedValue(createTestUser({ hashedRefreshToken: null }));
 
     await expect(service.refreshTokens(1, 'refresh-token')).rejects.toThrow(ForbiddenException);
+  });
+
+  it('refreshTokens should reject a deactivated account even with a matching token', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      createTestUser({ deactivatedAt: new Date('2026-09-01T00:00:00.000Z') }),
+    );
+    jest.mocked(argon2.verify).mockResolvedValue(true);
+
+    await expect(service.refreshTokens(1, 'refresh-token')).rejects.toThrow(ForbiddenException);
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it('refreshTokens should throw ForbiddenException when refresh token does not match', async () => {
@@ -263,20 +252,6 @@ describe('AuthService', () => {
         hashedRefreshToken: 'old-hash',
       },
       data: { hashedRefreshToken: 'new-hash' },
-    });
-  });
-
-  it('updateRefreshToken should hash and persist token', async () => {
-    jest.mocked(argon2.hash).mockResolvedValue('hashed-refresh-token');
-    prismaMock.user.update.mockResolvedValue(
-      createTestUser({ hashedRefreshToken: 'hashed-refresh-token' }),
-    );
-
-    await service.updateRefreshToken(9, 'plain-refresh-token');
-
-    expect(prismaMock.user.update).toHaveBeenCalledWith({
-      where: { id: 9 },
-      data: { hashedRefreshToken: 'hashed-refresh-token' },
     });
   });
 
