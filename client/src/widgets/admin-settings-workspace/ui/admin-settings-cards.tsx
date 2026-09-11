@@ -1,6 +1,6 @@
 import { FileText, KeyRound, Link2 } from 'lucide-react';
 
-import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import {
@@ -37,18 +37,12 @@ export function OpenRouterSettingsCard({
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className={adminClassNames.border.bottom}>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <div
-              className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.info.icon}`}
-            >
-              <KeyRound className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <CardTitle className="text-lg">OpenRouter API key</CardTitle>
-              <CardDescription>
-                Ключ берется только из переменной окружения сервера.
-              </CardDescription>
-            </div>
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <KeyRound className="size-4 shrink-0 text-admin-muted" />
+              OpenRouter API key
+            </CardTitle>
+            <CardDescription>Ключ берется только из переменной окружения сервера.</CardDescription>
           </div>
           {openRouter ? <OpenRouterStateBadge openRouter={openRouter} /> : null}
         </div>
@@ -102,18 +96,14 @@ export function ProfessionAtlasSettingsCard({
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className={adminClassNames.border.bottom}>
-        <div className="flex min-w-0 items-start gap-3">
-          <div
-            className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
-          >
-            <Link2 className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <CardTitle className="text-lg">Атлас профессий</CardTitle>
-            <CardDescription>
-              Карточки, предприятия, мероприятия и учебные заведения для результата Polus.
-            </CardDescription>
-          </div>
+        <div className="min-w-0">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Link2 className="size-4 shrink-0 text-admin-muted" />
+            Атлас профессий
+          </CardTitle>
+          <CardDescription>
+            Карточки, предприятия, мероприятия и учебные заведения для результата Polus.
+          </CardDescription>
         </div>
       </CardHeader>
 
@@ -186,18 +176,14 @@ export function PrivacyPolicySettingsCard({
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className={adminClassNames.border.bottom}>
-        <div className="flex min-w-0 items-start gap-3">
-          <div
-            className={`grid size-10 shrink-0 place-items-center rounded-xl ${adminToneClassNames.success.icon}`}
-          >
-            <FileText className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <CardTitle className="text-lg">Политика персональных данных</CardTitle>
-            <CardDescription>
-              Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.
-            </CardDescription>
-          </div>
+        <div className="min-w-0">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="size-4 shrink-0 text-admin-muted" />
+            Политика персональных данных
+          </CardTitle>
+          <CardDescription>
+            Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.
+          </CardDescription>
         </div>
       </CardHeader>
 

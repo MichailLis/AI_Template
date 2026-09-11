@@ -1,6 +1,5 @@
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
-import { Button } from '@/shared/ui/button';
-import { CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Input } from '@/shared/ui/input';
 
 import type { ReactNode } from 'react';
@@ -11,8 +10,11 @@ interface AdminListToolbarTab<T extends string> {
 }
 
 interface AdminListToolbarProps<T extends string> {
-  title: string;
-  description: string;
+  /**
+   * Название раздела уже стоит в шапке админки, поэтому список его не повторяет: заголовок здесь
+   * нужен только там, где карточка — не единственный блок экрана.
+   */
+  tabsLabel: string;
   searchId: string;
   searchValue: string;
   searchPlaceholder: string;
@@ -24,8 +26,7 @@ interface AdminListToolbarProps<T extends string> {
 }
 
 export function AdminListToolbar<T extends string>({
-  title,
-  description,
+  tabsLabel,
   searchId,
   searchValue,
   searchPlaceholder,
@@ -36,46 +37,30 @@ export function AdminListToolbar<T extends string>({
   onSearchChange,
 }: AdminListToolbarProps<T>) {
   return (
-    <CardHeader className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <CardTitle>{title}</CardTitle>
-          <CardDescription className="mt-1">{description}</CardDescription>
-        </div>
-        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
-      </div>
+    <div className="flex flex-col gap-3 border-b border-admin-border p-4 sm:flex-row sm:items-center sm:justify-between">
+      <AdminTabs
+        ariaLabel={tabsLabel}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+      />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className={adminClassNames.toolbar.tabs}>
-          {tabs.map((tab) => (
-            <Button
-              key={tab.value}
-              type="button"
-              size="sm"
-              variant={activeTab === tab.value ? 'secondary' : 'ghost'}
-              className={
-                activeTab === tab.value
-                  ? adminClassNames.toolbar.activeTab
-                  : adminClassNames.toolbar.inactiveTab
-              }
-              onClick={() => onTabChange(tab.value)}
-            >
-              {tab.label}
-            </Button>
-          ))}
-        </div>
+      <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+        <Input
+          id={searchId}
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
+          className={`w-full sm:w-72 ${adminClassNames.toolbar.input}`}
+        />
 
-        <div className="w-full max-w-md">
-          <Input
-            id={searchId}
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-            className={adminClassNames.toolbar.input}
-          />
-        </div>
+        {/* На узком экране кнопки идут снизу вверх: основное действие в списках стоит последним в
+            разметке, и без разворота оно оказывалось третьей кнопкой в столбце. */}
+        {actions ? (
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap">{actions}</div>
+        ) : null}
       </div>
-    </CardHeader>
+    </div>
   );
 }

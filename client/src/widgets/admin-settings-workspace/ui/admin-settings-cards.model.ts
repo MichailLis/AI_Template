@@ -1,3 +1,5 @@
+import { formatDateTime } from '@/shared/lib/date-format';
+
 import type {
   AdminOpenRouterSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
@@ -34,14 +36,5 @@ export const formatUpdatedAt = (value: string | null) => {
     return 'не обновлялся через админку';
   }
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('ru-RU', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
+  return formatDateTime(value);
 };

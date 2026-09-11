@@ -1,3 +1,5 @@
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+
 import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
 import { EducationOrganizationsNavigationCard } from './education-organizations-navigation-card';
@@ -21,7 +23,7 @@ export function AdminEducationOrganizationsWorkspace() {
   } = useAdminEducationOrganizationsWorkspace();
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className={`min-w-0 ${adminClassNames.layout.page}`}>
       <EducationOrganizationsNavigationCard onCreateOrganization={openCreateEditor} />
 
       <EducationOrganizationsListCard

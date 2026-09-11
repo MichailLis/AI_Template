@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+
 import { AdminTestsWorkspaceContent } from './admin-tests-workspace-content';
 import { AdminTestsWorkspaceModals } from './admin-tests-workspace-modals';
 import { useAdminTestsWorkspace } from './use-admin-tests-workspace';
@@ -41,7 +43,7 @@ export function AdminTestsWorkspace() {
 
   return (
     <>
-      <div className="grid gap-4">
+      <div className={adminClassNames.layout.page}>
         <AdminTestsWorkspaceContent
           workspace={workspace}
           isListRoute={isListRoute}

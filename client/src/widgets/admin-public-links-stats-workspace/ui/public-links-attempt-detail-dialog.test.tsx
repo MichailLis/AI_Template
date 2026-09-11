@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
 
@@ -64,6 +64,10 @@ const profOrientationSummary = {
 };
 
 const detailAttempt = {
+  attemptId: 191,
+  startedAt: '2026-05-12T11:00:00.000Z',
+  finishedAt: '2026-05-12T11:40:00.000Z',
+  expiresAt: null,
   entryProfileMode: 'EDUCATION_DEMOGRAPHIC' as const,
   professionAtlasUrl: 'https://atlas.example/professions',
   studentName: 'Алексей',
@@ -89,6 +93,8 @@ const detailAttempt = {
 };
 
 describe('PublicLinksAttemptDetailDialog', () => {
+  afterEach(cleanup);
+
   it('renders prof-orientation v3+ analysis in the student-facing Polus format', () => {
     render(
       <PublicLinksAttemptDetailDialog
@@ -125,5 +131,26 @@ describe('PublicLinksAttemptDetailDialog', () => {
     ).toHaveAttribute('href', 'https://atlas.example/professions');
     expect(document.body.textContent).not.toContain('Структурированные данные анализа');
     expect(document.body.textContent).not.toContain('"resultKind"');
+  });
+
+  it('carries the attempt id and timing that the table no longer shows', () => {
+    render(
+      <PublicLinksAttemptDetailDialog
+        isOpen
+        detailView="analysis"
+        detailAttempt={detailAttempt}
+        isLoading={false}
+        onClose={vi.fn()}
+        formatDateTime={(value) => value ?? '—'}
+        toPrettyJson={(value) => JSON.stringify(value, null, 2)}
+      />,
+    );
+
+    expect(screen.getByText('ID попытки')).toBeInTheDocument();
+    expect(screen.queryByText('ALGORITHM_LLM')).not.toBeInTheDocument();
+    expect(screen.getByText('191')).toBeInTheDocument();
+    expect(screen.getByText('Завершение работы')).toBeInTheDocument();
+    expect(screen.getByText('2026-05-12T11:40:00.000Z')).toBeInTheDocument();
+    expect(screen.getByText('Истекает через')).toBeInTheDocument();
   });
 });

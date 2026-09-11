@@ -5,12 +5,40 @@ import type {
 } from '@/shared/api/model';
 
 export type PublicLinksTab = 'active' | 'archived';
+export type AnalyticsTab = 'report' | 'attempts';
 export type AttemptDetailView = 'analysis' | 'answers';
 export type AnalyticsScope = TestsAdminAnalyticsControllerGetSummaryScope;
 export type AnalyticsLinkStatus = TestsAdminAnalyticsControllerGetSummaryLinkStatus;
 export type AnalyticsExportFormat = 'xlsx' | 'pdf';
 
 export const ATTEMPTS_LIMIT = 10;
+export const ATTEMPTS_LIMIT_OPTIONS = [10, 25, 50];
+
+export const resolveAnalyticsTab = (value: string | null): AnalyticsTab =>
+  value === 'attempts' ? 'attempts' : 'report';
+
+/**
+ * Чтение выбора из строки запроса. Значения приходят от пользователя (адресная строка, закладка),
+ * поэтому любое непонятное значение молча превращается в значение по умолчанию.
+ */
+export const readTab = (value: string | null): PublicLinksTab =>
+  value === 'archived' ? 'archived' : 'active';
+
+export const readNumber = (value: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+export const readLimit = (value: string | null) => {
+  const parsed = readNumber(value);
+
+  return parsed && ATTEMPTS_LIMIT_OPTIONS.includes(parsed) ? parsed : ATTEMPTS_LIMIT;
+};
 
 export interface PublicLinkSummary {
   id: number;

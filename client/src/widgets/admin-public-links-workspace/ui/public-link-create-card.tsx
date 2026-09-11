@@ -1,4 +1,5 @@
 import { Link2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
@@ -22,7 +23,15 @@ interface PublicLinkCreateDialogProps extends PublicLinkCreateCardProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function PublicLinkCreateHeader() {
+const CREATE_STEPS = [
+  { title: 'Тест', description: 'Выберите опубликованный тест для публикации.' },
+  { title: 'Учебное заведение', description: 'Привяжите ссылку к заведению или оставьте анкету.' },
+  { title: 'Доступ', description: 'Настройте код, анкету и ограничения попытки.' },
+];
+
+function PublicLinkCreateHeader({ stepIndex }: { stepIndex: number }) {
+  const step = CREATE_STEPS[stepIndex];
+
   return (
     <DialogHeader>
       <div className="flex items-start gap-3">
@@ -32,136 +41,101 @@ function PublicLinkCreateHeader() {
           <Link2 className="size-5" />
         </div>
         <div className="min-w-0">
+          <p className={adminClassNames.text.kicker}>
+            Шаг {stepIndex + 1} из {CREATE_STEPS.length} · {step.title}
+          </p>
           <DialogTitle>Создать публичную ссылку</DialogTitle>
-          <DialogDescription>
-            Выберите опубликованный тест, привяжите заведение и настройте доступ.
-          </DialogDescription>
+          <DialogDescription>{step.description}</DialogDescription>
         </div>
       </div>
     </DialogHeader>
   );
 }
 
+interface PublicLinkCreateWizardProps extends PublicLinkCreateCardProps {
+  onCancel: () => void;
+}
+
+/**
+ * Rendered only while the dialog is open: Radix unmounts the dialog content on close, so the
+ * wizard always reopens on its first step without an effect resetting the state.
+ */
+function PublicLinkCreateWizard({ onCancel, ...props }: PublicLinkCreateWizardProps) {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  const isLastStep = stepIndex === CREATE_STEPS.length - 1;
+  const canLeaveCurrentStep = stepIndex > 0 || props.hasPublishedVersion;
+
+  return (
+    <>
+      <PublicLinkCreateHeader stepIndex={stepIndex} />
+
+      <div className="grid gap-4">
+        {stepIndex === 0 ? (
+          <>
+            <PublicLinkTopicSection {...props} />
+
+            {!props.hasPublishedVersion ? (
+              <p className={adminClassNames.panel.warningInline}>
+                У выбранного теста нет опубликованной версии. Опубликуйте тест, чтобы создать
+                публичную ссылку.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        {stepIndex === 1 ? <PublicLinkOrganizationSection {...props} /> : null}
+
+        {stepIndex === 2 ? <PublicLinkAccessSettingsSection {...props} /> : null}
+
+        {isLastStep && props.createError ? (
+          <p role="alert" className={adminClassNames.panel.dangerInline}>
+            {props.createError}
+          </p>
+        ) : null}
+      </div>
+
+      <DialogFooter className="gap-2 sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => (stepIndex === 0 ? onCancel() : setStepIndex(stepIndex - 1))}
+        >
+          {stepIndex === 0 ? 'Отмена' : 'Назад'}
+        </Button>
+        {isLastStep ? (
+          <Button
+            type="button"
+            onClick={props.onCreatePublicLink}
+            disabled={props.isCreatingPublicLink || !props.hasPublishedVersion}
+          >
+            {props.isCreatingPublicLink ? 'Создаем...' : 'Создать ссылку'}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={() => setStepIndex(stepIndex + 1)}
+            disabled={!canLeaveCurrentStep}
+          >
+            Далее
+          </Button>
+        )}
+      </DialogFooter>
+    </>
+  );
+}
+
 export function PublicLinkCreateDialog({
   open,
   onOpenChange,
-  topics,
-  educationOrganizations,
-  effectiveSelectedTopicId,
-  onSelectTopic,
-  newEducationOrganizationId,
-  onEducationOrganizationSelect,
-  newPersonalDataProcessingMode,
-  onPersonalDataProcessingModeChange,
-  newEducationOrganizationName,
-  onEducationOrganizationNameChange,
-  groupValidationMode,
-  onGroupValidationModeChange,
-  groupValidationPattern,
-  onGroupValidationPatternChange,
-  groupValidationExample,
-  onGroupValidationExampleChange,
-  groupValidationHint,
-  onGroupValidationHintChange,
-  onCreateEducationOrganization,
-  onUpdateEducationOrganization,
-  isCreatingEducationOrganization,
-  isUpdatingEducationOrganization,
-  newPublicShortCode,
-  onShortCodeChange,
-  newPublicTemplate,
-  onPublicTemplateChange,
-  newPublicEntryProfileMode,
-  onEntryProfileModeChange,
-  newPublicMaxAttempts,
-  onMaxAttemptsChange,
-  newPublicTimeLimit,
-  onTimeLimitChange,
-  newPublicConsentVersion,
-  onConsentVersionChange,
-  newPublicConsentText,
-  onConsentTextChange,
-  newPublicAllowResume,
-  onAllowResumeChange,
-  onCreatePublicLink,
-  isCreatingPublicLink,
-  hasPublishedVersion,
+  ...wizardProps
 }: PublicLinkCreateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={`left-4 right-4 top-4 max-h-[calc(100vh-2rem)] w-auto max-w-none translate-x-0 translate-y-0 overflow-y-auto p-4 sm:left-[50%] sm:right-auto sm:w-[calc(100vw-2rem)] sm:max-w-2xl sm:translate-x-[-50%] sm:p-6 ${adminClassNames.dialog.content}`}
       >
-        <PublicLinkCreateHeader />
-
-        <div className="grid gap-4">
-          <PublicLinkTopicSection
-            topics={topics}
-            effectiveSelectedTopicId={effectiveSelectedTopicId}
-            onSelectTopic={onSelectTopic}
-          />
-
-          <PublicLinkOrganizationSection
-            educationOrganizations={educationOrganizations}
-            newEducationOrganizationId={newEducationOrganizationId}
-            onEducationOrganizationSelect={onEducationOrganizationSelect}
-            newPersonalDataProcessingMode={newPersonalDataProcessingMode}
-            onPersonalDataProcessingModeChange={onPersonalDataProcessingModeChange}
-            newEducationOrganizationName={newEducationOrganizationName}
-            onEducationOrganizationNameChange={onEducationOrganizationNameChange}
-            groupValidationMode={groupValidationMode}
-            onGroupValidationModeChange={onGroupValidationModeChange}
-            groupValidationPattern={groupValidationPattern}
-            onGroupValidationPatternChange={onGroupValidationPatternChange}
-            groupValidationExample={groupValidationExample}
-            onGroupValidationExampleChange={onGroupValidationExampleChange}
-            groupValidationHint={groupValidationHint}
-            onGroupValidationHintChange={onGroupValidationHintChange}
-            onCreateEducationOrganization={onCreateEducationOrganization}
-            onUpdateEducationOrganization={onUpdateEducationOrganization}
-            isCreatingEducationOrganization={isCreatingEducationOrganization}
-            isUpdatingEducationOrganization={isUpdatingEducationOrganization}
-          />
-
-          <PublicLinkAccessSettingsSection
-            newPublicShortCode={newPublicShortCode}
-            onShortCodeChange={onShortCodeChange}
-            newPublicTemplate={newPublicTemplate}
-            onPublicTemplateChange={onPublicTemplateChange}
-            newPublicEntryProfileMode={newPublicEntryProfileMode}
-            onEntryProfileModeChange={onEntryProfileModeChange}
-            newPublicMaxAttempts={newPublicMaxAttempts}
-            onMaxAttemptsChange={onMaxAttemptsChange}
-            newPublicTimeLimit={newPublicTimeLimit}
-            onTimeLimitChange={onTimeLimitChange}
-            newPublicConsentVersion={newPublicConsentVersion}
-            onConsentVersionChange={onConsentVersionChange}
-            newPublicConsentText={newPublicConsentText}
-            onConsentTextChange={onConsentTextChange}
-            newPublicAllowResume={newPublicAllowResume}
-            onAllowResumeChange={onAllowResumeChange}
-          />
-
-          {!hasPublishedVersion ? (
-            <p className={adminClassNames.panel.warningInline}>
-              У выбранного теста нет опубликованной версии. Опубликуйте тест, чтобы создать
-              публичную ссылку.
-            </p>
-          ) : null}
-        </div>
-
-        <DialogFooter className="gap-2 sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
-          </Button>
-          <Button
-            type="button"
-            onClick={onCreatePublicLink}
-            disabled={isCreatingPublicLink || !hasPublishedVersion}
-          >
-            {isCreatingPublicLink ? 'Создаем...' : 'Создать ссылку'}
-          </Button>
-        </DialogFooter>
+        <PublicLinkCreateWizard {...wizardProps} onCancel={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

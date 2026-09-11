@@ -1,5 +1,6 @@
 import { useQueries } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions,
@@ -8,7 +9,11 @@ import {
 } from '@/shared/api/generated/tests/tests';
 
 import {
+  ATTEMPTS_LIMIT,
   buildTopicOptions,
+  readLimit,
+  readNumber,
+  readTab,
   resolveEffectivePublicLinkId,
   resolveEffectiveTopicId,
 } from './use-admin-public-links-stats-workspace.model';
@@ -31,7 +36,20 @@ export const usePublicLinksData = () => {
     [listArchivedPublicLinksQuery.data?.links],
   );
 
-  return { activePublicLinks, archivedPublicLinks };
+  /**
+   * Ошибка загрузки списков отдается наружу: без нее экран аналитики показывал «нет доступных
+   * тестов», то есть выдавал отказ сервера за пустые данные.
+   */
+  return {
+    activePublicLinks,
+    archivedPublicLinks,
+    isPublicLinksError: listPublicLinksQuery.isError || listArchivedPublicLinksQuery.isError,
+    isPublicLinksLoading: listPublicLinksQuery.isLoading || listArchivedPublicLinksQuery.isLoading,
+    refetchPublicLinks: () => {
+      void listPublicLinksQuery.refetch();
+      void listArchivedPublicLinksQuery.refetch();
+    },
+  };
 };
 
 const usePublicLinkAttemptCounts = (linksForTopic: PublicLinkSummary[]) => {
@@ -60,10 +78,13 @@ export const usePublicLinkSelection = (
   activePublicLinks: PublicLinkSummary[],
   archivedPublicLinks: PublicLinkSummary[],
 ) => {
-  const [publicLinksTab, setPublicLinksTab] = useState<PublicLinksTab>('active');
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
-  const [selectedPublicLinkId, setSelectedPublicLinkId] = useState<number | null>(null);
-  const [attemptsPage, setAttemptsPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const publicLinksTab = readTab(searchParams.get('scope'));
+  const selectedTopicId = readNumber(searchParams.get('topic'));
+  const selectedPublicLinkId = readNumber(searchParams.get('link'));
+  const attemptsPage = readNumber(searchParams.get('page')) ?? 1;
+  const attemptsLimit = readLimit(searchParams.get('limit'));
 
   const visiblePublicLinks = useMemo(
     () => (publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
@@ -90,20 +111,54 @@ export const usePublicLinkSelection = (
   const selectedPublicLink =
     linksForTopic.find((link) => link.id === effectivePublicLinkId) ?? null;
 
+  /**
+   * Выбор живет в адресной строке, а не в состоянии компонента: ссылку на прохождения конкретной
+   * публичной ссылки нужно уметь отправить коллеге и положить в закладку. `replace` — чтобы
+   * переключение фильтров не забивало историю браузера.
+   */
+  const updateSelection = (patch: Record<string, string | null>) => {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === null) {
+            next.delete(key);
+          } else {
+            next.set(key, value);
+          }
+        }
+
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
   const handleTabChange = (tab: PublicLinksTab) => {
-    setPublicLinksTab(tab);
-    setSelectedTopicId(null);
-    setSelectedPublicLinkId(null);
-    setAttemptsPage(1);
+    updateSelection({
+      scope: tab === 'active' ? null : tab,
+      topic: null,
+      link: null,
+      page: null,
+    });
   };
   const handleTopicChange = (topicId: number) => {
-    setSelectedTopicId(topicId);
-    setSelectedPublicLinkId(null);
-    setAttemptsPage(1);
+    updateSelection({ topic: String(topicId), link: null, page: null });
   };
   const handlePublicLinkChange = (publicLinkId: number) => {
-    setSelectedPublicLinkId(publicLinkId);
-    setAttemptsPage(1);
+    updateSelection({ link: String(publicLinkId), page: null });
+  };
+  const setAttemptsPage = (updater: (previous: number) => number) => {
+    const nextPage = updater(attemptsPage);
+
+    updateSelection({ page: nextPage <= 1 ? null : String(nextPage) });
+  };
+  const setAttemptsLimit = (limit: number) => {
+    updateSelection({
+      limit: limit === ATTEMPTS_LIMIT ? null : String(limit),
+      page: null,
+    });
   };
 
   return {
@@ -115,7 +170,9 @@ export const usePublicLinkSelection = (
     linkAttemptsCountById,
     selectedPublicLink,
     attemptsPage,
+    attemptsLimit,
     setAttemptsPage,
+    setAttemptsLimit,
     setSelectedPublicLinkId: handlePublicLinkChange,
     handleTabChange,
     handleTopicChange,

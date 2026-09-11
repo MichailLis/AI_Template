@@ -1,19 +1,21 @@
 import { formatDateTimeOrDash } from '@/shared/lib/date-format';
 
-import { TestAnalyticsReportFiltersCard } from './public-links-stats-filters-card';
+import { AnalyticsReportFiltersSection } from './admin-analytics-filters';
 import { TestAnalyticsBreakdownTables } from './test-analytics-breakdown-table';
 import { TestAnalyticsExportActions } from './test-analytics-export-actions';
 import { TestAnalyticsSummaryCard } from './test-analytics-summary-card';
-import { useAdminTestAnalyticsReportWorkspace } from './use-admin-public-links-stats-workspace';
+import { useAnalyticsReport } from './use-admin-public-links-analytics-report';
 
-export function AdminTestAnalyticsReportWorkspace() {
+interface AnalyticsReportTabProps {
+  effectiveTopicId: number | null;
+  effectivePublicLinkId: number | null;
+}
+
+export function AnalyticsReportTab({
+  effectiveTopicId,
+  effectivePublicLinkId,
+}: AnalyticsReportTabProps) {
   const {
-    publicLinksTab,
-    topicOptions,
-    effectiveTopicId,
-    linksForTopic,
-    effectivePublicLinkId,
-    linkAttemptsCountById,
     analyticsScope,
     analyticsLinkStatus,
     analyticsDateFrom,
@@ -23,28 +25,16 @@ export function AdminTestAnalyticsReportWorkspace() {
     analyticsExportFormat,
     analyticsExportError,
     isAnalyticsQueryEnabled,
-    setSelectedPublicLinkId,
-    handleTabChange,
-    handleTopicChange,
     handleAnalyticsScopeChange,
     handleAnalyticsLinkStatusChange,
     handleAnalyticsDateFromChange,
     handleAnalyticsDateToChange,
     handleExportAnalytics,
-  } = useAdminTestAnalyticsReportWorkspace();
+  } = useAnalyticsReport(effectiveTopicId, effectivePublicLinkId);
 
   return (
-    <div className="flex flex-col gap-4">
-      <TestAnalyticsReportFiltersCard
-        publicLinksTab={publicLinksTab}
-        onTabChange={handleTabChange}
-        topicOptions={topicOptions}
-        effectiveTopicId={effectiveTopicId}
-        onTopicChange={handleTopicChange}
-        linksForTopic={linksForTopic}
-        effectivePublicLinkId={effectivePublicLinkId}
-        onPublicLinkChange={setSelectedPublicLinkId}
-        linkAttemptsCountById={linkAttemptsCountById}
+    <>
+      <AnalyticsReportFiltersSection
         analyticsScope={analyticsScope}
         onAnalyticsScopeChange={handleAnalyticsScopeChange}
         analyticsLinkStatus={analyticsLinkStatus}
@@ -75,6 +65,6 @@ export function AdminTestAnalyticsReportWorkspace() {
         summary={analyticsSummary}
         formatDateTime={formatDateTimeOrDash}
       />
-    </div>
+    </>
   );
 }

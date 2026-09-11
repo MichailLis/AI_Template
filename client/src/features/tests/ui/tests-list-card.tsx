@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 
+import { formatDateTime } from '@/shared/lib/date-format';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -51,7 +53,7 @@ function TestsListStateBlock({
   const isSearchActive = Boolean(searchValue.trim());
 
   if (topicsLoading) {
-    return <AdminStateBlock>Загрузка тестов... Пожалуйста, подождите.</AdminStateBlock>;
+    return <AdminSkeletonRows rows={6} columns={3} label="Загружаем тесты" className="p-4" />;
   }
 
   if (topicsError) {
@@ -100,14 +102,6 @@ interface TestListRowProps {
   onRequestDeleteTest: (topic: TestTopicListItem) => void;
   onSetPendingDelete: (topicId: number) => void;
 }
-
-const formatTopicUpdatedAt = (value: string) =>
-  new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
 
 const getPublishLabel = (topic: TestTopicListItem) => {
   if (topic.publishedVersionNumber) {
@@ -163,7 +157,7 @@ function TestsListItemRow({
         >
           <span>Черновик v{topic.draftVersionNumber}</span>
           <span>{topic.draftQuestionCount} вопросов</span>
-          <span>Обновлен {formatTopicUpdatedAt(topic.updatedAt)}</span>
+          <span>Обновлен {formatDateTime(topic.updatedAt)}</span>
         </div>
       </button>
 

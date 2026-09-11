@@ -10,7 +10,6 @@ import {
 import { parseApiError } from '@/shared/lib/api-error';
 
 import {
-  getShortLinkQrUrl,
   getShortLinkUrl,
   validateCreatePublicLinkInput,
 } from './admin-public-links-workspace.helpers';
@@ -239,10 +238,6 @@ function useShortLinkActions() {
     }
   };
 
-  const handleOpenShortLinkQr = (shortCode: string) => {
-    window.open(getShortLinkQrUrl(shortCode), '_blank', 'noopener,noreferrer');
-  };
-
   const handleOpenShortLink = (shortCode: string) => {
     window.open(getShortLinkUrl(shortCode), '_blank', 'noopener,noreferrer');
   };
@@ -250,7 +245,6 @@ function useShortLinkActions() {
   return {
     handleCopyShortLink,
     handleOpenShortLink,
-    handleOpenShortLinkQr,
   };
 }
 

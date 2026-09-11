@@ -80,7 +80,6 @@ export function AdminTestsWorkspaceContent({
         onDraftAnalysisPromptVersionChange={(value) =>
           workspace.updateCurrentDraftEdits({ analysisPromptVersionId: value })
         }
-        onSaveDraft={() => workspace.draftAutosave.saveDraft('manual')}
         onRequestPublish={() => workspace.setIsPublishConfirmOpen(true)}
         onToggleTopicActive={() =>
           workspace.handleToggleTopicActive(workspace.isSelectedTopicArchived)

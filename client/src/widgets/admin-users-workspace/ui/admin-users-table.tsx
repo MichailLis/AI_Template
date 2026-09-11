@@ -6,6 +6,8 @@ import { TableCell } from '@/shared/ui/table';
 
 import { AdminUserActionsMenu } from './admin-user-actions-menu';
 
+import type { SortBy, SortOrder } from './admin-users-workspace.types';
+
 interface AdminUsersTableUser {
   id: number;
   email: string;
@@ -27,13 +29,32 @@ interface AdminUsersTableProps {
   formatDateTime: (value: string) => string;
   getRoleBadgeClass: (role: string) => string;
   getRoleLabel: (role: string) => string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+  onSortByChange: (nextSortBy: SortBy) => void;
 }
 
-const ADMIN_USERS_COLUMNS = [
+const buildColumns = ({
+  sortBy,
+  sortOrder,
+  onSortByChange,
+}: Pick<AdminUsersTableProps, 'sortBy' | 'sortOrder' | 'onSortByChange'>) => [
   { id: 'user', header: 'Пользователь', className: 'w-32 sm:min-w-48' },
   { id: 'role', header: 'Роль', className: 'w-20 sm:w-36' },
-  { id: 'created', header: 'Создан', className: 'hidden lg:table-cell' },
-  { id: 'updated', header: 'Обновлен', className: 'hidden lg:table-cell' },
+  {
+    id: 'created',
+    header: 'Создан',
+    className: 'hidden lg:table-cell',
+    onSort: () => onSortByChange('createdAt'),
+    sortDirection: sortBy === 'createdAt' ? sortOrder : null,
+  },
+  {
+    id: 'updated',
+    header: 'Обновлен',
+    className: 'hidden lg:table-cell',
+    onSort: () => onSortByChange('updatedAt'),
+    sortDirection: sortBy === 'updatedAt' ? sortOrder : null,
+  },
   {
     id: 'actions',
     header: 'Действия',
@@ -61,18 +82,25 @@ export function AdminUsersTable({
   formatDateTime,
   getRoleBadgeClass,
   getRoleLabel,
+  sortBy,
+  sortOrder,
+  onSortByChange,
 }: AdminUsersTableProps) {
   return (
     <AdminDataTable
-      columns={ADMIN_USERS_COLUMNS}
+      columns={buildColumns({ sortBy, sortOrder, onSortByChange })}
       items={users}
       getRowKey={(user) => user.id}
       emptyMessage="По текущим фильтрам пользователи не найдены."
       renderRow={(user) => (
         <>
           <TableCell className="w-32 sm:min-w-48">
-            <div>
-              <p className="break-all font-medium text-foreground">{user.email}</p>
+            <div className="min-w-0">
+              {/* Email режется многоточием, а не рвется по буквам: разорванный посреди слова адрес
+                  мешает просматривать колонку глазами, полный адрес доступен по наведению. */}
+              <p className="truncate font-medium text-foreground" title={user.email}>
+                {user.email}
+              </p>
               <p className={cn('text-xs', adminClassNames.text.muted)}>ID: {user.id}</p>
               {user.name ? (
                 <p className={cn('text-xs', adminClassNames.text.muted)}>{user.name}</p>

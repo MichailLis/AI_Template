@@ -66,7 +66,7 @@ describe('PublicLinksListCard', () => {
     ).toBeInTheDocument();
   });
 
-  it('opens the branding constructor action for active STANDARD links', async () => {
+  it('opens the page styling action for active STANDARD links', async () => {
     const user = userEvent.setup();
     const standardLink = {
       id: 43,
@@ -92,7 +92,7 @@ describe('PublicLinksListCard', () => {
     );
 
     await user.click(screen.getByLabelText('Действия публичной ссылки'));
-    await user.click(screen.getByRole('button', { name: /конструктор/i }));
+    await user.click(screen.getByRole('button', { name: /оформление страницы/i }));
 
     expect(baseHandlers.onOpenBrandingBuilder).toHaveBeenCalledWith(standardLink);
   });

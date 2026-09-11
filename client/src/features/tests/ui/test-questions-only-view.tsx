@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -28,18 +29,34 @@ interface TestQuestionsOnlyViewProps {
 
 interface TestQuestionsOnlyHeaderProps {
   topicId: number;
+  topicTitle?: string;
+  questionCount?: number;
   loadingStatus?: string;
 }
 
-function TestQuestionsOnlyHeader({ topicId, loadingStatus }: TestQuestionsOnlyHeaderProps) {
+/**
+ * В заголовке стоит название редактируемого теста: раньше и шапка админки, и карточка говорили
+ * только «Тесты» / «Редактор теста», и по экрану нельзя было понять, какой именно тест открыт.
+ */
+function TestQuestionsOnlyHeader({
+  topicId,
+  topicTitle,
+  questionCount,
+  loadingStatus,
+}: TestQuestionsOnlyHeaderProps) {
   const navigate = useNavigate();
 
   return (
     <CardHeader>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <CardTitle>Редактор теста</CardTitle>
-          <CardDescription>Изменение вопросов теста</CardDescription>
+          <p className={adminClassNames.text.kicker}>Редактор теста</p>
+          <CardTitle className="truncate">{topicTitle ?? 'Вопросы теста'}</CardTitle>
+          <CardDescription>
+            {typeof questionCount === 'number'
+              ? `Вопросов в версии в работе: ${questionCount}`
+              : 'Изменение вопросов теста'}
+          </CardDescription>
         </div>
         <div className={`flex flex-wrap items-center gap-2 text-sm ${adminClassNames.text.body}`}>
           <button
@@ -66,18 +83,27 @@ function TestQuestionsOnlyHeader({ topicId, loadingStatus }: TestQuestionsOnlyHe
 
 interface TestQuestionsOnlyViewCardProps {
   topicId: number;
+  topicTitle?: string;
+  questionCount?: number;
   loadingStatus?: string;
   children: ReactNode;
 }
 
 function TestQuestionsOnlyViewCard({
   topicId,
+  topicTitle,
+  questionCount,
   loadingStatus,
   children,
 }: TestQuestionsOnlyViewCardProps) {
   return (
     <Card className={adminClassNames.panel.card}>
-      <TestQuestionsOnlyHeader topicId={topicId} loadingStatus={loadingStatus} />
+      <TestQuestionsOnlyHeader
+        topicId={topicId}
+        topicTitle={topicTitle}
+        questionCount={questionCount}
+        loadingStatus={loadingStatus}
+      />
       <CardContent>{children}</CardContent>
     </Card>
   );
@@ -130,9 +156,7 @@ export function TestQuestionsOnlyView({
   if (loading) {
     return (
       <TestQuestionsOnlyViewCard topicId={topicId} loadingStatus="Загрузка...">
-        <p className={`text-sm ${adminClassNames.text.muted}`}>
-          Загрузка версии в работе... Пожалуйста, подождите.
-        </p>
+        <AdminSkeletonRows rows={4} columns={2} label="Загружаем вопросы теста" />
       </TestQuestionsOnlyViewCard>
     );
   }
@@ -148,7 +172,11 @@ export function TestQuestionsOnlyView({
   }
 
   return (
-    <TestQuestionsOnlyViewCard topicId={topicId}>
+    <TestQuestionsOnlyViewCard
+      topicId={topicId}
+      topicTitle={detail.draft.title}
+      questionCount={detail.draft.questions.length}
+    >
       <TestEditorQuestionsSection
         questions={detail.draft.questions}
         isReorderingQuestions={isReorderingQuestions}

@@ -58,6 +58,8 @@ export interface PublicLinkCreateCardProps {
   onCreatePublicLink: () => void;
   isCreatingPublicLink: boolean;
   hasPublishedVersion: boolean;
+  /** Ошибка последней попытки создания: остается на форме, пока пользователь ее не исправит. */
+  createError?: string | null;
 }
 
 export interface PublicLinkTopicSectionProps {

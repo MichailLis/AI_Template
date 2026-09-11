@@ -1,11 +1,14 @@
 import { useState } from 'react';
 
+import { parseApiError } from '@/shared/lib/api-error';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { getShortLinkQrUrl, getShortLinkUrl } from './admin-public-links-workspace.helpers';
 import { PublicLinkBrandingBuilder } from './public-link-branding-builder';
 import { PublicLinkCreateDialog } from './public-link-create-card';
+import { PublicLinkQrDialog } from './public-link-qr-dialog';
 import { PublicLinksListCard } from './public-links-list-card';
 import { PublicLinksListHeader } from './public-links-list-header';
 import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace';
@@ -55,12 +58,16 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   onAllowResumeChange: state.setNewPublicAllowResume,
   onCreatePublicLink: state.handleCreatePublicLink,
   isCreatingPublicLink: state.createPublicLinkMutation.isPending,
+  createError: state.createPublicLinkMutation.isError
+    ? parseApiError(state.createPublicLinkMutation.error)
+    : null,
   hasPublishedVersion: Boolean(state.detailQuery.data?.published?.id),
 });
 
 const buildListCardProps = (
   state: AdminPublicLinksWorkspaceState,
   onOpenBrandingBuilder: (link: PublicLinkListItem) => void,
+  onOpenQr: (shortCode: string) => void,
 ) => ({
   publicLinksTab: state.publicLinksTab,
   visiblePublicLinks: state.visiblePublicLinks,
@@ -70,7 +77,7 @@ const buildListCardProps = (
   onRetryPublicLinks: state.refetchPublicLinks,
   onCopyShortLink: state.handleCopyShortLink,
   onOpenShortLink: state.handleOpenShortLink,
-  onOpenQr: state.handleOpenShortLinkQr,
+  onOpenQr,
   onOpenBrandingBuilder,
   onTogglePublicLink: state.handleTogglePublicLink,
   onRegenerateShortCode: state.handleRegeneratePublicLinkShortCode,
@@ -85,11 +92,12 @@ const buildListCardProps = (
 export function AdminPublicLinksWorkspace() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [brandingBuilderLink, setBrandingBuilderLink] = useState<PublicLinkListItem | null>(null);
+  const [qrShortCode, setQrShortCode] = useState<string | null>(null);
   const workspaceState = useAdminPublicLinksWorkspace({
     onPublicLinkCreated: () => setIsCreateDialogOpen(false),
   });
   const createCardProps = buildCreateCardProps(workspaceState);
-  const listCardProps = buildListCardProps(workspaceState, setBrandingBuilderLink);
+  const listCardProps = buildListCardProps(workspaceState, setBrandingBuilderLink, setQrShortCode);
 
   return (
     <>
@@ -103,6 +111,14 @@ export function AdminPublicLinksWorkspace() {
         />
         <PublicLinksListCard {...listCardProps} />
       </Card>
+
+      <PublicLinkQrDialog
+        shortCode={qrShortCode}
+        linkUrl={qrShortCode ? getShortLinkUrl(qrShortCode) : ''}
+        qrUrl={qrShortCode ? getShortLinkQrUrl(qrShortCode) : ''}
+        onClose={() => setQrShortCode(null)}
+        onCopyShortLink={workspaceState.handleCopyShortLink}
+      />
 
       <PublicLinkCreateDialog
         {...createCardProps}

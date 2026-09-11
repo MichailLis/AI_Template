@@ -17,6 +17,7 @@ interface SigninOptions {
       name: string;
     };
   }) => void;
+  onError?: (error: unknown) => void;
 }
 
 const authApiMock = vi.hoisted(() => ({
@@ -157,5 +158,44 @@ describe('LoginForm', () => {
     await submitLogin();
 
     expect(await screen.findByTestId('current-location')).toHaveTextContent('/admin');
+  });
+
+  it('keeps the sign-in failure on the form, not only in a toast', async () => {
+    authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
+      options?.onError?.({
+        response: { data: { error: { code: 'HTTP_ERROR', message: 'Invalid credentials' } } },
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await submitLogin();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Неверный email или пароль');
+    expect(toastMock.error).toHaveBeenCalledWith('Неверный email или пароль');
+  });
+
+  it('shows Russian validation messages for an empty form', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Войти' }));
+
+    expect(await screen.findByText('Введите корректный email')).toBeInTheDocument();
+    expect(screen.getByText('Введите пароль')).toBeInTheDocument();
   });
 });

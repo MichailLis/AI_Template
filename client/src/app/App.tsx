@@ -16,7 +16,6 @@ const AdminPublicLinksPage = lazy(() => import('@/pages/admin/admin-public-links
 const AdminPublicLinksOrganizationsPage = lazy(
   () => import('@/pages/admin/admin-public-links-organizations-page'),
 );
-const AdminPublicLinksStatsPage = lazy(() => import('@/pages/admin/admin-public-links-stats-page'));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/admin-settings-page'));
 const AdminTestsPage = lazy(() => import('@/pages/admin/admin-tests-page'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/admin-users-page'));
@@ -117,7 +116,10 @@ function App() {
                   path="/admin/public-links/organizations"
                   element={<AdminPublicLinksOrganizationsPage />}
                 />
-                <Route path="/admin/public-links/stats" element={<AdminPublicLinksStatsPage />} />
+                <Route
+                  path="/admin/public-links/stats"
+                  element={<Navigate to="/admin/analytics?tab=attempts" replace />}
+                />
               </Route>
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>

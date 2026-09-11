@@ -39,6 +39,70 @@ const normalizeValidationMessage = (message: string) => {
   return message;
 };
 
+/**
+ * Прикладные ошибки сервер формулирует по-английски, и раньше они попадали в русский интерфейс как
+ * есть: админ видел `Public link short code "MC5CKWDB" already exists`. Переводятся только те
+ * сообщения, которые пользователь реально может получить и на которые может повлиять; остальное
+ * по-прежнему показывается как пришло, чтобы не прятать неизвестную ошибку за общей фразой.
+ */
+const EXACT_MESSAGE_TRANSLATIONS: Record<string, string> = {
+  'Invalid credentials': 'Неверный email или пароль',
+  'Access Denied': 'Доступ запрещен',
+  'Admin area only': 'Раздел доступен только администраторам',
+  'Email already exists': 'Пользователь с таким email уже есть',
+  'User not found': 'Пользователь не найден',
+  'Education organization with this name already exists':
+    'Учебное заведение с таким названием уже есть',
+  'Public link not found': 'Публичная ссылка не найдена. Возможно, ее уже удалили.',
+  'Published version not found': 'Опубликованная версия не найдена',
+  'Test topic not found': 'Тест не найден. Возможно, его уже удалили.',
+  'Topic has no active draft version': 'У теста нет версии в работе',
+  'Question not found in active draft': 'Вопрос не найден в версии в работе',
+  'Public link can be created only for published test version':
+    'Публичную ссылку можно создать только для опубликованной версии теста',
+  'Unable to generate unique short code for public link':
+    'Не удалось подобрать свободный короткий код. Попробуйте еще раз.',
+  'Questions order must be unique within draft':
+    'Порядок вопросов внутри версии должен быть уникальным',
+  'Reorder payload contains duplicate question ids': 'В новом порядке вопросы повторяются',
+  'Some selected test questions were not found': 'Часть выбранных вопросов не найдена',
+  'Slider band maxValue must be greater than minValue':
+    'Верхняя граница диапазона должна быть больше нижней',
+  'Question settings must be valid JSON': 'Настройки вопроса должны быть корректным JSON',
+  'Value must be valid JSON': 'Значение должно быть корректным JSON',
+  'Profession atlas URLs must not be empty': 'Адреса Атласа профессий не могут быть пустыми',
+  'Privacy policy settings are invalid': 'Настройки политики персональных данных заполнены неверно',
+  'Invalid public link date format': 'Неверный формат даты публичной ссылки',
+};
+
+const PATTERN_MESSAGE_TRANSLATIONS: Array<{
+  pattern: RegExp;
+  translate: (match: string[]) => string;
+}> = [
+  {
+    pattern: /^Public link short code "(.+)" already exists$/,
+    translate: ([, shortCode]) => `Короткий код «${shortCode}» уже занят. Укажите другой.`,
+  },
+];
+
+const translateKnownMessage = (message: string) => {
+  const exact = EXACT_MESSAGE_TRANSLATIONS[message];
+
+  if (exact) {
+    return exact;
+  }
+
+  for (const { pattern, translate } of PATTERN_MESSAGE_TRANSLATIONS) {
+    const match = pattern.exec(message);
+
+    if (match) {
+      return translate(match);
+    }
+  }
+
+  return message;
+};
+
 const extractValidationDetails = (error: Record<string, unknown>): ApiValidationIssue[] => {
   if (error.code !== 'VALIDATION_ERROR' || !Array.isArray(error.details)) {
     return [];
@@ -96,12 +160,12 @@ const extractErrorMessage = (data: Record<string, unknown>) => {
     }
 
     if ('message' in nestedError) {
-      return String(nestedError.message);
+      return translateKnownMessage(String(nestedError.message));
     }
   }
 
   if ('message' in data) {
-    return String(data.message);
+    return translateKnownMessage(String(data.message));
   }
 
   return null;

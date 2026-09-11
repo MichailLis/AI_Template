@@ -1,107 +1,79 @@
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
-import type { RoleFilter, SortBy, SortOrder } from './admin-users-workspace.types';
+import type { RoleFilter } from './admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 interface AdminUsersFiltersProps {
   searchInput: string;
   roleFilter: RoleFilter;
-  sortBy: SortBy;
-  sortOrder: SortOrder;
   total: number;
   isFetching: boolean;
+  hasActiveFilters: boolean;
   onSearchInputChange: (value: string) => void;
   onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onResetFilters: () => void;
   onRoleFilterChange: (nextRole: RoleFilter) => void;
-  onSortByChange: (nextSortBy: SortBy) => void;
-  onSortOrderToggle: () => void;
 }
+
+const ROLE_TABS: Array<{ value: RoleFilter; label: string }> = [
+  { value: 'ALL', label: 'Все' },
+  { value: 'ADMIN', label: 'Администраторы' },
+  { value: 'USER', label: 'Пользователи' },
+];
 
 const formatTotal = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
 
+/**
+ * Фильтр по роли и поиск. Сортировка отсюда убрана: она живет в заголовках таблицы, где ей и место,
+ * — раньше в одном ряду стояли шесть кнопок трех разных назначений и читались как один набор.
+ */
 export function AdminUsersFilters({
   searchInput,
   roleFilter,
-  sortBy,
-  sortOrder,
   total,
   isFetching,
+  hasActiveFilters,
   onSearchInputChange,
   onSearchSubmit,
   onResetFilters,
   onRoleFilterChange,
-  onSortByChange,
-  onSortOrderToggle,
 }: AdminUsersFiltersProps) {
   return (
-    <>
-      <form onSubmit={onSearchSubmit} className="flex flex-wrap items-center gap-2">
-        <Input
-          value={searchInput}
-          onChange={(event) => onSearchInputChange(event.target.value)}
-          placeholder="Поиск по email или имени…"
-          aria-label="Поиск по email или имени"
-          className={adminClassNames.filters.input}
-        />
-        <Button type="submit" size="sm" variant="secondary">
-          Применить
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={onResetFilters}>
-          Сбросить
-        </Button>
-      </form>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <AdminTabs
+        ariaLabel="Роль пользователя"
+        tabs={ROLE_TABS}
+        activeTab={roleFilter}
+        onTabChange={onRoleFilterChange}
+      />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={roleFilter === 'ALL' ? 'secondary' : 'outline'}
-          onClick={() => onRoleFilterChange('ALL')}
-        >
-          Все
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={roleFilter === 'ADMIN' ? 'secondary' : 'outline'}
-          onClick={() => onRoleFilterChange('ADMIN')}
-        >
-          Администраторы
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={roleFilter === 'USER' ? 'secondary' : 'outline'}
-          onClick={() => onRoleFilterChange('USER')}
-        >
-          Пользователи
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={sortBy === 'updatedAt' ? 'secondary' : 'outline'}
-          onClick={() => onSortByChange('updatedAt')}
-        >
-          Сортировка: Обновлены
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={sortBy === 'createdAt' ? 'secondary' : 'outline'}
-          onClick={() => onSortByChange('createdAt')}
-        >
-          Сортировка: Созданы
-        </Button>
-        <Button size="sm" variant="outline" onClick={onSortOrderToggle}>
-          Порядок: {sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
-        </Button>
+        <form onSubmit={onSearchSubmit} className="flex items-center gap-2">
+          <Input
+            value={searchInput}
+            onChange={(event) => onSearchInputChange(event.target.value)}
+            placeholder="Поиск по email или имени…"
+            aria-label="Поиск по email или имени"
+            className={`w-full sm:w-72 ${adminClassNames.toolbar.input}`}
+          />
+          <Button type="submit" size="sm" variant="outline">
+            Найти
+          </Button>
+        </form>
+
+        {hasActiveFilters ? (
+          <Button type="button" size="sm" variant="ghost" onClick={onResetFilters}>
+            Сбросить
+          </Button>
+        ) : null}
+
         <p className={adminClassNames.filters.total}>
-          Всего: {formatTotal(total)} {isFetching ? '(обновление…)' : ''}
+          {isFetching ? 'Обновляем…' : `Всего: ${formatTotal(total)}`}
         </p>
       </div>
-    </>
+    </div>
   );
 }

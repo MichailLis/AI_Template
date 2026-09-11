@@ -100,10 +100,18 @@ export type AdminBadgeTone = keyof typeof adminBadgeClassNames;
 
 export const adminClassNames = {
   shell: {
-    root: 'min-h-screen w-full bg-[linear-gradient(180deg,hsl(var(--admin-canvas))_0%,hsl(var(--admin-canvas-soft))_48%,hsl(var(--admin-canvas-warm))_100%)] text-admin-foreground',
+    root: 'admin-surface min-h-screen w-full bg-[linear-gradient(180deg,hsl(var(--admin-canvas))_0%,hsl(var(--admin-canvas-soft))_48%,hsl(var(--admin-canvas-warm))_100%)] text-admin-foreground',
     layout: 'grid min-h-screen w-full md:grid-cols-[18rem_minmax(0,1fr)]',
     content: 'flex min-w-0 flex-col',
     main: 'flex-1 p-4 md:p-6 lg:p-8',
+  },
+  /**
+   * Вертикальный ритм страницы. Верхний уровень (карточки экрана) разделен шире, чем секции
+   * внутри карточки, иначе одинаковый отступ везде не дает ничего сгруппировать глазом.
+   */
+  layout: {
+    page: 'flex flex-col gap-6',
+    cardSections: 'flex flex-col gap-3',
   },
   nav: {
     button:
@@ -116,46 +124,45 @@ export const adminClassNames = {
   },
   sidebar: {
     desktop:
-      'hidden overflow-hidden border-r border-admin-border/80 bg-admin-panel/90 text-admin-foreground shadow-[1px_0_0_hsl(var(--admin-foreground)/0.03)] backdrop-blur md:sticky md:top-0 md:flex md:h-screen md:flex-col',
-    header: 'flex h-16 items-center border-b border-admin-border/80 px-5',
+      'hidden overflow-hidden border-r border-admin-border bg-admin-panel/90 text-admin-foreground shadow-[1px_0_0_hsl(var(--admin-foreground)/0.03)] backdrop-blur md:sticky md:top-0 md:flex md:h-screen md:flex-col',
+    header: 'flex h-16 items-center border-b border-admin-border px-5',
     brandMark:
       'rounded-lg bg-gradient-to-br from-admin-info via-admin-accent to-admin-success px-2 py-1 text-xs font-semibold text-white shadow-sm',
     brandTitle: 'block text-sm font-semibold text-admin-foreground',
     brandSubtitle: 'block text-xs text-admin-muted',
     nav: 'flex-1 overflow-hidden p-3',
-    footer: 'border-t border-admin-border/80 p-4',
-    workspaceCard: 'rounded-xl border border-admin-success-border bg-admin-success-soft/80 p-3',
-    workspaceLabel:
-      'flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-admin-success-foreground',
-    workspaceDot: 'size-2 rounded-full bg-admin-success',
-    workspaceTitle: 'mt-1 text-sm font-medium text-admin-foreground',
   },
   header: {
-    root: 'sticky top-0 z-10 border-b border-admin-border/80 bg-admin-panel/90 backdrop-blur',
+    root: 'sticky top-0 z-10 border-b border-admin-border bg-admin-panel/90 backdrop-blur',
     eyebrow: 'text-xs font-medium uppercase tracking-wide text-muted-foreground',
     title: 'text-sm font-semibold text-foreground',
-    input: 'w-64 border-admin-border bg-admin-panel-muted/80 shadow-sm lg:w-80',
+    /** Поиск в шапке переключает разделы, а не ищет данные, поэтому места занимает немного. */
+    input: 'w-40 border-admin-border bg-admin-panel-muted/80 shadow-sm lg:w-52',
     button: 'bg-admin-panel shadow-sm',
     userBadge:
       'max-w-48 truncate rounded-lg border border-admin-border bg-admin-panel px-3 py-1.5 text-xs font-medium text-admin-muted shadow-sm',
-    mobileNav: 'border-t border-admin-border/80 bg-admin-panel-muted/80 px-4 py-3 md:hidden',
+    mobileNav: 'border-t border-admin-border bg-admin-panel-muted/80 px-4 py-3 md:hidden',
   },
   panel: {
-    card: 'min-w-0 border-admin-border/80 bg-admin-panel shadow-sm',
+    card: 'min-w-0 border-admin-border bg-admin-panel shadow-sm',
     cardMuted: 'min-w-0 border-admin-border bg-admin-panel-muted/80 shadow-sm',
     errorCard: 'min-w-0 border-admin-danger-border bg-admin-danger-soft shadow-sm',
-    hero: 'min-w-0 overflow-hidden border-admin-border/80 bg-admin-panel shadow-sm',
+    hero: 'min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-sm',
     frame: 'rounded-md border border-admin-border bg-admin-panel',
-    section: 'rounded-xl border border-admin-border bg-admin-panel p-3 shadow-sm',
-    mutedSection: 'rounded-xl border border-admin-border bg-admin-panel-muted/70 px-3 py-2',
-    compactSection: 'rounded-md border border-admin-border bg-admin-panel-muted p-3',
+    /**
+     * Секция внутри карточки: только заливка, без рамки и тени. Раньше это была белая рамка
+     * на белой карточке — три вложенных уровня, между которыми глаз не видел разницы.
+     */
+    section: 'rounded-xl bg-admin-panel-muted/70 p-3',
+    mutedSection: 'rounded-xl bg-admin-panel-muted/70 px-3 py-2',
+    compactSection: 'rounded-md bg-admin-panel-muted p-3',
     compactCard: 'rounded-md border border-admin-border bg-admin-panel p-3',
     subtleCard: 'rounded-md border border-admin-border bg-admin-panel p-3 shadow-sm',
     loading:
       'rounded-md border border-admin-border bg-admin-panel-muted p-4 text-sm text-admin-muted',
-    empty: 'rounded-md border border-dashed border-admin-border p-4 text-sm text-admin-muted',
+    empty: 'rounded-md border border-dashed border-admin-border p-3 text-sm text-admin-muted',
     emptyCenter:
-      'rounded-md border border-dashed border-admin-border p-6 text-center text-sm text-admin-muted',
+      'rounded-md border border-dashed border-admin-border p-4 text-center text-sm text-admin-muted',
     infoInline:
       'rounded-md border border-admin-info-border bg-admin-info-soft px-3 py-2 text-sm text-admin-info-foreground',
     warningInline:
@@ -163,7 +170,7 @@ export const adminClassNames = {
     dangerInline:
       'rounded-md border border-admin-danger-border bg-admin-danger-soft px-3 py-2 text-sm text-admin-danger-foreground',
     listRow:
-      'border-b border-admin-border p-4 transition-colors last:border-b-0 hover:bg-admin-panel-muted/60',
+      'border-b border-admin-border px-4 py-2.5 transition-colors last:border-b-0 hover:bg-admin-panel-muted/60',
     selectedRow: 'bg-admin-panel-muted',
     inlineItem: 'flex items-start gap-3 rounded-md bg-admin-panel p-3 text-sm shadow-sm',
     mutedBar: 'bg-admin-panel-muted',
@@ -175,7 +182,7 @@ export const adminClassNames = {
       'rounded-xl border border-admin-border bg-admin-panel-muted/60 shadow-sm transition-[border-color,background-color,box-shadow] hover:border-admin-border hover:bg-admin-panel hover:shadow-md',
   },
   metric: {
-    card: 'relative min-w-0 overflow-hidden border-admin-border/80 bg-admin-panel shadow-sm',
+    card: 'relative min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-sm',
     rail: 'absolute inset-x-0 top-0 h-1 bg-gradient-to-r',
     icon: 'grid size-9 place-items-center rounded-lg',
     value: 'text-3xl font-semibold text-admin-foreground',
@@ -202,7 +209,12 @@ export const adminClassNames = {
     danger: 'text-admin-muted hover:bg-admin-danger-soft hover:text-admin-danger-foreground',
   },
   dialog: {
-    content: 'border-admin-border',
+    /**
+     * `admin-surface` обязателен: Radix рендерит диалоги в портал у `body`, вне корня AdminShell,
+     * поэтому переопределение `--primary` до них не доходит и основная кнопка внутри диалога
+     * оказывалась почти черной, как в стандартной теме shadcn.
+     */
+    content: 'admin-surface border-admin-border',
   },
   switch: {
     active: 'bg-admin-success',
@@ -235,7 +247,7 @@ export const adminClassNames = {
   },
   publicLinks: {
     rowBase:
-      'flex flex-col justify-between gap-3 border-b border-l-2 border-admin-border p-4 transition-colors last:border-b-0 sm:flex-row sm:items-center',
+      'flex flex-col justify-between gap-3 border-b border-l-2 border-admin-border px-4 py-2.5 transition-colors last:border-b-0 sm:flex-row sm:items-center',
     rowArchived:
       'border-l-admin-border bg-admin-panel text-admin-muted hover:bg-admin-panel-muted/60',
     rowInactive:
@@ -246,11 +258,20 @@ export const adminClassNames = {
     inactiveNotice: 'text-admin-warning-foreground',
   },
   table: {
-    container: 'overflow-hidden rounded-lg border border-admin-border bg-admin-panel shadow-sm',
-    header: 'bg-admin-panel-muted/50',
-    emptyCell: 'py-12 text-center text-sm text-admin-muted',
+    /**
+     * Таблица живет внутри карточки, поэтому собственной рамки и тени у нее нет: раньше вокруг
+     * данных было две границы подряд. `tabular-nums` выравнивает id, счетчики и даты по разрядам —
+     * без этого числа в соседних строках "плавают".
+     */
+    container: 'overflow-hidden rounded-lg bg-admin-panel tabular-nums',
+    scrollBody: 'max-h-[60vh] overflow-auto',
+    header: 'bg-admin-panel-muted',
+    stickyHeader: 'sticky top-0 z-10',
+    emptyCell: 'py-8 text-center text-sm text-admin-muted',
     clickableRow: 'cursor-pointer hover:bg-admin-panel-muted/40',
     mutedCell: 'text-admin-muted',
+    sortButton:
+      '-ml-2 inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-admin-muted hover:bg-admin-panel hover:text-admin-foreground',
   },
   toolbar: {
     tabs: 'inline-flex w-fit flex-wrap rounded-lg border border-admin-border bg-admin-panel-muted p-1',
@@ -276,8 +297,8 @@ export const adminClassNames = {
       'rounded-lg border border-admin-border bg-admin-panel-muted/40 px-3 py-1.5 text-sm text-admin-muted',
   },
   stateBlock: {
-    base: 'flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm',
-    action: 'mt-4',
+    base: 'flex flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center text-sm',
+    action: 'mt-3',
     muted: 'border-admin-border bg-admin-panel-muted/30 text-admin-muted',
     danger: 'border-admin-danger-border bg-admin-danger-soft text-admin-danger-foreground',
   },

@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/shared/lib/date-format';
 import { getEntryProfileModeLabel, getPublicTemplateLabel } from '@/shared/lib/public-test-labels';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 
@@ -38,16 +39,7 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
 
 export { getEntryProfileModeLabel, getPublicTemplateLabel };
 
-const publicLinkCreatedAtFormatter = new Intl.DateTimeFormat('ru-RU', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
-export const formatPublicLinkCreatedAt = (value: string) =>
-  publicLinkCreatedAtFormatter.format(new Date(value));
+export const formatPublicLinkCreatedAt = (value: string) => formatDateTime(value);
 
 export const getLinkRowClassName = (link: PublicLinkListItem) => {
   if (link.archivedAt) {

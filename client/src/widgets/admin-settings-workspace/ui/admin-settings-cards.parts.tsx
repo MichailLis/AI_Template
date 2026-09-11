@@ -177,38 +177,43 @@ export function ProfessionAtlasCoveragePanel({
         <div className={adminClassNames.panel.warningInline}>{coverage.errorMessage}</div>
       ) : null}
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {coverage.items.map((item) => {
-          const primaryMatch = item.matches[0];
+      <details className={adminClassNames.panel.compactCard}>
+        <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
+          Показать разбор по профессиям ({coverage.items.length})
+        </summary>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {coverage.items.map((item) => {
+            const primaryMatch = item.matches[0];
 
-          return (
-            <div
-              key={item.title}
-              className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-admin-border bg-admin-panel px-3 py-2"
-            >
-              <div className="min-w-0">
-                <p className={`truncate text-sm font-medium ${adminClassNames.text.heading}`}>
-                  {item.title}
-                </p>
-                {primaryMatch ? (
-                  <a
-                    href={primaryMatch.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs ${adminClassNames.text.linkInfo}`}
-                  >
-                    {primaryMatch.title}
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                ) : null}
+            return (
+              <div
+                key={item.title}
+                className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-admin-border bg-admin-panel px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className={`truncate text-sm font-medium ${adminClassNames.text.heading}`}>
+                    {item.title}
+                  </p>
+                  {primaryMatch ? (
+                    <a
+                      href={primaryMatch.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs ${adminClassNames.text.linkInfo}`}
+                    >
+                      {primaryMatch.title}
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  ) : null}
+                </div>
+                <Badge variant="outline" className={coverageItemBadgeClassNames[item.status]}>
+                  {atlasCoverageItemStatusLabels[item.status]}
+                </Badge>
               </div>
-              <Badge variant="outline" className={coverageItemBadgeClassNames[item.status]}>
-                {atlasCoverageItemStatusLabels[item.status]}
-              </Badge>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </details>
     </div>
   );
 }

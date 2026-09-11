@@ -42,26 +42,18 @@ export function TestEditorQuestionsSection({
 }: TestEditorQuestionsSectionProps) {
   return (
     <>
-      <div
-        className={`flex flex-wrap items-center justify-between gap-3 pt-4 ${adminClassNames.border.top}`}
-      >
-        <div>
-          <p className="text-sm font-semibold">Вопросы теста</p>
-          <p className={adminClassNames.form.fieldHint}>
-            Добавляйте и редактируйте вопросы в версии в работе через модальное окно.
-          </p>
-        </div>
+      {/* Название теста и число вопросов стоят в заголовке карточки, поэтому секция их не
+          повторяет: до этого счетчик вопросов встречался на экране трижды. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className={adminClassNames.form.fieldHint}>
+          {questions.length > 1
+            ? 'Перетаскивайте карточки за иконку слева. Подсветка покажет точное место вставки.'
+            : 'Вопросы добавляются и редактируются в модальном окне.'}
+        </p>
         <Button onClick={onCreateQuestion}>Добавить вопрос</Button>
       </div>
 
-      <div className={`space-y-3 pt-4 ${adminClassNames.border.top}`}>
-        <p className="text-sm font-semibold">Вопросы теста (в работе): {questions.length}</p>
-
-        {questions.length > 1 ? (
-          <p className={adminClassNames.form.fieldHint}>
-            Перетаскивайте карточки за иконку слева. Подсветка покажет точное место вставки.
-          </p>
-        ) : null}
+      <div className="space-y-3 pt-3">
         {isReorderingQuestions ? (
           <p className={`text-xs ${adminToneClassNames.info.text}`}>
             Сохраняем новый порядок вопросов...

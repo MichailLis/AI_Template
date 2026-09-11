@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/entities/session';
 import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 import { loginSchema } from '@/shared/api/schemas';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
@@ -71,8 +72,15 @@ export const LoginForm = () => {
           const backendMessage = authError.response?.data?.error?.message;
           const credentialErrors = ['Invalid credentials', 'Access Denied'];
           const message = credentialErrors.includes(backendMessage || '')
-            ? 'Неверные данные'
-            : backendMessage || 'Неверные данные';
+            ? 'Неверный email или пароль'
+            : (backendMessage ?? 'Не удалось войти. Попробуйте еще раз.');
+
+          /**
+           * Ошибка входа остается на форме, а не только всплывает тостом: тост исчезает через
+           * несколько секунд, и пользователь, отвлекшийся на ввод пароля, видел форму без
+           * объяснения, почему его не пустили.
+           */
+          form.setError('root', { message });
           toast.error(message);
         },
       },
@@ -108,6 +116,12 @@ export const LoginForm = () => {
             </FormItem>
           )}
         />
+        {form.formState.errors.root ? (
+          <p role="alert" className={adminClassNames.panel.dangerInline}>
+            {form.formState.errors.root.message}
+          </p>
+        ) : null}
+
         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
           {loginMutation.isPending ? 'Загрузка...' : 'Войти'}
         </Button>

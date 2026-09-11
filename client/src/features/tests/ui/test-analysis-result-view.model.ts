@@ -17,7 +17,18 @@ export const levelLabels = {
 } as const;
 
 export const statusLabels: Record<string, string> = {
-  READY: 'анализ готов',
-  PENDING: 'анализ выполняется',
-  FAILED: 'ошибка анализа',
+  READY: 'Анализ готов',
+  PENDING: 'Анализ выполняется',
+  FAILED: 'Ошибка анализа',
+};
+
+/**
+ * Режим формирования анализа приходит с сервера как enum и раньше показывался как есть — рядом с
+ * русскими бейджами в карточке прохождения висело латинское `STUB`.
+ */
+export const providerModeLabels: Record<string, string> = {
+  STUB: 'Заглушка',
+  LLM: 'Модель',
+  ALGORITHM: 'Алгоритм',
+  ALGORITHM_LLM: 'Алгоритм и модель',
 };

@@ -1,6 +1,7 @@
 import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { formatDateTime } from '@/shared/lib/date-format';
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
@@ -28,14 +29,7 @@ interface PromptLibraryItemProps {
   onDeletePrompt: (promptId: number) => void;
 }
 
-const formatPromptDate = (value: string) =>
-  new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
+const formatPromptDate = (value: string) => formatDateTime(value);
 
 function PromptLibraryItem({
   prompt,

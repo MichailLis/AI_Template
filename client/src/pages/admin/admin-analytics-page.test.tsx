@@ -4,13 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 import AdminAnalyticsPage from './admin-analytics-page';
 
 vi.mock('@/widgets/admin-public-links-stats-workspace', () => ({
-  AdminTestAnalyticsReportWorkspace: () => <div>analytics report workspace</div>,
+  AdminAnalyticsWorkspace: () => <div>analytics workspace</div>,
 }));
 
 describe('AdminAnalyticsPage', () => {
-  it('renders the test analytics report workspace', () => {
+  it('renders the merged analytics workspace', () => {
     render(<AdminAnalyticsPage />);
 
-    expect(screen.getByText('analytics report workspace')).toBeInTheDocument();
+    expect(screen.getByText('analytics workspace')).toBeInTheDocument();
   });
 });

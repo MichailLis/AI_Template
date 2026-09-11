@@ -17,7 +17,7 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
-import { levelLabels, statusLabels } from './test-analysis-result-view.model';
+import { levelLabels, providerModeLabels, statusLabels } from './test-analysis-result-view.model';
 
 import type {
   AnalysisPayload,
@@ -111,9 +111,13 @@ export function AnalysisStatusBadges({
         {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
       </Badge>
       {showProviderBadge && analysis?.providerMode ? (
-        <Badge variant="outline">{analysis.providerMode}</Badge>
+        <Badge variant="outline">
+          {providerModeLabels[analysis.providerMode] ?? analysis.providerMode}
+        </Badge>
       ) : null}
-      {generatedAtLabel ? <Badge variant="outline">{generatedAtLabel}</Badge> : null}
+      {generatedAtLabel ? (
+        <span className={`text-xs ${adminClassNames.text.muted}`}>{generatedAtLabel}</span>
+      ) : null}
     </div>
   );
 }
