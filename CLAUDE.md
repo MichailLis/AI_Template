@@ -43,6 +43,11 @@ entrypoints — business logic belongs in `widgets/*` and `features/*`.
 5. Server errors keep one shape: `{ success: false, error: { code, message } }`.
 6. Public `/t/*` DTOs expose student-safe fields only. Raw provider output, prompts and scoring
    internals belong in admin DTOs behind admin guards.
+7. Prof-orientation analysis is two-phase. The algorithmic phase writes the record as `READY`
+   before the LLM phase runs, and the record stays `READY` whether enrichment later succeeds
+   or fails. `status` / `analysisStatus` is therefore never a completion signal for the AI —
+   read `llmStatus` (or `summary.llm.status`) instead. Enforced by
+   `npm run verify:paired-rules` through the `getProfOrientationLlmStatus` pair.
 
 ## Feature pipeline (in this order)
 

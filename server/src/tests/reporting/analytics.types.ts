@@ -6,8 +6,13 @@ import type {
 
 export type AnalyticsAttemptRecord = {
   attemptId: number;
+
   status: string;
+
   analysisStatus: string | null;
+
+  llmStatus: string | null;
+
   summary: unknown;
 };
 

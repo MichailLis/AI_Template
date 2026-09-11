@@ -169,6 +169,20 @@
         "file": "server/src/tests/reporting/analytics-summary.ts"
       },
       "reason": "Локальные утилиты расчёта процентных долей для изолированных контекстов: клиентская функция вычисляет проценты выполнения для плашек карточки покрытия в админке, серверная рассчитывает доли для элементов списочных DTO. Клиент не перепроверяет расчёты бэкенда, сервер не зависит от клиентского UI; изменение формулы или точности в интерфейсе не нарушает бизнес-инварианты системы."
+    },
+    {
+      "name": "getProfOrientationLlmStatus",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/features/tests/ui/polus/prof-orientation-llm-data.ts",
+        "testFile": "client/src/features/tests/ui/polus/prof-orientation-llm-data.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/prof-orientation-v3-plus/scoring.ts",
+        "testFile": "server/src/tests/prof-orientation-v3-plus/scoring.spec.ts"
+      },
+      "reason": "Статус LLM-фазы двухфазного профориентационного анализа выводится из summary.llm.status. Сервер авторитетен: он записывает summary и отдаёт готовое поле llmStatus в админских ответах. Клиент дублирует вывод, потому что публичный экран результата решает по нему, продолжать ли опрос и показывать ли экран обработки."
     }
   ]
 }

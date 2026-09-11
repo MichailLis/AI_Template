@@ -1,7 +1,11 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-import { PublicSessionAnalysisStatusSchema, PublicSessionStatusSchema } from './tests-public.dto';
+import {
+  PublicAnalysisLlmStatusSchema,
+  PublicSessionAnalysisStatusSchema,
+  PublicSessionStatusSchema,
+} from './tests-public.dto';
 
 const ShareSchema = z.number().min(0).max(100);
 
@@ -156,7 +160,12 @@ export const AdminTestAnalyticsAttemptRowSchema = z.object({
   startedAt: z.string(),
   finishedAt: z.string().nullable(),
   status: PublicSessionStatusSchema,
-  analysisStatus: PublicSessionAnalysisStatusSchema.nullable(),
+  analysisStatus: PublicSessionAnalysisStatusSchema.nullable().describe(
+    'Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)',
+  ),
+  llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
+    'Статус асинхронного LLM-обогащения для двухфазного анализа',
+  ),
 });
 
 export const AdminTestAnalyticsSummarySchema = z.object({

@@ -106,6 +106,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       finishedAt: '2026-05-10T10:05:00.000Z',
       status: 'COMPLETED',
       analysisStatus: 'READY',
+      llmStatus: 'ready',
     },
     {
       attemptId: 102,
@@ -115,6 +116,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       finishedAt: null,
       status: 'IN_PROGRESS',
       analysisStatus: null,
+      llmStatus: null,
     },
   ],
 });
@@ -156,7 +158,6 @@ describe('TestsAnalyticsExportService', () => {
     await workbook.xlsx.load(bytes);
 
     const sheetNames = workbook.worksheets.map((sheet) => sheet.name);
-
     expect(workbook.worksheets.length).toBeGreaterThanOrEqual(requiredSheetNames.length);
     expect(sheetNames).toEqual(expect.arrayContaining(requiredSheetNames));
   });
@@ -167,7 +168,6 @@ describe('TestsAnalyticsExportService', () => {
     pdfRendererMock.render.mockResolvedValue(expectedBuffer);
 
     const buffer = await service.toPdf(summary);
-
     expect(buffer).toBe(expectedBuffer);
     expect(pdfRendererMock.render).toHaveBeenCalledTimes(1);
     expect(pdfRendererMock.render).toHaveBeenCalledWith(summary);

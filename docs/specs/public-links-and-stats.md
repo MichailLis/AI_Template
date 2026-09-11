@@ -23,6 +23,12 @@ Behavior baseline:
    - `EDUCATION` -> collect the current education-based profile before the test.
    - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior.
 10. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
+11. Admin attempt lists, analytics attempt rows, and the analytics CSV export must carry
+    `llmStatus` next to `analysisStatus`. `analysisStatus` reports the algorithmic analysis
+    record and reads `READY` for prof-orientation attempts whose LLM phase is still pending,
+    has failed, or was never requested, so any filter, badge, or monitoring that means "the
+    AI finished" must read `llmStatus` (`not_requested` / `pending` / `ready` / `failed`,
+    or `null` when the analysis has no separate LLM phase).
 
 ---
 

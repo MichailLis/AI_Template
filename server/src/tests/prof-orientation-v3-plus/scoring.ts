@@ -448,3 +448,26 @@ export const scoreProfOrientationV3Plus = ({
 
 export const isProfOrientationV3PlusSummary = (value: unknown): value is ProfOrientationSummary =>
   isRecord(value) && value.resultKind === PROF_ORIENTATION_V3_PLUS_RESULT_KIND;
+
+export type AnalysisLlmStatus = 'not_requested' | 'pending' | 'ready' | 'failed';
+
+const ANALYSIS_LLM_STATUSES: readonly string[] = [
+  'not_requested',
+  'pending',
+  'ready',
+  'failed',
+] satisfies readonly AnalysisLlmStatus[];
+
+const isAnalysisLlmStatus = (value: unknown): value is AnalysisLlmStatus =>
+  typeof value === 'string' && ANALYSIS_LLM_STATUSES.includes(value);
+
+export const getProfOrientationLlmStatus = (summary: unknown): AnalysisLlmStatus | null => {
+  if (!isProfOrientationV3PlusSummary(summary)) {
+    return null;
+  }
+
+  // The summary is Prisma JSON at runtime, so the declared union is not a guarantee here.
+  const status: unknown = summary.llm?.status;
+
+  return isAnalysisLlmStatus(status) ? status : 'not_requested';
+};

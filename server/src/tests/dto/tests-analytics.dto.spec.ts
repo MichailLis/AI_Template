@@ -6,7 +6,6 @@ import {
 describe('AdminTestAnalyticsQuerySchema', () => {
   it('applies query defaults', () => {
     const result = AdminTestAnalyticsQuerySchema.parse({});
-
     expect(result).toEqual({
       scope: 'TOPIC',
       linkStatus: 'ALL',
@@ -21,7 +20,6 @@ describe('AdminTestAnalyticsQuerySchema', () => {
       dateFrom: '2026-05-01',
       dateTo: '2026-05-19',
     });
-
     expect(result.publicLinkId).toBe(12);
     expect(result.scope).toBe('PUBLIC_LINK');
     expect(result.linkStatus).toBe('ACTIVE');
@@ -33,7 +31,6 @@ describe('AdminTestAnalyticsQuerySchema', () => {
       scope: 'PUBLIC_LINK',
       linkStatus: 'ACTIVE',
     });
-
     expect(result.success).toBe(false);
     if (result.success) {
       return;
@@ -51,7 +48,6 @@ describe('AdminTestAnalyticsQuerySchema', () => {
       dateFrom: '2026-05-20',
       dateTo: '2026-05-19',
     });
-
     expect(result.success).toBe(false);
     if (result.success) {
       return;
@@ -120,10 +116,10 @@ describe('AdminTestAnalyticsSummarySchema', () => {
           finishedAt: '2026-05-18T08:45:00.000Z',
           status: 'COMPLETED',
           analysisStatus: 'READY',
+          llmStatus: 'ready',
         },
       ],
     });
-
     expect(result.attempts).toHaveLength(1);
     expect(result.filters.publicLinkId).toBeNull();
     expect(typeof result.topic.generatedAt).toBe('string');
@@ -176,7 +172,6 @@ describe('AdminTestAnalyticsSummarySchema', () => {
       },
       attempts: [],
     });
-
     expect(typeof result.topic.generatedAt).toBe('string');
     expect(result.attempts[0]).toBeUndefined();
   });

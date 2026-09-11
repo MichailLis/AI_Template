@@ -11,6 +11,7 @@ import type { PublicSessionResultResponseDtoAnalysisSummary } from './publicSess
 
 export type PublicSessionResultResponseDtoAnalysis = {
   providerMode: PublicSessionResultResponseDtoAnalysisProviderMode;
+  /** Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения) */
   status: PublicSessionResultResponseDtoAnalysisStatus;
   /** @nullable */
   summary: PublicSessionResultResponseDtoAnalysisSummary;

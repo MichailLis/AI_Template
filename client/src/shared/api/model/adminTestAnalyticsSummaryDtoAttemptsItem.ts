@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus';
+import type { AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemLlmStatus';
 import type { AdminTestAnalyticsSummaryDtoAttemptsItemStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemStatus';
 
 export type AdminTestAnalyticsSummaryDtoAttemptsItem = {
@@ -25,6 +26,14 @@ export type AdminTestAnalyticsSummaryDtoAttemptsItem = {
   /** @nullable */
   finishedAt: string | null;
   status: AdminTestAnalyticsSummaryDtoAttemptsItemStatus;
-  /** @nullable */
+  /**
+   * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
+   * @nullable
+   */
   analysisStatus: AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus;
+  /**
+   * Статус асинхронного LLM-обогащения для двухфазного анализа
+   * @nullable
+   */
+  llmStatus: AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus;
 };

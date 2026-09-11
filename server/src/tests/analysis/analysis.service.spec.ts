@@ -6,6 +6,8 @@ import { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.ser
 import { PrismaService } from '../../prisma.service';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from '../prof-orientation-v3-plus/fixture';
+import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
+
 import { TestsAnalysisService } from '../analysis/analysis.service';
 
 type AnalysisUpsertArgs = {
@@ -223,7 +225,6 @@ describe('TestsAnalysisService', () => {
 
   it('toAttemptStatus treats expired in-progress attempts as expired without updating storage', () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
-
     expect(
       service.toAttemptStatus({
         status: 'IN_PROGRESS',
@@ -251,7 +252,6 @@ describe('TestsAnalysisService', () => {
       errorMessage: null,
       generatedAt: new Date('2026-05-12T12:00:00.000Z'),
     } as never);
-
     expect(result).toMatchObject({
       providerMode: 'LLM',
       status: 'READY',
@@ -270,11 +270,8 @@ describe('TestsAnalysisService', () => {
       .mockImplementation(() => undefined);
 
     await expect(service.recoverStalePendingLlmAnalyses()).resolves.toBe(2);
-
     expect(prismaMock.testStudentAnalysis.findMany).toHaveBeenCalledWith({
       where: {
-        status: 'PENDING',
-        providerMode: 'LLM',
         updatedAt: {
           lt: new Date('2026-05-12T11:50:00.000Z'),
         },
@@ -286,6 +283,20 @@ describe('TestsAnalysisService', () => {
             },
           },
         },
+        OR: [
+          {
+            status: 'PENDING',
+            providerMode: 'LLM',
+          },
+          {
+            status: 'READY',
+            providerMode: 'ALGORITHM_LLM',
+            summary: {
+              path: ['llm', 'status'],
+              equals: 'pending',
+            },
+          },
+        ],
       },
       select: {
         attemptId: true,
@@ -305,9 +316,101 @@ describe('TestsAnalysisService', () => {
     const recoverySpy = jest.spyOn(service, 'recoverStalePendingLlmAnalyses').mockResolvedValue(0);
 
     service.onApplicationBootstrap();
-
     expect(recoverySpy).toHaveBeenCalledTimes(1);
+
     recoverySpy.mockRestore();
+  });
+
+  it('recovers stale ALGORITHM_LLM analyses with pending LLM status and ignores the rest', async () => {
+    const now = new Date('2026-05-12T12:00:00.000Z');
+    const staleUpdatedAt = new Date('2026-05-12T11:45:00.000Z');
+    const freshUpdatedAt = new Date('2026-05-12T11:55:00.000Z');
+
+    jest.useFakeTimers().setSystemTime(now);
+
+    type RecoveryBranch = {
+      status: string;
+      providerMode: string;
+      summary?: { path: string[]; equals: string };
+    };
+    type RecoveryWhere = { updatedAt: { lt: Date }; OR: RecoveryBranch[] };
+    type Candidate = {
+      attemptId: number;
+      status: string;
+      providerMode: string;
+      updatedAt: Date;
+      summary: unknown;
+    };
+
+    const readPath = (value: unknown, path: string[]) =>
+      path.reduce<unknown>(
+        (acc, key) =>
+          typeof acc === 'object' && acc !== null
+            ? (acc as Record<string, unknown>)[key]
+            : undefined,
+        value,
+      );
+
+    // The fake applies the whole where clause, not just the staleness window: narrowing the
+    // filter back to PENDING/LLM must make this test fail, otherwise it proves nothing.
+    const matchesBranch = (candidate: Candidate, branch: RecoveryBranch) =>
+      branch.status === candidate.status &&
+      branch.providerMode === candidate.providerMode &&
+      (!branch.summary ||
+        readPath(candidate.summary, branch.summary.path) === branch.summary.equals);
+
+    const candidates: Candidate[] = [
+      {
+        attemptId: 41,
+        status: 'READY',
+        providerMode: 'ALGORITHM_LLM',
+        updatedAt: staleUpdatedAt,
+        summary: { resultKind: 'prof_orientation_v3_plus', llm: { status: 'pending' } },
+      },
+      {
+        attemptId: 42,
+        status: 'READY',
+        providerMode: 'ALGORITHM_LLM',
+        updatedAt: freshUpdatedAt,
+        summary: { resultKind: 'prof_orientation_v3_plus', llm: { status: 'pending' } },
+      },
+      {
+        attemptId: 43,
+        status: 'READY',
+        providerMode: 'ALGORITHM_LLM',
+        updatedAt: staleUpdatedAt,
+        summary: { resultKind: 'prof_orientation_v3_plus', llm: { status: 'ready' } },
+      },
+      {
+        attemptId: 44,
+        status: 'PENDING',
+        providerMode: 'LLM',
+        updatedAt: staleUpdatedAt,
+        summary: null,
+      },
+    ];
+
+    prismaMock.testStudentAnalysis.findMany.mockImplementation(
+      ({ where }: { where: RecoveryWhere }) =>
+        candidates.filter(
+          (candidate) =>
+            candidate.updatedAt < where.updatedAt.lt &&
+            where.OR.some((branch) => matchesBranch(candidate, branch)),
+        ),
+    );
+
+    const enqueueSpy = jest
+      .spyOn(service, 'enqueueAttemptAnalysis')
+      .mockImplementation(() => undefined);
+
+    const recoveredCount = await service.recoverStalePendingLlmAnalyses(now);
+    expect(recoveredCount).toBe(2);
+    expect(enqueueSpy).toHaveBeenCalledWith(41);
+    expect(enqueueSpy).toHaveBeenCalledWith(44);
+    expect(enqueueSpy).not.toHaveBeenCalledWith(42);
+    expect(enqueueSpy).not.toHaveBeenCalledWith(43);
+
+    enqueueSpy.mockRestore();
   });
 
   it('upsertProfOrientationV3PlusAnalysis uses the topic version scoring config', async () => {
@@ -334,6 +437,50 @@ describe('TestsAnalysisService', () => {
     const upsertArgs = upsertMock.mock.calls[0]?.[0];
 
     expect(upsertArgs?.create.summary.scoringVersion).toBe('3.1-custom');
+  });
+
+  it('sets llmStatus pending in phase 1 when prompt version is present, and not_requested when absent', async () => {
+    txMock.testStudentAnalysis.upsert.mockResolvedValue({});
+
+    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+      attempt: {
+        id: 11,
+        topicVersion: {
+          scoringConfig: PROF_ORIENTATION_V3_PLUS_CONFIG,
+          questions: [],
+        },
+        answers: [],
+      } as never,
+      promptVersionId: 42,
+    });
+
+    const upsertMock = txMock.testStudentAnalysis.upsert as jest.MockedFunction<
+      (args: { create: { status: string; summary: unknown } }) => Promise<unknown>
+    >;
+
+    const withPromptArgs = upsertMock.mock.calls[0]?.[0];
+
+    expect(withPromptArgs?.create.status).toBe('READY');
+    expect(getProfOrientationLlmStatus(withPromptArgs?.create.summary)).toBe('pending');
+
+    upsertMock.mockClear();
+
+    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+      attempt: {
+        id: 12,
+        topicVersion: {
+          scoringConfig: PROF_ORIENTATION_V3_PLUS_CONFIG,
+          questions: [],
+        },
+        answers: [],
+      } as never,
+      promptVersionId: null,
+    });
+
+    const withoutPromptArgs = upsertMock.mock.calls[0]?.[0];
+
+    expect(withoutPromptArgs?.create.status).toBe('READY');
+    expect(getProfOrientationLlmStatus(withoutPromptArgs?.create.summary)).toBe('not_requested');
   });
 
   it('runAttemptAnalysis stores structured ready analysis from OpenRouter', async () => {
@@ -376,7 +523,6 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
@@ -478,7 +624,6 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
@@ -539,6 +684,8 @@ describe('TestsAnalysisService', () => {
         },
       },
     });
+    expect(updateArgs?.data.status).toBe('READY');
+    expect(getProfOrientationLlmStatus(updateArgs?.data.summary)).toBe('ready');
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
       'test-key',
       expect.objectContaining({
@@ -593,7 +740,6 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
     const firstPromptCall = openRouterClientMock.generatePrompt.mock.calls[0] as unknown[];
     expect(firstPromptCall[2]).toMatchObject({
@@ -648,7 +794,6 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(1);
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
@@ -666,5 +811,24 @@ describe('TestsAnalysisService', () => {
         },
       },
     });
+    expect(updateArgs?.data.status).toBe('READY');
+    expect(getProfOrientationLlmStatus(updateArgs?.data.summary)).toBe('failed');
+  });
+
+  it('returns null llmStatus for non-prof-orientation analyses (STUB, LLM)', () => {
+    const stubAnalysis = {
+      providerMode: 'STUB',
+      status: 'READY',
+      summary: null,
+    };
+
+    const llmAnalysis = {
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: validAnalysisResult,
+    };
+
+    expect(getProfOrientationLlmStatus(stubAnalysis.summary)).toBeNull();
+    expect(getProfOrientationLlmStatus(llmAnalysis.summary)).toBeNull();
   });
 });

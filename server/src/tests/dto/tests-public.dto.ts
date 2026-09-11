@@ -212,7 +212,21 @@ export const PublicSessionSaveAnswersResponseSchema = z.object({
   answers: z.array(PublicSessionAnswerSchema),
 });
 
-export const PublicSessionAnalysisStatusSchema = z.enum(['PENDING', 'READY', 'FAILED']);
+export const PublicSessionAnalysisStatusSchema = z
+
+  .enum(['PENDING', 'READY', 'FAILED'])
+
+  .describe(
+    'Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)',
+  );
+
+export const PublicAnalysisLlmStatusSchema = z
+
+  .enum(['not_requested', 'pending', 'ready', 'failed'])
+
+  .describe('Статус асинхронного LLM-обогащения для двухфазного анализа');
+
+export type PublicAnalysisLlmStatus = z.infer<typeof PublicAnalysisLlmStatusSchema>;
 export const PublicSessionAnalysisProviderModeSchema = z.enum([
   'STUB',
   'LLM',

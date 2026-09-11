@@ -13,6 +13,7 @@ import type { AdminPublicAttemptDetailResponseDtoAnalysisStatus } from './adminP
  */
 export type AdminPublicAttemptDetailResponseDtoAnalysis = {
   providerMode: AdminPublicAttemptDetailResponseDtoAnalysisProviderMode;
+  /** Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения) */
   status: AdminPublicAttemptDetailResponseDtoAnalysisStatus;
   summary: unknown | null;
   /** @nullable */

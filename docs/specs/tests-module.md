@@ -65,9 +65,18 @@ Built-in prof-orientation v3+ baseline:
    exists yet.
 5. Public multi-choice UI must enforce `settings.maxChoices`.
 6. For this scoring kind, `finishSession` must store deterministic algorithm
-   analysis as `READY` before LLM enrichment starts.
+   analysis as `READY` before LLM enrichment starts. The record therefore reaches
+   `READY` while the LLM phase has not run yet, and it stays `READY` whether that
+   phase later succeeds or fails. The top-level analysis `status` describes the
+   algorithmic phase only and is never a completion signal for the LLM phase:
+   waiting on it returns immediately and proves nothing about the model call.
 7. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
-   direction, score, confidence, profile, or profession fields.
+   direction, score, confidence, profile, or profession fields. Its outcome lives in
+   `summary.llm.status` (`not_requested`, `pending`, `ready`, `failed`) — that field,
+   or the `llmStatus` derived from it, is the completion signal for the LLM phase.
+   An enrichment left `pending` past the staleness window is re-queued by
+   `recoverStalePendingLlmAnalyses`, which must therefore match `ALGORITHM_LLM`
+   records that are already `READY`, not only `PENDING` ones.
 8. Prof-orientation OpenRouter calls may use
    `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
    `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for

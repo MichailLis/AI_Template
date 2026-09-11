@@ -4,47 +4,65 @@
     "getMaxChoices": [
       {
         "description": "Standard positive integer cap",
-        "input": { "maxChoices": 3 },
+        "input": {
+          "maxChoices": 3
+        },
         "expected": 3
       },
       {
         "description": "Single choice cap",
-        "input": { "maxChoices": 1 },
+        "input": {
+          "maxChoices": 1
+        },
         "expected": 1
       },
       {
         "description": "Large integer cap",
-        "input": { "maxChoices": 100 },
+        "input": {
+          "maxChoices": 100
+        },
         "expected": 100
       },
       {
         "description": "Zero cap is below 1 and must be rejected",
-        "input": { "maxChoices": 0 },
+        "input": {
+          "maxChoices": 0
+        },
         "expected": null
       },
       {
         "description": "Negative integer cap is below 1 and must be rejected",
-        "input": { "maxChoices": -1 },
+        "input": {
+          "maxChoices": -1
+        },
         "expected": null
       },
       {
         "description": "Fractional non-integer cap above 1 must be rejected",
-        "input": { "maxChoices": 2.5 },
+        "input": {
+          "maxChoices": 2.5
+        },
         "expected": null
       },
       {
         "description": "Fractional non-integer cap below 1 must be rejected",
-        "input": { "maxChoices": 0.5 },
+        "input": {
+          "maxChoices": 0.5
+        },
         "expected": null
       },
       {
         "description": "Negative fractional cap must be rejected",
-        "input": { "maxChoices": -2.5 },
+        "input": {
+          "maxChoices": -2.5
+        },
         "expected": null
       },
       {
         "description": "String number cap must be rejected",
-        "input": { "maxChoices": "3" },
+        "input": {
+          "maxChoices": "3"
+        },
         "expected": null
       },
       {
@@ -54,7 +72,9 @@
       },
       {
         "description": "Settings with other fields but no maxChoices",
-        "input": { "other": 42 },
+        "input": {
+          "other": 42
+        },
         "expected": null
       },
       {
@@ -179,6 +199,85 @@
         "description": "Whitespace-only string",
         "input": "   \t   ",
         "expected": ""
+      }
+    ],
+    "getProfOrientationLlmStatus": [
+      {
+        "description": "Successful enrichment reports the LLM phase as ready",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus",
+          "llm": {
+            "status": "ready"
+          }
+        },
+        "expected": "ready"
+      },
+      {
+        "description": "Algorithmic phase written with a prompt version leaves the LLM phase pending",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus",
+          "llm": {
+            "status": "pending"
+          }
+        },
+        "expected": "pending"
+      },
+      {
+        "description": "Failed enrichment stays visible even though the record status remains READY",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus",
+          "llm": {
+            "status": "failed"
+          }
+        },
+        "expected": "failed"
+      },
+      {
+        "description": "Topic version without a prompt version never requests the LLM phase",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus",
+          "llm": {
+            "status": "not_requested"
+          }
+        },
+        "expected": "not_requested"
+      },
+      {
+        "description": "Summary without an llm block falls back to not_requested",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus"
+        },
+        "expected": "not_requested"
+      },
+      {
+        "description": "Unrecognised llm status falls back to not_requested",
+        "input": {
+          "resultKind": "prof_orientation_v3_plus",
+          "llm": {
+            "status": "queued"
+          }
+        },
+        "expected": "not_requested"
+      },
+      {
+        "description": "Non prof-orientation summary has no separate LLM phase",
+        "input": {
+          "resultKind": "standard_stub",
+          "llm": {
+            "status": "ready"
+          }
+        },
+        "expected": null
+      },
+      {
+        "description": "Absent summary has no separate LLM phase",
+        "input": null,
+        "expected": null
+      },
+      {
+        "description": "Primitive summary has no separate LLM phase",
+        "input": "prof_orientation_v3_plus",
+        "expected": null
       }
     ]
   }

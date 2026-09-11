@@ -7,6 +7,8 @@ import type {
 } from '@prisma/client';
 
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
+import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
+
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
 
@@ -95,6 +97,8 @@ interface AttemptListRecord {
   expiresAt: Date | null;
   analysis: {
     status: string;
+
+    summary?: unknown;
   } | null;
   publicLink?: {
     entryProfileMode: TestEntryProfileMode;
@@ -193,6 +197,7 @@ export const mapAttemptListItem = (
     finishedAt: toOptionalIsoString(attempt.finishedAt),
     expiresAt: toOptionalIsoString(attempt.expiresAt),
     analysisStatus: attempt.analysis?.status ?? null,
+    llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
   };
 };
 
