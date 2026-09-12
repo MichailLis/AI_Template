@@ -35,4 +35,37 @@ describe('PrivacyPolicyForm', () => {
     expect(input).toHaveAttribute('maxlength', '512');
     expect(onOperatorFullNameChange).toHaveBeenCalledWith('ООО «Новый оператор»');
   });
+
+  /**
+   * Находка аудита UX-09: дата публикации была нативным `datetime-local` с маской браузера
+   * `mm/dd/yyyy, --:-- --` в англоязычном интерфейсе.
+   */
+  it('edits the publication date in the Russian format and reports a datetime-local value', () => {
+    const onPublishedAtChange = vi.fn();
+
+    render(
+      <PrivacyPolicyForm
+        canSubmit
+        content="Политика"
+        isSaving={false}
+        operatorFullName="АНО «Старый оператор»"
+        publishedAt="2026-07-10T03:00"
+        version="2026-07-10"
+        onContentChange={vi.fn()}
+        onOperatorFullNameChange={vi.fn()}
+        onPublishedAtChange={onPublishedAtChange}
+        onSubmit={vi.fn()}
+        onVersionChange={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByLabelText('Дата публикации');
+
+    expect(input).toHaveValue('10.07.2026 03:00');
+    expect(input).not.toHaveAttribute('type', 'datetime-local');
+
+    fireEvent.change(input, { target: { value: '06.09.2026 14:30' } });
+
+    expect(onPublishedAtChange).toHaveBeenCalledWith('2026-09-06T14:30');
+  });
 });

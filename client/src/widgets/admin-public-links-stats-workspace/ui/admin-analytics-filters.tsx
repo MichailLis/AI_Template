@@ -6,8 +6,8 @@ import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
+import { RuDateInput } from '@/shared/ui/ru-date-input';
 
 type PublicLinksTab = 'active' | 'archived';
 type AnalyticsTab = 'report' | 'attempts';
@@ -193,22 +193,20 @@ export function AnalyticsReportFiltersSection({
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="analytics-date-from">Дата с</Label>
-          <Input
+          <RuDateInput
             id="analytics-date-from"
-            type="date"
             value={analyticsDateFrom}
-            onChange={(event) => onAnalyticsDateFromChange(event.target.value)}
+            onChange={onAnalyticsDateFromChange}
             className="border-admin-border bg-admin-panel"
           />
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="analytics-date-to">Дата по</Label>
-          <Input
+          <RuDateInput
             id="analytics-date-to"
-            type="date"
             value={analyticsDateTo}
-            onChange={(event) => onAnalyticsDateToChange(event.target.value)}
+            onChange={onAnalyticsDateToChange}
             className="border-admin-border bg-admin-panel"
           />
         </div>

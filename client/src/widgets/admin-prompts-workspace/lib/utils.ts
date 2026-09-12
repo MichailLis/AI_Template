@@ -1,11 +1,12 @@
 import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
+import { formatTime } from '@/shared/lib/date-format';
 
 import type { DuplicateVariableData, PromptVariable } from '../model/types';
 
 export const getApiErrorMessage = (error: unknown) =>
   getSharedApiErrorMessage(error, { fallbackMessage: 'Request failed' });
 
-export const formatNow = () => new Date().toLocaleTimeString();
+export const formatNow = () => formatTime(new Date().toISOString());
 
 export const estimateTokens = (value: string) => Math.max(1, Math.ceil(value.length / 4));
 

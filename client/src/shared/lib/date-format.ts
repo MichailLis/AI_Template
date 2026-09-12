@@ -33,6 +33,12 @@ const dateOnlyFormatter = new Intl.DateTimeFormat(LOCALE, {
   year: 'numeric',
 });
 
+const timeOnlyFormatter = new Intl.DateTimeFormat(LOCALE, {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
 const format = (value: string, formatter: Intl.DateTimeFormat) => {
   const date = new Date(value);
 
@@ -51,6 +57,12 @@ export const formatDateTimePrecise = (value: string) => format(value, preciseFor
 
 /** Только дата: для полей вроде даты публикации политики. */
 export const formatDate = (value: string) => format(value, dateOnlyFormatter);
+
+/**
+ * Только время, `23:00:56`: для журналов в пределах одного дня, например запусков симуляции
+ * промпта. Без фиксированной локали `toLocaleTimeString()` давал `11:00:56 PM`.
+ */
+export const formatTime = (value: string) => format(value, timeOnlyFormatter);
 
 export const formatDateTimeOrDash = (value: string | null | undefined) => {
   if (value === null || value === undefined) {

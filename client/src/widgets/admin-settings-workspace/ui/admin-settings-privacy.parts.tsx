@@ -4,6 +4,7 @@ import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
+import { RuDateInput } from '@/shared/ui/ru-date-input';
 import { Textarea } from '@/shared/ui/textarea';
 
 import { formatUpdatedAt } from './admin-settings-cards.model';
@@ -85,11 +86,11 @@ export function PrivacyPolicyForm({
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="privacy-policy-published-at">Дата публикации</Label>
-          <Input
+          <RuDateInput
             id="privacy-policy-published-at"
-            type="datetime-local"
+            mode="datetime"
             value={publishedAt}
-            onChange={(event) => onPublishedAtChange(event.target.value)}
+            onChange={onPublishedAtChange}
           />
         </div>
       </div>

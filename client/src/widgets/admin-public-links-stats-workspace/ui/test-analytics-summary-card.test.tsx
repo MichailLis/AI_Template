@@ -1,6 +1,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { formatDateTime } from '@/shared/lib/date-format';
+
 import { TestAnalyticsSummaryCard } from './test-analytics-summary-card';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
@@ -69,6 +71,29 @@ const renderCard = (summary: AdminTestAnalyticsSummaryDto) =>
       actions={null}
     />,
   );
+
+/**
+ * Находка аудита UX-09: строка отчёта показывала «сформировано 9/11/2026, 11:00:56 PM» — формат
+ * браузера — рядом с «06.09.2026, 18:36» на всех остальных экранах.
+ */
+describe('TestAnalyticsSummaryCard generated-at line', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('prints the report time in the shared admin format, not the browser locale', () => {
+    const summary = createSummary({});
+
+    renderCard(summary);
+
+    expect(
+      screen.getByText(`Тест · сформировано ${formatDateTime(summary.topic.generatedAt)}`),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(new RegExp(new Date(summary.topic.generatedAt).toLocaleString('en-US'))),
+    ).not.toBeInTheDocument();
+  });
+});
 
 describe('TestAnalyticsSummaryCard analysis figures', () => {
   afterEach(() => {

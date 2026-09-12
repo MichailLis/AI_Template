@@ -6,6 +6,7 @@ import {
   formatDateTimeOrDash,
   formatDateTimePrecise,
   formatDateTimePreciseOrDash,
+  formatTime,
 } from './date-format';
 
 /**
@@ -26,6 +27,16 @@ describe('единый формат даты', () => {
 
   it('умеет отдавать только дату', () => {
     expect(formatDate(value)).toMatch(/^\d{2}\.\d{2}\.\d{4}$/);
+  });
+
+  /**
+   * Время без даты нужно журналам в пределах одного дня, например запускам симуляции промпта.
+   * Раньше оно шло через `toLocaleTimeString()` без локали и на англоязычной машине выглядело как
+   * `11:00:56 PM`.
+   */
+  it('умеет отдавать только время в 24-часовом формате с секундами', () => {
+    expect(formatTime(value)).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    expect(formatTime(value)).not.toMatch(/AM|PM/);
   });
 
   it('не зависит от локали браузера', () => {

@@ -1,5 +1,6 @@
 import { AlertTriangle, BarChart3, Brain, CheckCircle2, Link2, Users } from 'lucide-react';
 
+import { formatDateTime } from '@/shared/lib/date-format';
 import { cn } from '@/shared/lib/utils';
 import {
   adminBadgeClassNames,
@@ -198,9 +199,7 @@ export function TestAnalyticsSummaryCard({
             </CardTitle>
             <CardDescription>
               {summary
-                ? `${summary.topic.title} · сформировано ${new Date(
-                    summary.topic.generatedAt,
-                  ).toLocaleString()}`
+                ? `${summary.topic.title} · сформировано ${formatDateTime(summary.topic.generatedAt)}`
                 : 'Агрегация результатов по методике V3+'}
             </CardDescription>
           </div>
