@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
@@ -33,6 +38,13 @@ type AnalysisPromptRecord = Prisma.AnalysisPromptGetPayload<{
 }>;
 
 type AnalysisPromptVersionRecord = Prisma.AnalysisPromptVersionGetPayload<Record<string, never>>;
+
+interface PromptActiveTest {
+  topicId: number;
+  title: string;
+  slug: string;
+  onPublishedVersion: boolean;
+}
 
 const syntheticAnswersJsonSchema = {
   name: 'student_test_answers',
@@ -100,6 +112,7 @@ export class AnalysisPromptsService {
   private toPromptResponse(
     prompt: AnalysisPromptRecord,
     usedInTestCountByVersionId: Map<number, number> = new Map(),
+    activeTests: PromptActiveTest[] = [],
   ) {
     return {
       id: prompt.id,
@@ -110,7 +123,75 @@ export class AnalysisPromptsService {
       versions: prompt.versions.map((version) =>
         this.toVersionResponse(version, usedInTestCountByVersionId.get(version.id) ?? 0),
       ),
+      activeTests,
     };
+  }
+
+  /**
+   * Неархивные тесты, чья опубликованная или рабочая версия подключена к промпту. Фоновый анализ
+   * берет промпт из версии теста и на архив промпта не смотрит, поэтому «удаленный» промпт молча
+   * продолжал бы анализировать прохождения опубликованных тестов.
+   */
+  private async listActiveTestsByPrompt(
+    promptIds: number[],
+  ): Promise<Map<number, PromptActiveTest[]>> {
+    const testsByPromptId = new Map<number, PromptActiveTest[]>();
+
+    if (promptIds.length === 0) {
+      return testsByPromptId;
+    }
+
+    const usesPrompt = {
+      analysisPromptVersion: { promptId: { in: promptIds } },
+    } satisfies Prisma.TestTopicVersionWhereInput;
+    const versionSelect = {
+      select: { title: true, analysisPromptVersion: { select: { promptId: true } } },
+    } as const;
+
+    const topics = await this.prisma.testTopic.findMany({
+      where: {
+        archivedAt: null,
+        OR: [{ activePublishedVersion: usesPrompt }, { activeDraftVersion: usesPrompt }],
+      },
+      select: {
+        id: true,
+        slug: true,
+        activePublishedVersion: versionSelect,
+        activeDraftVersion: versionSelect,
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    const addTest = (promptId: number, test: PromptActiveTest) => {
+      testsByPromptId.set(promptId, [...(testsByPromptId.get(promptId) ?? []), test]);
+    };
+
+    for (const topic of topics) {
+      const published = topic.activePublishedVersion;
+      const draft = topic.activeDraftVersion;
+      const publishedPromptId = published?.analysisPromptVersion?.promptId;
+      const draftPromptId = draft?.analysisPromptVersion?.promptId;
+
+      if (published && publishedPromptId !== undefined) {
+        addTest(publishedPromptId, {
+          topicId: topic.id,
+          title: published.title,
+          slug: topic.slug,
+          onPublishedVersion: true,
+        });
+      }
+
+      if (draft && draftPromptId !== undefined && draftPromptId !== publishedPromptId) {
+        addTest(draftPromptId, {
+          topicId: topic.id,
+          title: draft.title,
+          slug: topic.slug,
+          onPublishedVersion: false,
+        });
+      }
+    }
+
+    return testsByPromptId;
   }
 
   /**
@@ -156,11 +237,16 @@ export class AnalysisPromptsService {
   }
 
   private async toPromptResponseWithUsage(prompt: AnalysisPromptRecord) {
-    const usedInTestCountByVersionId = await this.countTestsByPromptVersion(
-      prompt.versions.map((version) => version.id),
-    );
+    const [usedInTestCountByVersionId, activeTestsByPromptId] = await Promise.all([
+      this.countTestsByPromptVersion(prompt.versions.map((version) => version.id)),
+      this.listActiveTestsByPrompt([prompt.id]),
+    ]);
 
-    return this.toPromptResponse(prompt, usedInTestCountByVersionId);
+    return this.toPromptResponse(
+      prompt,
+      usedInTestCountByVersionId,
+      activeTestsByPromptId.get(prompt.id),
+    );
   }
 
   private async getEditablePrompt(promptId: number) {
@@ -218,12 +304,21 @@ export class AnalysisPromptsService {
       orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
     });
 
-    const usedInTestCountByVersionId = await this.countTestsByPromptVersion(
-      prompts.flatMap((prompt) => prompt.versions.map((version) => version.id)),
-    );
+    const [usedInTestCountByVersionId, activeTestsByPromptId] = await Promise.all([
+      this.countTestsByPromptVersion(
+        prompts.flatMap((prompt) => prompt.versions.map((version) => version.id)),
+      ),
+      this.listActiveTestsByPrompt(prompts.map((prompt) => prompt.id)),
+    ]);
 
     return {
-      prompts: prompts.map((prompt) => this.toPromptResponse(prompt, usedInTestCountByVersionId)),
+      prompts: prompts.map((prompt) =>
+        this.toPromptResponse(
+          prompt,
+          usedInTestCountByVersionId,
+          activeTestsByPromptId.get(prompt.id),
+        ),
+      ),
     };
   }
 
@@ -321,6 +416,18 @@ export class AnalysisPromptsService {
     await ensureAdminAccess(this.prisma, userId);
 
     await this.getEditablePrompt(promptId);
+
+    const publishedTests = (
+      (await this.listActiveTestsByPrompt([promptId])).get(promptId) ?? []
+    ).filter((test) => test.onPublishedVersion);
+
+    if (publishedTests.length > 0) {
+      throw new ConflictException(
+        `Analysis prompt is used by published tests: ${publishedTests
+          .map((test) => test.slug)
+          .join(', ')}`,
+      );
+    }
 
     const prompt = await this.prisma.analysisPrompt.update({
       where: { id: promptId },

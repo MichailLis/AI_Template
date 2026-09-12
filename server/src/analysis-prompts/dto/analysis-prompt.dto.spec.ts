@@ -45,6 +45,7 @@ describe('analysis prompt DTOs', () => {
               updatedAt: '2026-05-01T10:05:00.000Z',
             },
           ],
+          activeTests: [],
         },
       ],
     });

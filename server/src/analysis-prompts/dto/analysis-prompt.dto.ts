@@ -19,6 +19,15 @@ export const AnalysisPromptVersionSchema = z.object({
   updatedAt: IsoDateStringSchema,
 });
 
+/** Неархивный тест, чья опубликованная или рабочая версия подключена к промпту. */
+export const AnalysisPromptActiveTestSchema = z.object({
+  topicId: z.number().int(),
+  title: z.string(),
+  slug: z.string(),
+  /** Промпт анализирует прохождения опубликованной версии, а не только черновика. */
+  onPublishedVersion: z.boolean(),
+});
+
 export const AnalysisPromptSchema = z.object({
   id: z.number(),
   title: z.string(),
@@ -26,6 +35,7 @@ export const AnalysisPromptSchema = z.object({
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
   versions: z.array(AnalysisPromptVersionSchema),
+  activeTests: z.array(AnalysisPromptActiveTestSchema),
 });
 
 export const AnalysisPromptListResponseSchema = z.object({

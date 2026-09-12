@@ -1,4 +1,4 @@
-import { NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { ConflictException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
@@ -45,6 +45,9 @@ describe('AnalysisPromptsService', () => {
       update: jest.Mock;
     };
     testTopicVersion: {
+      findMany: jest.Mock;
+    };
+    testTopic: {
       findMany: jest.Mock;
     };
     $transaction: jest.Mock;
@@ -103,6 +106,9 @@ describe('AnalysisPromptsService', () => {
         update: jest.fn(),
       },
       testTopicVersion: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      testTopic: {
         findMany: jest.fn().mockResolvedValue([]),
       },
       $transaction: jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock)),
@@ -173,6 +179,55 @@ describe('AnalysisPromptsService', () => {
     await expect(service.listPrompts(3)).resolves.toEqual({ prompts: [] });
 
     expect(prismaMock.testTopicVersion.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.testTopic.findMany).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Находка аудита FLOW-05: удаление промпта не учитывало тесты. Фоновый анализ берет промпт из
+   * версии теста и на архив промпта не смотрит, поэтому список нужен и в карточке, и в запрете.
+   */
+  it('listPrompts lists the active tests that use the prompt and marks the published ones', async () => {
+    prismaMock.analysisPrompt.findMany.mockResolvedValue([promptRecord]);
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 8,
+        slug: 'prof-orientation-v3-plus-5',
+        activePublishedVersion: {
+          title: 'Профориентационный тест v3+',
+          analysisPromptVersion: { promptId: 7 },
+        },
+        activeDraftVersion: {
+          title: 'Профориентационный тест v3+',
+          analysisPromptVersion: { promptId: 7 },
+        },
+      },
+      {
+        id: 247,
+        slug: 'demo-career-orientation',
+        activePublishedVersion: { title: 'Демо', analysisPromptVersion: null },
+        activeDraftVersion: {
+          title: 'Демо — черновик',
+          analysisPromptVersion: { promptId: 7 },
+        },
+      },
+    ]);
+
+    const result = await service.listPrompts(3);
+
+    expect(result.prompts[0]?.activeTests).toEqual([
+      {
+        topicId: 8,
+        title: 'Профориентационный тест v3+',
+        slug: 'prof-orientation-v3-plus-5',
+        onPublishedVersion: true,
+      },
+      {
+        topicId: 247,
+        title: 'Демо — черновик',
+        slug: 'demo-career-orientation',
+        onPublishedVersion: false,
+      },
+    ]);
   });
 
   it('listPrompts returns prompts with version metadata', async () => {
@@ -377,6 +432,43 @@ describe('AnalysisPromptsService', () => {
     const updateArg = updateCalls[0]?.[0];
     expect(updateArg?.where).toEqual({ id: 7 });
     expect(updateArg?.data.archivedAt).toBeInstanceOf(Date);
+  });
+
+  it('deletePrompt refuses to archive a prompt that a published test still analyses with', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 8,
+        slug: 'prof-orientation-v3-plus-5',
+        activePublishedVersion: {
+          title: 'Профориентационный тест v3+',
+          analysisPromptVersion: { promptId: 7 },
+        },
+        activeDraftVersion: null,
+      },
+    ]);
+
+    await expect(service.deletePrompt(3, 7)).rejects.toBeInstanceOf(ConflictException);
+    expect(prismaMock.analysisPrompt.update).not.toHaveBeenCalled();
+  });
+
+  it('deletePrompt archives a prompt that only drafts still point at', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 247,
+        slug: 'demo-career-orientation',
+        activePublishedVersion: null,
+        activeDraftVersion: { title: 'Демо', analysisPromptVersion: { promptId: 7 } },
+      },
+    ]);
+    prismaMock.analysisPrompt.update.mockResolvedValue({
+      ...promptRecord,
+      archivedAt: new Date('2026-05-01T11:00:00.000Z'),
+    });
+
+    await expect(service.deletePrompt(3, 7)).resolves.toMatchObject({ prompt: { id: 7 } });
+    expect(prismaMock.analysisPrompt.update).toHaveBeenCalled();
   });
   it('publishVersion marks an existing draft as published', async () => {
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({

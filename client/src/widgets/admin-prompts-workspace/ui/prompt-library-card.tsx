@@ -38,6 +38,43 @@ interface PromptLibraryItemProps {
 
 const formatPromptDate = (value: string) => formatDateTime(value);
 
+type PromptActiveTest = AnalysisPromptListResponseDtoPromptsItem['activeTests'][number];
+
+const formatTestList = (tests: PromptActiveTest[]) =>
+  tests.map((test) => `«${test.title}» (${test.slug})`).join(', ');
+
+/**
+ * Фоновый анализ берет промпт из версии теста и на архив промпта не смотрит. Поэтому промпт, на
+ * котором работают опубликованные тесты, удалить нельзя, а про черновики нужно предупредить.
+ */
+const getDeleteDialogCopy = (prompt: AnalysisPromptListResponseDtoPromptsItem) => {
+  const publishedTests = prompt.activeTests.filter((test) => test.onPublishedVersion);
+  const draftTests = prompt.activeTests.filter((test) => !test.onPublishedVersion);
+
+  if (publishedTests.length > 0) {
+    return {
+      isBlocked: true,
+      title: 'Промпт нельзя удалить',
+      description: `Промпт анализирует прохождения опубликованных тестов: ${formatTestList(publishedTests)}. Подключите к ним другой промпт и опубликуйте новые версии, затем удалите этот.`,
+    };
+  }
+
+  if (draftTests.length > 0) {
+    return {
+      isBlocked: false,
+      title: 'Удалить промпт?',
+      description: `Промпт подключен к черновикам: ${formatTestList(draftTests)}. Перед публикацией подключите к ним другой промпт: после удаления этот нельзя будет выбрать заново.`,
+    };
+  }
+
+  return {
+    isBlocked: false,
+    title: 'Удалить промпт?',
+    description:
+      'Промпт будет скрыт из конструктора. Уже созданные результаты анализа и версии останутся в истории.',
+  };
+};
+
 function PromptLibraryItem({
   prompt,
   isSelected,
@@ -59,6 +96,7 @@ function PromptLibraryItem({
     ['тест', 'теста', 'тестов'],
   )} ${pluralizeRu(usage.testsOnOutdatedVersions, ['остался', 'остались', 'остались'])} на прежних версиях промпта`;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteDialog = getDeleteDialogCopy(prompt);
 
   const handleConfirmDelete = () => {
     onDeletePrompt(prompt.id);
@@ -129,9 +167,11 @@ function PromptLibraryItem({
 
       <ConfirmActionDialog
         open={isDeleteDialogOpen}
-        title="Удалить промпт?"
-        description="Промпт будет скрыт из конструктора. Уже созданные результаты анализа и версии останутся в истории."
+        title={deleteDialog.title}
+        description={deleteDialog.description}
         confirmLabel="Удалить"
+        cancelLabel={deleteDialog.isBlocked ? 'Закрыть' : undefined}
+        hideConfirm={deleteDialog.isBlocked}
         variant="destructive"
         isConfirming={isDeleting}
         onConfirm={handleConfirmDelete}

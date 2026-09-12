@@ -17,6 +17,8 @@ interface ConfirmActionDialogProps {
   cancelLabel?: string;
   isConfirming?: boolean;
   variant?: 'default' | 'destructive';
+  /** Действие сейчас запрещено: диалог только объясняет причину и не предлагает подтверждение. */
+  hideConfirm?: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -29,6 +31,7 @@ export function ConfirmActionDialog({
   cancelLabel = 'Отмена',
   isConfirming = false,
   variant = 'default',
+  hideConfirm = false,
   onConfirm,
   onClose,
 }: ConfirmActionDialogProps) {
@@ -49,9 +52,11 @@ export function ConfirmActionDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isConfirming}>{cancelLabel}</AlertDialogCancel>
-          <Button type="button" variant={variant} onClick={onConfirm} disabled={isConfirming}>
-            {isConfirming ? 'Выполнение...' : confirmLabel}
-          </Button>
+          {hideConfirm ? null : (
+            <Button type="button" variant={variant} onClick={onConfirm} disabled={isConfirming}>
+              {isConfirming ? 'Выполнение...' : confirmLabel}
+            </Button>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
