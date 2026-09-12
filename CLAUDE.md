@@ -94,7 +94,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
-- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
+- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hooks, Serena, root TypeScript, compose name, orval lockfile drift). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 

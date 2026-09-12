@@ -13,7 +13,7 @@ import {
  * `npm run doctor:agent-tooling` — diagnostic, not a gate.
  *
  * Inspects machine-local agent tooling preconditions (rtk hook exclusions, Serena binary,
- * root typescript resolution, docker-compose project name).
+ * root typescript resolution, docker-compose project name, orval lockfile drift in the client).
  *
  * Always exits 0: machine state must not fail builds on a clean tree.
  */
@@ -102,12 +102,27 @@ if (existsSync(composePath)) {
   }
 }
 
+// 5. orval installed in client/node_modules vs the version client/package-lock.json locks
+const readJsonOrNull = (filePath) => {
+  try {
+    return JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+};
+const clientLockfile = readJsonOrNull(join(rootDir, 'client', 'package-lock.json'));
+const lockedOrvalVersion = clientLockfile?.packages?.['node_modules/orval']?.version ?? null;
+const installedOrvalVersion =
+  readJsonOrNull(join(rootDir, 'client', 'node_modules', 'orval', 'package.json'))?.version ?? null;
+
 const results = runAgentToolingChecks({
   rtkConfig,
   requiredHookExclusions,
   hasSerena,
   hasRootTypescript,
   dockerComposeContent,
+  lockedOrvalVersion,
+  installedOrvalVersion,
 });
 
 console.log(formatReport(results));
