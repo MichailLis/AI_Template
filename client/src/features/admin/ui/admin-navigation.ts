@@ -34,7 +34,7 @@ export const navItems: AdminNavItem[] = [
   {
     id: 'prompts',
     label: 'Промпты',
-    description: 'Prompt Studio',
+    description: 'Сценарии анализа',
     icon: MessageSquareText,
     href: '/admin/prompts',
     group: 'content',

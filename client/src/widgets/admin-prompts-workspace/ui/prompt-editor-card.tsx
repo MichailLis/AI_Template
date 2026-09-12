@@ -9,6 +9,7 @@ import { PromptEditorSettingsSection } from './prompt-editor-settings-section';
 import { PromptEditorTemplateSection } from './prompt-editor-template-section';
 import { PromptEditorVariablesSection } from './prompt-editor-variables-section';
 
+import type { PromptModelMismatch } from './admin-prompts-workspace.helpers';
 import type {
   DuplicateVariableData,
   ModelFilter,
@@ -17,7 +18,25 @@ import type {
 } from '../model/types';
 import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
 
+interface EditingPrompt {
+  title: string;
+  versionNumber: number | null;
+}
+
+const getEditorTitle = (editingPrompt: EditingPrompt | null) => {
+  if (!editingPrompt) {
+    return 'Новый промпт';
+  }
+
+  const version = editingPrompt.versionNumber ? ` (v${editingPrompt.versionNumber})` : '';
+
+  return `Редактирование: ${editingPrompt.title}${version}`;
+};
+
 interface PromptEditorCardProps {
+  /** Сохраненный промпт в редакторе; `null` — пишется новый. */
+  editingPrompt: EditingPrompt | null;
+  modelMismatch: PromptModelMismatch | null;
   modelSearch: string;
   onModelSearchChange: (value: string) => void;
   modelFilter: ModelFilter;
@@ -48,6 +67,8 @@ interface PromptEditorCardProps {
 }
 
 export function PromptEditorCard({
+  editingPrompt,
+  modelMismatch,
   modelSearch,
   onModelSearchChange,
   modelFilter,
@@ -83,14 +104,16 @@ export function PromptEditorCard({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="size-4 shrink-0 text-admin-muted" />
-              Редактор промптов
+              {getEditorTitle(editingPrompt)}
             </CardTitle>
             <CardDescription>
-              Черновой сценарий для студенческих карьерных траекторий.
+              {editingPrompt
+                ? 'Изменения сохранятся новой версией этого промпта.'
+                : 'Промпт сохранится как новый сценарий анализа.'}
             </CardDescription>
           </div>
           <Badge variant="outline" className={adminBadgeClassNames.info}>
-            Structured outputs
+            Структурированный ответ
           </Badge>
         </div>
       </CardHeader>
@@ -105,6 +128,7 @@ export function PromptEditorCard({
           selectedModel={selectedModel}
           onModelChange={onModelChange}
           selectedModelItem={selectedModelItem}
+          modelMismatch={modelMismatch}
         />
 
         <PromptEditorSettingsSection

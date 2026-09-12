@@ -4,6 +4,7 @@ import {
   applySimulationError,
   applySimulationSuccess,
   buildRunningSimulationRun,
+  getPromptModelMismatch,
   getPromptUsageSummary,
   resolveSelectedPromptModel,
   validateSimulationInput,
@@ -139,12 +140,49 @@ describe('admin prompts workspace helpers', () => {
     expect(
       resolveSelectedPromptModel('', [freeModel, paidModel], [freeModel, paidModel], 'model-free'),
     ).toBe('model-free');
-    expect(resolveSelectedPromptModel('', [paidModel], [freeModel, paidModel], 'model-free')).toBe(
-      'model-paid',
-    );
     expect(resolveSelectedPromptModel('hidden', [paidModel], [freeModel, paidModel])).toBe(
       'model-paid',
     );
+  });
+
+  /**
+   * Находка аудита UX-07: фильтр «Бесплатные» скрывал модель по умолчанию и сохраненную модель
+   * промпта, и выбор молча переключался на первую бесплатную модель — ее и сохраняли. Прежнее
+   * ожидание `('', [paid], [free, paid], 'model-free') → 'model-paid'` закрепляло именно эту подмену.
+   */
+  it('does not swap a catalog model for another one just because the filter hides it', () => {
+    const freeModel = makeModel('model-free', true);
+    const paidModel = makeModel('model-paid', false);
+
+    expect(resolveSelectedPromptModel('', [freeModel], [freeModel, paidModel], 'model-paid')).toBe(
+      'model-paid',
+    );
+    expect(resolveSelectedPromptModel('model-paid', [freeModel], [freeModel, paidModel])).toBe(
+      'model-paid',
+    );
+    expect(resolveSelectedPromptModel('', [paidModel], [freeModel, paidModel], 'model-free')).toBe(
+      'model-free',
+    );
+  });
+});
+
+describe('getPromptModelMismatch', () => {
+  const prompt = makePrompt([
+    makePromptVersion({ id: 43, versionNumber: 2, model: 'deepseek/deepseek-v4-flash' }),
+    makePromptVersion({ id: 42, versionNumber: 1, model: 'openai/gpt-oss-120b' }),
+  ]);
+
+  it('reports the saved model when the editor model differs from the latest version', () => {
+    expect(getPromptModelMismatch(prompt, 'dots/dots3-note:free')).toEqual({
+      versionNumber: 2,
+      savedModel: 'deepseek/deepseek-v4-flash',
+    });
+  });
+
+  it('reports nothing for a new prompt or for the saved model', () => {
+    expect(getPromptModelMismatch(null, 'dots/dots3-note:free')).toBeNull();
+    expect(getPromptModelMismatch(prompt, 'deepseek/deepseek-v4-flash')).toBeNull();
+    expect(getPromptModelMismatch(makePrompt([]), 'deepseek/deepseek-v4-flash')).toBeNull();
   });
 });
 

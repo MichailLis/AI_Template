@@ -33,9 +33,9 @@ export function SimulationRunItem({
         className={`flex flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between ${adminClassNames.border.bottom} ${adminClassNames.text.muted}`}
       >
         <span className="font-mono">
-          INPUT #{String(totalRuns - runIndex).padStart(3, '0')} - {run.createdAt}
+          {`Запуск #${String(totalRuns - runIndex).padStart(3, '0')} · ${run.createdAt}`}
         </span>
-        <span className="min-w-0 truncate">{run.model}</span>
+        <span className="min-w-0 truncate">{`Модель запуска: ${run.model}`}</span>
       </div>
 
       <div className="flex flex-col gap-3 px-4 py-3">
@@ -49,7 +49,7 @@ export function SimulationRunItem({
         {run.status === 'error' ? (
           <div className={`flex items-start gap-2 text-sm ${adminToneClassNames.danger.text}`}>
             <AlertTriangle className="mt-0.5 h-4 w-4" />
-            <span>{run.errorMessage ?? 'Unknown error'}</span>
+            <span>{run.errorMessage ?? 'Неизвестная ошибка'}</span>
           </div>
         ) : null}
 
@@ -58,7 +58,7 @@ export function SimulationRunItem({
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
               <Badge variant="outline" className={adminBadgeClassNames.success}>
-                Completed
+                Готово
               </Badge>
             </div>
             {diffView ? (
@@ -77,12 +77,12 @@ export function SimulationRunItem({
           className={`flex flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between ${adminClassNames.panel.mutedBar} ${adminClassNames.border.top} ${adminClassNames.text.muted}`}
         >
           <div className="flex flex-wrap items-center gap-3">
-            <span>Latency: {run.latencyMs ?? '-'}ms</span>
-            <span>Tokens: {run.totalTokens ?? '-'}</span>
+            <span>{`Задержка: ${run.latencyMs ?? '—'} мс`}</span>
+            <span>{`Токены: ${run.totalTokens ?? '—'}`}</span>
           </div>
           <Button type="button" size="sm" variant="ghost" onClick={() => void onCopyRunJson(run)}>
             <Copy className="mr-2 h-4 w-4" />
-            Copy JSON
+            Копировать JSON
           </Button>
         </div>
       ) : null}

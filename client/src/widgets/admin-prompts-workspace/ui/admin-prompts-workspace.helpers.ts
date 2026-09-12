@@ -133,9 +133,30 @@ export const resolveSelectedPromptModel = (
   const selectedModelCandidate =
     selectedModel || defaultModel || defaultFreeModel || allModels[0]?.id || '';
 
-  if (filteredModels.some((item) => item.id === selectedModelCandidate)) {
+  // Модель из каталога остается выбранной, даже если фильтр ее скрывает: иначе фильтр «Бесплатные»
+  // молча подменял сохраненную модель промпта первой бесплатной, и сохранялась уже она.
+  if (allModels.some((item) => item.id === selectedModelCandidate)) {
     return selectedModelCandidate;
   }
 
   return filteredModels[0]?.id || selectedModelCandidate;
+};
+
+export interface PromptModelMismatch {
+  versionNumber: number;
+  savedModel: string;
+}
+
+/** Модель сохраненной версии, если в редакторе выбрана другая; для нового промпта — `null`. */
+export const getPromptModelMismatch = (
+  prompt: AnalysisPromptListResponseDtoPromptsItem | null,
+  selectedModel: string,
+): PromptModelMismatch | null => {
+  const latestVersion = prompt?.versions[0];
+
+  if (!latestVersion || !selectedModel || latestVersion.model === selectedModel) {
+    return null;
+  }
+
+  return { versionNumber: latestVersion.versionNumber, savedModel: latestVersion.model };
 };
