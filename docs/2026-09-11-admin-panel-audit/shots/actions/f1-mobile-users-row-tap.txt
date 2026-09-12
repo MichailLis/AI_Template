@@ -1,0 +1,112 @@
+URL: http://localhost:5173/admin/users
+
+
+--- PAGE ---
+РОЛИ И ДОСТУПЫ
+
+Пользователи
+
+admin@admin.admin
+Выйти
+Разделы
+Пользователи
+Все
+Администраторы
+Пользователи
+Добавить пользователя
+Найти
+Любой статус
+Активные
+Отключённые
+
+Всего: 7
+
+Пользователь	Роль	Действия
+
+
+audit-c-1@example.com
+
+ID: 717
+
+AUDIT-C Проверка
+
+	
+Польз.
+	
+
+
+
+admin@admin.admin
+
+ID: 1
+
+Администратор демо
+
+	
+Админ
+	
+
+
+
+student@example.com
+
+ID: 3
+
+Иван Студент
+
+	
+Польз.
+	
+
+
+
+live-check-mtpz4zn0@example.com
+
+ID: 562
+
+Live Check
+
+	
+Польз.
+	
+
+
+
+live-check-mtpz2rhj@example.com
+
+ID: 560
+
+Live Check
+
+	
+Польз.
+	
+
+
+
+teacher@example.com
+
+ID: 4
+
+Ольга Преподаватель
+
+	
+Польз.
+	
+
+
+
+manager@example.com
+
+ID: 2
+
+Анна Методист
+
+	
+Админ
+	
+
+Страница 1 из 1
+
+Назад
+Далее
