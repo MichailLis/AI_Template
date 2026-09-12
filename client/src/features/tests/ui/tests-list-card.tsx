@@ -152,11 +152,22 @@ function TestsListItemRow({
             {getPublishLabel(topic)}
           </Badge>
         </div>
+        {/* Slug уникален и показывается всегда: у одноименных тестов бывает и одинаковое описание. */}
+        <p className={`mt-1 flex min-w-0 items-center gap-2 text-xs ${adminClassNames.text.muted}`}>
+          <span className="shrink-0 font-mono">{topic.slug}</span>
+          {topic.description ? <span className="min-w-0 truncate">{topic.description}</span> : null}
+        </p>
         <div
           className={`mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${adminClassNames.text.body}`}
         >
-          <span>Черновик v{topic.draftVersionNumber}</span>
+          {topic.hasUnpublishedChanges ? (
+            <Badge variant="outline" className={adminBadgeClassNames.warning}>
+              Есть неопубликованные изменения
+            </Badge>
+          ) : null}
           <span>{topic.draftQuestionCount} вопросов</span>
+          <span>{`Активных ссылок: ${topic.activePublicLinkCount}`}</span>
+          <span>{`Прохождений: ${topic.attemptCount}`}</span>
           <span>Обновлен {formatDateTime(topic.updatedAt)}</span>
         </div>
       </button>
@@ -188,7 +199,11 @@ const getFilteredTopics = (topics: TestTopicListItem[], searchValue: string) => 
     return topics;
   }
 
-  return topics.filter((topic) => topic.draftTitle.toLowerCase().includes(query));
+  return topics.filter((topic) =>
+    [topic.draftTitle, topic.slug, topic.description ?? ''].some((value) =>
+      value.toLowerCase().includes(query),
+    ),
+  );
 };
 
 export function TestsListCard({

@@ -7,12 +7,15 @@ import type { TestTopicListItem } from '@/features/tests';
 const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListItem => ({
   id: 1225,
   slug: 'audit-a',
+  description: null,
   draftVersionNumber: 2,
   draftTitle: 'AUDIT-A',
   draftQuestionCount: 3,
   publishedVersionNumber: 1,
   publishedTitle: 'AUDIT-A',
   activePublicLinkCount: 2,
+  attemptCount: 0,
+  hasUnpublishedChanges: false,
   updatedAt: '2026-09-11T10:00:00.000Z',
   ...overrides,
 });

@@ -35,6 +35,10 @@ import { mapQuestion, validateDraftForPublish } from '../shared/domain.utils';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { ensureUniqueTopicSlug } from '../topics/topic-slug.utils';
 import { TestsQuestionService } from '../topics/question.service';
+import {
+  TOPIC_VERSION_CONTENT_SELECT,
+  hasVersionContentChanges,
+} from '../topics/topic-version-content';
 
 @Injectable()
 export class TestsService {
@@ -202,18 +206,18 @@ export class TestsService {
           select: {
             id: true,
             versionNumber: true,
-            title: true,
             _count: {
               select: {
                 questions: true,
               },
             },
+            ...TOPIC_VERSION_CONTENT_SELECT,
           },
         },
         activePublishedVersion: {
           select: {
             versionNumber: true,
-            title: true,
+            ...TOPIC_VERSION_CONTENT_SELECT,
           },
         },
       },
@@ -222,9 +226,11 @@ export class TestsService {
       },
     });
 
-    const activePublicLinkCountByTopicId = await this.countActivePublicLinksByTopic(
-      topics.map((topic) => topic.id),
-    );
+    const topicIds = topics.map((topic) => topic.id);
+    const [activePublicLinkCountByTopicId, attemptCountByTopicId] = await Promise.all([
+      this.countActivePublicLinksByTopic(topicIds),
+      this.countAttemptsByTopic(topicIds),
+    ]);
 
     return {
       topics: topics
@@ -232,15 +238,43 @@ export class TestsService {
         .map((topic) => ({
           id: topic.id,
           slug: topic.slug,
+          description: topic.activeDraftVersion!.description,
           draftVersionNumber: topic.activeDraftVersion!.versionNumber,
           draftTitle: topic.activeDraftVersion!.title,
           draftQuestionCount: topic.activeDraftVersion!._count.questions,
           publishedVersionNumber: topic.activePublishedVersion?.versionNumber ?? null,
           publishedTitle: topic.activePublishedVersion?.title ?? null,
           activePublicLinkCount: activePublicLinkCountByTopicId.get(topic.id) ?? 0,
+          attemptCount: attemptCountByTopicId.get(topic.id) ?? 0,
+          hasUnpublishedChanges: topic.activePublishedVersion
+            ? hasVersionContentChanges(topic.activeDraftVersion!, topic.activePublishedVersion)
+            : false,
           updatedAt: topic.updatedAt.toISOString(),
         })),
     };
+  }
+
+  /** Прохождения по всем версиям теста: старые версии тоже были выданы ученикам. */
+  private async countAttemptsByTopic(topicIds: number[]): Promise<Map<number, number>> {
+    const countByTopicId = new Map<number, number>();
+
+    if (topicIds.length === 0) {
+      return countByTopicId;
+    }
+
+    const versions = await this.prisma.testTopicVersion.findMany({
+      where: { topicId: { in: topicIds } },
+      select: { topicId: true, _count: { select: { studentAttempts: true } } },
+    });
+
+    for (const version of versions) {
+      countByTopicId.set(
+        version.topicId,
+        (countByTopicId.get(version.topicId) ?? 0) + version._count.studentAttempts,
+      );
+    }
+
+    return countByTopicId;
   }
 
   private async countActivePublicLinksByTopic(topicIds: number[]): Promise<Map<number, number>> {

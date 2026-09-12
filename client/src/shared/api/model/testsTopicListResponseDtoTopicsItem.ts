@@ -9,6 +9,8 @@
 export type TestsTopicListResponseDtoTopicsItem = {
   id: number;
   slug: string;
+  /** @nullable */
+  description: string | null;
   draftVersionNumber: number;
   draftTitle: string;
   draftQuestionCount: number;
@@ -21,5 +23,11 @@ export type TestsTopicListResponseDtoTopicsItem = {
    * @maximum 9007199254740991
    */
   activePublicLinkCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  attemptCount: number;
+  hasUnpublishedChanges: boolean;
   updatedAt: string;
 };

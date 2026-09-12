@@ -42,12 +42,21 @@ export const TestQuestionSchema = z.object({
 export const TestsTopicSummarySchema = z.object({
   id: z.number(),
   slug: z.string(),
+  /** Описание черновика: одноименные тесты в списке различаются по нему. */
+  description: z.string().nullable(),
   draftVersionNumber: z.number(),
   draftTitle: z.string(),
   draftQuestionCount: z.number(),
   publishedVersionNumber: z.number().nullable(),
   publishedTitle: z.string().nullable(),
   activePublicLinkCount: z.number().int().min(0),
+  /** Прохождения по всем версиям теста. */
+  attemptCount: z.number().int().min(0),
+  /**
+   * Черновик отличается от опубликованной версии по содержимому. Публикация всегда создает
+   * черновик-клон, поэтому его существование само по себе изменений не означает.
+   */
+  hasUnpublishedChanges: z.boolean(),
   updatedAt: z.string(),
 });
 

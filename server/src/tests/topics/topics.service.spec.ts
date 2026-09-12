@@ -56,6 +56,31 @@ const createTopicSnapshot = () => ({
   activePublishedVersion: null,
 });
 
+const listedQuestion = {
+  type: 'SINGLE_CHOICE',
+  title: 'Что вам ближе?',
+  description: null,
+  required: true,
+  order: 1,
+  settings: null,
+  options: [{ label: 'Техника', value: 'tech', weight: 1, order: 1 }],
+  sliderBands: [],
+};
+
+/** Версия в том виде, в каком ее выбирает список тестов: номер, счетчик и сравниваемое содержимое. */
+const createListedVersion = (overrides: Record<string, unknown> = {}) => ({
+  id: 10,
+  versionNumber: 1,
+  title: 'Career skills',
+  description: 'Навыки для карьеры',
+  analysisPromptVersionId: 42,
+  scoringKind: 'DEFAULT',
+  scoringConfig: null,
+  _count: { questions: 1 },
+  questions: [listedQuestion],
+  ...overrides,
+});
+
 describe('TestsService analysis prompt attachment', () => {
   let service: TestsService;
   let prismaMock: {
@@ -71,6 +96,7 @@ describe('TestsService analysis prompt attachment', () => {
     };
     testTopicVersion: {
       count: jest.Mock;
+      findMany: jest.Mock;
       update: jest.Mock;
     };
     testPublicLink: {
@@ -146,6 +172,7 @@ describe('TestsService analysis prompt attachment', () => {
       },
       testTopicVersion: {
         count: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
         update: jest.fn(),
       },
       testPublicLink: {
@@ -170,24 +197,19 @@ describe('TestsService analysis prompt attachment', () => {
         id: 1,
         slug: 'career-skills',
         updatedAt: new Date('2026-09-11T10:00:00.000Z'),
-        activeDraftVersion: {
-          id: 10,
-          versionNumber: 3,
-          title: 'Career skills',
-          _count: { questions: 1 },
-        },
-        activePublishedVersion: { versionNumber: 2, title: 'Career skills' },
+        activeDraftVersion: createListedVersion({ id: 10, versionNumber: 3 }),
+        activePublishedVersion: createListedVersion({ id: 9, versionNumber: 2 }),
       },
       {
         id: 2,
         slug: 'no-links',
         updatedAt: new Date('2026-09-11T09:00:00.000Z'),
-        activeDraftVersion: {
+        activeDraftVersion: createListedVersion({
           id: 20,
-          versionNumber: 1,
           title: 'No links',
           _count: { questions: 0 },
-        },
+          questions: [],
+        }),
         activePublishedVersion: null,
       },
     ]);
@@ -229,6 +251,62 @@ describe('TestsService analysis prompt attachment', () => {
 
     expect(result.topics).toEqual([]);
     expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.testTopicVersion.findMany).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Находка аудита UX-03: одноименные тесты отличались только временем обновления, а «Черновик v2»
+   * стоял у каждого опубликованного теста, потому что публикация всегда клонирует черновик. Строке
+   * нужны описание, число прохождений и признак реальных неопубликованных изменений.
+   */
+  it('listTopics flags unpublished changes only when the draft differs from the published version', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'untouched',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 11, versionNumber: 2 }),
+        activePublishedVersion: createListedVersion({ id: 10, versionNumber: 1 }),
+      },
+      {
+        id: 2,
+        slug: 'edited',
+        updatedAt: new Date('2026-09-11T09:00:00.000Z'),
+        activeDraftVersion: createListedVersion({
+          id: 21,
+          versionNumber: 2,
+          questions: [{ ...listedQuestion, title: 'Что вам интереснее?' }],
+        }),
+        activePublishedVersion: createListedVersion({ id: 20, versionNumber: 1 }),
+      },
+      {
+        id: 3,
+        slug: 'draft-only',
+        updatedAt: new Date('2026-09-11T08:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 30, description: null }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { topicId: 1, _count: { studentAttempts: 3 } },
+      { topicId: 1, _count: { studentAttempts: 2 } },
+      { topicId: 2, _count: { studentAttempts: 1 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(
+      result.topics.map((topic) => [
+        topic.slug,
+        topic.hasUnpublishedChanges,
+        topic.attemptCount,
+        topic.description,
+      ]),
+    ).toEqual([
+      ['untouched', false, 5, 'Навыки для карьеры'],
+      ['edited', true, 1, 'Навыки для карьеры'],
+      ['draft-only', false, 0, null],
+    ]);
   });
 
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
