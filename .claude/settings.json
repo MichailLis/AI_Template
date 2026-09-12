@@ -1,4 +1,33 @@
 {
+  "enabledMcpjsonServers": ["serena"],
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "node scripts/claude-write-guard.mjs",
+            "timeout": 5,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bd prime --hook-json",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -55,24 +84,6 @@
       "mcp__serena__replace_content",
       "mcp__serena__replace_in_files",
       "mcp__serena__replace_symbol_body"
-    ]
-  },
-  "enabledMcpjsonServers": ["serena"],
-  "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node scripts/claude-write-guard.mjs",
-            "timeout": 5
-          }
-        ]
-      }
     ]
   }
 }
