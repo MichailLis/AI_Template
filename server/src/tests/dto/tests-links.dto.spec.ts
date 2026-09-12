@@ -162,6 +162,7 @@ describe('tests link DTO profile mode fields', () => {
       consentVersion: 'v1',
       consentText: 'Согласие',
       title: 'Тест',
+      topicArchivedAt: null,
       updatedAt: '2026-05-14T10:00:00.000Z',
       createdAt: '2026-05-14T10:00:00.000Z',
     });

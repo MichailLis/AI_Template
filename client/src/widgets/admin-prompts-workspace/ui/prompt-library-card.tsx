@@ -2,12 +2,19 @@ import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { cn } from '@/shared/lib/utils';
-import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import {
+  adminBadgeClassNames,
+  adminClassNames,
+  adminToneClassNames,
+} from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
+
+import { getPromptUsageSummary } from './admin-prompts-workspace.helpers';
 
 import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';
 
@@ -39,6 +46,18 @@ function PromptLibraryItem({
   onDeletePrompt,
 }: PromptLibraryItemProps) {
   const latestVersion = prompt.versions[0];
+  const usage = getPromptUsageSummary(prompt);
+  const usageText =
+    usage.publishedVersionNumber === null
+      ? 'Не опубликован, тесты его не используют'
+      : `Действует v${usage.publishedVersionNumber}, используется в ${usage.testsOnPublishedVersion} ${pluralizeRu(
+          usage.testsOnPublishedVersion,
+          ['тесте', 'тестах', 'тестах'],
+        )}`;
+  const outdatedUsageText = `${usage.testsOnOutdatedVersions} ${pluralizeRu(
+    usage.testsOnOutdatedVersions,
+    ['тест', 'теста', 'тестов'],
+  )} ${pluralizeRu(usage.testsOnOutdatedVersions, ['остался', 'остались', 'остались'])} на прежних версиях промпта`;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleConfirmDelete = () => {
@@ -87,6 +106,13 @@ function PromptLibraryItem({
           {latestVersion ? <span className="min-w-0 truncate">{latestVersion.model}</span> : null}
           <span>Обновлен {formatPromptDate(prompt.updatedAt)}</span>
         </div>
+
+        <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>{usageText}</p>
+        {usage.testsOnOutdatedVersions > 0 ? (
+          <p className={`mt-1 text-xs font-medium ${adminToneClassNames.warning.text}`}>
+            {outdatedUsageText}
+          </p>
+        ) : null}
       </button>
 
       <Button

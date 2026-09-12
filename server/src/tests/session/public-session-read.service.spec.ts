@@ -20,6 +20,7 @@ describe('TestsPublicSessionService read paths', () => {
   };
   const publishedTopicVersionState = {
     status: 'PUBLISHED',
+    topic: { archivedAt: null },
   };
   const publicBranding = {
     version: 1,

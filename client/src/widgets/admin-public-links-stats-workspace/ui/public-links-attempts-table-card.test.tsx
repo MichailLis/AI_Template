@@ -17,6 +17,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 1,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: 'failed',
             entryProfileMode: 'DEMOGRAPHIC',
             studentName: 'Иван',
@@ -37,6 +38,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 2,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: 'pending',
             entryProfileMode: 'DEMOGRAPHIC',
             studentName: 'Анна',
@@ -57,6 +59,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 3,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: 'ready',
             entryProfileMode: 'DEMOGRAPHIC',
             studentName: 'Сергей',
@@ -77,6 +80,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 4,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: 'not_requested',
             entryProfileMode: 'DEMOGRAPHIC',
             studentName: 'Ольга',
@@ -123,6 +127,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 1,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: null,
             entryProfileMode: 'DEMOGRAPHIC',
             studentName: 'Пётр',
@@ -153,13 +158,62 @@ describe('PublicLinksAttemptsTableCard', () => {
       />,
     );
 
-    expect(screen.getAllByText('Готов').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('ИИ-анализ готов').length).toBeGreaterThan(0);
     expect(screen.queryByText('READY')).not.toBeInTheDocument();
     expect(screen.getByText('Пройдено')).toBeInTheDocument();
     expect(screen.queryByText('ИИ готов')).not.toBeInTheDocument();
     expect(screen.queryByText('ИИ в обработке')).not.toBeInTheDocument();
     expect(screen.queryByText('ИИ ошибка')).not.toBeInTheDocument();
     expect(screen.queryByText('ИИ не запрашивался')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Находка аудита UX-01: у заглушки статус записи такой же `READY`, как у настоящего ИИ-анализа,
+   * и таблица показывала обеим зелёное «Готов».
+   */
+  it('names a stub as a stub instead of showing it as a ready analysis', () => {
+    render(
+      <PublicLinksAttemptsTableCard
+        selectedPublicLink={{ id: 1 }}
+        publicAttempts={[
+          {
+            attemptId: 191,
+            attemptNumber: 1,
+            status: 'COMPLETED',
+            analysisStatus: 'READY',
+            analysisResultKind: 'STUB',
+            llmStatus: null,
+            entryProfileMode: 'EDUCATION',
+            studentName: 'Пётр',
+            studentLastInitial: null,
+            studentMiddleInitial: null,
+            educationOrganization: null,
+            groupOrClass: null,
+            studentGender: null,
+            studentAge: null,
+            studentResidence: null,
+            studentEducationLevel: null,
+            startedAt: '2026-05-18T08:30:00.000Z',
+            finishedAt: '2026-05-18T08:45:00.000Z',
+            expiresAt: null,
+          },
+        ]}
+        isLoading={false}
+        isFetching={false}
+        page={1}
+        total={1}
+        totalPages={1}
+        pageSize={10}
+        formatDateTime={(v) => v ?? '—'}
+        onOpenAttemptDetails={vi.fn()}
+        onPageSizeChange={vi.fn()}
+        onPreviousPage={vi.fn()}
+        onNextPage={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Заглушка, промпт не подключен')).toBeInTheDocument();
+    expect(screen.queryByText('Готов')).not.toBeInTheDocument();
   });
 
   it('keeps the table to six columns and moves completion timing into the attempt card', () => {
@@ -172,6 +226,7 @@ describe('PublicLinksAttemptsTableCard', () => {
             attemptNumber: 7,
             status: 'COMPLETED',
             analysisStatus: 'READY',
+            analysisResultKind: 'AI',
             llmStatus: null,
             entryProfileMode: 'EDUCATION',
             studentName: 'Мария',
@@ -219,6 +274,7 @@ describe('PublicLinksAttemptsTableCard', () => {
     attemptNumber,
     status: 'COMPLETED',
     analysisStatus: 'READY',
+    analysisResultKind: 'AI',
     llmStatus: null,
     entryProfileMode: 'EDUCATION' as const,
     studentName: `Студент ${attemptNumber}`,

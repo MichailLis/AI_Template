@@ -14,6 +14,7 @@ const standardLink = {
   publicBranding: null,
   createdAt: '2026-05-19T10:30:00.000Z',
   archivedAt: null,
+  topicArchivedAt: null,
   isActive: true,
 };
 

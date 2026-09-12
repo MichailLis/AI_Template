@@ -673,6 +673,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'PUBLISHED',
@@ -716,6 +717,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'PUBLISHED',
@@ -742,6 +744,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'ARCHIVED',
@@ -759,12 +762,36 @@ describe('TestsPublicLinkService', () => {
     });
   });
 
+  it('getAccessiblePublicLinkByCode rejects links whose test topic is archived', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          topic: { archivedAt: new Date('2026-09-11T10:00:00.000Z') },
+          title: 'Профориентация',
+          description: null,
+          status: 'PUBLISHED',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    const result = service.getAccessiblePublicLinkByCode('demo2026');
+
+    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toMatchObject({
+      message: 'Public test link is disabled because its test is archived',
+    });
+  });
+
   it('getAccessiblePublicLinkByCode rejects links pointing to draft versions', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue(
       createPublicLinkRecordFixture({
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'DRAFT',
@@ -785,6 +812,7 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
     id: 50,
     topicId: 7,
     title: 'Профориентация',
+    topic: { archivedAt: null },
   },
   educationOrganization: null,
   personalDataProcessingMode: 'PUBLIC',

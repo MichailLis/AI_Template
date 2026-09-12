@@ -22,6 +22,7 @@ import {
   getLinkStateClassName,
   getLinkStateLabel,
   getPublicTemplateLabel,
+  isPublicLinkClosedForStudents,
 } from './public-links-list-card.helpers';
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
@@ -254,7 +255,7 @@ export function PublicLinkRow({
             </>
           ) : null}
         </div>
-        {!link.archivedAt && !link.isActive ? (
+        {!link.archivedAt && isPublicLinkClosedForStudents(link) ? (
           <p className={`mt-1 text-xs font-medium ${adminClassNames.publicLinks.inactiveNotice}`}>
             Доступ закрыт для участников
           </p>

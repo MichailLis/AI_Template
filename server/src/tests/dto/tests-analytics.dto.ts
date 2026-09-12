@@ -6,6 +6,7 @@ import {
   PublicSessionAnalysisStatusSchema,
   PublicSessionStatusSchema,
 } from './tests-public.dto';
+import { AdminAnalysisResultKindSchema } from './tests-links.dto';
 
 const ShareSchema = z.number().min(0).max(100);
 
@@ -62,6 +63,9 @@ export const AdminTestAnalyticsCoverageSectionSchema = z.object({
   attemptsTotal: z.number().int().min(0),
   attemptsCompleted: z.number().int().min(0),
   analysisReady: z.number().int().min(0),
+  analysisAiReady: z.number().int().min(0),
+  analysisWithoutAi: z.number().int().min(0),
+  analysisStub: z.number().int().min(0),
   analysisPending: z.number().int().min(0),
   analysisFailed: z.number().int().min(0),
   analysisMissing: z.number().int().min(0),
@@ -132,6 +136,7 @@ export const AdminTestAnalyticsPublicLinkSectionSchema = z.array(
     attemptsTotal: z.number().int().min(0),
     attemptsCompleted: z.number().int().min(0),
     analysisReady: z.number().int().min(0),
+    analysisStub: z.number().int().min(0),
     share: ShareSchema,
   }),
 );
@@ -165,6 +170,9 @@ export const AdminTestAnalyticsAttemptRowSchema = z.object({
   ),
   llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
     'Статус асинхронного LLM-обогащения для двухфазного анализа',
+  ),
+  analysisResultKind: AdminAnalysisResultKindSchema.describe(
+    'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
   ),
 });
 

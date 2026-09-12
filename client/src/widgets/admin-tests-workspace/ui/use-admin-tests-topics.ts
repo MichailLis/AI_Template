@@ -64,6 +64,22 @@ export function useAdminTestsTopics() {
     return archivedTopics.some((topic) => topic.id === effectiveSelectedTopicId);
   }, [archivedTopics, effectiveSelectedTopicId]);
 
+  const activeTopics = useMemo(
+    () => activeTopicsQuery.data?.topics ?? [],
+    [activeTopicsQuery.data?.topics],
+  );
+
+  const selectedTopic = useMemo(() => {
+    if (!effectiveSelectedTopicId) {
+      return null;
+    }
+
+    return (
+      [...activeTopics, ...archivedTopics].find((topic) => topic.id === effectiveSelectedTopicId) ??
+      null
+    );
+  }, [activeTopics, archivedTopics, effectiveSelectedTopicId]);
+
   const refetchTopicsOnly = useCallback(() => {
     void Promise.all([activeTopicsQuery.refetch(), archivedTopicsQuery.refetch()]);
   }, [activeTopicsQuery, archivedTopicsQuery]);
@@ -79,6 +95,7 @@ export function useAdminTestsTopics() {
     listMode,
     setListMode,
     isSelectedTopicArchived,
+    selectedTopic,
     refetchTopicsOnly,
   };
 }

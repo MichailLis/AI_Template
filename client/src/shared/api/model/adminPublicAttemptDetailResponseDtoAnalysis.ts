@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { AdminPublicAttemptDetailResponseDtoAnalysisProviderMode } from './adminPublicAttemptDetailResponseDtoAnalysisProviderMode';
+import type { AdminPublicAttemptDetailResponseDtoAnalysisResultKind } from './adminPublicAttemptDetailResponseDtoAnalysisResultKind';
 import type { AdminPublicAttemptDetailResponseDtoAnalysisStatus } from './adminPublicAttemptDetailResponseDtoAnalysisStatus';
 
 /**
@@ -13,6 +14,7 @@ import type { AdminPublicAttemptDetailResponseDtoAnalysisStatus } from './adminP
  */
 export type AdminPublicAttemptDetailResponseDtoAnalysis = {
   providerMode: AdminPublicAttemptDetailResponseDtoAnalysisProviderMode;
+  resultKind: AdminPublicAttemptDetailResponseDtoAnalysisResultKind;
   /** Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения) */
   status: AdminPublicAttemptDetailResponseDtoAnalysisStatus;
   summary: unknown | null;

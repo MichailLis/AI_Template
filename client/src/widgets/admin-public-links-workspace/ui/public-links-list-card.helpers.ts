@@ -14,12 +14,24 @@ export interface PublicLinkListItem {
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   createdAt: string;
   archivedAt: string | null;
+  /**
+   * Архив самого теста закрывает доступ по всем его ссылкам (сервер отказывает в
+   * `ensurePublicLinkAccessible`), поэтому состояние ссылки нельзя вычислять по одному `isActive`.
+   */
+  topicArchivedAt: string | null;
   isActive: boolean;
 }
+
+export const isPublicLinkClosedForStudents = (link: PublicLinkListItem) =>
+  Boolean(link.archivedAt) || Boolean(link.topicArchivedAt) || !link.isActive;
 
 export const getLinkStateLabel = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
     return 'В архиве';
+  }
+
+  if (link.topicArchivedAt) {
+    return 'Тест в архиве';
   }
 
   return link.isActive ? 'Активна' : 'Отключена';
@@ -30,11 +42,11 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
     return adminBadgeClassNames.archived;
   }
 
-  if (link.isActive) {
-    return adminBadgeClassNames.success;
+  if (link.topicArchivedAt || !link.isActive) {
+    return adminBadgeClassNames.warning;
   }
 
-  return adminBadgeClassNames.warning;
+  return adminBadgeClassNames.success;
 };
 
 export { getEntryProfileModeLabel, getPublicTemplateLabel };
@@ -46,7 +58,7 @@ export const getLinkRowClassName = (link: PublicLinkListItem) => {
     return adminClassNames.publicLinks.rowArchived;
   }
 
-  if (!link.isActive) {
+  if (link.topicArchivedAt || !link.isActive) {
     return adminClassNames.publicLinks.rowInactive;
   }
 

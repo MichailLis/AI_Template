@@ -1,5 +1,6 @@
 import { ListChecks, Rows3, TableProperties } from 'lucide-react';
 
+import { getAnalysisResultKindLabel } from '@/shared/lib/analysis-result-kind-labels';
 import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -261,7 +262,7 @@ function TestAnalyticsAttemptsTable({
               <TableCell className="whitespace-nowrap">{attempt.status}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <div className="flex flex-col items-start gap-1">
-                  <span>{attempt.analysisStatus ?? 'NONE'}</span>
+                  <span>{getAnalysisResultKindLabel(attempt.analysisResultKind)}</span>
                   <LlmStatusBadge status={attempt.llmStatus} />
                 </div>
               </TableCell>

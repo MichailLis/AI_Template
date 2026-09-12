@@ -73,6 +73,9 @@ describe('TestsService analysis prompt attachment', () => {
       count: jest.Mock;
       update: jest.Mock;
     };
+    testPublicLink: {
+      findMany: jest.Mock;
+    };
   };
   let txMock: {
     testTopic: {
@@ -145,6 +148,9 @@ describe('TestsService analysis prompt attachment', () => {
         count: jest.fn(),
         update: jest.fn(),
       },
+      testPublicLink: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     };
 
     service = new TestsService(
@@ -156,6 +162,73 @@ describe('TestsService analysis prompt attachment', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('listTopics reports how many active public links each test has', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'career-skills',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: {
+          id: 10,
+          versionNumber: 3,
+          title: 'Career skills',
+          _count: { questions: 1 },
+        },
+        activePublishedVersion: { versionNumber: 2, title: 'Career skills' },
+      },
+      {
+        id: 2,
+        slug: 'no-links',
+        updatedAt: new Date('2026-09-11T09:00:00.000Z'),
+        activeDraftVersion: {
+          id: 20,
+          versionNumber: 1,
+          title: 'No links',
+          _count: { questions: 0 },
+        },
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      { topicVersion: { topicId: 1 } },
+      { topicVersion: { topicId: 1 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(prismaMock.testPublicLink.findMany).toHaveBeenCalledWith({
+      where: {
+        archivedAt: null,
+        isActive: true,
+        topicVersion: {
+          topicId: {
+            in: [1, 2],
+          },
+        },
+      },
+      select: {
+        topicVersion: {
+          select: {
+            topicId: true,
+          },
+        },
+      },
+    });
+    expect(result.topics.map((topic) => [topic.id, topic.activePublicLinkCount])).toEqual([
+      [1, 2],
+      [2, 0],
+    ]);
+  });
+
+  it('does not query public links when no topic matches the list filter', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([]);
+
+    const result = await service.listTopics(5);
+
+    expect(result.topics).toEqual([]);
+    expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
   });
 
   it('getTopicDraft returns selected analysis prompt version summary', async () => {

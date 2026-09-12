@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,20 +12,20 @@ import {
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
 import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
-import {
-  adminBadgeClassNames,
-  adminClassNames,
-  adminToneClassNames,
-} from '@/shared/ui/admin-design-tokens';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
-import { Badge } from '@/shared/ui/badge';
 
 import {
   OpenRouterSettingsCard,
   PrivacyPolicySettingsCard,
   ProfessionAtlasSettingsCard,
 } from './admin-settings-cards';
+import {
+  getOpenRouterHealthBadge,
+  getProfessionAtlasHealthBadge,
+} from './admin-settings-cards.model';
+import { AdminSettingsHero } from './admin-settings-hero';
 
 import type { FormEvent } from 'react';
 
@@ -80,57 +79,6 @@ const toIsoFromDateTimeLocal = (value: string) => {
 
   return date.toISOString();
 };
-
-function AdminSettingsHero({
-  isOpenRouterConfigured,
-  isProfessionAtlasConfigured,
-}: {
-  isOpenRouterConfigured: boolean;
-  isProfessionAtlasConfigured: boolean;
-}) {
-  return (
-    <div className={`${adminClassNames.panel.hero} rounded-xl p-5`}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3">
-          <div
-            className={`grid size-11 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
-          >
-            <SlidersHorizontal className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <h1
-              className={`text-2xl font-semibold tracking-normal ${adminClassNames.text.heading}`}
-            >
-              Настройки
-            </h1>
-            <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
-              OpenRouter используется для анализа ответов. Атлас профессий показывается на публичной
-              странице результата.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Badge
-            variant="outline"
-            className={
-              isOpenRouterConfigured ? adminBadgeClassNames.success : adminBadgeClassNames.warning
-            }
-          >
-            {isOpenRouterConfigured ? 'OpenRouter готов' : 'OpenRouter требует ключ'}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={
-              isProfessionAtlasConfigured ? adminBadgeClassNames.info : adminBadgeClassNames.neutral
-            }
-          >
-            {isProfessionAtlasConfigured ? 'Атлас подключен' : 'Атлас не задан'}
-          </Badge>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function PrivacyPolicySettingsWorkspaceCard() {
   const queryClient = useQueryClient();
@@ -315,10 +263,10 @@ export function AdminSettingsWorkspace() {
   return (
     <div className={`mx-auto max-w-4xl ${adminClassNames.layout.page}`}>
       <AdminSettingsHero
-        isOpenRouterConfigured={Boolean(openRouter?.isConfigured)}
-        isProfessionAtlasConfigured={Boolean(
-          (professionAtlas?.publicUrl ?? professionAtlas?.url) && professionAtlas?.apiUrl,
-        )}
+        openRouterBadge={getOpenRouterHealthBadge(openRouter, { isError: settingsQuery.isError })}
+        professionAtlasBadge={getProfessionAtlasHealthBadge(professionAtlas, {
+          isError: professionAtlasQuery.isError,
+        })}
       />
 
       <AdminTabs

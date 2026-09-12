@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 
 import {
+  getAnalysisResultKindLabel,
+  getAnalysisResultKindTone,
+} from '@/shared/lib/analysis-result-kind-labels';
+import {
   adminBadgeClassNames,
   adminClassNames,
   adminToneClassNames,
@@ -17,26 +21,26 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { prettyJson } from '../lib/test-analysis-result-parser';
+
 import { levelLabels, providerModeLabels, statusLabels } from './test-analysis-result-view.model';
 
-import type {
-  AnalysisPayload,
-  AnalysisResult,
-  AnalysisStatus,
-} from '../lib/test-analysis-result-parser';
+import type { AnalysisPayload, AnalysisResult } from '../lib/test-analysis-result-parser';
 import type { ReactNode } from 'react';
 
-const getStatusBadgeClassName = (status: AnalysisStatus) => {
-  if (status === 'READY') {
-    return adminBadgeClassNames.success;
-  }
-
-  if (status === 'FAILED') {
-    return adminBadgeClassNames.danger;
-  }
-
-  return adminBadgeClassNames.warning;
+const toneBadgeClassNames: Record<string, string> = {
+  success: adminBadgeClassNames.success,
+  warning: adminBadgeClassNames.warning,
+  danger: adminBadgeClassNames.danger,
+  neutral: adminBadgeClassNames.neutral,
 };
+
+/**
+ * Бейдж берёт цвет и подпись из вида результата, а не из `status`: раньше заглушка получала
+ * зелёное «Анализ готов» ровно так же, как настоящий ИИ-анализ.
+ */
+const getResultKindBadgeClassName = (kind: string | null | undefined) =>
+  toneBadgeClassNames[getAnalysisResultKindTone(kind)] ?? adminBadgeClassNames.neutral;
 
 export function SectionCard({
   icon: Icon,
@@ -107,8 +111,10 @@ export function AnalysisStatusBadges({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Badge variant="outline" className={getStatusBadgeClassName(analysis?.status ?? 'PENDING')}>
-        {statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ'}
+      <Badge variant="outline" className={getResultKindBadgeClassName(analysis?.resultKind)}>
+        {analysis?.resultKind
+          ? getAnalysisResultKindLabel(analysis.resultKind)
+          : (statusLabels[analysis?.status ?? 'PENDING'] ?? analysis?.status ?? 'анализ')}
       </Badge>
       {showProviderBadge && analysis?.providerMode ? (
         <Badge variant="outline">
@@ -119,6 +125,41 @@ export function AnalysisStatusBadges({
         <span className={`text-xs ${adminClassNames.text.muted}`}>{generatedAtLabel}</span>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Когда содержательного анализа нет, в карточке оставались сырой JSON сводки и служебный текст
+ * провайдера. Теперь они лежат под свёрнутым блоком: админу сперва нужен ответ «что случилось»,
+ * а полезная нагрузка нужна только при разборе инцидента.
+ */
+export function TechnicalDetailsSection({
+  summary,
+  rawText,
+}: {
+  summary: unknown;
+  rawText: string | null | undefined;
+}) {
+  return (
+    <details className={adminClassNames.panel.card}>
+      <summary
+        className={`cursor-pointer px-4 py-3 text-sm font-medium ${adminClassNames.text.heading}`}
+      >
+        Технические данные
+      </summary>
+      <div className="space-y-3 px-4 pb-4">
+        {summary === null || summary === undefined ? null : (
+          <pre className={adminClassNames.code.softBlock}>{prettyJson(summary)}</pre>
+        )}
+        {rawText ? (
+          <p
+            className={`whitespace-pre-wrap text-sm leading-relaxed ${adminClassNames.text.muted}`}
+          >
+            {rawText}
+          </p>
+        ) : null}
+      </div>
+    </details>
   );
 }
 

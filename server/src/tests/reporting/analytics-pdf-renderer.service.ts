@@ -81,7 +81,7 @@ export class TestsAnalyticsPdfRendererService {
     ];
 
     const publicLinksRows = [
-      ['ID', 'Код', 'Тема', 'Попытки', 'Завершено', 'Анализ'],
+      ['ID', 'Код', 'Тема', 'Попытки', 'Завершено', 'Анализ', 'Заглушек'],
       ...summary.publicLinks.map((item) => [
         item.publicLinkId,
         item.shortCode,
@@ -89,6 +89,7 @@ export class TestsAnalyticsPdfRendererService {
         item.attemptsTotal,
         item.attemptsCompleted,
         item.analysisReady,
+        item.analysisStub,
       ]),
     ];
 
@@ -130,6 +131,9 @@ export class TestsAnalyticsPdfRendererService {
       ['Попыток всего', summary.coverage.attemptsTotal],
       ['Попыток завершено', summary.coverage.attemptsCompleted],
       ['Анализ готов', summary.coverage.analysisReady],
+      ['Из них ИИ-анализ', summary.coverage.analysisAiReady],
+      ['Из них без ИИ', summary.coverage.analysisWithoutAi],
+      ['Заглушка без ИИ-промпта', summary.coverage.analysisStub],
       ['Анализ в процессе', summary.coverage.analysisPending],
       ['Ошибка анализа', summary.coverage.analysisFailed],
       ['Не оценено', summary.coverage.analysisMissing],
@@ -205,7 +209,7 @@ export class TestsAnalyticsPdfRendererService {
         {
           table: {
             headerRows: 1,
-            widths: ['auto', 'auto', '*', 'auto', 'auto', 'auto'],
+            widths: ['auto', 'auto', '*', 'auto', 'auto', 'auto', 'auto'],
             body: publicLinksRows,
           },
           layout: 'lightHorizontalLines',

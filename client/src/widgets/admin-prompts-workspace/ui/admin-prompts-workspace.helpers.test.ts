@@ -4,6 +4,7 @@ import {
   applySimulationError,
   applySimulationSuccess,
   buildRunningSimulationRun,
+  getPromptUsageSummary,
   resolveSelectedPromptModel,
   validateSimulationInput,
 } from './admin-prompts-workspace.helpers';
@@ -11,8 +12,38 @@ import {
 import type { DuplicateVariableData, SimulationRun } from '../model/types';
 import type {
   AdminPromptModelsResponseDtoModelsItem,
+  AnalysisPromptListResponseDtoPromptsItem,
+  AnalysisPromptListResponseDtoPromptsItemVersionsItem,
   PromptSimulationResponseDto,
 } from '@/shared/api/model';
+
+const makePromptVersion = (
+  overrides: Partial<AnalysisPromptListResponseDtoPromptsItemVersionsItem>,
+): AnalysisPromptListResponseDtoPromptsItemVersionsItem => ({
+  id: 1,
+  promptId: 7,
+  versionNumber: 1,
+  status: 'PUBLISHED',
+  model: 'openai/gpt-oss-120b',
+  temperature: 0.2,
+  prompt: 'Analyze',
+  usedInTestCount: 0,
+  publishedAt: '2026-09-01T10:00:00.000Z',
+  createdAt: '2026-09-01T10:00:00.000Z',
+  updatedAt: '2026-09-01T10:00:00.000Z',
+  ...overrides,
+});
+
+const makePrompt = (
+  versions: AnalysisPromptListResponseDtoPromptsItemVersionsItem[],
+): AnalysisPromptListResponseDtoPromptsItem => ({
+  id: 7,
+  title: 'Профориентация v3+',
+  description: null,
+  createdAt: '2026-09-01T10:00:00.000Z',
+  updatedAt: '2026-09-01T10:00:00.000Z',
+  versions,
+});
 
 const emptyDuplicateData: DuplicateVariableData = {
   duplicateKeys: [],
@@ -114,5 +145,53 @@ describe('admin prompts workspace helpers', () => {
     expect(resolveSelectedPromptModel('hidden', [paidModel], [freeModel, paidModel])).toBe(
       'model-paid',
     );
+  });
+});
+
+describe('getPromptUsageSummary', () => {
+  it('separates tests on the published version from tests left on older versions', () => {
+    const prompt = makePrompt([
+      makePromptVersion({ id: 43, versionNumber: 2, status: 'PUBLISHED', usedInTestCount: 1 }),
+      makePromptVersion({ id: 42, versionNumber: 1, status: 'ARCHIVED', usedInTestCount: 3 }),
+    ]);
+
+    expect(getPromptUsageSummary(prompt)).toEqual({
+      publishedVersionNumber: 2,
+      testsOnPublishedVersion: 1,
+      testsOnOutdatedVersions: 3,
+    });
+  });
+
+  it('reports no published version while the prompt is still a draft', () => {
+    const prompt = makePrompt([
+      makePromptVersion({ id: 42, versionNumber: 1, status: 'DRAFT', usedInTestCount: 0 }),
+    ]);
+
+    expect(getPromptUsageSummary(prompt)).toEqual({
+      publishedVersionNumber: null,
+      testsOnPublishedVersion: 0,
+      testsOnOutdatedVersions: 0,
+    });
+  });
+
+  it('counts draft versions that tests still reference as outdated usage', () => {
+    const prompt = makePrompt([
+      makePromptVersion({ id: 44, versionNumber: 3, status: 'DRAFT', usedInTestCount: 2 }),
+      makePromptVersion({ id: 43, versionNumber: 2, status: 'PUBLISHED', usedInTestCount: 5 }),
+    ]);
+
+    expect(getPromptUsageSummary(prompt)).toEqual({
+      publishedVersionNumber: 2,
+      testsOnPublishedVersion: 5,
+      testsOnOutdatedVersions: 2,
+    });
+  });
+
+  it('handles a prompt without versions', () => {
+    expect(getPromptUsageSummary(makePrompt([]))).toEqual({
+      publishedVersionNumber: null,
+      testsOnPublishedVersion: 0,
+      testsOnOutdatedVersions: 0,
+    });
   });
 });

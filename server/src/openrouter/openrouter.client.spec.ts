@@ -27,6 +27,34 @@ describe('openrouter client', () => {
     expect(createClient('-1').resolveTimeoutMs()).toBe(120_000);
   });
 
+  /**
+   * Находка аудита UX-02: бейдж «OpenRouter готов» считался по наличию ключа. Проверка связи
+   * обязана реально сходить в OpenRouter и честно сообщить об отказе.
+   */
+  it('reports a healthy connection when the model catalog loads', async () => {
+    const client = createClient(undefined);
+    const fetchModelsSpy = jest
+      .spyOn(client, 'fetchModels')
+      .mockResolvedValue({ defaultModel: 'm', models: [] });
+
+    const health = await client.checkHealth('test-key');
+
+    expect(fetchModelsSpy).toHaveBeenCalledWith('test-key');
+    expect(health.status).toBe('ok');
+    expect(health.errorMessage).toBeUndefined();
+    expect(Number.isNaN(Date.parse(health.checkedAt))).toBe(false);
+  });
+
+  it('reports a failed connection with the reason instead of throwing', async () => {
+    const client = createClient(undefined);
+    jest.spyOn(client, 'fetchModels').mockRejectedValue(new Error('User not found.'));
+
+    await expect(client.checkHealth('bad-key')).resolves.toMatchObject({
+      status: 'failed',
+      errorMessage: 'User not found.',
+    });
+  });
+
   it('passes provider preferences together with required structured parameters', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
       new Response(

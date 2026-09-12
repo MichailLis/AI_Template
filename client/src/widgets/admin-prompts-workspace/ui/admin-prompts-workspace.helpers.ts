@@ -1,8 +1,37 @@
 import type { DuplicateVariableData, SimulationRun } from '../model/types';
 import type {
   AdminPromptModelsResponseDtoModelsItem,
+  AnalysisPromptListResponseDtoPromptsItem,
   PromptSimulationResponseDto,
 } from '@/shared/api/model';
+
+export interface PromptUsageSummary {
+  publishedVersionNumber: number | null;
+  testsOnPublishedVersion: number;
+  testsOnOutdatedVersions: number;
+}
+
+/**
+ * У промпта действует одна опубликованная версия, но тест привязан к конкретной версии и может
+ * остаться на прежней. Поэтому «используется в N тестах» разделено: сколько тестов уже на
+ * действующей версии и сколько осталось на устаревших — второе число и есть цена молчаливой
+ * правки промпта.
+ */
+export const getPromptUsageSummary = (
+  prompt: AnalysisPromptListResponseDtoPromptsItem,
+): PromptUsageSummary => {
+  const publishedVersion = prompt.versions.find((version) => version.status === 'PUBLISHED');
+
+  const testsOnOutdatedVersions = prompt.versions
+    .filter((version) => version.id !== publishedVersion?.id)
+    .reduce((total, version) => total + version.usedInTestCount, 0);
+
+  return {
+    publishedVersionNumber: publishedVersion?.versionNumber ?? null,
+    testsOnPublishedVersion: publishedVersion?.usedInTestCount ?? 0,
+    testsOnOutdatedVersions,
+  };
+};
 
 interface ValidateSimulationInputParams {
   selectedModel: string;

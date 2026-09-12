@@ -29,6 +29,7 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
     consentVersion: link.consentVersion,
     consentText: link.consentTextSnapshot,
     title: link.topicVersion.title,
+    topicArchivedAt: toOptionalIsoString(link.topicVersion.topic.archivedAt),
     updatedAt: link.updatedAt.toISOString(),
     createdAt: link.createdAt.toISOString(),
   };

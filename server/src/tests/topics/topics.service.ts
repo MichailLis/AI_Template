@@ -222,6 +222,10 @@ export class TestsService {
       },
     });
 
+    const activePublicLinkCountByTopicId = await this.countActivePublicLinksByTopic(
+      topics.map((topic) => topic.id),
+    );
+
     return {
       topics: topics
         .filter((topic) => topic.activeDraftVersion)
@@ -233,9 +237,44 @@ export class TestsService {
           draftQuestionCount: topic.activeDraftVersion!._count.questions,
           publishedVersionNumber: topic.activePublishedVersion?.versionNumber ?? null,
           publishedTitle: topic.activePublishedVersion?.title ?? null,
+          activePublicLinkCount: activePublicLinkCountByTopicId.get(topic.id) ?? 0,
           updatedAt: topic.updatedAt.toISOString(),
         })),
     };
+  }
+
+  private async countActivePublicLinksByTopic(topicIds: number[]): Promise<Map<number, number>> {
+    const countByTopicId = new Map<number, number>();
+
+    if (topicIds.length === 0) {
+      return countByTopicId;
+    }
+
+    const activeLinks = await this.prisma.testPublicLink.findMany({
+      where: {
+        archivedAt: null,
+        isActive: true,
+        topicVersion: {
+          topicId: {
+            in: topicIds,
+          },
+        },
+      },
+      select: {
+        topicVersion: {
+          select: {
+            topicId: true,
+          },
+        },
+      },
+    });
+
+    for (const link of activeLinks) {
+      const topicId = link.topicVersion.topicId;
+      countByTopicId.set(topicId, (countByTopicId.get(topicId) ?? 0) + 1);
+    }
+
+    return countByTopicId;
   }
 
   async archiveTopic(

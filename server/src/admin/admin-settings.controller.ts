@@ -7,6 +7,7 @@ import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-set
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
+import { OpenRouterClientService, type OpenRouterHealth } from '../openrouter/openrouter.client';
 import {
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
@@ -25,16 +26,34 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 export class AdminSettingsController {
   constructor(
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
+    private readonly openRouterClient: OpenRouterClientService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
     private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
   ) {}
 
+  /**
+   * Настройки несут результат живой проверки связи, как настройки атласа несут `coverage`: бейдж
+   * в шапке должен отвечать на вопрос «работает ли», а не «задан ли ключ».
+   */
   @Get('openrouter')
-  @ApiOperation({ summary: 'Get OpenRouter settings' })
+  @ApiOperation({ summary: 'Get OpenRouter settings with a live connection check' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminOpenRouterSettingsResponseDto })
-  getOpenRouterSettings(@GetCurrentUserId() userId: number) {
-    return this.openRouterApiKeyService.getOpenRouterSettings(userId);
+  async getOpenRouterSettings(@GetCurrentUserId() userId: number) {
+    const settings = await this.openRouterApiKeyService.getOpenRouterSettings(userId);
+
+    const health: OpenRouterHealth = settings.openRouter.isConfigured
+      ? await this.openRouterClient.checkHealth(
+          await this.openRouterApiKeyService.getOpenRouterApiKey(),
+        )
+      : { status: 'not_configured', checkedAt: new Date().toISOString() };
+
+    return {
+      openRouter: {
+        ...settings.openRouter,
+        health,
+      },
+    };
   }
 
   @Get('profession-atlas')

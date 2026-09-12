@@ -83,6 +83,7 @@ const detailAttempt = {
   status: 'COMPLETED',
   analysis: {
     providerMode: 'ALGORITHM_LLM',
+    resultKind: 'AI',
     status: 'READY',
     summary: profOrientationSummary,
     rawText: null,

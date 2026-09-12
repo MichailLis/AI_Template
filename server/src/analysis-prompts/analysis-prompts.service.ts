@@ -81,7 +81,7 @@ export class AnalysisPromptsService {
     private readonly testsPromptSimulationReadService: TestsPromptSimulationReadService,
   ) {}
 
-  private toVersionResponse(version: AnalysisPromptVersionRecord) {
+  private toVersionResponse(version: AnalysisPromptVersionRecord, usedInTestCount = 0) {
     return {
       id: version.id,
       promptId: version.promptId,
@@ -90,21 +90,77 @@ export class AnalysisPromptsService {
       model: version.model,
       temperature: version.temperature,
       prompt: version.prompt,
+      usedInTestCount,
       publishedAt: version.publishedAt ? version.publishedAt.toISOString() : null,
       createdAt: version.createdAt.toISOString(),
       updatedAt: version.updatedAt.toISOString(),
     };
   }
 
-  private toPromptResponse(prompt: AnalysisPromptRecord) {
+  private toPromptResponse(
+    prompt: AnalysisPromptRecord,
+    usedInTestCountByVersionId: Map<number, number> = new Map(),
+  ) {
     return {
       id: prompt.id,
       title: prompt.title,
       description: prompt.description,
       createdAt: prompt.createdAt.toISOString(),
       updatedAt: prompt.updatedAt.toISOString(),
-      versions: prompt.versions.map((version) => this.toVersionResponse(version)),
+      versions: prompt.versions.map((version) =>
+        this.toVersionResponse(version, usedInTestCountByVersionId.get(version.id) ?? 0),
+      ),
     };
+  }
+
+  /**
+   * Считает тесты, а не версии тестов: у одной темы несколько версий может ссылаться на одну и ту
+   * же версию промпта, и админу нужно число тестов, которые правка промпта затронет.
+   */
+  private async countTestsByPromptVersion(versionIds: number[]): Promise<Map<number, number>> {
+    const countByVersionId = new Map<number, number>();
+
+    if (versionIds.length === 0) {
+      return countByVersionId;
+    }
+
+    const testVersions = await this.prisma.testTopicVersion.findMany({
+      where: {
+        analysisPromptVersionId: { in: versionIds },
+      },
+      select: {
+        analysisPromptVersionId: true,
+        topicId: true,
+      },
+    });
+
+    const topicIdsByVersionId = new Map<number, Set<number>>();
+
+    for (const testVersion of testVersions) {
+      const versionId = testVersion.analysisPromptVersionId;
+
+      if (versionId === null) {
+        continue;
+      }
+
+      const topicIds = topicIdsByVersionId.get(versionId) ?? new Set<number>();
+      topicIds.add(testVersion.topicId);
+      topicIdsByVersionId.set(versionId, topicIds);
+    }
+
+    for (const versionId of versionIds) {
+      countByVersionId.set(versionId, topicIdsByVersionId.get(versionId)?.size ?? 0);
+    }
+
+    return countByVersionId;
+  }
+
+  private async toPromptResponseWithUsage(prompt: AnalysisPromptRecord) {
+    const usedInTestCountByVersionId = await this.countTestsByPromptVersion(
+      prompt.versions.map((version) => version.id),
+    );
+
+    return this.toPromptResponse(prompt, usedInTestCountByVersionId);
   }
 
   private async getEditablePrompt(promptId: number) {
@@ -162,8 +218,12 @@ export class AnalysisPromptsService {
       orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
     });
 
+    const usedInTestCountByVersionId = await this.countTestsByPromptVersion(
+      prompts.flatMap((prompt) => prompt.versions.map((version) => version.id)),
+    );
+
     return {
-      prompts: prompts.map((prompt) => this.toPromptResponse(prompt)),
+      prompts: prompts.map((prompt) => this.toPromptResponse(prompt, usedInTestCountByVersionId)),
     };
   }
 
@@ -253,7 +313,7 @@ export class AnalysisPromptsService {
     });
 
     return {
-      prompt: this.toPromptResponse(prompt),
+      prompt: await this.toPromptResponseWithUsage(prompt),
     };
   }
 
@@ -271,7 +331,7 @@ export class AnalysisPromptsService {
     });
 
     return {
-      prompt: this.toPromptResponse(prompt),
+      prompt: await this.toPromptResponseWithUsage(prompt),
     };
   }
 
@@ -283,23 +343,43 @@ export class AnalysisPromptsService {
 
     const existingVersion = await this.prisma.analysisPromptVersion.findUnique({
       where: { id: versionId },
-      select: { id: true },
+      select: { id: true, promptId: true },
     });
 
     if (!existingVersion) {
       throw new NotFoundException('Analysis prompt version not found');
     }
 
-    const version = await this.prisma.analysisPromptVersion.update({
-      where: { id: versionId },
-      data: {
-        status: 'PUBLISHED',
-        publishedAt: new Date(),
-      },
+    /**
+     * У промпта действует ровно одна опубликованная версия. Без архивации прежней в базе
+     * накапливались две PUBLISHED-версии одновременно, и селектор в настройках теста предлагал
+     * подключить устаревшую версию с другой моделью.
+     */
+    const version = await this.prisma.$transaction(async (tx) => {
+      await tx.analysisPromptVersion.updateMany({
+        where: {
+          promptId: existingVersion.promptId,
+          status: 'PUBLISHED',
+          id: { not: versionId },
+        },
+        data: {
+          status: 'ARCHIVED',
+        },
+      });
+
+      return tx.analysisPromptVersion.update({
+        where: { id: versionId },
+        data: {
+          status: 'PUBLISHED',
+          publishedAt: new Date(),
+        },
+      });
     });
 
+    const usedInTestCountByVersionId = await this.countTestsByPromptVersion([versionId]);
+
     return {
-      version: this.toVersionResponse(version),
+      version: this.toVersionResponse(version, usedInTestCountByVersionId.get(versionId) ?? 0),
     };
   }
 

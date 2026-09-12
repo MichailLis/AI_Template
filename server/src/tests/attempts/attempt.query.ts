@@ -4,6 +4,11 @@ export const attemptWithSessionInclude = {
   publicLink: true,
   topicVersion: {
     include: {
+      topic: {
+        select: {
+          archivedAt: true,
+        },
+      },
       questions: {
         orderBy: {
           order: 'asc',

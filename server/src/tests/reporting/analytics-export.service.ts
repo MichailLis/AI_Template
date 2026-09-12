@@ -63,6 +63,9 @@ const toCoverageRows = (summary: AdminTestAnalyticsSummaryDto): MetricSection =>
   { label: 'Попыток всего', value: summary.coverage.attemptsTotal },
   { label: 'Попыток завершено', value: summary.coverage.attemptsCompleted },
   { label: 'Анализ готов', value: summary.coverage.analysisReady },
+  { label: 'Из них ИИ-анализ', value: summary.coverage.analysisAiReady },
+  { label: 'Из них без ИИ', value: summary.coverage.analysisWithoutAi },
+  { label: 'Заглушка без ИИ-промпта', value: summary.coverage.analysisStub },
   { label: 'Анализ в обработке', value: summary.coverage.analysisPending },
   { label: 'Ошибка анализа', value: summary.coverage.analysisFailed },
   { label: 'Не оценено', value: summary.coverage.analysisMissing },
@@ -202,6 +205,7 @@ export class TestsAnalyticsExportService {
       'Попытки',
       'Завершено',
       'Анализ готов',
+      'Заглушек',
       'Доля, %',
     ]);
     for (const row of summary.publicLinks) {
@@ -213,6 +217,7 @@ export class TestsAnalyticsExportService {
         row.attemptsTotal,
         row.attemptsCompleted,
         row.analysisReady,
+        row.analysisStub,
         row.share,
       ]);
     }

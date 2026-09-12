@@ -13,6 +13,7 @@ export const AnalysisPromptVersionSchema = z.object({
   model: z.string(),
   temperature: z.number().min(0).max(2),
   prompt: z.string(),
+  usedInTestCount: z.number().int().min(0),
   publishedAt: IsoDateStringSchema.nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,

@@ -55,6 +55,8 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   consentVersion: string;
   consentText: string;
   title: string;
+  /** @nullable */
+  topicArchivedAt: string | null;
   updatedAt: string;
   createdAt: string;
 };

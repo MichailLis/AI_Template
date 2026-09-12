@@ -44,6 +44,16 @@ describe('AnalysisPromptsService', () => {
       findUnique: jest.Mock;
       update: jest.Mock;
     };
+    testTopicVersion: {
+      findMany: jest.Mock;
+    };
+    $transaction: jest.Mock;
+  };
+  let txMock: {
+    analysisPromptVersion: {
+      updateMany: jest.Mock;
+      update: jest.Mock;
+    };
   };
   let openRouterApiKeyServiceMock: {
     getOpenRouterApiKey: jest.Mock;
@@ -75,6 +85,12 @@ describe('AnalysisPromptsService', () => {
   };
 
   beforeEach(() => {
+    txMock = {
+      analysisPromptVersion: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        update: jest.fn(),
+      },
+    };
     prismaMock = {
       analysisPrompt: {
         findUnique: jest.fn(),
@@ -86,6 +102,10 @@ describe('AnalysisPromptsService', () => {
         findUnique: jest.fn(),
         update: jest.fn(),
       },
+      testTopicVersion: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      $transaction: jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock)),
     };
     openRouterApiKeyServiceMock = {
       getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
@@ -110,6 +130,49 @@ describe('AnalysisPromptsService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('listPrompts counts each test once, however many of its versions use the prompt', async () => {
+    prismaMock.analysisPrompt.findMany.mockResolvedValue([
+      {
+        ...promptRecord,
+        versions: [
+          { ...promptRecord.versions[0], id: 43, versionNumber: 2, status: 'PUBLISHED' },
+          { ...promptRecord.versions[0], id: 42, versionNumber: 1, status: 'ARCHIVED' },
+        ],
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { analysisPromptVersionId: 43, topicId: 1 },
+      { analysisPromptVersionId: 43, topicId: 1 },
+      { analysisPromptVersionId: 43, topicId: 2 },
+    ]);
+
+    const result = await service.listPrompts(3);
+
+    expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith({
+      where: {
+        analysisPromptVersionId: { in: [43, 42] },
+      },
+      select: {
+        analysisPromptVersionId: true,
+        topicId: true,
+      },
+    });
+    expect(
+      result.prompts[0]?.versions.map((version) => [version.id, version.usedInTestCount]),
+    ).toEqual([
+      [43, 2],
+      [42, 0],
+    ]);
+  });
+
+  it('listPrompts does not query test usage when there are no prompts', async () => {
+    prismaMock.analysisPrompt.findMany.mockResolvedValue([]);
+
+    await expect(service.listPrompts(3)).resolves.toEqual({ prompts: [] });
+
+    expect(prismaMock.testTopicVersion.findMany).not.toHaveBeenCalled();
   });
 
   it('listPrompts returns prompts with version metadata', async () => {
@@ -318,9 +381,10 @@ describe('AnalysisPromptsService', () => {
   it('publishVersion marks an existing draft as published', async () => {
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
       id: 42,
+      promptId: 7,
       status: 'DRAFT',
     });
-    prismaMock.analysisPromptVersion.update.mockResolvedValue({
+    txMock.analysisPromptVersion.update.mockResolvedValue({
       ...promptRecord.versions[0],
       status: 'PUBLISHED',
       publishedAt: new Date('2026-05-01T10:10:00.000Z'),
@@ -332,12 +396,65 @@ describe('AnalysisPromptsService', () => {
       },
     });
 
-    const updateMock = prismaMock.analysisPromptVersion
+    const updateMock = txMock.analysisPromptVersion
       .update as jest.MockedFunction<PublishVersionUpdate>;
     const updateArgs = updateMock.mock.calls[0]?.[0];
 
     expect(updateArgs?.where.id).toBe(42);
     expect(updateArgs?.data.status).toBe('PUBLISHED');
+  });
+
+  it('publishVersion archives the previously published version of the same prompt', async () => {
+    prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
+      id: 43,
+      promptId: 7,
+      status: 'DRAFT',
+    });
+    txMock.analysisPromptVersion.updateMany.mockResolvedValue({ count: 1 });
+    txMock.analysisPromptVersion.update.mockResolvedValue({
+      ...promptRecord.versions[0],
+      id: 43,
+      versionNumber: 2,
+      status: 'PUBLISHED',
+      publishedAt: new Date('2026-05-01T10:10:00.000Z'),
+    });
+
+    await expect(service.publishVersion(3, 43)).resolves.toMatchObject({
+      version: {
+        id: 43,
+        status: 'PUBLISHED',
+      },
+    });
+
+    expect(txMock.analysisPromptVersion.updateMany).toHaveBeenCalledWith({
+      where: {
+        promptId: 7,
+        status: 'PUBLISHED',
+        id: { not: 43 },
+      },
+      data: {
+        status: 'ARCHIVED',
+      },
+    });
+  });
+
+  it('publishVersion archives the previous version and publishes the new one in one transaction', async () => {
+    prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
+      id: 43,
+      promptId: 7,
+      status: 'DRAFT',
+    });
+    txMock.analysisPromptVersion.update.mockResolvedValue({
+      ...promptRecord.versions[0],
+      id: 43,
+      status: 'PUBLISHED',
+      publishedAt: new Date('2026-05-01T10:10:00.000Z'),
+    });
+
+    await service.publishVersion(3, 43);
+
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    expect(prismaMock.analysisPromptVersion.update).not.toHaveBeenCalled();
   });
 
   it('publishVersion throws NotFoundException when version does not exist', async () => {

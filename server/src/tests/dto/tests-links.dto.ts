@@ -13,8 +13,15 @@ import {
   PublicStudentEducationLevelSchema,
   PublicStudentGenderSchema,
 } from './tests-public.dto';
+import { ANALYSIS_RESULT_KINDS } from '../analysis/analysis-result-kind';
 
 const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
+
+/**
+ * Классификация берётся из `ANALYSIS_RESULT_KINDS`, поэтому новый вид анализа нельзя добавить в
+ * код, забыв про контракт: список один.
+ */
+export const AdminAnalysisResultKindSchema = z.enum(ANALYSIS_RESULT_KINDS);
 
 const HttpUrlSchema = z
   .string()
@@ -140,6 +147,7 @@ export const AdminPublicLinkSchema = z.object({
   consentVersion: z.string(),
   consentText: z.string(),
   title: z.string(),
+  topicArchivedAt: z.string().nullable(),
   updatedAt: z.string(),
   createdAt: z.string(),
 });
@@ -284,6 +292,9 @@ export const AdminPublicAttemptSummarySchema = z.object({
   llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
     'Статус асинхронного LLM-обогащения для двухфазного анализа',
   ),
+  analysisResultKind: AdminAnalysisResultKindSchema.describe(
+    'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
+  ),
 });
 
 export const AdminPublicAttemptsListQuerySchema = z.object({
@@ -310,6 +321,7 @@ export const AdminPublicAttemptAnswerSchema = z.object({
 export const AdminPublicAttemptAnalysisSchema = z
   .object({
     providerMode: PublicSessionAnalysisProviderModeSchema,
+    resultKind: AdminAnalysisResultKindSchema,
     status: PublicSessionAnalysisStatusSchema,
     summary: z.unknown().nullable(),
     rawText: z.string().nullable(),

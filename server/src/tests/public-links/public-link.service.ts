@@ -469,7 +469,7 @@ export class TestsPublicLinkService {
       throw new NotFoundException('Public test link not found');
     }
 
-    ensurePublicLinkAccessible(link, link.topicVersion.status);
+    ensurePublicLinkAccessible(link, link.topicVersion);
 
     return link;
   }

@@ -1,4 +1,5 @@
 import { type TestTopicListItem } from '@/features/tests';
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 interface PendingQuestion {
@@ -42,14 +43,56 @@ const getDeleteTopicDescription = (topic: TestTopicListItem | null) =>
     ? `Тест "${topic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
     : 'Тест будет удален вместе с черновиком и опубликованными версиями.';
 
+/**
+ * Архив теста закрывает доступ по всем его публичным ссылкам, поэтому подтверждение обязано
+ * назвать цену действия: сколько ссылок перестанет работать для участников.
+ */
+const getClosedLinksSentence = (activePublicLinkCount: number) => {
+  if (activePublicLinkCount === 0) {
+    return 'Активных ссылок нет, доступ закрывать не придется.';
+  }
+
+  const verb = pluralizeRu(activePublicLinkCount, [
+    'Будет закрыта',
+    'Будут закрыты',
+    'Будут закрыты',
+  ]);
+  const noun = pluralizeRu(activePublicLinkCount, [
+    'активная ссылка',
+    'активные ссылки',
+    'активных ссылок',
+  ]);
+
+  return `${verb} ${activePublicLinkCount} ${noun}: участники больше не смогут пройти тест.`;
+};
+
+const getRestoredLinksSentence = (activePublicLinkCount: number) => {
+  if (activePublicLinkCount === 0) {
+    return 'Активных ссылок у теста нет — создайте ссылку, чтобы участники смогли его пройти.';
+  }
+
+  const verb = pluralizeRu(activePublicLinkCount, [
+    'Снова заработает',
+    'Снова заработают',
+    'Снова заработают',
+  ]);
+  const noun = pluralizeRu(activePublicLinkCount, [
+    'активная ссылка',
+    'активные ссылки',
+    'активных ссылок',
+  ]);
+
+  return `${verb} ${activePublicLinkCount} ${noun} на этот тест.`;
+};
+
 const getArchiveTopicDescription = (topic: TestTopicListItem | null) =>
   topic
-    ? `Тест "${topic.draftTitle}" будет скрыт из активного списка и станет доступен во вкладке "Архив".`
-    : 'Тест будет перемещен в архив.';
+    ? `Тест "${topic.draftTitle}" будет скрыт из активного списка и станет доступен во вкладке "Архив". ${getClosedLinksSentence(topic.activePublicLinkCount)}`
+    : 'Тест будет перемещен в архив, а доступ по его публичным ссылкам закроется.';
 
 const getRestoreTopicDescription = (topic: TestTopicListItem | null) =>
   topic
-    ? `Тест "${topic.draftTitle}" снова появится во вкладке "Активные".`
+    ? `Тест "${topic.draftTitle}" снова появится во вкладке "Активные". ${getRestoredLinksSentence(topic.activePublicLinkCount)}`
     : 'Тест будет восстановлен в активный список.';
 
 const getDeleteQuestionDescription = (question: PendingQuestion | null) =>

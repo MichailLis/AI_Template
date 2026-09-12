@@ -16,5 +16,10 @@ export type TestsTopicListResponseDtoTopicsItem = {
   publishedVersionNumber: number | null;
   /** @nullable */
   publishedTitle: string | null;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  activePublicLinkCount: number;
   updatedAt: string;
 };

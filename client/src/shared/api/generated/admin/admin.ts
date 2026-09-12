@@ -863,7 +863,7 @@ export const useAdminControllerUpdateUserRole = <
   return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
 };
 /**
- * @summary Get OpenRouter settings
+ * @summary Get OpenRouter settings with a live connection check
  */
 export const adminSettingsControllerGetOpenRouterSettings = (
   options?: SecondParameter<typeof customInstance>,
@@ -978,7 +978,7 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Get OpenRouter settings
+ * @summary Get OpenRouter settings with a live connection check
  */
 
 export function useAdminSettingsControllerGetOpenRouterSettings<

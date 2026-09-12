@@ -31,6 +31,21 @@ export type AdminTestAnalyticsSummaryDtoCoverage = {
    * @minimum 0
    * @maximum 9007199254740991
    */
+  analysisAiReady: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  analysisWithoutAi: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  analysisStub: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
   analysisPending: number;
   /**
    * @minimum 0

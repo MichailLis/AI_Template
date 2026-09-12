@@ -39,6 +39,7 @@ describe('analysis prompt DTOs', () => {
               model: 'google/gemini-2.0-flash-exp:free',
               temperature: 0.2,
               prompt: 'Analyze {{answers}}',
+              usedInTestCount: 3,
               publishedAt: '2026-05-01T10:05:00.000Z',
               createdAt: '2026-05-01T10:00:00.000Z',
               updatedAt: '2026-05-01T10:05:00.000Z',

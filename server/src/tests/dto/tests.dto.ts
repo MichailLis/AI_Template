@@ -47,6 +47,7 @@ export const TestsTopicSummarySchema = z.object({
   draftQuestionCount: z.number(),
   publishedVersionNumber: z.number().nullable(),
   publishedTitle: z.string().nullable(),
+  activePublicLinkCount: z.number().int().min(0),
   updatedAt: z.string(),
 });
 

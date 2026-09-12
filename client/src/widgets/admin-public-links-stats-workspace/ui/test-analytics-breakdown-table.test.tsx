@@ -27,6 +27,9 @@ const createSummary = (
     attemptsTotal: attempts.length,
     attemptsCompleted: attempts.length,
     analysisReady: attempts.length,
+    analysisAiReady: attempts.length,
+    analysisWithoutAi: 0,
+    analysisStub: 0,
     analysisPending: 0,
     analysisFailed: 0,
     analysisMissing: 0,
@@ -65,6 +68,7 @@ describe('TestAnalyticsBreakdownTables', () => {
         finishedAt: '2026-05-18T08:45:00.000Z',
         status: 'COMPLETED',
         analysisStatus: 'READY',
+        analysisResultKind: 'AI',
         llmStatus: 'failed',
       },
       {
@@ -75,6 +79,7 @@ describe('TestAnalyticsBreakdownTables', () => {
         finishedAt: '2026-05-18T09:45:00.000Z',
         status: 'COMPLETED',
         analysisStatus: 'READY',
+        analysisResultKind: 'AI',
         llmStatus: 'pending',
       },
       {
@@ -85,6 +90,7 @@ describe('TestAnalyticsBreakdownTables', () => {
         finishedAt: '2026-05-18T10:45:00.000Z',
         status: 'COMPLETED',
         analysisStatus: 'READY',
+        analysisResultKind: 'AI',
         llmStatus: 'ready',
       },
       {
@@ -95,6 +101,7 @@ describe('TestAnalyticsBreakdownTables', () => {
         finishedAt: '2026-05-18T11:45:00.000Z',
         status: 'COMPLETED',
         analysisStatus: 'READY',
+        analysisResultKind: 'AI',
         llmStatus: 'not_requested',
       },
     ]);
@@ -105,5 +112,30 @@ describe('TestAnalyticsBreakdownTables', () => {
     expect(screen.getByText('ИИ в обработке')).toBeInTheDocument();
     expect(screen.getByText('ИИ готов')).toBeInTheDocument();
     expect(screen.getByText('ИИ не запрашивался')).toBeInTheDocument();
+  });
+
+  /**
+   * Найдено визуальной проверкой: колонка «Анализ» этой таблицы показывала сырой `READY`, поэтому
+   * заглушка выглядела здесь так же, как настоящий ИИ-анализ, хотя KPI её уже не засчитывал.
+   */
+  it('names the analysis source instead of printing the raw record status', () => {
+    const summary = createSummary([
+      {
+        attemptId: 191,
+        publicLinkId: 1,
+        shortCode: 'MC5CKWDB',
+        startedAt: '2026-09-06T18:30:00.000Z',
+        finishedAt: '2026-09-06T18:36:00.000Z',
+        status: 'COMPLETED',
+        analysisStatus: 'READY',
+        analysisResultKind: 'STUB',
+        llmStatus: null,
+      },
+    ]);
+
+    render(<TestAnalyticsBreakdownTables summary={summary} formatDateTime={(v) => v ?? '—'} />);
+
+    expect(screen.getByText('Заглушка, промпт не подключен')).toBeInTheDocument();
+    expect(screen.queryByText('READY')).not.toBeInTheDocument();
   });
 });

@@ -24,6 +24,7 @@ interface AttemptAnswer {
 interface AttemptAnalysis {
   status: string;
   providerMode: string;
+  resultKind: string;
   generatedAt: string | null;
   summary: unknown;
   rawText: string | null;

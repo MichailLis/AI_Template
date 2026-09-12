@@ -46,6 +46,7 @@ describe('PublicLinksListCard', () => {
       entryProfileMode: 'EDUCATION_DEMOGRAPHIC' as const,
       createdAt,
       archivedAt: null,
+      topicArchivedAt: null,
       isActive: true,
     };
 
@@ -66,6 +67,36 @@ describe('PublicLinksListCard', () => {
     ).toBeInTheDocument();
   });
 
+  it('reports that the test is archived instead of calling its link active', () => {
+    const archivedTopicLink = {
+      id: 7,
+      shortCode: 'AUDITA01',
+      title: 'AUDIT-A',
+      educationOrganizationName: null,
+      publicTemplate: 'STANDARD' as const,
+      entryProfileMode: 'EDUCATION' as const,
+      createdAt: '2026-05-19T10:30:00.000Z',
+      archivedAt: null,
+      topicArchivedAt: '2026-09-11T10:00:00.000Z',
+      isActive: true,
+    };
+
+    render(
+      <PublicLinksListCard
+        publicLinksTab="active"
+        visiblePublicLinks={[archivedTopicLink]}
+        publicLinksLoading={false}
+        publicLinksError={false}
+        searchValue=""
+        {...baseHandlers}
+      />,
+    );
+
+    expect(screen.getByText('Тест в архиве')).toBeInTheDocument();
+    expect(screen.queryByText('Активна')).not.toBeInTheDocument();
+    expect(screen.getByText('Доступ закрыт для участников')).toBeInTheDocument();
+  });
+
   it('opens the page styling action for active STANDARD links', async () => {
     const user = userEvent.setup();
     const standardLink = {
@@ -77,6 +108,7 @@ describe('PublicLinksListCard', () => {
       entryProfileMode: 'EDUCATION' as const,
       createdAt: '2026-05-19T10:30:00.000Z',
       archivedAt: null,
+      topicArchivedAt: null,
       isActive: true,
     };
 

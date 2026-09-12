@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind } from './adminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind';
 import type { AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus';
 import type { AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemLlmStatus';
 import type { AdminTestAnalyticsSummaryDtoAttemptsItemStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemStatus';
@@ -36,4 +37,6 @@ export type AdminTestAnalyticsSummaryDtoAttemptsItem = {
    * @nullable
    */
   llmStatus: AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus;
+  /** Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа */
+  analysisResultKind: AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind;
 };

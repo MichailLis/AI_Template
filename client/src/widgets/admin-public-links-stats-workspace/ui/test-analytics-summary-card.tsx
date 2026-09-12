@@ -63,13 +63,32 @@ const getMetrics = (summary: AdminTestAnalyticsSummaryDto): MetricItem[] => {
       tone: 'accent',
       icon: Users,
     },
+    /**
+     * «Готовый анализ» считает только содержательные результаты: заглушки идут отдельной плиткой.
+     * Иначе тест с пятью заглушками из двенадцати попыток показывал 100% готовности.
+     */
     {
       id: 'analysis',
       label: 'Готовый анализ',
       value: formatNumber(coverage.analysisReady),
-      hint: `${formatShare(toShare(coverage.analysisReady, coverage.attemptsTotal))} от попыток`,
+      hint: `${formatNumber(coverage.analysisAiReady)} с ИИ · ${formatNumber(
+        coverage.analysisWithoutAi,
+      )} без ИИ · ${formatShare(toShare(coverage.analysisReady, coverage.attemptsTotal))} от попыток`,
       tone: 'success',
       icon: CheckCircle2,
+    },
+    {
+      id: 'analysisStub',
+      label: 'Заглушки без ИИ',
+      value: formatNumber(coverage.analysisStub),
+      hint:
+        coverage.analysisStub > 0
+          ? `${formatShare(
+              toShare(coverage.analysisStub, coverage.attemptsTotal),
+            )} от попыток — промпт анализа не подключен`
+          : 'промпт анализа подключен везде',
+      tone: coverage.analysisStub > 0 ? 'warning' : 'info',
+      icon: AlertTriangle,
     },
     {
       id: 'v3',

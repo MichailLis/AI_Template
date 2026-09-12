@@ -261,6 +261,12 @@ const generateOpenRouterPrompt = async (
   }
 };
 
+export type OpenRouterHealth = {
+  status: 'ok' | 'failed' | 'not_configured';
+  checkedAt: string;
+  errorMessage?: string;
+};
+
 @Injectable()
 export class OpenRouterClientService {
   constructor(private readonly config: ConfigService) {}
@@ -271,6 +277,26 @@ export class OpenRouterClientService {
 
   fetchModels(apiKey: string) {
     return fetchOpenRouterModels(this.config, apiKey);
+  }
+
+  /**
+   * Проверка связи для экрана настроек. Раньше бейдж «OpenRouter готов» считался по наличию ключа
+   * и оставался зелёным при отозванном ключе или недоступном сервисе. Каталог моделей — самый
+   * лёгкий настоящий вызов с этим ключом; отказ возвращается как результат, а не исключение,
+   * чтобы экран настроек открывался и при сломанной интеграции.
+   */
+  async checkHealth(apiKey: string): Promise<OpenRouterHealth> {
+    try {
+      await this.fetchModels(apiKey);
+
+      return { status: 'ok', checkedAt: new Date().toISOString() };
+    } catch (error) {
+      return {
+        status: 'failed',
+        checkedAt: new Date().toISOString(),
+        errorMessage: error instanceof Error ? error.message : 'OpenRouter connection check failed',
+      };
+    }
   }
 
   generatePrompt(apiKey: string, dto: OpenRouterPromptRequest, options?: { timeoutMs?: number }) {
