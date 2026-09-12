@@ -138,6 +138,9 @@ describe('tests link DTO profile mode fields', () => {
     const result = AdminPublicLinkSchema.parse({
       id: 1,
       publishedVersionId: 10,
+      topicVersionNumber: 1,
+      activePublishedVersionId: 10,
+      activePublishedVersionNumber: 1,
       topicId: 2,
       educationOrganizationId: null,
       educationOrganizationName: null,

@@ -124,6 +124,11 @@ export const AdminUpdatePublicLinkSchema = z
 export const AdminPublicLinkSchema = z.object({
   id: z.number(),
   publishedVersionId: z.number(),
+  /** Ссылка остаётся на своей версии теста, поэтому номер версии показывается рядом с ней. */
+  topicVersionNumber: z.number().int().min(1),
+  /** Опубликованная сейчас версия теста; отличается от `publishedVersionId`, если ссылка отстала. */
+  activePublishedVersionId: z.number().int().nullable(),
+  activePublishedVersionNumber: z.number().int().min(1).nullable(),
   topicId: z.number(),
   educationOrganizationId: z.number().nullable(),
   educationOrganizationName: z.string().nullable(),

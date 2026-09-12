@@ -456,6 +456,47 @@ export class TestsPublicLinkService {
     return mapAdminPublicLink(restored);
   }
 
+  /**
+   * Ссылка сама за новой версией теста не следует (решение ait-rcw.2), поэтому перевод — явное
+   * действие. Начатые прохождения доводятся по своей версии: вопросы берутся из версии попытки.
+   */
+  async moveToActivePublishedVersion(userId: number, linkId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const existing = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: {
+        id: true,
+        archivedAt: true,
+        topicVersion: {
+          select: {
+            topic: {
+              select: { activePublishedVersionId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existing || existing.archivedAt) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    const activePublishedVersionId = existing.topicVersion.topic.activePublishedVersionId;
+
+    if (!activePublishedVersionId) {
+      throw new BadRequestException('Test has no published version to move the link to');
+    }
+
+    const moved = await this.prisma.testPublicLink.update({
+      where: { id: linkId },
+      data: { topicVersionId: activePublishedVersionId },
+      include: publicLinkAdminInclude,
+    });
+
+    return mapAdminPublicLink(moved);
+  }
+
   async getAccessiblePublicLinkByCode(shortCode: string): Promise<PublicLinkWithTopicVersion> {
     const normalizedCode = shortCode.trim().toUpperCase();
     const link = await this.prisma.testPublicLink.findUnique({

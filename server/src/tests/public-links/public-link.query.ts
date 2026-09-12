@@ -21,10 +21,17 @@ export const publicLinkAdminInclude = {
     select: {
       id: true,
       topicId: true,
+      versionNumber: true,
       title: true,
       topic: {
         select: {
           archivedAt: true,
+          activePublishedVersion: {
+            select: {
+              id: true,
+              versionNumber: true,
+            },
+          },
         },
       },
     },

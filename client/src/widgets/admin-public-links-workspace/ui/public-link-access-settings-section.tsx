@@ -21,7 +21,7 @@ function PublicTemplateField({
         value={newPublicTemplate}
         onChange={(event) => onPublicTemplateChange(event.target.value as typeof newPublicTemplate)}
       >
-        <option value="STANDARD">Текущий</option>
+        <option value="STANDARD">Стандартный</option>
         <option value="POLUS">Polus</option>
       </AdminSelectField>
       <p className={`text-xs ${adminClassNames.text.muted}`}>

@@ -6,6 +6,10 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
   return {
     id: link.id,
     publishedVersionId: link.topicVersion.id,
+    topicVersionNumber: link.topicVersion.versionNumber,
+    activePublishedVersionId: link.topicVersion.topic.activePublishedVersion?.id ?? null,
+    activePublishedVersionNumber:
+      link.topicVersion.topic.activePublishedVersion?.versionNumber ?? null,
     topicId: link.topicVersion.topicId,
     educationOrganizationId: link.educationOrganization?.id ?? null,
     educationOrganizationName: link.educationOrganization?.name ?? null,

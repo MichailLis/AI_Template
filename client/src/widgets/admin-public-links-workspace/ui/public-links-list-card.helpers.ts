@@ -20,6 +20,11 @@ export interface PublicLinkListItem {
    */
   topicArchivedAt: string | null;
   isActive: boolean;
+  publishedVersionId: number;
+  /** Ссылка остаётся на своей версии теста (решение ait-rcw.2), поэтому версия показывается явно. */
+  topicVersionNumber: number;
+  activePublishedVersionId: number | null;
+  activePublishedVersionNumber: number | null;
 }
 
 export const isPublicLinkClosedForStudents = (link: PublicLinkListItem) =>
@@ -49,7 +54,20 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
   return adminBadgeClassNames.success;
 };
 
-export { getEntryProfileModeLabel, getPublicTemplateLabel };
+export const getPublicTemplateBadgeLabel = (link: PublicLinkListItem) =>
+  `Шаблон: ${getPublicTemplateLabel(link.publicTemplate)}`;
+
+export const getEntryProfileModeBadgeLabel = (link: PublicLinkListItem) =>
+  `Анкета: ${getEntryProfileModeLabel(link.entryProfileMode)}`;
+
+export const getLinkVersionLabel = (link: PublicLinkListItem) => `Тест v${link.topicVersionNumber}`;
+
+/** Номер опубликованной версии теста, если ссылка ведёт на более старую; иначе `null`. */
+export const getNewerPublishedVersionNumber = (link: PublicLinkListItem) =>
+  link.activePublishedVersionId !== null &&
+  link.activePublishedVersionId !== link.publishedVersionId
+    ? link.activePublishedVersionNumber
+    : null;
 
 export const formatPublicLinkCreatedAt = (value: string) => formatDateTime(value);
 
@@ -83,8 +101,9 @@ export const buildLinkSearchText = (link: PublicLinkListItem) => {
     link.title,
     link.educationOrganizationName ?? '',
     getLinkStateLabel(link),
-    getPublicTemplateLabel(link.publicTemplate),
-    getEntryProfileModeLabel(link.entryProfileMode),
+    getLinkVersionLabel(link),
+    getPublicTemplateBadgeLabel(link),
+    getEntryProfileModeBadgeLabel(link),
   ]
     .join(' ')
     .toLowerCase();

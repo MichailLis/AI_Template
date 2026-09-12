@@ -83,11 +83,17 @@ const buildListCardProps = (
   onRegenerateShortCode: state.handleRegeneratePublicLinkShortCode,
   onArchivePublicLink: state.setPendingDeletePublicLinkId,
   onRestorePublicLink: state.handleRestorePublicLink,
+  onMoveToActiveVersion: state.setPendingMovePublicLink,
   isUpdatingPublicLink: state.updatePublicLinkMutation.isPending,
   isRegeneratingShortCode: state.regeneratePublicLinkShortCodeMutation.isPending,
   isArchivingPublicLink: state.deletePublicLinkMutation.isPending,
   isRestoringPublicLink: state.restorePublicLinkMutation.isPending,
 });
+
+const buildMoveDialogTitle = (link: PublicLinkListItem | null) =>
+  link
+    ? `Перевести ссылку ${link.shortCode} с v${link.topicVersionNumber} на v${link.activePublishedVersionNumber}?`
+    : 'Перевести ссылку на опубликованную версию?';
 
 export function AdminPublicLinksWorkspace() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -147,6 +153,16 @@ export function AdminPublicLinksWorkspace() {
         isConfirming={workspaceState.deletePublicLinkMutation.isPending}
         onConfirm={workspaceState.handleDeletePublicLink}
         onClose={() => workspaceState.setPendingDeletePublicLinkId(null)}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(workspaceState.pendingMovePublicLink)}
+        title={buildMoveDialogTitle(workspaceState.pendingMovePublicLink)}
+        description="Новые прохождения по ссылке пойдут по опубликованной версии теста. Начатые прохождения завершатся по прежней версии, поэтому в аналитике по ссылке будут результаты обеих версий."
+        confirmLabel="Перевести"
+        isConfirming={workspaceState.moveToActivePublishedVersionMutation.isPending}
+        onConfirm={workspaceState.handleMovePublicLinkToActiveVersion}
+        onClose={() => workspaceState.setPendingMovePublicLink(null)}
       />
     </>
   );

@@ -98,6 +98,8 @@ export function useAdminPublicLinksWorkspace({
     setPublicLinksTab: formState.setPublicLinksTab,
     setSelectedPublicLinkId: formState.setSelectedPublicLinkId,
     setPendingDeletePublicLinkId: formState.setPendingDeletePublicLinkId,
+    pendingMovePublicLink: formState.pendingMovePublicLink,
+    setPendingMovePublicLink: formState.setPendingMovePublicLink,
     setNewPublicShortCode: formState.setNewPublicShortCode,
     setNewPersonalDataProcessingMode: formState.setNewPersonalDataProcessingMode,
     setNewEducationOrganizationId,

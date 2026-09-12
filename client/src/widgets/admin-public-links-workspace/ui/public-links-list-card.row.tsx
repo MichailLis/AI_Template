@@ -1,5 +1,6 @@
 import {
   Archive,
+  ArrowUpRight,
   MoreHorizontal,
   Palette,
   Power,
@@ -17,11 +18,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { PublicLinkQuickActions } from './public-link-quick-actions';
 import {
   formatPublicLinkCreatedAt,
-  getEntryProfileModeLabel,
+  getEntryProfileModeBadgeLabel,
   getLinkRowClassName,
   getLinkStateClassName,
   getLinkStateLabel,
-  getPublicTemplateLabel,
+  getLinkVersionLabel,
+  getNewerPublishedVersionNumber,
+  getPublicTemplateBadgeLabel,
   isPublicLinkClosedForStudents,
 } from './public-links-list-card.helpers';
 
@@ -37,6 +40,7 @@ export interface PublicLinkActionHandlers {
   onRegenerateShortCode: (linkId: number) => void;
   onArchivePublicLink: (linkId: number) => void;
   onRestorePublicLink: (linkId: number) => void;
+  onMoveToActiveVersion: (link: PublicLinkListItem) => void;
   isUpdatingPublicLink: boolean;
   isRegeneratingShortCode: boolean;
   isArchivingPublicLink: boolean;
@@ -69,12 +73,27 @@ function ActivePublicLinkActions({
   onOpenBrandingBuilder,
   onRegenerateShortCode,
   onArchivePublicLink,
+  onMoveToActiveVersion,
   isUpdatingPublicLink,
   isRegeneratingShortCode,
   isArchivingPublicLink,
 }: ActivePublicLinkActionsProps) {
+  const newerVersionNumber = getNewerPublishedVersionNumber(link);
+
   return (
     <>
+      {newerVersionNumber !== null ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 justify-start px-2 text-left text-sm"
+          onClick={() => onMoveToActiveVersion(link)}
+        >
+          <ArrowUpRight className="mr-2 h-3.5 w-3.5" />
+          {`Перевести на v${newerVersionNumber}`}
+        </Button>
+      ) : null}
       {link.publicTemplate === 'STANDARD' ? (
         <Button
           type="button"
@@ -185,6 +204,7 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
               onTogglePublicLink={closeAfter(handlers.onTogglePublicLink)}
               onRegenerateShortCode={closeAfter(handlers.onRegenerateShortCode)}
               onArchivePublicLink={closeAfter(handlers.onArchivePublicLink)}
+              onMoveToActiveVersion={closeAfter(handlers.onMoveToActiveVersion)}
             />
           ) : (
             <ArchivedPublicLinkActions
@@ -205,6 +225,8 @@ export function PublicLinkRow({
   onOpenShortLink,
   ...handlers
 }: PublicLinkRowProps) {
+  const newerVersionNumber = getNewerPublishedVersionNumber(link);
+
   return (
     <div className={cn(adminClassNames.publicLinks.rowBase, getLinkRowClassName(link))}>
       <div className="min-w-0 flex-1">
@@ -231,18 +253,28 @@ export function PublicLinkRow({
           <span
             className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
           >
-            {getPublicTemplateLabel(link.publicTemplate)}
+            {getPublicTemplateBadgeLabel(link)}
           </span>
           <span
             className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
           >
-            {getEntryProfileModeLabel(link.entryProfileMode)}
+            {getEntryProfileModeBadgeLabel(link)}
           </span>
         </div>
         <div
           className={`mt-1 flex min-w-0 flex-wrap items-center gap-2 text-sm ${adminClassNames.text.body}`}
         >
           <span className="min-w-0 truncate">{link.title}</span>
+          <span className={`shrink-0 text-xs font-medium ${adminClassNames.text.muted}`}>
+            {getLinkVersionLabel(link)}
+          </span>
+          {newerVersionNumber !== null ? (
+            <span
+              className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.warning}`}
+            >
+              {`есть v${newerVersionNumber}`}
+            </span>
+          ) : null}
           <span className={`shrink-0 text-xs ${adminClassNames.text.muted}`}>
             Создана: {formatPublicLinkCreatedAt(link.createdAt)}
           </span>

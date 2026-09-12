@@ -2122,6 +2122,94 @@ export const useTestsAdminPublicLinksControllerRestorePublicLink = <
   );
 };
 /**
+ * @summary Move public link to the currently published version of its test
+ */
+export const testsAdminPublicLinksControllerMoveToActivePublishedVersion = (
+  linkId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPublicLinkDto>(
+    { url: `/admin/tests/public-links/${linkId}/move-to-active-version`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>,
+    TError,
+    TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>,
+  TError,
+  TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables,
+  TContext
+> => {
+  const mutationKey = ['testsAdminPublicLinksControllerMoveToActivePublishedVersion'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>,
+    TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables
+  > = (props) => {
+    const { linkId } = props ?? {};
+
+    return testsAdminPublicLinksControllerMoveToActivePublishedVersion(linkId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>
+>;
+
+export type TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationError =
+  ErrorType<ErrorResponseDto>;
+export type TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables = {
+  linkId: number;
+};
+
+/**
+ * @summary Move public link to the currently published version of its test
+ */
+export const useTestsAdminPublicLinksControllerMoveToActivePublishedVersion = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>,
+      TError,
+      TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsAdminPublicLinksControllerMoveToActivePublishedVersion>>,
+  TError,
+  TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationOptions(options),
+    queryClient,
+  );
+};
+/**
  * @summary List educational organizations for link binding
  */
 export const testsAdminEducationOrganizationsControllerListEducationOrganizations = (

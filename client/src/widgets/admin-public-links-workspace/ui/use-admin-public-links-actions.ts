@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import {
   useTestsAdminPublicLinksControllerCreatePublicLink,
   useTestsAdminPublicLinksControllerDeletePublicLink,
+  useTestsAdminPublicLinksControllerMoveToActivePublishedVersion,
   useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode,
   useTestsAdminPublicLinksControllerRestorePublicLink,
   useTestsAdminPublicLinksControllerUpdatePublicLink,
@@ -228,6 +229,42 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
   };
 }
 
+/**
+ * Перевод ссылки на опубликованную версию теста. Ссылка сама за новой версией не следует
+ * (решение ait-rcw.2), поэтому это явное действие с подтверждением.
+ */
+function usePublicLinkVersionActions(params: UseAdminPublicLinksActionsParams) {
+  const { pendingMovePublicLink, setPendingMovePublicLink, refetchPublicLinks } = params;
+
+  const moveToActivePublishedVersionMutation =
+    useTestsAdminPublicLinksControllerMoveToActivePublishedVersion();
+
+  const handleMovePublicLinkToActiveVersion = () => {
+    if (!pendingMovePublicLink) {
+      return;
+    }
+
+    moveToActivePublishedVersionMutation.mutate(
+      { linkId: pendingMovePublicLink.id },
+      {
+        onSuccess: () => {
+          toast.success('Ссылка переведена на опубликованную версию теста');
+          setPendingMovePublicLink(null);
+          refetchPublicLinks();
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
+  return {
+    moveToActivePublishedVersionMutation,
+    handleMovePublicLinkToActiveVersion,
+  };
+}
+
 function useShortLinkActions() {
   const handleCopyShortLink = async (shortCode: string) => {
     try {
@@ -252,12 +289,14 @@ export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsPar
   const organizationActions = useEducationOrganizationActions(params);
   const publicLinkCreateActions = usePublicLinkCreateActions(params);
   const publicLinkManagementActions = usePublicLinkManagementActions(params);
+  const publicLinkVersionActions = usePublicLinkVersionActions(params);
   const shortLinkActions = useShortLinkActions();
 
   return {
     ...organizationActions,
     ...publicLinkCreateActions,
     ...publicLinkManagementActions,
+    ...publicLinkVersionActions,
     ...shortLinkActions,
   };
 }

@@ -93,4 +93,14 @@ export class TestsAdminPublicLinksController {
   ) {
     return this.testsPublicLinkService.restorePublicLink(userId, linkId);
   }
+
+  @Post('public-links/:linkId/move-to-active-version')
+  @ApiOperation({ summary: 'Move public link to the currently published version of its test' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
+  moveToActivePublishedVersion(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.moveToActivePublishedVersion(userId, linkId);
+  }
 }

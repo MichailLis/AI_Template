@@ -16,6 +16,10 @@ const standardLink = {
   archivedAt: null,
   topicArchivedAt: null,
   isActive: true,
+  publishedVersionId: 50,
+  topicVersionNumber: 1,
+  activePublishedVersionId: 50,
+  activePublishedVersionNumber: 1,
 };
 
 describe('PublicLinkBrandingBuilder', () => {

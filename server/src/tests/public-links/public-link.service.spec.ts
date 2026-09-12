@@ -295,6 +295,113 @@ describe('TestsPublicLinkService', () => {
     expect(result.publicTemplate).toBe('STANDARD');
   });
 
+  /**
+   * Находка аудита UX-04: ссылка остаётся на своей версии теста (решение ait-rcw.2), но список не
+   * показывал ни эту версию, ни то, что тест уже опубликован заново.
+   */
+  it('listPublicLinks reports the version a link serves and the newer published version', async () => {
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          versionNumber: 1,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: { id: 51, versionNumber: 2 } },
+        },
+      }),
+    ]);
+
+    const result = await service.listPublicLinks(7);
+
+    expect(result.links[0]).toMatchObject({
+      publishedVersionId: 50,
+      topicVersionNumber: 1,
+      activePublishedVersionId: 51,
+      activePublishedVersionNumber: 2,
+    });
+  });
+
+  it('listPublicLinks reports no published version when the test has none', async () => {
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          versionNumber: 1,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: null },
+        },
+      }),
+    ]);
+
+    const result = await service.listPublicLinks(7);
+
+    expect(result.links[0]).toMatchObject({
+      activePublishedVersionId: null,
+      activePublishedVersionNumber: null,
+    });
+  });
+
+  it('moveToActivePublishedVersion points the link at the published version of its test', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      topicVersion: { topic: { activePublishedVersionId: 51 } },
+    });
+    prismaMock.testPublicLink.update.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 51,
+          topicId: 7,
+          versionNumber: 2,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: { id: 51, versionNumber: 2 } },
+        },
+      }),
+    );
+
+    const result = await service.moveToActivePublishedVersion(7, 100);
+
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(prismaMock.testPublicLink.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 100 }, data: { topicVersionId: 51 } }),
+    );
+    expect(result).toMatchObject({ publishedVersionId: 51, topicVersionNumber: 2 });
+  });
+
+  it('moveToActivePublishedVersion rejects a test that has no published version', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      topicVersion: { topic: { activePublishedVersionId: null } },
+    });
+
+    await expect(service.moveToActivePublishedVersion(7, 100)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a missing link', null],
+    [
+      'an archived link',
+      {
+        id: 100,
+        archivedAt: new Date('2026-09-01T10:00:00.000Z'),
+        topicVersion: { topic: { activePublishedVersionId: 51 } },
+      },
+    ],
+  ])('moveToActivePublishedVersion does not move %s', async (_case, record) => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(record);
+
+    await expect(service.moveToActivePublishedVersion(7, 100)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
   it('createPublicLink stores public branding when provided', async () => {
     prismaMock.testTopicVersion.findUnique.mockResolvedValue({
       id: 50,
@@ -811,8 +918,9 @@ const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) 
   topicVersion: {
     id: 50,
     topicId: 7,
+    versionNumber: 1,
     title: 'Профориентация',
-    topic: { archivedAt: null },
+    topic: { archivedAt: null, activePublishedVersion: { id: 50, versionNumber: 1 } },
   },
   educationOrganization: null,
   personalDataProcessingMode: 'PUBLIC',

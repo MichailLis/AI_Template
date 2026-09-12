@@ -376,6 +376,11 @@
           "protected": true
         },
         {
+          "path": "/admin/tests/public-links/{linkId}/move-to-active-version",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
           "path": "/admin/tests/education-organizations",
           "methods": ["get", "post"],
           "protected": true
