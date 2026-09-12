@@ -1,50 +1,28 @@
 import { formatDateTimeOrDash } from '@/shared/lib/date-format';
 
-import { AnalyticsReportFiltersSection } from './admin-analytics-filters';
 import { TestAnalyticsBreakdownTables } from './test-analytics-breakdown-table';
 import { TestAnalyticsExportActions } from './test-analytics-export-actions';
 import { TestAnalyticsSummaryCard } from './test-analytics-summary-card';
-import { useAnalyticsReport } from './use-admin-public-links-analytics-report';
+
+import type { useAnalyticsReport } from './use-admin-public-links-analytics-report';
 
 interface AnalyticsReportTabProps {
-  effectiveTopicId: number | null;
-  effectivePublicLinkId: number | null;
+  /** Состояние отчёта поднято в рабочую область: его поля стоят в общем блоке фильтров. */
+  report: ReturnType<typeof useAnalyticsReport>;
 }
 
-export function AnalyticsReportTab({
-  effectiveTopicId,
-  effectivePublicLinkId,
-}: AnalyticsReportTabProps) {
+export function AnalyticsReportTab({ report }: AnalyticsReportTabProps) {
   const {
-    analyticsScope,
-    analyticsLinkStatus,
-    analyticsDateFrom,
-    analyticsDateTo,
     analyticsSummary,
     analyticsSummaryQuery,
     analyticsExportFormat,
     analyticsExportError,
     isAnalyticsQueryEnabled,
-    handleAnalyticsScopeChange,
-    handleAnalyticsLinkStatusChange,
-    handleAnalyticsDateFromChange,
-    handleAnalyticsDateToChange,
     handleExportAnalytics,
-  } = useAnalyticsReport(effectiveTopicId, effectivePublicLinkId);
+  } = report;
 
   return (
     <>
-      <AnalyticsReportFiltersSection
-        analyticsScope={analyticsScope}
-        onAnalyticsScopeChange={handleAnalyticsScopeChange}
-        analyticsLinkStatus={analyticsLinkStatus}
-        onAnalyticsLinkStatusChange={handleAnalyticsLinkStatusChange}
-        analyticsDateFrom={analyticsDateFrom}
-        onAnalyticsDateFromChange={handleAnalyticsDateFromChange}
-        analyticsDateTo={analyticsDateTo}
-        onAnalyticsDateToChange={handleAnalyticsDateToChange}
-      />
-
       <TestAnalyticsSummaryCard
         summary={analyticsSummary}
         isLoading={analyticsSummaryQuery.isLoading}

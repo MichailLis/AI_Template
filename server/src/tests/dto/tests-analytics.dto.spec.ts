@@ -69,6 +69,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         slug: 'prof-orientation',
         title: 'Профориентационный тест',
         questionCount: 20,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
         generatedAt: '2026-05-20T00:00:00.000Z',
       },
       filters: {
@@ -136,6 +137,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         slug: 'prof-orientation',
         title: 'Профориентационный тест',
         questionCount: 20,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
         generatedAt: '2026-05-20',
       },
       filters: {

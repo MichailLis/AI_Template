@@ -31,6 +31,7 @@ describe('TestsAdminAnalyticsController', () => {
         slug: 'test-topic',
         title: 'Test Topic',
         questionCount: 10,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
         generatedAt: '2026-05-01T10:00:00.000Z',
       },
       filters: {

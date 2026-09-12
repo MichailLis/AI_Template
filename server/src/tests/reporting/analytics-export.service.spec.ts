@@ -10,6 +10,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     slug: 'sample-topic',
     title,
     questionCount: 24,
+    scoringKind: 'PROF_ORIENTATION_V3_PLUS',
     generatedAt: '2026-05-20T10:00:00.000Z',
   },
   filters: {

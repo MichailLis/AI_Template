@@ -108,7 +108,8 @@ export const buildAnalyticsParams = ({
   dateTo: string;
 }): TestsAdminAnalyticsControllerGetSummaryParams => ({
   scope,
-  linkStatus,
+  // Отчёт по одной ссылке не сужается по её статусу: архивная ссылка при «Активных» давала пустой отчёт.
+  linkStatus: scope === 'PUBLIC_LINK' ? 'ALL' : linkStatus,
   ...(scope === 'PUBLIC_LINK' && publicLinkId ? { publicLinkId } : {}),
   ...(dateFrom ? { dateFrom } : {}),
   ...(dateTo ? { dateTo } : {}),

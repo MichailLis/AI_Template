@@ -47,6 +47,8 @@ export const AdminTestAnalyticsTopicSectionSchema = z.object({
   slug: z.string().trim().min(1),
   title: z.string().trim().min(1),
   questionCount: z.number().int().min(0),
+  /** Методика опубликованной версии: разделы V3+ имеют смысл только для `PROF_ORIENTATION_V3_PLUS`. */
+  scoringKind: z.enum(['DEFAULT', 'PROF_ORIENTATION_V3_PLUS']),
   generatedAt: z.string(),
 });
 

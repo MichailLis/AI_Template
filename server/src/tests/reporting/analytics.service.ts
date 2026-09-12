@@ -41,6 +41,7 @@ const TOPIC_SELECT = {
   activePublishedVersion: {
     select: {
       title: true,
+      scoringKind: true,
       _count: {
         select: {
           questions: true,
@@ -423,6 +424,7 @@ export class TestsAnalyticsService {
 
     const topicSummary = topic.activePublishedVersion ?? {
       title: 'Тема теста',
+      scoringKind: 'DEFAULT' as const,
       _count: {
         questions: 0,
       },
@@ -434,6 +436,7 @@ export class TestsAnalyticsService {
         slug: topic.slug,
         title: topicSummary.title,
         questionCount: topicSummary._count.questions,
+        scoringKind: topicSummary.scoringKind,
         generatedAt: new Date().toISOString(),
       },
       filters: {

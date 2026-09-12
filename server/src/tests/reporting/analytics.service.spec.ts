@@ -92,6 +92,7 @@ describe('TestsAnalyticsService', () => {
     archivedAt: null,
     activePublishedVersion: {
       title: 'Тестовая тема',
+      scoringKind: 'PROF_ORIENTATION_V3_PLUS',
       createdAt: new Date('2026-05-01T10:00:00.000Z'),
       _count: { questions: 3 },
     },
@@ -215,6 +216,44 @@ describe('TestsAnalyticsService', () => {
         },
       }),
     );
+  });
+
+  /**
+   * Находка аудита UX-08: отчёт по тесту без методики V3+ показывал плитку «V3+ результаты» и
+   * таблицы направлений, которые для такого теста пусты всегда. Клиенту нужна методика
+   * опубликованной версии, чтобы не рисовать эти разделы.
+   */
+  it.each([
+    ['PROF_ORIENTATION_V3_PLUS', publicLinksActive],
+    ['DEFAULT', publicLinksActive],
+    ['DEFAULT', []],
+  ] as const)(
+    'reports the %s scoring kind of the published version (%j links)',
+    async (scoringKind, links) => {
+      prismaMock.testTopic.findUnique.mockResolvedValue({
+        ...topicSelect,
+        activePublishedVersion: { ...topicSelect.activePublishedVersion, scoringKind },
+      });
+      prismaMock.testPublicLink.findMany.mockResolvedValue(links);
+      prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+      const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+
+      expect(result.topic.scoringKind).toBe(scoringKind);
+    },
+  );
+
+  it('treats a topic without a published version as a non-V3+ test', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue({
+      ...topicSelect,
+      activePublishedVersion: null,
+    });
+    prismaMock.testPublicLink.findMany.mockResolvedValue(publicLinksActive);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+    const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+
+    expect(result.topic.scoringKind).toBe('DEFAULT');
   });
 
   it('archived links are included when linkStatus is ALL', async () => {

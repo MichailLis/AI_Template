@@ -9,12 +9,14 @@ import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 
 const createSummary = (
   coverage: Partial<AdminTestAnalyticsSummaryDto['coverage']>,
+  scoringKind: AdminTestAnalyticsSummaryDto['topic']['scoringKind'] = 'PROF_ORIENTATION_V3_PLUS',
 ): AdminTestAnalyticsSummaryDto => ({
   topic: {
     topicId: 1,
     slug: 'topic-1',
     title: 'Тест',
     questionCount: 10,
+    scoringKind,
     generatedAt: '2026-09-11T00:00:00.000Z',
   },
   filters: {
@@ -136,5 +138,55 @@ describe('TestAnalyticsSummaryCard analysis figures', () => {
 
     expect(screen.getByText('Заглушки без ИИ')).toBeInTheDocument();
     expect(screen.getByText('промпт анализа подключен везде')).toBeInTheDocument();
+  });
+});
+
+/**
+ * Находка аудита UX-08: у теста без методики V3+ отчёт показывал плитку «V3+ результаты» с
+ * «0% от готового анализа» и карточки «Нет данных V3+», которые для такого теста пусты всегда.
+ */
+describe('TestAnalyticsSummaryCard V3+ figures', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('hides V3+ figures for a test that does not use the V3+ method and says why', () => {
+    renderCard(createSummary({ analysisReady: 4, v3Results: 0 }, 'DEFAULT'));
+
+    expect(screen.queryByText('V3+ результаты')).not.toBeInTheDocument();
+    expect(screen.queryByText('Лидирующее направление')).not.toBeInTheDocument();
+    expect(screen.queryByText('Нет данных V3+')).not.toBeInTheDocument();
+    expect(screen.getByText(/не использует методику V3\+/)).toBeInTheDocument();
+  });
+
+  it('keeps V3+ figures when earlier versions of the test produced V3+ results', () => {
+    renderCard(createSummary({ analysisReady: 4, v3Results: 3 }, 'DEFAULT'));
+
+    expect(screen.getByText('V3+ результаты')).toBeInTheDocument();
+    expect(screen.queryByText(/не использует методику V3\+/)).not.toBeInTheDocument();
+  });
+
+  /** Находка аудита UX-08: «Средний gap: 0%» — жаргон, и отрыв считается в баллах, а не в процентах. */
+  it.each([
+    [11.5, 'Лидер опережает второе направление в среднем на 11,5 балла'],
+    [8, 'Лидер опережает второе направление в среднем на 8 баллов'],
+  ])('explains the average lead of %s points without jargon', (gap, text) => {
+    const summary = createSummary({ analysisReady: 2, v3Results: 2 });
+
+    renderCard({
+      ...summary,
+      confidence: { ...summary.confidence, gap: { value: gap, total: 2 } },
+    });
+
+    expect(screen.getByText(text)).toBeInTheDocument();
+    expect(screen.queryByText(/gap/i)).not.toBeInTheDocument();
+  });
+
+  it('says a V3+ test has no results yet instead of showing a zero share', () => {
+    renderCard(createSummary({ analysisReady: 0, v3Results: 0 }));
+
+    expect(screen.getByText('V3+ результаты')).toBeInTheDocument();
+    expect(screen.getByText('результатов V3+ пока нет')).toBeInTheDocument();
+    expect(screen.queryByText(/от готового анализа/)).not.toBeInTheDocument();
   });
 });

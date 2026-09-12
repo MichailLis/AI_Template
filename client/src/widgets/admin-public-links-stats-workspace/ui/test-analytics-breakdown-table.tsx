@@ -1,12 +1,15 @@
 import { ListChecks, Rows3, TableProperties } from 'lucide-react';
 
 import { getAnalysisResultKindLabel } from '@/shared/lib/analysis-result-kind-labels';
+import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
+
+import { hasV3PlusReport } from './test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 
@@ -259,7 +262,9 @@ function TestAnalyticsAttemptsTable({
             <>
               <TableCell className="whitespace-nowrap">{attempt.attemptId}</TableCell>
               <TableCell className="whitespace-nowrap">{attempt.shortCode}</TableCell>
-              <TableCell className="whitespace-nowrap">{attempt.status}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {getAttemptStatusLabel(attempt.status)}
+              </TableCell>
               <TableCell className="whitespace-nowrap">
                 <div className="flex flex-col items-start gap-1">
                   <span>{getAnalysisResultKindLabel(attempt.analysisResultKind)}</span>
@@ -291,47 +296,63 @@ export function TestAnalyticsBreakdownTables({
     return null;
   }
 
+  const demographyTable = (
+    <TestAnalyticsBreakdownTable
+      title="Демография и группы"
+      description="Срезы по анкетным и образовательным данным."
+      rows={[...buildDemographicRows(summary), ...buildGroupRows(summary)]}
+      valueHeader="Попытки"
+      emptyMessage="Нет демографических или групповых данных."
+    />
+  );
+  const publicLinksTable = (
+    <TestAnalyticsBreakdownTable
+      title="Публичные ссылки"
+      description="Вклад каждой ссылки в текущую выборку."
+      rows={buildPublicLinkRows(summary)}
+      valueHeader="Всего / завершено"
+      emptyMessage="В выборке нет публичных ссылок."
+    />
+  );
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 xl:grid-cols-2">
-        <TestAnalyticsBreakdownTable
-          title="Направления V3+"
-          description="Распределение первичных направлений."
-          rows={buildDirectionRows(summary)}
-          emptyMessage="Нет готовых V3+ результатов для распределения направлений."
-        />
-        <TestAnalyticsBreakdownTable
-          title="Баллы и пары"
-          description="Средние значения по шкалам и частые пары направлений."
-          rows={buildScoreRows(summary)}
-          valueHeader="Значение"
-          emptyMessage="Нет данных по шкалам и парам направлений."
-        />
-      </div>
+      {hasV3PlusReport(summary) ? (
+        <>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TestAnalyticsBreakdownTable
+              title="Направления V3+"
+              description="Распределение первичных направлений."
+              rows={buildDirectionRows(summary)}
+              emptyMessage="Нет готовых V3+ результатов для распределения направлений."
+            />
+            <TestAnalyticsBreakdownTable
+              title="Баллы и пары"
+              description="Средние значения по шкалам и частые пары направлений."
+              rows={buildScoreRows(summary)}
+              valueHeader="Значение"
+              emptyMessage="Нет данных по шкалам и парам направлений."
+            />
+          </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <TestAnalyticsBreakdownTable
-          title="Профили и флаги"
-          description="Типы профилей, уровни уверенности и сигналы качества."
-          rows={buildProfileRows(summary)}
-          emptyMessage="Нет профилей, уровней уверенности или флагов."
-        />
-        <TestAnalyticsBreakdownTable
-          title="Демография и группы"
-          description="Срезы по анкетным и образовательным данным."
-          rows={[...buildDemographicRows(summary), ...buildGroupRows(summary)]}
-          valueHeader="Попытки"
-          emptyMessage="Нет демографических или групповых данных."
-        />
-      </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TestAnalyticsBreakdownTable
+              title="Профили и флаги"
+              description="Типы профилей, уровни уверенности и сигналы качества."
+              rows={buildProfileRows(summary)}
+              emptyMessage="Нет профилей, уровней уверенности или флагов."
+            />
+            {demographyTable}
+          </div>
 
-      <TestAnalyticsBreakdownTable
-        title="Публичные ссылки"
-        description="Вклад каждой ссылки в текущую выборку."
-        rows={buildPublicLinkRows(summary)}
-        valueHeader="Всего / завершено"
-        emptyMessage="В выборке нет публичных ссылок."
-      />
+          {publicLinksTable}
+        </>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {demographyTable}
+          {publicLinksTable}
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <ListChecks className="size-4" />

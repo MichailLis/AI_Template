@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ATTEMPTS_LIMIT,
+  buildAnalyticsParams,
   readLimit,
   readNumber,
   readTab,
@@ -35,5 +36,35 @@ describe('analytics selection read from the query string', () => {
     expect(resolveAnalyticsTab('attempts')).toBe('attempts');
     expect(resolveAnalyticsTab('report')).toBe('report');
     expect(resolveAnalyticsTab(null)).toBe('report');
+  });
+});
+
+describe('analytics report query parameters', () => {
+  /**
+   * Находка аудита UX-08: фильтр «Ссылки в отчете» применялся и к отчёту по одной ссылке, поэтому
+   * архивная ссылка при выбранных «Активных» давала пустой отчёт без объяснения.
+   */
+  it('does not narrow a one-link report by the link status filter', () => {
+    expect(
+      buildAnalyticsParams({
+        scope: 'PUBLIC_LINK',
+        publicLinkId: 22,
+        linkStatus: 'ACTIVE',
+        dateFrom: '',
+        dateTo: '',
+      }),
+    ).toEqual({ scope: 'PUBLIC_LINK', publicLinkId: 22, linkStatus: 'ALL' });
+  });
+
+  it('keeps the link status filter for a whole-test report', () => {
+    expect(
+      buildAnalyticsParams({
+        scope: 'TOPIC',
+        publicLinkId: 22,
+        linkStatus: 'ARCHIVED',
+        dateFrom: '2026-09-01',
+        dateTo: '',
+      }),
+    ).toEqual({ scope: 'TOPIC', linkStatus: 'ARCHIVED', dateFrom: '2026-09-01' });
   });
 });

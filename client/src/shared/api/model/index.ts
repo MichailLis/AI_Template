@@ -129,6 +129,7 @@ export * from './adminTestAnalyticsSummaryDtoProfilesItem';
 export * from './adminTestAnalyticsSummaryDtoPublicLinksItem';
 export * from './adminTestAnalyticsSummaryDtoScoreAveragesItem';
 export * from './adminTestAnalyticsSummaryDtoTopic';
+export * from './adminTestAnalyticsSummaryDtoTopicScoringKind';
 export * from './adminUpdateEducationOrganizationDto';
 export * from './adminUpdateEducationOrganizationDtoGroupValidationMode';
 export * from './adminUpdatePublicLinkDto';
