@@ -78,6 +78,19 @@ describe('PromptLibraryCard', () => {
     vi.clearAllMocks();
   });
 
+  /** Находка аудита UX-06: бейдж версии показывал сырой PUBLISHED или DRAFT. */
+  it('names the latest version status in Russian', () => {
+    render(
+      <PromptLibraryCard
+        {...baseProps}
+        prompts={[makePrompt([makePromptVersion({ status: 'DRAFT' })])]}
+      />,
+    );
+
+    expect(screen.getByText('Черновик')).toBeInTheDocument();
+    expect(screen.queryByText('DRAFT')).not.toBeInTheDocument();
+  });
+
   it('warns that tests are left on older versions of the prompt', () => {
     const prompt = makePrompt([
       makePromptVersion({ id: 43, versionNumber: 2, status: 'PUBLISHED', usedInTestCount: 1 }),

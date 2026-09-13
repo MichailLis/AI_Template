@@ -40,7 +40,7 @@ export function OpenRouterSettingsCard({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-lg">
               <KeyRound className="size-4 shrink-0 text-admin-muted" />
-              OpenRouter API key
+              Ключ API OpenRouter
             </CardTitle>
             <CardDescription>Ключ берется только из переменной окружения сервера.</CardDescription>
           </div>

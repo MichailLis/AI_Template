@@ -49,24 +49,24 @@ export const validateSimulationInput = ({
   | { ok: true; parsedTemperature: number; preparedPrompt: string }
   | { ok: false; error: string } => {
   if (!selectedModel) {
-    return { ok: false, error: 'Select a model first' };
+    return { ok: false, error: 'Сначала выберите модель' };
   }
 
   if (duplicateVariableData.duplicateKeys.length > 0) {
     return {
       ok: false,
-      error: `Duplicate variable keys: ${duplicateVariableData.duplicateKeys.join(', ')}`,
+      error: `Переменные с одинаковыми ключами: ${duplicateVariableData.duplicateKeys.join(', ')}`,
     };
   }
 
   const parsedTemperature = Number(temperature);
   if (Number.isNaN(parsedTemperature) || parsedTemperature < 0 || parsedTemperature > 2) {
-    return { ok: false, error: 'Temperature must be between 0 and 2' };
+    return { ok: false, error: 'Температура должна быть от 0 до 2' };
   }
 
   const preparedPrompt = renderedPrompt.trim();
   if (!preparedPrompt) {
-    return { ok: false, error: 'Prompt is empty after variable substitution' };
+    return { ok: false, error: 'Промпт пуст после подстановки переменных' };
   }
 
   return { ok: true, parsedTemperature, preparedPrompt };

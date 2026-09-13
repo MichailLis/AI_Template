@@ -2,6 +2,7 @@ import { FileText, History, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
+import { getVersionStatusLabel } from '@/shared/lib/report-value-labels';
 import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -186,7 +187,7 @@ function PromptLibraryItem({
                     : adminBadgeClassNames.warning
                 }
               >
-                {latestVersion.status}
+                {getVersionStatusLabel(latestVersion.status)}
               </Badge>
             </>
           ) : null}

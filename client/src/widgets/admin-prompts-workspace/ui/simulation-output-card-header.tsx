@@ -48,7 +48,7 @@ export function SimulationOutputCardHeader({
               checked={diffView}
               onChange={(event) => onDiffViewChange(event.target.checked)}
             />
-            JSON-view
+            Ответ как есть
           </label>
           <Button type="button" size="sm" variant="ghost" onClick={onClearLogs}>
             <RotateCcw className="mr-2 size-4" />

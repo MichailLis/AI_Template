@@ -1,4 +1,5 @@
 import { parseApiError } from '@/shared/lib/api-error';
+import { questionTypeLabels } from '@/shared/lib/report-value-labels';
 import { isRecord } from '@/shared/lib/type-guards';
 
 import { getUniqueOptionValue } from './unique-option-value';
@@ -18,12 +19,8 @@ import type {
 
 export { parseApiError };
 
-export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
-  OPEN_TEXT: 'Открытый текст',
-  SINGLE_CHOICE: 'Один вариант',
-  MULTI_CHOICE: 'Несколько вариантов',
-  SLIDER: 'Слайдер',
-};
+/** Те же подписи, что в отчетах и карточке прохождения: один словарь в shared. */
+export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = questionTypeLabels;
 
 const isSettingsRecord = (value: unknown): value is UpsertTestsQuestionDtoSettings => {
   return isRecord(value);

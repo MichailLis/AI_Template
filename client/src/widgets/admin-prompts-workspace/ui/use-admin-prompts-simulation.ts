@@ -55,9 +55,9 @@ export function useAdminPromptsSimulation({
 
     try {
       await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-      toast.success('Run JSON copied');
+      toast.success('Данные запуска скопированы');
     } catch {
-      toast.error('Unable to copy run JSON');
+      toast.error('Не удалось скопировать данные запуска');
     }
   };
 

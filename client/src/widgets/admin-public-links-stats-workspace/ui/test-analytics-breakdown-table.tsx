@@ -2,6 +2,7 @@ import { ListChecks, Rows3, TableProperties } from 'lucide-react';
 
 import { getAnalysisResultKindLabel } from '@/shared/lib/analysis-result-kind-labels';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
+import { getConfidenceLevelLabel, getReportValueLabel } from '@/shared/lib/report-value-labels';
 import { cn } from '@/shared/lib/utils';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -154,7 +155,7 @@ const buildProfileRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow[]
   })),
   ...summary.confidence.levels.map((item) => ({
     id: `confidence-${item.label}`,
-    label: item.label,
+    label: getConfidenceLevelLabel(item.label),
     value: formatNumber(item.count),
     share: item.share,
     note: 'Уровень уверенности',
@@ -206,7 +207,7 @@ const buildGroupRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow[] =
 const buildDemographicRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownRow[] => [
   ...summary.demographics.gender.map((item) => ({
     id: `gender-${item.label}`,
-    label: item.label,
+    label: getReportValueLabel(item.label),
     value: formatNumber(item.count),
     share: item.share,
     note: 'Пол',
@@ -220,7 +221,7 @@ const buildDemographicRows = (summary: AdminTestAnalyticsSummaryDto): BreakdownR
   })),
   ...summary.demographics.educationLevel.map((item) => ({
     id: `education-${item.label}`,
-    label: item.label,
+    label: getReportValueLabel(item.label),
     value: formatNumber(item.count),
     share: item.share,
     note: 'Образование',

@@ -167,6 +167,32 @@ describe('TestAnalyticsBreakdownTables', () => {
     expect(screen.queryByText('COMPLETED')).not.toBeInTheDocument();
   });
 
+  /**
+   * Находка аудита UX-06: «Демография и группы» показывала MALE и SECONDARY_GENERAL, а «Профили и
+   * флаги» — уровни уверенности broad и mixed, как они лежат в данных.
+   */
+  it('names demographic values and confidence levels in Russian', () => {
+    const summary = createSummary([]);
+    summary.demographics.gender = [{ label: 'FEMALE', count: 2, share: 100 }];
+    summary.demographics.educationLevel = [
+      { label: 'INCOMPLETE_HIGHER_FROM_YEAR_3', count: 2, share: 100 },
+    ];
+    summary.confidence.levels = [
+      { label: 'broad', count: 1, share: 50 },
+      { label: 'mixed', count: 1, share: 50 },
+    ];
+
+    render(<TestAnalyticsBreakdownTables summary={summary} formatDateTime={(v) => v ?? '—'} />);
+
+    expect(screen.getByText('Женский')).toBeInTheDocument();
+    expect(screen.getByText('Неоконченное высшее')).toBeInTheDocument();
+    expect(screen.getByText('Широкий профиль')).toBeInTheDocument();
+    expect(screen.getByText('Смешанная')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/^(FEMALE|INCOMPLETE_HIGHER_FROM_YEAR_3|broad|mixed)$/),
+    ).not.toBeInTheDocument();
+  });
+
   /** Находка аудита UX-08: таблицы направлений и профилей пусты всегда, если тест не на V3+. */
   it('leaves out V3+ tables for a test that does not use the V3+ method', () => {
     render(

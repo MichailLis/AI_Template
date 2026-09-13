@@ -72,7 +72,7 @@ describe('admin prompts workspace helpers', () => {
         temperature: '0.2',
         renderedPrompt: 'Prompt',
       }),
-    ).toEqual({ ok: false, error: 'Select a model first' });
+    ).toEqual({ ok: false, error: 'Сначала выберите модель' });
 
     expect(
       validateSimulationInput({
@@ -84,7 +84,7 @@ describe('admin prompts workspace helpers', () => {
         temperature: '0.2',
         renderedPrompt: 'Prompt',
       }),
-    ).toEqual({ ok: false, error: 'Duplicate variable keys: name' });
+    ).toEqual({ ok: false, error: 'Переменные с одинаковыми ключами: name' });
 
     expect(
       validateSimulationInput({
@@ -93,7 +93,16 @@ describe('admin prompts workspace helpers', () => {
         temperature: '2.5',
         renderedPrompt: 'Prompt',
       }),
-    ).toEqual({ ok: false, error: 'Temperature must be between 0 and 2' });
+    ).toEqual({ ok: false, error: 'Температура должна быть от 0 до 2' });
+
+    expect(
+      validateSimulationInput({
+        selectedModel: 'model-a',
+        duplicateVariableData: emptyDuplicateData,
+        temperature: '0.2',
+        renderedPrompt: '   ',
+      }),
+    ).toEqual({ ok: false, error: 'Промпт пуст после подстановки переменных' });
 
     expect(
       validateSimulationInput({
