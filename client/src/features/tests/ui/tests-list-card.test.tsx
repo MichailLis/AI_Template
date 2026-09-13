@@ -21,6 +21,7 @@ const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListI
   attemptCount: 13,
   hasPublishedVersion: true,
   canDelete: false,
+  scoringKind: 'DEFAULT',
   hasUnpublishedChanges: false,
   updatedAt: '2026-06-16T01:00:00.000Z',
   ...overrides,

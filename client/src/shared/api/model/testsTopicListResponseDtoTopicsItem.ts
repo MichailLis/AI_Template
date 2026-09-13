@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { TestsTopicListResponseDtoTopicsItemScoringKind } from './testsTopicListResponseDtoTopicsItemScoringKind';
 
 export type TestsTopicListResponseDtoTopicsItem = {
   id: number;
@@ -35,6 +36,7 @@ export type TestsTopicListResponseDtoTopicsItem = {
   publicLinkCount: number;
   hasPublishedVersion: boolean;
   canDelete: boolean;
+  scoringKind: TestsTopicListResponseDtoTopicsItemScoringKind;
   hasUnpublishedChanges: boolean;
   updatedAt: string;
 };

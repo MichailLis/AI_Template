@@ -319,6 +319,7 @@ export * from './testsTopicDetailResponseDtoPublished';
 export * from './testsTopicDetailResponseDtoPublishedAnalysisPromptVersion';
 export * from './testsTopicListResponseDto';
 export * from './testsTopicListResponseDtoTopicsItem';
+export * from './testsTopicListResponseDtoTopicsItemScoringKind';
 export * from './updateAnalysisPromptVersionDto';
 export * from './updatePrivacyPolicyDto';
 export * from './updateProfessionAtlasUrlDto';

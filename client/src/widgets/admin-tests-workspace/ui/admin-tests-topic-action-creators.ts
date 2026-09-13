@@ -9,15 +9,11 @@ import type {
   useTestsControllerCreateTopic,
   useTestsControllerCreateTopicFromAi,
   useTestsControllerDeleteTopic,
-  useTestsControllerImportProfOrientationV3Plus,
 } from '@/shared/api/generated/tests/tests';
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 
 type CreateTopicMutation = ReturnType<typeof useTestsControllerCreateTopic>;
 type CreateTopicFromAiMutation = ReturnType<typeof useTestsControllerCreateTopicFromAi>;
-type ImportProfOrientationV3PlusMutation = ReturnType<
-  typeof useTestsControllerImportProfOrientationV3Plus
->;
 type DeleteTopicMutation = ReturnType<typeof useTestsControllerDeleteTopic>;
 type DraftAutosave = ReturnType<typeof useDraftAutosave>;
 type QuestionEditor = ReturnType<typeof useQuestionEditor>;
@@ -116,25 +112,72 @@ export const createHandleCreateTestFromAi = ({
 };
 
 interface ImportProfOrientationV3PlusDeps {
-  importProfOrientationV3PlusMutation: ImportProfOrientationV3PlusMutation;
-  draftAutosave: DraftAutosave;
+  importProfOrientationV3PlusMutation: {
+    mutate: (
+      variables: undefined,
+      options: {
+        onSuccess?: (result: { topicId: number }) => void;
+        onError?: (error: unknown) => void;
+      },
+    ) => void;
+  };
+  deleteTopicMutation: {
+    mutate: (
+      variables: { topicId: number },
+      options: { onSuccess?: () => void; onError?: (error: unknown) => void },
+    ) => void;
+  };
+  setIsImportConfirmOpen: (value: boolean) => void;
+  draftAutosave: Pick<DraftAutosave, 'resetAutosaveMeta'>;
   refetchTestsData: () => void;
   navigateToTopic: (topicId: number) => void;
+  navigateToList: () => void;
 }
+
+/** Тост с отменой держится дольше обычного: за это время администратор успевает понять, что импорт лишний. */
+const IMPORT_UNDO_TOAST_DURATION_MS = 10_000;
 
 export const createHandleImportProfOrientationV3Plus = ({
   importProfOrientationV3PlusMutation,
+  deleteTopicMutation,
+  setIsImportConfirmOpen,
   draftAutosave,
   refetchTestsData,
   navigateToTopic,
+  navigateToList,
 }: ImportProfOrientationV3PlusDeps) => {
+  /**
+   * Лишний импорт раньше убирался только через архив в четыре шага. Только что импортированный
+   * черновик не опубликован и не выдан, поэтому сервер разрешает удалить его сразу.
+   */
+  const undoImport = (topicId: number) => {
+    deleteTopicMutation.mutate(
+      { topicId },
+      {
+        onSuccess: () => {
+          toast.success('Импорт отменен');
+          draftAutosave.resetAutosaveMeta();
+          refetchTestsData();
+          navigateToList();
+        },
+        onError: (error) => {
+          toast.error(parseApiError(error));
+        },
+      },
+    );
+  };
+
   return () => {
     importProfOrientationV3PlusMutation.mutate(undefined, {
       onSuccess: (result) => {
-        toast.success('Методика v3+ импортирована');
+        setIsImportConfirmOpen(false);
         draftAutosave.resetAutosaveMeta();
         refetchTestsData();
         navigateToTopic(result.topicId);
+        toast.success('Методика v3+ импортирована', {
+          duration: IMPORT_UNDO_TOAST_DURATION_MS,
+          action: { label: 'Отменить', onClick: () => undoImport(result.topicId) },
+        });
       },
       onError: (error) => {
         toast.error(parseApiError(error));

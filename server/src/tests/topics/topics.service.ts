@@ -264,6 +264,7 @@ export class TestsService {
           publishedTitle: topic.activePublishedVersion?.title ?? null,
           activePublicLinkCount: activePublicLinkCountByTopicId.get(topic.id) ?? 0,
           ...toTopicUsageSummary(usageByTopicId.get(topic.id)),
+          scoringKind: topic.activeDraftVersion!.scoringKind,
           hasUnpublishedChanges: topic.activePublishedVersion
             ? hasVersionContentChanges(topic.activeDraftVersion!, topic.activePublishedVersion)
             : false,

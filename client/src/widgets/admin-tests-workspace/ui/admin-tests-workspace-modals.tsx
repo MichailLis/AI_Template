@@ -1,6 +1,8 @@
 import { AiTestGeneratorModal, QuestionModal, TestsCreateModal } from '@/features/tests';
 
 import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
+import { AdminTestsImportDialog } from './admin-tests-import-dialog';
+import { findProfOrientationV3PlusCopies } from './admin-tests-import.helpers';
 
 import type { useAdminTestsWorkspace } from './use-admin-tests-workspace';
 import type { Dispatch, SetStateAction } from 'react';
@@ -55,6 +57,21 @@ export function AdminTestsWorkspaceModals({
         isCreating={workspace.createTopicFromAiMutation.isPending}
         onOpenChange={workspace.setIsAiGeneratorOpen}
         onCreate={workspace.handleCreateTestFromAi}
+      />
+
+      <AdminTestsImportDialog
+        open={workspace.isImportConfirmOpen}
+        copies={findProfOrientationV3PlusCopies(
+          workspace.activeTopicsQuery.data?.topics ?? [],
+          workspace.archivedTopicsQuery.data?.topics ?? [],
+        )}
+        isImporting={workspace.importProfOrientationV3PlusMutation.isPending}
+        onOpenCopy={(topicId) => {
+          workspace.setIsImportConfirmOpen(false);
+          workspace.handleSelectTest(topicId);
+        }}
+        onConfirm={workspace.handleImportProfOrientationV3Plus}
+        onClose={() => workspace.setIsImportConfirmOpen(false)}
       />
 
       <QuestionModal

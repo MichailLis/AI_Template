@@ -54,6 +54,10 @@ export function useAdminTestsTopics() {
     [navigate],
   );
 
+  const navigateToList = useCallback(() => {
+    navigate('/admin/tests');
+  }, [navigate]);
+
   const topicsErrorMessage = topicsQuery.isError ? parseApiError(topicsQuery.error) : null;
 
   const isSelectedTopicArchived = useMemo(() => {
@@ -92,6 +96,7 @@ export function useAdminTestsTopics() {
     topicsErrorMessage,
     effectiveSelectedTopicId,
     navigateToTopic,
+    navigateToList,
     listMode,
     setListMode,
     isSelectedTopicArchived,

@@ -57,6 +57,7 @@ interface UseAdminTestsWorkspaceActionsParams {
   setNewTestSlug: (value: string) => void;
   setNewTestDescription: (value: string) => void;
   setIsAiGeneratorOpen: (value: boolean) => void;
+  setIsImportConfirmOpen: (value: boolean) => void;
   createTopicMutation: CreateTopicMutation;
   createTopicFromAiMutation: CreateTopicFromAiMutation;
   importProfOrientationV3PlusMutation: ImportProfOrientationV3PlusMutation;
@@ -89,6 +90,7 @@ interface UseAdminTestsWorkspaceActionsParams {
   restoreTopicMutation: RestoreTopicMutation;
   setListMode: (value: 'active' | 'archived') => void;
   navigateToTopic: (topicId: number) => void;
+  navigateToList: () => void;
 }
 
 function createCreationActions(params: UseAdminTestsWorkspaceActionsParams) {
@@ -113,9 +115,12 @@ function createCreationActions(params: UseAdminTestsWorkspaceActionsParams) {
   });
   const handleImportProfOrientationV3Plus = createHandleImportProfOrientationV3Plus({
     importProfOrientationV3PlusMutation: params.importProfOrientationV3PlusMutation,
+    deleteTopicMutation: params.deleteTopicMutation,
+    setIsImportConfirmOpen: params.setIsImportConfirmOpen,
     draftAutosave: params.draftAutosave,
     refetchTestsData: params.refetchTestsData,
     navigateToTopic: params.navigateToTopic,
+    navigateToList: params.navigateToList,
   });
 
   return {

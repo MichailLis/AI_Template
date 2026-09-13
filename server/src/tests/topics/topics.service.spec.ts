@@ -362,6 +362,37 @@ describe('TestsService analysis prompt attachment', () => {
     ]);
   });
 
+  /**
+   * Находка аудита FLOW-03: «Импорт v3+» создавал очередную копию методики, не упоминая
+   * существующие. Копии узнаются по виду подсчета черновика, а не по названию, которое можно менять.
+   */
+  it('listTopics exposes the scoring kind of the draft so methodology copies can be found', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'prof-orientation-v3-plus',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ scoringKind: 'PROF_ORIENTATION_V3_PLUS' }),
+        activePublishedVersion: null,
+      },
+      {
+        id: 2,
+        slug: 'career-skills',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 20 }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([]);
+
+    const result = await service.listTopics(5);
+
+    expect(result.topics.map((topic) => [topic.slug, topic.scoringKind])).toEqual([
+      ['prof-orientation-v3-plus', 'PROF_ORIENTATION_V3_PLUS'],
+      ['career-skills', 'DEFAULT'],
+    ]);
+  });
+
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
