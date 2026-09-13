@@ -59,6 +59,19 @@ const buildColumns = ({
   },
 ];
 
+function UserStatusBadge({ user }: { user: AdminUser }) {
+  const isActive = user.deactivatedAt === null;
+
+  return (
+    <Badge
+      variant="outline"
+      className={isActive ? adminBadgeClassNames.active : adminBadgeClassNames.inactive}
+    >
+      {isActive ? 'Активен' : 'Отключён'}
+    </Badge>
+  );
+}
+
 const getMobileRoleLabel = (role: string) => {
   if (role === 'ADMIN') {
     return 'Админ';
@@ -96,16 +109,24 @@ export function AdminUsersTable({
       renderRow={(user) => (
         <>
           <TableCell className="w-32 sm:min-w-48">
+            {/* Человека узнают по имени, поэтому оно первое; email — вторичная строка, а без имени
+                единственная. ID живет в карточке пользователя. Email режется многоточием, а не
+                рвется по буквам: полный адрес доступен по наведению. */}
             <div className="min-w-0">
-              {/* Email режется многоточием, а не рвется по буквам: разорванный посреди слова адрес
-                  мешает просматривать колонку глазами, полный адрес доступен по наведению. */}
-              <p className="truncate font-medium text-foreground" title={user.email}>
+              {user.name ? (
+                <p className="truncate font-medium text-foreground">{user.name}</p>
+              ) : null}
+              <p
+                className={cn(
+                  'truncate',
+                  user.name
+                    ? cn('text-xs', adminClassNames.text.muted)
+                    : 'font-medium text-foreground',
+                )}
+                title={user.email}
+              >
                 {user.email}
               </p>
-              <p className={cn('text-xs', adminClassNames.text.muted)}>ID: {user.id}</p>
-              {user.name ? (
-                <p className={cn('text-xs', adminClassNames.text.muted)}>{user.name}</p>
-              ) : null}
             </div>
           </TableCell>
           <TableCell className="w-20 sm:w-36">
@@ -119,18 +140,14 @@ export function AdminUsersTable({
               <span className="hidden sm:inline">{getRoleLabel(user.role)}</span>
               <span className="sm:hidden">{getMobileRoleLabel(user.role)}</span>
             </Badge>
+            {/* Колонка статуса скрыта до md: без этого бейджа отключенный аккаунт на телефоне
+                неотличим от активного. */}
+            <div className="mt-1 md:hidden">
+              <UserStatusBadge user={user} />
+            </div>
           </TableCell>
           <TableCell className="hidden w-32 md:table-cell">
-            <Badge
-              variant="outline"
-              className={
-                user.deactivatedAt === null
-                  ? adminBadgeClassNames.active
-                  : adminBadgeClassNames.inactive
-              }
-            >
-              {user.deactivatedAt === null ? 'Активен' : 'Отключён'}
-            </Badge>
+            <UserStatusBadge user={user} />
           </TableCell>
           <TableCell className={cn('hidden xl:table-cell', adminClassNames.table.mutedCell)}>
             {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Не входил'}

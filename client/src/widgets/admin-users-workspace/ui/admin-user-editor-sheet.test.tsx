@@ -122,6 +122,13 @@ describe('AdminUserEditorSheet', () => {
     expect(screen.getByLabelText('Email *')).toHaveValue('member@example.com');
   });
 
+  /** Находка аудита UX-10: ID ушел из строки таблицы и остается доступен в карточке пользователя. */
+  it('shows the user id in the sheet header', () => {
+    render(<AdminUserEditorSheet mode="edit" user={user} onClose={vi.fn()} onSubmit={vi.fn()} />);
+
+    expect(screen.getByText(/ID 5/)).toBeInTheDocument();
+  });
+
   it('does not offer a history while a user is being created', () => {
     render(<AdminUserEditorSheet mode="create" onClose={vi.fn()} onSubmit={vi.fn()} />);
 

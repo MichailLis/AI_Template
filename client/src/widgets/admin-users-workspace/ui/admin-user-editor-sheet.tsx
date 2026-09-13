@@ -283,7 +283,7 @@ export function AdminUserEditorSheet(props: AdminUserEditorSheetProps) {
                 <SheetDescription>
                   {mode === 'create'
                     ? 'Регистрации нет: аккаунт появляется, только когда его создаёт администратор.'
-                    : `Измените email или имя пользователя ${props.user?.email ?? ''}.`}
+                    : `ID ${props.user?.id ?? ''} · Измените email или имя пользователя ${props.user?.email ?? ''}.`}
                 </SheetDescription>
               </SheetHeader>
 
