@@ -98,4 +98,14 @@ describe('TestsAnalyticsPdfRendererService', () => {
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.slice(0, 4).toString('utf8')).toBe('%PDF');
   });
+
+  /** ait-rcw.29: спека проверяла только заголовок %PDF, а текст отчета печатал служебные ключи. */
+  it('prints report parameters and confidence metrics in Russian with the gap in points', () => {
+    const text = JSON.stringify(service.buildDefinition(createSummary('Отчёт')));
+
+    expect(text).not.toMatch(/Gap|Consistency Index|Readiness Top|scope:|linkStatus:|dateFrom:/);
+    expect(text).toContain('Охват: Весь тест');
+    expect(text).toContain('11,5 балла');
+    expect(text).not.toContain('11.5%');
+  });
 });

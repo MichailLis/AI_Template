@@ -195,6 +195,41 @@ describe('TestsAnalyticsExportService', () => {
     );
   });
 
+  /** ait-rcw.29: XLSX выгружал те же служебные ключи и коды, что и PDF. */
+  it('writes filters, demographics and attempt statuses in Russian', async () => {
+    const buffer = await service.toExcel(createSummary('Сводный отчет'));
+    const workbook = new ExcelJS.Workbook();
+    const bytes = new ArrayBuffer(buffer.byteLength);
+    new Uint8Array(bytes).set(buffer);
+    await workbook.xlsx.load(bytes);
+
+    const readRows = (name: string) => {
+      const rows: string[] = [];
+      workbook.getWorksheet(name)?.eachRow((row) => {
+        rows.push(
+          (row.values as Array<string | number | null | undefined>)
+            .slice(1)
+            .map((value) => (value === null || value === undefined ? '' : String(value)))
+            .join(' | '),
+        );
+      });
+      return rows.join('\n');
+    };
+
+    const summarySheet = readRows('Сводка');
+    expect(summarySheet).not.toMatch(/scope|linkStatus|dateFrom|publicLinkId/);
+    expect(summarySheet).toContain('Охват | Весь тест');
+
+    const demography = readRows('Демография');
+    expect(demography).toContain('Женский: 1');
+    expect(demography).toContain('Среднее общее: 3');
+    expect(demography).not.toMatch(/FEMALE|SECONDARY_GENERAL/);
+
+    const attempts = readRows('Прохождения');
+    expect(attempts).toContain('Пройдено');
+    expect(attempts).not.toMatch(/COMPLETED|Attempt ID/);
+  });
+
   it('delegates PDF export to renderer', async () => {
     const summary = createSummary('PDF отчёт');
     const expectedBuffer = Buffer.from('%PDF stub');

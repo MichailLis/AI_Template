@@ -4,6 +4,13 @@ import ExcelJS from 'exceljs';
 
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
 import { TestsAnalyticsPdfRendererService } from '../reporting/analytics-pdf-renderer.service';
+import {
+  buildReportFilterRows,
+  getReportAnalysisStatusLabel,
+  getReportAttemptStatusLabel,
+  getReportLlmStatusLabel,
+  getReportValueLabel,
+} from './analytics-report-labels';
 
 type MetricSection = Array<{ label: string; value: string | number }>;
 
@@ -72,19 +79,14 @@ const toCoverageRows = (summary: AdminTestAnalyticsSummaryDto): MetricSection =>
   { label: 'Готовых v3 результатов', value: summary.coverage.v3Results },
 ];
 
-const toFilterRows = (summary: AdminTestAnalyticsSummaryDto): MetricSection => [
-  { label: 'scope', value: summary.filters.scope },
-  { label: 'publicLinkId', value: toDisplayValue(summary.filters.publicLinkId) },
-  { label: 'linkStatus', value: summary.filters.linkStatus },
-  { label: 'dateFrom', value: toDisplayValue(summary.filters.dateFrom) },
-  { label: 'dateTo', value: toDisplayValue(summary.filters.dateTo) },
-];
+const toFilterRows = (summary: AdminTestAnalyticsSummaryDto): MetricSection =>
+  buildReportFilterRows(summary.filters);
 
 const toDemographyRows = (
   section: string,
   rows: Array<{ label: string; count: number; share: number }>,
 ): Array<DemographyRow> =>
-  rows.map((row) => [section, `${row.label}: ${row.count}`, `${row.share}%`]);
+  rows.map((row) => [section, `${getReportValueLabel(row.label)}: ${row.count}`, `${row.share}%`]);
 
 @Injectable()
 export class TestsAnalyticsExportService {
@@ -279,7 +281,7 @@ export class TestsAnalyticsExportService {
     summary: AdminTestAnalyticsSummaryDto,
   ): void {
     const sheet = createSheet(workbook, 'Прохождения', [
-      { header: 'Attempt ID', width: 12 },
+      { header: 'ID прохождения', width: 14 },
       { header: 'Публичная ссылка', width: 20 },
       { header: 'Код', width: 12 },
       { header: 'Начало', width: 28 },
@@ -290,7 +292,7 @@ export class TestsAnalyticsExportService {
     ]);
 
     addHeaderRow(sheet, [
-      'Attempt ID',
+      'ID прохождения',
       'Публичная ссылка',
       'Код',
       'Начало',
@@ -307,9 +309,9 @@ export class TestsAnalyticsExportService {
         row.shortCode,
         row.startedAt,
         toDisplayValue(row.finishedAt),
-        row.status,
-        toDisplayValue(row.analysisStatus),
-        toDisplayValue(row.llmStatus),
+        getReportAttemptStatusLabel(row.status),
+        getReportAnalysisStatusLabel(row.analysisStatus),
+        getReportLlmStatusLabel(row.llmStatus),
       ]);
     }
   }
