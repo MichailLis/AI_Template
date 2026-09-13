@@ -54,6 +54,7 @@ describe('TestsTopicDetailResponseSchema', () => {
           promptTitle: 'Career analysis',
           versionNumber: 2,
           model: 'google/gemini-2.0-flash-exp:free',
+          promptArchived: false,
         },
         questions: [],
       },

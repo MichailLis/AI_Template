@@ -201,7 +201,19 @@ export const validateDraftForPublish = (draft: {
     options: Array<{ id: number }>;
     sliderBands: Array<{ minValue: number; maxValue: number }>;
   }>;
+  analysisPromptVersion?: {
+    analysisPrompt: { title: string; archivedAt?: Date | null };
+  } | null;
 }) => {
+  // Удалить промпт, подключенный только к черновикам, разрешено. Публиковать такой черновик нельзя:
+  // фоновый анализ берет промпт из версии теста и не смотрит, удален ли он.
+  const attachedPrompt = draft.analysisPromptVersion?.analysisPrompt;
+  if (attachedPrompt?.archivedAt) {
+    throw new BadRequestException(
+      `Промпт анализа «${attachedPrompt.title}» удален. Подключите другой промпт перед публикацией.`,
+    );
+  }
+
   if (draft.questions.length === 0) {
     throw new BadRequestException('Draft must contain at least one question before publish');
   }

@@ -41,6 +41,7 @@ const attachedV1: AnalysisPromptVersionSummary = {
   id: 42,
   promptId: 7,
   promptTitle: 'Профориентация v3+',
+  promptArchived: false,
   versionNumber: 1,
   model: 'openai/gpt-oss-120b',
 };

@@ -15,6 +15,7 @@ export interface AnalysisPromptVersionSummary {
   promptTitle: string;
   versionNumber: number;
   model: string;
+  promptArchived: boolean;
 }
 
 interface AdminTestsAnalysisPromptSettingsSectionProps {
@@ -106,6 +107,13 @@ export function AdminTestsAnalysisPromptSettingsSection({
             <p className={`mt-1 truncate text-xs ${adminClassNames.text.body}`}>
               {selectedAnalysisPromptVersion.model}
             </p>
+            {/* Промпт, подключенный только к черновику, можно удалить; сервер такой черновик не
+                опубликует, поэтому причину видно заранее, а не только в ошибке публикации. */}
+            {selectedAnalysisPromptVersion.promptArchived ? (
+              <p className={`mt-2 text-xs font-medium ${adminToneClassNames.danger.text}`}>
+                Промпт удален. Подключите другой промпт — иначе тест не опубликовать.
+              </p>
+            ) : null}
             {newerPromptVersion ? (
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className={`text-xs font-medium ${adminToneClassNames.warning.text}`}>

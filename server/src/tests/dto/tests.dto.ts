@@ -105,6 +105,11 @@ export const AnalysisPromptVersionSummarySchema = z
     promptTitle: z.string(),
     versionNumber: z.number(),
     model: z.string(),
+    /**
+     * Промпт удален (архивирован). Черновик с таким промптом не публикуется: анализ продолжил бы
+     * работать на промпте, которого в библиотеке уже нет.
+     */
+    promptArchived: z.boolean(),
   })
   .nullable();
 

@@ -73,6 +73,7 @@ export class TestsService {
       model: string;
       analysisPrompt: {
         title: string;
+        archivedAt?: Date | null;
       };
     } | null,
   ) {
@@ -83,6 +84,7 @@ export class TestsService {
           promptTitle: version.analysisPrompt.title,
           versionNumber: version.versionNumber,
           model: version.model,
+          promptArchived: Boolean(version.analysisPrompt.archivedAt),
         }
       : null;
   }
@@ -102,6 +104,7 @@ export class TestsService {
                 analysisPrompt: {
                   select: {
                     title: true,
+                    archivedAt: true,
                   },
                 },
               },
@@ -129,6 +132,7 @@ export class TestsService {
                 analysisPrompt: {
                   select: {
                     title: true,
+                    archivedAt: true,
                   },
                 },
               },

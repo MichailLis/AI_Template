@@ -15,4 +15,5 @@ export type TestsTopicDetailResponseDtoPublishedAnalysisPromptVersion = {
   promptTitle: string;
   versionNumber: number;
   model: string;
+  promptArchived: boolean;
 } | null;

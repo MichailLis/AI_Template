@@ -404,6 +404,7 @@ describe('TestsService analysis prompt attachment', () => {
       promptTitle: 'Career analysis',
       versionNumber: 2,
       model: 'google/gemini-2.0-flash-exp:free',
+      promptArchived: false,
     });
   });
 
@@ -511,6 +512,27 @@ describe('TestsService analysis prompt attachment', () => {
         },
       },
     });
+  });
+
+  /** ait-rcw.30: публикация черновика с удаленным промптом анализа проходила молча. */
+  it('publishTopic refuses a draft attached to a deleted analysis prompt', async () => {
+    const snapshot = createTopicSnapshot();
+    prismaMock.testTopic.findUnique.mockResolvedValue({
+      ...snapshot,
+      activeDraftVersion: {
+        ...snapshot.activeDraftVersion,
+        analysisPromptVersion: {
+          ...publishedPromptVersion,
+          analysisPrompt: {
+            ...publishedPromptVersion.analysisPrompt,
+            archivedAt: new Date('2026-09-12T00:00:00.000Z'),
+          },
+        },
+      },
+    });
+
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(BadRequestException);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('importProfOrientationV3Plus creates a full Polus draft with scoring config', async () => {
