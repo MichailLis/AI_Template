@@ -72,7 +72,8 @@ function TestQuestionsOnlyHeader({
             onClick={() => navigate(`/admin/tests/${topicId}/settings`)}
             className={adminClassNames.text.hoverHeading}
           >
-            Настройки
+            {/* Не просто «Настройки»: так называется пункт меню с глобальными ключами и интеграциями. */}
+            Настройки теста
           </button>
           {loadingStatus ? <span className="animate-pulse">{loadingStatus}</span> : null}
         </div>

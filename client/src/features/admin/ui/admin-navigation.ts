@@ -22,23 +22,11 @@ export interface AdminNavItem {
   group: AdminNavGroupId;
 }
 
+/**
+ * «Контент» — только тесты. Пользователи и промпты настраивают систему (доступ и сценарии анализа),
+ * поэтому стоят рядом с глобальными настройками, а не среди содержимого.
+ */
 export const navItems: AdminNavItem[] = [
-  {
-    id: 'users',
-    label: 'Пользователи',
-    description: 'Роли и доступы',
-    icon: Users,
-    href: '/admin/users',
-    group: 'content',
-  },
-  {
-    id: 'prompts',
-    label: 'Промпты',
-    description: 'Сценарии анализа',
-    icon: MessageSquareText,
-    href: '/admin/prompts',
-    group: 'content',
-  },
   {
     id: 'tests',
     label: 'Тесты',
@@ -70,6 +58,22 @@ export const navItems: AdminNavItem[] = [
     icon: BarChart3,
     href: '/admin/analytics',
     group: 'analytics',
+  },
+  {
+    id: 'users',
+    label: 'Пользователи',
+    description: 'Роли и доступы',
+    icon: Users,
+    href: '/admin/users',
+    group: 'system',
+  },
+  {
+    id: 'prompts',
+    label: 'Промпты',
+    description: 'Сценарии анализа',
+    icon: MessageSquareText,
+    href: '/admin/prompts',
+    group: 'system',
   },
   {
     id: 'settings',
