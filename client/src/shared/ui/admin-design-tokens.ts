@@ -285,7 +285,8 @@ export const adminClassNames = {
       'ml-auto rounded-full border border-admin-border bg-admin-panel px-3 py-1.5 text-sm text-admin-muted shadow-sm',
   },
   actionMenu: {
-    card: 'absolute right-0 top-10 z-20 w-48 border-admin-border shadow-md',
+    // Ширина по самому длинному пункту: при фиксированной w-48 «Снять права администратора» обрезался.
+    card: 'absolute right-0 top-10 z-20 w-max min-w-48 max-w-[calc(100vw-2rem)] border-admin-border shadow-md',
     content: 'flex flex-col gap-2 p-2',
     item: 'h-8 justify-start px-2 text-left text-sm',
     dangerItem:
