@@ -1,0 +1,52 @@
+# Personal data processing modes — SDD progress
+
+- Task 1 — schema and DTO contracts: COMPLETE
+  - TDD: RED confirmed; GREEN 47/47 targeted tests.
+  - Gates: Prisma generation, migration verification, Prettier, diff check passed.
+  - Review: APPROVED after HTTP(S), admin round-trip, readiness, and exact-migration fixes.
+  - Commit: none; work remains intentionally uncommitted on `main`.
+- Task 2 — operator resolver and link snapshots: COMPLETE
+  - TDD: RED confirmed; GREEN 34/34 targeted tests.
+  - Review: APPROVED; type-only import cleanup applied.
+- Task 3 — public metadata and attempt snapshots: COMPLETE
+  - TDD: RED confirmed; GREEN 47/47 targeted tests; server build passed.
+  - Review: APPROVED; platform fallback constants consolidated.
+- Task 4 — generated API and organization admin UI: COMPLETE
+  - OpenAPI and Orval client regenerated successfully.
+  - TDD: RED confirmed; GREEN 5/5 workspace tests; client build passed.
+  - Review: APPROVED; input name/autocomplete cleanup applied.
+- Task 5 — public-link mode admin UI: COMPLETE
+  - TDD: RED confirmed; GREEN 16/16 workspace tests; client build passed.
+  - Review: APPROVED.
+- Task 6 — public entry operator disclosure and consent links: COMPLETE
+  - TDD: RED confirmed; GREEN 20/20 focused tests; client build passed.
+  - Review: APPROVED.
+- Task 7 — integration and full verification: COMPLETE WITH BASELINE BLOCKERS
+  - Backend unit: 47 suites / 306 tests passed.
+  - Backend E2E: 5 suites / 37 tests passed.
+  - Critical browser flows: 3/3 passed.
+  - Final changed frontend areas: 25 files / 70 tests passed after required rebuild.
+  - Server/client builds and root lint passed (one pre-existing max-lines warning).
+  - Release gate stops at pre-existing architecture manifest/privacy-page violations.
+  - Full client suite has one pre-existing unrelated exact-text assertion failure.
+  - Maintainability has two pre-existing unrelated violations; task-added session-spec violation was removed.
+
+## Education organization form guidance
+
+- UX design: APPROVED in chat.
+- Written spec: `docs/superpowers/specs/2026-07-10-education-organization-form-guidance-design.md`.
+- Written spec: APPROVED in chat.
+- Implementation plan: `docs/superpowers/plans/2026-07-10-education-organization-form-guidance.md`.
+- Task 1 — UX contract tests: COMPLETE (no commit; review clean after exact-copy fix).
+  - TDD: RED confirmed twice; 2/2 tests fail on missing `Название *` behavior.
+  - Review: APPROVED; exact complete helper copy replaces partial/obsolete checks.
+- Task 2 — labels, required semantics, and placeholders: COMPLETE (no commit; review clean).
+  - TDD: GREEN 1 file / 2 tests passed, output pristine.
+  - Review: APPROVED; exact config/copy/semantics preserved.
+- Task 3 — static, container, and browser verification: COMPLETE WITH BASELINE CONCERNS.
+  - Frontend rebuilt/recreated; backend rebuilt/recreated after stale runtime detection.
+  - Focused Vitest 1 file / 2 tests, client lint, client build, Prettier, and whitespace checks passed.
+  - Browser contract, readiness persistence, public disclosure, consent enforcement, and real session start passed.
+  - Browser consoles had no errors; temporary link archived and organization fields restored.
+  - Remaining concerns are pre-existing lint/line-ending warnings plus the intentionally preserved historical browser-test attempt.
+  - Independent final review: APPROVED; no Critical, Important, or Minor findings.

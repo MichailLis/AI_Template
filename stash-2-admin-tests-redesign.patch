@@ -1,0 +1,282 @@
+diff --git a/client/src/widgets/admin-tests-workspace/ui/admin-tests-confirm-dialogs.tsx b/client/src/widgets/admin-tests-workspace/ui/admin-tests-confirm-dialogs.tsx
+deleted file mode 100644
+index f03e165..0000000
+--- a/client/src/widgets/admin-tests-workspace/ui/admin-tests-confirm-dialogs.tsx
++++ /dev/null
+@@ -1,111 +0,0 @@
+-import { ConfirmActionDialog, type TestTopicListItem } from '@/features/tests';
+-
+-interface PendingQuestion {
+-  title: string;
+-}
+-
+-interface AdminTestsConfirmDialogsProps {
+-  isSwitchConfirmOpen: boolean;
+-  onConfirmTopicSwitch: () => void;
+-  onCloseTopicSwitch: () => void;
+-  isDiscardQuestionConfirmOpen: boolean;
+-  onConfirmDiscardQuestion: () => void;
+-  onCloseDiscardQuestion: () => void;
+-  pendingDeleteTopic: TestTopicListItem | null;
+-  isDeletingTopic: boolean;
+-  onConfirmDeleteTopic: () => void;
+-  onCloseDeleteTopic: () => void;
+-  pendingDeleteQuestion: PendingQuestion | null;
+-  isDeletingQuestion: boolean;
+-  onConfirmDeleteQuestion: () => void;
+-  onCloseDeleteQuestion: () => void;
+-  isPublishConfirmOpen: boolean;
+-  isPublishing: boolean;
+-  onConfirmPublish: () => void;
+-  onClosePublish: () => void;
+-}
+-
+-export function AdminTestsConfirmDialogs({
+-  isSwitchConfirmOpen,
+-  onConfirmTopicSwitch,
+-  onCloseTopicSwitch,
+-  isDiscardQuestionConfirmOpen,
+-  onConfirmDiscardQuestion,
+-  onCloseDiscardQuestion,
+-  pendingDeleteTopic,
+-  isDeletingTopic,
+-  onConfirmDeleteTopic,
+-  onCloseDeleteTopic,
+-  pendingDeleteQuestion,
+-  isDeletingQuestion,
+-  onConfirmDeleteQuestion,
+-  onCloseDeleteQuestion,
+-  isPublishConfirmOpen,
+-  isPublishing,
+-  onConfirmPublish,
+-  onClosePublish,
+-}: AdminTestsConfirmDialogsProps) {
+-  return (
+-    <>
+-      <ConfirmActionDialog
+-        open={isSwitchConfirmOpen}
+-        title="Переключить тест без сохранения?"
+-        description="У текущего теста есть несохраненные изменения. Они будут потеряны при переключении."
+-        confirmLabel="Переключить без сохранения"
+-        variant="destructive"
+-        onConfirm={onConfirmTopicSwitch}
+-        onClose={onCloseTopicSwitch}
+-      />
+-
+-      <ConfirmActionDialog
+-        open={isDiscardQuestionConfirmOpen}
+-        title="Закрыть редактор вопроса?"
+-        description="Есть несохраненные изменения в вопросе. Они будут потеряны."
+-        confirmLabel="Закрыть без сохранения"
+-        variant="destructive"
+-        onConfirm={onConfirmDiscardQuestion}
+-        onClose={onCloseDiscardQuestion}
+-      />
+-
+-      <ConfirmActionDialog
+-        open={Boolean(pendingDeleteTopic)}
+-        title="Удалить тест?"
+-        description={
+-          pendingDeleteTopic
+-            ? `Тест "${pendingDeleteTopic.draftTitle}" будет удален вместе с черновиком и опубликованными версиями.`
+-            : 'Тест будет удален вместе с черновиком и опубликованными версиями.'
+-        }
+-        confirmLabel="Удалить тест"
+-        variant="destructive"
+-        isConfirming={isDeletingTopic}
+-        onConfirm={onConfirmDeleteTopic}
+-        onClose={onCloseDeleteTopic}
+-      />
+-
+-      <ConfirmActionDialog
+-        open={Boolean(pendingDeleteQuestion)}
+-        title="Удалить вопрос?"
+-        description={
+-          pendingDeleteQuestion
+-            ? `Вопрос "${pendingDeleteQuestion.title}" будет удален из версии в работе.`
+-            : 'Вопрос будет удален из версии в работе.'
+-        }
+-        confirmLabel="Удалить вопрос"
+-        variant="destructive"
+-        isConfirming={isDeletingQuestion}
+-        onConfirm={onConfirmDeleteQuestion}
+-        onClose={onCloseDeleteQuestion}
+-      />
+-
+-      <ConfirmActionDialog
+-        open={isPublishConfirmOpen}
+-        title="Опубликовать текущую версию теста?"
+-        description="Текущая версия в работе станет опубликованной. После публикации будет создана новая версия в работе для дальнейших изменений."
+-        confirmLabel="Опубликовать"
+-        isConfirming={isPublishing}
+-        onConfirm={onConfirmPublish}
+-        onClose={onClosePublish}
+-      />
+-    </>
+-  );
+-}
+diff --git a/client/src/widgets/admin-tests-workspace/ui/admin-tests-workspace.tsx b/client/src/widgets/admin-tests-workspace/ui/admin-tests-workspace.tsx
+deleted file mode 100644
+index 586ad91..0000000
+--- a/client/src/widgets/admin-tests-workspace/ui/admin-tests-workspace.tsx
++++ /dev/null
+@@ -1,159 +0,0 @@
+-import { AiTestGeneratorModal, QuestionModal, TestEditor, TestsSidebar } from '@/features/tests';
+-
+-import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
+-import { PublicLinksHandoffCard } from './public-links-handoff-card';
+-import { useAdminTestsWorkspace } from './use-admin-tests-workspace';
+-
+-export function AdminTestsWorkspace() {
+-  const {
+-    topics,
+-    topicsQuery,
+-    topicsErrorMessage,
+-    detail,
+-    detailQuery,
+-    detailErrorMessage,
+-    draftForm,
+-    isDraftDirty,
+-    canPublish,
+-    draftAutosave,
+-    questionEditor,
+-    autosaveHint,
+-    effectiveSelectedTopicId,
+-    newTestTitle,
+-    newTestSlug,
+-    newTestDescription,
+-    testSearch,
+-    isAiGeneratorOpen,
+-    isPublishConfirmOpen,
+-    pendingDeleteTopic,
+-    isSwitchConfirmOpen,
+-    createTopicMutation,
+-    createTopicFromAiMutation,
+-    deleteTopicMutation,
+-    reorderQuestionsMutation,
+-    publishMutation,
+-    setTestSearch,
+-    setNewTestTitle,
+-    setNewTestSlug,
+-    setNewTestDescription,
+-    setIsAiGeneratorOpen,
+-    setPendingDeleteTopic,
+-    setPendingTopicSwitchId,
+-    setIsSwitchConfirmOpen,
+-    setIsPublishConfirmOpen,
+-    updateCurrentDraftEdits,
+-    handleCreateTest,
+-    handleCreateTestFromAi,
+-    handleSelectTest,
+-    handleConfirmTopicSwitch,
+-    handleConfirmDeleteTopic,
+-    handleConfirmPublish,
+-    handleReorderQuestions,
+-  } = useAdminTestsWorkspace();
+-
+-  return (
+-    <>
+-      <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+-        <TestsSidebar
+-          topics={topics}
+-          selectedTopicId={effectiveSelectedTopicId}
+-          topicsLoading={topicsQuery.isLoading}
+-          topicsError={topicsQuery.isError}
+-          topicsErrorMessage={topicsErrorMessage}
+-          searchValue={testSearch}
+-          onSearchChange={setTestSearch}
+-          newTestTitle={newTestTitle}
+-          newTestSlug={newTestSlug}
+-          newTestDescription={newTestDescription}
+-          isCreating={createTopicMutation.isPending}
+-          isCreatingWithAi={createTopicFromAiMutation.isPending}
+-          isDeletingTopic={deleteTopicMutation.isPending}
+-          deletingTopicId={pendingDeleteTopic?.id ?? null}
+-          onNewTestTitleChange={setNewTestTitle}
+-          onNewTestSlugChange={setNewTestSlug}
+-          onNewTestDescriptionChange={setNewTestDescription}
+-          onCreateTest={handleCreateTest}
+-          onOpenAiGenerator={() => setIsAiGeneratorOpen(true)}
+-          onRequestDeleteTest={setPendingDeleteTopic}
+-          onSelectTest={handleSelectTest}
+-          onRetryTopics={() => {
+-            void topicsQuery.refetch();
+-          }}
+-        />
+-
+-        <TestEditor
+-          hasSelection={Boolean(effectiveSelectedTopicId)}
+-          loading={detailQuery.isLoading}
+-          error={detailQuery.isError}
+-          errorMessage={detailErrorMessage}
+-          detail={detail}
+-          draftTitle={draftForm.title}
+-          draftDescription={draftForm.description}
+-          draftDirty={isDraftDirty}
+-          canPublish={canPublish}
+-          isSavingDraft={draftAutosave.isSavingDraft}
+-          isPublishing={publishMutation.isPending}
+-          isReorderingQuestions={reorderQuestionsMutation.isPending}
+-          isDeletingQuestion={questionEditor.isDeletingQuestion}
+-          autosaveHint={autosaveHint}
+-          autosaveError={draftAutosave.autoSaveError}
+-          onDraftTitleChange={(value) => updateCurrentDraftEdits({ title: value })}
+-          onDraftDescriptionChange={(value) => updateCurrentDraftEdits({ description: value })}
+-          onSaveDraft={() => draftAutosave.saveDraft('manual')}
+-          onRequestPublish={() => setIsPublishConfirmOpen(true)}
+-          onCreateQuestion={questionEditor.openCreateQuestionModal}
+-          onEditQuestion={questionEditor.openEditQuestionModal}
+-          onRequestDeleteQuestion={questionEditor.setPendingDeleteQuestion}
+-          onReorderQuestions={handleReorderQuestions}
+-          onRetryLoad={() => {
+-            void detailQuery.refetch();
+-          }}
+-        />
+-      </div>
+-
+-      <PublicLinksHandoffCard />
+-
+-      <AiTestGeneratorModal
+-        open={isAiGeneratorOpen}
+-        isCreating={createTopicFromAiMutation.isPending}
+-        onOpenChange={setIsAiGeneratorOpen}
+-        onCreate={handleCreateTestFromAi}
+-      />
+-
+-      <QuestionModal
+-        open={questionEditor.isQuestionModalOpen}
+-        mode={questionEditor.editingQuestionId ? 'edit' : 'create'}
+-        form={questionEditor.questionForm}
+-        submitError={questionEditor.questionSubmitError}
+-        isSubmitting={questionEditor.isQuestionSubmitting}
+-        onSubmit={questionEditor.handleSubmitQuestion}
+-        onRequestClose={questionEditor.handleQuestionModalRequestClose}
+-        onFormChange={questionEditor.handleQuestionFormChange}
+-      />
+-
+-      <AdminTestsConfirmDialogs
+-        isSwitchConfirmOpen={isSwitchConfirmOpen}
+-        onConfirmTopicSwitch={handleConfirmTopicSwitch}
+-        onCloseTopicSwitch={() => {
+-          setIsSwitchConfirmOpen(false);
+-          setPendingTopicSwitchId(null);
+-        }}
+-        isDiscardQuestionConfirmOpen={questionEditor.isDiscardQuestionConfirmOpen}
+-        onConfirmDiscardQuestion={questionEditor.closeQuestionModalDirect}
+-        onCloseDiscardQuestion={() => questionEditor.setIsDiscardQuestionConfirmOpen(false)}
+-        pendingDeleteTopic={pendingDeleteTopic}
+-        isDeletingTopic={deleteTopicMutation.isPending}
+-        onConfirmDeleteTopic={handleConfirmDeleteTopic}
+-        onCloseDeleteTopic={() => setPendingDeleteTopic(null)}
+-        pendingDeleteQuestion={questionEditor.pendingDeleteQuestion}
+-        isDeletingQuestion={questionEditor.isDeletingQuestion}
+-        onConfirmDeleteQuestion={questionEditor.handleConfirmDeleteQuestion}
+-        onCloseDeleteQuestion={() => questionEditor.setPendingDeleteQuestion(null)}
+-        isPublishConfirmOpen={isPublishConfirmOpen}
+-        isPublishing={publishMutation.isPending}
+-        onConfirmPublish={handleConfirmPublish}
+-        onClosePublish={() => setIsPublishConfirmOpen(false)}
+-      />
+-    </>
+-  );
+-}
