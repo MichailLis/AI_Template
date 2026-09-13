@@ -17,4 +17,5 @@ export type TestsAdminEducationOrganizationsControllerListEducationOrganizations
    * @maximum 50
    */
   limit?: number;
+  needsPersonalData?: boolean;
 };

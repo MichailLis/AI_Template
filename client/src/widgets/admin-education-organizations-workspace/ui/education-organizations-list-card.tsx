@@ -79,8 +79,15 @@ export function EducationOrganizationsListCard({
                   <span className={adminBadgeClassNames.pillSuccess}>Реквизиты заполнены</span>
                 ) : (
                   /* Незаполненные реквизиты блокируют публикацию от имени заведения — это
-                     предупреждение, а не нейтральное состояние. */
-                  <span className={adminBadgeClassNames.pillWarning}>Реквизиты не заполнены</span>
+                     предупреждение, а не нейтральное состояние. Последствие написано рядом:
+                     обычные ссылки у такого заведения работают, поэтому один бейдж вводил в
+                     заблуждение. */
+                  <div className="flex flex-col items-start gap-1">
+                    <span className={adminBadgeClassNames.pillWarning}>Реквизиты не заполнены</span>
+                    <span className={`text-xs ${adminClassNames.text.muted}`}>
+                      Ссылки от имени заведения недоступны
+                    </span>
+                  </div>
                 )}
               </TableCell>
               <TableCell>

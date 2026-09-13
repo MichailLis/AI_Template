@@ -50,6 +50,51 @@ describe('TestsEducationOrganizationService', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   * Находка аудита UX-15: у всех заведений стояло «Реквизиты не заполнены», и найти те, что требуют
+   * заполнения, можно было только листая страницы. Фильтр считает готовность тем же правилом, что и
+   * бейдж, и пагинирует уже отфильтрованный список.
+   */
+  it('lists only organizations whose personal data details still need filling', async () => {
+    const ready = createEducationOrganizationRecordFixture({
+      id: 1,
+      name: 'Готовый лицей',
+      fullName: 'Полное имя',
+      shortName: 'Краткое имя',
+      privacyPolicyUrl: 'https://ready.example/privacy',
+    });
+    const missingPolicy = createEducationOrganizationRecordFixture({
+      id: 2,
+      name: 'Без политики',
+      fullName: 'Полное имя',
+      shortName: 'Краткое имя',
+      privacyPolicyUrl: null,
+    });
+    const inactive = createEducationOrganizationRecordFixture({
+      id: 3,
+      name: 'Отключенный',
+      fullName: 'Полное имя',
+      shortName: 'Краткое имя',
+      privacyPolicyUrl: 'https://inactive.example/privacy',
+      isActive: false,
+    });
+
+    prismaMock.educationOrganization.count.mockResolvedValue(3);
+    prismaMock.educationOrganization.findMany.mockResolvedValue([ready, missingPolicy, inactive]);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+    const result = await (
+      service.listEducationOrganizations as (
+        userId: number,
+        query: { page: number; limit: number; needsPersonalData: boolean },
+      ) => Promise<{ total: number; totalPages: number; organizations: Array<{ id: number }> }>
+    )(7, { page: 1, limit: 1, needsPersonalData: true });
+
+    expect(result.total).toBe(2);
+    expect(result.totalPages).toBe(2);
+    expect(result.organizations.map((organization) => organization.id)).toEqual([2]);
+  });
+
   it('returns paginated education organizations with totals', async () => {
     const firstOrganization = createEducationOrganizationRecordFixture({
       id: 21,

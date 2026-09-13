@@ -13,6 +13,7 @@ import {
   PublicStudentEducationLevelSchema,
   PublicStudentGenderSchema,
 } from './tests-public.dto';
+import { QueryBooleanSchema } from './tests.dto';
 import { ANALYSIS_RESULT_KINDS } from '../analysis/analysis-result-kind';
 
 const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
@@ -256,6 +257,8 @@ export const AdminEducationOrganizationSchema = z.object({
 export const AdminEducationOrganizationsListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(50).optional(),
+  /** Только заведения, у которых реквизиты для выдачи ссылок от их имени еще не заполнены. */
+  needsPersonalData: QueryBooleanSchema.optional(),
 });
 
 export const AdminEducationOrganizationsListResponseSchema = z.object({

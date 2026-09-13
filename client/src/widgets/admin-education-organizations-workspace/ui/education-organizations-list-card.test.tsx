@@ -56,6 +56,27 @@ describe('EducationOrganizationsListCard', () => {
     expect(screen.getByText('Реквизиты не заполнены')).toBeInTheDocument();
   });
 
+  /**
+   * Находка аудита UX-15: бейдж «Реквизиты не заполнены» стоял у всех заведений, включая те, где
+   * работают ссылки, и не говорил, что именно он блокирует.
+   */
+  it('says what unfilled personal data details block', () => {
+    render(
+      <EducationOrganizationsListCard
+        organizations={[createOrganization(1, true), createOrganization(2, false)]}
+        page={1}
+        total={2}
+        totalPages={1}
+        isFetching={false}
+        onEditOrganization={vi.fn()}
+        onPreviousPage={vi.fn()}
+        onNextPage={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByText('Ссылки от имени заведения недоступны')).toHaveLength(1);
+  });
+
   it('opens the requested organization from a keyboard-accessible edit button', async () => {
     const user = userEvent.setup();
     const onEditOrganization = vi.fn();

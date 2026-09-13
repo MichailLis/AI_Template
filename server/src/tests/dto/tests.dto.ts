@@ -77,7 +77,8 @@ export const TestsTopicListResponseSchema = z.object({
   topics: z.array(TestsTopicSummarySchema),
 });
 
-const QueryBooleanSchema = z.preprocess((value) => {
+/** Булев query-параметр: `?flag=true` приходит строкой, а не boolean. */
+export const QueryBooleanSchema = z.preprocess((value) => {
   if (typeof value !== 'string') {
     return value;
   }

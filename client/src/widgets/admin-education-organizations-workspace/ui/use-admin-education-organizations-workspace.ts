@@ -24,10 +24,15 @@ export type EducationOrganizationEditorState =
 
 export function useAdminEducationOrganizationsWorkspace() {
   const [page, setPage] = useState(1);
+  const [needsPersonalDataOnly, setNeedsPersonalDataOnly] = useState(false);
   const [editorState, setEditorState] = useState<EducationOrganizationEditorState>('closed');
   const listOrganizationsQuery =
     useTestsAdminEducationOrganizationsControllerListEducationOrganizations(
-      { page, limit: ORGANIZATIONS_LIMIT },
+      {
+        page,
+        limit: ORGANIZATIONS_LIMIT,
+        ...(needsPersonalDataOnly ? { needsPersonalData: true } : {}),
+      },
       {
         query: {
           placeholderData: (previousData) => previousData,
@@ -73,8 +78,16 @@ export function useAdminEducationOrganizationsWorkspace() {
     );
   };
 
+  // Фильтр меняет число страниц: остаться на третьей странице отфильтрованного списка нельзя.
+  const changeNeedsPersonalDataOnly = (value: boolean) => {
+    setNeedsPersonalDataOnly(value);
+    setPage(1);
+  };
+
   return {
     organizations,
+    needsPersonalDataOnly,
+    changeNeedsPersonalDataOnly,
     editorState,
     organizationsPage: listOrganizationsQuery.data?.page ?? page,
     organizationsTotal: listOrganizationsQuery.data?.total ?? 0,
