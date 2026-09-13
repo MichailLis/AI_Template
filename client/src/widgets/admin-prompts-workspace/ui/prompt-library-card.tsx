@@ -1,4 +1,4 @@
-import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
+import { FileText, History, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 import { getPromptUsageSummary } from './admin-prompts-workspace.helpers';
+import { PromptHistoryDialog } from './prompt-history-dialog';
 
 import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';
 
@@ -75,6 +76,67 @@ const getDeleteDialogCopy = (prompt: AnalysisPromptListResponseDtoPromptsItem) =
   };
 };
 
+/** Кнопки истории и удаления промпта со своими диалогами. */
+function PromptItemActions({
+  prompt,
+  isDeleting,
+  onDeletePrompt,
+}: Pick<PromptLibraryItemProps, 'prompt' | 'isDeleting' | 'onDeletePrompt'>) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const deleteDialog = getDeleteDialogCopy(prompt);
+
+  const handleConfirmDelete = () => {
+    onDeletePrompt(prompt.id);
+    setIsDeleteDialogOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        aria-label={`История промпта ${prompt.title}`}
+        className={`shrink-0 ${adminClassNames.iconButton.muted}`}
+        onClick={() => setIsHistoryOpen(true)}
+      >
+        <History className="h-4 w-4" />
+      </Button>
+
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={isDeleting}
+        aria-label={`Удалить промпт ${prompt.title}`}
+        className={`shrink-0 ${adminClassNames.iconButton.danger}`}
+        onClick={() => setIsDeleteDialogOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+
+      <PromptHistoryDialog
+        prompt={isHistoryOpen ? prompt : null}
+        onClose={() => setIsHistoryOpen(false)}
+      />
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        title={deleteDialog.title}
+        description={deleteDialog.description}
+        confirmLabel="Удалить"
+        cancelLabel={deleteDialog.isBlocked ? 'Закрыть' : undefined}
+        hideConfirm={deleteDialog.isBlocked}
+        variant="destructive"
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
+    </>
+  );
+}
+
 function PromptLibraryItem({
   prompt,
   isSelected,
@@ -95,14 +157,6 @@ function PromptLibraryItem({
     usage.testsOnOutdatedVersions,
     ['тест', 'теста', 'тестов'],
   )} ${pluralizeRu(usage.testsOnOutdatedVersions, ['остался', 'остались', 'остались'])} на прежних версиях промпта`;
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const deleteDialog = getDeleteDialogCopy(prompt);
-
-  const handleConfirmDelete = () => {
-    onDeletePrompt(prompt.id);
-    setIsDeleteDialogOpen(false);
-  };
-
   return (
     <div
       className={cn(
@@ -153,30 +207,7 @@ function PromptLibraryItem({
         ) : null}
       </button>
 
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        disabled={isDeleting}
-        aria-label={`Удалить промпт ${prompt.title}`}
-        className={`shrink-0 ${adminClassNames.iconButton.danger}`}
-        onClick={() => setIsDeleteDialogOpen(true)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-
-      <ConfirmActionDialog
-        open={isDeleteDialogOpen}
-        title={deleteDialog.title}
-        description={deleteDialog.description}
-        confirmLabel="Удалить"
-        cancelLabel={deleteDialog.isBlocked ? 'Закрыть' : undefined}
-        hideConfirm={deleteDialog.isBlocked}
-        variant="destructive"
-        isConfirming={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteDialogOpen(false)}
-      />
+      <PromptItemActions prompt={prompt} isDeleting={isDeleting} onDeletePrompt={onDeletePrompt} />
     </div>
   );
 }

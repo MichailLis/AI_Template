@@ -4,6 +4,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PromptLibraryCard } from './prompt-library-card';
 
+vi.mock('@/shared/api/generated/admin/admin', () => ({
+  useAnalysisPromptsControllerGetPromptHistory: () => ({
+    data: {
+      events: [
+        {
+          id: 1,
+          action: 'PROMPT_VERSION_CREATED',
+          actor: { id: 1, email: 'admin@admin.admin', name: null },
+          changes: [
+            {
+              field: 'model',
+              before: 'google/gemini-2.0-flash-exp:free',
+              after: 'deepseek/deepseek-v4-flash',
+            },
+          ],
+          createdAt: '2026-09-13T10:00:00.000Z',
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 import type {
   AnalysisPromptListResponseDtoPromptsItem,
   AnalysisPromptListResponseDtoPromptsItemVersionsItem,
@@ -183,5 +207,33 @@ describe('PromptLibraryCard deletion', () => {
 
     expect(screen.getByText('Удалить промпт?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Удалить' })).toBeInTheDocument();
+  });
+});
+
+/** Находка аудита FLOW-06: нельзя было узнать, кто и когда поменял промпт. */
+describe('PromptLibraryCard history', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('opens the history of a prompt with who changed what', async () => {
+    const user = userEvent.setup();
+    render(
+      <PromptLibraryCard
+        {...baseProps}
+        prompts={[makePrompt([makePromptVersion({ id: 43, versionNumber: 2 })])]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'История промпта Профориентация v3+' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Создана новая версия промпта')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        'Модель: google/gemini-2.0-flash-exp:free → deepseek/deepseek-v4-flash',
+      ),
+    ).toBeInTheDocument();
+    expect(baseProps.onSelectPrompt).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,24 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
+vi.mock('@/shared/api/generated/admin/admin', () => ({
+  useAdminControllerGetUserHistory: () => ({
+    data: {
+      events: [
+        {
+          id: 1,
+          action: 'USER_ROLE_CHANGED',
+          actor: { id: 1, email: 'admin@admin.admin', name: null },
+          changes: [{ field: 'role', before: 'USER', after: 'ADMIN' }],
+          createdAt: '2026-09-13T10:00:00.000Z',
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 const user: AdminUser = {
   id: 5,
   email: 'member@example.com',
@@ -83,5 +101,30 @@ describe('AdminUserEditorSheet', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Сохранить изменения' }));
 
     expect(onSubmit).toHaveBeenCalledWith({ email: 'member@example.com', name: null });
+  });
+
+  /**
+   * Находка аудита FLOW-06: у пользователя были видны только «Создан», «Обновлен» и «Последний
+   * вход» — нельзя было узнать, кто выдал права администратора или отключил доступ.
+   */
+  it('shows the account change history on its own tab', async () => {
+    render(<AdminUserEditorSheet mode="edit" user={user} onClose={vi.fn()} onSubmit={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole('tab', { name: 'История' }));
+
+    expect(screen.getByText('Изменена роль')).toBeInTheDocument();
+    expect(screen.getByText('Роль: Пользователь → Администратор')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Email *')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Сохранить изменения' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Данные' }));
+
+    expect(screen.getByLabelText('Email *')).toHaveValue('member@example.com');
+  });
+
+  it('does not offer a history while a user is being created', () => {
+    render(<AdminUserEditorSheet mode="create" onClose={vi.fn()} onSubmit={vi.fn()} />);
+
+    expect(screen.queryByRole('tab', { name: 'История' })).not.toBeInTheDocument();
   });
 });

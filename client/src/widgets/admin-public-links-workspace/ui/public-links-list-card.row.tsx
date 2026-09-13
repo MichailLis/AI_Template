@@ -1,6 +1,7 @@
 import {
   Archive,
   ArrowUpRight,
+  History,
   MoreHorizontal,
   Palette,
   Power,
@@ -41,6 +42,7 @@ export interface PublicLinkActionHandlers {
   onArchivePublicLink: (linkId: number) => void;
   onRestorePublicLink: (linkId: number) => void;
   onMoveToActiveVersion: (link: PublicLinkListItem) => void;
+  onOpenHistory: (link: PublicLinkListItem) => void;
   isUpdatingPublicLink: boolean;
   isRegeneratingShortCode: boolean;
   isArchivingPublicLink: boolean;
@@ -213,6 +215,16 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
               isRestoringPublicLink={handlers.isRestoringPublicLink}
             />
           )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 justify-start px-2 text-left text-sm"
+            onClick={() => closeAfter(handlers.onOpenHistory)(link)}
+          >
+            <History className="mr-2 h-3.5 w-3.5" />
+            История изменений
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

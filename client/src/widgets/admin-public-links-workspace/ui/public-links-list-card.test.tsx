@@ -15,6 +15,7 @@ const baseHandlers = {
   onRestorePublicLink: vi.fn(),
   onOpenBrandingBuilder: vi.fn(),
   onMoveToActiveVersion: vi.fn(),
+  onOpenHistory: vi.fn(),
   isUpdatingPublicLink: false,
   isRegeneratingShortCode: false,
   isArchivingPublicLink: false,
@@ -220,5 +221,26 @@ describe('PublicLinksListCard test version', () => {
     await user.click(screen.getByLabelText('Действия публичной ссылки'));
 
     expect(screen.queryByRole('button', { name: /Перевести на/ })).not.toBeInTheDocument();
+  });
+
+  /** Находка аудита FLOW-06: кто и когда отключил ссылку или поменял согласие, не было видно. */
+  it('opens the change history of a link from its menu, archived or not', async () => {
+    const user = userEvent.setup();
+    const archivedLink = { ...outdatedLink, archivedAt: '2026-09-01T10:00:00.000Z' };
+    render(
+      <PublicLinksListCard
+        publicLinksTab="archived"
+        visiblePublicLinks={[archivedLink]}
+        publicLinksLoading={false}
+        publicLinksError={false}
+        searchValue=""
+        {...baseHandlers}
+      />,
+    );
+
+    await user.click(screen.getByLabelText('Действия публичной ссылки'));
+    await user.click(screen.getByRole('button', { name: 'История изменений' }));
+
+    expect(baseHandlers.onOpenHistory).toHaveBeenCalledWith(archivedLink);
   });
 });

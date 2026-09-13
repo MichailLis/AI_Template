@@ -11,13 +11,19 @@ import type { FormEvent } from 'react';
 
 const LIMIT = 10;
 
+/**
+ * Удаления пользователей нет, есть только отключение, поэтому отключенные аккаунты по умолчанию
+ * скрыты: иначе тестовые учетные записи копились в общем списке.
+ */
+const DEFAULT_STATUS_FILTER: StatusFilter = 'ACTIVE';
+
 /** Список, фильтры и меню строк. Изменения пользователей живут в `useAdminUserActions`. */
 export function useAdminUsersWorkspace() {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_STATUS_FILTER);
   const [sortBy, setSortBy] = useState<SortBy>('updatedAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [page, setPage] = useState(1);
@@ -65,7 +71,7 @@ export function useAdminUsersWorkspace() {
     setSearchInput('');
     setSearchQuery('');
     setRoleFilter('ALL');
-    setStatusFilter('ALL');
+    setStatusFilter(DEFAULT_STATUS_FILTER);
     setSortBy('updatedAt');
     setSortOrder('desc');
     setPage(1);
@@ -106,11 +112,15 @@ export function useAdminUsersWorkspace() {
     setPage((previous) => previous + 1);
   };
 
+  const hasActiveFilters =
+    roleFilter !== 'ALL' || statusFilter !== DEFAULT_STATUS_FILTER || searchInput.trim().length > 0;
+
   return {
     currentUserId,
     searchInput,
     roleFilter,
     statusFilter,
+    hasActiveFilters,
     sortBy,
     sortOrder,
     activeActionsUserId,

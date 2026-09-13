@@ -103,6 +103,7 @@ export function AdminUsersWorkspace() {
     searchInput,
     roleFilter,
     statusFilter,
+    hasActiveFilters,
     sortBy,
     sortOrder,
     activeActionsUserId,
@@ -161,9 +162,7 @@ export function AdminUsersWorkspace() {
             statusFilter={statusFilter}
             total={usersQuery.data.total}
             isFetching={usersQuery.isFetching}
-            hasActiveFilters={
-              roleFilter !== 'ALL' || statusFilter !== 'ALL' || searchInput.trim().length > 0
-            }
+            hasActiveFilters={hasActiveFilters}
             onSearchInputChange={handleSearchInputChange}
             onSearchSubmit={handleSearchSubmit}
             onResetFilters={handleResetFilters}
