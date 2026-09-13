@@ -759,6 +759,48 @@
   font-weight: 700;
 }
 
+/* Таймер и карточка вопроса — один элемент сетки hero, иначе она разносит их по высоте экрана. */
+.theme-public--polus .polus-run-stack {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+}
+
+.theme-public--polus .polus-question-card.polus-expired-card {
+  display: grid;
+  gap: 14px;
+}
+
+.theme-public--polus .polus-question-card.polus-expired-card p {
+  margin: 0;
+}
+
+.theme-public--polus .polus-expired-card .polus-question-actions {
+  margin-top: 12px;
+}
+
+.theme-public--polus .polus-run-timer {
+  display: flex;
+  flex-wrap: wrap;
+  width: min(100%, 640px);
+  align-items: center;
+  justify-self: center;
+  gap: 4px 14px;
+  color: rgba(5, 8, 49, 0.58);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.theme-public--polus .polus-run-timer-clock {
+  color: var(--polus-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-public--polus .polus-run-timer--warning,
+.theme-public--polus .polus-run-timer--warning .polus-run-timer-clock {
+  color: #9a3412;
+}
+
 .theme-public--polus .polus-progress-line {
   height: 8px;
   overflow: hidden;

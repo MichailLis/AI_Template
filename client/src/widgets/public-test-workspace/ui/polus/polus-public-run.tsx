@@ -1,3 +1,5 @@
+import { PublicTestRunTimer } from '../public-test-run-timer';
+
 import { PolusPublicLayout } from './polus-public-layout';
 import { PolusPublicQuestionCard } from './polus-public-question-card';
 
@@ -14,6 +16,7 @@ interface PolusPublicRunProps {
   totalQuestionsCount: number;
   currentAnswer: unknown;
   questionTransitionClass: string;
+  remainingSeconds: number | null;
   isSubmitting: boolean;
   onAnswerChange: (questionId: number, value: unknown) => void;
   onBack: () => void;
@@ -27,6 +30,7 @@ export function PolusPublicRun({
   totalQuestionsCount,
   currentAnswer,
   questionTransitionClass,
+  remainingSeconds,
   isSubmitting,
   onAnswerChange,
   onBack,
@@ -37,23 +41,28 @@ export function PolusPublicRun({
 
   return (
     <PolusPublicLayout view="question">
-      <div
-        key={currentQuestion.id}
-        className={`public-question-transition ${questionTransitionClass}`}
-      >
-        <PolusPublicQuestionCard
-          question={currentQuestion}
-          currentAnswer={currentAnswer}
-          currentQuestionIndex={currentQuestionIndex}
-          totalQuestionsCount={totalQuestionsCount}
-          isLastQuestion={currentQuestionIndex === session.questions.length - 1}
-          isSubmitting={isSubmitting}
-          canGoBack={currentQuestionIndex > 0}
-          onAnswerChange={onAnswerChange}
-          onBack={onBack}
-          onNext={onNext}
-          onFinish={onFinish}
-        />
+      <div className="polus-run-stack">
+        {remainingSeconds !== null ? (
+          <PublicTestRunTimer remainingSeconds={remainingSeconds} variant="polus" />
+        ) : null}
+        <div
+          key={currentQuestion.id}
+          className={`public-question-transition ${questionTransitionClass}`}
+        >
+          <PolusPublicQuestionCard
+            question={currentQuestion}
+            currentAnswer={currentAnswer}
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestionsCount={totalQuestionsCount}
+            isLastQuestion={currentQuestionIndex === session.questions.length - 1}
+            isSubmitting={isSubmitting}
+            canGoBack={currentQuestionIndex > 0}
+            onAnswerChange={onAnswerChange}
+            onBack={onBack}
+            onNext={onNext}
+            onFinish={onFinish}
+          />
+        </div>
       </div>
     </PolusPublicLayout>
   );

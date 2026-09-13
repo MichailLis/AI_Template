@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicTestRunWorkspace } from './public-test-run-workspace';
 
@@ -43,9 +44,17 @@ const createSession = (publicTemplate: PublicTestSession['publicTemplate']): Pub
   answers: [],
 });
 
+const renderWorkspace = () =>
+  render(
+    <MemoryRouter>
+      <PublicTestRunWorkspace />
+    </MemoryRouter>,
+  );
+
 const mockWorkspace = (
   publicTemplate: PublicTestSession['publicTemplate'],
   autosaveStatus: PublicTestAutosaveStatus,
+  sessionOverrides: Partial<PublicTestSession> = {},
 ) => {
   publicRunMocks.useWorkspace.mockReturnValue({
     code: 'DEMO2026',
@@ -53,7 +62,7 @@ const mockWorkspace = (
     sessionQuery: { isLoading: false, isError: false },
     saveAnswersMutation: { isPending: false },
     finishMutation: { isPending: false },
-    session: createSession(publicTemplate),
+    session: { ...createSession(publicTemplate), ...sessionOverrides },
     totalQuestionsCount: 1,
     getCurrentAnswer: () => undefined,
     setQuestionAnswer: vi.fn(),
@@ -89,3 +98,88 @@ describe('PublicTestRunWorkspace', () => {
     expect(screen.queryByText('Сохранено')).not.toBeInTheDocument();
   });
 });
+
+/**
+ * Находка доаудита FLOW-09: лимит времени ученику не показывался, а после его истечения экран
+ * продолжал принимать ответы, которые сервер уже не сохранял.
+ */
+describe.each(['STANDARD', 'POLUS'] as const)(
+  'PublicTestRunWorkspace time limit (%s)',
+  (template) => {
+    const startedAt = Date.parse('2026-09-13T10:00:00.000Z');
+    const timedSession = (overrides: Partial<PublicTestSession>) =>
+      mockWorkspace(template, 'idle', {
+        timeLimitMinutes: 5,
+        expiresAt: '2026-09-13T10:05:00.000Z',
+        ...overrides,
+      });
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      vi.setSystemTime(startedAt + 55_000);
+    });
+
+    afterEach(() => {
+      cleanup();
+      vi.clearAllMocks();
+      vi.useRealTimers();
+    });
+
+    it('shows the remaining time while the attempt is running', () => {
+      timedSession({});
+
+      renderWorkspace();
+
+      expect(screen.getByRole('timer')).toHaveTextContent('4:05');
+      expect(screen.queryByText(/меньше минуты/i)).not.toBeInTheDocument();
+    });
+
+    it('warns during the last minute', () => {
+      vi.setSystemTime(startedAt + 4 * 60_000 + 30_000);
+      timedSession({});
+
+      renderWorkspace();
+
+      expect(screen.getByRole('timer')).toHaveTextContent('0:30');
+      expect(screen.getByRole('status')).toHaveTextContent(/меньше минуты/i);
+    });
+
+    it('closes the questions when the clock runs out on the screen', () => {
+      vi.setSystemTime(startedAt + 4 * 60_000 + 58_000);
+      timedSession({});
+
+      renderWorkspace();
+      expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(3_000);
+      });
+
+      expect(screen.getByRole('heading', { name: 'Время вышло' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
+    });
+
+    it('shows the expired state from the server instead of the questions', () => {
+      timedSession({ status: 'EXPIRED' });
+
+      renderWorkspace();
+
+      expect(screen.getByRole('heading', { name: 'Время вышло' })).toBeInTheDocument();
+      expect(screen.getByText(/5 минут/)).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Вернуться к началу теста' })).toHaveAttribute(
+        'href',
+        '/t/DEMO2026',
+      );
+    });
+
+    it('shows no clock for an attempt without a time limit', () => {
+      mockWorkspace(template, 'idle');
+
+      renderWorkspace();
+
+      expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+    });
+  },
+);

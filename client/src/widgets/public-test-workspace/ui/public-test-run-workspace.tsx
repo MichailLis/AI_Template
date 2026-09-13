@@ -2,9 +2,12 @@ import { useState } from 'react';
 
 import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
+import { PublicTestRunExpiredScreen } from './public-test-run-expired-screen';
 import { PublicTestRunProgress } from './public-test-run-progress';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
+import { PublicTestRunTimer } from './public-test-run-timer';
 import { PublicThemeLayout } from './public-theme-layout';
+import { usePublicTestRunCountdown } from './use-public-test-run-countdown';
 import { usePublicTestRunWorkspace } from './use-public-test-run-workspace';
 import { useQuestionTransition } from './use-question-transition';
 
@@ -27,6 +30,7 @@ export function PublicTestRunWorkspace() {
     questionCount: session?.questions.length ?? 0,
     onQuestionIndexChange: setCurrentQuestionIndex,
   });
+  const remainingSeconds = usePublicTestRunCountdown(session?.expiresAt ?? null);
 
   if (!code || !sessionToken) {
     return (
@@ -63,6 +67,11 @@ export function PublicTestRunWorkspace() {
     return <PublicTestRunStateScreen message="Тест пока не содержит вопросов." tone="danger" />;
   }
 
+  // Статус с сервера приходит раз в несколько секунд, поэтому истечение по часам закрывает вопросы сразу.
+  if (session.status === 'EXPIRED' || remainingSeconds === 0) {
+    return <PublicTestRunExpiredScreen code={code} session={session} />;
+  }
+
   if (session.publicTemplate === 'POLUS') {
     const currentQuestion = session.questions[currentQuestionIndex];
 
@@ -73,6 +82,7 @@ export function PublicTestRunWorkspace() {
         totalQuestionsCount={totalQuestionsCount}
         currentAnswer={getCurrentAnswer(currentQuestion.id)}
         questionTransitionClass={questionTransitionClass}
+        remainingSeconds={remainingSeconds}
         isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
         onAnswerChange={setQuestionAnswer}
         onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
@@ -88,7 +98,10 @@ export function PublicTestRunWorkspace() {
       containerClassName="grid min-h-screen max-w-3xl place-items-center py-5 md:py-7"
     >
       <div className="w-full space-y-5">
-        <div className="px-1">
+        <div className="space-y-3 px-1">
+          {remainingSeconds !== null ? (
+            <PublicTestRunTimer remainingSeconds={remainingSeconds} variant="standard" />
+          ) : null}
           <PublicTestRunProgress
             currentQuestionIndex={currentQuestionIndex}
             totalQuestionsCount={totalQuestionsCount}
