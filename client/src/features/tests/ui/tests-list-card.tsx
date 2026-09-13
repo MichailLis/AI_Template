@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -94,13 +94,11 @@ interface TestListRowProps {
   restoringTopicId: number | null;
   isDeletingTopic: boolean;
   deletingTopicId: number | null;
-  pendingPermanentDeleteTopicId: number | null;
   onSelectTest: (topicId: number) => void;
   onOpenSettings: (topicId: number) => void;
   onRequestArchiveTest: (topic: TestTopicListItem) => void;
   onRequestRestoreTest: (topic: TestTopicListItem) => void;
   onRequestDeleteTest: (topic: TestTopicListItem) => void;
-  onSetPendingDelete: (topicId: number) => void;
 }
 
 const getPublishLabel = (topic: TestTopicListItem) => {
@@ -120,13 +118,11 @@ function TestsListItemRow({
   restoringTopicId,
   isDeletingTopic,
   deletingTopicId,
-  pendingPermanentDeleteTopicId,
   onSelectTest,
   onOpenSettings,
   onRequestArchiveTest,
   onRequestRestoreTest,
   onRequestDeleteTest,
-  onSetPendingDelete,
 }: TestListRowProps) {
   return (
     <div className={`${adminClassNames.panel.listRow} flex items-start gap-3`}>
@@ -181,13 +177,11 @@ function TestsListItemRow({
         restoringTopicId={restoringTopicId}
         isDeletingTopic={isDeletingTopic}
         deletingTopicId={deletingTopicId}
-        pendingPermanentDeleteTopicId={pendingPermanentDeleteTopicId}
         onSelectTest={onSelectTest}
         onOpenSettings={onOpenSettings}
         onRequestArchiveTest={onRequestArchiveTest}
         onRequestRestoreTest={onRequestRestoreTest}
         onRequestDeleteTest={onRequestDeleteTest}
-        onSetPendingDelete={onSetPendingDelete}
       />
     </div>
   );
@@ -226,10 +220,6 @@ export function TestsListCard({
   onRequestDeleteTest,
   onRetryTopics,
 }: TestsListCardProps) {
-  const [pendingPermanentDeleteTopicId, setPendingPermanentDeleteTopicId] = useState<number | null>(
-    null,
-  );
-
   const filteredTopics = useMemo(
     () => getFilteredTopics(topics, searchValue),
     [searchValue, topics],
@@ -263,22 +253,11 @@ export function TestsListCard({
           restoringTopicId={restoringTopicId}
           isDeletingTopic={isDeletingTopic}
           deletingTopicId={deletingTopicId}
-          pendingPermanentDeleteTopicId={pendingPermanentDeleteTopicId}
           onSelectTest={onSelectTest}
           onOpenSettings={onOpenSettings}
-          onRequestArchiveTest={(topicToArchive) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestArchiveTest(topicToArchive);
-          }}
-          onRequestRestoreTest={(topicToRestore) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestRestoreTest(topicToRestore);
-          }}
-          onRequestDeleteTest={(topicToDelete) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestDeleteTest(topicToDelete);
-          }}
-          onSetPendingDelete={setPendingPermanentDeleteTopicId}
+          onRequestArchiveTest={onRequestArchiveTest}
+          onRequestRestoreTest={onRequestRestoreTest}
+          onRequestDeleteTest={onRequestDeleteTest}
         />
       ))}
     </CardContent>

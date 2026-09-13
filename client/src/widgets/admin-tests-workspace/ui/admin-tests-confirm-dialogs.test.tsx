@@ -15,7 +15,10 @@ const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListI
   publishedVersionNumber: 1,
   publishedTitle: 'AUDIT-A',
   activePublicLinkCount: 0,
+  publicLinkCount: 0,
   attemptCount: 0,
+  hasPublishedVersion: true,
+  canDelete: false,
   hasUnpublishedChanges: false,
   updatedAt: '2026-09-11T10:00:00.000Z',
   ...overrides,
@@ -105,5 +108,29 @@ describe('AdminTestsConfirmDialogs archive confirmation', () => {
     expect(
       screen.getByText(/Снова заработают 2 активные ссылки на этот тест\./),
     ).toBeInTheDocument();
+  });
+
+  /**
+   * Находка аудита FLOW-04: диалог обещал удалить тест «вместе с опубликованными версиями», хотя
+   * сервер такие тесты удалять не дает. Удалить можно только неиспользованный тест.
+   */
+  it('describes deletion honestly for the only tests that can be deleted', () => {
+    render(
+      <AdminTestsConfirmDialogs
+        {...baseProps}
+        pendingDeleteTopic={createTopic({
+          canDelete: true,
+          hasPublishedVersion: false,
+          publishedVersionNumber: null,
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        'Тест "AUDIT-A" будет удален без возможности восстановления. У него нет публикаций, ссылок и прохождений, поэтому ничего больше не пострадает.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/опубликованными версиями/)).not.toBeInTheDocument();
   });
 });

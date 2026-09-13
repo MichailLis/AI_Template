@@ -28,6 +28,13 @@ export type TestsTopicListResponseDtoTopicsItem = {
    * @maximum 9007199254740991
    */
   attemptCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  publicLinkCount: number;
+  hasPublishedVersion: boolean;
+  canDelete: boolean;
   hasUnpublishedChanges: boolean;
   updatedAt: string;
 };

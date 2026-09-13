@@ -40,6 +40,24 @@ import {
   hasVersionContentChanges,
 } from '../topics/topic-version-content';
 
+interface TopicUsage {
+  attemptCount: number;
+  publicLinkCount: number;
+  hasPublishedVersion: boolean;
+}
+
+const EMPTY_TOPIC_USAGE: TopicUsage = {
+  attemptCount: 0,
+  publicLinkCount: 0,
+  hasPublishedVersion: false,
+};
+
+/** Использование теста для списка и возможность удалить его навсегда — по правилу deleteTopic. */
+const toTopicUsageSummary = (usage: TopicUsage = EMPTY_TOPIC_USAGE) => ({
+  ...usage,
+  canDelete: !usage.hasPublishedVersion && usage.publicLinkCount === 0 && usage.attemptCount === 0,
+});
+
 @Injectable()
 export class TestsService {
   constructor(
@@ -227,9 +245,9 @@ export class TestsService {
     });
 
     const topicIds = topics.map((topic) => topic.id);
-    const [activePublicLinkCountByTopicId, attemptCountByTopicId] = await Promise.all([
+    const [activePublicLinkCountByTopicId, usageByTopicId] = await Promise.all([
       this.countActivePublicLinksByTopic(topicIds),
-      this.countAttemptsByTopic(topicIds),
+      this.collectUsageByTopic(topicIds),
     ]);
 
     return {
@@ -245,7 +263,7 @@ export class TestsService {
           publishedVersionNumber: topic.activePublishedVersion?.versionNumber ?? null,
           publishedTitle: topic.activePublishedVersion?.title ?? null,
           activePublicLinkCount: activePublicLinkCountByTopicId.get(topic.id) ?? 0,
-          attemptCount: attemptCountByTopicId.get(topic.id) ?? 0,
+          ...toTopicUsageSummary(usageByTopicId.get(topic.id)),
           hasUnpublishedChanges: topic.activePublishedVersion
             ? hasVersionContentChanges(topic.activeDraftVersion!, topic.activePublishedVersion)
             : false,
@@ -254,27 +272,37 @@ export class TestsService {
     };
   }
 
-  /** Прохождения по всем версиям теста: старые версии тоже были выданы ученикам. */
-  private async countAttemptsByTopic(topicIds: number[]): Promise<Map<number, number>> {
-    const countByTopicId = new Map<number, number>();
+  /**
+   * Прохождения и ссылки по всем версиям теста и наличие опубликованной версии. Старые версии
+   * тоже были выданы ученикам, а deleteTopic запрещает удаление по этим же признакам.
+   */
+  private async collectUsageByTopic(topicIds: number[]): Promise<Map<number, TopicUsage>> {
+    const usageByTopicId = new Map<number, TopicUsage>();
 
     if (topicIds.length === 0) {
-      return countByTopicId;
+      return usageByTopicId;
     }
 
     const versions = await this.prisma.testTopicVersion.findMany({
       where: { topicId: { in: topicIds } },
-      select: { topicId: true, _count: { select: { studentAttempts: true } } },
+      select: {
+        topicId: true,
+        status: true,
+        _count: { select: { studentAttempts: true, publicLinks: true } },
+      },
     });
 
     for (const version of versions) {
-      countByTopicId.set(
-        version.topicId,
-        (countByTopicId.get(version.topicId) ?? 0) + version._count.studentAttempts,
-      );
+      const usage = usageByTopicId.get(version.topicId) ?? EMPTY_TOPIC_USAGE;
+
+      usageByTopicId.set(version.topicId, {
+        attemptCount: usage.attemptCount + version._count.studentAttempts,
+        publicLinkCount: usage.publicLinkCount + version._count.publicLinks,
+        hasPublishedVersion: usage.hasPublishedVersion || version.status === 'PUBLISHED',
+      });
     }
 
-    return countByTopicId;
+    return usageByTopicId;
   }
 
   private async countActivePublicLinksByTopic(topicIds: number[]): Promise<Map<number, number>> {

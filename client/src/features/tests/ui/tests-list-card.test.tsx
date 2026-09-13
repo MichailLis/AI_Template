@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TestsListCard } from './tests-list-card';
@@ -16,7 +17,10 @@ const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListI
   publishedVersionNumber: 1,
   publishedTitle: 'Профориентационный тест v3+',
   activePublicLinkCount: 2,
+  publicLinkCount: 3,
   attemptCount: 13,
+  hasPublishedVersion: true,
+  canDelete: false,
   hasUnpublishedChanges: false,
   updatedAt: '2026-06-16T01:00:00.000Z',
   ...overrides,
@@ -112,5 +116,51 @@ describe('TestsListCard row', () => {
 
     expect(screen.getByText('Пилот в лицее')).toBeInTheDocument();
     expect(screen.queryByText('Методика V3+ для 9–11 классов')).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Находка аудита FLOW-04: «Удалить навсегда» предлагалось любому архивному тесту, после двух
+ * подтверждений сервер отказывал тестам с публикацией, ссылками или прохождениями.
+ */
+describe('TestsListCard deletion from the archive', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('explains why a test that was used cannot be deleted', async () => {
+    const user = userEvent.setup();
+    renderList([createTopic({ canDelete: false, publicLinkCount: 2, attemptCount: 7 })], {
+      listMode: 'archived',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Действия' }));
+
+    expect(screen.getByRole('button', { name: /Удалить навсегда/ })).toBeDisabled();
+    expect(
+      screen.getByText(
+        'Нельзя удалить: опубликован, 2 ссылки, 7 прохождений. Тест можно только держать в архиве.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('asks for a single confirmation to delete an unused test', async () => {
+    const user = userEvent.setup();
+    const onRequestDeleteTest = vi.fn();
+    const unusedTopic = createTopic({
+      canDelete: true,
+      hasPublishedVersion: false,
+      publishedVersionNumber: null,
+      publicLinkCount: 0,
+      activePublicLinkCount: 0,
+      attemptCount: 0,
+    });
+    renderList([unusedTopic], { listMode: 'archived', onRequestDeleteTest });
+
+    await user.click(screen.getByRole('button', { name: 'Действия' }));
+    await user.click(screen.getByRole('button', { name: /Удалить навсегда/ }));
+
+    expect(onRequestDeleteTest).toHaveBeenCalledWith(unusedTopic);
+    expect(screen.queryByText('Подтвердить удаление')).not.toBeInTheDocument();
   });
 });

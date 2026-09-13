@@ -309,6 +309,59 @@ describe('TestsService analysis prompt attachment', () => {
     ]);
   });
 
+  /**
+   * Находка аудита FLOW-04: меню предлагало «Удалить навсегда» для любого архивного теста, а
+   * сервер отказывал тестам с публикацией, ссылками или прохождениями — узнать это можно было
+   * только после попытки. Список отдает возможность удаления по тому же правилу, что deleteTopic.
+   */
+  it('listTopics says whether a test can be deleted, by the same rule as deleteTopic', async () => {
+    const updatedAt = new Date('2026-09-11T10:00:00.000Z');
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'published',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 11, versionNumber: 2 }),
+        activePublishedVersion: createListedVersion({ id: 10, versionNumber: 1 }),
+      },
+      {
+        id: 2,
+        slug: 'linked-draft',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 20 }),
+        activePublishedVersion: null,
+      },
+      {
+        id: 3,
+        slug: 'unused-draft',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 30 }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { topicId: 1, status: 'PUBLISHED', _count: { studentAttempts: 0, publicLinks: 0 } },
+      { topicId: 1, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 0 } },
+      { topicId: 2, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 1 } },
+      { topicId: 3, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 0 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(
+      result.topics.map((topic) => [
+        topic.slug,
+        topic.canDelete,
+        topic.hasPublishedVersion,
+        topic.publicLinkCount,
+      ]),
+    ).toEqual([
+      ['published', false, true, 0],
+      ['linked-draft', false, false, 1],
+      ['unused-draft', true, false, 0],
+    ]);
+  });
+
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
