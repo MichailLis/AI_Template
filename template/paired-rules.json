@@ -183,6 +183,94 @@
         "testFile": "server/src/tests/prof-orientation-v3-plus/scoring.spec.ts"
       },
       "reason": "Статус LLM-фазы двухфазного профориентационного анализа выводится из summary.llm.status. Сервер авторитетен: он записывает summary и отдаёт готовое поле llmStatus в админских ответах. Клиент дублирует вывод, потому что публичный экран результата решает по нему, продолжать ли опрос и показывать ли экран обработки."
+    },
+    {
+      "name": "attemptStatusLabels",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/attempt-status-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Два независимых слоя представления: клиентский словарь подписывает статусы прохождения на экранах админки, серверный — в выгружаемых XLSX/PDF-отчётах. Формулировки намеренно совпадают, но расхождение было бы только текстовым: статус прохождения задаётся и валидируется сервером, ни один из словарей не участвует в данных или проверках."
+    },
+    {
+      "name": "analysisStatusLabels",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/attempt-status-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Подписи статусов анализа для экранов админки (клиент) и для выгружаемых отчётов (сервер). Формулировки совпадают по замыслу, но это вопрос текста, а не корректности: статус анализа хранится и меняется только на сервере, подписи его не читают и не пишут."
+    },
+    {
+      "name": "confidenceLevelLabels",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/report-value-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Русские подписи уровней уверенности результата v3+ на экране аналитики (клиент) и в выгружаемом отчёте (сервер). Уровень вычисляет только серверный скоринг; словари лишь переводят готовый код в текст, и их расхождение не меняет ни данных, ни решений системы."
+    },
+    {
+      "name": "demographicValueLabels",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/report-value-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Подписи кодов пола и уровня образования для экрана аналитики (клиент) и выгружаемого отчёта (сервер). Коды задаёт серверная схема, ввод ученика валидирует сервер; словари только переводят код в текст для чтения человеком, и расхождение формулировок не нарушает инвариантов."
+    },
+    {
+      "name": "getReportValueLabel",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/report-value-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Функции перевода кода в подпись для разных носителей и с разным охватом: клиентская переводит только демографические коды таблиц аналитики, серверная — ещё и уровни уверенности в строках XLSX. Обе возвращают незнакомый код как есть; ни одна не участвует в валидации или хранении данных."
+    },
+    {
+      "name": "labelOrRaw",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/report-value-labels.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Однострочный локальный хелпер «подпись из словаря или исходное значение» внутри модулей подписей клиента и сервера. Совпадение имени стандартного приёма, а не общее бизнес-правило; ни одно свойство корректности системы от него не зависит."
+    },
+    {
+      "name": "formatNumber",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/widgets/admin-public-links-stats-workspace/ui/test-analytics-summary-card.tsx"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Локальные форматтеры чисел для разных носителей: клиентские форматируют значения карточек и таблиц аналитики, серверный ограничивает дробную часть одним знаком для строк выгружаемого отчёта. Сигнатуры и точность различаются намеренно; сами значения считает сервер, форматтеры их не меняют."
+    },
+    {
+      "name": "pluralizeRu",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/shared/lib/ru-plural.ts"
+      },
+      "server": {
+        "file": "server/src/tests/reporting/analytics-report-labels.ts"
+      },
+      "reason": "Стандартное правило русского множественного числа для текста: клиентская утилита подписывает счётчики в интерфейсе, серверный хелпер — единицу «балл» в выгружаемом отчёте. Это оформление строк, а не бизнес-правило на границе доверия; расхождение дало бы только неверную словоформу."
     }
   ]
 }
