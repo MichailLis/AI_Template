@@ -146,8 +146,8 @@ export const GATE_MUTATIONS = [
     file: 'CLAUDE.md',
     description: 'Remove rtk vitest and rtk jest warnings from CLAUDE.md',
     action: 'replace',
-    search: 'and `rtk vitest` / `rtk jest`',
-    replace: 'and `vitest` / `jest`',
+    search: '`rtk vitest` and `rtk jest`',
+    replace: '`vitest` and `jest`',
   },
   {
     id: 'ai-guide-skills-nonexistent-path',
