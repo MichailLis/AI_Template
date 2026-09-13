@@ -7,6 +7,8 @@ export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGA
 export interface TopicOption {
   id: number;
   draftTitle: string;
+  /** Ссылку можно создать только на опубликованный тест. */
+  publishedVersionNumber: number | null;
 }
 
 export interface EducationOrganizationOption {

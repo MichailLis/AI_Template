@@ -21,6 +21,39 @@ describe('PublicLinkTopicSection', () => {
     expect(screen.getByRole('option', { name: 'Нет доступных тестов' })).toBeInTheDocument();
   });
 
+  /**
+   * Находка аудита UX-14: неопубликованные тесты стояли вперемешку с опубликованными, а бейдж
+   * «10 доступно» считал и те, по которым ссылку создать нельзя.
+   */
+  it('lists published tests first and groups the rest as needing publication', () => {
+    render(
+      <PublicLinkTopicSection
+        topics={[
+          { id: 5, draftTitle: 'Черновик без публикации', publishedVersionNumber: null },
+          { id: 7, draftTitle: 'Профориентация', publishedVersionNumber: 2 },
+          { id: 9, draftTitle: 'Soft skills', publishedVersionNumber: 1 },
+        ]}
+        effectiveSelectedTopicId={7}
+        onSelectTopic={vi.fn()}
+      />,
+    );
+
+    const groups = screen.getAllByRole('group');
+    expect(groups.map((group) => group.getAttribute('label'))).toEqual([
+      'Опубликованные',
+      'Нужно опубликовать',
+    ]);
+    expect([...groups[0].querySelectorAll('option')].map((option) => option.textContent)).toEqual([
+      'Профориентация',
+      'Soft skills',
+    ]);
+    expect([...groups[1].querySelectorAll('option')].map((option) => option.textContent)).toEqual([
+      'Черновик без публикации',
+    ]);
+    expect(screen.getByText('2 опубликовано')).toBeInTheDocument();
+    expect(screen.queryByText(/доступно/)).not.toBeInTheDocument();
+  });
+
   it('reports selected topic ids as numbers', async () => {
     const user = userEvent.setup();
     const onSelectTopic = vi.fn();
@@ -28,8 +61,8 @@ describe('PublicLinkTopicSection', () => {
     render(
       <PublicLinkTopicSection
         topics={[
-          { id: 11, draftTitle: 'Career skills' },
-          { id: 12, draftTitle: 'Soft skills' },
+          { id: 11, draftTitle: 'Career skills', publishedVersionNumber: 1 },
+          { id: 12, draftTitle: 'Soft skills', publishedVersionNumber: 1 },
         ]}
         effectiveSelectedTopicId={11}
         onSelectTopic={onSelectTopic}

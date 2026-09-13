@@ -2,6 +2,7 @@ export type PublicLinksTab = 'active' | 'archived';
 
 interface TopicOption {
   id: number;
+  publishedVersionNumber: number | null;
 }
 
 interface PublicLinkOption {
@@ -43,7 +44,9 @@ export const resolveEffectiveTopicId = (selectedTopicId: number | null, topics: 
     return selectedTopicId;
   }
 
-  return topics[0].id;
+  // Ссылку можно создать только на опубликованный тест: первый в списке часто свежий черновик, и
+  // мастер открывался сразу с предупреждением.
+  return (topics.find((topic) => topic.publishedVersionNumber !== null) ?? topics[0]).id;
 };
 
 export const resolveEffectivePublicLinkId = (
