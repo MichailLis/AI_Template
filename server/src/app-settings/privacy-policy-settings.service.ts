@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 
+import { collectAuditChanges } from '../audit/audit-changes';
+import { AuditService } from '../audit/audit.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import {
@@ -27,9 +29,15 @@ type StoredPolicy = {
   updatedAt: Date | null;
 };
 
+/** Идентификатор настройки в журнале изменений. */
+const PRIVACY_POLICY_AUDIT_ENTITY_ID = 'privacy-policy';
+
 @Injectable()
 export class PrivacyPolicySettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   private getDefaultPolicy(): StoredPolicy {
     return {
@@ -128,6 +136,7 @@ export class PrivacyPolicySettingsService {
 
     const payload = this.normalizePayload(input);
     const value = JSON.stringify(payload);
+    const previousPolicy = await this.getEffectivePolicy();
     const setting = await this.prisma.$transaction(async (transaction) => {
       const saved = await transaction.appSetting.upsert({
         where: {
@@ -149,6 +158,21 @@ export class PrivacyPolicySettingsService {
 
       return saved;
     });
+
+    const changes = collectAuditChanges(previousPolicy.payload, payload, {
+      fields: ['version', 'publishedAt', 'operatorFullName'],
+      redactedFields: ['content'],
+    });
+
+    if (changes.length > 0) {
+      await this.auditService.record({
+        entityType: 'APP_SETTING',
+        entityId: PRIVACY_POLICY_AUDIT_ENTITY_ID,
+        action: 'SETTING_UPDATED',
+        actorUserId: userId,
+        changes,
+      });
+    }
 
     return this.toAdminResponse({
       payload,

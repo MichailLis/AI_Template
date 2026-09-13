@@ -28,6 +28,28 @@
         "server/src/openrouter/openrouter.client.ts",
         "server/src/openrouter/openrouter.utils.ts"
       ]
+    },
+    {
+      "name": "audit",
+      "backendModule": "AuditModule",
+      "ownership": {
+        "kind": "integration",
+        "owns": [
+          "AuditEvent model",
+          "Recording changes of users, prompts, settings and public links",
+          "Reading the change history of one entity"
+        ]
+      },
+      "ownedRoots": {
+        "backend": ["server/src/audit"]
+      },
+      "backendFiles": [
+        "server/src/audit/audit.module.ts",
+        "server/src/audit/audit.service.ts",
+        "server/src/audit/audit-changes.ts",
+        "server/src/audit/audit.types.ts",
+        "server/src/audit/dto/audit-history.dto.ts"
+      ]
     }
   ],
   "features": [
@@ -123,6 +145,11 @@
           "protected": true
         },
         {
+          "path": "/admin/users/{id}/history",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
           "path": "/admin/settings/openrouter",
           "methods": ["get"],
           "protected": true
@@ -187,6 +214,11 @@
         {
           "path": "/admin/prompts/{promptId}",
           "methods": ["patch", "delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/prompts/{promptId}/history",
+          "methods": ["get"],
           "protected": true
         },
         {
@@ -378,6 +410,11 @@
         {
           "path": "/admin/tests/public-links/{linkId}/move-to-active-version",
           "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/history",
+          "methods": ["get"],
           "protected": true
         },
         {

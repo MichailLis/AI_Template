@@ -92,6 +92,13 @@ enum PersonalDataProcessingMode {
   ON_BEHALF_OF_EDUCATION_ORGANIZATION
 }
 
+enum AuditEntityType {
+  USER
+  ANALYSIS_PROMPT
+  APP_SETTING
+  PUBLIC_LINK
+}
+
 model User {
   id                 Int       @id @default(autoincrement())
   /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
@@ -108,8 +115,32 @@ model User {
   updatedAt DateTime @updatedAt
 
   createdPublicTestLinks TestPublicLink[] @relation("PublicLinkCreatedBy")
+  auditEvents            AuditEvent[]     @relation("AuditEventActor")
 
   @@map("users")
+}
+
+/// Журнал изменений ролей, доступов, промптов, настроек и публичных ссылок: кто, что, когда,
+/// было → стало. Владелец — интеграционный модуль audit; фичи только пишут события и читают
+/// историю своих сущностей.
+model AuditEvent {
+  id          Int             @id @default(autoincrement())
+  entityType  AuditEntityType
+  /// Идентификатор сущности текстом: у настроек это ключ, у остальных числовой id.
+  entityId    String
+  action      String
+  /// Автор изменения; при удалении пользователя событие остается без автора.
+  actorUserId Int?
+  /// Список [{ field, before, after }] со строковыми значениями. Пароли, секреты и длинные тексты
+  /// не хранятся: у таких полей before и after равны null, а сама запись отмечает факт изменения.
+  changes     Json            @default("[]")
+  createdAt   DateTime        @default(now())
+
+  actor User? @relation("AuditEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId])
+  @@map("audit_events")
 }
 
 model TestTopic {

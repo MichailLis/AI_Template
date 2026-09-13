@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
+import type { AuditService } from '../../audit/audit.service';
 import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
@@ -198,7 +199,8 @@ describe('TestsPublicSessionService read paths', () => {
       {} as TestsPublicLinkService,
       analysisService,
       {} as PrivacyPolicySettingsService,
-      new ProfessionAtlasSettingsService(prismaMock),
+      // Read paths never change settings, so the audit trail is never written here.
+      new ProfessionAtlasSettingsService(prismaMock, {} as AuditService),
       {
         saveEnrichedAnalysis: jest.fn(),
       } as unknown as ProfOrientationAtlasService,

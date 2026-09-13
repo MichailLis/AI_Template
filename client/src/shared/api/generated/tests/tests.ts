@@ -34,6 +34,7 @@ import type {
   AdminTestAnalyticsSummaryDto,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
+  AuditHistoryResponseDto,
   CreateTestsTopicDto,
   CreateTestsTopicFromAiDto,
   DeleteTestsTopicResponseDto,
@@ -2209,6 +2210,169 @@ export const useTestsAdminPublicLinksControllerMoveToActivePublishedVersion = <
     queryClient,
   );
 };
+/**
+ * @summary List recorded changes of a public link
+ */
+export const testsAdminPublicLinksControllerGetPublicLinkHistory = (
+  linkId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AuditHistoryResponseDto>(
+    { url: `/admin/tests/public-links/${linkId}/history`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getTestsAdminPublicLinksControllerGetPublicLinkHistoryQueryKey = (linkId: number) => {
+  return [`/admin/tests/public-links/${linkId}/history`] as const;
+};
+
+export const getTestsAdminPublicLinksControllerGetPublicLinkHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getTestsAdminPublicLinksControllerGetPublicLinkHistoryQueryKey(linkId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>
+  > = ({ signal }) =>
+    testsAdminPublicLinksControllerGetPublicLinkHistory(linkId, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: linkId !== null && linkId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsAdminPublicLinksControllerGetPublicLinkHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>
+>;
+export type TestsAdminPublicLinksControllerGetPublicLinkHistoryQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
+  TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
+  TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
+  TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recorded changes of a public link
+ */
+
+export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
+  TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsAdminPublicLinksControllerGetPublicLinkHistoryQueryOptions(
+    linkId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 /**
  * @summary List educational organizations for link binding
  */

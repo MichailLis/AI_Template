@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AdminService } from './admin.service';
+import { AuditHistoryResponseDto } from '../audit/dto/audit-history.dto';
 import { AtGuard } from '../auth/guards';
 import { GetCurrentUserId } from '../auth/decorators';
 import { AdminOverviewResponseDto } from './dto/admin-overview-response.dto';
@@ -108,6 +109,17 @@ export class AdminController {
     @Param('id', ParseIntPipe) targetUserId: number,
   ) {
     return this.adminService.revokeUserSessions(userId, targetUserId);
+  }
+
+  @Get('users/:id/history')
+  @ApiOperation({ summary: 'List recorded changes of a user account' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
+  getUserHistory(
+    @GetCurrentUserId() userId: number,
+    @Param('id', ParseIntPipe) targetUserId: number,
+  ) {
+    return this.adminService.getUserHistory(userId, targetUserId);
   }
 
   @Patch('users/:id/role')

@@ -13,10 +13,12 @@ describe('AnalysisPromptsController', () => {
     listTestQuestions: jest.Mock;
     getPromptModels: jest.Mock;
     generatePrompt: jest.Mock;
+    getPromptHistory: jest.Mock;
   };
 
   beforeEach(() => {
     serviceMock = {
+      getPromptHistory: jest.fn(),
       listPrompts: jest.fn(),
       createPrompt: jest.fn(),
       updatePrompt: jest.fn(),
@@ -86,6 +88,14 @@ describe('AnalysisPromptsController', () => {
 
     await expect(controller.deletePrompt(7, 9)).resolves.toEqual(response);
     expect(serviceMock.deletePrompt).toHaveBeenCalledWith(7, 9);
+  });
+
+  it('getPromptHistory delegates to service with numeric route param', async () => {
+    const response = { events: [] };
+    serviceMock.getPromptHistory.mockResolvedValue(response);
+
+    await expect(controller.getPromptHistory(7, 9)).resolves.toEqual(response);
+    expect(serviceMock.getPromptHistory).toHaveBeenCalledWith(7, 9);
   });
 
   it('simulatePrompt delegates to service', async () => {

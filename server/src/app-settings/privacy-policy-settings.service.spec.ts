@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { PrivacyPolicySettingsService } from './privacy-policy-settings.service';
+import type { AuditService } from '../audit/audit.service';
 
 jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
@@ -10,6 +11,7 @@ jest.mock('../common/authz/admin-access.utils', () => ({
 
 describe('PrivacyPolicySettingsService', () => {
   let service: PrivacyPolicySettingsService;
+  let auditMock: { record: jest.Mock; listForEntity: jest.Mock };
   let prismaMock: {
     $transaction: jest.Mock;
     appSetting: {
@@ -35,12 +37,81 @@ describe('PrivacyPolicySettingsService', () => {
     prismaMock.$transaction.mockImplementation(
       (callback: (transaction: typeof prismaMock) => unknown) => callback(prismaMock),
     );
-    service = new PrivacyPolicySettingsService(prismaMock as unknown as PrismaService);
+    auditMock = {
+      record: jest.fn().mockResolvedValue(undefined),
+      listForEntity: jest.fn().mockResolvedValue([]),
+    };
+    service = new PrivacyPolicySettingsService(
+      prismaMock as unknown as PrismaService,
+      auditMock as unknown as AuditService,
+    );
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  /**
+   * Находка аудита FLOW-06: у настроек не было следа, кто и когда поменял политику
+   * конфиденциальности. Текст политики длинный и в журнал не пишется — только факт его изменения.
+   */
+  describe('audit trail', () => {
+    const storedPolicy = {
+      key: 'privacy.policy',
+      value: JSON.stringify({
+        version: '2026-07-01',
+        publishedAt: '2026-07-01T00:00:00.000Z',
+        content: 'Старая политика',
+        operatorFullName: 'ООО «Оператор»',
+      }),
+      updatedAt: new Date('2026-07-01T12:00:00.000Z'),
+    };
+
+    beforeEach(() => {
+      prismaMock.appSetting.findUnique.mockResolvedValue(storedPolicy);
+      prismaMock.appSetting.upsert.mockResolvedValue({
+        ...storedPolicy,
+        updatedAt: new Date('2026-07-10T12:00:00.000Z'),
+      });
+      prismaMock.testPublicLink.updateMany.mockResolvedValue({ count: 0 });
+    });
+
+    it('records the policy version and date change and marks a new text', async () => {
+      await service.updatePrivacyPolicy(3, {
+        version: '2026-07-10',
+        publishedAt: '2026-07-10T00:00:00.000Z',
+        content: 'Новая политика',
+        operatorFullName: 'ООО «Оператор»',
+      });
+
+      expect(auditMock.record).toHaveBeenCalledWith({
+        entityType: 'APP_SETTING',
+        entityId: 'privacy-policy',
+        action: 'SETTING_UPDATED',
+        actorUserId: 3,
+        changes: [
+          { field: 'version', before: '2026-07-01', after: '2026-07-10' },
+          {
+            field: 'publishedAt',
+            before: '2026-07-01T00:00:00.000Z',
+            after: '2026-07-10T00:00:00.000Z',
+          },
+          { field: 'content', before: null, after: null },
+        ],
+      });
+    });
+
+    it('records nothing when the same policy is saved again', async () => {
+      await service.updatePrivacyPolicy(3, {
+        version: '2026-07-01',
+        publishedAt: '2026-07-01T00:00:00.000Z',
+        content: 'Старая политика',
+        operatorFullName: 'ООО «Оператор»',
+      });
+
+      expect(auditMock.record).not.toHaveBeenCalled();
+    });
   });
 
   it('returns bundled public policy when database setting is missing', async () => {

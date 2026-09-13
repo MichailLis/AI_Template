@@ -9,6 +9,8 @@ import type { Prisma } from '@prisma/client';
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
+import { collectAuditChanges } from '../audit/audit-changes';
+import { AuditService } from '../audit/audit.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import { OpenRouterClientService } from '../openrouter/openrouter.client';
 import { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';
@@ -45,6 +47,17 @@ interface PromptActiveTest {
   slug: string;
   onPublishedVersion: boolean;
 }
+
+const PROMPT_AUDIT_FIELDS = ['title', 'versionNumber', 'model', 'temperature'] as const;
+
+/** Состояние промпта для журнала: название и последняя версия. Текст промпта пишется только фактом. */
+const toPromptAuditState = (prompt: AnalysisPromptRecord) => ({
+  title: prompt.title,
+  versionNumber: prompt.versions[0]?.versionNumber,
+  model: prompt.versions[0]?.model,
+  temperature: prompt.versions[0]?.temperature,
+  prompt: prompt.versions[0]?.prompt,
+});
 
 const syntheticAnswersJsonSchema = {
   name: 'student_test_answers',
@@ -91,6 +104,7 @@ export class AnalysisPromptsService {
     private readonly openRouterApiKeyService: OpenRouterApiKeyService,
     private readonly openRouterClient: OpenRouterClientService,
     private readonly testsPromptSimulationReadService: TestsPromptSimulationReadService,
+    private readonly auditService: AuditService,
   ) {}
 
   private toVersionResponse(version: AnalysisPromptVersionRecord, usedInTestCount = 0) {
@@ -370,6 +384,16 @@ export class AnalysisPromptsService {
       include: analysisPromptInclude,
     });
 
+    await this.auditService.record({
+      entityType: 'ANALYSIS_PROMPT',
+      entityId: prompt.id,
+      action: 'PROMPT_CREATED',
+      actorUserId: userId,
+      changes: collectAuditChanges({}, toPromptAuditState(prompt), {
+        fields: PROMPT_AUDIT_FIELDS,
+      }),
+    });
+
     return {
       prompt: this.toPromptResponse(prompt),
     };
@@ -407,9 +431,36 @@ export class AnalysisPromptsService {
       include: analysisPromptInclude,
     });
 
+    await this.auditService.record({
+      entityType: 'ANALYSIS_PROMPT',
+      entityId: promptId,
+      action: 'PROMPT_VERSION_CREATED',
+      actorUserId: userId,
+      changes: collectAuditChanges(toPromptAuditState(existingPrompt), toPromptAuditState(prompt), {
+        fields: PROMPT_AUDIT_FIELDS,
+        redactedFields: ['prompt'],
+      }),
+    });
+
     return {
       prompt: await this.toPromptResponseWithUsage(prompt),
     };
+  }
+
+  /** История доступна и у заархивированного промпта: архивация — тоже событие его жизни. */
+  async getPromptHistory(userId: number, promptId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const prompt = await this.prisma.analysisPrompt.findUnique({
+      where: { id: promptId },
+      select: { id: true },
+    });
+
+    if (!prompt) {
+      throw new NotFoundException('Analysis prompt not found');
+    }
+
+    return { events: await this.auditService.listForEntity('ANALYSIS_PROMPT', promptId) };
   }
 
   async deletePrompt(userId: number, promptId: number): Promise<AnalysisPromptResponseDto> {
@@ -435,6 +486,13 @@ export class AnalysisPromptsService {
         archivedAt: new Date(),
       },
       include: analysisPromptInclude,
+    });
+
+    await this.auditService.record({
+      entityType: 'ANALYSIS_PROMPT',
+      entityId: promptId,
+      action: 'PROMPT_ARCHIVED',
+      actorUserId: userId,
     });
 
     return {
@@ -481,6 +539,18 @@ export class AnalysisPromptsService {
           publishedAt: new Date(),
         },
       });
+    });
+
+    await this.auditService.record({
+      entityType: 'ANALYSIS_PROMPT',
+      entityId: existingVersion.promptId,
+      action: 'PROMPT_VERSION_PUBLISHED',
+      actorUserId: userId,
+      changes: collectAuditChanges(
+        {},
+        { publishedVersionNumber: version.versionNumber },
+        { fields: ['publishedVersionNumber'] },
+      ),
     });
 
     const usedInTestCountByVersionId = await this.countTestsByPromptVersion([versionId]);

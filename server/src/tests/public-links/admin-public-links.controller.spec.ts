@@ -17,6 +17,7 @@ describe('TestsAdminPublicLinksController', () => {
     deletePublicLink: jest.Mock;
     restorePublicLink: jest.Mock;
     moveToActivePublishedVersion: jest.Mock;
+    getPublicLinkHistory: jest.Mock;
   };
 
   beforeEach(() => {
@@ -29,6 +30,7 @@ describe('TestsAdminPublicLinksController', () => {
       deletePublicLink: jest.fn(),
       restorePublicLink: jest.fn(),
       moveToActivePublishedVersion: jest.fn(),
+      getPublicLinkHistory: jest.fn(),
     };
 
     controller = new TestsAdminPublicLinksController(
@@ -115,5 +117,13 @@ describe('TestsAdminPublicLinksController', () => {
 
     await expect(controller.moveToActivePublishedVersion(7, 5)).resolves.toEqual(response);
     expect(serviceMock.moveToActivePublishedVersion).toHaveBeenCalledWith(7, 5);
+  });
+
+  it('getPublicLinkHistory delegates to service', async () => {
+    const response = { events: [] };
+    serviceMock.getPublicLinkHistory.mockResolvedValue(response);
+
+    await expect(controller.getPublicLinkHistory(7, 5)).resolves.toEqual(response);
+    expect(serviceMock.getPublicLinkHistory).toHaveBeenCalledWith(7, 5);
   });
 });
