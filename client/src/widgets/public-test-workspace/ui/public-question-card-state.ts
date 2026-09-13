@@ -30,7 +30,9 @@ export function getPublicQuestionCardState({
       ? getSliderQuestionMeta(question.settings, question.sliderBands, currentAnswer)
       : null;
   const hasAnswer = hasMeaningfulQuestionAnswer(question.type, currentAnswer);
-  const needsInlineAction = question.type !== 'SINGLE_CHOICE';
+  // Вопрос с одним вариантом переходит дальше по выбору. Но если ответ уже сохранен (ученик вернулся
+  // в сессию или нажал «Назад»), выбрать тот же вариант еще раз нельзя — без кнопки он застревает.
+  const needsInlineAction = question.type !== 'SINGLE_CHOICE' || hasAnswer;
   const inlineActionIsDisabled = isSubmitting || (question.required && !hasAnswer);
   const handleSingleSelect = (value: string) => {
     if (isSubmitting) {
