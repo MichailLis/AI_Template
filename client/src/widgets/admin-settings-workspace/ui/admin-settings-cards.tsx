@@ -40,7 +40,7 @@ export function OpenRouterSettingsCard({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-lg">
               <KeyRound className="size-4 shrink-0 text-admin-muted" />
-              OpenRouter API key
+              Ключ API OpenRouter
             </CardTitle>
             <CardDescription>Ключ берется только из переменной окружения сервера.</CardDescription>
           </div>
@@ -143,6 +143,7 @@ interface PrivacyPolicySettingsCardProps {
   content: string;
   isError: boolean;
   isLoading: boolean;
+  isOldDateWithNewContent?: boolean;
   isSaving: boolean;
   operatorFullName: string;
   privacyPolicy: PrivacyPolicySettings | undefined;
@@ -151,7 +152,9 @@ interface PrivacyPolicySettingsCardProps {
   onContentChange: (value: string) => void;
   onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
+  onPublishedAtValidityChange?: (isValid: boolean) => void;
   onRetry: () => void;
+  onSetCurrentDate?: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onVersionChange: (value: string) => void;
 }
@@ -161,6 +164,7 @@ export function PrivacyPolicySettingsCard({
   content,
   isError,
   isLoading,
+  isOldDateWithNewContent,
   isSaving,
   operatorFullName,
   privacyPolicy,
@@ -169,7 +173,9 @@ export function PrivacyPolicySettingsCard({
   onContentChange,
   onOperatorFullNameChange,
   onPublishedAtChange,
+  onPublishedAtValidityChange,
   onRetry,
+  onSetCurrentDate,
   onSubmit,
   onVersionChange,
 }: PrivacyPolicySettingsCardProps) {
@@ -204,6 +210,7 @@ export function PrivacyPolicySettingsCard({
         <PrivacyPolicyForm
           canSubmit={canSubmit}
           content={content}
+          isOldDateWithNewContent={isOldDateWithNewContent}
           isSaving={isSaving}
           operatorFullName={operatorFullName}
           publishedAt={publishedAt}
@@ -211,6 +218,8 @@ export function PrivacyPolicySettingsCard({
           onContentChange={onContentChange}
           onOperatorFullNameChange={onOperatorFullNameChange}
           onPublishedAtChange={onPublishedAtChange}
+          onPublishedAtValidityChange={onPublishedAtValidityChange}
+          onSetCurrentDate={onSetCurrentDate}
           onSubmit={onSubmit}
           onVersionChange={onVersionChange}
         />

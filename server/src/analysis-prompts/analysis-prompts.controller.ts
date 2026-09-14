@@ -29,6 +29,7 @@ import {
   UpdateAnalysisPromptVersionDto,
 } from './dto/analysis-prompt.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
+import { AuditHistoryResponseDto } from '../audit/dto/audit-history.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -94,6 +95,17 @@ export class AnalysisPromptsController {
     @Param('promptId', ParseIntPipe) promptId: number,
   ) {
     return this.analysisPromptsService.deletePrompt(userId, promptId);
+  }
+
+  @Get(':promptId/history')
+  @ApiOperation({ summary: 'List recorded changes of an analysis prompt' })
+  @ApiParam({ name: 'promptId', type: Number })
+  @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
+  getPromptHistory(
+    @GetCurrentUserId() userId: number,
+    @Param('promptId', ParseIntPipe) promptId: number,
+  ) {
+    return this.analysisPromptsService.getPromptHistory(userId, promptId);
   }
 
   @Post('versions/:versionId/publish')

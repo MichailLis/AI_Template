@@ -1,4 +1,5 @@
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { Button } from '@/shared/ui/button';
 
 import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
@@ -8,6 +9,8 @@ import { useAdminEducationOrganizationsWorkspace } from './use-admin-education-o
 export function AdminEducationOrganizationsWorkspace() {
   const {
     organizations,
+    needsPersonalDataOnly,
+    changeNeedsPersonalDataOnly,
     editorState,
     organizationsPage,
     organizationsTotal,
@@ -25,6 +28,29 @@ export function AdminEducationOrganizationsWorkspace() {
   return (
     <div className={`min-w-0 ${adminClassNames.layout.page}`}>
       <EducationOrganizationsNavigationCard onCreateOrganization={openCreateEditor} />
+
+      {/* Незаполненные реквизиты встречаются у многих заведений; фильтр отбирает их на сервере,
+          чтобы не листать страницы. */}
+      <div className="flex flex-wrap gap-2" aria-label="Фильтр заведений">
+        <Button
+          type="button"
+          size="sm"
+          variant={needsPersonalDataOnly ? 'outline' : 'secondary'}
+          aria-pressed={!needsPersonalDataOnly}
+          onClick={() => changeNeedsPersonalDataOnly(false)}
+        >
+          Все заведения
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={needsPersonalDataOnly ? 'secondary' : 'outline'}
+          aria-pressed={needsPersonalDataOnly}
+          onClick={() => changeNeedsPersonalDataOnly(true)}
+        >
+          Требуют заполнения
+        </Button>
+      </div>
 
       <EducationOrganizationsListCard
         organizations={organizations}

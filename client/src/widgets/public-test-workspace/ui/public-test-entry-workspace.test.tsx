@@ -223,4 +223,21 @@ describe('PublicTestEntryWorkspace', () => {
     expect(lastInitialInput).toHaveValue('Ж');
     expect(middleInitialInput).toHaveValue('П');
   });
+
+  it('shows warning when Latin letters are entered in studentName and trims leading space (UX-17)', async () => {
+    mockLinkAccess('STANDARD', 'EDUCATION');
+
+    render(<PublicTestEntryWorkspace />);
+
+    const nameInput = screen.getByLabelText('Имя');
+
+    fireEvent.change(nameInput, { target: { value: 'Doaudit ДОАУДИТ' } });
+
+    expect(nameInput).toHaveValue('ДОАУДИТ');
+    expect(screen.getByText('Имя вводится кириллицей')).toBeInTheDocument();
+
+    fireEvent.change(nameInput, { target: { value: 'ИВАН' } });
+    expect(nameInput).toHaveValue('ИВАН');
+    expect(screen.queryByText('Имя вводится кириллицей')).not.toBeInTheDocument();
+  });
 });

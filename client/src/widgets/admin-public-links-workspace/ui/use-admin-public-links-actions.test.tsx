@@ -7,6 +7,7 @@ import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-
 
 const createPublicLinkMutate = vi.fn();
 const updatePublicLinkMutate = vi.fn();
+const moveToActiveVersionMutate = vi.fn();
 
 vi.mock('sonner', () => ({
   toast: {
@@ -46,6 +47,10 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
   }),
   useTestsAdminPublicLinksControllerUpdatePublicLink: () => ({
     mutate: updatePublicLinkMutate,
+    isPending: false,
+  }),
+  useTestsAdminPublicLinksControllerMoveToActivePublishedVersion: () => ({
+    mutate: moveToActiveVersionMutate,
     isPending: false,
   }),
 }));
@@ -153,5 +158,46 @@ describe('useAdminPublicLinksActions', () => {
       },
       expect.any(Object),
     );
+  });
+
+  /** Находка аудита UX-04: действие перевода ссылки на опубликованную версию теста. */
+  it('moves the confirmed link to the published version and closes the confirmation', () => {
+    const setPendingMovePublicLink = vi.fn();
+    const refetchPublicLinks = vi.fn();
+    moveToActiveVersionMutate.mockReset();
+    moveToActiveVersionMutate.mockImplementation(
+      (_variables: unknown, options: { onSuccess: (link: { id: number }) => void }) =>
+        options.onSuccess({ id: 61 }),
+    );
+    const { result } = renderHook(() =>
+      useAdminPublicLinksActions(
+        createParams({
+          pendingMovePublicLink: {
+            id: 61,
+          } as UseAdminPublicLinksActionsParams['pendingMovePublicLink'],
+          setPendingMovePublicLink,
+          refetchPublicLinks,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.handleMovePublicLinkToActiveVersion();
+    });
+
+    expect(moveToActiveVersionMutate).toHaveBeenCalledWith({ linkId: 61 }, expect.any(Object));
+    expect(setPendingMovePublicLink).toHaveBeenCalledWith(null);
+    expect(refetchPublicLinks).toHaveBeenCalled();
+  });
+
+  it('does nothing when no link is waiting for the move', () => {
+    moveToActiveVersionMutate.mockReset();
+    const { result } = renderHook(() => useAdminPublicLinksActions(createParams()));
+
+    act(() => {
+      result.current.handleMovePublicLinkToActiveVersion();
+    });
+
+    expect(moveToActiveVersionMutate).not.toHaveBeenCalled();
   });
 });

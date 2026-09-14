@@ -13,7 +13,7 @@ import {
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import { updateBrandingSection } from './public-link-branding-builder.helpers';
+import { isValidHexColor, updateBrandingSection } from './public-link-branding-builder.helpers';
 import { PublicLinkBrandingColorField } from './public-link-branding-color-field';
 
 import type { DraftPublicBrandingConfig } from './public-link-branding-builder.helpers';
@@ -85,7 +85,7 @@ function BackgroundPanel({ draft, onApply, onClose }: BrandingBuilderPanelProps)
         <Button type="button" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-        <Button type="button" onClick={apply}>
+        <Button type="button" onClick={apply} disabled={!isValidHexColor(color)}>
           Применить
         </Button>
       </DialogFooter>
@@ -186,7 +186,11 @@ function ButtonPanel({ draft, onApply, onClose }: BrandingBuilderPanelProps) {
         <Button type="button" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-        <Button type="button" onClick={apply}>
+        <Button
+          type="button"
+          onClick={apply}
+          disabled={!isValidHexColor(primaryColor) || !isValidHexColor(textColor)}
+        >
           Применить
         </Button>
       </DialogFooter>
@@ -226,7 +230,11 @@ function SurfacePanel({ draft, onApply, onClose }: BrandingBuilderPanelProps) {
         <Button type="button" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-        <Button type="button" onClick={apply}>
+        <Button
+          type="button"
+          onClick={apply}
+          disabled={!isValidHexColor(cardColor) || !isValidHexColor(borderColor)}
+        >
           Применить
         </Button>
       </DialogFooter>
@@ -258,7 +266,7 @@ function AccentPanel({ draft, onApply, onClose }: BrandingBuilderPanelProps) {
         <Button type="button" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-        <Button type="button" onClick={apply}>
+        <Button type="button" onClick={apply} disabled={!isValidHexColor(accentColor)}>
           Применить
         </Button>
       </DialogFooter>

@@ -152,6 +152,62 @@ describe('PolusPublicQuestionCard', () => {
     expect(onNext).toHaveBeenCalledOnce();
   });
 
+  /**
+   * Находка доаудита FLOW-07: вернувшись в сессию, ученик видел сохраненный выбор, но ни одной
+   * кнопки — переход срабатывал только на смену выбора, и продолжить можно было, лишь изменив ответ.
+   */
+  it('lets a returning student continue a single-choice question without changing the answer', async () => {
+    const user = userEvent.setup();
+    const onAnswerChange = vi.fn();
+    const onNext = vi.fn();
+
+    render(
+      <PolusPublicQuestionCard
+        question={singleChoiceQuestion}
+        currentAnswer="system"
+        currentQuestionIndex={0}
+        totalQuestionsCount={2}
+        isLastQuestion={false}
+        isSubmitting={false}
+        canGoBack={false}
+        onAnswerChange={onAnswerChange}
+        onBack={vi.fn()}
+        onNext={onNext}
+        onFinish={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /далее/i }));
+
+    expect(onNext).toHaveBeenCalledOnce();
+    expect(onAnswerChange).not.toHaveBeenCalled();
+  });
+
+  it('lets a returning student finish on an answered last single-choice question', async () => {
+    const user = userEvent.setup();
+    const onFinish = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <PolusPublicQuestionCard
+        question={singleChoiceQuestion}
+        currentAnswer="prototype"
+        currentQuestionIndex={1}
+        totalQuestionsCount={2}
+        isLastQuestion
+        isSubmitting={false}
+        canGoBack
+        onAnswerChange={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        onFinish={onFinish}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /завершить тест/i }));
+
+    expect(onFinish).toHaveBeenCalledOnce();
+  });
+
   it('waits for an explicit action on open text questions', async () => {
     const user = userEvent.setup();
     const onAnswerChange = vi.fn();

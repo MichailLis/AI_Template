@@ -21,7 +21,19 @@ export const publicLinkAdminInclude = {
     select: {
       id: true,
       topicId: true,
+      versionNumber: true,
       title: true,
+      topic: {
+        select: {
+          archivedAt: true,
+          activePublishedVersion: {
+            select: {
+              id: true,
+              versionNumber: true,
+            },
+          },
+        },
+      },
     },
   },
 } as const satisfies Prisma.TestPublicLinkInclude;
@@ -45,6 +57,11 @@ export const publicLinkAccessInclude = {
   },
   topicVersion: {
     include: {
+      topic: {
+        select: {
+          archivedAt: true,
+        },
+      },
       _count: {
         select: {
           questions: true,

@@ -13,11 +13,30 @@ import type { AdminPublicLinkDtoPublicTemplate } from './adminPublicLinkDtoPubli
 export interface AdminPublicLinkDto {
   id: number;
   publishedVersionId: number;
+  /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  topicVersionNumber: number;
+  /**
+   * @minimum -9007199254740991
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  activePublishedVersionId: number | null;
+  /**
+   * @minimum 1
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  activePublishedVersionNumber: number | null;
   topicId: number;
   /** @nullable */
   educationOrganizationId: number | null;
   /** @nullable */
   educationOrganizationName: string | null;
+  /** @nullable */
+  educationOrganizationIsActive: boolean | null;
   personalDataProcessingMode: AdminPublicLinkDtoPersonalDataProcessingMode;
   /** @nullable */
   operatorFullNameSnapshot: string | null;
@@ -55,6 +74,8 @@ export interface AdminPublicLinkDto {
   consentVersion: string;
   consentText: string;
   title: string;
+  /** @nullable */
+  topicArchivedAt: string | null;
   updatedAt: string;
   createdAt: string;
 }

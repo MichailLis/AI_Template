@@ -36,4 +36,5 @@ export type PublicSessionGetResponseDtoSession = {
   timeLimitMinutes: number | null;
   questions: PublicSessionGetResponseDtoSessionQuestionsItem[];
   answers: PublicSessionGetResponseDtoSessionAnswersItem[];
+  serverTime: string;
 };

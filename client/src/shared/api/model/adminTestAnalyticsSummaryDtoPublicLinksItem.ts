@@ -35,6 +35,11 @@ export type AdminTestAnalyticsSummaryDtoPublicLinksItem = {
   analysisReady: number;
   /**
    * @minimum 0
+   * @maximum 9007199254740991
+   */
+  analysisStub: number;
+  /**
+   * @minimum 0
    * @maximum 100
    */
   share: number;

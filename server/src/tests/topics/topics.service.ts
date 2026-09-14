@@ -35,6 +35,28 @@ import { mapQuestion, validateDraftForPublish } from '../shared/domain.utils';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { ensureUniqueTopicSlug } from '../topics/topic-slug.utils';
 import { TestsQuestionService } from '../topics/question.service';
+import {
+  TOPIC_VERSION_CONTENT_SELECT,
+  hasVersionContentChanges,
+} from '../topics/topic-version-content';
+
+interface TopicUsage {
+  attemptCount: number;
+  publicLinkCount: number;
+  hasPublishedVersion: boolean;
+}
+
+const EMPTY_TOPIC_USAGE: TopicUsage = {
+  attemptCount: 0,
+  publicLinkCount: 0,
+  hasPublishedVersion: false,
+};
+
+/** Использование теста для списка и возможность удалить его навсегда — по правилу deleteTopic. */
+const toTopicUsageSummary = (usage: TopicUsage = EMPTY_TOPIC_USAGE) => ({
+  ...usage,
+  canDelete: !usage.hasPublishedVersion && usage.publicLinkCount === 0 && usage.attemptCount === 0,
+});
 
 @Injectable()
 export class TestsService {
@@ -51,6 +73,7 @@ export class TestsService {
       model: string;
       analysisPrompt: {
         title: string;
+        archivedAt?: Date | null;
       };
     } | null,
   ) {
@@ -61,6 +84,7 @@ export class TestsService {
           promptTitle: version.analysisPrompt.title,
           versionNumber: version.versionNumber,
           model: version.model,
+          promptArchived: Boolean(version.analysisPrompt.archivedAt),
         }
       : null;
   }
@@ -80,6 +104,7 @@ export class TestsService {
                 analysisPrompt: {
                   select: {
                     title: true,
+                    archivedAt: true,
                   },
                 },
               },
@@ -107,6 +132,7 @@ export class TestsService {
                 analysisPrompt: {
                   select: {
                     title: true,
+                    archivedAt: true,
                   },
                 },
               },
@@ -202,18 +228,18 @@ export class TestsService {
           select: {
             id: true,
             versionNumber: true,
-            title: true,
             _count: {
               select: {
                 questions: true,
               },
             },
+            ...TOPIC_VERSION_CONTENT_SELECT,
           },
         },
         activePublishedVersion: {
           select: {
             versionNumber: true,
-            title: true,
+            ...TOPIC_VERSION_CONTENT_SELECT,
           },
         },
       },
@@ -222,20 +248,100 @@ export class TestsService {
       },
     });
 
+    const topicIds = topics.map((topic) => topic.id);
+    const [activePublicLinkCountByTopicId, usageByTopicId] = await Promise.all([
+      this.countActivePublicLinksByTopic(topicIds),
+      this.collectUsageByTopic(topicIds),
+    ]);
+
     return {
       topics: topics
         .filter((topic) => topic.activeDraftVersion)
         .map((topic) => ({
           id: topic.id,
           slug: topic.slug,
+          description: topic.activeDraftVersion!.description,
           draftVersionNumber: topic.activeDraftVersion!.versionNumber,
           draftTitle: topic.activeDraftVersion!.title,
           draftQuestionCount: topic.activeDraftVersion!._count.questions,
           publishedVersionNumber: topic.activePublishedVersion?.versionNumber ?? null,
           publishedTitle: topic.activePublishedVersion?.title ?? null,
+          activePublicLinkCount: activePublicLinkCountByTopicId.get(topic.id) ?? 0,
+          ...toTopicUsageSummary(usageByTopicId.get(topic.id)),
+          scoringKind: topic.activeDraftVersion!.scoringKind,
+          hasUnpublishedChanges: topic.activePublishedVersion
+            ? hasVersionContentChanges(topic.activeDraftVersion!, topic.activePublishedVersion)
+            : false,
           updatedAt: topic.updatedAt.toISOString(),
         })),
     };
+  }
+
+  /**
+   * Прохождения и ссылки по всем версиям теста и наличие опубликованной версии. Старые версии
+   * тоже были выданы ученикам, а deleteTopic запрещает удаление по этим же признакам.
+   */
+  private async collectUsageByTopic(topicIds: number[]): Promise<Map<number, TopicUsage>> {
+    const usageByTopicId = new Map<number, TopicUsage>();
+
+    if (topicIds.length === 0) {
+      return usageByTopicId;
+    }
+
+    const versions = await this.prisma.testTopicVersion.findMany({
+      where: { topicId: { in: topicIds } },
+      select: {
+        topicId: true,
+        status: true,
+        _count: { select: { studentAttempts: true, publicLinks: true } },
+      },
+    });
+
+    for (const version of versions) {
+      const usage = usageByTopicId.get(version.topicId) ?? EMPTY_TOPIC_USAGE;
+
+      usageByTopicId.set(version.topicId, {
+        attemptCount: usage.attemptCount + version._count.studentAttempts,
+        publicLinkCount: usage.publicLinkCount + version._count.publicLinks,
+        hasPublishedVersion: usage.hasPublishedVersion || version.status === 'PUBLISHED',
+      });
+    }
+
+    return usageByTopicId;
+  }
+
+  private async countActivePublicLinksByTopic(topicIds: number[]): Promise<Map<number, number>> {
+    const countByTopicId = new Map<number, number>();
+
+    if (topicIds.length === 0) {
+      return countByTopicId;
+    }
+
+    const activeLinks = await this.prisma.testPublicLink.findMany({
+      where: {
+        archivedAt: null,
+        isActive: true,
+        topicVersion: {
+          topicId: {
+            in: topicIds,
+          },
+        },
+      },
+      select: {
+        topicVersion: {
+          select: {
+            topicId: true,
+          },
+        },
+      },
+    });
+
+    for (const link of activeLinks) {
+      const topicId = link.topicVersion.topicId;
+      countByTopicId.set(topicId, (countByTopicId.get(topicId) ?? 0) + 1);
+    }
+
+    return countByTopicId;
   }
 
   async archiveTopic(

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   checkComposeProjectName,
+  checkOrvalLockfileDrift,
   checkRootTypescript,
   checkRtkHookExclusions,
   checkSerenaBinary,
@@ -235,17 +236,58 @@ describe('checkComposeProjectName', () => {
   });
 });
 
+/**
+ * Real incident: client/node_modules held orval 8.10.0 while client/package-lock.json locked
+ * 8.26.0. `npm run gen:api` succeeded but regenerated the client in the old format — 322 files of
+ * churn around a two-field contract change — and CI from a clean checkout would generate
+ * something else again.
+ */
+describe('checkOrvalLockfileDrift', () => {
+  it('returns ok when installed orval matches the lockfile', () => {
+    const result = checkOrvalLockfileDrift('8.26.0', '8.26.0');
+    assert.equal(result.id, 'orval');
+    assert.equal(result.status, 'ok');
+    assert.equal(result.fix, null);
+  });
+
+  it('returns problem naming both versions when installed orval drifted from the lockfile', () => {
+    const result = checkOrvalLockfileDrift('8.26.0', '8.10.0');
+    assert.equal(result.id, 'orval');
+    assert.equal(result.status, 'problem');
+    assert.match(result.message, /8\.10\.0/);
+    assert.match(result.message, /8\.26\.0/);
+    assert.equal(result.fix, 'npm ci --prefix client');
+  });
+
+  it('returns problem when the lockfile pins orval but it is not installed', () => {
+    const result = checkOrvalLockfileDrift('8.26.0', null);
+    assert.equal(result.id, 'orval');
+    assert.equal(result.status, 'problem');
+    assert.match(result.message, /not installed/);
+    assert.equal(result.fix, 'npm ci --prefix client');
+  });
+
+  it('returns ok when the lockfile has no orval entry to compare against', () => {
+    const result = checkOrvalLockfileDrift(null, '8.10.0');
+    assert.equal(result.id, 'orval');
+    assert.equal(result.status, 'ok');
+    assert.equal(result.fix, null);
+  });
+});
+
 describe('runAgentToolingChecks and formatReport', () => {
-  it('runs all four checks and returns structured results', () => {
+  it('runs all five checks and returns structured results', () => {
     const results = runAgentToolingChecks({
       rtkConfig: 'exclude_commands = ["tsc", "vitest", "jest", "playwright", "find", "wc", "tree"]',
       requiredHookExclusions: REQUIRED_EXCLUSIONS,
       hasSerena: true,
       hasRootTypescript: true,
       dockerComposeContent: 'name: ai_template\nservices:\n',
+      lockedOrvalVersion: '8.26.0',
+      installedOrvalVersion: '8.26.0',
     });
 
-    assert.equal(results.length, 4);
+    assert.equal(results.length, 5);
     assert.ok(results.every((r) => r.status === 'ok'));
 
     const report = formatReport(results);
@@ -253,6 +295,7 @@ describe('runAgentToolingChecks and formatReport', () => {
     assert.match(report, /\[ok\]\s+serena:/);
     assert.match(report, /\[ok\]\s+typescript:/);
     assert.match(report, /\[ok\]\s+compose:/);
+    assert.match(report, /\[ok\]\s+orval:/);
     assert.doesNotMatch(report, /Actionable fixes:/);
   });
 
@@ -263,14 +306,18 @@ describe('runAgentToolingChecks and formatReport', () => {
       hasSerena: false,
       hasRootTypescript: false,
       dockerComposeContent: 'name: wrong_project\n',
+      lockedOrvalVersion: '8.26.0',
+      installedOrvalVersion: '8.10.0',
     });
 
-    assert.equal(results.filter((r) => r.status === 'problem').length, 3);
+    assert.equal(results.filter((r) => r.status === 'problem').length, 4);
     const report = formatReport(results);
     assert.match(report, /\[problem\] serena:/);
     assert.match(report, /\[problem\] typescript:/);
     assert.match(report, /\[problem\] compose:/);
+    assert.match(report, /\[problem\] orval:/);
     assert.match(report, /Actionable fixes:/);
     assert.match(report, /uv tool install serena-agent/);
+    assert.match(report, /npm ci --prefix client/);
   });
 });

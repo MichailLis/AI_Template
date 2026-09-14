@@ -16,3 +16,11 @@ export const updateBrandingSection = <K extends keyof DraftPublicBrandingConfig>
   ...config,
   [key]: value,
 });
+
+export const isValidHexColor = (value: string): boolean => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return true;
+  }
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed);
+};

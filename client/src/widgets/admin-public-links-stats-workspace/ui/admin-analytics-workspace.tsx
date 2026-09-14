@@ -7,9 +7,14 @@ import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
-import { ANALYTICS_PANEL_ID, AdminAnalyticsNavigationCard } from './admin-analytics-filters';
+import {
+  ANALYTICS_PANEL_ID,
+  AdminAnalyticsNavigationCard,
+  AnalyticsReportFilterFields,
+} from './admin-analytics-filters';
 import { AnalyticsAttemptsTab } from './analytics-attempts-tab';
 import { AnalyticsReportTab } from './analytics-report-tab';
+import { useAnalyticsReport } from './use-admin-public-links-analytics-report';
 import { usePublicLinkSelection, usePublicLinksData } from './use-admin-public-links-selection';
 import { resolveAnalyticsTab } from './use-admin-public-links-stats-workspace.model';
 
@@ -42,6 +47,13 @@ export function AdminAnalyticsWorkspace() {
     handleTabChange,
     handleTopicChange,
   } = usePublicLinkSelection(activePublicLinks, archivedPublicLinks);
+  // Параметры отчёта живут здесь, а не во вкладке: их поля стоят в общем блоке фильтров и
+  // сохраняются при переключении вкладок. Сам отчёт запрашивается только на своей вкладке.
+  const analyticsReport = useAnalyticsReport(
+    effectiveTopicId,
+    effectivePublicLinkId,
+    analyticsTab === 'report',
+  );
 
   const handleAnalyticsTabChange = (tab: AnalyticsTab) => {
     setSearchParams(tab === 'attempts' ? { tab: 'attempts' } : {}, { replace: true });
@@ -91,6 +103,20 @@ export function AdminAnalyticsWorkspace() {
         effectivePublicLinkId={effectivePublicLinkId}
         onPublicLinkChange={setSelectedPublicLinkId}
         linkAttemptsCountById={linkAttemptsCountById}
+        reportFilters={
+          analyticsTab === 'report' ? (
+            <AnalyticsReportFilterFields
+              analyticsScope={analyticsReport.analyticsScope}
+              onAnalyticsScopeChange={analyticsReport.handleAnalyticsScopeChange}
+              analyticsLinkStatus={analyticsReport.analyticsLinkStatus}
+              onAnalyticsLinkStatusChange={analyticsReport.handleAnalyticsLinkStatusChange}
+              analyticsDateFrom={analyticsReport.analyticsDateFrom}
+              onAnalyticsDateFromChange={analyticsReport.handleAnalyticsDateFromChange}
+              analyticsDateTo={analyticsReport.analyticsDateTo}
+              onAnalyticsDateToChange={analyticsReport.handleAnalyticsDateToChange}
+            />
+          ) : null
+        }
       />
 
       <div
@@ -98,10 +124,7 @@ export function AdminAnalyticsWorkspace() {
         className={adminClassNames.layout.page}
       >
         {analyticsTab === 'report' ? (
-          <AnalyticsReportTab
-            effectiveTopicId={effectiveTopicId}
-            effectivePublicLinkId={effectivePublicLinkId}
-          />
+          <AnalyticsReportTab report={analyticsReport} />
         ) : (
           <AnalyticsAttemptsTab
             selectedPublicLink={selectedPublicLink}

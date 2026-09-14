@@ -4,7 +4,7 @@ import {
   isChoiceType,
 } from '../lib/tests-utils';
 
-import type { QuestionFormState, QuestionType } from '../model/types';
+import type { QuestionFormState, QuestionSliderBandDraft, QuestionType } from '../model/types';
 
 export const getQuestionModalSubmitLabel = (mode: 'create' | 'edit', isSubmitting: boolean) => {
   if (isSubmitting) {
@@ -121,4 +121,42 @@ export const withRemovedSliderBand = (form: QuestionFormState, bandId: string) =
     ...form,
     sliderBands: form.sliderBands.filter((band) => band.id !== bandId),
   };
+};
+
+export const getOverlappingSliderBandIds = (
+  sliderBands: QuestionSliderBandDraft[],
+): Set<string> => {
+  const parsed = sliderBands.map((band) => {
+    const minStr = band.minValue.trim();
+    const maxStr = band.maxValue.trim();
+    if (!minStr || !maxStr) {
+      return null;
+    }
+    const min = Number.parseInt(minStr, 10);
+    const max = Number.parseInt(maxStr, 10);
+    if (Number.isNaN(min) || Number.isNaN(max) || max <= min) {
+      return null;
+    }
+    return { id: band.id, min, max };
+  });
+
+  const overlappingIds = new Set<string>();
+  for (let i = 0; i < parsed.length; i++) {
+    const a = parsed[i];
+    if (!a) {
+      continue;
+    }
+    for (let j = i + 1; j < parsed.length; j++) {
+      const b = parsed[j];
+      if (!b) {
+        continue;
+      }
+      if (a.min <= b.max && b.min <= a.max) {
+        overlappingIds.add(a.id);
+        overlappingIds.add(b.id);
+      }
+    }
+  }
+
+  return overlappingIds;
 };

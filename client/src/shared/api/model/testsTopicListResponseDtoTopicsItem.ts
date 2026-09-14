@@ -5,10 +5,13 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { TestsTopicListResponseDtoTopicsItemScoringKind } from './testsTopicListResponseDtoTopicsItemScoringKind';
 
 export type TestsTopicListResponseDtoTopicsItem = {
   id: number;
   slug: string;
+  /** @nullable */
+  description: string | null;
   draftVersionNumber: number;
   draftTitle: string;
   draftQuestionCount: number;
@@ -16,5 +19,24 @@ export type TestsTopicListResponseDtoTopicsItem = {
   publishedVersionNumber: number | null;
   /** @nullable */
   publishedTitle: string | null;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  activePublicLinkCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  attemptCount: number;
+  /**
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  publicLinkCount: number;
+  hasPublishedVersion: boolean;
+  canDelete: boolean;
+  scoringKind: TestsTopicListResponseDtoTopicsItemScoringKind;
+  hasUnpublishedChanges: boolean;
   updatedAt: string;
 };

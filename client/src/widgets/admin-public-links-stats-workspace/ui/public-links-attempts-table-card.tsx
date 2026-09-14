@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 
-import { getAnalysisStatusLabel, getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
+import {
+  getAnalysisResultKindLabel,
+  getAnalysisResultKindTone,
+} from '@/shared/lib/analysis-result-kind-labels';
+import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -23,6 +27,8 @@ interface PublicAttemptRow {
   attemptNumber: number;
   status: string;
   analysisStatus: string | null;
+
+  analysisResultKind: string;
 
   llmStatus?: string | null;
 
@@ -102,21 +108,20 @@ const getAttemptStatusBadgeClassName = (status: string) => {
   return adminBadgeClassNames.info;
 };
 
-const getAnalysisStatusBadgeClassName = (status: string | null) => {
-  if (status === 'READY') {
-    return adminBadgeClassNames.success;
-  }
-
-  if (status === 'FAILED') {
-    return adminBadgeClassNames.danger;
-  }
-
-  if (status === 'PENDING') {
-    return adminBadgeClassNames.warning;
-  }
-
-  return adminBadgeClassNames.neutral;
+/**
+ * Цвет берётся из вида результата, а не из статуса записи: `READY` стоит и у заглушки, и у
+ * настоящего ИИ-анализа, поэтому зелёный по статусу вводил админа в заблуждение.
+ */
+const analysisResultKindBadgeClassNames: Record<string, string> = {
+  success: adminBadgeClassNames.success,
+  warning: adminBadgeClassNames.warning,
+  danger: adminBadgeClassNames.danger,
+  neutral: adminBadgeClassNames.neutral,
 };
+
+const getAnalysisResultBadgeClassName = (kind: string | null | undefined) =>
+  analysisResultKindBadgeClassNames[getAnalysisResultKindTone(kind)] ??
+  adminBadgeClassNames.neutral;
 
 const getLlmStatusBadgeConfig = (status: string | null | undefined) => {
   switch (status) {
@@ -229,9 +234,9 @@ function AttemptRowCells({
         <div className="flex flex-col items-start gap-1">
           <Badge
             variant="outline"
-            className={getAnalysisStatusBadgeClassName(attempt.analysisStatus)}
+            className={getAnalysisResultBadgeClassName(attempt.analysisResultKind)}
           >
-            {getAnalysisStatusLabel(attempt.analysisStatus)}
+            {getAnalysisResultKindLabel(attempt.analysisResultKind)}
           </Badge>
           <LlmStatusBadge status={attempt.llmStatus} />
         </div>

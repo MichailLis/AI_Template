@@ -100,6 +100,39 @@ describe('AdminUserActionsMenu', () => {
     expect(screen.getByRole('button', { name: /изменить данные/i })).toBeEnabled();
   });
 
+  /**
+   * Находка аудита UX-12: для своей учетки четыре пункта были просто серыми, без объяснения, и
+   * администратор не понимал, сломано ли меню или действие запрещено.
+   */
+  it('explains why actions are unavailable for the own account', () => {
+    renderMenu({ id: CURRENT_ADMIN_ID, email: 'me@example.com', role: 'ADMIN' });
+
+    expect(screen.getByText(/Нельзя применить к своей учетке/)).toBeInTheDocument();
+
+    for (const name of [
+      /снять права администратора/i,
+      /сбросить пароль/i,
+      /завершить сеансы/i,
+      /отключить доступ/i,
+    ]) {
+      expect(screen.getByRole('button', { name })).toHaveAccessibleDescription(
+        /Нельзя применить к своей учетке/,
+      );
+    }
+    expect(
+      screen.getByRole('button', { name: /изменить данные/i }),
+    ).not.toHaveAccessibleDescription();
+  });
+
+  it('shows no own-account explanation for another user', () => {
+    renderMenu({ id: 3, email: 'member@example.com', role: 'USER' });
+
+    expect(screen.queryByText(/Нельзя применить к своей учетке/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /сбросить пароль/i }),
+    ).not.toHaveAccessibleDescription();
+  });
+
   it('routes each management action to its handler and closes the menu', async () => {
     renderMenu({ id: 3, email: 'member@example.com', role: 'USER' });
 

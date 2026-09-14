@@ -1,6 +1,7 @@
 import { useWatch } from 'react-hook-form';
 
 import { GROUP_VALIDATION_MODE_OPTIONS } from '@/shared/lib/group-validation';
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import {
@@ -30,6 +31,7 @@ interface EducationOrganizationFormProps {
   form: UseFormReturn<EducationOrganizationFormValues>;
   mode: OrganizationEditorMode;
   disabled?: boolean;
+  activeLinksCount?: number;
 }
 
 interface OrganizationTextFieldProps {
@@ -94,7 +96,8 @@ function MainDataSection({
   form,
   mode,
   disabled,
-}: FormSectionProps & { mode: OrganizationEditorMode }) {
+  activeLinksCount,
+}: FormSectionProps & { mode: OrganizationEditorMode; activeLinksCount?: number }) {
   return (
     <fieldset className={sectionClassName} disabled={disabled}>
       <legend className={legendClassName}>Основные данные</legend>
@@ -112,22 +115,36 @@ function MainDataSection({
         <FormField
           control={form.control}
           name="isActive"
-          render={({ field }) => (
-            <FormItem>
-              <label className={adminClassNames.form.checkboxLabel}>
-                <input
-                  ref={field.ref}
-                  type="checkbox"
-                  checked={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(event) => field.onChange(event.target.checked)}
-                  disabled={disabled}
-                />
-                Заведение активно
-              </label>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const linksCount = activeLinksCount ?? 0;
+            const linksText = `${linksCount} ${pluralizeRu(linksCount, [
+              'активная ссылка',
+              'активные ссылки',
+              'активных ссылок',
+            ])}`;
+
+            return (
+              <FormItem>
+                <label className={adminClassNames.form.checkboxLabel}>
+                  <input
+                    ref={field.ref}
+                    type="checkbox"
+                    checked={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(event) => field.onChange(event.target.checked)}
+                    disabled={disabled}
+                  />
+                  Заведение активно
+                </label>
+                <FormDescription>
+                  {field.value
+                    ? `При отключении заведения доступ по его публичным ссылкам (${linksText}) будет закрыт для студентов.`
+                    : `Заведение отключено. Его публичные ссылки (${linksText}) закрыты для прохождения студентами.`}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       ) : null}
     </fieldset>
@@ -318,10 +335,16 @@ export function EducationOrganizationForm({
   form,
   mode,
   disabled = false,
+  activeLinksCount,
 }: EducationOrganizationFormProps) {
   return (
     <div className="space-y-6">
-      <MainDataSection form={form} mode={mode} disabled={disabled} />
+      <MainDataSection
+        form={form}
+        mode={mode}
+        disabled={disabled}
+        activeLinksCount={activeLinksCount}
+      />
       <OperatorSection form={form} disabled={disabled} />
       <DocumentsSection form={form} disabled={disabled} />
       <ContactsSection form={form} disabled={disabled} />

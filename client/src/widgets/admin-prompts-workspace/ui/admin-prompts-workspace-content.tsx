@@ -1,3 +1,4 @@
+import { getPromptModelMismatch } from './admin-prompts-workspace.helpers';
 import { PromptEditorCard } from './prompt-editor-card';
 import { PromptLibraryCard } from './prompt-library-card';
 import { SimulationOutputCard } from './simulation-output-card';
@@ -35,6 +36,15 @@ export function AdminPromptsWorkspaceContent({ workspace }: AdminPromptsWorkspac
       </div>
 
       <PromptEditorCard
+        editingPrompt={
+          workspace.selectedPrompt
+            ? {
+                title: workspace.selectedPrompt.title,
+                versionNumber: workspace.selectedPromptVersionNumber,
+              }
+            : null
+        }
+        modelMismatch={getPromptModelMismatch(workspace.selectedPrompt, workspace.selectedModel)}
         modelSearch={workspace.modelSearch}
         onModelSearchChange={workspace.setModelSearch}
         modelFilter={workspace.modelFilter}

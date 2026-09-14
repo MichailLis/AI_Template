@@ -7,6 +7,7 @@ import pdfMake from 'pdfmake';
 import type { TDocumentDefinitions, TFontDictionary } from 'pdfmake/interfaces';
 
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
+import { buildReportConfidenceRows, buildReportFilterRows } from './analytics-report-labels';
 
 const requireFromHere = createRequire(__filename);
 
@@ -58,7 +59,8 @@ export class TestsAnalyticsPdfRendererService {
     return pdfMake.createPdf(definition).getBuffer();
   }
 
-  private buildDefinition(summary: AdminTestAnalyticsSummaryDto): TDocumentDefinitions {
+  /** Открыто для спеки: текст отчета проверяется по определению документа, без разбора PDF. */
+  buildDefinition(summary: AdminTestAnalyticsSummaryDto): TDocumentDefinitions {
     const directionRows = [
       ['ID', 'Название', 'Кол-во', 'Доля, %'],
       ...summary.directions.map((item) => [item.id, item.label, item.count, `${item.share}%`]),
@@ -81,7 +83,7 @@ export class TestsAnalyticsPdfRendererService {
     ];
 
     const publicLinksRows = [
-      ['ID', 'Код', 'Тема', 'Попытки', 'Завершено', 'Анализ'],
+      ['ID', 'Код', 'Тема', 'Попытки', 'Завершено', 'Анализ', 'Заглушек'],
       ...summary.publicLinks.map((item) => [
         item.publicLinkId,
         item.shortCode,
@@ -89,6 +91,7 @@ export class TestsAnalyticsPdfRendererService {
         item.attemptsTotal,
         item.attemptsCompleted,
         item.analysisReady,
+        item.analysisStub,
       ]),
     ];
 
@@ -104,25 +107,13 @@ export class TestsAnalyticsPdfRendererService {
     ];
 
     const confidenceRows = [
-      ['Ключ', 'Значение'],
-      ['Gap', `${summary.confidence.gap.value}% (${summary.confidence.gap.total})`],
-      [
-        'Consistency Index',
-        `${summary.confidence.consistencyIndex.value}% (${summary.confidence.consistencyIndex.total})`,
-      ],
-      [
-        'Readiness Top',
-        `${summary.confidence.readinessTop.value}% (${summary.confidence.readinessTop.total})`,
-      ],
+      ['Показатель', 'Значение'],
+      ...buildReportConfidenceRows(summary.confidence).map((row) => [row.label, row.value]),
     ];
 
-    const filters = [
-      `scope: ${summary.filters.scope}`,
-      `publicLinkId: ${toDisplayValue(summary.filters.publicLinkId)}`,
-      `linkStatus: ${summary.filters.linkStatus}`,
-      `dateFrom: ${toDisplayValue(summary.filters.dateFrom)}`,
-      `dateTo: ${toDisplayValue(summary.filters.dateTo)}`,
-    ];
+    const filters = buildReportFilterRows(summary.filters).map(
+      (row) => `${row.label}: ${row.value}`,
+    );
 
     const coverageBody = [
       ['Метрика', 'Значение'],
@@ -130,6 +121,9 @@ export class TestsAnalyticsPdfRendererService {
       ['Попыток всего', summary.coverage.attemptsTotal],
       ['Попыток завершено', summary.coverage.attemptsCompleted],
       ['Анализ готов', summary.coverage.analysisReady],
+      ['Из них ИИ-анализ', summary.coverage.analysisAiReady],
+      ['Из них без ИИ', summary.coverage.analysisWithoutAi],
+      ['Заглушка без ИИ-промпта', summary.coverage.analysisStub],
       ['Анализ в процессе', summary.coverage.analysisPending],
       ['Ошибка анализа', summary.coverage.analysisFailed],
       ['Не оценено', summary.coverage.analysisMissing],
@@ -205,7 +199,7 @@ export class TestsAnalyticsPdfRendererService {
         {
           table: {
             headerRows: 1,
-            widths: ['auto', 'auto', '*', 'auto', 'auto', 'auto'],
+            widths: ['auto', 'auto', '*', 'auto', 'auto', 'auto', 'auto'],
             body: publicLinksRows,
           },
           layout: 'lightHorizontalLines',
@@ -221,7 +215,7 @@ export class TestsAnalyticsPdfRendererService {
         },
         { text: 'Методология', style: 'subtitle' },
         {
-          text: 'Отчет сформирован на основе агрегированных данных по результатам диагностического анализа методики prof-orientation-v3-plus.',
+          text: 'Отчет сформирован на основе агрегированных данных по результатам диагностического анализа методики профориентации v3+.',
           style: 'small',
         },
       ],

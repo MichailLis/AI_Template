@@ -56,6 +56,31 @@ const createTopicSnapshot = () => ({
   activePublishedVersion: null,
 });
 
+const listedQuestion = {
+  type: 'SINGLE_CHOICE',
+  title: 'Что вам ближе?',
+  description: null,
+  required: true,
+  order: 1,
+  settings: null,
+  options: [{ label: 'Техника', value: 'tech', weight: 1, order: 1 }],
+  sliderBands: [],
+};
+
+/** Версия в том виде, в каком ее выбирает список тестов: номер, счетчик и сравниваемое содержимое. */
+const createListedVersion = (overrides: Record<string, unknown> = {}) => ({
+  id: 10,
+  versionNumber: 1,
+  title: 'Career skills',
+  description: 'Навыки для карьеры',
+  analysisPromptVersionId: 42,
+  scoringKind: 'DEFAULT',
+  scoringConfig: null,
+  _count: { questions: 1 },
+  questions: [listedQuestion],
+  ...overrides,
+});
+
 describe('TestsService analysis prompt attachment', () => {
   let service: TestsService;
   let prismaMock: {
@@ -71,7 +96,11 @@ describe('TestsService analysis prompt attachment', () => {
     };
     testTopicVersion: {
       count: jest.Mock;
+      findMany: jest.Mock;
       update: jest.Mock;
+    };
+    testPublicLink: {
+      findMany: jest.Mock;
     };
   };
   let txMock: {
@@ -143,7 +172,11 @@ describe('TestsService analysis prompt attachment', () => {
       },
       testTopicVersion: {
         count: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
         update: jest.fn(),
+      },
+      testPublicLink: {
+        findMany: jest.fn().mockResolvedValue([]),
       },
     };
 
@@ -158,6 +191,208 @@ describe('TestsService analysis prompt attachment', () => {
     jest.clearAllMocks();
   });
 
+  it('listTopics reports how many active public links each test has', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'career-skills',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 10, versionNumber: 3 }),
+        activePublishedVersion: createListedVersion({ id: 9, versionNumber: 2 }),
+      },
+      {
+        id: 2,
+        slug: 'no-links',
+        updatedAt: new Date('2026-09-11T09:00:00.000Z'),
+        activeDraftVersion: createListedVersion({
+          id: 20,
+          title: 'No links',
+          _count: { questions: 0 },
+          questions: [],
+        }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      { topicVersion: { topicId: 1 } },
+      { topicVersion: { topicId: 1 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(prismaMock.testPublicLink.findMany).toHaveBeenCalledWith({
+      where: {
+        archivedAt: null,
+        isActive: true,
+        topicVersion: {
+          topicId: {
+            in: [1, 2],
+          },
+        },
+      },
+      select: {
+        topicVersion: {
+          select: {
+            topicId: true,
+          },
+        },
+      },
+    });
+    expect(result.topics.map((topic) => [topic.id, topic.activePublicLinkCount])).toEqual([
+      [1, 2],
+      [2, 0],
+    ]);
+  });
+
+  it('does not query public links when no topic matches the list filter', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([]);
+
+    const result = await service.listTopics(5);
+
+    expect(result.topics).toEqual([]);
+    expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.testTopicVersion.findMany).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Находка аудита UX-03: одноименные тесты отличались только временем обновления, а «Черновик v2»
+   * стоял у каждого опубликованного теста, потому что публикация всегда клонирует черновик. Строке
+   * нужны описание, число прохождений и признак реальных неопубликованных изменений.
+   */
+  it('listTopics flags unpublished changes only when the draft differs from the published version', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'untouched',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 11, versionNumber: 2 }),
+        activePublishedVersion: createListedVersion({ id: 10, versionNumber: 1 }),
+      },
+      {
+        id: 2,
+        slug: 'edited',
+        updatedAt: new Date('2026-09-11T09:00:00.000Z'),
+        activeDraftVersion: createListedVersion({
+          id: 21,
+          versionNumber: 2,
+          questions: [{ ...listedQuestion, title: 'Что вам интереснее?' }],
+        }),
+        activePublishedVersion: createListedVersion({ id: 20, versionNumber: 1 }),
+      },
+      {
+        id: 3,
+        slug: 'draft-only',
+        updatedAt: new Date('2026-09-11T08:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 30, description: null }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { topicId: 1, _count: { studentAttempts: 3 } },
+      { topicId: 1, _count: { studentAttempts: 2 } },
+      { topicId: 2, _count: { studentAttempts: 1 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(
+      result.topics.map((topic) => [
+        topic.slug,
+        topic.hasUnpublishedChanges,
+        topic.attemptCount,
+        topic.description,
+      ]),
+    ).toEqual([
+      ['untouched', false, 5, 'Навыки для карьеры'],
+      ['edited', true, 1, 'Навыки для карьеры'],
+      ['draft-only', false, 0, null],
+    ]);
+  });
+
+  /**
+   * Находка аудита FLOW-04: меню предлагало «Удалить навсегда» для любого архивного теста, а
+   * сервер отказывал тестам с публикацией, ссылками или прохождениями — узнать это можно было
+   * только после попытки. Список отдает возможность удаления по тому же правилу, что deleteTopic.
+   */
+  it('listTopics says whether a test can be deleted, by the same rule as deleteTopic', async () => {
+    const updatedAt = new Date('2026-09-11T10:00:00.000Z');
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'published',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 11, versionNumber: 2 }),
+        activePublishedVersion: createListedVersion({ id: 10, versionNumber: 1 }),
+      },
+      {
+        id: 2,
+        slug: 'linked-draft',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 20 }),
+        activePublishedVersion: null,
+      },
+      {
+        id: 3,
+        slug: 'unused-draft',
+        updatedAt,
+        activeDraftVersion: createListedVersion({ id: 30 }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { topicId: 1, status: 'PUBLISHED', _count: { studentAttempts: 0, publicLinks: 0 } },
+      { topicId: 1, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 0 } },
+      { topicId: 2, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 1 } },
+      { topicId: 3, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 0 } },
+    ]);
+
+    const result = await service.listTopics(5);
+
+    expect(
+      result.topics.map((topic) => [
+        topic.slug,
+        topic.canDelete,
+        topic.hasPublishedVersion,
+        topic.publicLinkCount,
+      ]),
+    ).toEqual([
+      ['published', false, true, 0],
+      ['linked-draft', false, false, 1],
+      ['unused-draft', true, false, 0],
+    ]);
+  });
+
+  /**
+   * Находка аудита FLOW-03: «Импорт v3+» создавал очередную копию методики, не упоминая
+   * существующие. Копии узнаются по виду подсчета черновика, а не по названию, которое можно менять.
+   */
+  it('listTopics exposes the scoring kind of the draft so methodology copies can be found', async () => {
+    prismaMock.testTopic.findMany.mockResolvedValue([
+      {
+        id: 1,
+        slug: 'prof-orientation-v3-plus',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ scoringKind: 'PROF_ORIENTATION_V3_PLUS' }),
+        activePublishedVersion: null,
+      },
+      {
+        id: 2,
+        slug: 'career-skills',
+        updatedAt: new Date('2026-09-11T10:00:00.000Z'),
+        activeDraftVersion: createListedVersion({ id: 20 }),
+        activePublishedVersion: null,
+      },
+    ]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([]);
+
+    const result = await service.listTopics(5);
+
+    expect(result.topics.map((topic) => [topic.slug, topic.scoringKind])).toEqual([
+      ['prof-orientation-v3-plus', 'PROF_ORIENTATION_V3_PLUS'],
+      ['career-skills', 'DEFAULT'],
+    ]);
+  });
+
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
@@ -169,6 +404,7 @@ describe('TestsService analysis prompt attachment', () => {
       promptTitle: 'Career analysis',
       versionNumber: 2,
       model: 'google/gemini-2.0-flash-exp:free',
+      promptArchived: false,
     });
   });
 
@@ -276,6 +512,27 @@ describe('TestsService analysis prompt attachment', () => {
         },
       },
     });
+  });
+
+  /** ait-rcw.30: публикация черновика с удаленным промптом анализа проходила молча. */
+  it('publishTopic refuses a draft attached to a deleted analysis prompt', async () => {
+    const snapshot = createTopicSnapshot();
+    prismaMock.testTopic.findUnique.mockResolvedValue({
+      ...snapshot,
+      activeDraftVersion: {
+        ...snapshot.activeDraftVersion,
+        analysisPromptVersion: {
+          ...publishedPromptVersion,
+          analysisPrompt: {
+            ...publishedPromptVersion.analysisPrompt,
+            archivedAt: new Date('2026-09-12T00:00:00.000Z'),
+          },
+        },
+      },
+    });
+
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(BadRequestException);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('importProfOrientationV3Plus creates a full Polus draft with scoring config', async () => {

@@ -16,6 +16,8 @@ describe('TestsAdminPublicLinksController', () => {
     regeneratePublicLinkShortCode: jest.Mock;
     deletePublicLink: jest.Mock;
     restorePublicLink: jest.Mock;
+    moveToActivePublishedVersion: jest.Mock;
+    getPublicLinkHistory: jest.Mock;
   };
 
   beforeEach(() => {
@@ -27,6 +29,8 @@ describe('TestsAdminPublicLinksController', () => {
       regeneratePublicLinkShortCode: jest.fn(),
       deletePublicLink: jest.fn(),
       restorePublicLink: jest.fn(),
+      moveToActivePublishedVersion: jest.fn(),
+      getPublicLinkHistory: jest.fn(),
     };
 
     controller = new TestsAdminPublicLinksController(
@@ -104,5 +108,22 @@ describe('TestsAdminPublicLinksController', () => {
 
     await expect(controller.restorePublicLink(7, 5)).resolves.toEqual(response);
     expect(serviceMock.restorePublicLink).toHaveBeenCalledWith(7, 5);
+  });
+
+  /** Находка аудита UX-04: ссылку на устаревшую версию теста нельзя было перевести на актуальную. */
+  it('moveToActivePublishedVersion delegates to service', async () => {
+    const response = { id: 5, publishedVersionId: 51 };
+    serviceMock.moveToActivePublishedVersion.mockResolvedValue(response);
+
+    await expect(controller.moveToActivePublishedVersion(7, 5)).resolves.toEqual(response);
+    expect(serviceMock.moveToActivePublishedVersion).toHaveBeenCalledWith(7, 5);
+  });
+
+  it('getPublicLinkHistory delegates to service', async () => {
+    const response = { events: [] };
+    serviceMock.getPublicLinkHistory.mockResolvedValue(response);
+
+    await expect(controller.getPublicLinkHistory(7, 5)).resolves.toEqual(response);
+    expect(serviceMock.getPublicLinkHistory).toHaveBeenCalledWith(7, 5);
   });
 });

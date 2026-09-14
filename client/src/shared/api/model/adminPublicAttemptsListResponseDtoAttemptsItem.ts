@@ -5,6 +5,7 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKind } from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKind';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode } from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemLlmStatus';
@@ -58,4 +59,6 @@ export type AdminPublicAttemptsListResponseDtoAttemptsItem = {
    * @nullable
    */
   llmStatus: AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus;
+  /** Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа */
+  analysisResultKind: AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKind;
 };

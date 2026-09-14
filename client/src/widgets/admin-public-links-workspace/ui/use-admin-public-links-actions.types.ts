@@ -5,6 +5,7 @@ import type {
   PersonalDataProcessingMode,
   EducationOrganizationOption,
 } from './public-link-create-card.types';
+import type { PublicLinkListItem } from './public-links-list-card.helpers';
 import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 export interface UseAdminPublicLinksActionsParams {
@@ -30,6 +31,8 @@ export interface UseAdminPublicLinksActionsParams {
   setPublicLinksTab: (tab: PublicLinksTab) => void;
   setSelectedPublicLinkId: (value: number | null) => void;
   setPendingDeletePublicLinkId: (value: number | null) => void;
+  pendingMovePublicLink: PublicLinkListItem | null;
+  setPendingMovePublicLink: (link: PublicLinkListItem | null) => void;
   setNewPublicShortCode: (value: string) => void;
   setNewPersonalDataProcessingMode: (value: PersonalDataProcessingMode) => void;
   setNewEducationOrganizationId: (value: number | null) => void;

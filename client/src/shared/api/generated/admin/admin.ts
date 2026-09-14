@@ -35,6 +35,7 @@ import type {
   AnalysisPromptListResponseDto,
   AnalysisPromptResponseDto,
   AnalysisPromptVersionResponseDto,
+  AuditHistoryResponseDto,
   CreateAnalysisPromptDto,
   CreateUserDto,
   ErrorResponseDto,
@@ -771,6 +772,140 @@ export const useAdminControllerRevokeUserSessions = <
   return useMutation(getAdminControllerRevokeUserSessionsMutationOptions(options), queryClient);
 };
 /**
+ * @summary List recorded changes of a user account
+ */
+export const adminControllerGetUserHistory = (
+  id: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AuditHistoryResponseDto>(
+    { url: `/admin/users/${id}/history`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminControllerGetUserHistoryQueryKey = (id: number) => {
+  return [`/admin/users/${id}/history`] as const;
+};
+
+export const getAdminControllerGetUserHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminControllerGetUserHistoryQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUserHistory>>> = ({
+    signal,
+  }) => adminControllerGetUserHistory(id, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type AdminControllerGetUserHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminControllerGetUserHistory>>
+>;
+export type AdminControllerGetUserHistoryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminControllerGetUserHistory<
+  TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  id: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetUserHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminControllerGetUserHistory<
+  TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetUserHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminControllerGetUserHistory<
+  TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recorded changes of a user account
+ */
+
+export function useAdminControllerGetUserHistory<
+  TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  id: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetUserHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminControllerGetUserHistoryQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
  * @summary Update user role
  */
 export const adminControllerUpdateUserRole = (
@@ -863,7 +998,7 @@ export const useAdminControllerUpdateUserRole = <
   return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
 };
 /**
- * @summary Get OpenRouter settings
+ * @summary Get OpenRouter settings with a live connection check
  */
 export const adminSettingsControllerGetOpenRouterSettings = (
   options?: SecondParameter<typeof customInstance>,
@@ -978,7 +1113,7 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Get OpenRouter settings
+ * @summary Get OpenRouter settings with a live connection check
  */
 
 export function useAdminSettingsControllerGetOpenRouterSettings<
@@ -2409,6 +2544,163 @@ export const useAnalysisPromptsControllerDeletePrompt = <
 > => {
   return useMutation(getAnalysisPromptsControllerDeletePromptMutationOptions(options), queryClient);
 };
+/**
+ * @summary List recorded changes of an analysis prompt
+ */
+export const analysisPromptsControllerGetPromptHistory = (
+  promptId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AuditHistoryResponseDto>(
+    { url: `/admin/prompts/${promptId}/history`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAnalysisPromptsControllerGetPromptHistoryQueryKey = (promptId: number) => {
+  return [`/admin/prompts/${promptId}/history`] as const;
+};
+
+export const getAnalysisPromptsControllerGetPromptHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  promptId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAnalysisPromptsControllerGetPromptHistoryQueryKey(promptId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>
+  > = ({ signal }) => analysisPromptsControllerGetPromptHistory(promptId, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: promptId !== null && promptId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AnalysisPromptsControllerGetPromptHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>
+>;
+export type AnalysisPromptsControllerGetPromptHistoryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAnalysisPromptsControllerGetPromptHistory<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  promptId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAnalysisPromptsControllerGetPromptHistory<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  promptId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+          TError,
+          Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAnalysisPromptsControllerGetPromptHistory<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  promptId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recorded changes of an analysis prompt
+ */
+
+export function useAnalysisPromptsControllerGetPromptHistory<
+  TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  promptId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAnalysisPromptsControllerGetPromptHistoryQueryOptions(promptId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 /**
  * @summary Publish analysis prompt version
  */

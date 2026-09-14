@@ -13,6 +13,7 @@ import { Label } from '@/shared/ui/label';
 import {
   atlasCoverageItemStatusLabels,
   atlasCoverageStatusLabels,
+  formatAtlasErrorMessage,
   formatUpdatedAt,
   sourceLabels,
 } from './admin-settings-cards.model';
@@ -94,7 +95,7 @@ export function ProfessionAtlasStatusPanel({
       className={`grid gap-3 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_12rem] ${adminClassNames.panel.loading}`}
     >
       <div className="min-w-0">
-        <p className={adminClassNames.text.kicker}>Public URL</p>
+        <p className={adminClassNames.text.kicker}>Публичная страница</p>
         {(professionAtlas.publicUrl ?? professionAtlas.url) ? (
           <a
             href={professionAtlas.publicUrl ?? professionAtlas.url ?? ''}
@@ -110,7 +111,7 @@ export function ProfessionAtlasStatusPanel({
         )}
       </div>
       <div className="min-w-0">
-        <p className={adminClassNames.text.kicker}>API URL</p>
+        <p className={adminClassNames.text.kicker}>Адрес API</p>
         {professionAtlas.apiUrl ? (
           <a
             href={professionAtlas.apiUrl}
@@ -174,7 +175,9 @@ export function ProfessionAtlasCoveragePanel({
       </div>
 
       {coverage.errorMessage ? (
-        <div className={adminClassNames.panel.warningInline}>{coverage.errorMessage}</div>
+        <div className={adminClassNames.panel.warningInline}>
+          {formatAtlasErrorMessage(coverage.errorMessage)}
+        </div>
       ) : null}
 
       <details className={adminClassNames.panel.compactCard}>
@@ -240,7 +243,7 @@ export function ProfessionAtlasForm({
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="profession-atlas-public-url">Public URL Атласа</Label>
+        <Label htmlFor="profession-atlas-public-url">Публичная страница Атласа</Label>
         <Input
           id="profession-atlas-public-url"
           type="url"
@@ -256,7 +259,7 @@ export function ProfessionAtlasForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="profession-atlas-api-url">API URL Атласа</Label>
+        <Label htmlFor="profession-atlas-api-url">Адрес API Атласа</Label>
         <Input
           id="profession-atlas-api-url"
           type="url"

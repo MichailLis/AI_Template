@@ -68,4 +68,41 @@ describe('createQuestionPayload', () => {
       }),
     ).toThrow('Дополнительные настройки должны быть JSON-объектом');
   });
+
+  it('rejects overlapping slider bands in question payload', () => {
+    expect(() =>
+      createQuestionPayload({
+        ...createEmptyQuestionFormState(),
+        type: 'SLIDER',
+        title: 'Шкала тревожности',
+        sliderMin: '0',
+        sliderMax: '10',
+        sliderStep: '1',
+        sliderBands: [
+          { id: '1', minValue: '0', maxValue: '5', label: 'Низко', weight: '1' },
+          { id: '2', minValue: '3', maxValue: '10', label: 'Высоко', weight: '3' },
+        ],
+      }),
+    ).toThrow('Диапазоны не должны пересекаться: [0..5] и [3..10]');
+  });
+
+  it('accepts non-overlapping slider bands in question payload', () => {
+    const payload = createQuestionPayload({
+      ...createEmptyQuestionFormState(),
+      type: 'SLIDER',
+      title: 'Шкала тревожности',
+      sliderMin: '0',
+      sliderMax: '10',
+      sliderStep: '1',
+      sliderBands: [
+        { id: '1', minValue: '0', maxValue: '5', label: 'Низко', weight: '1' },
+        { id: '2', minValue: '6', maxValue: '10', label: 'Высоко', weight: '3' },
+      ],
+    });
+
+    expect(payload.sliderBands).toEqual([
+      { minValue: 0, maxValue: 5, label: 'Низко', weight: 1 },
+      { minValue: 6, maxValue: 10, label: 'Высоко', weight: 3 },
+    ]);
+  });
 });

@@ -9,7 +9,7 @@ import type { PublicLinkCreateCardProps } from './public-link-create-card.types'
 const buildProps = (
   overrides: Partial<PublicLinkCreateCardProps> = {},
 ): PublicLinkCreateCardProps => ({
-  topics: [{ id: 1, draftTitle: 'Профориентационный тест' }],
+  topics: [{ id: 1, draftTitle: 'Профориентационный тест', publishedVersionNumber: 1 }],
   educationOrganizations: [],
   effectiveSelectedTopicId: 1,
   onSelectTopic: vi.fn(),

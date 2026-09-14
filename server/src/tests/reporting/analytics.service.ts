@@ -3,6 +3,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma.service';
+import {
+  getAnalysisResultKind,
+  isAnalysisResultWithoutAi,
+  isMeaningfulAnalysisResult,
+} from '../analysis/analysis-result-kind';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 
 import { buildV3AnalyticsSections, getV3Summary, toShare } from '../reporting/analytics-summary';
@@ -36,6 +41,7 @@ const TOPIC_SELECT = {
   activePublishedVersion: {
     select: {
       title: true,
+      scoringKind: true,
       _count: {
         select: {
           questions: true,
@@ -81,6 +87,7 @@ const ATTEMPT_SELECT = {
   },
   analysis: {
     select: {
+      providerMode: true,
       status: true,
       summary: true,
     },
@@ -135,6 +142,7 @@ const toAttemptRecord = (attempt: AttemptRecord) => ({
   status: attempt.status,
   analysisStatus: attempt.analysis?.status ?? null,
   llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
+  analysisResultKind: getAnalysisResultKind(attempt.analysis),
 });
 
 const buildShareSection = (counts: Map<string, number>, total: number) =>
@@ -261,6 +269,9 @@ export class TestsAnalyticsService {
       attemptsTotal: 0,
       attemptsCompleted: 0,
       analysisReady: 0,
+      analysisAiReady: 0,
+      analysisWithoutAi: 0,
+      analysisStub: 0,
       analysisPending: 0,
       analysisFailed: 0,
       analysisMissing: 0,
@@ -279,17 +290,39 @@ export class TestsAnalyticsService {
         coverage.attemptsCompleted += 1;
       }
 
-      if (!attempt.analysis) {
+      /**
+       * `status === 'READY'` не означает, что анализ содержательный: так помечены и заглушки, и
+       * двухфазный prof-orientation сразу после алгоритмической фазы. Показатели считаются по
+       * источнику результата, иначе заглушка давала «готовый анализ 100%».
+       */
+      const analysisKind = getAnalysisResultKind(attempt.analysis);
+
+      if (analysisKind === 'MISSING') {
         coverage.analysisMissing += 1;
         continue;
       }
 
-      if (attempt.analysis.status === 'READY') {
-        coverage.analysisReady += 1;
-      } else if (attempt.analysis.status === 'PENDING') {
+      if (analysisKind === 'PENDING') {
         coverage.analysisPending += 1;
-      } else if (attempt.analysis.status === 'FAILED') {
+        continue;
+      }
+
+      if (analysisKind === 'FAILED') {
         coverage.analysisFailed += 1;
+        continue;
+      }
+
+      if (analysisKind === 'STUB') {
+        coverage.analysisStub += 1;
+        continue;
+      }
+
+      coverage.analysisReady += 1;
+
+      if (isAnalysisResultWithoutAi(analysisKind)) {
+        coverage.analysisWithoutAi += 1;
+      } else {
+        coverage.analysisAiReady += 1;
       }
     }
 
@@ -308,8 +341,12 @@ export class TestsAnalyticsService {
         archivedAt: link.archivedAt ? link.archivedAt.toISOString() : null,
         attemptsTotal: linkAttempts.length,
         attemptsCompleted: linkAttempts.filter((attempt) => attempt.status === 'COMPLETED').length,
-        analysisReady: linkAttempts.filter((attempt) => attempt.analysis?.status === 'READY')
-          .length,
+        analysisReady: linkAttempts.filter((attempt) =>
+          isMeaningfulAnalysisResult(getAnalysisResultKind(attempt.analysis)),
+        ).length,
+        analysisStub: linkAttempts.filter(
+          (attempt) => getAnalysisResultKind(attempt.analysis) === 'STUB',
+        ).length,
         share: toShare(linkAttempts.length, coverage.attemptsTotal),
       };
     });
@@ -387,6 +424,7 @@ export class TestsAnalyticsService {
 
     const topicSummary = topic.activePublishedVersion ?? {
       title: 'Тема теста',
+      scoringKind: 'DEFAULT' as const,
       _count: {
         questions: 0,
       },
@@ -398,6 +436,7 @@ export class TestsAnalyticsService {
         slug: topic.slug,
         title: topicSummary.title,
         questionCount: topicSummary._count.questions,
+        scoringKind: topicSummary.scoringKind,
         generatedAt: new Date().toISOString(),
       },
       filters: {

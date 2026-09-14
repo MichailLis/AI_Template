@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,20 +12,21 @@ import {
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
 import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
-import {
-  adminBadgeClassNames,
-  adminClassNames,
-  adminToneClassNames,
-} from '@/shared/ui/admin-design-tokens';
+import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
-import { Badge } from '@/shared/ui/badge';
 
 import {
   OpenRouterSettingsCard,
   PrivacyPolicySettingsCard,
   ProfessionAtlasSettingsCard,
 } from './admin-settings-cards';
+import {
+  getOpenRouterHealthBadge,
+  getProfessionAtlasHealthBadge,
+} from './admin-settings-cards.model';
+import { AdminSettingsHero } from './admin-settings-hero';
+import { usePrivacyPolicyFormState } from './use-privacy-policy-form-state';
 
 import type { FormEvent } from 'react';
 
@@ -42,107 +42,22 @@ const SETTINGS_TABS: Array<{ value: AdminSettingsTab; label: string }> = [
 
 const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
 const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
-const EMPTY_PRIVACY_POLICY_FORM = {
-  content: '',
-  isDirty: false,
-  operatorFullName: '',
-  publishedAt: '',
-  version: '',
-};
-
 const getApiErrorMessage = (error: unknown) =>
   getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
 
-const toDateTimeLocalValue = (value: string | null | undefined) => {
-  if (!value) {
-    return '';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  const pad = (part: number) => part.toString().padStart(2, '0');
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
-};
-
-const toIsoFromDateTimeLocal = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date.toISOString();
-};
-
-function AdminSettingsHero({
-  isOpenRouterConfigured,
-  isProfessionAtlasConfigured,
-}: {
-  isOpenRouterConfigured: boolean;
-  isProfessionAtlasConfigured: boolean;
-}) {
-  return (
-    <div className={`${adminClassNames.panel.hero} rounded-xl p-5`}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3">
-          <div
-            className={`grid size-11 shrink-0 place-items-center rounded-xl ${adminToneClassNames.accent.icon}`}
-          >
-            <SlidersHorizontal className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <h1
-              className={`text-2xl font-semibold tracking-normal ${adminClassNames.text.heading}`}
-            >
-              Настройки
-            </h1>
-            <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
-              OpenRouter используется для анализа ответов. Атлас профессий показывается на публичной
-              странице результата.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Badge
-            variant="outline"
-            className={
-              isOpenRouterConfigured ? adminBadgeClassNames.success : adminBadgeClassNames.warning
-            }
-          >
-            {isOpenRouterConfigured ? 'OpenRouter готов' : 'OpenRouter требует ключ'}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={
-              isProfessionAtlasConfigured ? adminBadgeClassNames.info : adminBadgeClassNames.neutral
-            }
-          >
-            {isProfessionAtlasConfigured ? 'Атлас подключен' : 'Атлас не задан'}
-          </Badge>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function PrivacyPolicySettingsWorkspaceCard() {
   const queryClient = useQueryClient();
-  const [privacyPolicyForm, setPrivacyPolicyForm] = useState(EMPTY_PRIVACY_POLICY_FORM);
   const privacyPolicyQuery = useAdminSettingsControllerGetPrivacyPolicySettings();
+  const privacyPolicy = privacyPolicyQuery.data?.privacyPolicy;
+  const form = usePrivacyPolicyFormState(privacyPolicy);
+
   const updatePrivacyPolicyMutation = useAdminSettingsControllerUpdatePrivacyPolicy({
     mutation: {
       onError: (error) => {
         toast.error(getApiErrorMessage(error));
       },
       onSuccess: async () => {
-        setPrivacyPolicyForm(EMPTY_PRIVACY_POLICY_FORM);
+        form.resetForm();
         await queryClient.invalidateQueries({
           queryKey: getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey(),
         });
@@ -151,42 +66,15 @@ function PrivacyPolicySettingsWorkspaceCard() {
     },
   });
 
-  const privacyPolicy = privacyPolicyQuery.data?.privacyPolicy;
-  const privacyPolicyVersion = privacyPolicyForm.isDirty
-    ? privacyPolicyForm.version
-    : (privacyPolicy?.version ?? '');
-  const privacyPolicyPublishedAt = privacyPolicyForm.isDirty
-    ? privacyPolicyForm.publishedAt
-    : toDateTimeLocalValue(privacyPolicy?.publishedAt);
-  const privacyPolicyContent = privacyPolicyForm.isDirty
-    ? privacyPolicyForm.content
-    : (privacyPolicy?.content ?? '');
-  const privacyPolicyOperatorFullName = privacyPolicyForm.isDirty
-    ? privacyPolicyForm.operatorFullName
-    : (privacyPolicy?.operatorFullName ?? '');
-  const normalizedPrivacyPolicyVersion = privacyPolicyVersion.trim();
-  const normalizedPrivacyPolicyContent = privacyPolicyContent.trim();
-  const normalizedPrivacyPolicyOperatorFullName = privacyPolicyOperatorFullName.trim();
-  const privacyPolicyPublishedAtIso = toIsoFromDateTimeLocal(privacyPolicyPublishedAt);
-  const getPrivacyPolicyDraft = (current: typeof privacyPolicyForm) => ({
-    content: current.isDirty ? current.content : (privacyPolicy?.content ?? ''),
-    operatorFullName: current.isDirty
-      ? current.operatorFullName
-      : (privacyPolicy?.operatorFullName ?? ''),
-    publishedAt: current.isDirty
-      ? current.publishedAt
-      : toDateTimeLocalValue(privacyPolicy?.publishedAt),
-    version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
-  });
-
   const handlePrivacyPolicySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (
-      !normalizedPrivacyPolicyVersion ||
-      !normalizedPrivacyPolicyContent ||
-      !normalizedPrivacyPolicyOperatorFullName ||
-      !privacyPolicyPublishedAtIso ||
+      !form.isPublishedAtValid ||
+      !form.normalizedVersion ||
+      !form.normalizedContent ||
+      !form.normalizedOperatorFullName ||
+      !form.publishedAtIso ||
       updatePrivacyPolicyMutation.isPending
     ) {
       return;
@@ -194,10 +82,10 @@ function PrivacyPolicySettingsWorkspaceCard() {
 
     updatePrivacyPolicyMutation.mutate({
       data: {
-        version: normalizedPrivacyPolicyVersion,
-        publishedAt: privacyPolicyPublishedAtIso,
-        content: normalizedPrivacyPolicyContent,
-        operatorFullName: normalizedPrivacyPolicyOperatorFullName,
+        version: form.normalizedVersion,
+        publishedAt: form.publishedAtIso,
+        content: form.normalizedContent,
+        operatorFullName: form.normalizedOperatorFullName,
       },
     });
   };
@@ -206,52 +94,32 @@ function PrivacyPolicySettingsWorkspaceCard() {
     <PrivacyPolicySettingsCard
       canSubmit={
         Boolean(
-          normalizedPrivacyPolicyVersion &&
-          normalizedPrivacyPolicyContent &&
-          normalizedPrivacyPolicyOperatorFullName &&
-          privacyPolicyPublishedAtIso,
+          form.isPublishedAtValid &&
+          form.normalizedVersion &&
+          form.normalizedContent &&
+          form.normalizedOperatorFullName &&
+          form.publishedAtIso,
         ) && !updatePrivacyPolicyMutation.isPending
       }
-      content={privacyPolicyContent}
+      content={form.content}
       isError={privacyPolicyQuery.isError}
       isLoading={privacyPolicyQuery.isLoading}
+      isOldDateWithNewContent={form.isOldDateWithNewContent}
       isSaving={updatePrivacyPolicyMutation.isPending}
-      operatorFullName={privacyPolicyOperatorFullName}
+      operatorFullName={form.operatorFullName}
       privacyPolicy={privacyPolicy}
-      publishedAt={privacyPolicyPublishedAt}
-      version={privacyPolicyVersion}
+      publishedAt={form.publishedAt}
+      version={form.version}
       onRetry={() => {
         void privacyPolicyQuery.refetch();
       }}
       onSubmit={handlePrivacyPolicySubmit}
-      onContentChange={(value) =>
-        setPrivacyPolicyForm((current) => ({
-          ...getPrivacyPolicyDraft(current),
-          isDirty: true,
-          content: value,
-        }))
-      }
-      onOperatorFullNameChange={(value) =>
-        setPrivacyPolicyForm((current) => ({
-          ...getPrivacyPolicyDraft(current),
-          isDirty: true,
-          operatorFullName: value,
-        }))
-      }
-      onPublishedAtChange={(value) =>
-        setPrivacyPolicyForm((current) => ({
-          ...getPrivacyPolicyDraft(current),
-          isDirty: true,
-          publishedAt: value,
-        }))
-      }
-      onVersionChange={(value) =>
-        setPrivacyPolicyForm((current) => ({
-          ...getPrivacyPolicyDraft(current),
-          isDirty: true,
-          version: value,
-        }))
-      }
+      onContentChange={form.onContentChange}
+      onOperatorFullNameChange={form.onOperatorFullNameChange}
+      onPublishedAtChange={form.onPublishedAtChange}
+      onPublishedAtValidityChange={form.onPublishedAtValidityChange}
+      onSetCurrentDate={form.onSetCurrentDate}
+      onVersionChange={form.onVersionChange}
     />
   );
 }
@@ -315,10 +183,10 @@ export function AdminSettingsWorkspace() {
   return (
     <div className={`mx-auto max-w-4xl ${adminClassNames.layout.page}`}>
       <AdminSettingsHero
-        isOpenRouterConfigured={Boolean(openRouter?.isConfigured)}
-        isProfessionAtlasConfigured={Boolean(
-          (professionAtlas?.publicUrl ?? professionAtlas?.url) && professionAtlas?.apiUrl,
-        )}
+        openRouterBadge={getOpenRouterHealthBadge(openRouter, { isError: settingsQuery.isError })}
+        professionAtlasBadge={getProfessionAtlasHealthBadge(professionAtlas, {
+          isError: professionAtlasQuery.isError,
+        })}
       />
 
       <AdminTabs

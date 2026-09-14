@@ -1,6 +1,8 @@
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { isValidHexColor } from './public-link-branding-builder.helpers';
+
 const brandColorSwatches = [
   '#0066cc',
   '#1455d9',
@@ -28,6 +30,7 @@ export function PublicLinkBrandingColorField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const isHexValid = isValidHexColor(value);
   const selectedValue = value.toLowerCase();
   const pickerValue = sixDigitHexColorPattern.test(value) ? value : '#000000';
 
@@ -35,7 +38,13 @@ export function PublicLinkBrandingColorField({
     <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
       <div className="flex items-center gap-2">
-        <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} />
+        <Input
+          id={id}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          aria-invalid={!isHexValid}
+          className={!isHexValid ? 'border-destructive focus-visible:ring-destructive' : ''}
+        />
         <input
           aria-label={`Открыть палитру для ${label}`}
           className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1"
@@ -44,6 +53,11 @@ export function PublicLinkBrandingColorField({
           onChange={(event) => onChange(event.target.value)}
         />
       </div>
+      {!isHexValid ? (
+        <p role="alert" className="text-xs text-destructive font-medium">
+          Некорректный HEX-код цвета (например, #0066cc)
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-2" aria-label={`Готовые цвета для ${label}`}>
         {brandColorSwatches.map((swatch) => {
           const isSelected = selectedValue === swatch;

@@ -13,8 +13,16 @@ import {
   PublicStudentEducationLevelSchema,
   PublicStudentGenderSchema,
 } from './tests-public.dto';
+import { QueryBooleanSchema } from './tests.dto';
+import { ANALYSIS_RESULT_KINDS } from '../analysis/analysis-result-kind';
 
 const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
+
+/**
+ * Классификация берётся из `ANALYSIS_RESULT_KINDS`, поэтому новый вид анализа нельзя добавить в
+ * код, забыв про контракт: список один.
+ */
+export const AdminAnalysisResultKindSchema = z.enum(ANALYSIS_RESULT_KINDS);
 
 const HttpUrlSchema = z
   .string()
@@ -117,9 +125,15 @@ export const AdminUpdatePublicLinkSchema = z
 export const AdminPublicLinkSchema = z.object({
   id: z.number(),
   publishedVersionId: z.number(),
+  /** Ссылка остаётся на своей версии теста, поэтому номер версии показывается рядом с ней. */
+  topicVersionNumber: z.number().int().min(1),
+  /** Опубликованная сейчас версия теста; отличается от `publishedVersionId`, если ссылка отстала. */
+  activePublishedVersionId: z.number().int().nullable(),
+  activePublishedVersionNumber: z.number().int().min(1).nullable(),
   topicId: z.number(),
   educationOrganizationId: z.number().nullable(),
   educationOrganizationName: z.string().nullable(),
+  educationOrganizationIsActive: z.boolean().nullable(),
   personalDataProcessingMode: PersonalDataProcessingModeSchema,
   operatorFullNameSnapshot: z.string().nullable(),
   operatorShortNameSnapshot: z.string().nullable(),
@@ -140,6 +154,7 @@ export const AdminPublicLinkSchema = z.object({
   consentVersion: z.string(),
   consentText: z.string(),
   title: z.string(),
+  topicArchivedAt: z.string().nullable(),
   updatedAt: z.string(),
   createdAt: z.string(),
 });
@@ -243,6 +258,8 @@ export const AdminEducationOrganizationSchema = z.object({
 export const AdminEducationOrganizationsListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(50).optional(),
+  /** Только заведения, у которых реквизиты для выдачи ссылок от их имени еще не заполнены. */
+  needsPersonalData: QueryBooleanSchema.optional(),
 });
 
 export const AdminEducationOrganizationsListResponseSchema = z.object({
@@ -284,6 +301,9 @@ export const AdminPublicAttemptSummarySchema = z.object({
   llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
     'Статус асинхронного LLM-обогащения для двухфазного анализа',
   ),
+  analysisResultKind: AdminAnalysisResultKindSchema.describe(
+    'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
+  ),
 });
 
 export const AdminPublicAttemptsListQuerySchema = z.object({
@@ -310,6 +330,7 @@ export const AdminPublicAttemptAnswerSchema = z.object({
 export const AdminPublicAttemptAnalysisSchema = z
   .object({
     providerMode: PublicSessionAnalysisProviderModeSchema,
+    resultKind: AdminAnalysisResultKindSchema,
     status: PublicSessionAnalysisStatusSchema,
     summary: z.unknown().nullable(),
     rawText: z.string().nullable(),

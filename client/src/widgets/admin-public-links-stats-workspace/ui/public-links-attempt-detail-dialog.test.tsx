@@ -83,6 +83,7 @@ const detailAttempt = {
   status: 'COMPLETED',
   analysis: {
     providerMode: 'ALGORITHM_LLM',
+    resultKind: 'AI',
     status: 'READY',
     summary: profOrientationSummary,
     rawText: null,
@@ -152,5 +153,42 @@ describe('PublicLinksAttemptDetailDialog', () => {
     expect(screen.getByText('Завершение работы')).toBeInTheDocument();
     expect(screen.getByText('2026-05-12T11:40:00.000Z')).toBeInTheDocument();
     expect(screen.getByText('Истекает через')).toBeInTheDocument();
+  });
+
+  /**
+   * Находка аудита UX-06: в ответах стоял сырой тип MULTI_CHOICE, а под каждым ответом сразу
+   * разворачивался JSON. Тип называется по-русски, а JSON остается в свернутом блоке для разбора.
+   */
+  it('names the question type and keeps the raw answer payload collapsed', () => {
+    render(
+      <PublicLinksAttemptDetailDialog
+        isOpen
+        detailView="answers"
+        detailAttempt={{
+          ...detailAttempt,
+          answers: [
+            {
+              questionId: 12,
+              questionType: 'MULTI_CHOICE',
+              questionTitle: 'Что тебе интереснее?',
+              answerPayload: { optionIds: [3, 5] },
+              updatedAt: '2026-05-12T11:10:00.000Z',
+            },
+          ],
+        }}
+        isLoading={false}
+        onClose={vi.fn()}
+        formatDateTime={(value) => value ?? '—'}
+        toPrettyJson={(value) => JSON.stringify(value, null, 2)}
+      />,
+    );
+
+    expect(screen.getByText(/Несколько вариантов/)).toBeInTheDocument();
+    expect(screen.queryByText(/MULTI_CHOICE/)).not.toBeInTheDocument();
+
+    const technicalDetails = screen.getByText('Технические данные ответа').closest('details');
+    expect(technicalDetails).toBeInTheDocument();
+    expect(technicalDetails).not.toHaveAttribute('open');
+    expect(technicalDetails?.textContent).toContain('"optionIds"');
   });
 });

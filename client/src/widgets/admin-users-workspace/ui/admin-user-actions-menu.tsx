@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserX,
 } from 'lucide-react';
+import { useId } from 'react';
 
 import { cn } from '@/shared/lib/utils';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -42,10 +43,18 @@ interface MenuItemProps {
   children: ReactNode;
   disabled?: boolean;
   danger?: boolean;
+  /** id пояснения, почему пункт недоступен; читается скринридером вместе с названием пункта. */
+  describedBy?: string;
   onSelect: () => void;
 }
 
-function MenuItem({ children, disabled = false, danger = false, onSelect }: MenuItemProps) {
+function MenuItem({
+  children,
+  disabled = false,
+  danger = false,
+  describedBy,
+  onSelect,
+}: MenuItemProps) {
   return (
     <Button
       variant="ghost"
@@ -55,6 +64,7 @@ function MenuItem({ children, disabled = false, danger = false, onSelect }: Menu
         danger && 'text-admin-danger-foreground hover:text-admin-danger-foreground',
       )}
       disabled={disabled}
+      aria-describedby={describedBy}
       onClick={onSelect}
     >
       {children}
@@ -97,6 +107,8 @@ export function AdminUserActionsMenu({
   const isSelf = currentUserId === user.id;
   const isPending = pendingUserId === user.id;
   const isDeactivated = user.deactivatedAt !== null;
+  const selfNoteId = useId();
+  const selfDescribedBy = isSelf ? selfNoteId : undefined;
   const select = (action: () => void) => () => {
     action();
     onClose();
@@ -123,6 +135,7 @@ export function AdminUserActionsMenu({
             </MenuItem>
             <MenuItem
               disabled={isPending || (isSelf && user.role === 'ADMIN')}
+              describedBy={isSelf && user.role === 'ADMIN' ? selfNoteId : undefined}
               onSelect={select(() =>
                 onToggleRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN'),
               )}
@@ -131,17 +144,26 @@ export function AdminUserActionsMenu({
             </MenuItem>
             {/* Себе эти действия не предлагаются: сброс пароля и завершение сеансов выбросили бы
                 администратора из его же сеанса, а отключить себя не даст и сервер. */}
-            <MenuItem disabled={isPending || isSelf} onSelect={select(onResetPassword)}>
+            <MenuItem
+              disabled={isPending || isSelf}
+              describedBy={selfDescribedBy}
+              onSelect={select(onResetPassword)}
+            >
               <KeyRound className="mr-2 h-4 w-4" />
               Сбросить пароль
             </MenuItem>
-            <MenuItem disabled={isPending || isSelf} onSelect={select(onRevokeSessions)}>
+            <MenuItem
+              disabled={isPending || isSelf}
+              describedBy={selfDescribedBy}
+              onSelect={select(onRevokeSessions)}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Завершить сеансы
             </MenuItem>
             <MenuItem
               danger={!isDeactivated}
               disabled={isPending || isSelf}
+              describedBy={selfDescribedBy}
               onSelect={select(onToggleStatus)}
             >
               {isDeactivated ? (
@@ -160,6 +182,16 @@ export function AdminUserActionsMenu({
               <Copy className="mr-2 h-4 w-4" />
               Скопировать email
             </MenuItem>
+            {/* Серые пункты без объяснения выглядели как сломанное меню. w-0 min-w-full: пояснение
+                переносится по ширине пунктов, а не растягивает меню на всю фразу. */}
+            {isSelf ? (
+              <p
+                id={selfNoteId}
+                className={cn('w-0 min-w-full px-2 pb-1 text-xs', adminClassNames.text.muted)}
+              >
+                Нельзя применить к своей учетке: вы потеряете доступ к админке.
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

@@ -42,11 +42,34 @@ export const TestQuestionSchema = z.object({
 export const TestsTopicSummarySchema = z.object({
   id: z.number(),
   slug: z.string(),
+  /** Описание черновика: одноименные тесты в списке различаются по нему. */
+  description: z.string().nullable(),
   draftVersionNumber: z.number(),
   draftTitle: z.string(),
   draftQuestionCount: z.number(),
   publishedVersionNumber: z.number().nullable(),
   publishedTitle: z.string().nullable(),
+  activePublicLinkCount: z.number().int().min(0),
+  /** Прохождения по всем версиям теста. */
+  attemptCount: z.number().int().min(0),
+  /** Все ссылки теста, включая отключенные и архивные: удаление они запрещают так же, как активные. */
+  publicLinkCount: z.number().int().min(0),
+  hasPublishedVersion: z.boolean(),
+  /**
+   * Тест можно удалить навсегда: нет опубликованной версии, ссылок и прохождений. Правило то же,
+   * что у удаления, поэтому меню не предлагает действие, которое сервер отклонит.
+   */
+  canDelete: z.boolean(),
+  /**
+   * Вид подсчета черновика. По нему узнаются копии встроенной методики: название и описание
+   * копии можно переименовать, а вид подсчета импорт задает сам.
+   */
+  scoringKind: z.enum(['DEFAULT', 'PROF_ORIENTATION_V3_PLUS']),
+  /**
+   * Черновик отличается от опубликованной версии по содержимому. Публикация всегда создает
+   * черновик-клон, поэтому его существование само по себе изменений не означает.
+   */
+  hasUnpublishedChanges: z.boolean(),
   updatedAt: z.string(),
 });
 
@@ -54,7 +77,8 @@ export const TestsTopicListResponseSchema = z.object({
   topics: z.array(TestsTopicSummarySchema),
 });
 
-const QueryBooleanSchema = z.preprocess((value) => {
+/** Булев query-параметр: `?flag=true` приходит строкой, а не boolean. */
+export const QueryBooleanSchema = z.preprocess((value) => {
   if (typeof value !== 'string') {
     return value;
   }
@@ -81,6 +105,11 @@ export const AnalysisPromptVersionSummarySchema = z
     promptTitle: z.string(),
     versionNumber: z.number(),
     model: z.string(),
+    /**
+     * Промпт удален (архивирован). Черновик с таким промптом не публикуется: анализ продолжил бы
+     * работать на промпте, которого в библиотеке уже нет.
+     */
+    promptArchived: z.boolean(),
   })
   .nullable();
 

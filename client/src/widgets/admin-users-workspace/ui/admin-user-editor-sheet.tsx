@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { extractApiValidationIssues, parseApiError } from '@/shared/lib/api-error';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 import {
@@ -36,6 +37,7 @@ import {
   translateServerFieldMessage,
   type AdminUserFormValues,
 } from './admin-user-form.schema';
+import { AdminUserHistory } from './admin-user-history';
 
 import type { AdminUser } from './admin-users-workspace.types';
 import type { CreateUserDto, UpdateUserDto } from '@/shared/api/model';
@@ -148,6 +150,48 @@ const SUBMIT_LABELS = {
   edit: 'Сохранить изменения',
 } as const;
 
+type EditorTab = 'data' | 'history';
+
+/** История есть только у существующего аккаунта: у создаваемого еще нечего показывать. */
+const EDITOR_TABS: Array<{ value: EditorTab; label: string }> = [
+  { value: 'data', label: 'Данные' },
+  { value: 'history', label: 'История' },
+];
+
+interface AdminUserEditorFooterProps {
+  isHistoryTab: boolean;
+  isSubmitting: boolean;
+  submitLabel: string;
+  onCancel: () => void;
+}
+
+/** На вкладке истории сохранять нечего, поэтому там остается только кнопка закрытия. */
+function AdminUserEditorFooter({
+  isHistoryTab,
+  isSubmitting,
+  submitLabel,
+  onCancel,
+}: AdminUserEditorFooterProps) {
+  return (
+    <SheetFooter className="flex flex-col-reverse gap-2 sm:flex-row">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={onCancel}
+        disabled={isSubmitting}
+      >
+        Отмена
+      </Button>
+      {isHistoryTab ? null : (
+        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+          {isSubmitting ? 'Сохраняем...' : submitLabel}
+        </Button>
+      )}
+    </SheetFooter>
+  );
+}
+
 /**
  * Монтируется заново на каждое открытие, поэтому начальные значения формы берутся один раз при
  * монтировании и не требуют синхронизации с данными списка.
@@ -155,6 +199,8 @@ const SUBMIT_LABELS = {
 export function AdminUserEditorSheet(props: AdminUserEditorSheetProps) {
   const { mode, onClose } = props;
   const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<EditorTab>('data');
+  const isHistoryTab = props.mode === 'edit' && activeTab === 'history';
   const form = useForm<AdminUserFormValues>({
     resolver: zodResolver(adminUserFormSchema),
     defaultValues: getAdminUserFormValues(props.user),
@@ -237,28 +283,32 @@ export function AdminUserEditorSheet(props: AdminUserEditorSheetProps) {
                 <SheetDescription>
                   {mode === 'create'
                     ? 'Регистрации нет: аккаунт появляется, только когда его создаёт администратор.'
-                    : `Измените email или имя пользователя ${props.user?.email ?? ''}.`}
+                    : `ID ${props.user?.id ?? ''} · Измените email или имя пользователя ${props.user?.email ?? ''}.`}
                 </SheetDescription>
               </SheetHeader>
 
               <SheetBody className="flex flex-col gap-4">
-                <AdminUserFormFields form={form} mode={mode} disabled={isSubmitting} />
+                {props.mode === 'edit' ? (
+                  <AdminTabs
+                    ariaLabel="Разделы карточки пользователя"
+                    tabs={EDITOR_TABS}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                  />
+                ) : null}
+                {isHistoryTab && props.user ? (
+                  <AdminUserHistory userId={props.user.id} />
+                ) : (
+                  <AdminUserFormFields form={form} mode={mode} disabled={isSubmitting} />
+                )}
               </SheetBody>
 
-              <SheetFooter className="flex flex-col-reverse gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={requestClose}
-                  disabled={isSubmitting}
-                >
-                  Отмена
-                </Button>
-                <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
-                  {isSubmitting ? 'Сохраняем...' : SUBMIT_LABELS[mode]}
-                </Button>
-              </SheetFooter>
+              <AdminUserEditorFooter
+                isHistoryTab={isHistoryTab}
+                isSubmitting={isSubmitting}
+                submitLabel={SUBMIT_LABELS[mode]}
+                onCancel={requestClose}
+              />
             </form>
           </Form>
         </SheetContent>

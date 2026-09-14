@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useQuestionEditor } from '@/features/tests';
 import {
@@ -12,6 +12,7 @@ import {
   useTestsControllerRestoreTopic,
 } from '@/shared/api/generated/tests/tests';
 
+import { createHandleToggleTopicActive } from './admin-tests-archive-action-creators';
 import { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
 import { useAdminTestsDraft } from './use-admin-tests-draft';
 import { useAdminTestsTopics } from './use-admin-tests-topics';
@@ -21,8 +22,7 @@ export type { ListMode } from './use-admin-tests-topics';
 
 export function useAdminTestsWorkspace() {
   const topicsState = useAdminTestsTopics();
-  const { activeTopicsQuery, archivedTopicsQuery, effectiveSelectedTopicId, setListMode } =
-    topicsState;
+  const { activeTopicsQuery, archivedTopicsQuery, effectiveSelectedTopicId } = topicsState;
 
   const createTopicMutation = useTestsControllerCreateTopic();
   const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
@@ -88,29 +88,17 @@ export function useAdminTestsWorkspace() {
     setPendingNavigationPath(null);
   }, [setIsNavigationConfirmOpen, setPendingNavigationPath]);
 
-  const handleToggleTopicActive = useCallback(
-    (nextActive: boolean) => {
-      if (!effectiveSelectedTopicId) {
-        return;
-      }
-
-      const mutation = nextActive ? restoreTopicMutation : archiveTopicMutation;
-      mutation.mutate(
-        { topicId: effectiveSelectedTopicId },
-        {
-          onSuccess: () => {
-            setListMode(nextActive ? 'active' : 'archived');
-            refetchTestsData();
-          },
-        },
-      );
-    },
+  const handleToggleTopicActive = useMemo(
+    () =>
+      createHandleToggleTopicActive({
+        selectedTopic: topicsState.selectedTopic,
+        setPendingArchiveTopic: dialogState.setPendingArchiveTopic,
+        setPendingRestoreTopic: dialogState.setPendingRestoreTopic,
+      }),
     [
-      archiveTopicMutation,
-      effectiveSelectedTopicId,
-      refetchTestsData,
-      restoreTopicMutation,
-      setListMode,
+      dialogState.setPendingArchiveTopic,
+      dialogState.setPendingRestoreTopic,
+      topicsState.selectedTopic,
     ],
   );
 

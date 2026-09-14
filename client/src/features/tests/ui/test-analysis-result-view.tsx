@@ -10,6 +10,7 @@ import {
   ReadyAnalysisSections,
   SectionCard,
   StatusMessage,
+  TechnicalDetailsSection,
 } from './test-analysis-result-view.sections';
 
 import type { TestAnalysisResultViewProps } from './test-analysis-result-view.model';
@@ -24,6 +25,16 @@ export function TestAnalysisResultView({
   generatedAtLabel,
 }: TestAnalysisResultViewProps) {
   const parsed = parseAnalysisResult(analysis?.summary ?? null);
+  /**
+   * Только заглушка заведомо не содержит анализа. У остальных видов непарсящаяся сводка всё ещё
+   * может нести содержание в `rawText`, поэтому прятать его нельзя.
+   */
+  const hasContentlessReadyAnalysis =
+    analysis?.status === 'READY' && !parsed && analysis.resultKind === 'STUB';
+  const contentlessExplanation =
+    'Содержательного анализа нет: к версии теста не подключен промпт, участник увидел только заглушку.';
+  const hasUnparsedReadyAnalysis =
+    analysis?.status === 'READY' && !parsed && !hasContentlessReadyAnalysis;
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -37,19 +48,33 @@ export function TestAnalysisResultView({
 
       {analysis?.status === 'READY' && parsed ? <ReadyAnalysisSections parsed={parsed} /> : null}
 
-      {analysis?.status === 'READY' && !parsed && showStructuredFallback ? (
+      {/**
+       * Запись готова, но содержания в ней нет — обычно это заглушка без подключённого промпта.
+       * Раньше здесь стоял сырой JSON и служебный текст провайдера: админ видел «анализ готов» и
+       * непонятную техническую простыню вместо ответа, что случилось.
+       */}
+      {hasContentlessReadyAnalysis ? (
+        <>
+          <div className={adminClassNames.panel.empty}>{contentlessExplanation}</div>
+          {showStructuredFallback ? (
+            <TechnicalDetailsSection summary={analysis.summary} rawText={analysis.rawText} />
+          ) : null}
+        </>
+      ) : null}
+
+      {hasUnparsedReadyAnalysis && showStructuredFallback ? (
         <SectionCard icon={Sparkles} title="Структурированные данные анализа">
           <pre className={adminClassNames.code.softBlock}>{prettyJson(analysis.summary)}</pre>
         </SectionCard>
       ) : null}
 
-      {analysis?.status === 'READY' && !parsed && !showStructuredFallback ? (
+      {hasUnparsedReadyAnalysis && !showStructuredFallback ? (
         <div className={adminClassNames.panel.empty}>
           Итог прохождения сохранен. Подробный анализ для этого теста пока не настроен.
         </div>
       ) : null}
 
-      {showRawText && analysis?.rawText ? (
+      {showRawText && !hasContentlessReadyAnalysis && analysis?.rawText ? (
         <SectionCard icon={CheckCircle2} title="Текст анализа">
           <p
             className={`whitespace-pre-wrap text-sm leading-relaxed ${adminClassNames.text.heading}`}

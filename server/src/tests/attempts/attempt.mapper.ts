@@ -7,6 +7,7 @@ import type {
 } from '@prisma/client';
 
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
+import { getAnalysisResultKind } from '../analysis/analysis-result-kind';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 
 import { toOptionalIsoString } from '../shared/date.utils';
@@ -96,6 +97,8 @@ interface AttemptListRecord {
   finishedAt: Date | null;
   expiresAt: Date | null;
   analysis: {
+    providerMode: string;
+
     status: string;
 
     summary?: unknown;
@@ -181,6 +184,7 @@ export const mapSessionState = (
       answerPayload: answer.answerPayload,
       updatedAt: answer.updatedAt.toISOString(),
     })),
+    serverTime: new Date().toISOString(),
   };
 };
 
@@ -198,6 +202,7 @@ export const mapAttemptListItem = (
     expiresAt: toOptionalIsoString(attempt.expiresAt),
     analysisStatus: attempt.analysis?.status ?? null,
     llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
+    analysisResultKind: getAnalysisResultKind(attempt.analysis),
   };
 };
 
@@ -229,6 +234,7 @@ export const mapAttemptDetail = (
     analysis: attempt.analysis
       ? {
           providerMode: attempt.analysis.providerMode,
+          resultKind: getAnalysisResultKind(attempt.analysis),
           status: attempt.analysis.status,
           summary: attempt.analysis.summary,
           rawText: attempt.analysis.rawText,

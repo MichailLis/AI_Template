@@ -69,6 +69,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         slug: 'prof-orientation',
         title: 'Профориентационный тест',
         questionCount: 20,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
         generatedAt: '2026-05-20T00:00:00.000Z',
       },
       filters: {
@@ -83,6 +84,9 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         attemptsTotal: 2,
         attemptsCompleted: 2,
         analysisReady: 2,
+        analysisAiReady: 2,
+        analysisWithoutAi: 0,
+        analysisStub: 0,
         analysisPending: 0,
         analysisFailed: 0,
         analysisMissing: 0,
@@ -117,6 +121,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
           status: 'COMPLETED',
           analysisStatus: 'READY',
           llmStatus: 'ready',
+          analysisResultKind: 'AI',
         },
       ],
     });
@@ -132,6 +137,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         slug: 'prof-orientation',
         title: 'Профориентационный тест',
         questionCount: 20,
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
         generatedAt: '2026-05-20',
       },
       filters: {
@@ -146,6 +152,9 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         attemptsTotal: 0,
         attemptsCompleted: 0,
         analysisReady: 0,
+        analysisAiReady: 0,
+        analysisWithoutAi: 0,
+        analysisStub: 0,
         analysisPending: 0,
         analysisFailed: 0,
         analysisMissing: 0,

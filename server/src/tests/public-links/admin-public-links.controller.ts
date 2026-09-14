@@ -21,6 +21,7 @@ import {
   AdminPublicLinksListResponseDto,
   AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
+import { AuditHistoryResponseDto } from '../../audit/dto/audit-history.dto';
 import { TestsPublicLinkService } from '../public-links/public-link.service';
 import { ApiErrorResponses } from '../../common/decorators/api-error-responses.decorator';
 
@@ -92,5 +93,25 @@ export class TestsAdminPublicLinksController {
     @Param('linkId', ParseIntPipe) linkId: number,
   ) {
     return this.testsPublicLinkService.restorePublicLink(userId, linkId);
+  }
+
+  @Post('public-links/:linkId/move-to-active-version')
+  @ApiOperation({ summary: 'Move public link to the currently published version of its test' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinkDto })
+  moveToActivePublishedVersion(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.moveToActivePublishedVersion(userId, linkId);
+  }
+
+  @Get('public-links/:linkId/history')
+  @ApiOperation({ summary: 'List recorded changes of a public link' })
+  @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
+  getPublicLinkHistory(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    return this.testsPublicLinkService.getPublicLinkHistory(userId, linkId);
   }
 }

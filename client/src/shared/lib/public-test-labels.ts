@@ -49,8 +49,12 @@ export const studentEducationLevelOptions: ReadonlyArray<{
   { value: 'HIGHER', label: 'Высшее' },
 ];
 
+/**
+ * `STANDARD` раньше назывался «Текущий» и в списке ссылок читался как «текущая версия теста»,
+ * хотя это шаблон страницы.
+ */
 export const publicTemplateLabels: Record<PublicTemplate, string> = {
-  STANDARD: 'Текущий',
+  STANDARD: 'Стандартный',
   POLUS: 'Polus',
 };
 

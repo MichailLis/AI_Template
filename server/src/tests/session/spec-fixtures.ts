@@ -116,6 +116,7 @@ export const createPublicSessionStateResponse = (sessionToken: string): SessionS
     timeLimitMinutes: 30,
     questions: [],
     answers: [],
+    serverTime: new Date('2026-02-15T10:00:00.000Z').toISOString(),
   },
 });
 

@@ -5,6 +5,7 @@ server/node_modules
 .omx
 .playwright-cli
 .playwright-mcp
+.beads
 Design
 01_брендинг
 nul

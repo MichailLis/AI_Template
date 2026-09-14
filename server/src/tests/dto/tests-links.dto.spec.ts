@@ -138,9 +138,13 @@ describe('tests link DTO profile mode fields', () => {
     const result = AdminPublicLinkSchema.parse({
       id: 1,
       publishedVersionId: 10,
+      topicVersionNumber: 1,
+      activePublishedVersionId: 10,
+      activePublishedVersionNumber: 1,
       topicId: 2,
       educationOrganizationId: null,
       educationOrganizationName: null,
+      educationOrganizationIsActive: null,
       personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
       operatorFullNameSnapshot:
         'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',
@@ -162,6 +166,7 @@ describe('tests link DTO profile mode fields', () => {
       consentVersion: 'v1',
       consentText: 'Согласие',
       title: 'Тест',
+      topicArchivedAt: null,
       updatedAt: '2026-05-14T10:00:00.000Z',
       createdAt: '2026-05-14T10:00:00.000Z',
     });

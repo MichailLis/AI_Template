@@ -92,6 +92,7 @@ describe('TestsAnalyticsService', () => {
     archivedAt: null,
     activePublishedVersion: {
       title: 'Тестовая тема',
+      scoringKind: 'PROF_ORIENTATION_V3_PLUS',
       createdAt: new Date('2026-05-01T10:00:00.000Z'),
       _count: { questions: 3 },
     },
@@ -217,6 +218,44 @@ describe('TestsAnalyticsService', () => {
     );
   });
 
+  /**
+   * Находка аудита UX-08: отчёт по тесту без методики V3+ показывал плитку «V3+ результаты» и
+   * таблицы направлений, которые для такого теста пусты всегда. Клиенту нужна методика
+   * опубликованной версии, чтобы не рисовать эти разделы.
+   */
+  it.each([
+    ['PROF_ORIENTATION_V3_PLUS', publicLinksActive],
+    ['DEFAULT', publicLinksActive],
+    ['DEFAULT', []],
+  ] as const)(
+    'reports the %s scoring kind of the published version (%j links)',
+    async (scoringKind, links) => {
+      prismaMock.testTopic.findUnique.mockResolvedValue({
+        ...topicSelect,
+        activePublishedVersion: { ...topicSelect.activePublishedVersion, scoringKind },
+      });
+      prismaMock.testPublicLink.findMany.mockResolvedValue(links);
+      prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+      const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+
+      expect(result.topic.scoringKind).toBe(scoringKind);
+    },
+  );
+
+  it('treats a topic without a published version as a non-V3+ test', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue({
+      ...topicSelect,
+      activePublishedVersion: null,
+    });
+    prismaMock.testPublicLink.findMany.mockResolvedValue(publicLinksActive);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+    const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+
+    expect(result.topic.scoringKind).toBe('DEFAULT');
+  });
+
   it('archived links are included when linkStatus is ALL', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
     prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
@@ -282,6 +321,9 @@ describe('TestsAnalyticsService', () => {
       attemptsTotal: 0,
       attemptsCompleted: 0,
       analysisReady: 0,
+      analysisAiReady: 0,
+      analysisWithoutAi: 0,
+      analysisStub: 0,
       analysisPending: 0,
       analysisFailed: 0,
       analysisMissing: 0,
@@ -346,6 +388,89 @@ describe('TestsAnalyticsService', () => {
         },
       }),
     );
+  });
+
+  it('keeps stub analyses out of the ready figure and counts AI content separately', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([
+      {
+        id: 401,
+        status: 'COMPLETED',
+        startedAt: new Date('2026-05-10T10:00:00.000Z'),
+        finishedAt: new Date('2026-05-10T10:10:00.000Z'),
+        publicLink: publicLinks[0],
+        topicVersion: publicLinks[0].topicVersion,
+        analysis: {
+          providerMode: 'ALGORITHM_LLM',
+          status: 'READY',
+          summary: { ...createV3Summary(), llm: { status: 'ready' } },
+        },
+        educationOrganization: 'Школа',
+        groupOrClass: '11Б',
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
+      },
+      {
+        id: 402,
+        status: 'COMPLETED',
+        startedAt: new Date('2026-05-10T11:00:00.000Z'),
+        finishedAt: new Date('2026-05-10T11:10:00.000Z'),
+        publicLink: publicLinks[0],
+        topicVersion: publicLinks[0].topicVersion,
+        analysis: {
+          providerMode: 'ALGORITHM_LLM',
+          status: 'READY',
+          summary: { ...createV3Summary(), llm: { status: 'failed' } },
+        },
+        educationOrganization: 'Школа',
+        groupOrClass: '11Б',
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
+      },
+      {
+        id: 403,
+        status: 'COMPLETED',
+        startedAt: new Date('2026-05-10T12:00:00.000Z'),
+        finishedAt: new Date('2026-05-10T12:10:00.000Z'),
+        publicLink: publicLinks[0],
+        topicVersion: publicLinks[0].topicVersion,
+        analysis: {
+          providerMode: 'STUB',
+          status: 'READY',
+          summary: { mode: 'stub' },
+        },
+        educationOrganization: 'Школа',
+        groupOrClass: '11Б',
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
+      },
+    ]);
+
+    const result = await service.getSummary(7, 1, {
+      scope: 'TOPIC',
+      linkStatus: 'ALL',
+    });
+
+    expect(result.coverage).toMatchObject({
+      attemptsTotal: 3,
+      analysisReady: 2,
+      analysisAiReady: 1,
+      analysisWithoutAi: 1,
+      analysisStub: 1,
+      analysisMissing: 0,
+    });
+    expect(result.publicLinks[0]).toMatchObject({
+      analysisReady: 2,
+      analysisStub: 1,
+    });
   });
 
   it('missing analysis and invalid summaries affect coverage but not v3 aggregates', async () => {
@@ -521,6 +646,7 @@ describe('TestsAnalyticsService', () => {
           },
           analysis: {
             select: {
+              providerMode: true,
               status: true,
               summary: true,
             },

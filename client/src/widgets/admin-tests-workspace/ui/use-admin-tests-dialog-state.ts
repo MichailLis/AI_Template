@@ -8,6 +8,7 @@ export function useAdminTestsDialogState() {
   const [newTestDescription, setNewTestDescription] = useState('');
   const [testSearch, setTestSearch] = useState('');
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+  const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
 
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [pendingDeleteTopic, setPendingDeleteTopic] = useState<TestTopicListItem | null>(null);
@@ -32,6 +33,8 @@ export function useAdminTestsDialogState() {
     setTestSearch,
     isAiGeneratorOpen,
     setIsAiGeneratorOpen,
+    isImportConfirmOpen,
+    setIsImportConfirmOpen,
     isPublishConfirmOpen,
     setIsPublishConfirmOpen,
     pendingDeleteTopic,

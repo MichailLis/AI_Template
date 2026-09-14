@@ -67,7 +67,7 @@ export const getPromptSaveError = (
   }
 
   if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
-    return 'Temperature must be between 0 and 2';
+    return 'Температура должна быть от 0 до 2';
   }
 
   return null;

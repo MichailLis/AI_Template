@@ -1,11 +1,13 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { PrismaService } from '../../prisma.service';
-import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
-import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
+import {
+  createExistingPublicLinkUpdateFixture,
+  createPublicLinkRecordFixture,
+  createPublicLinkServiceHarness,
+  type PublicLinkServiceHarness,
+} from '../public-links/public-link.service.spec-harness';
 import { createEducationOrganizationRecordFixture } from '../session/spec-fixtures';
 
 import type {
@@ -20,77 +22,18 @@ jest.mock('../../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
-type PrismaEducationOrganizationDelegate = {
-  findFirst: jest.Mock;
-  findUnique: jest.Mock;
-  create: jest.Mock;
-  update: jest.Mock;
-};
-
-type PublicLinkMutationInput = {
-  data: Record<string, unknown>;
-  [key: string]: unknown;
-};
-
-type PrismaTestPublicLinkDelegate = {
-  create: jest.Mock<Promise<unknown>, [PublicLinkMutationInput]>;
-  findMany: jest.Mock;
-  findUnique: jest.Mock;
-  update: jest.Mock<Promise<unknown>, [PublicLinkMutationInput]>;
-};
-
-type PrismaTestTopicVersionDelegate = {
-  findUnique: jest.Mock;
-};
-
+/** Журнал изменений ссылок проверяется отдельно, в public-link.service.audit.spec.ts. */
 describe('TestsPublicLinkService', () => {
   const publicBranding: PublicBrandingConfig = {
     version: 1,
     buttons: { primaryColor: '#0066cc', textColor: '#ffffff' },
     accents: { accentColor: '#00a889' },
   };
-  let service: TestsPublicLinkService;
-  let privacyPolicySettingsService: {
-    getPlatformOperatorFullName: jest.Mock;
-  };
-  let prismaMock: {
-    educationOrganization: PrismaEducationOrganizationDelegate;
-    testPublicLink: PrismaTestPublicLinkDelegate;
-    testTopicVersion: PrismaTestTopicVersionDelegate;
-  };
+  let service: PublicLinkServiceHarness['service'];
+  let prismaMock: PublicLinkServiceHarness['prismaMock'];
 
   beforeEach(() => {
-    prismaMock = {
-      educationOrganization: {
-        findFirst: jest.fn(),
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-      },
-      testPublicLink: {
-        create: jest.fn<Promise<unknown>, [PublicLinkMutationInput]>(),
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        update: jest.fn<Promise<unknown>, [PublicLinkMutationInput]>(),
-      },
-      testTopicVersion: {
-        findUnique: jest.fn(),
-      },
-    };
-
-    const educationOrganizationService = new TestsEducationOrganizationService(
-      prismaMock as unknown as PrismaService,
-    );
-    privacyPolicySettingsService = {
-      getPlatformOperatorFullName: jest.fn().mockResolvedValue('ООО «Новый оператор»'),
-    };
-
-    service = new TestsPublicLinkService(
-      prismaMock as unknown as PrismaService,
-      educationOrganizationService,
-      privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
-    );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
+    ({ service, prismaMock } = createPublicLinkServiceHarness());
   });
 
   afterEach(() => {
@@ -293,6 +236,113 @@ describe('TestsPublicLinkService', () => {
 
     expect(createCall?.data.publicTemplate).toBe('STANDARD');
     expect(result.publicTemplate).toBe('STANDARD');
+  });
+
+  /**
+   * Находка аудита UX-04: ссылка остаётся на своей версии теста (решение ait-rcw.2), но список не
+   * показывал ни эту версию, ни то, что тест уже опубликован заново.
+   */
+  it('listPublicLinks reports the version a link serves and the newer published version', async () => {
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          versionNumber: 1,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: { id: 51, versionNumber: 2 } },
+        },
+      }),
+    ]);
+
+    const result = await service.listPublicLinks(7);
+
+    expect(result.links[0]).toMatchObject({
+      publishedVersionId: 50,
+      topicVersionNumber: 1,
+      activePublishedVersionId: 51,
+      activePublishedVersionNumber: 2,
+    });
+  });
+
+  it('listPublicLinks reports no published version when the test has none', async () => {
+    prismaMock.testPublicLink.findMany.mockResolvedValue([
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          versionNumber: 1,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: null },
+        },
+      }),
+    ]);
+
+    const result = await service.listPublicLinks(7);
+
+    expect(result.links[0]).toMatchObject({
+      activePublishedVersionId: null,
+      activePublishedVersionNumber: null,
+    });
+  });
+
+  it('moveToActivePublishedVersion points the link at the published version of its test', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      topicVersion: { topic: { activePublishedVersionId: 51 } },
+    });
+    prismaMock.testPublicLink.update.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 51,
+          topicId: 7,
+          versionNumber: 2,
+          title: 'Профориентация',
+          topic: { archivedAt: null, activePublishedVersion: { id: 51, versionNumber: 2 } },
+        },
+      }),
+    );
+
+    const result = await service.moveToActivePublishedVersion(7, 100);
+
+    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+    expect(prismaMock.testPublicLink.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 100 }, data: { topicVersionId: 51 } }),
+    );
+    expect(result).toMatchObject({ publishedVersionId: 51, topicVersionNumber: 2 });
+  });
+
+  it('moveToActivePublishedVersion rejects a test that has no published version', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue({
+      id: 100,
+      archivedAt: null,
+      topicVersion: { topic: { activePublishedVersionId: null } },
+    });
+
+    await expect(service.moveToActivePublishedVersion(7, 100)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a missing link', null],
+    [
+      'an archived link',
+      {
+        id: 100,
+        archivedAt: new Date('2026-09-01T10:00:00.000Z'),
+        topicVersion: { topic: { activePublishedVersionId: 51 } },
+      },
+    ],
+  ])('moveToActivePublishedVersion does not move %s', async (_case, record) => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(record);
+
+    await expect(service.moveToActivePublishedVersion(7, 100)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prismaMock.testPublicLink.update).not.toHaveBeenCalled();
   });
 
   it('createPublicLink stores public branding when provided', async () => {
@@ -673,6 +723,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'PUBLISHED',
@@ -716,6 +767,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'PUBLISHED',
@@ -742,6 +794,7 @@ describe('TestsPublicLinkService', () => {
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'ARCHIVED',
@@ -759,12 +812,36 @@ describe('TestsPublicLinkService', () => {
     });
   });
 
+  it('getAccessiblePublicLinkByCode rejects links whose test topic is archived', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        topicVersion: {
+          id: 50,
+          topicId: 7,
+          topic: { archivedAt: new Date('2026-09-11T10:00:00.000Z') },
+          title: 'Профориентация',
+          description: null,
+          status: 'PUBLISHED',
+          _count: { questions: 1 },
+        },
+      }),
+    );
+
+    const result = service.getAccessiblePublicLinkByCode('demo2026');
+
+    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toMatchObject({
+      message: 'Public test link is disabled because its test is archived',
+    });
+  });
+
   it('getAccessiblePublicLinkByCode rejects links pointing to draft versions', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue(
       createPublicLinkRecordFixture({
         topicVersion: {
           id: 50,
           topicId: 7,
+          topic: { archivedAt: null },
           title: 'Профориентация',
           description: null,
           status: 'DRAFT',
@@ -777,51 +854,23 @@ describe('TestsPublicLinkService', () => {
       BadRequestException,
     );
   });
-});
 
-const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) => ({
-  id: 100,
-  topicVersion: {
-    id: 50,
-    topicId: 7,
-    title: 'Профориентация',
-  },
-  educationOrganization: null,
-  personalDataProcessingMode: 'PUBLIC',
-  operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
-  operatorShortNameSnapshot: null,
-  operatorPrivacyPolicyUrlSnapshot: '/privacy',
-  operatorConsentDocumentUrlSnapshot: null,
-  shortCode: 'DEMO2026',
-  isActive: true,
-  archivedAt: null,
-  startsAt: null,
-  endsAt: null,
-  entryProfileMode: 'EDUCATION',
-  publicTemplate: 'STANDARD',
-  publicBranding: null,
-  maxAttemptsPerStudent: 3,
-  timeLimitMinutes: null,
-  allowResume: true,
-  consentVersion: 'v1',
-  consentTextSnapshot: 'Согласие',
-  updatedAt: new Date('2026-05-14T10:00:00.000Z'),
-  createdAt: new Date('2026-05-14T10:00:00.000Z'),
-  ...overrides,
-});
+  it('getAccessiblePublicLinkByCode rejects links whose education organization is disabled', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        educationOrganization: createEducationOrganizationRecordFixture({
+          id: 12,
+          name: 'Отключенное заведение',
+          isActive: false,
+        }),
+      }),
+    );
 
-const createExistingPublicLinkUpdateFixture = (overrides: Record<string, unknown> = {}) => ({
-  id: 100,
-  archivedAt: null,
-  entryProfileMode: 'EDUCATION',
-  maxAttemptsPerStudent: 3,
-  startsAt: null,
-  endsAt: null,
-  educationOrganizationId: null,
-  personalDataProcessingMode: 'PUBLIC',
-  operatorFullNameSnapshot: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
-  operatorShortNameSnapshot: null,
-  operatorPrivacyPolicyUrlSnapshot: '/privacy',
-  operatorConsentDocumentUrlSnapshot: null,
-  ...overrides,
+    const result = service.getAccessiblePublicLinkByCode('demo2026');
+
+    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toMatchObject({
+      message: 'Public test link is disabled because its education organization is disabled',
+    });
+  });
 });

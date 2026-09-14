@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -94,13 +94,11 @@ interface TestListRowProps {
   restoringTopicId: number | null;
   isDeletingTopic: boolean;
   deletingTopicId: number | null;
-  pendingPermanentDeleteTopicId: number | null;
   onSelectTest: (topicId: number) => void;
   onOpenSettings: (topicId: number) => void;
   onRequestArchiveTest: (topic: TestTopicListItem) => void;
   onRequestRestoreTest: (topic: TestTopicListItem) => void;
   onRequestDeleteTest: (topic: TestTopicListItem) => void;
-  onSetPendingDelete: (topicId: number) => void;
 }
 
 const getPublishLabel = (topic: TestTopicListItem) => {
@@ -120,13 +118,11 @@ function TestsListItemRow({
   restoringTopicId,
   isDeletingTopic,
   deletingTopicId,
-  pendingPermanentDeleteTopicId,
   onSelectTest,
   onOpenSettings,
   onRequestArchiveTest,
   onRequestRestoreTest,
   onRequestDeleteTest,
-  onSetPendingDelete,
 }: TestListRowProps) {
   return (
     <div className={`${adminClassNames.panel.listRow} flex items-start gap-3`}>
@@ -152,11 +148,22 @@ function TestsListItemRow({
             {getPublishLabel(topic)}
           </Badge>
         </div>
+        {/* Slug уникален и показывается всегда: у одноименных тестов бывает и одинаковое описание. */}
+        <p className={`mt-1 flex min-w-0 items-center gap-2 text-xs ${adminClassNames.text.muted}`}>
+          <span className="shrink-0 font-mono">{topic.slug}</span>
+          {topic.description ? <span className="min-w-0 truncate">{topic.description}</span> : null}
+        </p>
         <div
           className={`mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${adminClassNames.text.body}`}
         >
-          <span>Черновик v{topic.draftVersionNumber}</span>
+          {topic.hasUnpublishedChanges ? (
+            <Badge variant="outline" className={adminBadgeClassNames.warning}>
+              Есть неопубликованные изменения
+            </Badge>
+          ) : null}
           <span>{topic.draftQuestionCount} вопросов</span>
+          <span>{`Активных ссылок: ${topic.activePublicLinkCount}`}</span>
+          <span>{`Прохождений: ${topic.attemptCount}`}</span>
           <span>Обновлен {formatDateTime(topic.updatedAt)}</span>
         </div>
       </button>
@@ -170,13 +177,11 @@ function TestsListItemRow({
         restoringTopicId={restoringTopicId}
         isDeletingTopic={isDeletingTopic}
         deletingTopicId={deletingTopicId}
-        pendingPermanentDeleteTopicId={pendingPermanentDeleteTopicId}
         onSelectTest={onSelectTest}
         onOpenSettings={onOpenSettings}
         onRequestArchiveTest={onRequestArchiveTest}
         onRequestRestoreTest={onRequestRestoreTest}
         onRequestDeleteTest={onRequestDeleteTest}
-        onSetPendingDelete={onSetPendingDelete}
       />
     </div>
   );
@@ -188,7 +193,11 @@ const getFilteredTopics = (topics: TestTopicListItem[], searchValue: string) => 
     return topics;
   }
 
-  return topics.filter((topic) => topic.draftTitle.toLowerCase().includes(query));
+  return topics.filter((topic) =>
+    [topic.draftTitle, topic.slug, topic.description ?? ''].some((value) =>
+      value.toLowerCase().includes(query),
+    ),
+  );
 };
 
 export function TestsListCard({
@@ -211,10 +220,6 @@ export function TestsListCard({
   onRequestDeleteTest,
   onRetryTopics,
 }: TestsListCardProps) {
-  const [pendingPermanentDeleteTopicId, setPendingPermanentDeleteTopicId] = useState<number | null>(
-    null,
-  );
-
   const filteredTopics = useMemo(
     () => getFilteredTopics(topics, searchValue),
     [searchValue, topics],
@@ -248,22 +253,11 @@ export function TestsListCard({
           restoringTopicId={restoringTopicId}
           isDeletingTopic={isDeletingTopic}
           deletingTopicId={deletingTopicId}
-          pendingPermanentDeleteTopicId={pendingPermanentDeleteTopicId}
           onSelectTest={onSelectTest}
           onOpenSettings={onOpenSettings}
-          onRequestArchiveTest={(topicToArchive) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestArchiveTest(topicToArchive);
-          }}
-          onRequestRestoreTest={(topicToRestore) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestRestoreTest(topicToRestore);
-          }}
-          onRequestDeleteTest={(topicToDelete) => {
-            setPendingPermanentDeleteTopicId(null);
-            onRequestDeleteTest(topicToDelete);
-          }}
-          onSetPendingDelete={setPendingPermanentDeleteTopicId}
+          onRequestArchiveTest={onRequestArchiveTest}
+          onRequestRestoreTest={onRequestRestoreTest}
+          onRequestDeleteTest={onRequestDeleteTest}
         />
       ))}
     </CardContent>

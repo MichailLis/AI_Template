@@ -6,6 +6,7 @@ import {
   PublicSessionAnalysisStatusSchema,
   PublicSessionStatusSchema,
 } from './tests-public.dto';
+import { AdminAnalysisResultKindSchema } from './tests-links.dto';
 
 const ShareSchema = z.number().min(0).max(100);
 
@@ -46,6 +47,8 @@ export const AdminTestAnalyticsTopicSectionSchema = z.object({
   slug: z.string().trim().min(1),
   title: z.string().trim().min(1),
   questionCount: z.number().int().min(0),
+  /** Методика опубликованной версии: разделы V3+ имеют смысл только для `PROF_ORIENTATION_V3_PLUS`. */
+  scoringKind: z.enum(['DEFAULT', 'PROF_ORIENTATION_V3_PLUS']),
   generatedAt: z.string(),
 });
 
@@ -62,6 +65,9 @@ export const AdminTestAnalyticsCoverageSectionSchema = z.object({
   attemptsTotal: z.number().int().min(0),
   attemptsCompleted: z.number().int().min(0),
   analysisReady: z.number().int().min(0),
+  analysisAiReady: z.number().int().min(0),
+  analysisWithoutAi: z.number().int().min(0),
+  analysisStub: z.number().int().min(0),
   analysisPending: z.number().int().min(0),
   analysisFailed: z.number().int().min(0),
   analysisMissing: z.number().int().min(0),
@@ -132,6 +138,7 @@ export const AdminTestAnalyticsPublicLinkSectionSchema = z.array(
     attemptsTotal: z.number().int().min(0),
     attemptsCompleted: z.number().int().min(0),
     analysisReady: z.number().int().min(0),
+    analysisStub: z.number().int().min(0),
     share: ShareSchema,
   }),
 );
@@ -165,6 +172,9 @@ export const AdminTestAnalyticsAttemptRowSchema = z.object({
   ),
   llmStatus: PublicAnalysisLlmStatusSchema.nullable().describe(
     'Статус асинхронного LLM-обогащения для двухфазного анализа',
+  ),
+  analysisResultKind: AdminAnalysisResultKindSchema.describe(
+    'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
   ),
 });
 

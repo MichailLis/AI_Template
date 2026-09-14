@@ -102,11 +102,16 @@ function EducationOrganizationSelect({
         className="flex"
       >
         <option value="">Не привязывать (студент заполнит сам)</option>
-        {educationOrganizations.map((organization) => (
-          <option key={organization.id} value={organization.id} disabled={!organization.isActive}>
-            {`${organization.name} — ${organization.personalDataReady ? 'ПДн готовы' : 'ПДн не готовы'}${organization.isActive ? '' : ' (отключено)'}`}
-          </option>
-        ))}
+        {educationOrganizations
+          .filter(
+            (organization) =>
+              organization.isActive || organization.id === newEducationOrganizationId,
+          )
+          .map((organization) => (
+            <option key={organization.id} value={organization.id} disabled={!organization.isActive}>
+              {`${organization.name} — ${organization.personalDataReady ? 'ПДн готовы' : 'ПДн не готовы'}${organization.isActive ? '' : ' (отключено)'}`}
+            </option>
+          ))}
       </AdminSelectField>
     </div>
   );

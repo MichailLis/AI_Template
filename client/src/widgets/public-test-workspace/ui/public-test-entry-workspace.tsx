@@ -1,5 +1,4 @@
 import { GraduationCap } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import {
@@ -11,14 +10,11 @@ import { PolusPublicEntry } from './polus/polus-public-entry';
 import { PublicEntryStateCard } from './public-entry-state-card';
 import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
-import {
-  initialDemographicFormState,
-  initialFormState,
-  resolveGroupValidationWarning,
-} from './public-test-entry.helpers';
+import { resolveGroupValidationWarning } from './public-test-entry.helpers';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
+import { usePublicTestEntryState } from './use-public-test-entry-state';
 
 import type {
   DemographicFormState,
@@ -38,52 +34,13 @@ type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
   value: DemographicFormState[K],
 ) => void;
 
-const latinLettersPattern = /[A-Za-z]/g;
-
-const removeLatinLetters = (value: string) => value.replace(latinLettersPattern, '');
-
-const sanitizeEducationFieldValue = <K extends keyof StudentFormState>(
-  key: K,
-  value: StudentFormState[K],
-): StudentFormState[K] => {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const valueWithoutLatin = removeLatinLetters(value);
-
-  if (key === 'studentName') {
-    return valueWithoutLatin.toUpperCase() as StudentFormState[K];
-  }
-
-  if (key === 'studentLastInitial' || key === 'studentMiddleInitial') {
-    return valueWithoutLatin.toUpperCase().slice(0, 1) as StudentFormState[K];
-  }
-
-  return valueWithoutLatin as StudentFormState[K];
-};
-
-const sanitizeDemographicFieldValue = <K extends keyof DemographicFormState>(
-  key: K,
-  value: DemographicFormState[K],
-): DemographicFormState[K] => {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  if (key === 'age' || key === 'residence') {
-    return removeLatinLetters(value) as DemographicFormState[K];
-  }
-
-  return value;
-};
-
 interface StandardPublicTestEntryProps {
   link: PublicLinkAccessResponseDto;
   entryProfileMode: EntryProfileMode;
   demographicFormState: DemographicFormState;
   registrationFormState: StudentFormState;
   currentGroupValidationWarning: string | null;
+  nameInputWarning?: string | null;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onEducationFieldChange: EducationFieldChangeHandler;
@@ -111,6 +68,7 @@ function StandardPublicTestEntry({
   demographicFormState,
   registrationFormState,
   currentGroupValidationWarning,
+  nameInputWarning,
   isSubmitting,
   onSubmit,
   onEducationFieldChange,
@@ -148,6 +106,7 @@ function StandardPublicTestEntry({
             groupValidationExample={link.groupValidationExample}
             groupValidationHint={link.groupValidationHint}
             groupValidationWarning={currentGroupValidationWarning}
+            nameInputWarning={nameInputWarning}
             showDemographicFields={entryProfileMode === 'EDUCATION_DEMOGRAPHIC'}
             isSubmitting={isSubmitting}
             onSubmit={onSubmit}
@@ -163,10 +122,13 @@ function StandardPublicTestEntry({
 export function PublicTestEntryWorkspace() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [educationFormState, setEducationFormState] = useState<StudentFormState>(initialFormState);
-  const [demographicFormState, setDemographicFormState] = useState<DemographicFormState>(
-    initialDemographicFormState,
-  );
+  const {
+    educationFormState,
+    demographicFormState,
+    nameInputWarning,
+    updateEducationField,
+    updateDemographicField,
+  } = usePublicTestEntryState();
 
   const linkQuery = useTestsPublicControllerGetLinkAccess(code ?? '', {
     query: {
@@ -175,30 +137,6 @@ export function PublicTestEntryWorkspace() {
     },
   });
   const startMutation = useTestsPublicControllerStartSession();
-
-  const updateEducationField = <K extends keyof StudentFormState>(
-    key: K,
-    value: StudentFormState[K],
-  ) => {
-    const sanitizedValue = sanitizeEducationFieldValue(key, value);
-
-    setEducationFormState((previousState) => ({
-      ...previousState,
-      [key]: sanitizedValue,
-    }));
-  };
-
-  const updateDemographicField = <K extends keyof DemographicFormState>(
-    key: K,
-    value: DemographicFormState[K],
-  ) => {
-    const sanitizedValue = sanitizeDemographicFieldValue(key, value);
-
-    setDemographicFormState((previousState) => ({
-      ...previousState,
-      [key]: sanitizedValue,
-    }));
-  };
 
   if (!code) {
     return (
@@ -261,6 +199,7 @@ export function PublicTestEntryWorkspace() {
         demographicFormState={demographicFormState}
         registrationFormState={registrationFormState}
         currentGroupValidationWarning={currentGroupValidationWarning}
+        nameInputWarning={nameInputWarning}
         isSubmitting={startMutation.isPending}
         onSubmit={handleStart}
         onEducationFieldChange={updateEducationField}
@@ -276,6 +215,7 @@ export function PublicTestEntryWorkspace() {
       demographicFormState={demographicFormState}
       registrationFormState={registrationFormState}
       currentGroupValidationWarning={currentGroupValidationWarning}
+      nameInputWarning={nameInputWarning}
       isSubmitting={startMutation.isPending}
       onSubmit={handleStart}
       onEducationFieldChange={updateEducationField}

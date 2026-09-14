@@ -32,6 +32,7 @@ interface PublicTestRegistrationCardProps {
   groupValidationExample: string | null;
   groupValidationHint: string | null;
   groupValidationWarning: string | null;
+  nameInputWarning?: string | null;
   showDemographicFields?: boolean;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -43,6 +44,7 @@ interface RegistrationFormFieldsProps {
   formState: StudentFormState;
   onFieldChange: FormFieldChangeHandler;
   showInitialFields?: boolean;
+  nameInputWarning?: string | null;
 }
 
 function RegistrationCardHeader() {
@@ -69,6 +71,7 @@ function IdentityFields({
   formState,
   onFieldChange,
   showInitialFields = true,
+  nameInputWarning,
 }: RegistrationFormFieldsProps) {
   return (
     <>
@@ -84,6 +87,11 @@ function IdentityFields({
           className="h-11"
           placeholder="Введите ваше имя"
         />
+        {nameInputWarning ? (
+          <p role="alert" className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+            {nameInputWarning}
+          </p>
+        ) : null}
       </div>
       {showInitialFields ? (
         <>
@@ -235,6 +243,7 @@ export function PublicTestRegistrationCard({
   groupValidationExample,
   groupValidationHint,
   groupValidationWarning,
+  nameInputWarning,
   showDemographicFields = false,
   isSubmitting,
   onSubmit,
@@ -258,6 +267,7 @@ export function PublicTestRegistrationCard({
                 formState={formState}
                 onFieldChange={onFieldChange}
                 showInitialFields={!showDemographicFields}
+                nameInputWarning={nameInputWarning}
               />
               <EducationOrganizationField
                 formState={formState}

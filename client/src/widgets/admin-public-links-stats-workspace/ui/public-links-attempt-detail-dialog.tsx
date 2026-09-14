@@ -1,6 +1,7 @@
 import { PublicTestStudentAnalysisView } from '@/features/tests';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
+import { getQuestionTypeLabel } from '@/shared/lib/report-value-labels';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import {
@@ -24,6 +25,7 @@ interface AttemptAnswer {
 interface AttemptAnalysis {
   status: string;
   providerMode: string;
+  resultKind: string;
   generatedAt: string | null;
   summary: unknown;
   rawText: string | null;
@@ -209,12 +211,18 @@ export function PublicLinksAttemptDetailDialog({
                       {answer.questionTitle}
                     </p>
                     <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
-                      #{answer.questionId} • {answer.questionType} •{' '}
+                      #{answer.questionId} • {getQuestionTypeLabel(answer.questionType)} •{' '}
                       {formatDateTime(answer.updatedAt)}
                     </p>
-                    <pre className={`mt-2 ${adminClassNames.code.block}`}>
-                      {toPrettyJson(answer.answerPayload)}
-                    </pre>
+                    {/* Сырой ответ нужен только при разборе проблемы, поэтому он свернут. */}
+                    <details className="mt-2">
+                      <summary className={`cursor-pointer text-xs ${adminClassNames.text.muted}`}>
+                        Технические данные ответа
+                      </summary>
+                      <pre className={`mt-2 ${adminClassNames.code.block}`}>
+                        {toPrettyJson(answer.answerPayload)}
+                      </pre>
+                    </details>
                   </div>
                 ))
               )}

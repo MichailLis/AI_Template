@@ -7,6 +7,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     slug: 'sample-topic',
     title,
     questionCount: 24,
+    scoringKind: 'PROF_ORIENTATION_V3_PLUS',
     generatedAt: '2026-05-20T10:00:00.000Z',
   },
   filters: {
@@ -21,6 +22,9 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     attemptsTotal: 2,
     attemptsCompleted: 1,
     analysisReady: 1,
+    analysisAiReady: 1,
+    analysisWithoutAi: 0,
+    analysisStub: 0,
     analysisPending: 0,
     analysisFailed: 0,
     analysisMissing: 1,
@@ -54,6 +58,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       attemptsTotal: 2,
       attemptsCompleted: 1,
       analysisReady: 1,
+      analysisStub: 0,
       share: 100,
     },
   ],
@@ -92,5 +97,15 @@ describe('TestsAnalyticsPdfRendererService', () => {
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.slice(0, 4).toString('utf8')).toBe('%PDF');
+  });
+
+  /** ait-rcw.29: спека проверяла только заголовок %PDF, а текст отчета печатал служебные ключи. */
+  it('prints report parameters and confidence metrics in Russian with the gap in points', () => {
+    const text = JSON.stringify(service.buildDefinition(createSummary('Отчёт')));
+
+    expect(text).not.toMatch(/Gap|Consistency Index|Readiness Top|scope:|linkStatus:|dateFrom:/);
+    expect(text).toContain('Охват: Весь тест');
+    expect(text).toContain('11,5 балла');
+    expect(text).not.toContain('11.5%');
   });
 });

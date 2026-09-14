@@ -9,17 +9,42 @@ export interface PublicLinkListItem {
   shortCode: string;
   title: string;
   educationOrganizationName: string | null;
+  educationOrganizationIsActive?: boolean | null;
   publicTemplate: 'STANDARD' | 'POLUS';
   publicBranding?: PublicBrandingConfig;
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   createdAt: string;
   archivedAt: string | null;
+  /**
+   * Архив самого теста закрывает доступ по всем его ссылкам (сервер отказывает в
+   * `ensurePublicLinkAccessible`), поэтому состояние ссылки нельзя вычислять по одному `isActive`.
+   */
+  topicArchivedAt: string | null;
   isActive: boolean;
+  publishedVersionId: number;
+  /** Ссылка остаётся на своей версии теста (решение ait-rcw.2), поэтому версия показывается явно. */
+  topicVersionNumber: number;
+  activePublishedVersionId: number | null;
+  activePublishedVersionNumber: number | null;
 }
+
+export const isPublicLinkClosedForStudents = (link: PublicLinkListItem) =>
+  Boolean(link.archivedAt) ||
+  Boolean(link.topicArchivedAt) ||
+  link.educationOrganizationIsActive === false ||
+  !link.isActive;
 
 export const getLinkStateLabel = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
     return 'В архиве';
+  }
+
+  if (link.topicArchivedAt) {
+    return 'Тест в архиве';
+  }
+
+  if (link.educationOrganizationIsActive === false) {
+    return 'Заведение отключено';
   }
 
   return link.isActive ? 'Активна' : 'Отключена';
@@ -30,14 +55,27 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
     return adminBadgeClassNames.archived;
   }
 
-  if (link.isActive) {
-    return adminBadgeClassNames.success;
+  if (link.topicArchivedAt || link.educationOrganizationIsActive === false || !link.isActive) {
+    return adminBadgeClassNames.warning;
   }
 
-  return adminBadgeClassNames.warning;
+  return adminBadgeClassNames.success;
 };
 
-export { getEntryProfileModeLabel, getPublicTemplateLabel };
+export const getPublicTemplateBadgeLabel = (link: PublicLinkListItem) =>
+  `Шаблон: ${getPublicTemplateLabel(link.publicTemplate)}`;
+
+export const getEntryProfileModeBadgeLabel = (link: PublicLinkListItem) =>
+  `Анкета: ${getEntryProfileModeLabel(link.entryProfileMode)}`;
+
+export const getLinkVersionLabel = (link: PublicLinkListItem) => `Тест v${link.topicVersionNumber}`;
+
+/** Номер опубликованной версии теста, если ссылка ведёт на более старую; иначе `null`. */
+export const getNewerPublishedVersionNumber = (link: PublicLinkListItem) =>
+  link.activePublishedVersionId !== null &&
+  link.activePublishedVersionId !== link.publishedVersionId
+    ? link.activePublishedVersionNumber
+    : null;
 
 export const formatPublicLinkCreatedAt = (value: string) => formatDateTime(value);
 
@@ -46,7 +84,7 @@ export const getLinkRowClassName = (link: PublicLinkListItem) => {
     return adminClassNames.publicLinks.rowArchived;
   }
 
-  if (!link.isActive) {
+  if (link.topicArchivedAt || link.educationOrganizationIsActive === false || !link.isActive) {
     return adminClassNames.publicLinks.rowInactive;
   }
 
@@ -71,8 +109,9 @@ export const buildLinkSearchText = (link: PublicLinkListItem) => {
     link.title,
     link.educationOrganizationName ?? '',
     getLinkStateLabel(link),
-    getPublicTemplateLabel(link.publicTemplate),
-    getEntryProfileModeLabel(link.entryProfileMode),
+    getLinkVersionLabel(link),
+    getPublicTemplateBadgeLabel(link),
+    getEntryProfileModeBadgeLabel(link),
   ]
     .join(' ')
     .toLowerCase();

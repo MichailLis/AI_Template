@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
+import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 import {
   Dialog,
   DialogContent,
@@ -71,8 +72,10 @@ function PublicLinkBrandingBuilderContent({
   );
   const [previewState, setPreviewState] = useState<BrandingPreviewState>('start');
   const [activePanel, setActivePanel] = useState<BuilderPanel | null>(null);
+  const [isConfirmResetOpen, setIsConfirmResetOpen] = useState(false);
 
-  const handleReset = () => {
+  const handleConfirmReset = () => {
+    setIsConfirmResetOpen(false);
     setDraft(createDefaultBrandingConfig());
     if (link) {
       onSave(link.id, null);
@@ -98,7 +101,7 @@ function PublicLinkBrandingBuilderContent({
                 <DialogTitle>Конструктор публичной страницы</DialogTitle>
                 <DialogDescription>
                   {link
-                    ? `STANDARD-шаблон для ссылки ${link.shortCode}. Нажмите на зону в превью, чтобы изменить ее оформление.`
+                    ? `Стандартный шаблон для ссылки ${link.shortCode}. Нажмите на зону в превью, чтобы изменить ее оформление.`
                     : 'Выберите публичную ссылку для настройки.'}
                 </DialogDescription>
               </div>
@@ -151,7 +154,7 @@ function PublicLinkBrandingBuilderContent({
             <Button
               type="button"
               variant="outline"
-              onClick={handleReset}
+              onClick={() => setIsConfirmResetOpen(true)}
               disabled={!link || isSaving}
             >
               Сбросить к стандарту
@@ -162,6 +165,16 @@ function PublicLinkBrandingBuilderContent({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmActionDialog
+        open={isConfirmResetOpen}
+        onClose={() => setIsConfirmResetOpen(false)}
+        title="Сбросить оформление к стандарту?"
+        description="Индивидуальные настройки цветов, кнопок и фона для этой ссылки будут удалены."
+        confirmLabel="Сбросить"
+        variant="destructive"
+        onConfirm={handleConfirmReset}
+      />
 
       <BuilderPanelDialog
         panel={activePanel}

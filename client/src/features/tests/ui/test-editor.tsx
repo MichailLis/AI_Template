@@ -174,6 +174,8 @@ export function TestEditor({
           onDrop={questionDnd.handleDrop}
           onEditQuestion={onEditQuestion}
           onRequestDeleteQuestion={onRequestDeleteQuestion}
+          onMoveUp={questionDnd.handleMoveUp}
+          onMoveDown={questionDnd.handleMoveDown}
         />
       </CardContent>
     </Card>

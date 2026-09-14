@@ -3,11 +3,22 @@ import { z } from 'zod';
 
 export const OpenRouterApiKeySourceSchema = z.enum(['ENV', 'NONE']);
 
+/**
+ * Результат живой проверки связи с OpenRouter. Устроен так же, как `coverage` у атласа: статус,
+ * время проверки и причина отказа.
+ */
+export const OpenRouterHealthSchema = z.object({
+  status: z.enum(['ok', 'failed', 'not_configured']),
+  checkedAt: z.string().datetime(),
+  errorMessage: z.string().optional(),
+});
+
 export const OpenRouterApiKeySettingsSchema = z.object({
   isConfigured: z.boolean(),
   maskedValue: z.string().nullable(),
   source: OpenRouterApiKeySourceSchema,
   updatedAt: z.string().datetime().nullable(),
+  health: OpenRouterHealthSchema,
 });
 
 export const AdminOpenRouterSettingsResponseSchema = z.object({

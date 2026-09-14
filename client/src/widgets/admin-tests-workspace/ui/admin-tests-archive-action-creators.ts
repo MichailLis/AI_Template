@@ -4,6 +4,35 @@ import { parseApiError } from '@/shared/lib/api-error';
 
 import type { TestTopicListItem } from '@/features/tests';
 
+interface ToggleTopicActiveDeps {
+  selectedTopic: TestTopicListItem | null;
+  setPendingArchiveTopic: (value: TestTopicListItem | null) => void;
+  setPendingRestoreTopic: (value: TestTopicListItem | null) => void;
+}
+
+/**
+ * Переключатель «Активен для студентов» закрывает доступ по публичным ссылкам теста, поэтому он
+ * не мутирует сразу, а открывает то же подтверждение, что и архивация из списка тестов.
+ */
+export const createHandleToggleTopicActive = ({
+  selectedTopic,
+  setPendingArchiveTopic,
+  setPendingRestoreTopic,
+}: ToggleTopicActiveDeps) => {
+  return (nextActive: boolean) => {
+    if (!selectedTopic) {
+      return;
+    }
+
+    if (nextActive) {
+      setPendingRestoreTopic(selectedTopic);
+      return;
+    }
+
+    setPendingArchiveTopic(selectedTopic);
+  };
+};
+
 interface ConfirmArchiveTopicDeps {
   pendingArchiveTopic: TestTopicListItem | null;
   archiveTopicMutation: {

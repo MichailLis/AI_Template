@@ -28,6 +28,13 @@ const isPersonalDataReady = (organization: {
   Boolean(organization.shortName?.trim()) &&
   Boolean(organization.privacyPolicyUrl?.trim());
 
+const EMPTY_ORGANIZATION_STATS = { linksCount: 0, activeLinksCount: 0, attemptsCount: 0 };
+
+const EDUCATION_ORGANIZATIONS_ORDER: Prisma.EducationOrganizationOrderByWithRelationInput[] = [
+  { isActive: 'desc' },
+  { name: 'asc' },
+];
+
 @Injectable()
 export class TestsEducationOrganizationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -203,6 +210,10 @@ export class TestsEducationOrganizationService {
   ) {
     await ensureAdminAccess(this.prisma, userId);
 
+    if (query.needsPersonalData) {
+      return this.listOrganizationsNeedingPersonalData(query);
+    }
+
     const total = await this.prisma.educationOrganization.count();
     const isPaginated = query.page !== undefined || query.limit !== undefined;
     const page = query.page ?? 1;
@@ -232,11 +243,43 @@ export class TestsEducationOrganizationService {
       organizations: organizations.map((organization) =>
         this.mapEducationOrganization(
           organization,
-          statsByOrganizationId.get(organization.id) ?? {
-            linksCount: 0,
-            activeLinksCount: 0,
-            attemptsCount: 0,
-          },
+          statsByOrganizationId.get(organization.id) ?? EMPTY_ORGANIZATION_STATS,
+        ),
+      ),
+    };
+  }
+
+  /**
+   * Готовность реквизитов вычисляется в коде (isPersonalDataReady), а не хранится в базе, поэтому
+   * фильтр и пагинация идут в памяти: так список совпадает с бейджем, а заведений немного.
+   */
+  private async listOrganizationsNeedingPersonalData(
+    query: AdminEducationOrganizationsListQueryDto,
+  ) {
+    const organizations = (
+      await this.prisma.educationOrganization.findMany({ orderBy: EDUCATION_ORGANIZATIONS_ORDER })
+    ).filter((organization) => !isPersonalDataReady(organization));
+
+    const total = organizations.length;
+    const isPaginated = query.page !== undefined || query.limit !== undefined;
+    const limit = query.limit ?? (isPaginated ? 10 : Math.max(total, 1));
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(query.page ?? 1, totalPages);
+    const pageOrganizations = organizations.slice((currentPage - 1) * limit, currentPage * limit);
+
+    const statsByOrganizationId = await this.getOrganizationStatsByIds(
+      pageOrganizations.map((organization) => organization.id),
+    );
+
+    return {
+      page: currentPage,
+      limit,
+      total,
+      totalPages,
+      organizations: pageOrganizations.map((organization) =>
+        this.mapEducationOrganization(
+          organization,
+          statsByOrganizationId.get(organization.id) ?? EMPTY_ORGANIZATION_STATS,
         ),
       ),
     };

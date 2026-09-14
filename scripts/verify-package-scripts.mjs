@@ -135,7 +135,7 @@ if (rootScripts['audit:explain'] !== 'node scripts/audit-explain.mjs') {
 }
 
 // doctor:agent-tooling diagnoses machine-local agent preconditions (rtk hook exclusions, serena binary,
-// root typescript, compose project name). It gates nothing, and keeping it out of verify:local and
+// root typescript, compose project name, orval lockfile drift). It gates nothing, and keeping it out of verify:local and
 // verify:template below is intentional — machine configuration should not fail builds on a clean tree.
 if (rootScripts['doctor:agent-tooling'] !== 'node scripts/doctor-agent-tooling.mjs') {
   fail(

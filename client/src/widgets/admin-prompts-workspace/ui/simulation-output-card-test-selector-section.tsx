@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
+import { getQuestionTypeLabel, getVersionStatusLabel } from '@/shared/lib/report-value-labels';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
@@ -44,8 +45,8 @@ export function PromptTestSelectorSection({
           ) : null}
           {testQuestionGroups.map((testGroup) => (
             <option key={testGroup.id} value={testGroup.id}>
-              {testGroup.title} · версия {testGroup.versionNumber} · {testGroup.versionStatus} ·{' '}
-              {testGroup.questionCount} вопросов
+              {testGroup.title} · версия {testGroup.versionNumber} ·{' '}
+              {getVersionStatusLabel(testGroup.versionStatus)} · {testGroup.questionCount} вопросов
             </option>
           ))}
         </AdminSelectField>
@@ -72,7 +73,7 @@ export function PromptTestSelectorSection({
             </Badge>
             <span>
               {selectedTest.topicSlug} · версия {selectedTest.versionNumber} ·{' '}
-              {selectedTest.versionStatus}
+              {getVersionStatusLabel(selectedTest.versionStatus)}
             </span>
           </div>
 
@@ -92,7 +93,7 @@ export function PromptTestSelectorSection({
                     {question.title}
                   </div>
                   <div className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
-                    {question.type}
+                    {getQuestionTypeLabel(question.type)}
                   </div>
                   {question.description ? (
                     <div className={`mt-1 line-clamp-2 text-xs ${adminClassNames.text.muted}`}>

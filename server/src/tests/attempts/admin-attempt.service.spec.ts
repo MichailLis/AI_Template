@@ -85,6 +85,7 @@ describe('TestsAdminAttemptService', () => {
         finishedAt,
         expiresAt,
         analysis: {
+          providerMode: 'LLM',
           status: 'READY',
         },
       },
@@ -126,6 +127,7 @@ describe('TestsAdminAttemptService', () => {
           expiresAt: expiresAt.toISOString(),
           analysisStatus: 'READY',
           llmStatus: null,
+          analysisResultKind: 'AI',
         },
       ],
     });

@@ -91,6 +91,7 @@ interface EditorSheetFormProps {
   form: UseFormReturn<EducationOrganizationFormValues>;
   mode: OrganizationEditorMode;
   organizationName?: string;
+  activeLinksCount?: number;
   isSubmitting: boolean;
   onCancel: () => void;
   onSubmit: (values: EducationOrganizationFormValues) => Promise<void>;
@@ -100,6 +101,7 @@ function EditorSheetForm({
   form,
   mode,
   organizationName,
+  activeLinksCount,
   isSubmitting,
   onCancel,
   onSubmit,
@@ -125,7 +127,12 @@ function EditorSheetForm({
         </SheetHeader>
 
         <SheetBody>
-          <EducationOrganizationForm form={form} mode={mode} disabled={isSubmitting} />
+          <EducationOrganizationForm
+            form={form}
+            mode={mode}
+            disabled={isSubmitting}
+            activeLinksCount={activeLinksCount}
+          />
         </SheetBody>
 
         <SheetFooter className="flex flex-col-reverse gap-2 sm:flex-row">
@@ -248,6 +255,7 @@ export function EducationOrganizationEditorSheet(props: EducationOrganizationEdi
             form={form}
             mode={mode}
             organizationName={props.organization?.name}
+            activeLinksCount={props.organization?.activeLinksCount}
             isSubmitting={isSubmitting}
             onCancel={requestClose}
             onSubmit={submitForm}

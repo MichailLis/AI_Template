@@ -1,0 +1,7 @@
+URL: http://localhost:5173/login
+
+Вход
+Введите email для входа в аккаунт
+Email
+Пароль
+Войти

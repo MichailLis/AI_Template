@@ -3,8 +3,10 @@ import { useMemo } from 'react';
 import { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
+import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
 
+import { getNewerAnalysisPromptVersion } from './admin-tests-analysis-prompt.helpers';
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
 
 export interface AnalysisPromptVersionSummary {
@@ -13,6 +15,7 @@ export interface AnalysisPromptVersionSummary {
   promptTitle: string;
   versionNumber: number;
   model: string;
+  promptArchived: boolean;
 }
 
 interface AdminTestsAnalysisPromptSettingsSectionProps {
@@ -41,6 +44,14 @@ export function AdminTestsAnalysisPromptSettingsSection({
           })),
       ),
     [promptsQuery.data?.prompts],
+  );
+  const newerPromptVersion = useMemo(
+    () =>
+      getNewerAnalysisPromptVersion({
+        attachedVersion: selectedAnalysisPromptVersion,
+        prompts: promptsQuery.data?.prompts ?? [],
+      }),
+    [promptsQuery.data?.prompts, selectedAnalysisPromptVersion],
   );
   const selectedExists = promptVersionOptions.some(
     (option) => option.id === selectedAnalysisPromptVersionId,
@@ -96,6 +107,31 @@ export function AdminTestsAnalysisPromptSettingsSection({
             <p className={`mt-1 truncate text-xs ${adminClassNames.text.body}`}>
               {selectedAnalysisPromptVersion.model}
             </p>
+            {/* Промпт, подключенный только к черновику, можно удалить; сервер такой черновик не
+                опубликует, поэтому причину видно заранее, а не только в ошибке публикации. */}
+            {selectedAnalysisPromptVersion.promptArchived ? (
+              <p className={`mt-2 text-xs font-medium ${adminToneClassNames.danger.text}`}>
+                Промпт удален. Подключите другой промпт — иначе тест не опубликовать.
+              </p>
+            ) : null}
+            {newerPromptVersion ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className={`text-xs font-medium ${adminToneClassNames.warning.text}`}>
+                  Версия устарела: действует v{newerPromptVersion.versionNumber} (
+                  {newerPromptVersion.model}). Пока тест не обновлён, правки промпта до участников
+                  не доходят.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isSelectedTopicArchived}
+                  onClick={() => onDraftAnalysisPromptVersionChange(newerPromptVersion.versionId)}
+                >
+                  Обновить до v{newerPromptVersion.versionNumber}
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

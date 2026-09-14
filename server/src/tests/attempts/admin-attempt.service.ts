@@ -55,6 +55,7 @@ export class TestsAdminAttemptService {
         },
         analysis: {
           select: {
+            providerMode: true,
             status: true,
             summary: true,
           },

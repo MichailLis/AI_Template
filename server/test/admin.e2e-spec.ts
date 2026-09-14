@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { AuditService } from '../src/audit/audit.service';
 import { PrismaService } from '../src/prisma.service';
 import { setupApp } from '../src/setup-app';
 import { createE2eUser } from './helpers/create-e2e-user';
@@ -189,6 +190,26 @@ describe('Admin (e2e)', () => {
       .expect(200);
 
     expect(signinResponse.body.user).toMatchObject({ email, role: 'USER' });
+  });
+
+  it('POST /admin/users should roll back the user when the audit write fails', async () => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-audit-failure@example.com`;
+    const auditSpy = jest
+      .spyOn(app.get(AuditService), 'record')
+      .mockRejectedValueOnce(new Error('Forced audit failure'));
+
+    try {
+      await request(app.getHttpServer())
+        .post('/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ email, password })
+        .expect(500);
+
+      await expect(prisma.user.findUnique({ where: { email } })).resolves.toBeNull();
+    } finally {
+      auditSpy.mockRestore();
+    }
   });
 
   it('POST /admin/users should keep a supplied password and reject a taken email', async () => {

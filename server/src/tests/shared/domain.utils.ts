@@ -201,7 +201,19 @@ export const validateDraftForPublish = (draft: {
     options: Array<{ id: number }>;
     sliderBands: Array<{ minValue: number; maxValue: number }>;
   }>;
+  analysisPromptVersion?: {
+    analysisPrompt: { title: string; archivedAt?: Date | null };
+  } | null;
 }) => {
+  // Удалить промпт, подключенный только к черновикам, разрешено. Публиковать такой черновик нельзя:
+  // фоновый анализ берет промпт из версии теста и не смотрит, удален ли он.
+  const attachedPrompt = draft.analysisPromptVersion?.analysisPrompt;
+  if (attachedPrompt?.archivedAt) {
+    throw new BadRequestException(
+      `Промпт анализа «${attachedPrompt.title}» удален. Подключите другой промпт перед публикацией.`,
+    );
+  }
+
   if (draft.questions.length === 0) {
     throw new BadRequestException('Draft must contain at least one question before publish');
   }
@@ -232,6 +244,18 @@ export const validateDraftForPublish = (draft: {
           throw new BadRequestException(
             `Slider question "${question.title}" has invalid score range`,
           );
+        }
+      }
+
+      for (let i = 0; i < question.sliderBands.length; i++) {
+        for (let j = i + 1; j < question.sliderBands.length; j++) {
+          const a = question.sliderBands[i];
+          const b = question.sliderBands[j];
+          if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
+            throw new BadRequestException(
+              `Slider question "${question.title}" has overlapping score ranges: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+            );
+          }
         }
       }
     }
@@ -265,6 +289,20 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
           };
         })
       : [];
+
+  if (dto.type === 'SLIDER' && sliderBands.length > 1) {
+    for (let i = 0; i < sliderBands.length; i++) {
+      for (let j = i + 1; j < sliderBands.length; j++) {
+        const a = sliderBands[i];
+        const b = sliderBands[j];
+        if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
+          throw new BadRequestException(
+            `Slider bands must not overlap: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+          );
+        }
+      }
+    }
+  }
 
   return {
     type: dto.type,

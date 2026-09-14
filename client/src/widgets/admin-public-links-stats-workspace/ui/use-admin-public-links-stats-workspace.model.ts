@@ -108,11 +108,51 @@ export const buildAnalyticsParams = ({
   dateTo: string;
 }): TestsAdminAnalyticsControllerGetSummaryParams => ({
   scope,
-  linkStatus,
+  // Отчёт по одной ссылке не сужается по её статусу: архивная ссылка при «Активных» давала пустой отчёт.
+  linkStatus: scope === 'PUBLIC_LINK' ? 'ALL' : linkStatus,
   ...(scope === 'PUBLIC_LINK' && publicLinkId ? { publicLinkId } : {}),
   ...(dateFrom ? { dateFrom } : {}),
   ...(dateTo ? { dateTo } : {}),
 });
 
-export const buildAnalyticsFileName = (topicId: number, format: AnalyticsExportFormat) =>
-  `test-analytics-${topicId}.${format}`;
+export interface BuildAnalyticsFileNameOptions {
+  topicTitle?: string | null;
+  scope?: string | null;
+  linkCode?: string | null;
+  date?: string | Date | null;
+}
+
+export const sanitizeFileNamePart = (value: string): string =>
+  value
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 40);
+
+export const buildAnalyticsFileName = (
+  topicId: number,
+  format: AnalyticsExportFormat,
+  options?: BuildAnalyticsFileNameOptions,
+) => {
+  let dateStr = new Date().toISOString().slice(0, 10);
+  if (typeof options?.date === 'string') {
+    dateStr = options.date.slice(0, 10);
+  } else if (options?.date instanceof Date) {
+    dateStr = options.date.toISOString().slice(0, 10);
+  }
+
+  const cleanTitle = options?.topicTitle
+    ? sanitizeFileNamePart(options.topicTitle)
+    : `test-${topicId}`;
+
+  let scopePart = 'all';
+  if (options?.scope === 'PUBLIC_LINK') {
+    scopePart = options.linkCode ? `link-${options.linkCode}` : 'link';
+  } else if (options?.scope === 'TOPIC') {
+    scopePart = 'topic';
+  } else if (options?.scope) {
+    scopePart = options.scope.toLowerCase().replace(/_/g, '-');
+  }
+
+  return `${cleanTitle}-${scopePart}-${dateStr}.${format}`;
+};

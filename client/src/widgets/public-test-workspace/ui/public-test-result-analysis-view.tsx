@@ -255,8 +255,9 @@ export function PublicTestResultAnalysisView({ analysis }: { analysis: AnalysisP
 
   if (!parsed) {
     return (
-      <PublicResultStatusPanel tone="muted" title="Итог прохождения сохранен">
-        Подробный анализ для этого теста пока не настроен.
+      <PublicResultStatusPanel tone="muted" title="Ответы сохранены">
+        Подробный анализ для этого теста не предусмотрен или результаты будут переданы
+        преподавателем.
       </PublicResultStatusPanel>
     );
   }

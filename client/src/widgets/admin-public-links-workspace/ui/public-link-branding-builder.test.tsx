@@ -14,7 +14,12 @@ const standardLink = {
   publicBranding: null,
   createdAt: '2026-05-19T10:30:00.000Z',
   archivedAt: null,
+  topicArchivedAt: null,
   isActive: true,
+  publishedVersionId: 50,
+  topicVersionNumber: 1,
+  activePublishedVersionId: 50,
+  activePublishedVersionNumber: 1,
 };
 
 describe('PublicLinkBrandingBuilder', () => {
@@ -80,5 +85,56 @@ describe('PublicLinkBrandingBuilder', () => {
         buttons: expect.objectContaining({ primaryColor: '#ff6b35' }),
       }),
     );
+  });
+
+  it('requires confirmation before resetting branding to default', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+
+    render(
+      <PublicLinkBrandingBuilder
+        open
+        link={standardLink}
+        isSaving={false}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /сбросить к стандарту/i }));
+
+    expect(
+      screen.getByRole('heading', { name: /сбросить оформление к стандарту\?/i }),
+    ).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+
+    // Confirm in dialog
+    const confirmButton = screen.getByRole('button', { name: 'Сбросить' });
+    await user.click(confirmButton);
+
+    expect(onSave).toHaveBeenCalledWith(standardLink.id, null);
+  });
+
+  it('validates hex color and disables apply button on invalid input', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PublicLinkBrandingBuilder
+        open
+        link={standardLink}
+        isSaving={false}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /акцент/i }));
+    const colorInput = screen.getByRole('textbox', { name: 'Акцентный цвет' });
+
+    await user.clear(colorInput);
+    await user.type(colorInput, 'не цвет');
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/некорректный hex-код цвета/i);
+    expect(screen.getByRole('button', { name: /применить/i })).toBeDisabled();
   });
 });

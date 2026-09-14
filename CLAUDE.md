@@ -94,7 +94,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
-- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
+- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hooks, Serena, root TypeScript, compose name, orval lockfile drift). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
@@ -125,70 +125,119 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
 
 ## Tools in this repo
 
-Empirical measurements, benchmarks, and experimental findings behind tool choices are recorded in `docs/tooling-evidence.md`. This section contains only actionable rules and traps where violation leads to incorrect results.
+Measurements behind these choices live in `docs/tooling-evidence.md`; this section keeps only the rules and the traps that produce wrong results.
 
-- **Tool selection overview:**
+- **Tool selection:**
 
-  | Question                                               | Reach for                                                                  | Why not the others                                                                                                          |
-  | ------------------------------------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-  | Is the symbol name unique (first step)                 | **`npm run find:symbol -- <name>`**                                        | Answers uniqueness in milliseconds without external binaries, reports declarations, warns on drift, routes to Serena or rg. |
-  | Who uses this symbol — before a rename, move or delete | **`typescript-lsp`** (`findReferences`, `incomingCalls`, `goToDefinition`) | Local answer without network; resolves references and callers. Graph misses callbacks. Re-query once on cold start.         |
-  | How deep does the call chain go, what is hop distance  | **graph** `trace_path`, always with `include_tests: true`                  | Nothing else ranks by hop. Positives only — absence proves nothing, and default parameters miss product code.               |
-  | Where is X handled, when you do not know the name      | **graph** `search_graph query=`                                            | BM25 and vector ranking surface relevant symbols without exact name matching.                                               |
-  | A property of the whole tree at once                   | **graph** `query_graph`                                                    | Neither grep nor Serena can express it across the entire AST.                                                               |
-  | A symbol whose name is unique                          | **`rg --with-filename`**                                                   | Four times cheaper and exact.                                                                                               |
-  | Literals, UI strings, config keys, non-code files      | **`rg`**                                                                   | Not in the graph, not symbols.                                                                                              |
-  | Read a function you already located                    | **`sed -n 'a,bp'`**                                                        | `get_code_snippet` costs ~2.4x for the same lines and needs a `qualified_name` first.                                       |
-  | Compiler errors in one file                            | **Serena** `get_diagnostics_for_file`                                      | `npm run typecheck` covers the server in ~5s; use diagnostics for one file's noise, not for speed.                          |
-  | Typecheck the whole server                             | **`npm run typecheck`**                                                    | `rtk tsc` prints "No errors found" when the compiler never ran.                                                             |
-  | What is in this file / CRLF-safe symbol edit           | **Serena** (`replace_*`, `get_symbols_overview`)                           | Remaining uniqueness is CRLF-safe symbol editing (avoids `\r\r\n` corruption) and cheap structure overview (~200 bytes).    |
-  | Command output                                         | **rtk**, but only the safe filters listed below                            | Compresses command output — but `tsc`, `find`, `wc`, `vitest`/`jest` and `read -l aggressive` misreport failure as success. |
+  | Question                                      | Reach for                                                | Why                                                                   |
+  | --------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+  | Is the symbol name unique (first step)        | **`npm run find:symbol -- <name>`**                      | Fast, no binaries, flags client/server drift, routes to Serena or rg. |
+  | Who uses it — before a rename, move or delete | **`typescript-lsp`** (`findReferences`, `incomingCalls`) | Finds callers the graph misses. Re-query once on cold start.          |
+  | How deep does the call chain go               | **graph** `trace_path` with `include_tests: true`        | Only tool that ranks by hop. Absence proves nothing.                  |
+  | Where is X handled, name unknown              | **graph** `search_graph query=`                          | Ranked search without the exact name.                                 |
+  | A property of the whole tree                  | **graph** `query_graph`                                  | Grep and Serena cannot express it.                                    |
+  | A unique symbol name                          | **`rg --with-filename`**                                 | Cheaper and exact.                                                    |
+  | Literals, UI strings, config, non-code files  | **`rg`**                                                 | Not in the graph.                                                     |
+  | Read a located function                       | **`sed -n 'a,bp'`**                                      | `get_code_snippet` costs more and needs a `qualified_name`.           |
+  | Compiler errors in one file                   | **Serena** `get_diagnostics_for_file`                    | `npm run typecheck` is faster for the whole server.                   |
+  | Typecheck the whole server                    | **`npm run typecheck`**                                  | `rtk tsc` prints "No errors found" when the compiler never ran.       |
+  | File structure / CRLF-safe symbol edit        | **Serena** (`replace_*`, `get_symbols_overview`)         | Avoids `\r\r\n` corruption.                                           |
+  | Command output                                | **rtk**, safe filters only                               | Several filters report failure as success (below).                    |
 
-- **typescript-lsp** (language server plugin):
-  - **Local symbol resolution:** Answers "who uses this symbol" locally without network via `findReferences`, `incomingCalls`, `goToDefinition`.
-  - **Cold-start trap — first query may return incomplete results:** Measured: `findReferences` on server `getMaxChoices` returned 2 references in 1 file on cold start, omitting the test spec that imports and calls it; a repeated query on the warmed server returned the true 4 references in 2 files. For renames and moves, an incomplete reference list is worse than none. Always re-query the first LSP response.
-  - Detailed measurements: `docs/tooling-evidence.md#8-tooling-audit-2026-09-06`.
+- **typescript-lsp:** answers "who uses this symbol" locally (`findReferences`, `incomingCalls`, `goToDefinition`). **The first query after a cold start can return an incomplete reference list** — always re-query before a rename or move. Evidence: `docs/tooling-evidence.md#8-tooling-audit-2026-09-06`.
 
-- **Serena** (MCP, symbolic navigation over TypeScript LSP):
-  - **Symbol discovery:** To choose between tools for finding a symbol, run `npm run find:symbol -- <name>`.
-  - **Parameter names differ between sibling tools:** `find_symbol` and `safe_delete_symbol` take `name_path_pattern`, whereas `find_referencing_symbols` takes `name_path`. Passing the wrong parameter name fails validation.
-  - **Editing tools are CRLF-safe:** `insert_after_symbol`, `replace_symbol_body`, `replace_in_files`, `insert_before_symbol`, and `replace_content` preserve CRLF and leave 0 bare LFs, avoiding the `\r\r\n` corruption trap. Ad-hoc scripts often corrupt line endings.
-  - **Serena's line numbers are 0-based:** Line 26 in `rg`, `sed`, or the graph sits at line 25 in Serena. Always add 1 before carrying a Serena line number into `sed -n`.
-  - Detailed measurements and benchmarks: `docs/tooling-evidence.md#1-serena`.
+- **Serena** (MCP over TypeScript LSP):
+  - `find_symbol` and `safe_delete_symbol` take `name_path_pattern`; `find_referencing_symbols` takes `name_path`.
+  - Its editing tools (`replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol`, `replace_in_files`, `replace_content`) preserve CRLF; ad-hoc scripts write `\r\r\n`.
+  - Its line numbers are 0-based: add 1 before using them with `rg` or `sed -n`.
+  - Evidence: `docs/tooling-evidence.md#1-serena`.
 
-- **codebase-memory** (MCP, local knowledge graph over the whole tree):
-  - **Always pass `include_tests: true` to `trace_path` in this repository:** The indexer marks any path with `tests` as test code. Here `tests` is the product: 736 business code nodes (11% of the graph) are flagged. Inbound tracing on `getMaxChoices` returns 5 callers with `include_tests: true` and 0 without it.
-  - **`DECORATES` points method → decorator:** The direction is counter-intuitive (`(m:Method)-[:DECORATES]->(d:Decorator)`). Querying `(d:Decorator)-[:DECORATES]->(m:Method)` returns zero rows.
-  - **Functions passed as bare callbacks get no inbound edges:** `.map(fn)` is invisible to the graph (`mapQuestionToPromptPayload` has 3 call sites and 0 inbound `CALLS` edges). Consequence: automated dead-code detection is unusable (produces false positives), and caller traces miss callback usages.
-  - **`Route` nodes are not the route table:** Generated from call sites in tests/client code with null `path` and `file_path`. Authorities are `template/features.manifest.json` and `server/openapi.json`.
-  - **No cross-service linking:** The graph contains zero client-to-server edges; `trace_path` with `mode: "cross_service"` stops at `customInstance`.
-  - **Index lags behind the working tree:** `check_index_coverage` reports per-path freshness; a `metadata_changed` response means the graph reflects an older version of the file. Query coverage before relying on graph results for recently modified code.
-  - Detailed findings (main checkout indexing failure, Cypher subset, daemon lifecycle): `docs/tooling-evidence.md#2-codebase-memory`.
+- **codebase-memory** (MCP knowledge graph):
+  - Always pass `include_tests: true` to `trace_path`: the indexer treats every `tests` path as test code, and here `tests` is product code.
+  - `DECORATES` points method → decorator: `(m:Method)-[:DECORATES]->(d:Decorator)`.
+  - Bare callbacks (`.map(fn)`) get no inbound `CALLS` edges, so caller traces and dead-code detection miss them.
+  - `Route` nodes are not the route table; use `template/features.manifest.json` and `server/openapi.json`.
+  - No client-to-server edges: `cross_service` tracing stops at `customInstance`.
+  - The index lags the working tree: check `check_index_coverage` (`metadata_changed` means stale) before trusting recent code.
+  - Evidence: `docs/tooling-evidence.md#2-codebase-memory`.
 
-- **rtk** (wraps shell output to cut tokens):
-  - **Never use these — they report success or emptiness when the command failed:** `rtk tsc` (reports "No errors found" without running compiler), `rtk find` (exits 0 on non-existent directories), `rtk tree` (broken on Windows, exits 0 with parameter error), `rtk playwright` (reports `PASS (0) FAIL (0)` on missing files), `rtk read -l aggressive` (strips braces and bodies, breaking syntax), `rtk wc` (silently drops missing files), and `rtk vitest` / `rtk jest` (reports `PASS (0) FAIL (0)` on unmatched filters, masks config errors).
-  - **Use with care:** `rtk git diff` (strips context, incompatible with `git apply`), `rtk lint` (crashes deserializer on ESLint syntax errors).
+- **rtk** (compresses command output):
+  - **Never use — they report success or emptiness on failure:** `rtk tsc` (never runs the compiler), `rtk find` and `rtk wc` (skip missing paths), `rtk tree` (broken on Windows), `rtk playwright`, `rtk vitest` and `rtk jest` (`PASS (0) FAIL (0)` on missing files or filters), `rtk read -l aggressive` (strips code bodies).
+  - **Use with care:** `rtk git diff` (strips context, breaks `git apply`), `rtk lint` (crashes on ESLint syntax errors).
   - **Safe filters:** `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, `rtk read` (without `-l aggressive`).
-  - **rtk requires `rg` on PATH:** Without ripgrep, it falls back to raw execution with corrupted search output.
-  - **Always give `rtk rg` an explicit path:** `rtk rg <pat>` drops file names and line numbers; `rtk rg -n <pat> server/src` keeps them.
-  - **`rtk rg` hangs on pipelines without stdin redirection:** `rtk rg pat | wc -l` hangs; use `rtk rg pat </dev/null | wc -l`.
-  - **Silent `npx tsc` rewrite:** The `Bash` PreToolUse hook rewrites `npx tsc` to `rtk tsc`. Fixed on this machine via `hooks.exclude_commands = ["npx tsc", "tsc"]` in `%APPDATA%\rtk\config.toml`. Use `npm run typecheck`.
-  - Detailed sweeps and compression stats: `docs/tooling-evidence.md#3-rtk`.
+  - Needs `rg` on PATH. Give `rtk rg` an explicit path (otherwise file names and line numbers are dropped) and `</dev/null` inside pipelines (otherwise it hangs).
+  - The `Bash` PreToolUse hook rewrites `npx tsc` to `rtk tsc`; this machine excludes it via `hooks.exclude_commands` in `%APPDATA%\rtk\config.toml`. Use `npm run typecheck`.
+  - Evidence: `docs/tooling-evidence.md#3-rtk`.
 
-- **Claude Code hooks:**
-  - **User-level hooks do not fire in a resumed session:** Hooks configured in user-level `~/.claude/settings.json` are not picked up by `--continue` or `--resume`, and spawned subagents inherit this inactive state. In contrast, project hooks in `.claude/settings.json` were observed firing after resume. Verify hook behavior rather than assuming execution.
-  - Cost and latency measurements: `docs/tooling-evidence.md#4-claude-code-hooks`.
+- **Claude Code hooks:** user-level hooks (`~/.claude/settings.json`) do not fire after `--continue`/`--resume` or in subagents; project hooks do. Verify, do not assume. Evidence: `docs/tooling-evidence.md#4-claude-code-hooks`.
 
-- **omp (Oh My Pi):**
-  - Dispatched workers read `~/.omp/agent/` (`mcp.json`, `AGENTS.md`, `skills/`) and root `.mcp.json`.
-  - `tools.xdevDocs: builtins` keeps MCP schemas on demand, avoiding context inflation in short-lived workers.
-  - Token analysis: `docs/tooling-evidence.md#5-omp`.
+- **omp:** workers read `~/.omp/agent/` (`mcp.json`, `AGENTS.md`, `skills/`) and root `.mcp.json`; `tools.xdevDocs: builtins` keeps MCP schemas on demand. Evidence: `docs/tooling-evidence.md#5-omp`.
 
 - **Orca orchestration:**
-  - **Worker termination:** Individual workers are stopped with `orca orchestration worker-stop --dispatch <id>`. `worker-stop` can respond with `dispatch_inactive` and still succeed — verify state via `worker-show`, where a stopped worker has `termination_reason: operator_close` and `stage: process_exited`. In contrast, `terminal stop` is per-worktree only.
-  - **Deadlock on worker death:** If the host sleeps, a worker dying mid-run leaves the dispatch permanently active and task unrecoverable. Only the worker can settle its dispatch.
-  - **Worker liveness:** Do not judge liveness by `last_heartbeat_at` (can be stale or `None`). The authoritative check is transcript growth across checks via `worker-read --dispatch <id>`.
-  - **JSON output parsing:** When parsing Orca CLI `--json`, connect only stdout; crashpad diagnostic lines emitted to stderr break JSON parsers if merged.
-  - Detailed mechanics and experiments: `docs/tooling-evidence.md#6-orca-orchestration`.
+  - Stop one worker with `orca orchestration worker-stop --dispatch <id>` (`terminal stop` closes the whole worktree). It may answer `dispatch_inactive` yet succeed: confirm `termination_reason: operator_close` in `worker-show`.
+  - A worker that dies while the host sleeps leaves its dispatch active forever; only the worker can settle it.
+  - Judge liveness by transcript growth in `worker-read`, not by `last_heartbeat_at`.
+  - Parse `--json` from stdout only; crashpad lines on stderr break the parser.
+  - Evidence: `docs/tooling-evidence.md#6-orca-orchestration`.
 
 - Codex is not used in this repository.
+
+<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:970c3bf2 -->
+
+## Beads Issue Tracker
+
+This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+
+### Quick Reference
+
+```bash
+bd ready              # Find available work
+bd show <id>          # View issue details
+bd update <id> --claim  # Claim work
+bd close <id>         # Complete work
+```
+
+### Rules
+
+- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Run `bd prime` for detailed command reference and session close protocol
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+
+**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+
+## Agent Context Profiles
+
+The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
+
+- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
+- **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
+- **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
+
+## Session Completion
+
+This protocol applies when ending a Beads implementation workflow. It is subordinate to explicit user, repository, and orchestrator instructions.
+
+1. **File issues for remaining work** - Create beads for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **Handle git/sync by active profile**:
+
+   ```bash
+   # Conservative/minimal/default: report status and proposed commands; wait for approval.
+   git status
+
+   # Team-maintainer opt-in only, unless current instructions forbid it:
+   git pull --rebase
+   bd dolt push
+   git push
+   git status
+   ```
+
+5. **Hand off** - Summarize changes, validation, issue status, and any blocked sync/commit/push step
+
+**Critical rules:**
+
+- Explicit user or orchestrator instructions override this Beads block.
+- Do not commit or push without clear authority from the active profile or the current user request.
+- If a required sync or push is blocked, stop and report the exact command and error.
+<!-- END BEADS INTEGRATION -->

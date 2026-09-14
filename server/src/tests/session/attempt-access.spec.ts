@@ -4,13 +4,18 @@ import { PrismaService } from '../../prisma.service';
 import { getSessionAttemptByTokenOrThrow } from '../session/attempt-access';
 import { attemptWithSessionInclude } from '../attempts/attempt.query';
 
-const createAttemptFixture = (publicLinkOverrides: Record<string, unknown> = {}) => ({
+const createAttemptFixture = (
+  publicLinkOverrides: Record<string, unknown> = {},
+  topicVersionOverrides: Record<string, unknown> = {},
+) => ({
   id: 5,
   status: 'IN_PROGRESS',
   expiresAt: new Date('2026-05-12T12:30:00.000Z'),
   finishedAt: null,
   topicVersion: {
     status: 'PUBLISHED',
+    topic: { archivedAt: null },
+    ...topicVersionOverrides,
   },
   publicLink: {
     isActive: true,
@@ -83,6 +88,15 @@ describe('getSessionAttemptByTokenOrThrow', () => {
       exception: BadRequestException,
       message: 'Public test link has expired',
     },
+    {
+      label: 'disabled by education organization',
+      publicLink: {
+        isActive: true,
+        educationOrganization: { isActive: false },
+      },
+      exception: BadRequestException,
+      message: 'Public test link is disabled because its education organization is disabled',
+    },
   ])('rejects an existing session token when its public link is $label', async (testCase) => {
     jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
 
@@ -100,6 +114,31 @@ describe('getSessionAttemptByTokenOrThrow', () => {
     expect(findUniqueMock).toHaveBeenCalledWith({
       where: { resumeToken: 'session-token' },
       include: attemptWithSessionInclude,
+    });
+  });
+
+  it('rejects an existing session token when the test topic is archived', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+
+    const findUniqueMock = jest.fn().mockResolvedValue(
+      createAttemptFixture(
+        {},
+        {
+          topic: { archivedAt: new Date('2026-05-12T11:00:00.000Z') },
+        },
+      ),
+    );
+    const prismaMock = {
+      testStudentAttempt: {
+        findUnique: findUniqueMock,
+      },
+    } as unknown as PrismaService;
+
+    const result = getSessionAttemptByTokenOrThrow(prismaMock, 'session-token');
+
+    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toMatchObject({
+      message: 'Public test link is disabled because its test is archived',
     });
   });
 });

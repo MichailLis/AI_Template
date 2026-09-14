@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '@/shared/lib/utils';
@@ -103,6 +103,64 @@ function ModelOptionItem({
   );
 }
 
+interface ModelCatalogStatusProps {
+  allModelsCount: number;
+  modelOptionsCount: number;
+  visibleModelsCount: number;
+  isLoading: boolean;
+  isError: boolean;
+  onRetryModels: () => void;
+}
+
+/**
+ * Счетчики имеют смысл только для загруженного каталога. Пока запрос идет (до восьми секунд), нули
+ * читались как «моделей нет», а при ошибке — так же, как пустой каталог.
+ */
+function ModelCatalogStatus({
+  allModelsCount,
+  modelOptionsCount,
+  visibleModelsCount,
+  isLoading,
+  isError,
+  onRetryModels,
+}: ModelCatalogStatusProps) {
+  if (isLoading) {
+    return (
+      <p role="status" className={cn('flex items-center gap-2', adminClassNames.form.fieldHint)}>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        Загружаем каталог моделей…
+      </p>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-start gap-2">
+        <p className={`text-xs ${adminToneClassNames.danger.text}`}>
+          Не удалось загрузить каталог моделей
+        </p>
+        <Button type="button" variant="outline" size="sm" onClick={onRetryModels}>
+          Повторить загрузку моделей
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <p className={adminClassNames.form.fieldHint}>
+        Показано {visibleModelsCount} из {modelOptionsCount} моделей с поддержкой structured outputs
+      </p>
+      {modelOptionsCount === 0 ? (
+        <p className={`text-xs ${adminToneClassNames.warning.text}`}>
+          Нет моделей с поддержкой structured outputs.
+        </p>
+      ) : null}
+      <p className={adminClassNames.form.fieldHint}>Всего в каталоге: {allModelsCount}</p>
+    </>
+  );
+}
+
 export function AiModelCombobox({
   allModelsCount,
   modelOptionsCount,
@@ -172,24 +230,14 @@ export function AiModelCombobox({
         </PopoverContent>
       </Popover>
 
-      <p className={adminClassNames.form.fieldHint}>
-        Показано {visibleModelOptions.length} из {modelOptionsCount} моделей с поддержкой structured
-        outputs
-      </p>
-
-      {!isLoading && modelOptionsCount === 0 ? (
-        <p className={`text-xs ${adminToneClassNames.warning.text}`}>
-          Нет моделей с поддержкой structured outputs.
-        </p>
-      ) : null}
-
-      <p className={adminClassNames.form.fieldHint}>Всего в каталоге: {allModelsCount}</p>
-
-      {isError ? (
-        <Button type="button" variant="outline" size="sm" onClick={onRetryModels}>
-          Повторить загрузку моделей
-        </Button>
-      ) : null}
+      <ModelCatalogStatus
+        allModelsCount={allModelsCount}
+        modelOptionsCount={modelOptionsCount}
+        visibleModelsCount={visibleModelOptions.length}
+        isLoading={isLoading}
+        isError={isError}
+        onRetryModels={onRetryModels}
+      />
     </div>
   );
 }

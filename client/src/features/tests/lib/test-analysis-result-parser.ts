@@ -5,6 +5,11 @@ export type AnalysisStatus = 'PENDING' | 'READY' | 'FAILED' | string;
 export interface AnalysisPayload {
   status: AnalysisStatus;
   providerMode?: string | null;
+  /**
+   * Что на самом деле лежит в записи (сервер считает это в `getAnalysisResultKind`). У заглушки и
+   * у настоящего ИИ-анализа `status` одинаковый — `READY`, поэтому статус не годится для подписи.
+   */
+  resultKind?: string | null;
   summary: unknown | null;
   rawText?: string | null;
   errorMessage?: string | null;

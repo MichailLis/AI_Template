@@ -11,6 +11,7 @@ interface QuestionModalSliderBandRowProps {
   band: QuestionSliderBandDraft;
   index: number;
   canRemove: boolean;
+  hasOverlap?: boolean;
   onUpdateSliderBand: (
     bandId: string,
     field: 'minValue' | 'maxValue' | 'label' | 'weight',
@@ -23,6 +24,7 @@ export function QuestionModalSliderBandRow({
   band,
   index,
   canRemove,
+  hasOverlap = false,
   onUpdateSliderBand,
   onRemoveSliderBand,
 }: QuestionModalSliderBandRowProps) {
@@ -30,7 +32,7 @@ export function QuestionModalSliderBandRow({
 
   return (
     <div
-      className={`grid items-end gap-2 md:grid-cols-[6rem_6rem_minmax(0,1fr)_6rem_2.25rem] ${adminClassNames.panel.compactSection}`}
+      className={`grid items-end gap-2 md:grid-cols-[6rem_6rem_minmax(0,1fr)_6rem_2.25rem] ${adminClassNames.panel.compactSection} ${hasOverlap ? 'border-destructive/80 bg-destructive/5 ring-1 ring-destructive/30' : ''}`}
     >
       <div className="space-y-1">
         <Label className={`text-xs ${adminClassNames.text.body}`} htmlFor={`${fieldPrefix}-min`}>
@@ -43,6 +45,11 @@ export function QuestionModalSliderBandRow({
           value={band.minValue}
           onChange={(event) => onUpdateSliderBand(band.id, 'minValue', event.target.value)}
           placeholder="1"
+          className={
+            hasOverlap
+              ? 'border-destructive text-destructive focus-visible:ring-destructive'
+              : undefined
+          }
         />
       </div>
       <div className="space-y-1">
@@ -56,6 +63,11 @@ export function QuestionModalSliderBandRow({
           value={band.maxValue}
           onChange={(event) => onUpdateSliderBand(band.id, 'maxValue', event.target.value)}
           placeholder="3"
+          className={
+            hasOverlap
+              ? 'border-destructive text-destructive focus-visible:ring-destructive'
+              : undefined
+          }
         />
       </div>
       <div className="space-y-1">
@@ -92,6 +104,11 @@ export function QuestionModalSliderBandRow({
       >
         <Trash2 className="h-4 w-4" aria-hidden="true" />
       </Button>
+      {hasOverlap ? (
+        <p className="col-span-full -mt-1 text-xs font-medium text-destructive">
+          Диапазон пересекается с другим диапазоном
+        </p>
+      ) : null}
     </div>
   );
 }

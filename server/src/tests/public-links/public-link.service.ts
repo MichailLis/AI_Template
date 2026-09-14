@@ -1,7 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { PersonalDataProcessingMode } from '@prisma/client';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { PersonalDataProcessingMode, Prisma } from '@prisma/client';
 
 import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
+import { collectAuditChanges } from '../../audit/audit-changes';
+import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
@@ -12,6 +19,7 @@ import type {
 } from '../dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from '../dto/tests-public.dto';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
+import { runSerializableTransaction } from '../../common/prisma-transaction.utils';
 import { parseDateOrNull, toOptionalIsoString } from '../shared/date.utils';
 import { createShortCodeCandidate } from '../shared/domain.utils';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
@@ -97,12 +105,93 @@ const resolveMaxAttemptsForEntryProfileMode = (
   return requestedMaxAttempts ?? DEFAULT_MAX_ATTEMPTS;
 };
 
+/** Поля ссылки, которые пишутся в журнал значениями. */
+const PUBLIC_LINK_AUDIT_FIELDS = [
+  'shortCode',
+  'topicVersionNumber',
+  'isActive',
+  'startsAt',
+  'endsAt',
+  'entryProfileMode',
+  'publicTemplate',
+  'maxAttemptsPerStudent',
+  'timeLimitMinutes',
+  'allowResume',
+  'educationOrganizationId',
+  'personalDataProcessingMode',
+  'consentVersion',
+] as const;
+
+/** Длинный текст согласия и оформление страницы пишутся только фактом изменения. */
+const PUBLIC_LINK_REDACTED_AUDIT_FIELDS = ['consentText', 'publicBranding'] as const;
+
+const PUBLIC_LINK_AUDIT_SELECT = {
+  shortCode: true,
+  isActive: true,
+  startsAt: true,
+  endsAt: true,
+  entryProfileMode: true,
+  publicTemplate: true,
+  maxAttemptsPerStudent: true,
+  timeLimitMinutes: true,
+  allowResume: true,
+  educationOrganizationId: true,
+  personalDataProcessingMode: true,
+  consentVersion: true,
+  consentTextSnapshot: true,
+  publicBranding: true,
+  topicVersion: { select: { versionNumber: true } },
+} as const satisfies Prisma.TestPublicLinkSelect;
+
+const PUBLIC_LINK_UPDATE_SELECT = {
+  ...PUBLIC_LINK_AUDIT_SELECT,
+  id: true,
+  topicVersionId: true,
+  archivedAt: true,
+  operatorFullNameSnapshot: true,
+  operatorShortNameSnapshot: true,
+  operatorPrivacyPolicyUrlSnapshot: true,
+  operatorConsentDocumentUrlSnapshot: true,
+} as const satisfies Prisma.TestPublicLinkSelect;
+
+type PublicLinkAuditSource = Prisma.TestPublicLinkGetPayload<{
+  select: typeof PUBLIC_LINK_AUDIT_SELECT;
+}>;
+
+const toPublicLinkAuditState = (link: PublicLinkAuditSource) => ({
+  shortCode: link.shortCode,
+  topicVersionNumber: link.topicVersion.versionNumber,
+  isActive: link.isActive,
+  startsAt: link.startsAt,
+  endsAt: link.endsAt,
+  entryProfileMode: link.entryProfileMode,
+  publicTemplate: link.publicTemplate,
+  maxAttemptsPerStudent: link.maxAttemptsPerStudent,
+  timeLimitMinutes: link.timeLimitMinutes,
+  allowResume: link.allowResume,
+  educationOrganizationId: link.educationOrganizationId,
+  personalDataProcessingMode: link.personalDataProcessingMode,
+  consentVersion: link.consentVersion,
+  consentText: link.consentTextSnapshot,
+  publicBranding: link.publicBranding,
+});
+
+const collectPublicLinkChanges = (
+  before: PublicLinkAuditSource | null,
+  after: PublicLinkAuditSource,
+) =>
+  collectAuditChanges(before ? toPublicLinkAuditState(before) : {}, toPublicLinkAuditState(after), {
+    fields: PUBLIC_LINK_AUDIT_FIELDS,
+    redactedFields: PUBLIC_LINK_REDACTED_AUDIT_FIELDS,
+  });
+
 @Injectable()
 export class TestsPublicLinkService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly educationOrganizationService: TestsEducationOrganizationService,
     private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
+    private readonly auditService: AuditService,
   ) {}
 
   private async resolveOperator(
@@ -141,6 +230,26 @@ export class TestsPublicLinkService {
     }
 
     return version;
+  }
+
+  private async ensureVersionPromptIsActive(
+    tx: Prisma.TransactionClient,
+    versionId: number,
+  ): Promise<void> {
+    const version = await tx.testTopicVersion.findUnique({
+      where: { id: versionId },
+      select: {
+        analysisPromptVersion: {
+          select: {
+            analysisPrompt: { select: { archivedAt: true } },
+          },
+        },
+      },
+    });
+
+    if (version?.analysisPromptVersion?.analysisPrompt.archivedAt) {
+      throw new ConflictException('Public link cannot use an archived analysis prompt');
+    }
   }
 
   private async ensureUniqueShortCode(explicitShortCode?: string) {
@@ -202,29 +311,61 @@ export class TestsPublicLinkService {
 
     ensureValidPublicLinkDateWindow(startsAt, endsAt);
 
-    const created = await this.prisma.testPublicLink.create({
-      data: {
-        topicVersionId: dto.publishedVersionId,
-        shortCode,
-        isActive: dto.isActive ?? true,
-        startsAt,
-        endsAt,
-        entryProfileMode,
-        publicTemplate,
-        ...(publicBranding !== undefined ? { publicBranding } : {}),
-        maxAttemptsPerStudent,
-        timeLimitMinutes: dto.timeLimitMinutes ?? null,
-        allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
-        educationOrganizationId,
-        ...toOperatorSnapshotData(operator),
-        consentVersion: dto.consentVersion,
-        consentTextSnapshot: dto.consentText,
-        createdByUserId: userId,
-      },
-      include: publicLinkAdminInclude,
+    const created = await runSerializableTransaction(this.prisma, async (tx) => {
+      await this.ensureVersionPromptIsActive(tx, dto.publishedVersionId);
+      const link = await tx.testPublicLink.create({
+        data: {
+          topicVersionId: dto.publishedVersionId,
+          shortCode,
+          isActive: dto.isActive ?? true,
+          startsAt,
+          endsAt,
+          entryProfileMode,
+          publicTemplate,
+          ...(publicBranding !== undefined ? { publicBranding } : {}),
+          maxAttemptsPerStudent,
+          timeLimitMinutes: dto.timeLimitMinutes ?? null,
+          allowResume: dto.allowResume ?? DEFAULT_ALLOW_RESUME,
+          educationOrganizationId,
+          ...toOperatorSnapshotData(operator),
+          consentVersion: dto.consentVersion,
+          consentTextSnapshot: dto.consentText,
+          createdByUserId: userId,
+        },
+        include: publicLinkAdminInclude,
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: link.id,
+          action: 'PUBLIC_LINK_CREATED',
+          actorUserId: userId,
+          changes: collectPublicLinkChanges(null, link),
+        },
+        tx,
+      );
+
+      return link;
     });
 
     return mapAdminPublicLink(created);
+  }
+
+  /** История доступна и у архивной ссылки: архивация — тоже событие ее жизни. */
+  async getPublicLinkHistory(userId: number, linkId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const link = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true },
+    });
+
+    if (!link) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    return { events: await this.auditService.listForEntity('PUBLIC_LINK', linkId) };
   }
 
   async listPublicLinks(userId: number) {
@@ -270,20 +411,7 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: {
-        id: true,
-        archivedAt: true,
-        entryProfileMode: true,
-        maxAttemptsPerStudent: true,
-        startsAt: true,
-        endsAt: true,
-        educationOrganizationId: true,
-        personalDataProcessingMode: true,
-        operatorFullNameSnapshot: true,
-        operatorShortNameSnapshot: true,
-        operatorPrivacyPolicyUrlSnapshot: true,
-        operatorConsentDocumentUrlSnapshot: true,
-      },
+      select: PUBLIC_LINK_UPDATE_SELECT,
     });
 
     if (!existing) {
@@ -325,35 +453,67 @@ export class TestsPublicLinkService {
             );
     }
 
-    const entryProfileMode = dto.entryProfileMode ?? existing.entryProfileMode;
-    const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
-      entryProfileMode,
-      dto.maxAttemptsPerStudent ?? existing.maxAttemptsPerStudent,
-    );
-    const startsAt = resolveDateUpdate(dto.startsAt, existing.startsAt);
-    const endsAt = resolveDateUpdate(dto.endsAt, existing.endsAt);
     const publicBranding = toPrismaPublicBranding(dto.publicBranding);
 
-    ensureValidPublicLinkDateWindow(startsAt, endsAt);
+    const updated = await runSerializableTransaction(this.prisma, async (tx) => {
+      const current = await tx.testPublicLink.findUnique({
+        where: { id: linkId },
+        select: PUBLIC_LINK_UPDATE_SELECT,
+      });
 
-    const updated = await this.prisma.testPublicLink.update({
-      where: { id: linkId },
-      data: {
-        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...(dto.startsAt !== undefined ? { startsAt } : {}),
-        ...(dto.endsAt !== undefined ? { endsAt } : {}),
-        ...(dto.entryProfileMode !== undefined ? { entryProfileMode } : {}),
-        ...(publicBranding !== undefined ? { publicBranding } : {}),
-        maxAttemptsPerStudent,
-        ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
-        ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
-        ...(educationOrganizationId !== undefined ? { educationOrganizationId } : {}),
-        ...(dto.personalDataProcessingMode !== undefined ? { personalDataProcessingMode } : {}),
-        ...(operator ? toOperatorSnapshotData(operator) : {}),
-        ...(dto.consentVersion !== undefined ? { consentVersion: dto.consentVersion } : {}),
-        ...(dto.consentText !== undefined ? { consentTextSnapshot: dto.consentText } : {}),
-      },
-      include: publicLinkAdminInclude,
+      if (!current || current.archivedAt) {
+        throw new NotFoundException('Public link not found');
+      }
+
+      const entryProfileMode = dto.entryProfileMode ?? current.entryProfileMode;
+      const maxAttemptsPerStudent = resolveMaxAttemptsForEntryProfileMode(
+        entryProfileMode,
+        dto.maxAttemptsPerStudent ?? current.maxAttemptsPerStudent,
+      );
+      const startsAt = resolveDateUpdate(dto.startsAt, current.startsAt);
+      const endsAt = resolveDateUpdate(dto.endsAt, current.endsAt);
+
+      ensureValidPublicLinkDateWindow(startsAt, endsAt);
+
+      if (dto.isActive === true) {
+        await this.ensureVersionPromptIsActive(tx, current.topicVersionId);
+      }
+      const link = await tx.testPublicLink.update({
+        where: { id: linkId },
+        data: {
+          ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+          ...(dto.startsAt !== undefined ? { startsAt } : {}),
+          ...(dto.endsAt !== undefined ? { endsAt } : {}),
+          ...(dto.entryProfileMode !== undefined ? { entryProfileMode } : {}),
+          ...(publicBranding !== undefined ? { publicBranding } : {}),
+          maxAttemptsPerStudent,
+          ...(dto.timeLimitMinutes !== undefined ? { timeLimitMinutes: dto.timeLimitMinutes } : {}),
+          ...(dto.allowResume !== undefined ? { allowResume: dto.allowResume } : {}),
+          ...(educationOrganizationId !== undefined ? { educationOrganizationId } : {}),
+          ...(dto.personalDataProcessingMode !== undefined ? { personalDataProcessingMode } : {}),
+          ...(operator ? toOperatorSnapshotData(operator) : {}),
+          ...(dto.consentVersion !== undefined ? { consentVersion: dto.consentVersion } : {}),
+          ...(dto.consentText !== undefined ? { consentTextSnapshot: dto.consentText } : {}),
+        },
+        include: publicLinkAdminInclude,
+      });
+
+      const changes = collectPublicLinkChanges(current, link);
+
+      if (changes.length > 0) {
+        await this.auditService.record(
+          {
+            entityType: 'PUBLIC_LINK',
+            entityId: linkId,
+            action: 'PUBLIC_LINK_UPDATED',
+            actorUserId: userId,
+            changes,
+          },
+          tx,
+        );
+      }
+
+      return link;
     });
 
     return mapAdminPublicLink(updated);
@@ -364,7 +524,7 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true, archivedAt: true },
+      select: { id: true, archivedAt: true, shortCode: true },
     });
 
     if (!existing) {
@@ -377,12 +537,27 @@ export class TestsPublicLinkService {
 
     const shortCode = await this.ensureUniqueShortCode();
 
-    const updated = await this.prisma.testPublicLink.update({
-      where: { id: linkId },
-      data: {
-        shortCode,
-      },
-      include: publicLinkAdminInclude,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const link = await tx.testPublicLink.update({
+        where: { id: linkId },
+        data: {
+          shortCode,
+        },
+        include: publicLinkAdminInclude,
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: linkId,
+          action: 'PUBLIC_LINK_CODE_REGENERATED',
+          actorUserId: userId,
+          changes: collectAuditChanges(existing, link, { fields: ['shortCode'] }),
+        },
+        tx,
+      );
+
+      return link;
     });
 
     return mapAdminPublicLink(updated);
@@ -393,7 +568,7 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true, archivedAt: true },
+      select: { id: true, topicVersionId: true, archivedAt: true },
     });
 
     if (!existing) {
@@ -406,12 +581,24 @@ export class TestsPublicLinkService {
       };
     }
 
-    await this.prisma.testPublicLink.update({
-      where: { id: linkId },
-      data: {
-        isActive: false,
-        archivedAt: new Date(),
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.testPublicLink.update({
+        where: { id: linkId },
+        data: {
+          isActive: false,
+          archivedAt: new Date(),
+        },
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: linkId,
+          action: 'PUBLIC_LINK_ARCHIVED',
+          actorUserId: userId,
+        },
+        tx,
+      );
     });
 
     return {
@@ -424,7 +611,7 @@ export class TestsPublicLinkService {
 
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
-      select: { id: true, archivedAt: true },
+      select: { id: true, topicVersionId: true, archivedAt: true },
     });
 
     if (!existing) {
@@ -444,16 +631,113 @@ export class TestsPublicLinkService {
       return mapAdminPublicLink(current);
     }
 
-    const restored = await this.prisma.testPublicLink.update({
-      where: { id: linkId },
-      data: {
-        archivedAt: null,
-        isActive: true,
-      },
-      include: publicLinkAdminInclude,
+    const restored = await runSerializableTransaction(this.prisma, async (tx) => {
+      const current = await tx.testPublicLink.findUnique({
+        where: { id: linkId },
+        include: publicLinkAdminInclude,
+      });
+
+      if (!current) {
+        throw new NotFoundException('Public link not found');
+      }
+
+      if (!current.archivedAt) {
+        return current;
+      }
+
+      await this.ensureVersionPromptIsActive(tx, current.topicVersionId);
+      const link = await tx.testPublicLink.update({
+        where: { id: linkId },
+        data: {
+          archivedAt: null,
+          isActive: true,
+        },
+        include: publicLinkAdminInclude,
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: linkId,
+          action: 'PUBLIC_LINK_RESTORED',
+          actorUserId: userId,
+        },
+        tx,
+      );
+
+      return link;
     });
 
     return mapAdminPublicLink(restored);
+  }
+
+  /**
+   * Ссылка сама за новой версией теста не следует (решение ait-rcw.2), поэтому перевод — явное
+   * действие. Начатые прохождения доводятся по своей версии: вопросы берутся из версии попытки.
+   */
+  async moveToActivePublishedVersion(userId: number, linkId: number) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const existing = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true, archivedAt: true },
+    });
+
+    if (!existing || existing.archivedAt) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    const moved = await runSerializableTransaction(this.prisma, async (tx) => {
+      const current = await tx.testPublicLink.findUnique({
+        where: { id: linkId },
+        select: {
+          id: true,
+          archivedAt: true,
+          topicVersion: {
+            select: {
+              versionNumber: true,
+              topic: { select: { activePublishedVersionId: true } },
+            },
+          },
+        },
+      });
+
+      if (!current || current.archivedAt) {
+        throw new NotFoundException('Public link not found');
+      }
+
+      const currentActivePublishedVersionId = current.topicVersion.topic.activePublishedVersionId;
+
+      if (!currentActivePublishedVersionId) {
+        throw new BadRequestException('Test has no published version to move the link to');
+      }
+
+      await this.ensureVersionPromptIsActive(tx, currentActivePublishedVersionId);
+      const link = await tx.testPublicLink.update({
+        where: { id: linkId },
+        data: { topicVersionId: currentActivePublishedVersionId },
+        include: publicLinkAdminInclude,
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: linkId,
+          action: 'PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION',
+          actorUserId: userId,
+          changes: collectAuditChanges(
+            { topicVersionNumber: current.topicVersion.versionNumber },
+            { topicVersionNumber: link.topicVersion.versionNumber },
+            { fields: ['topicVersionNumber'] },
+          ),
+        },
+        tx,
+      );
+
+      return link;
+    });
+
+    return mapAdminPublicLink(moved);
   }
 
   async getAccessiblePublicLinkByCode(shortCode: string): Promise<PublicLinkWithTopicVersion> {
@@ -469,7 +753,7 @@ export class TestsPublicLinkService {
       throw new NotFoundException('Public test link not found');
     }
 
-    ensurePublicLinkAccessible(link, link.topicVersion.status);
+    ensurePublicLinkAccessible(link, link.topicVersion);
 
     return link;
   }

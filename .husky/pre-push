@@ -1,1 +1,3 @@
 npm run verify:diff -- --run
+# beads: keep issue tracking in sync (no-op when bd is not installed)
+command -v bd >/dev/null 2>&1 && bd hooks run pre-push || true

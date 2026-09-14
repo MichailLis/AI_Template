@@ -6,6 +6,7 @@
  * 2. serena binary: installed and resolvable on PATH (avoiding uvx 30s MCP timeouts).
  * 3. root typescript: resolvable from root package (enabling typescript-lsp plugin).
  * 4. compose project name: docker-compose.yml pins top-level name to ai_template.
+ * 5. orval lockfile drift: client/node_modules/orval matches the version client/package-lock.json locks.
  *
  * No I/O or subprocesses here: caller supplies already-read content and booleans.
  */
@@ -192,6 +193,54 @@ export const checkComposeProjectName = (dockerComposeContent) => {
 };
 
 /**
+ * Checks that the orval installed in client/node_modules is the version client/package-lock.json
+ * locks.
+ *
+ * `npm run gen:api` does not fail on a stale orval: it quietly regenerates the whole client in the
+ * old version's format, burying a real contract change under hundreds of changed files, and a clean
+ * checkout would generate something else again.
+ *
+ * @param {string | null | undefined} lockedVersion
+ * @param {string | null | undefined} installedVersion
+ * @returns {{ id: 'orval', status: 'ok' | 'problem', message: string, fix: string | null }}
+ */
+export const checkOrvalLockfileDrift = (lockedVersion, installedVersion) => {
+  if (!lockedVersion) {
+    return {
+      id: 'orval',
+      status: 'ok',
+      message: 'client/package-lock.json has no orval entry; nothing to check',
+      fix: null,
+    };
+  }
+
+  if (!installedVersion) {
+    return {
+      id: 'orval',
+      status: 'problem',
+      message: `orval ${lockedVersion} is locked in client/package-lock.json but not installed in client/node_modules`,
+      fix: 'npm ci --prefix client',
+    };
+  }
+
+  if (installedVersion !== lockedVersion) {
+    return {
+      id: 'orval',
+      status: 'problem',
+      message: `client/node_modules has orval ${installedVersion}, but client/package-lock.json locks ${lockedVersion}. npm run gen:api would regenerate the client in the wrong format.`,
+      fix: 'npm ci --prefix client',
+    };
+  }
+
+  return {
+    id: 'orval',
+    status: 'ok',
+    message: `client/node_modules orval ${installedVersion} matches client/package-lock.json`,
+    fix: null,
+  };
+};
+
+/**
  * Runs all agent tooling checks over the supplied inputs.
  *
  * @param {{
@@ -199,7 +248,9 @@ export const checkComposeProjectName = (dockerComposeContent) => {
  *   requiredHookExclusions?: string[],
  *   hasSerena?: boolean,
  *   hasRootTypescript?: boolean,
- *   dockerComposeContent?: string | null
+ *   dockerComposeContent?: string | null,
+ *   lockedOrvalVersion?: string | null,
+ *   installedOrvalVersion?: string | null
  * }} inputs
  * @returns {Array<{ id: string, status: 'ok' | 'problem', message: string, fix: string | null }>}
  */
@@ -209,11 +260,14 @@ export const runAgentToolingChecks = ({
   hasSerena = false,
   hasRootTypescript = false,
   dockerComposeContent = null,
+  lockedOrvalVersion = null,
+  installedOrvalVersion = null,
 }) => [
   checkRtkHookExclusions(rtkConfig, requiredHookExclusions),
   checkSerenaBinary(hasSerena),
   checkRootTypescript(hasRootTypescript),
   checkComposeProjectName(dockerComposeContent),
+  checkOrvalLockfileDrift(lockedOrvalVersion, installedOrvalVersion),
 ];
 
 /**

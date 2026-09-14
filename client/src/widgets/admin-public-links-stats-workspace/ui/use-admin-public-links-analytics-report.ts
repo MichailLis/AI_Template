@@ -25,6 +25,8 @@ import type {
 export const useAnalyticsReport = (
   effectiveTopicId: number | null,
   effectivePublicLinkId: number | null,
+  /** Отчёт запрашивается только на своей вкладке, а его параметры живут дольше неё. */
+  isReportTabActive: boolean,
 ) => {
   const [analyticsScope, setAnalyticsScope] = useState<AnalyticsScope>('TOPIC');
   const [analyticsLinkStatus, setAnalyticsLinkStatus] = useState<AnalyticsLinkStatus>('ALL');
@@ -53,7 +55,7 @@ export const useAnalyticsReport = (
     ],
   );
   const isAnalyticsQueryEnabled = Boolean(
-    effectiveTopicId && (analyticsScope === 'TOPIC' || effectivePublicLinkId),
+    isReportTabActive && effectiveTopicId && (analyticsScope === 'TOPIC' || effectivePublicLinkId),
   );
   const analyticsSummaryQuery = useTestsAdminAnalyticsControllerGetSummary(
     effectiveTopicId ?? 0,
@@ -99,7 +101,12 @@ export const useAnalyticsReport = (
               analyticsParams as TestsAdminAnalyticsControllerExportPdfParams,
             );
 
-      downloadTestAnalyticsBlob(blob, buildAnalyticsFileName(effectiveTopicId, format));
+      const fileName = buildAnalyticsFileName(effectiveTopicId, format, {
+        topicTitle: analyticsSummaryQuery.data?.topic.title,
+        scope: analyticsScope,
+        date: analyticsSummaryQuery.data?.topic.generatedAt,
+      });
+      downloadTestAnalyticsBlob(blob, fileName);
     } catch {
       setAnalyticsExportError('Не удалось сформировать файл отчета. Попробуйте еще раз.');
     } finally {

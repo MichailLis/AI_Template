@@ -1,5 +1,7 @@
 import { AlertTriangle, BarChart3, Brain, CheckCircle2, Link2, Users } from 'lucide-react';
 
+import { formatDateTime } from '@/shared/lib/date-format';
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { cn } from '@/shared/lib/utils';
 import {
   adminBadgeClassNames,
@@ -10,6 +12,8 @@ import {
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+
+import { hasV3PlusReport } from './test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 import type { ReactNode } from 'react';
@@ -43,10 +47,20 @@ const toShare = (count: number, total: number) => {
   return Math.round((count / total) * 1000) / 10;
 };
 
+/**
+ * `confidence.gap` — разница баллов между первым и вторым направлением, а не доля. Дробное число
+ * баллов всегда читается как «балла»: «11,5 балла».
+ */
+const formatLeadInPoints = (value: number) => {
+  const unit = Number.isInteger(value) ? pluralizeRu(value, ['балл', 'балла', 'баллов']) : 'балла';
+
+  return `Лидер опережает второе направление в среднем на ${formatNumber(value)} ${unit}`;
+};
+
 const getMetrics = (summary: AdminTestAnalyticsSummaryDto): MetricItem[] => {
   const coverage = summary.coverage;
 
-  return [
+  const metrics: MetricItem[] = [
     {
       id: 'links',
       label: 'Публичные ссылки',
@@ -63,23 +77,50 @@ const getMetrics = (summary: AdminTestAnalyticsSummaryDto): MetricItem[] => {
       tone: 'accent',
       icon: Users,
     },
+    /**
+     * «Готовый анализ» считает только содержательные результаты: заглушки идут отдельной плиткой.
+     * Иначе тест с пятью заглушками из двенадцати попыток показывал 100% готовности.
+     */
     {
       id: 'analysis',
       label: 'Готовый анализ',
       value: formatNumber(coverage.analysisReady),
-      hint: `${formatShare(toShare(coverage.analysisReady, coverage.attemptsTotal))} от попыток`,
+      hint: `${formatNumber(coverage.analysisAiReady)} с ИИ · ${formatNumber(
+        coverage.analysisWithoutAi,
+      )} без ИИ · ${formatShare(toShare(coverage.analysisReady, coverage.attemptsTotal))} от попыток`,
       tone: 'success',
       icon: CheckCircle2,
     },
     {
+      id: 'analysisStub',
+      label: 'Заглушки без ИИ',
+      value: formatNumber(coverage.analysisStub),
+      hint:
+        coverage.analysisStub > 0
+          ? `${formatShare(
+              toShare(coverage.analysisStub, coverage.attemptsTotal),
+            )} от попыток — промпт анализа не подключен`
+          : 'промпт анализа подключен везде',
+      tone: coverage.analysisStub > 0 ? 'warning' : 'info',
+      icon: AlertTriangle,
+    },
+  ];
+
+  if (hasV3PlusReport(summary)) {
+    metrics.push({
       id: 'v3',
       label: 'V3+ результаты',
       value: formatNumber(coverage.v3Results),
-      hint: `${formatShare(toShare(coverage.v3Results, coverage.analysisReady))} от готового анализа`,
+      hint:
+        coverage.v3Results > 0
+          ? `${formatShare(toShare(coverage.v3Results, coverage.analysisReady))} от готового анализа`
+          : 'результатов V3+ пока нет',
       tone: 'warning',
       icon: Brain,
-    },
-  ];
+    });
+  }
+
+  return metrics;
 };
 
 function MetricCard({ item }: { item: MetricItem }) {
@@ -153,7 +194,7 @@ function SummaryHighlights({ summary }: { summary: AdminTestAnalyticsSummaryDto 
         <p className={cn('mt-1 text-sm', adminClassNames.text.muted)}>
           {topFlag
             ? `${formatNumber(topFlag.count)} / ${formatShare(topFlag.share)}`
-            : `Средний gap: ${formatShare(summary.confidence.gap.value)}`}
+            : formatLeadInPoints(summary.confidence.gap.value)}
         </p>
       </div>
     </div>
@@ -179,10 +220,8 @@ export function TestAnalyticsSummaryCard({
             </CardTitle>
             <CardDescription>
               {summary
-                ? `${summary.topic.title} · сформировано ${new Date(
-                    summary.topic.generatedAt,
-                  ).toLocaleString()}`
-                : 'Агрегация результатов по методике V3+'}
+                ? `${summary.topic.title} · сформировано ${formatDateTime(summary.topic.generatedAt)}`
+                : 'Агрегация результатов прохождений'}
             </CardDescription>
           </div>
           <div className="flex flex-col gap-2 lg:items-end">
@@ -223,7 +262,14 @@ export function TestAnalyticsSummaryCard({
                 <MetricCard key={item.id} item={item} />
               ))}
             </div>
-            <SummaryHighlights summary={summary} />
+            {hasV3PlusReport(summary) ? (
+              <SummaryHighlights summary={summary} />
+            ) : (
+              <p className={cn('text-sm', adminClassNames.text.muted)}>
+                Тест не использует методику V3+, поэтому направления, профили и баллы в отчете не
+                показаны.
+              </p>
+            )}
           </>
         ) : null}
       </CardContent>

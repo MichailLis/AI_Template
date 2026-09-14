@@ -10,6 +10,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     slug: 'sample-topic',
     title,
     questionCount: 24,
+    scoringKind: 'PROF_ORIENTATION_V3_PLUS',
     generatedAt: '2026-05-20T10:00:00.000Z',
   },
   filters: {
@@ -24,6 +25,9 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     attemptsTotal: 3,
     attemptsCompleted: 2,
     analysisReady: 2,
+    analysisAiReady: 1,
+    analysisWithoutAi: 1,
+    analysisStub: 3,
     analysisPending: 0,
     analysisFailed: 1,
     analysisMissing: 0,
@@ -76,6 +80,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       attemptsTotal: 2,
       attemptsCompleted: 2,
       analysisReady: 2,
+      analysisStub: 3,
       share: 66.7,
     },
   ],
@@ -107,6 +112,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       status: 'COMPLETED',
       analysisStatus: 'READY',
       llmStatus: 'ready',
+      analysisResultKind: 'AI',
     },
     {
       attemptId: 102,
@@ -117,6 +123,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
       status: 'IN_PROGRESS',
       analysisStatus: null,
       llmStatus: null,
+      analysisResultKind: 'MISSING',
     },
   ],
 });
@@ -160,6 +167,67 @@ describe('TestsAnalyticsExportService', () => {
     const sheetNames = workbook.worksheets.map((sheet) => sheet.name);
     expect(workbook.worksheets.length).toBeGreaterThanOrEqual(requiredSheetNames.length);
     expect(sheetNames).toEqual(expect.arrayContaining(requiredSheetNames));
+  });
+
+  it('exports the analysis breakdown so the export cannot pass stubs off as ready analyses', async () => {
+    const summary = createSummary('Сводный отчет');
+    const buffer = await service.toExcel(summary);
+    const workbook = new ExcelJS.Workbook();
+
+    const bytes = new ArrayBuffer(buffer.byteLength);
+    new Uint8Array(bytes).set(buffer);
+
+    await workbook.xlsx.load(bytes);
+
+    const sheet = workbook.getWorksheet('Сводка');
+    const rows: Array<[unknown, unknown]> = [];
+    sheet?.eachRow((row) => {
+      rows.push([row.getCell(1).value, row.getCell(2).value]);
+    });
+
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        ['Анализ готов', 2],
+        ['Из них ИИ-анализ', 1],
+        ['Из них без ИИ', 1],
+        ['Заглушка без ИИ-промпта', 3],
+      ]),
+    );
+  });
+
+  /** ait-rcw.29: XLSX выгружал те же служебные ключи и коды, что и PDF. */
+  it('writes filters, demographics and attempt statuses in Russian', async () => {
+    const buffer = await service.toExcel(createSummary('Сводный отчет'));
+    const workbook = new ExcelJS.Workbook();
+    const bytes = new ArrayBuffer(buffer.byteLength);
+    new Uint8Array(bytes).set(buffer);
+    await workbook.xlsx.load(bytes);
+
+    const readRows = (name: string) => {
+      const rows: string[] = [];
+      workbook.getWorksheet(name)?.eachRow((row) => {
+        rows.push(
+          (row.values as Array<string | number | null | undefined>)
+            .slice(1)
+            .map((value) => (value === null || value === undefined ? '' : String(value)))
+            .join(' | '),
+        );
+      });
+      return rows.join('\n');
+    };
+
+    const summarySheet = readRows('Сводка');
+    expect(summarySheet).not.toMatch(/scope|linkStatus|dateFrom|publicLinkId/);
+    expect(summarySheet).toContain('Охват | Весь тест');
+
+    const demography = readRows('Демография');
+    expect(demography).toContain('Женский: 1');
+    expect(demography).toContain('Среднее общее: 3');
+    expect(demography).not.toMatch(/FEMALE|SECONDARY_GENERAL/);
+
+    const attempts = readRows('Прохождения');
+    expect(attempts).toContain('Пройдено');
+    expect(attempts).not.toMatch(/COMPLETED|Attempt ID/);
   });
 
   it('delegates PDF export to renderer', async () => {

@@ -11,6 +11,7 @@ const apiMocks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   refetch: vi.fn(),
+  listParams: vi.fn(),
 }));
 
 const organization = vi.hoisted(() => ({
@@ -40,16 +41,19 @@ const organization = vi.hoisted(() => ({
 })) satisfies AdminEducationOrganizationsListResponseDtoOrganizationsItem;
 
 vi.mock('@/shared/api/generated/tests/tests', () => ({
-  useTestsAdminEducationOrganizationsControllerListEducationOrganizations: () => ({
-    data: {
-      organizations: [organization],
-      page: 1,
-      total: 1,
-      totalPages: 1,
-    },
-    isFetching: false,
-    refetch: apiMocks.refetch,
-  }),
+  useTestsAdminEducationOrganizationsControllerListEducationOrganizations: (params: unknown) => {
+    apiMocks.listParams(params);
+    return {
+      data: {
+        organizations: [organization],
+        page: 1,
+        total: 1,
+        totalPages: 1,
+      },
+      isFetching: false,
+      refetch: apiMocks.refetch,
+    };
+  },
   useTestsAdminEducationOrganizationsControllerCreateEducationOrganization: () => ({
     mutateAsync: apiMocks.create,
   }),
@@ -93,6 +97,30 @@ describe('AdminEducationOrganizationsWorkspace', () => {
     await user.click(screen.getByRole('button', { name: 'Редактировать Лицей 42' }));
     expect(screen.getByRole('dialog', { name: 'Редактирование заведения' })).toBeInTheDocument();
     expect(screen.getByLabelText('Название *')).toHaveValue('Лицей 42');
+  });
+
+  /** Находка аудита UX-15: заведения с незаполненными реквизитами нельзя было отобрать. */
+  it('filters the list to organizations that still need personal data details', async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    expect(apiMocks.listParams).toHaveBeenLastCalledWith({ page: 1, limit: 10 });
+    expect(screen.getByRole('button', { name: 'Все заведения' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Требуют заполнения' }));
+
+    expect(apiMocks.listParams).toHaveBeenLastCalledWith({
+      page: 1,
+      limit: 10,
+      needsPersonalData: true,
+    });
+    expect(screen.getByRole('button', { name: 'Требуют заполнения' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('creates an organization, refetches page one and closes the editor', async () => {

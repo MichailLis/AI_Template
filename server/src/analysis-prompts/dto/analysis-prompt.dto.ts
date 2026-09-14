@@ -13,9 +13,19 @@ export const AnalysisPromptVersionSchema = z.object({
   model: z.string(),
   temperature: z.number().min(0).max(2),
   prompt: z.string(),
+  usedInTestCount: z.number().int().min(0),
   publishedAt: IsoDateStringSchema.nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
+});
+
+/** Неархивный тест, чья опубликованная или рабочая версия подключена к промпту. */
+export const AnalysisPromptActiveTestSchema = z.object({
+  topicId: z.number().int(),
+  title: z.string(),
+  slug: z.string(),
+  /** Промпт анализирует прохождения опубликованной версии, а не только черновика. */
+  onPublishedVersion: z.boolean(),
 });
 
 export const AnalysisPromptSchema = z.object({
@@ -25,6 +35,7 @@ export const AnalysisPromptSchema = z.object({
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
   versions: z.array(AnalysisPromptVersionSchema),
+  activeTests: z.array(AnalysisPromptActiveTestSchema),
 });
 
 export const AnalysisPromptListResponseSchema = z.object({
