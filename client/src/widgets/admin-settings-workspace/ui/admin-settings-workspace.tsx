@@ -70,6 +70,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
     event.preventDefault();
 
     if (
+      !form.isPublishedAtValid ||
       !form.normalizedVersion ||
       !form.normalizedContent ||
       !form.normalizedOperatorFullName ||
@@ -93,6 +94,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
     <PrivacyPolicySettingsCard
       canSubmit={
         Boolean(
+          form.isPublishedAtValid &&
           form.normalizedVersion &&
           form.normalizedContent &&
           form.normalizedOperatorFullName &&
@@ -115,6 +117,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
       onContentChange={form.onContentChange}
       onOperatorFullNameChange={form.onOperatorFullNameChange}
       onPublishedAtChange={form.onPublishedAtChange}
+      onPublishedAtValidityChange={form.onPublishedAtValidityChange}
       onSetCurrentDate={form.onSetCurrentDate}
       onVersionChange={form.onVersionChange}
     />

@@ -211,23 +211,30 @@ export class AdminService {
 
     const existingUser = await this.assertUserExists(targetUserId);
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: targetUserId },
-      data: { role: dto.role },
-      select: ADMIN_USER_SELECT,
-    });
-
-    const changes = collectAuditChanges(existingUser, updatedUser, { fields: ['role'] });
-
-    if (changes.length > 0) {
-      await this.auditService.record({
-        entityType: 'USER',
-        entityId: targetUserId,
-        action: 'USER_ROLE_CHANGED',
-        actorUserId: adminId,
-        changes,
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: targetUserId },
+        data: { role: dto.role },
+        select: ADMIN_USER_SELECT,
       });
-    }
+
+      const changes = collectAuditChanges(existingUser, user, { fields: ['role'] });
+
+      if (changes.length > 0) {
+        await this.auditService.record(
+          {
+            entityType: 'USER',
+            entityId: targetUserId,
+            action: 'USER_ROLE_CHANGED',
+            actorUserId: adminId,
+            changes,
+          },
+          tx,
+        );
+      }
+
+      return user;
+    });
 
     return this.toAdminUserResponse(updatedUser);
   }
@@ -245,22 +252,29 @@ export class AdminService {
     const { hashedPassword, generatedPassword } = await this.resolvePassword(dto.password);
 
     try {
-      const createdUser = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          name: dto.name ?? null,
-          role: dto.role,
-          password: hashedPassword,
-        },
-        select: ADMIN_USER_SELECT,
-      });
+      const createdUser = await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            email: dto.email,
+            name: dto.name ?? null,
+            role: dto.role,
+            password: hashedPassword,
+          },
+          select: ADMIN_USER_SELECT,
+        });
 
-      await this.auditService.record({
-        entityType: 'USER',
-        entityId: createdUser.id,
-        action: 'USER_CREATED',
-        actorUserId: adminId,
-        changes: collectAuditChanges({}, createdUser, { fields: USER_AUDIT_FIELDS }),
+        await this.auditService.record(
+          {
+            entityType: 'USER',
+            entityId: user.id,
+            action: 'USER_CREATED',
+            actorUserId: adminId,
+            changes: collectAuditChanges({}, user, { fields: USER_AUDIT_FIELDS }),
+          },
+          tx,
+        );
+
+        return user;
       });
 
       return { user: this.toAdminUserResponse(createdUser), generatedPassword };
@@ -277,25 +291,32 @@ export class AdminService {
     const existingUser = await this.assertUserExists(targetUserId);
 
     try {
-      const updatedUser = await this.prisma.user.update({
-        where: { id: targetUserId },
-        data: { email: dto.email, name: dto.name },
-        select: ADMIN_USER_SELECT,
-      });
-
-      const changes = collectAuditChanges(existingUser, updatedUser, {
-        fields: ['email', 'name'],
-      });
-
-      if (changes.length > 0) {
-        await this.auditService.record({
-          entityType: 'USER',
-          entityId: targetUserId,
-          action: 'USER_UPDATED',
-          actorUserId: adminId,
-          changes,
+      const updatedUser = await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.update({
+          where: { id: targetUserId },
+          data: { email: dto.email, name: dto.name },
+          select: ADMIN_USER_SELECT,
         });
-      }
+
+        const changes = collectAuditChanges(existingUser, user, {
+          fields: ['email', 'name'],
+        });
+
+        if (changes.length > 0) {
+          await this.auditService.record(
+            {
+              entityType: 'USER',
+              entityId: targetUserId,
+              action: 'USER_UPDATED',
+              actorUserId: adminId,
+              changes,
+            },
+            tx,
+          );
+        }
+
+        return user;
+      });
 
       return this.toAdminUserResponse(updatedUser);
     } catch (error: unknown) {
@@ -313,18 +334,25 @@ export class AdminService {
     const { hashedPassword, generatedPassword } = await this.resolvePassword(dto.password);
 
     // A new password ends every existing session: the old refresh token stops working.
-    const updatedUser = await this.prisma.user.update({
-      where: { id: targetUserId },
-      data: { password: hashedPassword, hashedRefreshToken: null },
-      select: ADMIN_USER_SELECT,
-    });
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: targetUserId },
+        data: { password: hashedPassword, hashedRefreshToken: null },
+        select: ADMIN_USER_SELECT,
+      });
 
-    // Пароль в журнал не попадает ни в каком виде: событие фиксирует только факт сброса.
-    await this.auditService.record({
-      entityType: 'USER',
-      entityId: targetUserId,
-      action: 'USER_PASSWORD_RESET',
-      actorUserId: adminId,
+      // Пароль в журнал не попадает ни в каком виде: событие фиксирует только факт сброса.
+      await this.auditService.record(
+        {
+          entityType: 'USER',
+          entityId: targetUserId,
+          action: 'USER_PASSWORD_RESET',
+          actorUserId: adminId,
+        },
+        tx,
+      );
+
+      return user;
     });
 
     return { user: this.toAdminUserResponse(updatedUser), generatedPassword };
@@ -341,30 +369,37 @@ export class AdminService {
 
     const existingUser = await this.assertUserExists(targetUserId);
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: targetUserId },
-      data:
-        dto.status === 'DEACTIVATED'
-          ? { deactivatedAt: existingUser.deactivatedAt ?? new Date(), hashedRefreshToken: null }
-          : { deactivatedAt: null },
-      select: ADMIN_USER_SELECT,
-    });
-
-    const changes = collectAuditChanges(
-      { status: toAccountStatus(existingUser.deactivatedAt) },
-      { status: toAccountStatus(updatedUser.deactivatedAt) },
-      { fields: ['status'] },
-    );
-
-    if (changes.length > 0) {
-      await this.auditService.record({
-        entityType: 'USER',
-        entityId: targetUserId,
-        action: 'USER_STATUS_CHANGED',
-        actorUserId: adminId,
-        changes,
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: targetUserId },
+        data:
+          dto.status === 'DEACTIVATED'
+            ? { deactivatedAt: existingUser.deactivatedAt ?? new Date(), hashedRefreshToken: null }
+            : { deactivatedAt: null },
+        select: ADMIN_USER_SELECT,
       });
-    }
+
+      const changes = collectAuditChanges(
+        { status: toAccountStatus(existingUser.deactivatedAt) },
+        { status: toAccountStatus(user.deactivatedAt) },
+        { fields: ['status'] },
+      );
+
+      if (changes.length > 0) {
+        await this.auditService.record(
+          {
+            entityType: 'USER',
+            entityId: targetUserId,
+            action: 'USER_STATUS_CHANGED',
+            actorUserId: adminId,
+            changes,
+          },
+          tx,
+        );
+      }
+
+      return user;
+    });
 
     return this.toAdminUserResponse(updatedUser);
   }
@@ -373,17 +408,24 @@ export class AdminService {
     await this.getCurrentAdminUser(adminId);
     await this.assertUserExists(targetUserId);
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: targetUserId },
-      data: { hashedRefreshToken: null },
-      select: ADMIN_USER_SELECT,
-    });
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: targetUserId },
+        data: { hashedRefreshToken: null },
+        select: ADMIN_USER_SELECT,
+      });
 
-    await this.auditService.record({
-      entityType: 'USER',
-      entityId: targetUserId,
-      action: 'USER_SESSIONS_REVOKED',
-      actorUserId: adminId,
+      await this.auditService.record(
+        {
+          entityType: 'USER',
+          entityId: targetUserId,
+          action: 'USER_SESSIONS_REVOKED',
+          actorUserId: adminId,
+        },
+        tx,
+      );
+
+      return user;
     });
 
     return this.toAdminUserResponse(updatedUser);

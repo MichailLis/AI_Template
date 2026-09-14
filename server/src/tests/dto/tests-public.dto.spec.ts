@@ -212,6 +212,7 @@ describe('tests public DTO schemas', () => {
       timeLimitMinutes: 30,
       questions: [],
       answers: [],
+      serverTime: '2026-05-14T10:00:00.000Z',
     });
     const result = PublicSessionResultResponseSchema.parse({
       sessionToken: 'session-token',

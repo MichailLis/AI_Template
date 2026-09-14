@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { PolusPublicRun } from './polus/polus-public-run';
@@ -31,7 +31,16 @@ export function PublicTestRunWorkspace() {
     questionCount: session?.questions.length ?? 0,
     onQuestionIndexChange: setCurrentQuestionIndex,
   });
-  const remainingSeconds = usePublicTestRunCountdown(session?.expiresAt ?? null);
+
+  const handleCountdownExpire = useCallback(() => {
+    void sessionQuery.refetch();
+  }, [sessionQuery]);
+
+  const remainingSeconds = usePublicTestRunCountdown(
+    session?.expiresAt ?? null,
+    session?.serverTime ?? null,
+    handleCountdownExpire,
+  );
 
   if (!code || !sessionToken) {
     return (
@@ -73,20 +82,21 @@ export function PublicTestRunWorkspace() {
     return <Navigate to={`/t/${code}/result/${sessionToken}`} replace />;
   }
 
-  // Статус с сервера приходит раз в несколько секунд, поэтому истечение по часам закрывает вопросы сразу.
-  if (session.status === 'EXPIRED' || session.status === 'ABANDONED' || remainingSeconds === 0) {
+  // Статус с сервера является авторитетным: переход на экран истечения происходит, когда сервер зафиксировал EXPIRED или ABANDONED.
+  if (session.status === 'EXPIRED' || session.status === 'ABANDONED') {
     return <PublicTestRunExpiredScreen code={code} session={session} />;
   }
 
-  if (session.publicTemplate === 'POLUS') {
-    const currentQuestion = session.questions[currentQuestionIndex];
+  const currentQuestion = session.questions[currentQuestionIndex];
+  const currentAnswer = getCurrentAnswer(currentQuestion.id);
 
+  if (session.publicTemplate === 'POLUS') {
     return (
       <PolusPublicRun
         session={session}
         currentQuestionIndex={currentQuestionIndex}
         totalQuestionsCount={totalQuestionsCount}
-        currentAnswer={getCurrentAnswer(currentQuestion.id)}
+        currentAnswer={currentAnswer}
         questionTransitionClass={questionTransitionClass}
         remainingSeconds={remainingSeconds}
         isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
@@ -114,28 +124,22 @@ export function PublicTestRunWorkspace() {
           />
         </div>
 
-        {(() => {
-          const currentQuestion = session.questions[currentQuestionIndex];
-          const currentAnswer = getCurrentAnswer(currentQuestion.id);
-          return (
-            <div
-              key={currentQuestion.id}
-              className={`public-question-transition ${questionTransitionClass}`}
-            >
-              <PublicQuestionCard
-                question={currentQuestion}
-                currentAnswer={currentAnswer}
-                isLastQuestion={currentQuestionIndex === session.questions.length - 1}
-                isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
-                canGoBack={currentQuestionIndex > 0}
-                onAnswerChange={setQuestionAnswer}
-                onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
-                onNext={() => goToQuestionIndex(currentQuestionIndex + 1)}
-                onFinish={handleFinish}
-              />
-            </div>
-          );
-        })()}
+        <div
+          key={currentQuestion.id}
+          className={`public-question-transition ${questionTransitionClass}`}
+        >
+          <PublicQuestionCard
+            question={currentQuestion}
+            currentAnswer={currentAnswer}
+            isLastQuestion={currentQuestionIndex === session.questions.length - 1}
+            isSubmitting={saveAnswersMutation.isPending || finishMutation.isPending}
+            canGoBack={currentQuestionIndex > 0}
+            onAnswerChange={setQuestionAnswer}
+            onBack={() => goToQuestionIndex(currentQuestionIndex - 1)}
+            onNext={() => goToQuestionIndex(currentQuestionIndex + 1)}
+            onFinish={handleFinish}
+          />
+        </div>
       </div>
     </PublicThemeLayout>
   );

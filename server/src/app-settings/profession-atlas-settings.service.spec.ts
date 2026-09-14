@@ -13,6 +13,7 @@ describe('ProfessionAtlasSettingsService', () => {
   let service: ProfessionAtlasSettingsService;
   let auditMock: { record: jest.Mock; listForEntity: jest.Mock };
   let prismaMock: {
+    $transaction: jest.Mock;
     appSetting: {
       findUnique: jest.Mock;
       upsert: jest.Mock;
@@ -21,6 +22,7 @@ describe('ProfessionAtlasSettingsService', () => {
 
   beforeEach(() => {
     prismaMock = {
+      $transaction: jest.fn((callback: (tx: unknown) => unknown) => callback(prismaMock)),
       appSetting: {
         findUnique: jest.fn(),
         upsert: jest.fn(),
@@ -70,15 +72,39 @@ describe('ProfessionAtlasSettingsService', () => {
       apiUrl: 'https://old-atlas.example/api',
     });
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'APP_SETTING',
-      entityId: 'profession-atlas',
-      action: 'SETTING_UPDATED',
-      actorUserId: 3,
-      changes: [
-        { field: 'publicUrl', before: 'https://old-atlas.example', after: 'https://atlas.example' },
-      ],
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'APP_SETTING',
+        entityId: 'profession-atlas',
+        action: 'SETTING_UPDATED',
+        actorUserId: 3,
+        changes: [
+          {
+            field: 'publicUrl',
+            before: 'https://old-atlas.example',
+            after: 'https://atlas.example',
+          },
+        ],
+      },
+      prismaMock,
+    );
+  });
+
+  it('updateProfessionAtlasUrl rolls back and throws when audit write fails (atomic audit)', async () => {
+    prismaMock.appSetting.findUnique.mockResolvedValue(null);
+    prismaMock.appSetting.upsert.mockResolvedValue({
+      key: 'professionAtlas.publicUrl',
+      value: 'https://atlas.example',
+      updatedAt: new Date(),
     });
+    auditMock.record.mockRejectedValue(new Error('Audit DB failure'));
+
+    await expect(
+      service.updateProfessionAtlasUrl(3, {
+        publicUrl: 'https://atlas.example',
+        apiUrl: 'https://atlas.example/api',
+      }),
+    ).rejects.toThrow('Audit DB failure');
   });
 
   it('returns the trimmed URL from app settings for public result pages', async () => {

@@ -1,7 +1,12 @@
 export const PUBLIC_TEST_TIME_WARNING_SECONDS = 60;
 
 // Округляем вверх: «0:00» появляется только тогда, когда срок попытки на сервере действительно прошел.
-export const getRemainingSeconds = (expiresAt: string | null, nowMs: number) => {
+// Смещение часов (clockSkewMs = clientNow - serverNow) позволяет калибровать отсчет по времени сервера.
+export const getRemainingSeconds = (
+  expiresAt: string | null,
+  nowMs: number,
+  clockSkewMs: number = 0,
+) => {
   if (!expiresAt) {
     return null;
   }
@@ -12,7 +17,8 @@ export const getRemainingSeconds = (expiresAt: string | null, nowMs: number) => 
     return null;
   }
 
-  return Math.max(0, Math.ceil((expiresAtMs - nowMs) / 1000));
+  const serverNowMs = nowMs - clockSkewMs;
+  return Math.max(0, Math.ceil((expiresAtMs - serverNowMs) / 1000));
 };
 
 const padTimePart = (value: number) => String(value).padStart(2, '0');

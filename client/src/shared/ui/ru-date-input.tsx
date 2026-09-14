@@ -40,6 +40,12 @@ type RuDateInputProps = Omit<
   value: string;
   /** Вызывается со значением, когда ввод полный и существует, и с пустой строкой при очистке. */
   onChange: (value: string) => void;
+  /**
+   * Вызывается при изменении валидности текущего отображаемого значения.
+   * false, когда в поле незавершённый черновик или несуществующая дата.
+   * true, когда ввод полностью валиден или поле очищено.
+   */
+  onValidityChange?: (isValid: boolean) => void;
 };
 
 /**
@@ -47,13 +53,26 @@ type RuDateInputProps = Omit<
  *
  * Пока ввод не допечатан, он живёт в собственном черновике поля, а родителю не уходит ничего:
  * фильтр не должен перестраивать отчёт на `06.09.20`. Показываемое значение вычисляется при
- * рендере — черновик или значение родителя, — без синхронизации через эффекты.
+ * рендере — черновик или значение родителя.
+ * При внешнем изменении `value` черновик сбрасывается.
  */
 export const RuDateInput = React.forwardRef<HTMLInputElement, RuDateInputProps>(
-  ({ mode = 'date', value, onChange, ...props }, ref) => {
+  ({ mode = 'date', value, onChange, onValidityChange, ...props }, ref) => {
     const format = RU_DATE_FORMATS[mode];
     const completeLength = format.placeholder.length;
     const [draft, setDraft] = React.useState<string | null>(null);
+    const lastValueRef = React.useRef(value);
+
+    React.useEffect(() => {
+      if (lastValueRef.current !== value) {
+        lastValueRef.current = value;
+        if (draft !== null) {
+          setDraft(null);
+          onValidityChange?.(true);
+        }
+      }
+    }, [value, draft, onValidityChange]);
+
     const displayValue = draft ?? format.format(value);
     const isInvalid =
       draft !== null && draft.length === completeLength && format.parse(draft) === null;
@@ -73,7 +92,9 @@ export const RuDateInput = React.forwardRef<HTMLInputElement, RuDateInputProps>(
           const masked = format.mask(event.target.value);
 
           if (masked === '') {
+            lastValueRef.current = '';
             setDraft(null);
+            onValidityChange?.(true);
             onChange('');
             return;
           }
@@ -81,12 +102,15 @@ export const RuDateInput = React.forwardRef<HTMLInputElement, RuDateInputProps>(
           const parsed = format.parse(masked);
 
           if (parsed) {
+            lastValueRef.current = parsed;
             setDraft(null);
+            onValidityChange?.(true);
             onChange(parsed);
             return;
           }
 
           setDraft(masked);
+          onValidityChange?.(false);
         }}
       />
     );

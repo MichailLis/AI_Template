@@ -140,4 +140,47 @@ describe('RuDateInput datetime mode', () => {
 
     expect(onChange).toHaveBeenLastCalledWith('2026-09-06T14:30');
   });
+
+  it('reports validity changes and resets draft on external value change', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onValidityChange = vi.fn();
+
+    function TestHarness() {
+      const [val, setVal] = useState('2026-07-10T03:00');
+      return (
+        <div>
+          <button type="button" onClick={() => setVal('2026-09-14T12:00')}>
+            Set External
+          </button>
+          <RuDateInput
+            aria-label="Дата публикации"
+            mode="datetime"
+            value={val}
+            onChange={(next) => {
+              setVal(next);
+              onChange(next);
+            }}
+            onValidityChange={onValidityChange}
+          />
+        </div>
+      );
+    }
+
+    render(<TestHarness />);
+    const input = screen.getByLabelText('Дата публикации');
+    expect(input).toHaveValue('10.07.2026 03:00');
+
+    // Type partial/invalid date
+    await user.clear(input);
+    expect(onValidityChange).toHaveBeenLastCalledWith(true);
+
+    await user.type(input, '31022026');
+    expect(onValidityChange).toHaveBeenLastCalledWith(false);
+
+    // External value change resets draft and signals validity true
+    await user.click(screen.getByRole('button', { name: 'Set External' }));
+    expect(input).toHaveValue('14.09.2026 12:00');
+    expect(onValidityChange).toHaveBeenLastCalledWith(true);
+  });
 });

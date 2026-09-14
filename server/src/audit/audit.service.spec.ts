@@ -41,6 +41,36 @@ describe('AuditService', () => {
     });
   });
 
+  it('records through a transaction client when provided', async () => {
+    const txMock = {
+      auditEvent: {
+        create: jest.fn().mockResolvedValue({ id: 99 }),
+      },
+    };
+
+    await service.record(
+      {
+        entityType: 'USER',
+        entityId: 42,
+        action: 'USER_ROLE_CHANGED',
+        actorUserId: 7,
+        changes: [{ field: 'role', before: 'USER', after: 'ADMIN' }],
+      },
+      txMock as never,
+    );
+
+    expect(txMock.auditEvent.create).toHaveBeenCalledWith({
+      data: {
+        entityType: 'USER',
+        entityId: '42',
+        action: 'USER_ROLE_CHANGED',
+        actorUserId: 7,
+        changes: [{ field: 'role', before: 'USER', after: 'ADMIN' }],
+      },
+    });
+    expect(prismaMock.auditEvent.create).not.toHaveBeenCalled();
+  });
+
   it('records an event without changes as an empty list', async () => {
     await service.record({
       entityType: 'USER',

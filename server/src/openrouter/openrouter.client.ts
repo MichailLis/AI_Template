@@ -148,9 +148,14 @@ const extractCompletionOutput = (payload: {
       : '';
 };
 
-const fetchOpenRouterModels = async (config: ConfigService, apiKey: string) => {
+const fetchOpenRouterModels = async (
+  config: ConfigService,
+  apiKey: string,
+  options?: { timeoutMs?: number },
+) => {
+  const timeoutMs = options?.timeoutMs ?? resolveOpenRouterTimeoutMs(config);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), resolveOpenRouterTimeoutMs(config));
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
@@ -267,35 +272,47 @@ export type OpenRouterHealth = {
   errorMessage?: string;
 };
 
+export const OPENROUTER_HEALTH_CHECK_TIMEOUT_MS = 5_000;
+export const OPENROUTER_HEALTH_CHECK_CACHE_TTL_MS = 30_000;
+
 @Injectable()
 export class OpenRouterClientService {
+  private healthCache = new Map<string, { result: OpenRouterHealth; cachedAt: number }>();
+
   constructor(private readonly config: ConfigService) {}
 
   resolveTimeoutMs(timeoutMs?: number) {
     return resolveOpenRouterTimeoutMs(this.config, timeoutMs);
   }
 
-  fetchModels(apiKey: string) {
-    return fetchOpenRouterModels(this.config, apiKey);
+  fetchModels(apiKey: string, options?: { timeoutMs?: number }) {
+    return fetchOpenRouterModels(this.config, apiKey, options);
   }
 
   /**
-   * Проверка связи для экрана настроек. Раньше бейдж «OpenRouter готов» считался по наличию ключа
-   * и оставался зелёным при отозванном ключе или недоступном сервисе. Каталог моделей — самый
-   * лёгкий настоящий вызов с этим ключом; отказ возвращается как результат, а не исключение,
-   * чтобы экран настроек открывался и при сломанной интеграции.
+   * Проверка связи для экрана настроек. Каталог моделей запрашивается с коротким таймаутом (5с)
+   * и кэшируется на 30с, чтобы медленный или фильтруемый внешний провайдер не блокировал админку.
    */
   async checkHealth(apiKey: string): Promise<OpenRouterHealth> {
-    try {
-      await this.fetchModels(apiKey);
+    const now = Date.now();
+    const cached = this.healthCache.get(apiKey);
+    if (cached && now - cached.cachedAt < OPENROUTER_HEALTH_CHECK_CACHE_TTL_MS) {
+      return cached.result;
+    }
 
-      return { status: 'ok', checkedAt: new Date().toISOString() };
+    try {
+      await this.fetchModels(apiKey, { timeoutMs: OPENROUTER_HEALTH_CHECK_TIMEOUT_MS });
+
+      const result: OpenRouterHealth = { status: 'ok', checkedAt: new Date().toISOString() };
+      this.healthCache.set(apiKey, { result, cachedAt: now });
+      return result;
     } catch (error) {
-      return {
+      const result: OpenRouterHealth = {
         status: 'failed',
         checkedAt: new Date().toISOString(),
         errorMessage: error instanceof Error ? error.message : 'OpenRouter connection check failed',
       };
+      return result;
     }
   }
 

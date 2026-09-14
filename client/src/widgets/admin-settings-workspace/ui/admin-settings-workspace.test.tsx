@@ -203,4 +203,39 @@ describe('AdminSettingsWorkspace privacy policy', () => {
       screen.queryByText(/редакция изменена, но дата публикации осталась прежней/i),
     ).not.toBeInTheDocument();
   });
+
+  /** Находка аудита PR #55 (ait-hw7): невалидная/неполная дата в драфте блокирует submit. */
+  it('disables submit and prevents mutation when publication date has an incomplete or invalid draft', () => {
+    renderWorkspace();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Политика данных' }));
+
+    const dateInput = screen.getByLabelText('Дата публикации');
+    const submitButton = screen.getByRole('button', { name: 'Сохранить политику' });
+
+    expect(submitButton).not.toBeDisabled();
+
+    // Вводим невалидную дату (31 февраля)
+    fireEvent.change(dateInput, { target: { value: '31.02.2026 12:00' } });
+
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.click(submitButton);
+    expect(updatePrivacyPolicy).not.toHaveBeenCalled();
+
+    // Вводим неполную дату
+    fireEvent.change(dateInput, { target: { value: '10.07.2026 03:0' } });
+
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.click(submitButton);
+    expect(updatePrivacyPolicy).not.toHaveBeenCalled();
+
+    // Нажимаем «Поставить текущую дату» — кнопка снова активна
+    fireEvent.click(screen.getByRole('button', { name: 'Поставить текущую дату' }));
+    expect(submitButton).not.toBeDisabled();
+
+    fireEvent.click(submitButton);
+    expect(updatePrivacyPolicy).toHaveBeenCalled();
+  });
 });

@@ -85,21 +85,37 @@ describe('PrivacyPolicySettingsService', () => {
         operatorFullName: 'ООО «Оператор»',
       });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'APP_SETTING',
-        entityId: 'privacy-policy',
-        action: 'SETTING_UPDATED',
-        actorUserId: 3,
-        changes: [
-          { field: 'version', before: '2026-07-01', after: '2026-07-10' },
-          {
-            field: 'publishedAt',
-            before: '2026-07-01T00:00:00.000Z',
-            after: '2026-07-10T00:00:00.000Z',
-          },
-          { field: 'content', before: null, after: null },
-        ],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'APP_SETTING',
+          entityId: 'privacy-policy',
+          action: 'SETTING_UPDATED',
+          actorUserId: 3,
+          changes: [
+            { field: 'version', before: '2026-07-01', after: '2026-07-10' },
+            {
+              field: 'publishedAt',
+              before: '2026-07-01T00:00:00.000Z',
+              after: '2026-07-10T00:00:00.000Z',
+            },
+            { field: 'content', before: null, after: null },
+          ],
+        },
+        prismaMock,
+      );
+    });
+
+    it('updatePrivacyPolicy rolls back and throws when audit write fails (atomic audit)', async () => {
+      auditMock.record.mockRejectedValue(new Error('Audit DB failure'));
+
+      await expect(
+        service.updatePrivacyPolicy(3, {
+          version: '2026-07-10',
+          publishedAt: '2026-07-10T00:00:00.000Z',
+          content: 'Новая политика',
+          operatorFullName: 'ООО «Оператор»',
+        }),
+      ).rejects.toThrow('Audit DB failure');
     });
 
     it('records nothing when the same policy is saved again', async () => {

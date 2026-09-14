@@ -152,6 +152,7 @@ interface PrivacyPolicySettingsCardProps {
   onContentChange: (value: string) => void;
   onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
+  onPublishedAtValidityChange?: (isValid: boolean) => void;
   onRetry: () => void;
   onSetCurrentDate?: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -172,6 +173,7 @@ export function PrivacyPolicySettingsCard({
   onContentChange,
   onOperatorFullNameChange,
   onPublishedAtChange,
+  onPublishedAtValidityChange,
   onRetry,
   onSetCurrentDate,
   onSubmit,
@@ -216,6 +218,7 @@ export function PrivacyPolicySettingsCard({
           onContentChange={onContentChange}
           onOperatorFullNameChange={onOperatorFullNameChange}
           onPublishedAtChange={onPublishedAtChange}
+          onPublishedAtValidityChange={onPublishedAtValidityChange}
           onSetCurrentDate={onSetCurrentDate}
           onSubmit={onSubmit}
           onVersionChange={onVersionChange}

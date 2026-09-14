@@ -9,6 +9,7 @@ import type { Prisma } from '@prisma/client';
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
+import { runSerializableTransaction } from '../common/prisma-transaction.utils';
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
 import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
@@ -142,12 +143,14 @@ export class AnalysisPromptsService {
   }
 
   /**
-   * Неархивные тесты, чья опубликованная или рабочая версия подключена к промпту. Фоновый анализ
+   * Неархивные тесты, чья опубликованная или рабочая версия, либо историческая версия с активными
+   * публичными ссылками или незавершенными попытками подключена к промпту. Фоновый анализ
    * берет промпт из версии теста и на архив промпта не смотрит, поэтому «удаленный» промпт молча
-   * продолжал бы анализировать прохождения опубликованных тестов.
+   * продолжал бы анализировать прохождения тестов.
    */
   private async listActiveTestsByPrompt(
     promptIds: number[],
+    client: Prisma.TransactionClient | PrismaService = this.prisma,
   ): Promise<Map<number, PromptActiveTest[]>> {
     const testsByPromptId = new Map<number, PromptActiveTest[]>();
 
@@ -162,19 +165,83 @@ export class AnalysisPromptsService {
       select: { title: true, analysisPromptVersion: { select: { promptId: true } } },
     } as const;
 
-    const topics = await this.prisma.testTopic.findMany({
-      where: {
-        archivedAt: null,
-        OR: [{ activePublishedVersion: usesPrompt }, { activeDraftVersion: usesPrompt }],
-      },
-      select: {
-        id: true,
-        slug: true,
-        activePublishedVersion: versionSelect,
-        activeDraftVersion: versionSelect,
-      },
-      orderBy: { id: 'asc' },
-    });
+    const [topics, pinnedVersions, recoverableAnalyses] = await Promise.all([
+      client.testTopic.findMany({
+        where: {
+          archivedAt: null,
+          OR: [{ activePublishedVersion: usesPrompt }, { activeDraftVersion: usesPrompt }],
+        },
+        select: {
+          id: true,
+          slug: true,
+          activePublishedVersion: versionSelect,
+          activeDraftVersion: versionSelect,
+        },
+        orderBy: { id: 'asc' },
+      }),
+      client.testTopicVersion.findMany({
+        where: {
+          analysisPromptVersion: { promptId: { in: promptIds } },
+          OR: [
+            {
+              publicLinks: {
+                some: {
+                  archivedAt: null,
+                  isActive: true,
+                },
+              },
+            },
+            {
+              studentAttempts: {
+                some: {
+                  status: 'IN_PROGRESS',
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          analysisPromptVersion: { select: { promptId: true } },
+          topic: {
+            select: {
+              id: true,
+              slug: true,
+            },
+          },
+        },
+        orderBy: { id: 'asc' },
+      }),
+      client.testStudentAnalysis.findMany({
+        where: {
+          promptVersion: { promptId: { in: promptIds } },
+          attempt: { status: 'COMPLETED' },
+          OR: [
+            { status: 'PENDING', providerMode: 'LLM' },
+            {
+              status: 'READY',
+              providerMode: 'ALGORITHM_LLM',
+              summary: { path: ['llm', 'status'], equals: 'pending' },
+            },
+          ],
+        },
+        select: {
+          promptVersion: { select: { promptId: true } },
+          attempt: {
+            select: {
+              topicVersion: {
+                select: {
+                  title: true,
+                  topic: { select: { id: true, slug: true } },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { id: 'asc' },
+      }),
+    ]);
 
     const addTest = (promptId: number, test: PromptActiveTest) => {
       testsByPromptId.set(promptId, [...(testsByPromptId.get(promptId) ?? []), test]);
@@ -202,6 +269,51 @@ export class AnalysisPromptsService {
           slug: topic.slug,
           onPublishedVersion: false,
         });
+      }
+    }
+
+    for (const pinned of pinnedVersions) {
+      const promptId = pinned.analysisPromptVersion?.promptId;
+      if (promptId === undefined) {
+        continue;
+      }
+
+      const existing = (testsByPromptId.get(promptId) ?? []).find(
+        (test) => test.topicId === pinned.topic.id,
+      );
+
+      if (!existing) {
+        addTest(promptId, {
+          topicId: pinned.topic.id,
+          title: pinned.title,
+          slug: pinned.topic.slug,
+          onPublishedVersion: true,
+        });
+      } else if (!existing.onPublishedVersion) {
+        existing.onPublishedVersion = true;
+      }
+    }
+
+    for (const analysis of recoverableAnalyses) {
+      const promptId = analysis.promptVersion?.promptId;
+      if (promptId === undefined) {
+        continue;
+      }
+
+      const version = analysis.attempt.topicVersion;
+      const existing = (testsByPromptId.get(promptId) ?? []).find(
+        (test) => test.topicId === version.topic.id,
+      );
+
+      if (!existing) {
+        addTest(promptId, {
+          topicId: version.topic.id,
+          title: version.title,
+          slug: version.topic.slug,
+          onPublishedVersion: true,
+        });
+      } else if (!existing.onPublishedVersion) {
+        existing.onPublishedVersion = true;
       }
     }
 
@@ -366,32 +478,39 @@ export class AnalysisPromptsService {
   ): Promise<AnalysisPromptResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
-    const prompt = await this.prisma.analysisPrompt.create({
-      data: {
-        title: dto.title.trim(),
-        description: dto.description?.trim() || null,
-        versions: {
-          create: {
-            versionNumber: 1,
-            status: 'DRAFT',
-            model: dto.model.trim(),
-            temperature: dto.temperature ?? 0.2,
-            prompt: dto.prompt.trim(),
-            outputSchema: TestAnalysisResultJsonSchema,
+    const prompt = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.analysisPrompt.create({
+        data: {
+          title: dto.title.trim(),
+          description: dto.description?.trim() || null,
+          versions: {
+            create: {
+              versionNumber: 1,
+              status: 'DRAFT',
+              model: dto.model.trim(),
+              temperature: dto.temperature ?? 0.2,
+              prompt: dto.prompt.trim(),
+              outputSchema: TestAnalysisResultJsonSchema,
+            },
           },
         },
-      },
-      include: analysisPromptInclude,
-    });
+        include: analysisPromptInclude,
+      });
 
-    await this.auditService.record({
-      entityType: 'ANALYSIS_PROMPT',
-      entityId: prompt.id,
-      action: 'PROMPT_CREATED',
-      actorUserId: userId,
-      changes: collectAuditChanges({}, toPromptAuditState(prompt), {
-        fields: PROMPT_AUDIT_FIELDS,
-      }),
+      await this.auditService.record(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: created.id,
+          action: 'PROMPT_CREATED',
+          actorUserId: userId,
+          changes: collectAuditChanges({}, toPromptAuditState(created), {
+            fields: PROMPT_AUDIT_FIELDS,
+          }),
+        },
+        tx,
+      );
+
+      return created;
     });
 
     return {
@@ -409,37 +528,48 @@ export class AnalysisPromptsService {
     const existingPrompt = await this.getEditablePrompt(promptId);
     const latestVersion = existingPrompt.versions[0];
 
-    const prompt = await this.prisma.analysisPrompt.update({
-      where: { id: promptId },
-      data: {
-        title: dto.title === undefined ? existingPrompt.title : dto.title.trim(),
-        description:
-          dto.description === undefined
-            ? existingPrompt.description
-            : dto.description?.trim() || null,
-        versions: {
-          create: {
-            versionNumber: latestVersion.versionNumber + 1,
-            status: 'DRAFT',
-            model: dto.model?.trim() ?? latestVersion.model,
-            temperature: dto.temperature ?? latestVersion.temperature,
-            prompt: dto.prompt?.trim() ?? latestVersion.prompt,
-            outputSchema: TestAnalysisResultJsonSchema,
+    const prompt = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.analysisPrompt.update({
+        where: { id: promptId },
+        data: {
+          title: dto.title === undefined ? existingPrompt.title : dto.title.trim(),
+          description:
+            dto.description === undefined
+              ? existingPrompt.description
+              : dto.description?.trim() || null,
+          versions: {
+            create: {
+              versionNumber: latestVersion.versionNumber + 1,
+              status: 'DRAFT',
+              model: dto.model?.trim() ?? latestVersion.model,
+              temperature: dto.temperature ?? latestVersion.temperature,
+              prompt: dto.prompt?.trim() ?? latestVersion.prompt,
+              outputSchema: TestAnalysisResultJsonSchema,
+            },
           },
         },
-      },
-      include: analysisPromptInclude,
-    });
+        include: analysisPromptInclude,
+      });
 
-    await this.auditService.record({
-      entityType: 'ANALYSIS_PROMPT',
-      entityId: promptId,
-      action: 'PROMPT_VERSION_CREATED',
-      actorUserId: userId,
-      changes: collectAuditChanges(toPromptAuditState(existingPrompt), toPromptAuditState(prompt), {
-        fields: PROMPT_AUDIT_FIELDS,
-        redactedFields: ['prompt'],
-      }),
+      await this.auditService.record(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: promptId,
+          action: 'PROMPT_VERSION_CREATED',
+          actorUserId: userId,
+          changes: collectAuditChanges(
+            toPromptAuditState(existingPrompt),
+            toPromptAuditState(updated),
+            {
+              fields: PROMPT_AUDIT_FIELDS,
+              redactedFields: ['prompt'],
+            },
+          ),
+        },
+        tx,
+      );
+
+      return updated;
     });
 
     return {
@@ -468,31 +598,47 @@ export class AnalysisPromptsService {
 
     await this.getEditablePrompt(promptId);
 
-    const publishedTests = (
-      (await this.listActiveTestsByPrompt([promptId])).get(promptId) ?? []
-    ).filter((test) => test.onPublishedVersion);
+    const prompt = await runSerializableTransaction(this.prisma, async (tx) => {
+      const currentPrompt = await tx.analysisPrompt.findUnique({
+        where: { id: promptId, archivedAt: null },
+        select: { id: true },
+      });
 
-    if (publishedTests.length > 0) {
-      throw new ConflictException(
-        `Analysis prompt is used by published tests: ${publishedTests
-          .map((test) => test.slug)
-          .join(', ')}`,
+      if (!currentPrompt) {
+        throw new NotFoundException('Analysis prompt not found');
+      }
+
+      const publishedTests = (
+        (await this.listActiveTestsByPrompt([promptId], tx)).get(promptId) ?? []
+      ).filter((test) => test.onPublishedVersion);
+
+      if (publishedTests.length > 0) {
+        throw new ConflictException(
+          `Analysis prompt is used by published tests: ${publishedTests
+            .map((test) => test.slug)
+            .join(', ')}`,
+        );
+      }
+
+      const updated = await tx.analysisPrompt.update({
+        where: { id: promptId },
+        data: {
+          archivedAt: new Date(),
+        },
+        include: analysisPromptInclude,
+      });
+
+      await this.auditService.record(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: promptId,
+          action: 'PROMPT_ARCHIVED',
+          actorUserId: userId,
+        },
+        tx,
       );
-    }
 
-    const prompt = await this.prisma.analysisPrompt.update({
-      where: { id: promptId },
-      data: {
-        archivedAt: new Date(),
-      },
-      include: analysisPromptInclude,
-    });
-
-    await this.auditService.record({
-      entityType: 'ANALYSIS_PROMPT',
-      entityId: promptId,
-      action: 'PROMPT_ARCHIVED',
-      actorUserId: userId,
+      return updated;
     });
 
     return {
@@ -532,25 +678,30 @@ export class AnalysisPromptsService {
         },
       });
 
-      return tx.analysisPromptVersion.update({
+      const updated = await tx.analysisPromptVersion.update({
         where: { id: versionId },
         data: {
           status: 'PUBLISHED',
           publishedAt: new Date(),
         },
       });
-    });
 
-    await this.auditService.record({
-      entityType: 'ANALYSIS_PROMPT',
-      entityId: existingVersion.promptId,
-      action: 'PROMPT_VERSION_PUBLISHED',
-      actorUserId: userId,
-      changes: collectAuditChanges(
-        {},
-        { publishedVersionNumber: version.versionNumber },
-        { fields: ['publishedVersionNumber'] },
-      ),
+      await this.auditService.record(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: existingVersion.promptId,
+          action: 'PROMPT_VERSION_PUBLISHED',
+          actorUserId: userId,
+          changes: collectAuditChanges(
+            {},
+            { publishedVersionNumber: updated.versionNumber },
+            { fields: ['publishedVersionNumber'] },
+          ),
+        },
+        tx,
+      );
+
+      return updated;
     });
 
     const usedInTestCountByVersionId = await this.countTestsByPromptVersion([versionId]);

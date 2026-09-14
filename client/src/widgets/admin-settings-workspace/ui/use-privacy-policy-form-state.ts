@@ -43,6 +43,7 @@ export const toIsoFromDateTimeLocal = (value: string) => {
 
 export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings | undefined) {
   const [privacyPolicyForm, setPrivacyPolicyForm] = useState(EMPTY_PRIVACY_POLICY_FORM);
+  const [isPublishedAtValid, setIsPublishedAtValid] = useState(true);
 
   const privacyPolicyVersion = privacyPolicyForm.isDirty
     ? privacyPolicyForm.version
@@ -73,40 +74,34 @@ export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings |
     version: current.isDirty ? current.version : (privacyPolicy?.version ?? ''),
   });
 
-  const handleVersionChange = (value: string) => {
-    setPrivacyPolicyForm((current) => {
-      const draft = getPrivacyPolicyDraft(current);
-      const isVersionChanged = value.trim() !== (privacyPolicy?.version ?? '').trim();
-      const isContentChanged = draft.content.trim() !== (privacyPolicy?.content ?? '').trim();
-      const shouldAutoUpdateDate =
-        (isVersionChanged || isContentChanged) && !current.isPublishedAtManual;
+  const updateTextDraft = (
+    current: typeof privacyPolicyForm,
+    field: 'version' | 'content',
+    value: string,
+  ) => {
+    const draft = getPrivacyPolicyDraft(current);
+    const newVersion = field === 'version' ? value : draft.version;
+    const newContent = field === 'content' ? value : draft.content;
+    const isVersionChanged = newVersion.trim() !== (privacyPolicy?.version ?? '').trim();
+    const isContentChanged = newContent.trim() !== (privacyPolicy?.content ?? '').trim();
+    const shouldAutoUpdateDate =
+      (isVersionChanged || isContentChanged) && !current.isPublishedAtManual;
 
-      return {
-        ...draft,
-        isDirty: true,
-        isPublishedAtManual: current.isPublishedAtManual,
-        publishedAt: shouldAutoUpdateDate ? getNowDateTimeLocalValue() : draft.publishedAt,
-        version: value,
-      };
-    });
+    return {
+      ...draft,
+      [field]: value,
+      isDirty: true,
+      isPublishedAtManual: current.isPublishedAtManual,
+      publishedAt: shouldAutoUpdateDate ? getNowDateTimeLocalValue() : draft.publishedAt,
+    };
+  };
+
+  const handleVersionChange = (value: string) => {
+    setPrivacyPolicyForm((current) => updateTextDraft(current, 'version', value));
   };
 
   const handleContentChange = (value: string) => {
-    setPrivacyPolicyForm((current) => {
-      const draft = getPrivacyPolicyDraft(current);
-      const isContentChanged = value.trim() !== (privacyPolicy?.content ?? '').trim();
-      const isVersionChanged = draft.version.trim() !== (privacyPolicy?.version ?? '').trim();
-      const shouldAutoUpdateDate =
-        (isContentChanged || isVersionChanged) && !current.isPublishedAtManual;
-
-      return {
-        ...draft,
-        isDirty: true,
-        isPublishedAtManual: current.isPublishedAtManual,
-        publishedAt: shouldAutoUpdateDate ? getNowDateTimeLocalValue() : draft.publishedAt,
-        content: value,
-      };
-    });
+    setPrivacyPolicyForm((current) => updateTextDraft(current, 'content', value));
   };
 
   const handlePublishedAtChange = (value: string) => {
@@ -116,6 +111,10 @@ export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings |
       isPublishedAtManual: true,
       publishedAt: value,
     }));
+  };
+
+  const handlePublishedAtValidityChange = (isValid: boolean) => {
+    setIsPublishedAtValid(isValid);
   };
 
   const handleOperatorFullNameChange = (value: string) => {
@@ -128,6 +127,7 @@ export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings |
   };
 
   const handleSetCurrentDate = () => {
+    setIsPublishedAtValid(true);
     setPrivacyPolicyForm((current) => ({
       ...getPrivacyPolicyDraft(current),
       isDirty: true,
@@ -136,7 +136,10 @@ export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings |
     }));
   };
 
-  const resetForm = () => setPrivacyPolicyForm(EMPTY_PRIVACY_POLICY_FORM);
+  const resetForm = () => {
+    setPrivacyPolicyForm(EMPTY_PRIVACY_POLICY_FORM);
+    setIsPublishedAtValid(true);
+  };
 
   const isOldDateWithNewContent = Boolean(
     privacyPolicy?.publishedAt &&
@@ -150,12 +153,14 @@ export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings |
   return {
     content: privacyPolicyContent,
     isOldDateWithNewContent,
+    isPublishedAtValid,
     normalizedContent: normalizedPrivacyPolicyContent,
     normalizedOperatorFullName: normalizedPrivacyPolicyOperatorFullName,
     normalizedVersion: normalizedPrivacyPolicyVersion,
     onContentChange: handleContentChange,
     onOperatorFullNameChange: handleOperatorFullNameChange,
     onPublishedAtChange: handlePublishedAtChange,
+    onPublishedAtValidityChange: handlePublishedAtValidityChange,
     onSetCurrentDate: handleSetCurrentDate,
     onVersionChange: handleVersionChange,
     operatorFullName: privacyPolicyOperatorFullName,

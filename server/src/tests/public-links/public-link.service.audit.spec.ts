@@ -96,18 +96,40 @@ describe('TestsPublicLinkService audit trail', () => {
       consentText: 'Новое согласие',
     });
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'PUBLIC_LINK',
-      entityId: 100,
-      action: 'PUBLIC_LINK_UPDATED',
-      actorUserId: 7,
-      changes: [
-        { field: 'isActive', before: 'true', after: 'false' },
-        { field: 'maxAttemptsPerStudent', before: '3', after: '5' },
-        { field: 'consentText', before: null, after: null },
-      ],
-    });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'PUBLIC_LINK',
+        entityId: 100,
+        action: 'PUBLIC_LINK_UPDATED',
+        actorUserId: 7,
+        changes: [
+          { field: 'isActive', before: 'true', after: 'false' },
+          { field: 'maxAttemptsPerStudent', before: '3', after: '5' },
+          { field: 'consentText', before: null, after: null },
+        ],
+      },
+      prismaMock,
+    );
     expect(JSON.stringify(auditMock.record.mock.calls)).not.toContain('Новое согласие');
+  });
+
+  it('createPublicLink rolls back and throws when audit write fails (atomic audit)', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.create.mockResolvedValue(createPublicLinkRecordFixture());
+    auditMock.record.mockRejectedValue(new Error('Audit DB failure'));
+
+    await expect(
+      service.createPublicLink(7, {
+        publishedVersionId: 50,
+        shortCode: 'DEMO2026',
+        consentVersion: 'v1',
+        consentText: 'Согласие',
+      }),
+    ).rejects.toThrow('Audit DB failure');
   });
 
   it('regeneratePublicLinkShortCode records the old and the new code', async () => {
@@ -120,13 +142,16 @@ describe('TestsPublicLinkService audit trail', () => {
 
     await service.regeneratePublicLinkShortCode(7, 100);
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'PUBLIC_LINK',
-      entityId: 100,
-      action: 'PUBLIC_LINK_CODE_REGENERATED',
-      actorUserId: 7,
-      changes: [{ field: 'shortCode', before: 'OLD2026', after: 'NEW2026' }],
-    });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'PUBLIC_LINK',
+        entityId: 100,
+        action: 'PUBLIC_LINK_CODE_REGENERATED',
+        actorUserId: 7,
+        changes: [{ field: 'shortCode', before: 'OLD2026', after: 'NEW2026' }],
+      },
+      prismaMock,
+    );
   });
 
   it('deletePublicLink records the archive', async () => {
@@ -135,12 +160,15 @@ describe('TestsPublicLinkService audit trail', () => {
 
     await service.deletePublicLink(7, 100);
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'PUBLIC_LINK',
-      entityId: 100,
-      action: 'PUBLIC_LINK_ARCHIVED',
-      actorUserId: 7,
-    });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'PUBLIC_LINK',
+        entityId: 100,
+        action: 'PUBLIC_LINK_ARCHIVED',
+        actorUserId: 7,
+      },
+      prismaMock,
+    );
   });
 
   it('deletePublicLink records nothing for a link that is already archived', async () => {
@@ -163,12 +191,15 @@ describe('TestsPublicLinkService audit trail', () => {
 
     await service.restorePublicLink(7, 100);
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'PUBLIC_LINK',
-      entityId: 100,
-      action: 'PUBLIC_LINK_RESTORED',
-      actorUserId: 7,
-    });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'PUBLIC_LINK',
+        entityId: 100,
+        action: 'PUBLIC_LINK_RESTORED',
+        actorUserId: 7,
+      },
+      prismaMock,
+    );
   });
 
   it('moveToActivePublishedVersion records the version the link moved from and to', async () => {
@@ -191,13 +222,16 @@ describe('TestsPublicLinkService audit trail', () => {
 
     await service.moveToActivePublishedVersion(7, 100);
 
-    expect(auditMock.record).toHaveBeenCalledWith({
-      entityType: 'PUBLIC_LINK',
-      entityId: 100,
-      action: 'PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION',
-      actorUserId: 7,
-      changes: [{ field: 'topicVersionNumber', before: '1', after: '2' }],
-    });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      {
+        entityType: 'PUBLIC_LINK',
+        entityId: 100,
+        action: 'PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION',
+        actorUserId: 7,
+        changes: [{ field: 'topicVersionNumber', before: '1', after: '2' }],
+      },
+      prismaMock,
+    );
   });
 
   it('getPublicLinkHistory returns the history of a link, archived or not', async () => {

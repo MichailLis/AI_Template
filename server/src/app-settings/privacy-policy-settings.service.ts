@@ -137,6 +137,11 @@ export class PrivacyPolicySettingsService {
     const payload = this.normalizePayload(input);
     const value = JSON.stringify(payload);
     const previousPolicy = await this.getEffectivePolicy();
+    const changes = collectAuditChanges(previousPolicy.payload, payload, {
+      fields: ['version', 'publishedAt', 'operatorFullName'],
+      redactedFields: ['content'],
+    });
+
     const setting = await this.prisma.$transaction(async (transaction) => {
       const saved = await transaction.appSetting.upsert({
         where: {
@@ -156,23 +161,21 @@ export class PrivacyPolicySettingsService {
         data: { operatorFullNameSnapshot: payload.operatorFullName },
       });
 
+      if (changes.length > 0) {
+        await this.auditService.record(
+          {
+            entityType: 'APP_SETTING',
+            entityId: PRIVACY_POLICY_AUDIT_ENTITY_ID,
+            action: 'SETTING_UPDATED',
+            actorUserId: userId,
+            changes,
+          },
+          transaction,
+        );
+      }
+
       return saved;
     });
-
-    const changes = collectAuditChanges(previousPolicy.payload, payload, {
-      fields: ['version', 'publishedAt', 'operatorFullName'],
-      redactedFields: ['content'],
-    });
-
-    if (changes.length > 0) {
-      await this.auditService.record({
-        entityType: 'APP_SETTING',
-        entityId: PRIVACY_POLICY_AUDIT_ENTITY_ID,
-        action: 'SETTING_UPDATED',
-        actorUserId: userId,
-        changes,
-      });
-    }
 
     return this.toAdminResponse({
       payload,

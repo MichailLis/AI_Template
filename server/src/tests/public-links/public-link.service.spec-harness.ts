@@ -40,11 +40,13 @@ export interface PublicLinkServiceHarness {
     testTopicVersion: {
       findUnique: jest.Mock;
     };
+    $transaction: jest.Mock;
   };
 }
 
 export const createPublicLinkServiceHarness = (): PublicLinkServiceHarness => {
   const prismaMock: PublicLinkServiceHarness['prismaMock'] = {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) => callback(prismaMock)),
     educationOrganization: {
       findFirst: jest.fn(),
       findUnique: jest.fn(),

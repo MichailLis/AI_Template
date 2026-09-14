@@ -54,6 +54,7 @@ interface PrivacyPolicyFormProps {
   onContentChange: (value: string) => void;
   onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
+  onPublishedAtValidityChange?: (isValid: boolean) => void;
   onSetCurrentDate?: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onVersionChange: (value: string) => void;
@@ -70,6 +71,7 @@ export function PrivacyPolicyForm({
   onContentChange,
   onOperatorFullNameChange,
   onPublishedAtChange,
+  onPublishedAtValidityChange,
   onSetCurrentDate,
   onSubmit,
   onVersionChange,
@@ -111,6 +113,7 @@ export function PrivacyPolicyForm({
             mode="datetime"
             value={publishedAt}
             onChange={onPublishedAtChange}
+            onValidityChange={onPublishedAtValidityChange}
           />
           {isOldDateWithNewContent ? (
             <p className="text-xs font-medium text-amber-700 dark:text-amber-400">

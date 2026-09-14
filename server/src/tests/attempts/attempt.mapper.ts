@@ -184,6 +184,7 @@ export const mapSessionState = (
       answerPayload: answer.answerPayload,
       updatedAt: answer.updatedAt.toISOString(),
     })),
+    serverTime: new Date().toISOString(),
   };
 };
 

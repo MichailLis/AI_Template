@@ -42,6 +42,7 @@ const createSession = (publicTemplate: PublicTestSession['publicTemplate']): Pub
     },
   ],
   answers: [],
+  serverTime: '2026-05-27T00:00:00.000Z',
 });
 
 const renderWorkspace = () =>
@@ -55,11 +56,13 @@ const mockWorkspace = (
   publicTemplate: PublicTestSession['publicTemplate'],
   autosaveStatus: PublicTestAutosaveStatus,
   sessionOverrides: Partial<PublicTestSession> = {},
+  queryOverrides: Record<string, unknown> = {},
 ) => {
+  const refetch = vi.fn().mockResolvedValue({});
   publicRunMocks.useWorkspace.mockReturnValue({
     code: 'DEMO2026',
     sessionToken: 'session-token',
-    sessionQuery: { isLoading: false, isError: false },
+    sessionQuery: { isLoading: false, isError: false, refetch, ...queryOverrides },
     saveAnswersMutation: { isPending: false },
     finishMutation: { isPending: false },
     session: { ...createSession(publicTemplate), ...sessionOverrides },
@@ -70,6 +73,7 @@ const mockWorkspace = (
     autosaveStatus,
     autosaveError: null,
   });
+  return { refetch };
 };
 
 describe('PublicTestRunWorkspace', () => {
@@ -107,12 +111,21 @@ describe.each(['STANDARD', 'POLUS'] as const)(
   'PublicTestRunWorkspace time limit (%s)',
   (template) => {
     const startedAt = Date.parse('2026-09-13T10:00:00.000Z');
-    const timedSession = (overrides: Partial<PublicTestSession>) =>
-      mockWorkspace(template, 'idle', {
-        timeLimitMinutes: 5,
-        expiresAt: '2026-09-13T10:05:00.000Z',
-        ...overrides,
-      });
+    const timedSession = (
+      overrides: Partial<PublicTestSession> = {},
+      queryOverrides: Record<string, unknown> = {},
+    ) =>
+      mockWorkspace(
+        template,
+        'idle',
+        {
+          timeLimitMinutes: 5,
+          expiresAt: '2026-09-13T10:05:00.000Z',
+          serverTime: new Date(startedAt + 55_000).toISOString(),
+          ...overrides,
+        },
+        queryOverrides,
+      );
 
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: false });
@@ -136,7 +149,9 @@ describe.each(['STANDARD', 'POLUS'] as const)(
 
     it('warns during the last minute', () => {
       vi.setSystemTime(startedAt + 4 * 60_000 + 30_000);
-      timedSession({});
+      timedSession({
+        serverTime: new Date(startedAt + 4 * 60_000 + 30_000).toISOString(),
+      });
 
       renderWorkspace();
 
@@ -144,9 +159,22 @@ describe.each(['STANDARD', 'POLUS'] as const)(
       expect(screen.getByRole('status')).toHaveTextContent(/меньше минуты/i);
     });
 
-    it('closes the questions when the clock runs out on the screen', () => {
+    it('calibrates remaining time by serverTime when client clock is ahead', () => {
+      vi.setSystemTime(startedAt + 3 * 60_000);
+      timedSession({
+        serverTime: new Date(startedAt + 60_000).toISOString(),
+      });
+
+      renderWorkspace();
+
+      expect(screen.getByRole('timer')).toHaveTextContent('4:00');
+    });
+
+    it('triggers refetch and keeps questions visible when local clock runs out while server is in progress', () => {
       vi.setSystemTime(startedAt + 4 * 60_000 + 58_000);
-      timedSession({});
+      const { refetch } = timedSession({
+        serverTime: new Date(startedAt + 4 * 60_000 + 58_000).toISOString(),
+      });
 
       renderWorkspace();
       expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
@@ -155,8 +183,9 @@ describe.each(['STANDARD', 'POLUS'] as const)(
         vi.advanceTimersByTime(3_000);
       });
 
-      expect(screen.getByRole('heading', { name: 'Время вышло' })).toBeInTheDocument();
-      expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Время вышло' })).not.toBeInTheDocument();
+      expect(refetch).toHaveBeenCalled();
     });
 
     it('shows the expired state from the server instead of the questions', () => {

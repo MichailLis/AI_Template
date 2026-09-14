@@ -21,6 +21,15 @@ describe('getRemainingSeconds', () => {
   it('never goes below zero after the limit', () => {
     expect(getRemainingSeconds('2026-09-13T09:59:00.000Z', nowMs)).toBe(0);
   });
+
+  it('calibrates remaining seconds by clock skew between browser and server', () => {
+    const clientNowMs = Date.parse('2026-09-13T10:03:00.000Z');
+    const clockSkewMs = 3 * 60_000;
+    const expiresAt = '2026-09-13T10:05:00.000Z';
+
+    expect(getRemainingSeconds(expiresAt, clientNowMs, 0)).toBe(120);
+    expect(getRemainingSeconds(expiresAt, clientNowMs, clockSkewMs)).toBe(300);
+  });
 });
 
 describe('formatRemainingTime', () => {

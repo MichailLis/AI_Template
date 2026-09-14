@@ -40,6 +40,9 @@ describe('Tests Archive/Restore (e2e)', () => {
         },
       },
     });
+    await prisma.analysisPrompt.deleteMany({
+      where: { title: { startsWith: testsSlugPrefix } },
+    });
   };
 
   const signin = async (email: string) => {
@@ -319,5 +322,183 @@ describe('Tests Archive/Restore (e2e)', () => {
     const archived3 = await listTopics(adminToken, 'true');
     const archivedSlugs3 = (archived3.topics as Array<{ slug: string }>).map((topic) => topic.slug);
     expect(archivedSlugs3).not.toContain(topicSlug);
+  });
+
+  it('should refuse to archive a prompt used by a pinned historical version with active public links or recoverable analysis', async () => {
+    // 1. Create a prompt P1 with published version V1
+    const prompt = await prisma.analysisPrompt.create({
+      data: {
+        title: `${testsSlugPrefix}-prompt`,
+        description: 'Test prompt',
+        versions: {
+          create: {
+            versionNumber: 1,
+            status: 'PUBLISHED',
+            model: 'google/gemini-2.0-flash-exp:free',
+            temperature: 0.2,
+            prompt: 'Test prompt {{answers}}',
+            outputSchema: {},
+            publishedAt: new Date(),
+          },
+        },
+      },
+      include: { versions: true },
+    });
+    const promptVersionId = prompt.versions[0].id;
+
+    // 2. Create test topic with question and bind to prompt
+    const topicSlug = `${testsSlugPrefix}-prompt-pin`;
+    const topicId = await createTestTopic(adminToken, topicSlug, 'Pinned Prompt Test');
+
+    const topic = await prisma.testTopic.findUniqueOrThrow({
+      where: { id: topicId },
+      include: { activeDraftVersion: true },
+    });
+    const draftId = topic.activeDraftVersion!.id;
+
+    await prisma.testQuestion.create({
+      data: {
+        versionId: draftId,
+        type: 'SINGLE_CHOICE',
+        title: 'Q1',
+        order: 1,
+        options: {
+          create: [
+            { label: 'A', value: 'a', order: 1, weight: 1 },
+            { label: 'B', value: 'b', order: 2, weight: 2 },
+          ],
+        },
+      },
+    });
+
+    await prisma.testTopicVersion.update({
+      where: { id: draftId },
+      data: { analysisPromptVersionId: promptVersionId },
+    });
+
+    // 3. Publish topic -> V1 is published with P1
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/publish`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const topicAfterV1 = await prisma.testTopic.findUniqueOrThrow({
+      where: { id: topicId },
+    });
+    const v1Id = topicAfterV1.activePublishedVersionId!;
+
+    // 4. Create an active public link pinned to V1
+    const linkCode = `LP_${suffix}`.slice(0, 16);
+    const link = await prisma.testPublicLink.create({
+      data: {
+        topicVersionId: v1Id,
+        shortCode: linkCode,
+        isActive: true,
+        consentVersion: '2026-07-09',
+        consentTextSnapshot: 'Consent',
+      },
+    });
+
+    // 5. Update draft (V2) to remove prompt and publish V2 -> V1 becomes ARCHIVED
+    const v2Draft = topicAfterV1.activeDraftVersionId!;
+    await prisma.testTopicVersion.update({
+      where: { id: v2Draft },
+      data: { analysisPromptVersionId: null },
+    });
+
+    await request(app.getHttpServer())
+      .post(`/admin/tests/${topicId}/publish`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    // Verify V1 is indeed ARCHIVED and activePublishedVersion is now V2
+    const topicAfterV2 = await prisma.testTopic.findUniqueOrThrow({
+      where: { id: topicId },
+      include: { activePublishedVersion: true },
+    });
+    expect(topicAfterV2.activePublishedVersionId).not.toBe(v1Id);
+
+    const v1Record = await prisma.testTopicVersion.findUniqueOrThrow({
+      where: { id: v1Id },
+    });
+    expect(v1Record.status).toBe('ARCHIVED');
+
+    // 6. Attempt to archive prompt P1 -> MUST FAIL with 409 Conflict because active link still uses V1
+    const archiveRes = await request(app.getHttpServer())
+      .delete(`/admin/prompts/${prompt.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+
+    expect(archiveRes.body.error.message).toContain(
+      `Analysis prompt is used by published tests: ${topicSlug}`,
+    );
+
+    await prisma.testTopic.update({ where: { id: topicId }, data: { archivedAt: new Date() } });
+    await request(app.getHttpServer())
+      .delete(`/admin/prompts/${prompt.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+
+    // 7. Deactivate / archive public link
+    await prisma.testPublicLink.update({
+      where: { id: link.id },
+      data: { archivedAt: new Date(), isActive: false },
+    });
+
+    // 8. A completed attempt can still have recoverable hybrid analysis after its link and
+    // topic are archived. Recovery intentionally scans these historical attempts.
+    const pendingAttempt = await prisma.testStudentAttempt.create({
+      data: {
+        publicLinkId: link.id,
+        topicVersionId: v1Id,
+        attemptNumber: 1,
+        status: 'COMPLETED',
+        studentKeyHash: `${testsSlugPrefix}-pending-analysis`,
+        resumeToken: `${testsSlugPrefix}-pending-analysis-token`,
+        consentAcceptedAt: new Date(),
+        consentVersion: '2026-07-09',
+        consentTextSnapshot: 'Consent',
+        finishedAt: new Date(),
+        analysis: {
+          create: {
+            promptVersionId,
+            providerMode: 'ALGORITHM_LLM',
+            status: 'READY',
+            summary: { llm: { status: 'pending' } },
+          },
+        },
+      },
+      include: { analysis: true },
+    });
+
+    // 9. Recoverable analysis still intends to execute P1, so archival MUST FAIL.
+    await request(app.getHttpServer())
+      .delete(`/admin/prompts/${prompt.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+
+    // 10. Once no active consumer remains, archival may proceed.
+    await prisma.testStudentAnalysis.delete({ where: { id: pendingAttempt.analysis!.id } });
+
+    await request(app.getHttpServer())
+      .delete(`/admin/prompts/${prompt.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    // 11. An archived prompt must not become live again through link restoration.
+    await request(app.getHttpServer())
+      .post(`/admin/tests/public-links/${link.id}/restore`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+
+    await expect(
+      prisma.testPublicLink.findUniqueOrThrow({
+        where: { id: link.id },
+        select: { archivedAt: true, isActive: true },
+      }),
+    ).resolves.toMatchObject({ isActive: false });
+
+    // 12. Clean up prompt
+    await prisma.analysisPrompt.delete({ where: { id: prompt.id } });
   });
 });

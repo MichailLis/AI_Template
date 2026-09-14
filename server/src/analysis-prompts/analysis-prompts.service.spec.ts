@@ -51,9 +51,16 @@ describe('AnalysisPromptsService', () => {
     testTopic: {
       findMany: jest.Mock;
     };
+    testStudentAnalysis: {
+      findMany: jest.Mock;
+    };
     $transaction: jest.Mock;
   };
   let txMock: {
+    analysisPrompt: typeof prismaMock.analysisPrompt;
+    testTopic: typeof prismaMock.testTopic;
+    testTopicVersion: typeof prismaMock.testTopicVersion;
+    testStudentAnalysis: typeof prismaMock.testStudentAnalysis;
     analysisPromptVersion: {
       updateMany: jest.Mock;
       update: jest.Mock;
@@ -90,12 +97,6 @@ describe('AnalysisPromptsService', () => {
   };
 
   beforeEach(() => {
-    txMock = {
-      analysisPromptVersion: {
-        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-        update: jest.fn(),
-      },
-    };
     prismaMock = {
       analysisPrompt: {
         findUnique: jest.fn(),
@@ -113,8 +114,24 @@ describe('AnalysisPromptsService', () => {
       testTopic: {
         findMany: jest.fn().mockResolvedValue([]),
       },
-      $transaction: jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock)),
+      testStudentAnalysis: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      $transaction: jest.fn(),
     };
+    txMock = {
+      analysisPrompt: prismaMock.analysisPrompt,
+      testTopic: prismaMock.testTopic,
+      testTopicVersion: prismaMock.testTopicVersion,
+      testStudentAnalysis: prismaMock.testStudentAnalysis,
+      analysisPromptVersion: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        update: jest.fn(),
+      },
+    };
+    prismaMock.$transaction.mockImplementation((callback: (tx: typeof txMock) => unknown) =>
+      callback(txMock),
+    );
     openRouterApiKeyServiceMock = {
       getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
     };
@@ -442,6 +459,24 @@ describe('AnalysisPromptsService', () => {
     expect(updateArg?.data.archivedAt).toBeInstanceOf(Date);
   });
 
+  it('deletePrompt retries a serializable transaction conflict and rechecks prompt usage', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.analysisPrompt.update.mockResolvedValue({
+      ...promptRecord,
+      archivedAt: new Date('2026-05-01T11:00:00.000Z'),
+    });
+    prismaMock.$transaction
+      .mockReset()
+      .mockImplementationOnce(async (callback: (tx: typeof txMock) => unknown) => {
+        await callback(txMock);
+        throw Object.assign(new Error('Transaction conflict'), { code: 'P2034' });
+      })
+      .mockImplementationOnce((callback: (tx: typeof txMock) => unknown) => callback(txMock));
+
+    await expect(service.deletePrompt(3, 7)).resolves.toMatchObject({ prompt: { id: 7 } });
+    expect(prismaMock.testTopic.findMany).toHaveBeenCalledTimes(3);
+  });
+
   it('deletePrompt refuses to archive a prompt that a published test still analyses with', async () => {
     prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
     prismaMock.testTopic.findMany.mockResolvedValue([
@@ -457,6 +492,27 @@ describe('AnalysisPromptsService', () => {
     ]);
 
     await expect(service.deletePrompt(3, 7)).rejects.toBeInstanceOf(ConflictException);
+    expect(prismaMock.analysisPrompt.update).not.toHaveBeenCalled();
+  });
+
+  it('deletePrompt refuses to archive a prompt used by a pinned historical version with active public links', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue(promptRecord);
+    prismaMock.testTopic.findMany.mockResolvedValue([]);
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      {
+        id: 101,
+        title: 'Тест v1 (исторический)',
+        analysisPromptVersion: { promptId: 7 },
+        topic: {
+          id: 42,
+          slug: 'historical-pinned-test',
+        },
+      },
+    ]);
+
+    await expect(service.deletePrompt(3, 7)).rejects.toThrow(
+      'Analysis prompt is used by published tests: historical-pinned-test',
+    );
     expect(prismaMock.analysisPrompt.update).not.toHaveBeenCalled();
   });
 
@@ -494,18 +550,35 @@ describe('AnalysisPromptsService', () => {
         prompt: 'Analyze {{answers}}',
       });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'ANALYSIS_PROMPT',
-        entityId: 7,
-        action: 'PROMPT_CREATED',
-        actorUserId: 3,
-        changes: [
-          { field: 'title', before: null, after: 'Career guidance analysis' },
-          { field: 'versionNumber', before: null, after: '1' },
-          { field: 'model', before: null, after: 'google/gemini-2.0-flash-exp:free' },
-          { field: 'temperature', before: null, after: '0.2' },
-        ],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: 7,
+          action: 'PROMPT_CREATED',
+          actorUserId: 3,
+          changes: [
+            { field: 'title', before: null, after: 'Career guidance analysis' },
+            { field: 'versionNumber', before: null, after: '1' },
+            { field: 'model', before: null, after: 'google/gemini-2.0-flash-exp:free' },
+            { field: 'temperature', before: null, after: '0.2' },
+          ],
+        },
+        txMock,
+      );
+    });
+
+    it('createPrompt rolls back and throws when audit write fails (atomic audit)', async () => {
+      prismaMock.analysisPrompt.create.mockResolvedValue(promptRecord);
+      auditMock.record.mockRejectedValue(new Error('Audit DB failure'));
+
+      await expect(
+        service.createPrompt(3, {
+          title: 'Career guidance analysis',
+          model: 'google/gemini-2.0-flash-exp:free',
+          temperature: 0.2,
+          prompt: 'Analyze {{answers}}',
+        }),
+      ).rejects.toThrow('Audit DB failure');
     });
 
     it('updatePrompt records the new version and marks a changed prompt text', async () => {
@@ -529,21 +602,24 @@ describe('AnalysisPromptsService', () => {
         prompt: 'Analyze answers in detail',
       });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'ANALYSIS_PROMPT',
-        entityId: 7,
-        action: 'PROMPT_VERSION_CREATED',
-        actorUserId: 3,
-        changes: [
-          { field: 'versionNumber', before: '1', after: '2' },
-          {
-            field: 'model',
-            before: 'google/gemini-2.0-flash-exp:free',
-            after: 'deepseek/deepseek-v4-flash',
-          },
-          { field: 'prompt', before: null, after: null },
-        ],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: 7,
+          action: 'PROMPT_VERSION_CREATED',
+          actorUserId: 3,
+          changes: [
+            { field: 'versionNumber', before: '1', after: '2' },
+            {
+              field: 'model',
+              before: 'google/gemini-2.0-flash-exp:free',
+              after: 'deepseek/deepseek-v4-flash',
+            },
+            { field: 'prompt', before: null, after: null },
+          ],
+        },
+        txMock,
+      );
       expect(JSON.stringify(auditMock.record.mock.calls)).not.toContain(
         'Analyze answers in detail',
       );
@@ -559,13 +635,16 @@ describe('AnalysisPromptsService', () => {
 
       await service.publishVersion(3, 42);
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'ANALYSIS_PROMPT',
-        entityId: 7,
-        action: 'PROMPT_VERSION_PUBLISHED',
-        actorUserId: 3,
-        changes: [{ field: 'publishedVersionNumber', before: null, after: '1' }],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: 7,
+          action: 'PROMPT_VERSION_PUBLISHED',
+          actorUserId: 3,
+          changes: [{ field: 'publishedVersionNumber', before: null, after: '1' }],
+        },
+        txMock,
+      );
     });
 
     it('deletePrompt records that the prompt was archived', async () => {
@@ -577,12 +656,15 @@ describe('AnalysisPromptsService', () => {
 
       await service.deletePrompt(3, 7);
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'ANALYSIS_PROMPT',
-        entityId: 7,
-        action: 'PROMPT_ARCHIVED',
-        actorUserId: 3,
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'ANALYSIS_PROMPT',
+          entityId: 7,
+          action: 'PROMPT_ARCHIVED',
+          actorUserId: 3,
+        },
+        txMock,
+      );
     });
 
     it('does not record a refused archive', async () => {

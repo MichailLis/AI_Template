@@ -29,6 +29,7 @@ const createUserRecord = (overrides: Record<string, unknown> = {}) => ({
 describe('AdminService user management', () => {
   let service: AdminService;
   let prismaMock: {
+    $transaction: jest.Mock;
     user: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
   };
   let auditMock: { record: jest.Mock; listForEntity: jest.Mock };
@@ -39,6 +40,7 @@ describe('AdminService user management', () => {
     actingAdmin = { id: ADMIN_ID, role: 'ADMIN', deactivatedAt: null };
     targetDeactivatedAt = null;
     prismaMock = {
+      $transaction: jest.fn((callback: (tx: unknown) => unknown) => callback(prismaMock)),
       user: {
         // Every mutation looks up the acting admin first and the target user second.
         findUnique: jest.fn(({ where }: { where: { id: number } }) => {
@@ -198,13 +200,16 @@ describe('AdminService user management', () => {
 
       await service.updateUserRole(ADMIN_ID, TARGET_ID, { role: 'ADMIN' });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: TARGET_ID,
-        action: 'USER_ROLE_CHANGED',
-        actorUserId: ADMIN_ID,
-        changes: [{ field: 'role', before: 'USER', after: 'ADMIN' }],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: TARGET_ID,
+          action: 'USER_ROLE_CHANGED',
+          actorUserId: ADMIN_ID,
+          changes: [{ field: 'role', before: 'USER', after: 'ADMIN' }],
+        },
+        prismaMock,
+      );
     });
 
     it('updateUserRole records nothing when the role stays the same', async () => {
@@ -220,24 +225,30 @@ describe('AdminService user management', () => {
 
       await service.updateUserStatus(ADMIN_ID, TARGET_ID, { status: 'DEACTIVATED' });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: TARGET_ID,
-        action: 'USER_STATUS_CHANGED',
-        actorUserId: ADMIN_ID,
-        changes: [{ field: 'status', before: 'ACTIVE', after: 'DEACTIVATED' }],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: TARGET_ID,
+          action: 'USER_STATUS_CHANGED',
+          actorUserId: ADMIN_ID,
+          changes: [{ field: 'status', before: 'ACTIVE', after: 'DEACTIVATED' }],
+        },
+        prismaMock,
+      );
     });
 
     it('resetUserPassword records the reset but never the password', async () => {
       await service.resetUserPassword(ADMIN_ID, TARGET_ID, { password: 'Secret-Password-42' });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: TARGET_ID,
-        action: 'USER_PASSWORD_RESET',
-        actorUserId: ADMIN_ID,
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: TARGET_ID,
+          action: 'USER_PASSWORD_RESET',
+          actorUserId: ADMIN_ID,
+        },
+        prismaMock,
+      );
       expect(JSON.stringify(auditMock.record.mock.calls)).not.toContain('Secret-Password-42');
     });
 
@@ -248,16 +259,27 @@ describe('AdminService user management', () => {
 
       await service.createUser(ADMIN_ID, { email: 'new@example.com', role: 'ADMIN' });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: 5,
-        action: 'USER_CREATED',
-        actorUserId: ADMIN_ID,
-        changes: [
-          { field: 'email', before: null, after: 'new@example.com' },
-          { field: 'role', before: null, after: 'ADMIN' },
-        ],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: 5,
+          action: 'USER_CREATED',
+          actorUserId: ADMIN_ID,
+          changes: [
+            { field: 'email', before: null, after: 'new@example.com' },
+            { field: 'role', before: null, after: 'ADMIN' },
+          ],
+        },
+        prismaMock,
+      );
+    });
+
+    it('createUser rolls back and throws when audit write fails (atomic audit)', async () => {
+      auditMock.record.mockRejectedValue(new Error('Audit DB failure'));
+
+      await expect(
+        service.createUser(ADMIN_ID, { email: 'new@example.com', role: 'ADMIN' }),
+      ).rejects.toThrow('Audit DB failure');
     });
 
     it('updateUser records only the fields that changed', async () => {
@@ -265,24 +287,30 @@ describe('AdminService user management', () => {
 
       await service.updateUser(ADMIN_ID, TARGET_ID, { name: 'Renamed' });
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: TARGET_ID,
-        action: 'USER_UPDATED',
-        actorUserId: ADMIN_ID,
-        changes: [{ field: 'name', before: 'User', after: 'Renamed' }],
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: TARGET_ID,
+          action: 'USER_UPDATED',
+          actorUserId: ADMIN_ID,
+          changes: [{ field: 'name', before: 'User', after: 'Renamed' }],
+        },
+        prismaMock,
+      );
     });
 
     it('revokeUserSessions records that the sessions were ended', async () => {
       await service.revokeUserSessions(ADMIN_ID, TARGET_ID);
 
-      expect(auditMock.record).toHaveBeenCalledWith({
-        entityType: 'USER',
-        entityId: TARGET_ID,
-        action: 'USER_SESSIONS_REVOKED',
-        actorUserId: ADMIN_ID,
-      });
+      expect(auditMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'USER',
+          entityId: TARGET_ID,
+          action: 'USER_SESSIONS_REVOKED',
+          actorUserId: ADMIN_ID,
+        },
+        prismaMock,
+      );
     });
 
     it('getUserHistory returns the recorded history of an existing user', async () => {

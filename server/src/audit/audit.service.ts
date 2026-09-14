@@ -49,14 +49,12 @@ const toStoredChanges = (value: Prisma.JsonValue): AuditChange[] => {
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async record({
-    entityType,
-    entityId,
-    action,
-    actorUserId,
-    changes = [],
-  }: AuditEventInput): Promise<void> {
-    await this.prisma.auditEvent.create({
+  async record(
+    { entityType, entityId, action, actorUserId, changes = [] }: AuditEventInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.auditEvent.create({
       data: {
         entityType,
         entityId: String(entityId),

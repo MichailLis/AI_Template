@@ -185,6 +185,7 @@ export const PublicSessionStateSchema = z.object({
   timeLimitMinutes: z.number().int().min(1).nullable(),
   questions: z.array(PublicTestQuestionSchema),
   answers: z.array(PublicSessionAnswerSchema),
+  serverTime: z.string(),
 });
 
 export const PublicSessionStartRequestSchema = PublicStudentProfileSchema;

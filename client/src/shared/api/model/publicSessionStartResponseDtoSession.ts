@@ -36,4 +36,5 @@ export type PublicSessionStartResponseDtoSession = {
   timeLimitMinutes: number | null;
   questions: PublicSessionStartResponseDtoSessionQuestionsItem[];
   answers: PublicSessionStartResponseDtoSessionAnswersItem[];
+  serverTime: string;
 };

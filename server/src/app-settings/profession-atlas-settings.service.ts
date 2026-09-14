@@ -105,8 +105,8 @@ export class ProfessionAtlasSettingsService {
     }
 
     const previousSetting = await this.getStoredProfessionAtlasUrl();
-    const [publicUrlSetting, apiUrlSetting] = await Promise.all([
-      this.prisma.appSetting.upsert({
+    const { publicUrlSetting, apiUrlSetting } = await this.prisma.$transaction(async (tx) => {
+      const publicUrl = await tx.appSetting.upsert({
         where: {
           key: PROFESSION_ATLAS_PUBLIC_URL_SETTING_KEY,
         },
@@ -117,36 +117,42 @@ export class ProfessionAtlasSettingsService {
         update: {
           value: normalizedPublicUrl,
         },
-      }),
-      this.prisma.appSetting.upsert({
-        where: {
-          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
-        },
-        create: {
-          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
-          value: normalizedApiUrl,
-        },
-        update: {
-          value: normalizedApiUrl,
-        },
-      }),
-    ]);
-
-    const changes = collectAuditChanges(
-      previousSetting,
-      { publicUrl: publicUrlSetting.value.trim(), apiUrl: apiUrlSetting.value.trim() },
-      { fields: ['publicUrl', 'apiUrl'] },
-    );
-
-    if (changes.length > 0) {
-      await this.auditService.record({
-        entityType: 'APP_SETTING',
-        entityId: PROFESSION_ATLAS_AUDIT_ENTITY_ID,
-        action: 'SETTING_UPDATED',
-        actorUserId: userId,
-        changes,
       });
-    }
+
+      const apiUrl = await tx.appSetting.upsert({
+        where: {
+          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
+        },
+        create: {
+          key: PROFESSION_ATLAS_API_URL_SETTING_KEY,
+          value: normalizedApiUrl,
+        },
+        update: {
+          value: normalizedApiUrl,
+        },
+      });
+
+      const changes = collectAuditChanges(
+        previousSetting,
+        { publicUrl: publicUrl.value.trim(), apiUrl: apiUrl.value.trim() },
+        { fields: ['publicUrl', 'apiUrl'] },
+      );
+
+      if (changes.length > 0) {
+        await this.auditService.record(
+          {
+            entityType: 'APP_SETTING',
+            entityId: PROFESSION_ATLAS_AUDIT_ENTITY_ID,
+            action: 'SETTING_UPDATED',
+            actorUserId: userId,
+            changes,
+          },
+          tx,
+        );
+      }
+
+      return { publicUrlSetting: publicUrl, apiUrlSetting: apiUrl };
+    });
 
     return this.toSettingsResponse({
       publicUrl: publicUrlSetting.value.trim(),

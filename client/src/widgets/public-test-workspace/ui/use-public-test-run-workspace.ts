@@ -49,6 +49,44 @@ const countAnsweredQuestions = (
     return hasMeaningfulQuestionAnswer(question.type, answer) ? acc + 1 : acc;
   }, 0) ?? 0;
 
+const isSessionExpiredError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const maybeAxiosError = error as {
+    response?: {
+      data?: {
+        message?: string;
+      };
+    };
+  };
+  const message = maybeAxiosError.response?.data?.message;
+  return typeof message === 'string' && message.toLowerCase().includes('expired');
+};
+
+const resolveCurrentAnswer = (
+  answerDraft: PublicTestAnswerDraft,
+  serverAnswerMap: PublicTestAnswerDraft,
+  questionId: number,
+) =>
+  Object.prototype.hasOwnProperty.call(answerDraft, questionId)
+    ? answerDraft[questionId]
+    : serverAnswerMap[questionId];
+
+const resolveFinishAnswers = (
+  session: PublicTestSession | null,
+  effectiveAnswers: PublicTestAnswerDraft,
+  answerOverride?: AnswerOverride,
+) =>
+  session
+    ? buildSessionAnswers(
+        session.questions,
+        answerOverride
+          ? { ...effectiveAnswers, [answerOverride.questionId]: answerOverride.value }
+          : effectiveAnswers,
+      )
+    : [];
+
 export function usePublicTestRunWorkspace() {
   const { code, sessionToken } = useParams<{ code: string; sessionToken: string }>();
   const navigate = useNavigate();
@@ -85,13 +123,8 @@ export function usePublicTestRunWorkspace() {
     onSavedAnswers: handleSavedAnswers,
   });
 
-  const getCurrentAnswer = (questionId: number) => {
-    if (Object.prototype.hasOwnProperty.call(answerDraft, questionId)) {
-      return answerDraft[questionId];
-    }
-
-    return serverAnswerMap[questionId];
-  };
+  const getCurrentAnswer = (questionId: number) =>
+    resolveCurrentAnswer(answerDraft, serverAnswerMap, questionId);
 
   const setQuestionAnswer = (questionId: number, value: unknown) => {
     setAnswerDraft((prev) => ({
@@ -102,12 +135,8 @@ export function usePublicTestRunWorkspace() {
   };
 
   const handleSaveAnswers = async () => {
-    if (!sessionToken || !session) {
-      return;
-    }
-
+    if (!sessionToken || !session) return;
     const answers = buildSessionAnswers(session.questions, effectiveAnswers);
-
     if (answers.length === 0) {
       toast.error('Нет данных для сохранения');
       return;
@@ -123,22 +152,15 @@ export function usePublicTestRunWorkspace() {
       setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, response.answers));
       autosave.markAnswersSaved(answers);
       toast.success('Ответы сохранены');
-    } catch {
+    } catch (error) {
+      if (isSessionExpiredError(error)) void sessionQuery.refetch();
       toast.error('Не удалось сохранить ответы');
     }
   };
 
   const handleFinish = async (answerOverride?: AnswerOverride) => {
-    if (!sessionToken || !code || !session) {
-      return;
-    }
-
-    const answers = buildSessionAnswers(
-      session.questions,
-      answerOverride
-        ? { ...effectiveAnswers, [answerOverride.questionId]: answerOverride.value }
-        : effectiveAnswers,
-    );
+    if (!sessionToken || !code || !session) return;
+    const answers = resolveFinishAnswers(session, effectiveAnswers, answerOverride);
 
     try {
       autosave.cancelQueuedAutosave();
@@ -154,7 +176,8 @@ export function usePublicTestRunWorkspace() {
 
       const response = await finishMutation.mutateAsync({ sessionToken });
       navigate(`/t/${code}/result/${response.sessionToken}`);
-    } catch {
+    } catch (error) {
+      if (isSessionExpiredError(error)) void sessionQuery.refetch();
       toast.error('Не удалось завершить тест');
     }
   };
