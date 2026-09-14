@@ -35,6 +35,8 @@ export type AdminPublicLinksListResponseDtoLinksItem = {
   educationOrganizationId: number | null;
   /** @nullable */
   educationOrganizationName: string | null;
+  /** @nullable */
+  educationOrganizationIsActive: boolean | null;
   personalDataProcessingMode: AdminPublicLinksListResponseDtoLinksItemPersonalDataProcessingMode;
   /** @nullable */
   operatorFullNameSnapshot: string | null;

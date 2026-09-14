@@ -159,4 +159,48 @@ describe('AdminSettingsWorkspace privacy policy', () => {
       },
     });
   });
+
+  /** Находка аудита UX-18: автоматическое обновление даты публикации при новой редакции. */
+  it('automatically sets publication date when version is edited, and submits new publication date', () => {
+    renderWorkspace();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Политика данных' }));
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Версия политики' }), {
+      target: { value: '2026-09-14-v2' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить политику' }));
+
+    expect(updatePrivacyPolicy).toHaveBeenCalled();
+    const calledData = updatePrivacyPolicy.mock.calls[0][0].data;
+    expect(calledData.version).toBe('2026-09-14-v2');
+    expect(calledData.publishedAt).not.toBe('2026-07-10T00:00:00.000Z');
+  });
+
+  it('warns when editing version but reverting date to the previous edition date', () => {
+    renderWorkspace();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Политика данных' }));
+
+    // Сначала меняем версию — дата обновляется
+    fireEvent.change(screen.getByRole('textbox', { name: 'Версия политики' }), {
+      target: { value: '2026-09-14-v2' },
+    });
+
+    // Возвращаем старую дату вручную (до прежней редакции от 10.07.2026)
+    fireEvent.change(screen.getByLabelText('Дата публикации'), {
+      target: { value: '01.07.2026 00:00' },
+    });
+
+    expect(
+      screen.getByText(/редакция изменена, но дата публикации осталась прежней/i),
+    ).toBeInTheDocument();
+
+    // Нажимаем «Поставить текущую дату»
+    fireEvent.click(screen.getByRole('button', { name: 'Поставить текущую дату' }));
+    expect(
+      screen.queryByText(/редакция изменена, но дата публикации осталась прежней/i),
+    ).not.toBeInTheDocument();
+  });
 });

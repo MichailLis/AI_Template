@@ -68,4 +68,36 @@ describe('PrivacyPolicyForm', () => {
 
     expect(onPublishedAtChange).toHaveBeenCalledWith('2026-09-06T14:30');
   });
+
+  /** Находка аудита UX-18: предупреждение об устаревшей дате и кнопка подстановки даты. */
+  it('displays warning when editing with old date and invokes onSetCurrentDate when clicked', () => {
+    const onSetCurrentDate = vi.fn();
+
+    render(
+      <PrivacyPolicyForm
+        canSubmit
+        content="Новый текст политики"
+        isOldDateWithNewContent
+        isSaving={false}
+        operatorFullName="Оператор"
+        publishedAt="2026-07-10T03:00"
+        version="2026-09-14-v2"
+        onContentChange={vi.fn()}
+        onOperatorFullNameChange={vi.fn()}
+        onPublishedAtChange={vi.fn()}
+        onSetCurrentDate={onSetCurrentDate}
+        onSubmit={vi.fn()}
+        onVersionChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(/редакция изменена, но дата публикации осталась прежней/i),
+    ).toBeInTheDocument();
+
+    const setDateButton = screen.getByRole('button', { name: 'Поставить текущую дату' });
+    fireEvent.click(setDateButton);
+
+    expect(onSetCurrentDate).toHaveBeenCalledTimes(1);
+  });
 });

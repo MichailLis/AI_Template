@@ -23,6 +23,7 @@ interface PolusEducationDemographicFieldsProps {
   registrationFormState: StudentFormState;
   link: PublicLinkAccessResponseDto;
   warning: string | null;
+  nameInputWarning?: string | null;
   onEducationFieldChange: EducationFieldChangeHandler;
   onDemographicFieldChange: DemographicFieldChangeHandler;
 }
@@ -77,6 +78,7 @@ export function PolusEducationDemographicFields({
   registrationFormState,
   link,
   warning,
+  nameInputWarning,
   onEducationFieldChange,
   onDemographicFieldChange,
 }: PolusEducationDemographicFieldsProps) {
@@ -91,6 +93,11 @@ export function PolusEducationDemographicFields({
           placeholder="Введите ваше имя"
           required
         />
+        {nameInputWarning ? (
+          <p role="alert" className="text-xs text-amber-600 font-medium mt-1">
+            {nameInputWarning}
+          </p>
+        ) : null}
       </div>
       <div className="polus-field">
         <label htmlFor="polus-student-last-initial">Фамилия (1-я буква)</label>

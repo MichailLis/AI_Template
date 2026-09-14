@@ -12,9 +12,16 @@ interface PublicTestRunExpiredScreenProps {
   session: PublicTestSession;
 }
 
-const getExpiredMessage = (timeLimitMinutes: number | null) => {
-  const limitText = timeLimitMinutes
-    ? ` — ${timeLimitMinutes} ${pluralizeRu(timeLimitMinutes, ['минута', 'минуты', 'минут'])} —`
+const getScreenTitle = (status: PublicTestSession['status']) =>
+  status === 'ABANDONED' ? 'Попытка закрыта' : 'Время вышло';
+
+const getScreenMessage = (session: PublicTestSession) => {
+  if (session.status === 'ABANDONED') {
+    return 'Эта попытка была прервана или закрыта. Ответы больше не принимаются, и результат по ней не формируется.';
+  }
+
+  const limitText = session.timeLimitMinutes
+    ? ` — ${session.timeLimitMinutes} ${pluralizeRu(session.timeLimitMinutes, ['минута', 'минуты', 'минут'])} —`
     : '';
 
   return `Время на прохождение теста${limitText} закончилось. Попытка закрыта: ответы больше не принимаются, и результат по ней не формируется.`;
@@ -23,17 +30,18 @@ const getExpiredMessage = (timeLimitMinutes: number | null) => {
 const NEXT_STEP_MESSAGE =
   'Если по ссылке можно пройти тест еще раз, начните заново. Если попыток не осталось, обратитесь к педагогу или администратору теста.';
 
-// Экран закрытой по времени попытки: вопросы не показываются, потому что сервер ответы уже не примет.
+// Экран закрытой попытки (истекшей по времени или брошенной): вопросы не показываются, потому что сервер ответы уже не примет.
 export function PublicTestRunExpiredScreen({ code, session }: PublicTestRunExpiredScreenProps) {
   const entryPath = `/t/${code}`;
-  const message = getExpiredMessage(session.timeLimitMinutes);
+  const title = getScreenTitle(session.status);
+  const message = getScreenMessage(session);
 
   if (session.publicTemplate === 'POLUS') {
     return (
       <PolusPublicLayout view="question">
         <div className="polus-question-shell">
           <article className="polus-question-card polus-expired-card">
-            <h1>Время вышло</h1>
+            <h1>{title}</h1>
             <p className="polus-question-description">{message}</p>
             <p className="polus-question-description">{NEXT_STEP_MESSAGE}</p>
             <div className="polus-question-actions">
@@ -54,7 +62,7 @@ export function PublicTestRunExpiredScreen({ code, session }: PublicTestRunExpir
     >
       <section className="public-glass w-full space-y-4 rounded-[1.75rem] px-5 py-8 text-center md:px-10">
         <h1 className="text-balance text-2xl font-bold leading-tight text-foreground md:text-3xl">
-          Время вышло
+          {title}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{message}</p>
         <p className="text-sm leading-relaxed text-muted-foreground md:text-base">

@@ -243,4 +243,29 @@ describe('PublicLinksListCard test version', () => {
 
     expect(baseHandlers.onOpenHistory).toHaveBeenCalledWith(archivedLink);
   });
+
+  /** Находка аудита FLOW-10: отключение учебного заведения помечает его ссылки. */
+  it('reports that the education organization is disabled instead of calling its link active', () => {
+    const disabledOrgLink = {
+      id: 8,
+      shortCode: 'REAUDT02',
+      title: 'Доаудит тест',
+      educationOrganizationName: 'Доаудит лицей',
+      educationOrganizationIsActive: false,
+      publicTemplate: 'STANDARD' as const,
+      entryProfileMode: 'EDUCATION' as const,
+      createdAt: '2026-05-19T10:30:00.000Z',
+      archivedAt: null,
+      topicArchivedAt: null,
+      isActive: true,
+      ...upToDateVersion,
+    };
+
+    renderLinks([disabledOrgLink]);
+
+    expect(screen.getByText('Заведение отключено')).toBeInTheDocument();
+    expect(screen.getByText('Доаудит лицей (отключено)')).toBeInTheDocument();
+    expect(screen.getByText('Доступ закрыт для участников')).toBeInTheDocument();
+    expect(screen.queryByText('Активна')).not.toBeInTheDocument();
+  });
 });

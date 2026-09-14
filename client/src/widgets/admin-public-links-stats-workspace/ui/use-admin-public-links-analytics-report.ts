@@ -101,7 +101,12 @@ export const useAnalyticsReport = (
               analyticsParams as TestsAdminAnalyticsControllerExportPdfParams,
             );
 
-      downloadTestAnalyticsBlob(blob, buildAnalyticsFileName(effectiveTopicId, format));
+      const fileName = buildAnalyticsFileName(effectiveTopicId, format, {
+        topicTitle: analyticsSummaryQuery.data?.topic.title,
+        scope: analyticsScope,
+        date: analyticsSummaryQuery.data?.topic.generatedAt,
+      });
+      downloadTestAnalyticsBlob(blob, fileName);
     } catch {
       setAnalyticsExportError('Не удалось сформировать файл отчета. Попробуйте еще раз.');
     } finally {

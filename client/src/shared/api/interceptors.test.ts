@@ -200,4 +200,48 @@ describe('setupInterceptors', () => {
     expect(safeStorage.getItem('accessToken')).toBe('new-access');
     expect(safeStorage.getItem('refreshToken')).toBeNull();
   });
+
+  /** Находка аудита FLOW-11: передача причины и адреса возврата на /login при истекшей сессии. */
+  it('redirects to /login with reason=session_expired and from parameter when refresh fails on a protected page', async () => {
+    const originalLocation = window.location;
+    let assignedHref = '';
+    const mockLocation = {
+      ...originalLocation,
+      origin: 'http://localhost:3000',
+      pathname: '/admin/topics',
+      search: '?tab=active',
+      hash: '',
+      set href(val: string) {
+        assignedHref = val;
+      },
+      get href() {
+        return assignedHref;
+      },
+    };
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      configurable: true,
+      value: mockLocation,
+    });
+
+    try {
+      const onAuthRefreshFailed = vi.fn();
+      configureInterceptorsRuntime({ onAuthRefreshFailed });
+      const api = createApiWithUnauthorizedAdapter();
+
+      safeStorage.setItem('accessToken', 'expired-access');
+
+      await expect(api.get('/protected')).rejects.toThrow('Refresh failed');
+
+      expect(assignedHref).toBe(
+        '/login?reason=session_expired&from=%2Fadmin%2Ftopics%3Ftab%3Dactive',
+      );
+    } finally {
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        configurable: true,
+        value: originalLocation,
+      });
+    }
+  });
 });

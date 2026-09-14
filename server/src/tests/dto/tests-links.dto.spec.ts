@@ -144,6 +144,7 @@ describe('tests link DTO profile mode fields', () => {
       topicId: 2,
       educationOrganizationId: null,
       educationOrganizationName: null,
+      educationOrganizationIsActive: null,
       personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
       operatorFullNameSnapshot:
         'Муниципальное автономное общеобразовательное учреждение «Лицей № 42»',

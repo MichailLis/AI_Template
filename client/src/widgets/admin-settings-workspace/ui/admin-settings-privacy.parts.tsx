@@ -46,6 +46,7 @@ export function PrivacyPolicyStatusPanel({
 interface PrivacyPolicyFormProps {
   canSubmit: boolean;
   content: string;
+  isOldDateWithNewContent?: boolean;
   isSaving: boolean;
   operatorFullName: string;
   publishedAt: string;
@@ -53,6 +54,7 @@ interface PrivacyPolicyFormProps {
   onContentChange: (value: string) => void;
   onOperatorFullNameChange: (value: string) => void;
   onPublishedAtChange: (value: string) => void;
+  onSetCurrentDate?: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onVersionChange: (value: string) => void;
 }
@@ -60,6 +62,7 @@ interface PrivacyPolicyFormProps {
 export function PrivacyPolicyForm({
   canSubmit,
   content,
+  isOldDateWithNewContent = false,
   isSaving,
   operatorFullName,
   publishedAt,
@@ -67,6 +70,7 @@ export function PrivacyPolicyForm({
   onContentChange,
   onOperatorFullNameChange,
   onPublishedAtChange,
+  onSetCurrentDate,
   onSubmit,
   onVersionChange,
 }: PrivacyPolicyFormProps) {
@@ -82,16 +86,42 @@ export function PrivacyPolicyForm({
             placeholder="2026-07-09"
             autoComplete="off"
           />
+          {!version.trim() ? (
+            <p className="text-xs font-medium text-destructive">
+              Укажите номер или идентификатор версии.
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="privacy-policy-published-at">Дата публикации</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="privacy-policy-published-at">Дата публикации</Label>
+            {onSetCurrentDate ? (
+              <button
+                type="button"
+                onClick={onSetCurrentDate}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Поставить текущую дату
+              </button>
+            ) : null}
+          </div>
           <RuDateInput
             id="privacy-policy-published-at"
             mode="datetime"
             value={publishedAt}
             onChange={onPublishedAtChange}
           />
+          {isOldDateWithNewContent ? (
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+              Внимание: редакция изменена, но дата публикации осталась прежней. Рекомендуется
+              обновить дату.
+            </p>
+          ) : (
+            <p className={adminClassNames.form.fieldHint}>
+              Дата и время вступления редакции в силу на странице /privacy.
+            </p>
+          )}
         </div>
       </div>
 
@@ -120,10 +150,16 @@ export function PrivacyPolicyForm({
           className="min-h-[360px] font-mono text-sm leading-6"
           spellCheck={false}
         />
-        <p className={adminClassNames.form.fieldHint}>
-          Этот текст публикуется на странице /privacy и используется как текущая редакция для новых
-          попыток тестирования.
-        </p>
+        {!content.trim() ? (
+          <p className="text-xs font-medium text-destructive">
+            Текст политики обязателен для сохранения и публикации.
+          </p>
+        ) : (
+          <p className={adminClassNames.form.fieldHint}>
+            Этот текст публикуется на странице /privacy и используется как текущая редакция для
+            новых попыток тестирования.
+          </p>
+        )}
       </div>
 
       <Button type="submit" disabled={!canSubmit}>

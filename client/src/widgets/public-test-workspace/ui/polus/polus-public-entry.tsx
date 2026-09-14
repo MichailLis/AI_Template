@@ -35,6 +35,7 @@ interface PolusPublicEntryProps {
   demographicFormState: DemographicFormState;
   registrationFormState: StudentFormState;
   currentGroupValidationWarning: string | null;
+  nameInputWarning?: string | null;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onEducationFieldChange: EducationFieldChangeHandler;
@@ -59,6 +60,13 @@ function PolusIntroPanel() {
             По итогам вы получите подходящие направления, профессии и первые практические шаги.
           </span>
         </div>
+        <div className="polus-metric-row polus-metric-row--stats">
+          <span>Около 15 минут</span>
+          <span aria-hidden="true">•</span>
+          <span>4 блока</span>
+          <span aria-hidden="true">•</span>
+          <span>Персональный результат</span>
+        </div>
       </div>
 
       <div className="polus-professor" aria-label="Сопровождение теста">
@@ -78,11 +86,13 @@ function EducationProfileFields({
   formState,
   link,
   warning,
+  nameInputWarning,
   onFieldChange,
 }: {
   formState: StudentFormState;
   link: PublicLinkAccessResponseDto;
   warning: string | null;
+  nameInputWarning?: string | null;
   onFieldChange: EducationFieldChangeHandler;
 }) {
   return (
@@ -96,6 +106,11 @@ function EducationProfileFields({
           placeholder="Введите ваше имя"
           required
         />
+        {nameInputWarning ? (
+          <p role="alert" className="text-xs text-amber-600 font-medium mt-1">
+            {nameInputWarning}
+          </p>
+        ) : null}
       </div>
       <div className="polus-field">
         <label htmlFor="polus-student-last-initial">Фамилия (1-я буква)</label>
@@ -231,6 +246,7 @@ export function PolusPublicEntry({
   demographicFormState,
   registrationFormState,
   currentGroupValidationWarning,
+  nameInputWarning,
   isSubmitting,
   onSubmit,
   onEducationFieldChange,
@@ -257,6 +273,7 @@ export function PolusPublicEntry({
         registrationFormState={registrationFormState}
         link={link}
         warning={currentGroupValidationWarning}
+        nameInputWarning={nameInputWarning}
         onEducationFieldChange={onEducationFieldChange}
         onDemographicFieldChange={onDemographicFieldChange}
       />
@@ -267,6 +284,7 @@ export function PolusPublicEntry({
         formState={registrationFormState}
         link={link}
         warning={currentGroupValidationWarning}
+        nameInputWarning={nameInputWarning}
         onFieldChange={onEducationFieldChange}
       />
     );

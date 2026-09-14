@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { formatDateTime } from '@/shared/lib/date-format';
 
 import {
+  formatAtlasErrorMessage,
   getOpenRouterHealthBadge,
   getProfessionAtlasHealthBadge,
   type OpenRouterSettings,
@@ -169,5 +170,21 @@ describe('getProfessionAtlasHealthBadge', () => {
       label: `Атлас работает · ${formatDateTime(CHECKED_AT)}`,
       tone: 'success',
     });
+  });
+});
+
+describe('formatAtlasErrorMessage', () => {
+  it('translates fetch failed to user-friendly text', () => {
+    expect(formatAtlasErrorMessage('fetch failed')).toBe('Сервис Атласа не отвечает');
+    expect(formatAtlasErrorMessage('TypeError: fetch failed')).toBe('Сервис Атласа не отвечает');
+  });
+
+  it('keeps other specific error messages as is', () => {
+    expect(formatAtlasErrorMessage('HTTP 404: Not Found')).toBe('HTTP 404: Not Found');
+  });
+
+  it('handles empty or null messages gracefully', () => {
+    expect(formatAtlasErrorMessage(null)).toBeNull();
+    expect(formatAtlasErrorMessage(undefined)).toBeNull();
   });
 });

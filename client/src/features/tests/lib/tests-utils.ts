@@ -195,7 +195,7 @@ const parseSliderBandsDraft = (
     throw new Error('Добавьте минимум один диапазон слайдера');
   }
 
-  return nonEmptyDrafts.map((band, index) => {
+  const parsed = nonEmptyDrafts.map((band, index) => {
     const minValue = Number.parseInt(band.minValue.trim(), 10);
     const maxValue = Number.parseInt(band.maxValue.trim(), 10);
     const weight = Number.parseInt(band.weight.trim() || '0', 10);
@@ -223,6 +223,20 @@ const parseSliderBandsDraft = (
 
     return { minValue, maxValue, label, weight };
   });
+
+  for (let i = 0; i < parsed.length; i++) {
+    for (let j = i + 1; j < parsed.length; j++) {
+      const a = parsed[i];
+      const b = parsed[j];
+      if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
+        throw new Error(
+          `Диапазоны не должны пересекаться: [${a.minValue}..${a.maxValue}] и [${b.minValue}..${b.maxValue}]`,
+        );
+      }
+    }
+  }
+
+  return parsed;
 };
 
 const getQuestionSettingsText = (question: TestsTopicDetailResponseDtoDraftQuestionsItem) => {

@@ -45,6 +45,34 @@ describe('PublicTestResultWorkspace', () => {
     expect(screen.queryByRole('heading', { name: /результат теста/i })).not.toBeInTheDocument();
   });
 
+  /** Находка аудита UX-16: честный экран без карточек-заглушек при тесте без анализа. */
+  it('renders an honest completion screen without placeholder hero cards when test has no analysis', () => {
+    mockSessionResult({
+      analysis: {
+        providerMode: 'STUB',
+        status: 'READY',
+        summary: null,
+        errorMessage: null,
+        generatedAt: '2026-09-13T12:00:00.000Z',
+      },
+    });
+
+    render(<PublicTestResultWorkspace />);
+
+    expect(screen.getByRole('heading', { name: 'Тестирование завершено' })).toBeInTheDocument();
+    expect(screen.getByText('Ответы сохранены')).toBeInTheDocument();
+    expect(
+      screen.getByText(/результат пришлет преподаватель или анализ не предусмотрен/i),
+    ).toBeInTheDocument();
+
+    // Заглушки hero-сигналов и обещания модели не должны отображаться
+    expect(screen.queryByText(/оценивается моделью/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/анализ результата/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/базовые навыки/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/инженерно-технического профиля/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /скачать pdf/i })).not.toBeInTheDocument();
+  });
+
   it('shows the configured profession atlas link with student-facing explanation', () => {
     mockSessionResult({ professionAtlasUrl: 'https://atlas.example/professions' });
 

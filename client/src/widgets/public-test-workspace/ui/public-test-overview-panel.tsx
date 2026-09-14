@@ -1,5 +1,7 @@
 import { BarChart3, Clock3, FileText, Sparkles, Target } from 'lucide-react';
 
+import { pluralizeRu } from '@/shared/lib/ru-plural';
+
 interface PublicTestOverviewPanelProps {
   title: string;
   description: string | null;
@@ -74,7 +76,10 @@ export function PublicTestOverviewPanel({
         <div className="mt-4 flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2">
           <Clock3 className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium text-foreground">
-            Время прохождения: {timeLimitMinutes ? `${timeLimitMinutes} минут` : '15-20 минут'}
+            Время прохождения:{' '}
+            {timeLimitMinutes
+              ? `${timeLimitMinutes} ${pluralizeRu(timeLimitMinutes, ['минута', 'минуты', 'минут'])}`
+              : '15-20 минут'}
           </span>
         </div>
       </div>

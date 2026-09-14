@@ -6,6 +6,9 @@ type PublicLinkAccessState = {
   isActive: boolean;
   startsAt: Date | null;
   endsAt: Date | null;
+  educationOrganization?: {
+    isActive: boolean;
+  } | null;
 };
 
 type PublicLinkTopicVersionAccessState = {
@@ -25,6 +28,12 @@ export const ensurePublicLinkAccessible = (
 
   if (topicVersion.topic.archivedAt) {
     throw new BadRequestException('Public test link is disabled because its test is archived');
+  }
+
+  if (link.educationOrganization && !link.educationOrganization.isActive) {
+    throw new BadRequestException(
+      'Public test link is disabled because its education organization is disabled',
+    );
   }
 
   if (!link.isActive) {

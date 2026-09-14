@@ -1,5 +1,5 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicTestRunWorkspace } from './public-test-run-workspace';
@@ -180,6 +180,51 @@ describe.each(['STANDARD', 'POLUS'] as const)(
       renderWorkspace();
 
       expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+    });
+  },
+);
+
+/**
+ * Находка доаудита FLOW-08: завершенная попытка открывалась как незавершенная и принимала несохраняемые ответы.
+ * Для COMPLETED должен происходить переход на результат (/t/:code/result/:sessionToken).
+ * Для ABANDONED должен показываться экран закрытой попытки со ссылкой на начало теста.
+ */
+describe.each(['STANDARD', 'POLUS'] as const)(
+  'PublicTestRunWorkspace terminal session states (%s)',
+  (template) => {
+    afterEach(() => {
+      cleanup();
+      vi.clearAllMocks();
+    });
+
+    it('redirects completed attempts to the result screen', () => {
+      mockWorkspace(template, 'idle', { status: 'COMPLETED' });
+
+      render(
+        <MemoryRouter initialEntries={['/t/DEMO2026/session/session-token']}>
+          <Routes>
+            <Route path="/t/:code/session/:sessionToken" element={<PublicTestRunWorkspace />} />
+            <Route path="/t/:code/result/:sessionToken" element={<div>Result Screen Target</div>} />
+          </Routes>
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText('Result Screen Target')).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
+    });
+
+    it('shows the closed state for abandoned attempts instead of questions', () => {
+      mockWorkspace(template, 'idle', { status: 'ABANDONED' });
+
+      renderWorkspace();
+
+      expect(screen.getByRole('heading', { name: 'Попытка закрыта' })).toBeInTheDocument();
+      expect(screen.getByText(/Эта попытка была прервана или закрыта/i)).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Вернуться к началу теста' })).toHaveAttribute(
+        'href',
+        '/t/DEMO2026',
+      );
     });
   },
 );

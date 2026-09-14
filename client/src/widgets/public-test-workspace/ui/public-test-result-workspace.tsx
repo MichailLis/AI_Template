@@ -89,14 +89,14 @@ const getProcessingStartedAt = (
   return new Date(finishedAtMs ?? fallbackStartedAtMs).toISOString();
 };
 
-const getTopSkill = (analysis: AnalysisResult | null) =>
-  analysis?.skillsLevel.items
+const getTopSkill = (analysis: AnalysisResult) =>
+  analysis.skillsLevel.items
     .filter((item) => typeof item.score === 'number')
     .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))[0] ?? null;
 
-const getHeroSignals = (analysis: AnalysisResult | null): HeroSignal[] => {
+const getHeroSignals = (analysis: AnalysisResult): HeroSignal[] => {
   const topSkill = getTopSkill(analysis);
-  const thinkingStrengths = analysis?.thinkingType.strengths.slice(0, 2).join(' · ');
+  const thinkingStrengths = analysis.thinkingType.strengths.slice(0, 2).join(' · ');
   const topSkillScore =
     typeof topSkill?.score === 'number' ? `${topSkill.score}/100 по шкале анализа` : null;
 
@@ -104,19 +104,19 @@ const getHeroSignals = (analysis: AnalysisResult | null): HeroSignal[] => {
     {
       icon: Gauge,
       label: 'Профиль',
-      value: analysis?.thinkingType.type ?? 'Анализ результата',
+      value: analysis.thinkingType.type || 'Анализ результата',
       note: thinkingStrengths || 'Сводка по ответам',
     },
     {
       icon: Target,
       label: 'Сильная зона',
-      value: topSkill?.name ?? 'Базовые навыки',
-      note: topSkillScore ?? 'Оценивается моделью',
+      value: topSkill?.name || 'Базовые навыки',
+      note: topSkillScore || 'Оценивается по шкале',
     },
     {
       icon: Route,
       label: 'Следующий фокус',
-      value: analysis?.careerDevelopment.professionalNextSteps[0] ?? 'План развития',
+      value: analysis.careerDevelopment.professionalNextSteps[0] || 'План развития',
       note: 'Конкретный шаг после теста',
     },
   ];
@@ -137,15 +137,17 @@ function HeroSignalCard({ icon: Icon, label, value, note }: HeroSignal) {
   );
 }
 
-function ResultHeroCopy() {
+function ResultHeroCopy({ hasAnalysis }: { hasAnalysis: boolean }) {
   return (
     <div className="relative min-w-0 max-w-3xl space-y-4">
       <div className="space-y-3">
         <h1 className="text-balance text-3xl font-black leading-tight md:text-5xl">
-          Результат теста
+          {hasAnalysis ? 'Результат теста' : 'Тестирование завершено'}
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-white/78 md:text-base">
-          Итог прохождения и анализ инженерно-технического профиля.
+          {hasAnalysis
+            ? 'Итог прохождения и анализ инженерно-технического профиля.'
+            : 'Ответы сохранены. Результат пришлет преподаватель или анализ не предусмотрен.'}
         </p>
       </div>
     </div>
@@ -167,12 +169,14 @@ function ResultPdfButton({ className }: { className: string }) {
   );
 }
 
-function ResultHero() {
+function ResultHero({ hasAnalysis }: { hasAnalysis: boolean }) {
   return (
     <div className="public-result-hero relative overflow-hidden rounded-[1.5rem] px-5 py-6 text-white md:px-7 md:py-7">
       <div className="relative flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-        <ResultHeroCopy />
-        <ResultPdfButton className="public-result-pdf-action w-fit shrink-0 rounded-xl border-white/25 bg-white/12 text-white shadow-sm backdrop-blur hover:bg-white/18 hover:text-white" />
+        <ResultHeroCopy hasAnalysis={hasAnalysis} />
+        {hasAnalysis ? (
+          <ResultPdfButton className="public-result-pdf-action w-fit shrink-0 rounded-xl border-white/25 bg-white/12 text-white shadow-sm backdrop-blur hover:bg-white/18 hover:text-white" />
+        ) : null}
       </div>
     </div>
   );
@@ -282,7 +286,8 @@ export function PublicTestResultWorkspace() {
   }
 
   const parsedAnalysis = parseAnalysisResult(result.analysis.summary);
-  const heroSignals = getHeroSignals(parsedAnalysis);
+  const hasAnalysis = Boolean(parsedAnalysis);
+  const heroSignals = parsedAnalysis ? getHeroSignals(parsedAnalysis) : [];
 
   return (
     <PublicThemeLayout
@@ -291,13 +296,15 @@ export function PublicTestResultWorkspace() {
     >
       <section className="public-glass public-result-shell rounded-[1.75rem] px-4 py-4 md:px-6 md:py-6">
         <header className="space-y-4">
-          <ResultHero />
+          <ResultHero hasAnalysis={hasAnalysis} />
 
-          <div className="public-result-signal-grid grid gap-3 lg:grid-cols-3">
-            {heroSignals.map((signal) => (
-              <HeroSignalCard key={signal.label} {...signal} />
-            ))}
-          </div>
+          {hasAnalysis ? (
+            <div className="public-result-signal-grid grid gap-3 lg:grid-cols-3">
+              {heroSignals.map((signal) => (
+                <HeroSignalCard key={signal.label} {...signal} />
+              ))}
+            </div>
+          ) : null}
         </header>
 
         <div className="mt-8 md:mt-9">
@@ -310,9 +317,11 @@ export function PublicTestResultWorkspace() {
           </div>
         ) : null}
 
-        <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
-          <ResultPdfButton className="rounded-xl px-5 shadow-sm" />
-        </div>
+        {hasAnalysis ? (
+          <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
+            <ResultPdfButton className="rounded-xl px-5 shadow-sm" />
+          </div>
+        ) : null}
       </section>
     </PublicThemeLayout>
   );

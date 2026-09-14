@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ATTEMPTS_LIMIT,
+  buildAnalyticsFileName,
   buildAnalyticsParams,
   readLimit,
   readNumber,
@@ -66,5 +67,34 @@ describe('analytics report query parameters', () => {
         dateTo: '',
       }),
     ).toEqual({ scope: 'TOPIC', linkStatus: 'ARCHIVED', dateFrom: '2026-09-01' });
+  });
+});
+
+describe('buildAnalyticsFileName', () => {
+  it('includes topic title, scope, date, and extension', () => {
+    const fileName = buildAnalyticsFileName(8, 'xlsx', {
+      topicTitle: 'Инженерный маршрут',
+      scope: 'TOPIC',
+      date: '2026-09-14T10:00:00.000Z',
+    });
+    expect(fileName).toBe('Инженерный-маршрут-topic-2026-09-14.xlsx');
+  });
+
+  it('includes linkCode when scope is PUBLIC_LINK', () => {
+    const fileName = buildAnalyticsFileName(8, 'pdf', {
+      topicTitle: 'Инженерный маршрут',
+      scope: 'PUBLIC_LINK',
+      linkCode: 'REAUDT02',
+      date: '2026-09-14T10:00:00.000Z',
+    });
+    expect(fileName).toBe('Инженерный-маршрут-link-REAUDT02-2026-09-14.pdf');
+  });
+
+  it('falls back to test ID when topicTitle is missing', () => {
+    const fileName = buildAnalyticsFileName(8, 'xlsx', {
+      scope: 'TOPIC',
+      date: '2026-09-14T10:00:00.000Z',
+    });
+    expect(fileName).toBe('test-8-topic-2026-09-14.xlsx');
   });
 });

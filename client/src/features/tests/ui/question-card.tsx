@@ -1,4 +1,4 @@
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Pencil, Trash2 } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -15,6 +15,8 @@ type DropPosition = 'before' | 'after';
 
 interface QuestionCardProps {
   question: TestDraftQuestion;
+  isFirst?: boolean;
+  isLast?: boolean;
   isReorderingQuestions: boolean;
   isDeletingQuestion: boolean;
   isDragging: boolean;
@@ -27,10 +29,14 @@ interface QuestionCardProps {
   onDragEnd: () => void;
   onEditQuestion: (question: TestDraftQuestion) => void;
   onRequestDeleteQuestion: (question: TestDraftQuestion) => void;
+  onMoveUp?: (questionId: number) => void;
+  onMoveDown?: (questionId: number) => void;
 }
 
 export function QuestionCard({
   question,
+  isFirst = false,
+  isLast = false,
   isReorderingQuestions,
   isDeletingQuestion,
   isDragging,
@@ -43,6 +49,8 @@ export function QuestionCard({
   onDragEnd,
   onEditQuestion,
   onRequestDeleteQuestion,
+  onMoveUp,
+  onMoveDown,
 }: QuestionCardProps) {
   return (
     <Card
@@ -95,6 +103,32 @@ export function QuestionCard({
           </div>
 
           <div className="flex flex-wrap gap-2 sm:justify-end">
+            {onMoveUp ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onMoveUp(question.id)}
+                disabled={isFirst || isReorderingQuestions || isAnyDragging}
+                title="Переместить вверх"
+                aria-label={`Переместить вопрос ${question.order} вверх`}
+              >
+                <ArrowUp className="mr-1 h-4 w-4" />
+                Вверх
+              </Button>
+            ) : null}
+            {onMoveDown ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onMoveDown(question.id)}
+                disabled={isLast || isReorderingQuestions || isAnyDragging}
+                title="Переместить вниз"
+                aria-label={`Переместить вопрос ${question.order} вниз`}
+              >
+                <ArrowDown className="mr-1 h-4 w-4" />
+                Вниз
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="sm"

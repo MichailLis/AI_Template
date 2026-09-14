@@ -191,6 +191,8 @@ export function TestQuestionsOnlyView({
         onDrop={questionDnd.handleDrop}
         onEditQuestion={onEditQuestion}
         onRequestDeleteQuestion={onRequestDeleteQuestion}
+        onMoveUp={questionDnd.handleMoveUp}
+        onMoveDown={questionDnd.handleMoveDown}
       />
     </TestQuestionsOnlyViewCard>
   );

@@ -854,4 +854,23 @@ describe('TestsPublicLinkService', () => {
       BadRequestException,
     );
   });
+
+  it('getAccessiblePublicLinkByCode rejects links whose education organization is disabled', async () => {
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(
+      createPublicLinkRecordFixture({
+        educationOrganization: createEducationOrganizationRecordFixture({
+          id: 12,
+          name: 'Отключенное заведение',
+          isActive: false,
+        }),
+      }),
+    );
+
+    const result = service.getAccessiblePublicLinkByCode('demo2026');
+
+    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toMatchObject({
+      message: 'Public test link is disabled because its education organization is disabled',
+    });
+  });
 });

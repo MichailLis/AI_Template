@@ -215,7 +215,7 @@ describe('LoginForm', () => {
     await submitLogin();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Неверный email или пароль');
-    expect(toastMock.error).toHaveBeenCalledWith('Неверный email или пароль');
+    expect(toastMock.error).not.toHaveBeenCalled();
   });
 
   it('tells a deactivated user why they cannot sign in', async () => {
@@ -255,5 +255,67 @@ describe('LoginForm', () => {
 
     expect(await screen.findByText('Введите корректный email')).toBeInTheDocument();
     expect(screen.getByText('Введите пароль')).toBeInTheDocument();
+  });
+
+  /** Находка аудита FLOW-11: предупреждение об истекшей сессии и возврат на исходный экран. */
+  it('shows session expired warning when reason=session_expired in query', () => {
+    render(
+      <MemoryRouter initialEntries={['/login?reason=session_expired&from=/admin/public-links']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Сессия истекла, войдите снова');
+  });
+
+  it('shows session expired warning when reason=session_expired in router state', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/login',
+            state: { reason: 'session_expired' },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Сессия истекла, войдите снова');
+  });
+
+  it('returns to the protected URL from query param after successful login', async () => {
+    render(
+      <MemoryRouter initialEntries={['/login?from=/admin/public-links']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await submitLogin();
+
+    expect(await screen.findByTestId('current-location')).toHaveTextContent('/admin/public-links');
+  });
+
+  it('ignores external URL in query param and falls back to /admin', async () => {
+    render(
+      <MemoryRouter initialEntries={['/login?from=https://evil.com/phish']}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await submitLogin();
+
+    expect(await screen.findByTestId('current-location')).toHaveTextContent('/admin');
   });
 });

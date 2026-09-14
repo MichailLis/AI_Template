@@ -271,6 +271,17 @@
         "file": "server/src/tests/reporting/analytics-report-labels.ts"
       },
       "reason": "Стандартное правило русского множественного числа для текста: клиентская утилита подписывает счётчики в интерфейсе, серверный хелпер — единицу «балл» в выгружаемом отчёте. Это оформление строк, а не бизнес-правило на границе доверия; расхождение дало бы только неверную словоформу."
+    },
+    {
+      "name": "formatAtlasErrorMessage",
+      "type": "unrelated",
+      "client": {
+        "file": "client/src/widgets/admin-settings-workspace/ui/admin-settings-cards.model.ts"
+      },
+      "server": {
+        "file": "server/src/tests/prof-orientation-v3-plus/atlas.ts"
+      },
+      "reason": "Форматирование технической ошибки подключения к сервису Атласа (fetch failed) в понятное пользователю сообщение на русском языке на стороне сервера и локальный хелпер в карточках настроек клиента."
     }
   ]
 }

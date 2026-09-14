@@ -133,6 +133,7 @@ export const AdminPublicLinkSchema = z.object({
   topicId: z.number(),
   educationOrganizationId: z.number().nullable(),
   educationOrganizationName: z.string().nullable(),
+  educationOrganizationIsActive: z.boolean().nullable(),
   personalDataProcessingMode: PersonalDataProcessingModeSchema,
   operatorFullNameSnapshot: z.string().nullable(),
   operatorShortNameSnapshot: z.string().nullable(),

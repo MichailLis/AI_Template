@@ -9,6 +9,7 @@ export interface PublicLinkListItem {
   shortCode: string;
   title: string;
   educationOrganizationName: string | null;
+  educationOrganizationIsActive?: boolean | null;
   publicTemplate: 'STANDARD' | 'POLUS';
   publicBranding?: PublicBrandingConfig;
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
@@ -28,7 +29,10 @@ export interface PublicLinkListItem {
 }
 
 export const isPublicLinkClosedForStudents = (link: PublicLinkListItem) =>
-  Boolean(link.archivedAt) || Boolean(link.topicArchivedAt) || !link.isActive;
+  Boolean(link.archivedAt) ||
+  Boolean(link.topicArchivedAt) ||
+  link.educationOrganizationIsActive === false ||
+  !link.isActive;
 
 export const getLinkStateLabel = (link: PublicLinkListItem) => {
   if (link.archivedAt) {
@@ -39,6 +43,10 @@ export const getLinkStateLabel = (link: PublicLinkListItem) => {
     return 'Тест в архиве';
   }
 
+  if (link.educationOrganizationIsActive === false) {
+    return 'Заведение отключено';
+  }
+
   return link.isActive ? 'Активна' : 'Отключена';
 };
 
@@ -47,7 +55,7 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
     return adminBadgeClassNames.archived;
   }
 
-  if (link.topicArchivedAt || !link.isActive) {
+  if (link.topicArchivedAt || link.educationOrganizationIsActive === false || !link.isActive) {
     return adminBadgeClassNames.warning;
   }
 
@@ -76,7 +84,7 @@ export const getLinkRowClassName = (link: PublicLinkListItem) => {
     return adminClassNames.publicLinks.rowArchived;
   }
 
-  if (link.topicArchivedAt || !link.isActive) {
+  if (link.topicArchivedAt || link.educationOrganizationIsActive === false || !link.isActive) {
     return adminClassNames.publicLinks.rowInactive;
   }
 

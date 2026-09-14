@@ -13,6 +13,7 @@ import { Label } from '@/shared/ui/label';
 import {
   atlasCoverageItemStatusLabels,
   atlasCoverageStatusLabels,
+  formatAtlasErrorMessage,
   formatUpdatedAt,
   sourceLabels,
 } from './admin-settings-cards.model';
@@ -174,7 +175,9 @@ export function ProfessionAtlasCoveragePanel({
       </div>
 
       {coverage.errorMessage ? (
-        <div className={adminClassNames.panel.warningInline}>{coverage.errorMessage}</div>
+        <div className={adminClassNames.panel.warningInline}>
+          {formatAtlasErrorMessage(coverage.errorMessage)}
+        </div>
       ) : null}
 
       <details className={adminClassNames.panel.compactCard}>

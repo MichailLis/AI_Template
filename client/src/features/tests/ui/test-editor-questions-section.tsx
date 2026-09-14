@@ -24,6 +24,8 @@ interface TestEditorQuestionsSectionProps {
   onDrop: (questionId: number) => void;
   onEditQuestion: (question: TestDraftQuestion) => void;
   onRequestDeleteQuestion: (question: TestDraftQuestion) => void;
+  onMoveUp?: (questionId: number) => void;
+  onMoveDown?: (questionId: number) => void;
 }
 
 export function TestEditorQuestionsSection({
@@ -39,6 +41,8 @@ export function TestEditorQuestionsSection({
   onDrop,
   onEditQuestion,
   onRequestDeleteQuestion,
+  onMoveUp,
+  onMoveDown,
 }: TestEditorQuestionsSectionProps) {
   return (
     <>
@@ -47,7 +51,7 @@ export function TestEditorQuestionsSection({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className={adminClassNames.form.fieldHint}>
           {questions.length > 1
-            ? 'Перетаскивайте карточки за иконку слева. Подсветка покажет точное место вставки.'
+            ? 'Используйте кнопки «Вверх» и «Вниз» или перетаскивайте карточки за иконку слева.'
             : 'Вопросы добавляются и редактируются в модальном окне.'}
         </p>
         <Button onClick={onCreateQuestion}>Добавить вопрос</Button>
@@ -66,10 +70,12 @@ export function TestEditorQuestionsSection({
           </p>
         ) : null}
 
-        {questions.map((question) => (
+        {questions.map((question, index) => (
           <QuestionCard
             key={question.id}
             question={question}
+            isFirst={index === 0}
+            isLast={index === questions.length - 1}
             isReorderingQuestions={isReorderingQuestions}
             isDeletingQuestion={isDeletingQuestion}
             isDragging={draggingQuestionId === question.id}
@@ -84,6 +90,8 @@ export function TestEditorQuestionsSection({
             onDrop={onDrop}
             onEditQuestion={onEditQuestion}
             onRequestDeleteQuestion={onRequestDeleteQuestion}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
           />
         ))}
       </div>

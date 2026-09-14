@@ -1,7 +1,15 @@
 import type { Prisma } from '@prisma/client';
 
 export const attemptWithSessionInclude = {
-  publicLink: true,
+  publicLink: {
+    include: {
+      educationOrganization: {
+        select: {
+          isActive: true,
+        },
+      },
+    },
+  },
   topicVersion: {
     include: {
       topic: {

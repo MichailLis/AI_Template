@@ -20,6 +20,19 @@ export const configureInterceptorsRuntime = (hooks: InterceptorRuntimeHooks) => 
   runtimeHooks = hooks;
 };
 
+const redirectToLoginOnExpiredSession = () => {
+  if (typeof window === 'undefined' || window.location.pathname === '/login') {
+    return;
+  }
+  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const loginUrl = new URL('/login', window.location.origin);
+  loginUrl.searchParams.set('reason', 'session_expired');
+  if (currentPath && currentPath !== '/') {
+    loginUrl.searchParams.set('from', currentPath);
+  }
+  window.location.href = `${loginUrl.pathname}${loginUrl.search}${loginUrl.hash}`;
+};
+
 export const setupInterceptors = (api: AxiosInstance) => {
   if (configuredApis.has(api)) {
     return;
@@ -87,10 +100,7 @@ export const setupInterceptors = (api: AxiosInstance) => {
           safeStorage.removeItem('refreshToken');
 
           runtimeHooks.onAuthRefreshFailed?.();
-
-          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
+          redirectToLoginOnExpiredSession();
           return Promise.reject(refreshError);
         }
       }

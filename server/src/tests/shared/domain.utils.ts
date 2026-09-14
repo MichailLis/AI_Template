@@ -246,6 +246,18 @@ export const validateDraftForPublish = (draft: {
           );
         }
       }
+
+      for (let i = 0; i < question.sliderBands.length; i++) {
+        for (let j = i + 1; j < question.sliderBands.length; j++) {
+          const a = question.sliderBands[i];
+          const b = question.sliderBands[j];
+          if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
+            throw new BadRequestException(
+              `Slider question "${question.title}" has overlapping score ranges: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+            );
+          }
+        }
+      }
     }
   }
 };
@@ -277,6 +289,20 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
           };
         })
       : [];
+
+  if (dto.type === 'SLIDER' && sliderBands.length > 1) {
+    for (let i = 0; i < sliderBands.length; i++) {
+      for (let j = i + 1; j < sliderBands.length; j++) {
+        const a = sliderBands[i];
+        const b = sliderBands[j];
+        if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
+          throw new BadRequestException(
+            `Slider bands must not overlap: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+          );
+        }
+      }
+    }
+  }
 
   return {
     type: dto.type,

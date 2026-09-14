@@ -60,4 +60,23 @@ describe('PublicTestResultAnalysisView', () => {
       introductionHeading.compareDocumentPosition(skillsHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
+
+  it('renders honest notification when analysis is not configured', () => {
+    render(
+      <PublicTestResultAnalysisView
+        analysis={{
+          providerMode: 'STUB',
+          status: 'READY',
+          summary: null,
+          errorMessage: null,
+          generatedAt: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Ответы сохранены')).toBeInTheDocument();
+    expect(
+      screen.getByText(/подробный анализ для этого теста не предусмотрен/i),
+    ).toBeInTheDocument();
+  });
 });

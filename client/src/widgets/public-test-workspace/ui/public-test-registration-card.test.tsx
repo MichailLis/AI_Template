@@ -45,4 +45,24 @@ describe('PublicTestRegistrationCard', () => {
     expect(screen.getByRole('checkbox', { name: /политик/i })).not.toBeChecked();
     expect(screen.getByRole('link', { name: /политик/i })).toHaveAttribute('href', '/privacy');
   });
+
+  it('renders name input warning when provided (UX-17)', () => {
+    render(
+      <PublicTestRegistrationCard
+        formState={formState}
+        personalData={personalData}
+        lockedEducationOrganization={null}
+        groupValidationMode="NONE"
+        groupValidationExample={null}
+        groupValidationHint={null}
+        groupValidationWarning={null}
+        nameInputWarning="Имя вводится кириллицей"
+        isSubmitting={false}
+        onSubmit={vi.fn()}
+        onFieldChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Имя вводится кириллицей')).toBeInTheDocument();
+  });
 });

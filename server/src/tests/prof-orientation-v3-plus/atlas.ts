@@ -29,6 +29,17 @@ const findExactProfessionMatches = async (
     (profession) => normalizeProfessionTitle(profession.title) === expectedTitle,
   );
 };
+
+const formatAtlasErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    if (error.message === 'fetch failed' || error.message.includes('fetch failed')) {
+      return 'Сервис Атласа не отвечает';
+    }
+    return error.message;
+  }
+  return 'Сервис Атласа не отвечает';
+};
+
 @Injectable()
 export class ProfOrientationAtlasService {
   constructor(
@@ -96,7 +107,7 @@ export class ProfOrientationAtlasService {
         missing: titles,
         duplicates: [],
         items: titles.map((title) => ({ title, status: 'missing', matches: [] })),
-        errorMessage: error instanceof Error ? error.message : 'Atlas API request failed',
+        errorMessage: formatAtlasErrorMessage(error),
       };
     }
   }
@@ -209,7 +220,7 @@ export class ProfOrientationAtlasService {
           status: 'unavailable',
           publicUrl,
           apiUrl,
-          errorMessage: error instanceof Error ? error.message : 'Atlas API request failed',
+          errorMessage: formatAtlasErrorMessage(error),
           unmatchedProfessions: selected.map((item) => item.profession.title),
           duplicateProfessions: [],
           professions: [],

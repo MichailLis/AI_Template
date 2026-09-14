@@ -57,6 +57,26 @@ const apiBinaryResponse = (contentType: string, description: string) => ({
   },
 });
 
+function buildAnalyticsExportDisposition(
+  summary: AdminTestAnalyticsSummaryDto,
+  topicId: number,
+  format: 'xlsx' | 'pdf',
+): string {
+  const dateStr = (summary.topic.generatedAt ?? new Date().toISOString()).slice(0, 10);
+  const scopePart = summary.filters.scope
+    ? summary.filters.scope.toLowerCase().replace(/_/g, '-')
+    : 'all';
+  const rawTitle = summary.topic.title?.trim() || `test-${topicId}`;
+  const cleanTitle = rawTitle
+    .replace(/[/\\?%*:|"<>]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 40);
+
+  const fallback = `test-analytics-${topicId}-${scopePart}-${dateStr}.${format}`;
+  const utf8Name = `${cleanTitle}-${scopePart}-${dateStr}.${format}`;
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(utf8Name)}`;
+}
+
 @ApiTags('tests')
 @ApiBearerAuth()
 @ApiErrorResponses()
@@ -92,13 +112,14 @@ export class TestsAdminAnalyticsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const summary = await this.analyticsService.getSummary(userId, topicId, query);
+    const disposition = buildAnalyticsExportDisposition(summary, topicId, 'xlsx');
     const file = new StreamableFile(await this.exportService.toExcel(summary), {
       type: XLSX_CONTENT_TYPE,
-      disposition: `attachment; filename="test-analytics-${topicId}.xlsx"`,
+      disposition,
     });
 
     res.setHeader('Content-Type', XLSX_CONTENT_TYPE);
-    res.setHeader('Content-Disposition', `attachment; filename="test-analytics-${topicId}.xlsx"`);
+    res.setHeader('Content-Disposition', disposition);
 
     return file;
   }
@@ -115,13 +136,14 @@ export class TestsAdminAnalyticsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const summary = await this.analyticsService.getSummary(userId, topicId, query);
+    const disposition = buildAnalyticsExportDisposition(summary, topicId, 'pdf');
     const file = new StreamableFile(await this.exportService.toPdf(summary), {
       type: PDF_CONTENT_TYPE,
-      disposition: `attachment; filename="test-analytics-${topicId}.pdf"`,
+      disposition,
     });
 
     res.setHeader('Content-Type', PDF_CONTENT_TYPE);
-    res.setHeader('Content-Disposition', `attachment; filename="test-analytics-${topicId}.pdf"`);
+    res.setHeader('Content-Disposition', disposition);
 
     return file;
   }

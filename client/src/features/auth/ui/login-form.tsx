@@ -31,12 +31,18 @@ const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   'Account is deactivated': 'Аккаунт отключён. Обратитесь к администратору.',
 };
 
-const resolveLoginRedirect = (state: unknown) => {
-  if (typeof state !== 'object' || state === null || !('from' in state)) {
-    return DEFAULT_LOGIN_REDIRECT;
+const resolveLoginRedirect = (state: unknown, search = '') => {
+  let from: unknown = null;
+
+  if (typeof state === 'object' && state !== null && 'from' in state) {
+    from = (state as { from?: unknown }).from;
   }
 
-  const from = (state as { from?: unknown }).from;
+  if (!from && search) {
+    const params = new URLSearchParams(search);
+    from = params.get('from');
+  }
+
   if (typeof from !== 'string') {
     return DEFAULT_LOGIN_REDIRECT;
   }
@@ -49,12 +55,28 @@ const resolveLoginRedirect = (state: unknown) => {
     : DEFAULT_LOGIN_REDIRECT;
 };
 
+const resolveSessionExpired = (state: unknown, search = '') => {
+  if (search) {
+    const params = new URLSearchParams(search);
+    if (params.get('reason') === 'session_expired') {
+      return true;
+    }
+  }
+
+  if (typeof state === 'object' && state !== null && 'reason' in state) {
+    return (state as { reason?: unknown }).reason === 'session_expired';
+  }
+
+  return false;
+};
+
 export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const loginMutation = useAuthControllerSignin();
-  const redirectTo = resolveLoginRedirect(location.state);
+  const redirectTo = resolveLoginRedirect(location.state, location.search);
+  const isSessionExpired = resolveSessionExpired(location.state, location.search);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -88,12 +110,10 @@ export const LoginForm = () => {
             'Не удалось войти. Попробуйте еще раз.';
 
           /**
-           * Ошибка входа остается на форме, а не только всплывает тостом: тост исчезает через
-           * несколько секунд, и пользователь, отвлекшийся на ввод пароля, видел форму без
-           * объяснения, почему его не пустили.
+           * Ошибка входа показывается один раз непосредственно на форме, чтобы избежать
+           * дублирования сообщения между формой и всплывающим тостом (UX-19).
            */
           form.setError('root', { message });
-          toast.error(message);
         },
       },
     );
@@ -102,6 +122,11 @@ export const LoginForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+        {isSessionExpired ? (
+          <div role="alert" className={adminClassNames.panel.warningInline}>
+            Сессия истекла, войдите снова
+          </div>
+        ) : null}
         <FormField
           control={form.control}
           name="email"

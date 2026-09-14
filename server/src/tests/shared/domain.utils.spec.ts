@@ -65,4 +65,41 @@ describe('tests domain utils', () => {
       }),
     ).toThrow(BadRequestException);
   });
+
+  it('rejects overlapping slider bands on question upsert', () => {
+    expect(() =>
+      prepareQuestionPayload({
+        type: 'SLIDER',
+        title: 'Overlapping slider',
+        required: true,
+        settings: { min: 0, max: 10, step: 1 },
+        sliderBands: [
+          { minValue: 0, maxValue: 5, label: 'Низко', weight: 3 },
+          { minValue: 3, maxValue: 10, label: 'Высоко', weight: 1 },
+        ],
+      }),
+    ).toThrow('Slider bands must not overlap: [0..5] and [3..10]');
+  });
+
+  it('rejects overlapping slider bands before publish', () => {
+    expect(() =>
+      validateDraftForPublish({
+        questions: [
+          {
+            type: 'SLIDER',
+            title: 'Overlapping slider',
+            order: 1,
+            settings: { min: 0, max: 10, step: 1 },
+            options: [],
+            sliderBands: [
+              { minValue: 0, maxValue: 5 },
+              { minValue: 3, maxValue: 10 },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'Slider question "Overlapping slider" has overlapping score ranges: [0..5] and [3..10]',
+    );
+  });
 });

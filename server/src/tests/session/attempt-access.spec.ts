@@ -88,6 +88,15 @@ describe('getSessionAttemptByTokenOrThrow', () => {
       exception: BadRequestException,
       message: 'Public test link has expired',
     },
+    {
+      label: 'disabled by education organization',
+      publicLink: {
+        isActive: true,
+        educationOrganization: { isActive: false },
+      },
+      exception: BadRequestException,
+      message: 'Public test link is disabled because its education organization is disabled',
+    },
   ])('rejects an existing session token when its public link is $label', async (testCase) => {
     jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
 

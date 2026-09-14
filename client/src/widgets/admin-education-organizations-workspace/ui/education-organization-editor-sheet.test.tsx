@@ -174,4 +174,23 @@ describe('EducationOrganizationEditorSheet', () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Лицей 42' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  /** Находка аудита FLOW-10: объяснение последствий отключения заведения. */
+  it('explains the consequence of disabling the organization with active links count', () => {
+    render(
+      <EducationOrganizationEditorSheet
+        open
+        mode="edit"
+        organization={{ ...organization, activeLinksCount: 3, isActive: true }}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        'При отключении заведения доступ по его публичным ссылкам (3 активные ссылки) будет закрыт для студентов.',
+      ),
+    ).toBeInTheDocument();
+  });
 });

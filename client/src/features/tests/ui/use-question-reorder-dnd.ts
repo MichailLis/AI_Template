@@ -101,6 +101,26 @@ export function useQuestionReorderDnd({
     resetDragState();
   };
 
+  const handleMoveUp = (questionId: number) => {
+    if (!questions) return;
+    const index = questions.findIndex((q) => q.id === questionId);
+    if (index <= 0) return;
+    const reordered = [...questions];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(index - 1, 0, moved);
+    onReorderQuestions(reordered.map((q) => q.id));
+  };
+
+  const handleMoveDown = (questionId: number) => {
+    if (!questions) return;
+    const index = questions.findIndex((q) => q.id === questionId);
+    if (index < 0 || index >= questions.length - 1) return;
+    const reordered = [...questions];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(index + 1, 0, moved);
+    onReorderQuestions(reordered.map((q) => q.id));
+  };
+
   return {
     draggingQuestionId,
     dropTarget,
@@ -108,5 +128,7 @@ export function useQuestionReorderDnd({
     handleDragOver,
     handleDragEnd: resetDragState,
     handleDrop,
+    handleMoveUp,
+    handleMoveDown,
   };
 }

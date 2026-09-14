@@ -3,6 +3,7 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
+import { getOverlappingSliderBandIds } from './question-modal.form';
 import { QuestionModalSliderBandRow } from './question-modal.slider-band-row';
 
 import type { QuestionSliderBandDraft } from '../model/types';
@@ -32,6 +33,14 @@ export function QuestionModalSliderSection({
   onUpdateSliderBand,
   onRemoveSliderBand,
 }: QuestionModalSliderSectionProps) {
+  const overlappingBandIds = getOverlappingSliderBandIds(sliderBands);
+  const isScaleOrderInvalid =
+    sliderMin !== '' &&
+    sliderMax !== '' &&
+    !Number.isNaN(Number(sliderMin)) &&
+    !Number.isNaN(Number(sliderMax)) &&
+    Number(sliderMin) >= Number(sliderMax);
+
   return (
     <div className="space-y-3">
       <div className={`space-y-3 ${adminClassNames.panel.compactSection}`}>
@@ -57,6 +66,10 @@ export function QuestionModalSliderSection({
               value={sliderMin}
               onChange={(event) => onUpdateSliderScale('sliderMin', event.target.value)}
               placeholder="1"
+              aria-invalid={isScaleOrderInvalid}
+              className={
+                isScaleOrderInvalid ? 'border-destructive focus-visible:ring-destructive' : ''
+              }
             />
           </div>
 
@@ -71,6 +84,10 @@ export function QuestionModalSliderSection({
               value={sliderMax}
               onChange={(event) => onUpdateSliderScale('sliderMax', event.target.value)}
               placeholder="10"
+              aria-invalid={isScaleOrderInvalid}
+              className={
+                isScaleOrderInvalid ? 'border-destructive focus-visible:ring-destructive' : ''
+              }
             />
           </div>
 
@@ -89,6 +106,12 @@ export function QuestionModalSliderSection({
             />
           </div>
         </div>
+
+        {isScaleOrderInvalid ? (
+          <p role="alert" className="text-xs text-destructive font-medium mt-1">
+            Минимум шкалы должен быть меньше максимума
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -103,6 +126,15 @@ export function QuestionModalSliderSection({
         </Button>
       </div>
 
+      {overlappingBandIds.size > 0 ? (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-xs font-medium text-destructive"
+        >
+          Обнаружены пересекающиеся диапазоны слайдера. Исправьте границы перед сохранением.
+        </div>
+      ) : null}
+
       <div className="space-y-2">
         {sliderBands.map((band, index) => (
           <QuestionModalSliderBandRow
@@ -110,6 +142,7 @@ export function QuestionModalSliderSection({
             band={band}
             index={index}
             canRemove={sliderBands.length > 1}
+            hasOverlap={overlappingBandIds.has(band.id)}
             onUpdateSliderBand={onUpdateSliderBand}
             onRemoveSliderBand={onRemoveSliderBand}
           />

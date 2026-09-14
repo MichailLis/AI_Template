@@ -142,12 +142,13 @@ describe('TestsAdminAnalyticsController', () => {
     );
     expect(setHeaderMock).toHaveBeenCalledWith(
       'Content-Disposition',
-      'attachment; filename="test-analytics-22.xlsx"',
+      'attachment; filename="test-analytics-22-topic-2026-05-01.xlsx"; filename*=UTF-8\'\'Test-Topic-topic-2026-05-01.xlsx',
     );
     expect(result).toBeInstanceOf(StreamableFile);
     expect(result.getHeaders()).toMatchObject({
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      disposition: 'attachment; filename="test-analytics-22.xlsx"',
+      disposition:
+        'attachment; filename="test-analytics-22-topic-2026-05-01.xlsx"; filename*=UTF-8\'\'Test-Topic-topic-2026-05-01.xlsx',
     });
   });
 
@@ -168,12 +169,13 @@ describe('TestsAdminAnalyticsController', () => {
     expect(setHeaderMock).toHaveBeenCalledWith('Content-Type', 'application/pdf');
     expect(setHeaderMock).toHaveBeenCalledWith(
       'Content-Disposition',
-      'attachment; filename="test-analytics-33.pdf"',
+      'attachment; filename="test-analytics-33-topic-2026-05-01.pdf"; filename*=UTF-8\'\'Test-Topic-topic-2026-05-01.pdf',
     );
     expect(result).toBeInstanceOf(StreamableFile);
     expect(result.getHeaders()).toMatchObject({
       type: 'application/pdf',
-      disposition: 'attachment; filename="test-analytics-33.pdf"',
+      disposition:
+        'attachment; filename="test-analytics-33-topic-2026-05-01.pdf"; filename*=UTF-8\'\'Test-Topic-topic-2026-05-01.pdf',
     });
   });
 });

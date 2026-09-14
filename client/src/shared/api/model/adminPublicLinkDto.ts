@@ -35,6 +35,8 @@ export interface AdminPublicLinkDto {
   educationOrganizationId: number | null;
   /** @nullable */
   educationOrganizationName: string | null;
+  /** @nullable */
+  educationOrganizationIsActive: boolean | null;
   personalDataProcessingMode: AdminPublicLinkDtoPersonalDataProcessingMode;
   /** @nullable */
   operatorFullNameSnapshot: string | null;

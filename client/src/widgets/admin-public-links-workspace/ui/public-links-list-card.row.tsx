@@ -247,7 +247,7 @@ export function PublicLinkRow({
             type="button"
             className={cn(
               'text-left text-sm font-semibold underline-offset-2 hover:underline',
-              link.archivedAt || !link.isActive
+              isPublicLinkClosedForStudents(link)
                 ? adminClassNames.text.muted
                 : adminClassNames.text.heading,
             )}
@@ -295,6 +295,7 @@ export function PublicLinkRow({
               <span className={adminClassNames.publicLinks.divider}>/</span>
               <span className={`min-w-0 truncate ${adminClassNames.text.muted}`}>
                 {link.educationOrganizationName}
+                {link.educationOrganizationIsActive === false ? ' (отключено)' : ''}
               </span>
             </>
           ) : null}

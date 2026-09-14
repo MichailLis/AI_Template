@@ -127,3 +127,13 @@ export const formatUpdatedAt = (value: string | null) => {
 
   return formatDateTime(value);
 };
+
+export const formatAtlasErrorMessage = (message: string | null | undefined): string | null => {
+  if (!message) {
+    return null;
+  }
+  if (message === 'fetch failed' || message.includes('fetch failed')) {
+    return 'Сервис Атласа не отвечает';
+  }
+  return message;
+};

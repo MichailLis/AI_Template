@@ -54,4 +54,18 @@ describe('PublicLinkOrganizationSection', () => {
       screen.getByText(/после быстрого добавления заполните реквизиты в разделе/i),
     ).toBeInTheDocument();
   });
+
+  it('filters out disabled organizations from the selection list', () => {
+    render(
+      <PublicLinkOrganizationSection
+        {...baseProps}
+        educationOrganizations={[
+          ...baseProps.educationOrganizations,
+          { id: 3, name: 'Отключенная школа', isActive: false, personalDataReady: false },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByText(/Отключенная школа/)).not.toBeInTheDocument();
+  });
 });

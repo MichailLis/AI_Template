@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
@@ -67,8 +68,13 @@ export function PublicTestRunWorkspace() {
     return <PublicTestRunStateScreen message="Тест пока не содержит вопросов." tone="danger" />;
   }
 
+  // Завершенная сессия не должна снова показывать вопросы — перенаправляем на результат.
+  if (session.status === 'COMPLETED') {
+    return <Navigate to={`/t/${code}/result/${sessionToken}`} replace />;
+  }
+
   // Статус с сервера приходит раз в несколько секунд, поэтому истечение по часам закрывает вопросы сразу.
-  if (session.status === 'EXPIRED' || remainingSeconds === 0) {
+  if (session.status === 'EXPIRED' || session.status === 'ABANDONED' || remainingSeconds === 0) {
     return <PublicTestRunExpiredScreen code={code} session={session} />;
   }
 

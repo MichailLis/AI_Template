@@ -13,6 +13,7 @@ export const mapAdminPublicLink = (link: PublicLinkAdminRecord) => {
     topicId: link.topicVersion.topicId,
     educationOrganizationId: link.educationOrganization?.id ?? null,
     educationOrganizationName: link.educationOrganization?.name ?? null,
+    educationOrganizationIsActive: link.educationOrganization?.isActive ?? null,
     personalDataProcessingMode: link.personalDataProcessingMode,
     operatorFullNameSnapshot: link.operatorFullNameSnapshot,
     operatorShortNameSnapshot: link.operatorShortNameSnapshot,

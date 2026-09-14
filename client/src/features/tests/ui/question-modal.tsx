@@ -149,7 +149,18 @@ export function QuestionModal({
             <Button variant="outline" onClick={onRequestClose} disabled={isSubmitting}>
               Отмена
             </Button>
-            <Button onClick={onSubmit} disabled={isSubmitting}>
+            <Button
+              onClick={onSubmit}
+              disabled={
+                isSubmitting ||
+                (form.type === 'SLIDER' &&
+                  form.sliderMin !== '' &&
+                  form.sliderMax !== '' &&
+                  !Number.isNaN(Number(form.sliderMin)) &&
+                  !Number.isNaN(Number(form.sliderMax)) &&
+                  Number(form.sliderMin) >= Number(form.sliderMax))
+              }
+            >
               {submitLabel}
             </Button>
           </div>
