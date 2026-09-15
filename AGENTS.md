@@ -54,18 +54,22 @@ Host-level checks — Vitest, ESLint, `tsc` — do not need a container rebuild.
 
 ## Tooling
 
-`rtk` compresses shell output, but several of its filters report success instead of error. The
-list of safe filters is fixed and defined in `template/rtk-filters.json`. Only `rtk run`, `rtk err`,
-`rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, and `rtk read` are safe; run everything else without
-a wrapper. Consult `CLAUDE.md` and `template/rtk-filters.json` for the full list and empirical findings.
+Use raw `rg` for exact function names, error codes, config keys, constants, regexes, TODOs, and
+literals. `mcp-ripgrep` is not configured: its shell quoting is broken on native Windows. Use
+`npm run find:symbol -- <name>` before a rename. For consequential TypeScript references, warm the
+language server with the lightweight `typescript.tsserverRequest/projectInfo` request, then use LSP
+references/call hierarchy. Use Serena for symbol-bounded reads and edits. Probe and codebase-memory
+are discovery aids only; confirm their results in source or with LSP before changing code.
 
-Run `npm run find:symbol -- <name>` to check whether a symbol name is unique before renaming.
+`rtk` compresses shell output, but correctness gates and searches run directly. The fixed safe set
+in `template/rtk-filters.json` is `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`,
+and `rtk read`. Consult `CLAUDE.md` and `docs/tooling-evidence.md` for measured failure modes.
 
 Install Serena once with `uv tool install serena-agent --from git+https://github.com/oraios/serena`.
 The root `.mcp.json` calls the installed binary directly: running through `uvx --from git+…` executes
 a network git fetch on every start (99s on warm cache, over 5 minutes on cold cache) and exceeds the
 30-second MCP connection timeout, whereas the installed binary starts in 1.4s.
 
-Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name, and orval lockfile drift in the client).
-
-Codex is not used in this repository.
+Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites,
+including Serena, TypeScript language server, codebase-memory, RTK exclusions, Compose naming, and
+Orval lockfile alignment.

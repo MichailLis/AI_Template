@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 
 import {
   checkComposeProjectName,
+  checkRequiredBinary,
+  checkRtkPolicy,
   checkOrvalLockfileDrift,
   checkRootTypescript,
   checkRtkHookExclusions,
@@ -10,6 +12,7 @@ import {
   deriveRtkHookExclusions,
   extractExcludeCommands,
   formatReport,
+  parseRtkFilterPolicy,
   runAgentToolingChecks,
 } from './agent-tooling-checks.mjs';
 
@@ -77,9 +80,23 @@ describe('deriveRtkHookExclusions', () => {
   });
 });
 
+describe('parseRtkFilterPolicy', () => {
+  it('parses a valid policy and derives exclusions', () => {
+    const result = parseRtkFilterPolicy('{"unsafe":["rtk tsc"],"safe":["rtk run"]}');
+    assert.equal(result.valid, true);
+    assert.deepEqual(result.requiredHookExclusions, ['tsc']);
+  });
+
+  it('fails closed for missing, malformed, or structurally invalid policy content', () => {
+    for (const input of [null, '{', '{"unsafe":[]}']) {
+      assert.equal(parseRtkFilterPolicy(input).valid, false);
+    }
+  });
+});
+
 describe('checkRtkHookExclusions', () => {
   it('returns ok when config is null (rtk not installed or no config)', () => {
-    const result = checkRtkHookExclusions(null, REQUIRED_EXCLUSIONS);
+    const result = checkRtkHookExclusions(null, REQUIRED_EXCLUSIONS, false);
     assert.equal(result.id, 'rtk');
     assert.equal(result.status, 'ok');
     assert.equal(result.fix, null);
@@ -87,9 +104,15 @@ describe('checkRtkHookExclusions', () => {
   });
 
   it('returns ok when config is undefined', () => {
-    const result = checkRtkHookExclusions(undefined, REQUIRED_EXCLUSIONS);
+    const result = checkRtkHookExclusions(undefined, REQUIRED_EXCLUSIONS, false);
     assert.equal(result.status, 'ok');
     assert.equal(result.fix, null);
+  });
+
+  it('returns problem when rtk is installed but config is missing', () => {
+    const result = checkRtkHookExclusions(null, REQUIRED_EXCLUSIONS, true);
+    assert.equal(result.status, 'problem');
+    assert.match(result.message, /config.*not found/i);
   });
 
   it('returns ok when all required exclusions are present', () => {
@@ -153,6 +176,17 @@ enabled = true
   });
 });
 
+describe('checkRtkPolicy', () => {
+  it('fails closed when template/rtk-filters.json is absent or malformed', () => {
+    assert.equal(checkRtkPolicy(false).status, 'problem');
+    assert.match(checkRtkPolicy(false).message, /rtk-filters\.json/);
+  });
+
+  it('passes when the policy was parsed', () => {
+    assert.equal(checkRtkPolicy(true).status, 'ok');
+  });
+});
+
 describe('checkSerenaBinary', () => {
   it('returns ok when Serena binary is resolved on PATH', () => {
     const result = checkSerenaBinary(true);
@@ -192,6 +226,28 @@ describe('checkRootTypescript', () => {
     assert.match(result.message, /findReferences/);
     assert.match(result.message, /incomingCalls/);
     assert.ok(result.fix !== null);
+  });
+});
+
+describe('checkRequiredBinary', () => {
+  it('returns ok when a required executable is on PATH', () => {
+    const result = checkRequiredBinary(
+      'typescript-language-server',
+      true,
+      'npm install -g typescript-language-server',
+    );
+    assert.equal(result.status, 'ok');
+    assert.match(result.message, /resolved on PATH/i);
+  });
+
+  it('returns an actionable problem when a required executable is missing', () => {
+    const result = checkRequiredBinary(
+      'codebase-memory-mcp',
+      false,
+      'npm install -g codebase-memory-mcp',
+    );
+    assert.equal(result.status, 'problem');
+    assert.equal(result.fix, 'npm install -g codebase-memory-mcp');
   });
 });
 
@@ -276,24 +332,30 @@ describe('checkOrvalLockfileDrift', () => {
 });
 
 describe('runAgentToolingChecks and formatReport', () => {
-  it('runs all five checks and returns structured results', () => {
+  it('runs all eight checks and returns structured results', () => {
     const results = runAgentToolingChecks({
       rtkConfig: 'exclude_commands = ["tsc", "vitest", "jest", "playwright", "find", "wc", "tree"]',
       requiredHookExclusions: REQUIRED_EXCLUSIONS,
+      hasValidRtkPolicy: true,
+      hasRtk: true,
       hasSerena: true,
       hasRootTypescript: true,
+      hasTypescriptLanguageServer: true,
+      hasCodebaseMemory: true,
       dockerComposeContent: 'name: ai_template\nservices:\n',
       lockedOrvalVersion: '8.26.0',
       installedOrvalVersion: '8.26.0',
     });
 
-    assert.equal(results.length, 5);
+    assert.equal(results.length, 8);
     assert.ok(results.every((r) => r.status === 'ok'));
 
     const report = formatReport(results);
     assert.match(report, /\[ok\]\s+rtk:/);
     assert.match(report, /\[ok\]\s+serena:/);
     assert.match(report, /\[ok\]\s+typescript:/);
+    assert.match(report, /\[ok\]\s+typescript-language-server:/);
+    assert.match(report, /\[ok\]\s+codebase-memory-mcp:/);
     assert.match(report, /\[ok\]\s+compose:/);
     assert.match(report, /\[ok\]\s+orval:/);
     assert.doesNotMatch(report, /Actionable fixes:/);
@@ -303,14 +365,18 @@ describe('runAgentToolingChecks and formatReport', () => {
     const results = runAgentToolingChecks({
       rtkConfig: null,
       requiredHookExclusions: REQUIRED_EXCLUSIONS,
+      hasValidRtkPolicy: false,
+      hasRtk: true,
       hasSerena: false,
       hasRootTypescript: false,
+      hasTypescriptLanguageServer: false,
+      hasCodebaseMemory: false,
       dockerComposeContent: 'name: wrong_project\n',
       lockedOrvalVersion: '8.26.0',
       installedOrvalVersion: '8.10.0',
     });
 
-    assert.equal(results.filter((r) => r.status === 'problem').length, 4);
+    assert.equal(results.filter((r) => r.status === 'problem').length, 8);
     const report = formatReport(results);
     assert.match(report, /\[problem\] serena:/);
     assert.match(report, /\[problem\] typescript:/);

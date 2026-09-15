@@ -384,3 +384,72 @@ Empirical evaluation of index freshness in `codebase-memory`:
   - `recommended_action`: `"read_source_and_reindex"`
 - **Observed failure mode:** `query_graph` and `search_graph` queries answered based on the earlier indexed snapshot from the specified generation timestamp (`2026-09-06T14:35:22Z`), completely omitting subsequent edits. The query responses provided no inline signal or warning of index staleness.
 - **Practical requirement:** Agents must execute `check_index_coverage` before relying on graph responses for newly created or recently modified files; when `freshness` returns `metadata_changed`, inspect source files directly and reindex as recommended.
+
+## 9. Full tooling audit (2026-09-14)
+
+This section supersedes older operational recommendations where current measurements differ. Tests
+ran on Windows with rg 15.2.0, RTK 0.48.0, Serena 1.7.1.dev0, TypeScript language server 6.0.0,
+codebase-memory 0.10.8, Beads 1.2.2, Node 24.21.0, and Codex CLI 0.154.0.
+
+### Authority and confidence model
+
+| Question                                | Primary evidence                | Secondary aid            | Confidence rule                                         |
+| --------------------------------------- | ------------------------------- | ------------------------ | ------------------------------------------------------- |
+| Exact text, regex, literal, key, code   | raw `rg`                        | none                     | DIRECT: matched source lines                            |
+| Symbol uniqueness                       | `npm run find:symbol -- <name>` | raw `rg`                 | DIRECT: declaration classifier plus source              |
+| TypeScript references/callers           | warmed TypeScript LSP           | Serena scoped references | VERIFIED: semantic result checked against source        |
+| Complete symbol body or structural edit | Serena                          | TypeScript LSP           | DIRECT for resulting bytes; verify with tests/typecheck |
+| Unknown-name exploration                | Probe or codebase-memory        | raw `rg`/source          | DERIVED: discovery only, never proof of absence         |
+| Whole-graph pattern                     | codebase-memory `query_graph`   | source sampling          | DERIVED: validate material nodes in source              |
+| Build/test correctness                  | direct project scripts          | none                     | BEHAVIORAL: native exit code plus assertions/output     |
+
+### Representative evaluation corpus and measurements
+
+| Case                                                               | Result                                                                                                                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rg` exact function, UI literal, config key, route, constant, TODO | 53–56 ms after warm-up; correct source lines; 168–6,272 bytes                                                                                         |
+| `find:symbol` unique, duplicate, generated DTO, test-only constant | 450–600 ms; correctly classified declarations and routed non-symbol strings to `rg`                                                                   |
+| LSP `toProfessionListItem`                                         | cold references 3 in 455–480 ms; repeated query 2–3 ms; call hierarchy found callback use                                                             |
+| LSP barrel-exported `getMaxChoices`                                | blind cold query returned 1 instead of 11; lightweight `projectInfo` warm-up took 2.3–2.5 s, then returned 11/11 in 89–96 ms in three fresh processes |
+| Serena scoped references                                           | found re-export, production call sites, imports, tests, and `.map(toProfessionListItem)` callback                                                     |
+| Serena CRLF edit fixture                                           | replace/insert/bulk replace retained CRLF with zero bare LF or CRCRLF; typecheck passed                                                               |
+| Probe exact/extract                                                | exact search returned 379 tokens; extraction returned a 115-token complete method                                                                     |
+| Probe conceptual search                                            | 1,552 tokens and unrelated env/docs hits; configured `grep` rejected `-C`; documented structural tools were absent from rc339 MCP                     |
+| codebase-memory conceptual search                                  | 90–329 candidates; useful top hits mixed with false positives                                                                                         |
+| codebase-memory traces                                             | qualified client trace improved with `include_tests`; service `finishSession` returned zero despite known callers                                     |
+| codebase-memory freshness                                          | watcher saw a rename immediately, but coverage still said `metadata_changed` after forced reindex                                                     |
+| RTK failure probes                                                 | most 0.48.0 exit codes propagated; `rtk vitest` hung on zero matches and `rtk tree` returned 0 on argument error                                      |
+| RTK compression probes                                             | `rtk read -l aggressive AI_GUIDE.md` emitted the same 30,061 bytes as raw read; no saving                                                             |
+| Codex fresh hook task                                              | 17.0 s; 22,085 input, 11,008 cached input, 5 output tokens; `bd prime` context present                                                                |
+| Codex resumed hook task                                            | 27.7 s; 23,735 input, 21,248 cached input, 5 output tokens; `bd prime` context present                                                                |
+
+Token accounting must separate raw input from cached input. The hook experiment's uncached input was
+11,077 tokens fresh and 2,487 tokens resumed; aggregate account usage cannot be assigned to one tool.
+
+### Confirmed failure modes and routing decisions
+
+- Do not configure `mcp-ripgrep` on native Windows. Its MCP implementation builds shell commands;
+  exact, regex, count, and file-list calls failed because POSIX quoting reached the Windows shell.
+  Raw `rg` is faster, simpler, and authoritative.
+- TypeScript LSP is primary for rename/move/delete references, but only after the explicit lightweight
+  `projectInfo` readiness request. Repeating the same blind query is not a readiness protocol.
+- Serena is retained for structure-aware reads/edits and as a reference cross-check. Its MCP calls are
+  internally serialized, so parallel requests do not improve latency.
+- Probe is optional discovery, not exact or structural authority in the currently pinned interface.
+- codebase-memory is retained for graph exploration and whole-tree queries. Its negative results and
+  freshness metadata are insufficient evidence for destructive changes.
+- RTK is restricted to `template/rtk-filters.json`; correctness gates and searches run directly.
+- Knip 6.31.0 was not added: an unconfigured transient run emitted roughly 68k output tokens and
+  flagged framework entrypoints, tests, generated Orval files, and barrel exports.
+- ast-grep 0.40.5 was not added: the tested map expression took about 1.1 s versus 21 ms for `rg`, a
+  naïve catch pattern failed parsing, and a nested React pattern missed without custom relational rules.
+- `trace:api` was not built: eight recent Codex rollouts did not show a recurring UI-to-Orval-to-Nest
+  trace burden sufficient to justify another maintained index or script.
+
+Primary documentation consulted: [Serena](https://github.com/oraios/serena),
+[TypeScript language server](https://github.com/typescript-language-server/typescript-language-server),
+[Probe](https://github.com/probelabs/probe),
+[codebase-memory](https://github.com/DeusData/codebase-memory-mcp),
+[mcp-ripgrep](https://github.com/mcollina/mcp-ripgrep), [RTK](https://github.com/rtk-ai/rtk),
+[Knip](https://github.com/webpro-nl/knip), [ast-grep](https://github.com/ast-grep/ast-grep), and
+[Beads](https://github.com/gastownhall/beads).

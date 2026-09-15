@@ -4,8 +4,8 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
 import {
-  deriveRtkHookExclusions,
   formatReport,
+  parseRtkFilterPolicy,
   runAgentToolingChecks,
 } from './lib/agent-tooling-checks.mjs';
 
@@ -13,7 +13,7 @@ import {
  * `npm run doctor:agent-tooling` — diagnostic, not a gate.
  *
  * Inspects machine-local agent tooling preconditions (rtk hook exclusions, Serena binary,
- * root typescript resolution, docker-compose project name, orval lockfile drift in the client).
+ * TypeScript tooling, codebase-memory, docker-compose project name, and orval lockfile drift).
  *
  * Always exits 0: machine state must not fail builds on a clean tree.
  */
@@ -68,18 +68,19 @@ if (rtkConfigPath && existsSync(rtkConfigPath)) {
 
 // Required hook exclusions derived from template/rtk-filters.json (unsafe list)
 let requiredHookExclusions = [];
+let hasValidRtkPolicy = false;
 const filtersPath = join(rootDir, 'template', 'rtk-filters.json');
 if (existsSync(filtersPath)) {
-  try {
-    const filtersData = JSON.parse(readFileSync(filtersPath, 'utf8'));
-    requiredHookExclusions = deriveRtkHookExclusions(filtersData.unsafe);
-  } catch {
-    requiredHookExclusions = [];
-  }
+  const policy = parseRtkFilterPolicy(readFileSync(filtersPath, 'utf8'));
+  requiredHookExclusions = policy.requiredHookExclusions;
+  hasValidRtkPolicy = policy.valid;
 }
 
 // 2. Serena binary on PATH
+const hasRtk = resolveBinaryInPath('rtk');
 const hasSerena = resolveBinaryInPath('serena');
+const hasTypescriptLanguageServer = resolveBinaryInPath('typescript-language-server');
+const hasCodebaseMemory = resolveBinaryInPath('codebase-memory-mcp');
 
 // 3. Root typescript resolution
 let hasRootTypescript = false;
@@ -118,8 +119,12 @@ const installedOrvalVersion =
 const results = runAgentToolingChecks({
   rtkConfig,
   requiredHookExclusions,
+  hasValidRtkPolicy,
+  hasRtk,
   hasSerena,
   hasRootTypescript,
+  hasTypescriptLanguageServer,
+  hasCodebaseMemory,
   dockerComposeContent,
   lockedOrvalVersion,
   installedOrvalVersion,
