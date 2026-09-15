@@ -453,3 +453,19 @@ Primary documentation consulted: [Serena](https://github.com/oraios/serena),
 [mcp-ripgrep](https://github.com/mcollina/mcp-ripgrep), [RTK](https://github.com/rtk-ai/rtk),
 [Knip](https://github.com/webpro-nl/knip), [ast-grep](https://github.com/ast-grep/ast-grep), and
 [Beads](https://github.com/gastownhall/beads).
+
+### Follow-up risk resolution (2026-09-15)
+
+- The Prisma warning came from the repository-local installation, not a global executable:
+  `prisma` was 7.10.0 while `@prisma/client` and `@prisma/adapter-pg` were 7.8.0. All three direct
+  Prisma packages are now aligned at 7.10.0, and the doctor checks their installed versions.
+  `prisma generate` and typecheck complete without the mismatch warning.
+- Serena's Codex startup warning was reproduced at the byte level. Its Windows stderr encoded the
+  ellipsis after `Starting MCP server` as the Windows-1252 byte `0x85`; Codex requires UTF-8.
+  Setting `PYTHONUTF8=1` for the Serena MCP process produced valid UTF-8 in the byte probe and removed
+  the warning in a fresh Codex process.
+- The earlier codebase-memory `Transport closed` belonged to the already-running parent MCP process.
+  A fresh Codex process started the configured server and completed `list_projects` successfully.
+  No server/configuration failure reproduced across the fresh-process boundary.
+- Claude CLI and Claude hook lifecycle testing are explicitly deferred by user decision; Claude is
+  not part of the active tooling workflow.

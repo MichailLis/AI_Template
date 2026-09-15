@@ -56,10 +56,12 @@ Host-level checks — Vitest, ESLint, `tsc` — do not need a container rebuild.
 
 Use raw `rg` for exact function names, error codes, config keys, constants, regexes, TODOs, and
 literals. `mcp-ripgrep` is not configured: its shell quoting is broken on native Windows. Use
-`npm run find:symbol -- <name>` before a rename. For consequential TypeScript references, warm the
-language server with the lightweight `typescript.tsserverRequest/projectInfo` request, then use LSP
-references/call hierarchy. Use Serena for symbol-bounded reads and edits. Probe and codebase-memory
-are discovery aids only; confirm their results in source or with LSP before changing code.
+`npm run find:symbol -- <name>` before a rename. When a direct TypeScript LSP tool is available, warm
+it with the lightweight `typescript.tsserverRequest/projectInfo` request before consequential
+references/call-hierarchy work. In Codex sessions without that direct tool, use Serena references
+and implementations, then confirm consequential results in source with raw `rg`. Use Serena for
+symbol-bounded reads and edits. Probe and codebase-memory are discovery aids only; confirm their
+results in source or with an available LSP before changing code.
 
 `rtk` compresses shell output, but correctness gates and searches run directly. The fixed safe set
 in `template/rtk-filters.json` is `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`,
@@ -70,6 +72,7 @@ The root `.mcp.json` calls the installed binary directly: running through `uvx -
 a network git fetch on every start (99s on warm cache, over 5 minutes on cold cache) and exceeds the
 30-second MCP connection timeout, whereas the installed binary starts in 1.4s.
 
-Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites,
-including Serena, TypeScript language server, codebase-memory, RTK exclusions, Compose naming, and
-Orval lockfile alignment.
+Run `npm run doctor:agent-tooling` once on a new machine to diagnose the RTK policy and hook
+exclusions, Serena, root TypeScript, TypeScript Language Server, codebase-memory, Compose naming,
+Orval lockfile alignment, and Prisma package alignment. It is not a gate and exits 0 even when it
+reports problems, so inspect every status line and directly smoke-test critical tools.

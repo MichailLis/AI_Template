@@ -283,6 +283,30 @@ export const checkOrvalLockfileDrift = (lockedVersion, installedVersion) => {
   };
 };
 
+/** Ensures Prisma's generator CLI and generated-client runtime use the same release. */
+export const checkPrismaVersionAlignment = (cliVersion, clientVersion, adapterVersion) => {
+  if (
+    cliVersion &&
+    clientVersion &&
+    adapterVersion &&
+    cliVersion === clientVersion &&
+    cliVersion === adapterVersion
+  ) {
+    return {
+      id: 'prisma',
+      status: 'ok',
+      message: `Prisma CLI, @prisma/client, and @prisma/adapter-pg all use ${cliVersion}`,
+      fix: null,
+    };
+  }
+  return {
+    id: 'prisma',
+    status: 'problem',
+    message: `Prisma CLI ${cliVersion ?? 'missing'}, @prisma/client ${clientVersion ?? 'missing'}, and @prisma/adapter-pg ${adapterVersion ?? 'missing'} are not aligned`,
+    fix: 'Install matching prisma, @prisma/client, and @prisma/adapter-pg versions in server/package.json',
+  };
+};
+
 /**
  * Runs all agent tooling checks over the supplied inputs.
  *
@@ -298,6 +322,9 @@ export const checkOrvalLockfileDrift = (lockedVersion, installedVersion) => {
  *   dockerComposeContent?: string | null,
  *   lockedOrvalVersion?: string | null,
  *   installedOrvalVersion?: string | null
+ *   installedPrismaVersion?: string | null,
+ *   installedPrismaClientVersion?: string | null
+ *   installedPrismaAdapterVersion?: string | null
  * }} inputs
  * @returns {Array<{ id: string, status: 'ok' | 'problem', message: string, fix: string | null }>}
  */
@@ -313,6 +340,9 @@ export const runAgentToolingChecks = ({
   dockerComposeContent = null,
   lockedOrvalVersion = null,
   installedOrvalVersion = null,
+  installedPrismaVersion = null,
+  installedPrismaClientVersion = null,
+  installedPrismaAdapterVersion = null,
 }) => [
   checkRtkPolicy(hasValidRtkPolicy),
   checkRtkHookExclusions(rtkConfig, requiredHookExclusions, hasRtk),
@@ -330,6 +360,11 @@ export const runAgentToolingChecks = ({
   ),
   checkComposeProjectName(dockerComposeContent),
   checkOrvalLockfileDrift(lockedOrvalVersion, installedOrvalVersion),
+  checkPrismaVersionAlignment(
+    installedPrismaVersion,
+    installedPrismaClientVersion,
+    installedPrismaAdapterVersion,
+  ),
 ];
 
 /**

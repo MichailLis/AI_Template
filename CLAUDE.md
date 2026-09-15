@@ -94,7 +94,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
 - `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
-- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects machine-local agent prerequisites (rtk hooks, Serena, root TypeScript, compose name, orval lockfile drift). It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and keeps machine drift from breaking a clean tree.
+- `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects the RTK policy/hooks, Serena, root TypeScript, TypeScript Language Server, codebase-memory, Compose naming, Orval alignment, and Prisma alignment. It exits 0 even when it reports problems, so inspect every status line and directly smoke-test critical tools. It is absent from `verify:local` and `verify:template`.
 
 Never disable a check, comment out failing logic, or hardcode around a gate to make it pass.
 
@@ -144,7 +144,7 @@ Measurements behind these choices live in `docs/tooling-evidence.md`; this secti
   | File structure / CRLF-safe symbol edit        | **Serena** (`replace_*`, `get_symbols_overview`)  | Avoids `\r\r\n` corruption.                                           |
   | Command output                                | **rtk**, safe filters only                        | Several filters report failure as success (below).                    |
 
-- **TypeScript language server:** answers "who uses this symbol" locally. A blind cold query can be incomplete. Before consequential reference work, call `workspace/executeCommand` with `typescript.tsserverRequest`, command `projectInfo`, and `needFileNameList: false`; then query references/call hierarchy. This produced 11/11 references in three fresh processes without the 114 KB file list.
+- **TypeScript language server:** answers "who uses this symbol" locally. A blind cold query can be incomplete. When a direct TypeScript LSP tool is available, call `workspace/executeCommand` with `typescript.tsserverRequest`, command `projectInfo`, and `needFileNameList: false`; then query references/call hierarchy. In Codex without that direct tool, use Serena references/implementations and confirm consequential results in source with raw `rg`. The direct warm-up produced 11/11 references in three fresh processes without the 114 KB file list.
 
 - **Serena** (MCP over TypeScript LSP):
   - `find_symbol` and `safe_delete_symbol` take `name_path_pattern`; `find_referencing_symbols` takes `name_path`.

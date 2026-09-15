@@ -6,6 +6,7 @@ import {
   checkRequiredBinary,
   checkRtkPolicy,
   checkOrvalLockfileDrift,
+  checkPrismaVersionAlignment,
   checkRootTypescript,
   checkRtkHookExclusions,
   checkSerenaBinary,
@@ -331,8 +332,27 @@ describe('checkOrvalLockfileDrift', () => {
   });
 });
 
+describe('checkPrismaVersionAlignment', () => {
+  it('passes when Prisma CLI and client versions match', () => {
+    assert.equal(checkPrismaVersionAlignment('7.10.0', '7.10.0', '7.10.0').status, 'ok');
+  });
+
+  it('reports both versions when Prisma CLI and client drift', () => {
+    const result = checkPrismaVersionAlignment('7.10.0', '7.8.0', '7.10.0');
+    assert.equal(result.status, 'problem');
+    assert.match(result.message, /7\.10\.0/);
+    assert.match(result.message, /7\.8\.0/);
+  });
+
+  it('reports drift in the direct PostgreSQL adapter', () => {
+    const result = checkPrismaVersionAlignment('7.10.0', '7.10.0', '7.8.0');
+    assert.equal(result.status, 'problem');
+    assert.match(result.message, /adapter-pg.*7\.8\.0/i);
+  });
+});
+
 describe('runAgentToolingChecks and formatReport', () => {
-  it('runs all eight checks and returns structured results', () => {
+  it('runs all nine checks and returns structured results', () => {
     const results = runAgentToolingChecks({
       rtkConfig: 'exclude_commands = ["tsc", "vitest", "jest", "playwright", "find", "wc", "tree"]',
       requiredHookExclusions: REQUIRED_EXCLUSIONS,
@@ -345,9 +365,12 @@ describe('runAgentToolingChecks and formatReport', () => {
       dockerComposeContent: 'name: ai_template\nservices:\n',
       lockedOrvalVersion: '8.26.0',
       installedOrvalVersion: '8.26.0',
+      installedPrismaVersion: '7.10.0',
+      installedPrismaClientVersion: '7.10.0',
+      installedPrismaAdapterVersion: '7.10.0',
     });
 
-    assert.equal(results.length, 8);
+    assert.equal(results.length, 9);
     assert.ok(results.every((r) => r.status === 'ok'));
 
     const report = formatReport(results);
@@ -374,9 +397,12 @@ describe('runAgentToolingChecks and formatReport', () => {
       dockerComposeContent: 'name: wrong_project\n',
       lockedOrvalVersion: '8.26.0',
       installedOrvalVersion: '8.10.0',
+      installedPrismaVersion: '7.10.0',
+      installedPrismaClientVersion: '7.8.0',
+      installedPrismaAdapterVersion: '7.10.0',
     });
 
-    assert.equal(results.filter((r) => r.status === 'problem').length, 8);
+    assert.equal(results.filter((r) => r.status === 'problem').length, 9);
     const report = formatReport(results);
     assert.match(report, /\[problem\] serena:/);
     assert.match(report, /\[problem\] typescript:/);

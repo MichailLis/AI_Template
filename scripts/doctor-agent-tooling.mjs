@@ -115,6 +115,15 @@ const clientLockfile = readJsonOrNull(join(rootDir, 'client', 'package-lock.json
 const lockedOrvalVersion = clientLockfile?.packages?.['node_modules/orval']?.version ?? null;
 const installedOrvalVersion =
   readJsonOrNull(join(rootDir, 'client', 'node_modules', 'orval', 'package.json'))?.version ?? null;
+const installedPrismaVersion =
+  readJsonOrNull(join(rootDir, 'server', 'node_modules', 'prisma', 'package.json'))?.version ??
+  null;
+const installedPrismaClientVersion =
+  readJsonOrNull(join(rootDir, 'server', 'node_modules', '@prisma', 'client', 'package.json'))
+    ?.version ?? null;
+const installedPrismaAdapterVersion =
+  readJsonOrNull(join(rootDir, 'server', 'node_modules', '@prisma', 'adapter-pg', 'package.json'))
+    ?.version ?? null;
 
 const results = runAgentToolingChecks({
   rtkConfig,
@@ -128,6 +137,9 @@ const results = runAgentToolingChecks({
   dockerComposeContent,
   lockedOrvalVersion,
   installedOrvalVersion,
+  installedPrismaVersion,
+  installedPrismaClientVersion,
+  installedPrismaAdapterVersion,
 });
 
 console.log(formatReport(results));
