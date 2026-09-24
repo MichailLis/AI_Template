@@ -10,6 +10,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
+import { LlmStatusBadge } from './llm-status-badge';
 import { hasV3PlusReport } from './test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
@@ -32,39 +33,6 @@ interface TestAnalyticsBreakdownTableProps {
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
 const formatShare = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)}%`;
-
-const getLlmStatusBadgeConfig = (status: string | null | undefined) => {
-  switch (status) {
-    case 'ready':
-      return { label: 'ИИ готов', className: adminBadgeClassNames.success };
-
-    case 'pending':
-      return { label: 'ИИ в обработке', className: adminBadgeClassNames.warning };
-
-    case 'failed':
-      return { label: 'ИИ ошибка', className: adminBadgeClassNames.danger };
-
-    case 'not_requested':
-      return { label: 'ИИ не запрашивался', className: adminBadgeClassNames.neutral };
-
-    default:
-      return null;
-  }
-};
-
-const LlmStatusBadge = ({ status }: { status: string | null | undefined }) => {
-  const config = getLlmStatusBadgeConfig(status);
-
-  if (!config) {
-    return null;
-  }
-
-  return (
-    <Badge variant="outline" className={config.className}>
-      {config.label}
-    </Badge>
-  );
-};
 
 const BREAKDOWN_COLUMNS = [
   { id: 'label', header: 'Показатель', className: 'min-w-64' },
