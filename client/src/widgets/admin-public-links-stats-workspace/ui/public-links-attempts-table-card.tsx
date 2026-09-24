@@ -16,6 +16,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
+import { LlmStatusBadge } from './llm-status-badge';
 import { ATTEMPTS_LIMIT_OPTIONS } from './use-admin-public-links-stats-workspace.model';
 
 import type { AdminDataTableSortDirection } from '@/shared/ui/admin-data-table';
@@ -122,39 +123,6 @@ const analysisResultKindBadgeClassNames: Record<string, string> = {
 const getAnalysisResultBadgeClassName = (kind: string | null | undefined) =>
   analysisResultKindBadgeClassNames[getAnalysisResultKindTone(kind)] ??
   adminBadgeClassNames.neutral;
-
-const getLlmStatusBadgeConfig = (status: string | null | undefined) => {
-  switch (status) {
-    case 'ready':
-      return { label: 'ИИ готов', className: adminBadgeClassNames.success };
-
-    case 'pending':
-      return { label: 'ИИ в обработке', className: adminBadgeClassNames.warning };
-
-    case 'failed':
-      return { label: 'ИИ ошибка', className: adminBadgeClassNames.danger };
-
-    case 'not_requested':
-      return { label: 'ИИ не запрашивался', className: adminBadgeClassNames.neutral };
-
-    default:
-      return null;
-  }
-};
-
-const LlmStatusBadge = ({ status }: { status: string | null | undefined }) => {
-  const config = getLlmStatusBadgeConfig(status);
-
-  if (!config) {
-    return null;
-  }
-
-  return (
-    <Badge variant="outline" className={config.className}>
-      {config.label}
-    </Badge>
-  );
-};
 
 const getAttemptProfilePrimary = (attempt: PublicAttemptRow) => {
   if (attempt.entryProfileMode === 'DEMOGRAPHIC') {
