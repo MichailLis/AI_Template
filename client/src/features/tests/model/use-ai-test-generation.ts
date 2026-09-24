@@ -7,12 +7,11 @@ import {
 
 import { AI_QUESTION_TYPES } from '../lib/ai-generator-utils';
 
+import { DEFAULT_SELECTED_TYPES, resolveEffectiveModel } from './ai-test-generation.rules';
 import {
   buildCreatePayload,
   handleGeneration,
   handleTypeToggle,
-  DEFAULT_SELECTED_TYPES,
-  resolveEffectiveModel,
 } from './use-ai-test-generation.helpers';
 
 import type {
