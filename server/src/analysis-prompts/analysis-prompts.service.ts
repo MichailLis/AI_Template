@@ -16,6 +16,7 @@ import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.servic
 import { OpenRouterClientService } from '../openrouter/openrouter.client';
 import { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
+import { calculatePromptUsage, type PromptActiveTest } from './prompt-usage.utils';
 
 import type {
   AnalysisPromptListResponseDto,
@@ -41,13 +42,6 @@ type AnalysisPromptRecord = Prisma.AnalysisPromptGetPayload<{
 }>;
 
 type AnalysisPromptVersionRecord = Prisma.AnalysisPromptVersionGetPayload<Record<string, never>>;
-
-interface PromptActiveTest {
-  topicId: number;
-  title: string;
-  slug: string;
-  onPublishedVersion: boolean;
-}
 
 const PROMPT_AUDIT_FIELDS = ['title', 'versionNumber', 'model', 'temperature'] as const;
 
@@ -152,10 +146,8 @@ export class AnalysisPromptsService {
     promptIds: number[],
     client: Prisma.TransactionClient | PrismaService = this.prisma,
   ): Promise<Map<number, PromptActiveTest[]>> {
-    const testsByPromptId = new Map<number, PromptActiveTest[]>();
-
     if (promptIds.length === 0) {
-      return testsByPromptId;
+      return new Map();
     }
 
     const usesPrompt = {
@@ -242,82 +234,7 @@ export class AnalysisPromptsService {
         orderBy: { id: 'asc' },
       }),
     ]);
-
-    const addTest = (promptId: number, test: PromptActiveTest) => {
-      testsByPromptId.set(promptId, [...(testsByPromptId.get(promptId) ?? []), test]);
-    };
-
-    for (const topic of topics) {
-      const published = topic.activePublishedVersion;
-      const draft = topic.activeDraftVersion;
-      const publishedPromptId = published?.analysisPromptVersion?.promptId;
-      const draftPromptId = draft?.analysisPromptVersion?.promptId;
-
-      if (published && publishedPromptId !== undefined) {
-        addTest(publishedPromptId, {
-          topicId: topic.id,
-          title: published.title,
-          slug: topic.slug,
-          onPublishedVersion: true,
-        });
-      }
-
-      if (draft && draftPromptId !== undefined && draftPromptId !== publishedPromptId) {
-        addTest(draftPromptId, {
-          topicId: topic.id,
-          title: draft.title,
-          slug: topic.slug,
-          onPublishedVersion: false,
-        });
-      }
-    }
-
-    for (const pinned of pinnedVersions) {
-      const promptId = pinned.analysisPromptVersion?.promptId;
-      if (promptId === undefined) {
-        continue;
-      }
-
-      const existing = (testsByPromptId.get(promptId) ?? []).find(
-        (test) => test.topicId === pinned.topic.id,
-      );
-
-      if (!existing) {
-        addTest(promptId, {
-          topicId: pinned.topic.id,
-          title: pinned.title,
-          slug: pinned.topic.slug,
-          onPublishedVersion: true,
-        });
-      } else if (!existing.onPublishedVersion) {
-        existing.onPublishedVersion = true;
-      }
-    }
-
-    for (const analysis of recoverableAnalyses) {
-      const promptId = analysis.promptVersion?.promptId;
-      if (promptId === undefined) {
-        continue;
-      }
-
-      const version = analysis.attempt.topicVersion;
-      const existing = (testsByPromptId.get(promptId) ?? []).find(
-        (test) => test.topicId === version.topic.id,
-      );
-
-      if (!existing) {
-        addTest(promptId, {
-          topicId: version.topic.id,
-          title: version.title,
-          slug: version.topic.slug,
-          onPublishedVersion: true,
-        });
-      } else if (!existing.onPublishedVersion) {
-        existing.onPublishedVersion = true;
-      }
-    }
-
-    return testsByPromptId;
+    return calculatePromptUsage(topics, pinnedVersions, recoverableAnalyses);
   }
 
   /**
