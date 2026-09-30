@@ -134,7 +134,8 @@ Measurements behind these choices live in `docs/tooling-evidence.md`; this secti
   | Is the symbol name unique (first step)        | **`npm run find:symbol -- <name>`**               | Fast, no binaries, flags client/server drift, routes to Serena or rg. |
   | Who uses it — before a rename, move or delete | **TypeScript LSP** (`references`, call hierarchy) | Warm with lightweight `projectInfo`; finds callers the graph misses.  |
   | How deep does the call chain go               | **graph** `trace_path` with `include_tests: true` | Only tool that ranks by hop. Absence proves nothing.                  |
-  | Where is X handled, name unknown              | **graph** `search_graph query=`                   | Ranked search without the exact name.                                 |
+  | One implementation, name unknown              | **Probe** `search_code`                           | Bounded discovery; verify in source.                                  |
+  | Where is X handled across modules             | **graph** `search_graph query=`                   | Ranked discovery in the indexed tree; check coverage.                 |
   | A property of the whole tree                  | **graph** `query_graph`                           | Grep and Serena cannot express it.                                    |
   | Exact names, codes, keys, constants, regexes  | **raw `rg --with-filename`**                      | Cheapest exact evidence; native Windows MCP wrapper is unreliable.    |
   | Literals, UI strings, config, non-code files  | **`rg`**                                          | Not in the graph.                                                     |
@@ -143,6 +144,7 @@ Measurements behind these choices live in `docs/tooling-evidence.md`; this secti
   | Typecheck the whole server                    | **`npm run typecheck`**                           | Correctness gate; do not put a compression parser in the path.        |
   | File structure / CRLF-safe symbol edit        | **Serena** (`replace_*`, `get_symbols_overview`)  | Avoids `\r\r\n` corruption.                                           |
   | Command output                                | **rtk**, safe filters only                        | Several filters report failure as success (below).                    |
+  | Agent token use or savings                    | **codeburn** `status` / `context` / `optimize`    | Check freshness; separate cache; do not infer per-tool savings.       |
 
 - **TypeScript language server:** answers "who uses this symbol" locally. A blind cold query can be incomplete. When a direct TypeScript LSP tool is available, call `workspace/executeCommand` with `typescript.tsserverRequest`, command `projectInfo`, and `needFileNameList: false`; then query references/call hierarchy. In Codex without that direct tool, use Serena references/implementations and confirm consequential results in source with raw `rg`. The direct warm-up produced 11/11 references in three fresh processes without the 114 KB file list.
 
@@ -152,7 +154,7 @@ Measurements behind these choices live in `docs/tooling-evidence.md`; this secti
   - Its line numbers are 0-based: add 1 before using them with `rg` or `sed -n`.
   - Evidence: `docs/tooling-evidence.md#1-serena`.
 
-- **Probe:** use only for zero-index exploratory search when the name is unknown and for extracting a located block. The configured rc339 MCP lacks the documented `query`/`symbols` tools, its `grep` wrapper rejects supported-looking context flags, and fuzzy searches can be noisy. Exact claims require raw `rg`; reference claims require LSP/Serena.
+- **Probe:** for bounded unknown-name discovery, call `search_code` once; use `extract_code` when Serena cannot read a located block. The configured rc339 MCP lacks the documented `query`/`symbols` tools, its `grep` wrapper rejects supported-looking context flags, and fuzzy searches can be noisy. Exact claims require raw `rg`; reference claims require LSP/Serena.
 
 - **codebase-memory** (MCP knowledge graph):
   - Always pass `include_tests: true` to `trace_path`: the indexer treats every `tests` path as test code, and here `tests` is product code.
@@ -167,7 +169,7 @@ Measurements behind these choices live in `docs/tooling-evidence.md`; this secti
   - Historical versions masked failures in several parsers. In 0.48.0, most tested exit codes propagated, but `rtk vitest` hung on a zero-match filter and `rtk tree` returned success on an argument error. Do not use RTK for gates or evidence-producing searches.
   - The complete denylist remains explicit for the documentation gate: `rtk tsc`; `rtk vitest` and `rtk jest`; `rtk playwright`; `rtk find`; `rtk wc`; `rtk tree`; and `rtk read -l aggressive`.
   - **Use with care:** `rtk git diff` (strips context, breaks `git apply`), `rtk lint` (crashes on ESLint syntax errors).
-  - **Safe filters:** `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, `rtk read` (without `-l aggressive`).
+  - **Safe filters:** `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk read` (without `-l aggressive`). On native Windows, `rtk ls` fails without Unix `ls`; use `rg --files` or PowerShell `Get-ChildItem`.
   - Needs `rg` on PATH. Give `rtk rg` an explicit path (otherwise file names and line numbers are dropped) and `</dev/null` inside pipelines (otherwise it hangs).
   - The `Bash` PreToolUse hook rewrites `npx tsc` to `rtk tsc`; this machine excludes it via `hooks.exclude_commands` in `%APPDATA%\rtk\config.toml`. Use `npm run typecheck`.
   - Evidence: `docs/tooling-evidence.md#3-rtk`.

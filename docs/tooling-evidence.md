@@ -165,7 +165,7 @@ Executing `rtk tsc` shells out to `npx tsc`. When `tsc` is not on PATH, `npx` in
 - **Use with care:**
   - `rtk git diff`: Strips context lines, producing diffs incompatible with `git apply`.
   - `rtk lint`: Crashes internal Rust deserializer on ESLint syntax errors.
-- **Safe:** `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, and `rtk read` (without `-l aggressive`).
+- **Safe on this Windows host:** `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, and `rtk read` (without `-l aggressive`). A later direct check found that `rtk ls` exits 1 because Unix `ls` is not on PATH; use `rg --files` or PowerShell `Get-ChildItem`.
 
 ### Subcommand Failure Sweep
 
@@ -302,7 +302,7 @@ A global `PreToolUse` hook intercepts shell execution and rewrites commands befo
 | `rg`        | `rtk rg`          | Drops file names and line numbers unless explicit path is provided        |
 | `cat`       | `rtk read`        | `-l aggressive` strips braces and function bodies, corrupting syntax      |
 | `git`       | `rtk git`         | Strips context lines, making `git diff` incompatible with `git apply`     |
-| `ls`        | `rtk ls`          | Compresses dirent listing                                                 |
+| `ls`        | `rtk ls`          | Requires Unix `ls`; fails on this native Windows PATH (2026-09-24)        |
 | `grep`      | `rtk grep`        | Fails on Windows without native grep on PATH (`Failed to resolve 'grep'`) |
 | `npm`       | `rtk npm`         | Compresses npm script output                                              |
 | `docker`    | `rtk docker`      | Compresses container logs                                                 |
@@ -469,3 +469,59 @@ Primary documentation consulted: [Serena](https://github.com/oraios/serena),
   No server/configuration failure reproduced across the fresh-process boundary.
 - Claude CLI and Claude hook lifecycle testing are explicitly deferred by user decision; Claude is
   not part of the active tooling workflow.
+
+### Codex tool selection and Windows smoke checks (2026-09-24)
+
+Availability and autonomous selection are distinct. In clean desktop tasks, the agent chose raw
+`rg` for unknown-name discovery and for an exhaustive direct-caller question. A follow-up with an
+explicit tool name successfully called Serena `find_referencing_symbols`; it found the two production
+calls and seven spec calls, plus imports and a type-only mention that are not calls. Another fresh
+task called Probe `search_code` on its first turn when explicitly requested. These results establish
+that the MCP tools are callable, not that a neutral prompt reliably selects them. Project instructions
+now give affirmative task-based triggers while preserving raw `rg` for exact evidence and source
+confirmation for graph/Probe candidates.
+
+Direct checks on this host: `rg` and `find:symbol` resolved the paired `getMaxChoices` declarations;
+Serena reported its TypeScript LSP ready and returned scoped references; Probe rc339's MCP exposed
+`search_code`, `extract_code`, and `grep`, and a direct search returned source matches. The
+codebase-memory index was ready and `search_graph` ranked `validatePublicAnswerPayload` first, but
+`check_index_coverage` again reported `metadata_changed` for that source. `trace_path` with
+`include_tests: true` returned the known callers but collapsed the spec into one node. `codeburn
+status --format json --project AI_Template` returned usage totals; these do not attribute savings
+to individual tools. The RTK `read`, `npm`, `run`, `err`, and `json` probes succeeded, while `rtk ls`
+failed with `Binary 'ls' not found on PATH`. The direct TypeScript language-server binary is present
+but no direct LSP MCP is mounted in Codex; use Serena's LSP backend there. `mcp-ripgrep` remains
+intentionally unconfigured on native Windows. A separate `codex exec` probe did not reach tool
+selection: the CLI received HTTP 400 for `gpt-6-sol` with this ChatGPT account, so it cannot replace
+desktop blind tests.
+
+A later read-only CLI check on 2026-09-30 reproduced HTTP 400 with both `gpt-6.1-sol` and
+`gpt-6-luna`, while `gpt-5.5` worked. The cause was the old 0.154.0 executable taking precedence
+in PATH: the desktop's 0.159.2 binary successfully ran Luna. Installed the official
+`@openai/codex@latest` npm package (0.159.2) and removed only the stale Codex directory from
+the user PATH, retaining its binaries. With the persisted PATH loaded, ordinary `codex exec`
+then completed minimal read-only prompts with both Luna and the unchanged global `gpt-6.1-sol`.
+The earlier HTTP 400 is not evidence that this account lacks access to these models.
+
+### Neutral desktop routing tests (2026-09-30)
+
+Four fresh local Codex tasks received domain-only prompts without tool names. The implementation
+discovery task called Probe `search_code`, then Serena `find_symbol` and source checks. The
+direct-caller task called Serena `find_symbol` and declaration-scoped
+`find_referencing_symbols`, separating production calls from spec calls, imports, and type uses.
+The dependency-chain task called codebase-memory `list_projects`, `trace_path` with
+`include_tests: true`, and `check_index_coverage`; it treated a failed secondary trace and
+`metadata_changed` coverage as non-authoritative and verified the path in source. The token-usage
+task selected codeburn without a tool hint. These are observed calls, not just advertised tools;
+one trial per intent does not establish universal routing reliability.
+
+The codeburn task found its 1–30 September summary lagged the raw Codex logs: 196.44 million
+tokens in the summary versus about 211.95 million after checking the latest logs and archive
+duplicates. Of the latter, about 203.36 million were cached input and 8.04 million uncached
+input. Its displayed $68.68 was incomplete for models without configured pricing. Neither these
+totals nor the cache ratio prove savings from any particular search tool; that would require
+comparable task-level measurements.
+
+The relevant tooling-check unit suite passed 37/37 with Node's in-process test isolation. The
+repository-wide `npm run test:scripts` hit `spawn EPERM` in the sandbox, then passed 218/218
+when run outside that child-process restriction. The sandbox failure was environmental.
