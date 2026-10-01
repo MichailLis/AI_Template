@@ -39,7 +39,7 @@ const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
 const formatTotal = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
 
 /**
- * Фильтр по роли и поиск. Сортировка отсюда убрана: она живет в заголовках таблицы, где ей и место,
+ * Фильтры по роли и статусу и поиск. Сортировка отсюда убрана: она живет в заголовках таблицы, где ей и место,
  * — раньше в одном ряду стояли шесть кнопок трех разных назначений и читались как один набор.
  */
 export function AdminUsersFilters({

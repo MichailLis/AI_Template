@@ -1,6 +1,6 @@
 /**
  * A MULTI_CHOICE question may cap how many options a student can pick, via
- * `settings.maxChoices`. The server enforces the cap in tests-answer-validation.ts and
+ * `settings.maxChoices`. The server enforces the cap in server/src/tests/session/answer-validation.ts and
  * rejects an over-long answer, so any public template that lets the student exceed it
  * produces a rejection they could not have anticipated.
  *

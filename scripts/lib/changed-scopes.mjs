@@ -39,7 +39,8 @@ export const VERIFY_LOCAL_ORDER = [
  * - any package.json -> verify:package-scripts
  * - template/*.json -> verify:contracts
  * - .github/workflows/ci.yml -> verify:package-scripts
- * - AI_GUIDE.md, README.md, AGENTS.md, docs/**, .serena/memories/** -> verify:ai-guide
+ * - AI_GUIDE.md, README.md, AGENTS.md, CLAUDE.md, docs/**, .serena/memories/**, .claude/skills/**,
+ *   template/rtk-filters.json -> verify:ai-guide
  * - any file at all -> format:check
  */
 export const getScriptsForFile = (filePath) => {
@@ -121,8 +122,11 @@ export const getScriptsForFile = (filePath) => {
     norm === 'AI_GUIDE.md' ||
     norm === 'README.md' ||
     norm === 'AGENTS.md' ||
+    norm === 'CLAUDE.md' ||
+    norm === 'template/rtk-filters.json' ||
     norm.startsWith('docs/') ||
-    norm.startsWith('.serena/memories/')
+    norm.startsWith('.serena/memories/') ||
+    norm.startsWith('.claude/skills/')
   ) {
     scripts.add('verify:ai-guide');
   }

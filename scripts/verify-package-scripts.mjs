@@ -134,9 +134,10 @@ if (rootScripts['audit:explain'] !== 'node scripts/audit-explain.mjs') {
   fail('root package must define audit:explain script as "node scripts/audit-explain.mjs"');
 }
 
-// doctor:agent-tooling diagnoses machine-local agent preconditions (rtk hook exclusions, serena binary,
-// root typescript, compose project name, orval lockfile drift). It gates nothing, and keeping it out of verify:local and
-// verify:template below is intentional — machine configuration should not fail builds on a clean tree.
+// doctor:agent-tooling diagnoses machine-local agent preconditions (rtk policy and hook exclusions,
+// required binaries, root typescript, compose project name, orval lockfile drift, prisma alignment).
+// It gates nothing, and keeping it out of verify:local and verify:template below is intentional —
+// machine configuration should not fail builds on a clean tree.
 if (rootScripts['doctor:agent-tooling'] !== 'node scripts/doctor-agent-tooling.mjs') {
   fail(
     'root package must define doctor:agent-tooling script as "node scripts/doctor-agent-tooling.mjs"',

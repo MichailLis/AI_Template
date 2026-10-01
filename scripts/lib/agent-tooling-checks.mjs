@@ -2,11 +2,14 @@
  * Pure logic behind `npm run doctor:agent-tooling`.
  *
  * Checks machine-local agent tooling preconditions:
- * 1. rtk hooks: exclude_commands contains all required hook exclusions.
- * 2. serena binary: installed and resolvable on PATH (avoiding uvx 30s MCP timeouts).
- * 3. root typescript: resolvable from root package (enabling typescript-lsp plugin).
- * 4. compose project name: docker-compose.yml pins top-level name to ai_template.
- * 5. orval lockfile drift: client/node_modules/orval matches the version client/package-lock.json locks.
+ * 1. rtk policy: template/rtk-filters.json parses; a malformed policy is a problem, not an empty one.
+ * 2. rtk hooks: exclude_commands contains all required hook exclusions.
+ * 3. serena binary: installed and resolvable on PATH (avoiding uvx 30s MCP timeouts).
+ * 4. root typescript: resolvable from root package (enabling typescript-lsp plugin).
+ * 5. required binaries: typescript-language-server and codebase-memory-mcp resolvable on PATH.
+ * 6. compose project name: docker-compose.yml pins top-level name to ai_template.
+ * 7. orval lockfile drift: client/node_modules/orval matches the version client/package-lock.json locks.
+ * 8. prisma alignment: the Prisma CLI, client and pg adapter are installed at the same version.
  *
  * No I/O or subprocesses here: caller supplies already-read content and booleans.
  */

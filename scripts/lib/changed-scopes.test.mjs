@@ -119,6 +119,16 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     assert.deepEqual(docScripts, ['verify:ai-guide', 'format:check']);
   });
 
+  // verify-ai-guide.mjs reads each of these, so a change to one alone must still run the gate.
+  it('triggers verify:ai-guide for CLAUDE.md, skills and the rtk filter policy on their own', () => {
+    assert.deepEqual(getOrderedScripts(['CLAUDE.md']), ['verify:ai-guide', 'format:check']);
+    assert.deepEqual(getOrderedScripts(['.claude/skills/feature-pipeline/SKILL.md']), [
+      'verify:ai-guide',
+      'format:check',
+    ]);
+    assert.ok(getOrderedScripts(['template/rtk-filters.json']).includes('verify:ai-guide'));
+  });
+
   it('triggers only format:check for unknown or arbitrary files', () => {
     const scripts = getOrderedScripts(['random-asset.png']);
     assert.deepEqual(scripts, ['format:check']);
@@ -136,7 +146,8 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     const scripts = getOrderedScripts(changed);
 
     // Expected relative order according to verify:local:
-    // verify:ai-guide, verify:package-scripts, test:scripts, verify:invariants, format:check
+    // verify:ai-guide, verify:package-scripts, test:scripts, verify:invariants,
+    // verify:maintainability, format:check
     assert.deepEqual(scripts, [
       'verify:ai-guide',
       'verify:package-scripts',

@@ -12,8 +12,9 @@ import {
 /**
  * `npm run doctor:agent-tooling` — diagnostic, not a gate.
  *
- * Inspects machine-local agent tooling preconditions (rtk hook exclusions, Serena binary,
- * TypeScript tooling, codebase-memory, docker-compose project name, and orval lockfile drift).
+ * Inspects machine-local agent tooling preconditions (rtk policy and hook exclusions, Serena binary,
+ * TypeScript tooling, codebase-memory, docker-compose project name, orval lockfile drift, and
+ * Prisma package alignment).
  *
  * Always exits 0: machine state must not fail builds on a clean tree.
  */
@@ -76,7 +77,7 @@ if (existsSync(filtersPath)) {
   hasValidRtkPolicy = policy.valid;
 }
 
-// 2. Serena binary on PATH
+// 2. Required binaries on PATH
 const hasRtk = resolveBinaryInPath('rtk');
 const hasSerena = resolveBinaryInPath('serena');
 const hasTypescriptLanguageServer = resolveBinaryInPath('typescript-language-server');

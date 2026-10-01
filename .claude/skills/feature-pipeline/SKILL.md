@@ -29,6 +29,8 @@ decision.
 
 1. `server/prisma/schema.prisma` — data model change.
 2. `npm run prisma:generate` — regenerate Prisma client and Zod types from the schema.
+   If the schema changed, add the checked-in migration too (`AI_GUIDE.md`, "Phase 1: Data
+   Modeling" has the command): `npm run prisma:push` alone leaves `verify:prisma-migrations` red.
 3. Backend: DTOs (`createZodDto(...)`, dates as `z.string()`, never `z.date()`/`z.coerce.date()`),
    controllers (every handler needs `@ApiOperation` and a typed `@ApiResponse`), services.
 4. `npm run gen:api` — regenerates `server/openapi.json` and the client hooks under
@@ -42,13 +44,13 @@ decision.
 **If backend DTOs or controllers changed, step 4 must happen before any frontend lint, build, or
 test step.** A frontend check run against a stale generated client passes for the wrong reason.
 
-## 3. The traps that cost the most (from `CLAUDE.md`, "Verifying A Change")
+## 3. The traps that cost the most (from `CLAUDE.md`, "Verifying your own work")
 
 - **After `npm run gen:api`, read `git diff --numstat`, not `git status`.** Orval rewrites every
   generated file with LF, so `git status` can list hundreds of modified files where only one or
   two actually changed content — `git status` cannot tell you which. `git diff --numstat` shows
   real insertions/deletions per file; a file with `0	0` changed only line endings.
-- **`client/src/shared/api/generated/**`and`client/src/shared/api/model/**` are generated _and
+- **`client/src/shared/api/generated/` and `client/src/shared/api/model/` are generated _and
   committed_.** Do not delete them to "start clean" before testing a gate — `verify:api-mutator`
   reads them before `gen:api` ever runs, and deleting them turns a clean-tree check into a fake
   failure. Ask `git check-ignore <path>` to find out what is actually gitignored in this tree;
@@ -60,8 +62,9 @@ test step.** A frontend check run against a stale generated client passes for th
 
 ## 4. Close with verification
 
-- `npm run verify:diff` — fast pre-flight scoped to the current git diff; also what
-  `.husky/pre-push` runs. Not a gate, just a cheap early signal.
+- `npm run verify:diff -- --run` — fast pre-flight scoped to the current git diff; also what
+  `.husky/pre-push` runs. Without `--run` it only runs its guards and prints the plan. Not a
+  gate, just a cheap early signal.
 - `npm run verify:local` — the daily gate; run this before calling the change done.
 - `npm run verify:template` — the release gate; mandatory before finalizing branch state.
 

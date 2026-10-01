@@ -310,7 +310,7 @@ export const GATE_MUTATIONS = [
     skipReason: 'server/openapi.json is missing (requires gen:openapi)',
   },
 
-  // 12. verify-paired-rules.mjs
+  // 8. verify-paired-rules.mjs
   {
     id: 'paired-rules-constant-mismatch',
     gate: 'verify-paired-rules.mjs',
