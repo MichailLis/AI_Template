@@ -54,8 +54,8 @@ entrypoints — business logic belongs in `widgets/*` and `features/*`.
 ## Feature pipeline (in this order)
 
 Classify the change first (`existing-feature-change` vs `new-feature`, see `AI_GUIDE.md` Phase 0),
-then: `schema.prisma` → `npm run prisma:generate` → backend → `npm run gen:api` → frontend →
-verification. Regenerate the API client before any frontend lint/build/test step when backend
+then: `schema.prisma` → `npm run prisma:generate` → migration (`AI_GUIDE.md` Phase 1) → backend →
+`npm run gen:api` → frontend → verification. Regenerate the API client before any frontend lint/build/test step when backend
 DTOs or controllers changed.
 
 ## Runtime
@@ -94,7 +94,7 @@ Local Vitest, ESLint and type checks run on the host and need no container rebui
 - `npm run verify:invariants` — checks non-obvious invariants (Swagger completeness, no `z.date()`, storage discipline, single error shape, public DTO safety, no React Query state mirroring).
 - `npm run verify:paired-rules` — verifies parity of paired implementations and shared constants between client and server via `template/paired-rules.json` and `template/paired-rules.vectors.json`.
 - `npm run verify:gates` — runs in-memory mutation testing over repository gates to ensure every pipeline gate catches violations and enforces gate coverage.
-- `npm run verify:diff` — auxiliary fast pre-flight over git diff; checks only affected scopes and guards. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
+- `npm run verify:diff` — pre-flight over git diff, not a gate: bare, it runs guards and prints the plan; `-- --run` executes the affected-scope checks.
 - `npm run audit:explain [-- --base <ref>]` — diagnostic, not a gate: it explains a red `audit:all` by splitting findings into introduced by this branch, inherited from the base, and resolved, per lock file. It exits 0 whatever it finds, is absent from `verify:local` and `verify:template`, and does not weaken `audit:all`.
 - `npm run doctor:agent-tooling` — diagnostic, not a gate: inspects the RTK policy/hooks, Serena, root TypeScript, TypeScript Language Server, codebase-memory, Compose naming, Orval alignment, and Prisma alignment. It exits 0 even when it reports problems, so inspect every status line and directly smoke-test critical tools. It is absent from `verify:local` and `verify:template`.
 
@@ -127,7 +127,7 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
 
 ## Tools in this repo
 
-Measurements behind these choices live in `docs/tooling-evidence.md`; this section keeps only the rules and the traps that produce wrong results.
+Measurements live in `docs/tooling-evidence.md`; here are only the rules and traps. Probe and codebase-memory are machine-local MCPs; `.mcp.json` ships only Serena.
 
 - **Tool selection:**
 

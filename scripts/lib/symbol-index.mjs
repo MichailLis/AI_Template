@@ -154,8 +154,7 @@ export const indexSymbol = (files, symbolName) => {
         }
       }
 
-      // Declarations (checked on stripped source to avoid comments/strings)
-      // Declarations (checked on stripped source; NEVER in generated files)
+      // Declarations (checked on stripped source to avoid comments/strings; NEVER in generated files)
       if (declPattern && !isGenerated) {
         const strippedLine = strippedLines[idx] ?? '';
         const declMatch = strippedLine.match(declPattern);

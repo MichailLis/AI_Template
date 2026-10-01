@@ -7,7 +7,7 @@ Current project state:
 - Auth is fully wired: access token in response body, refresh token in an `HttpOnly` cookie
 - Admin feature is enabled on this branch (`/admin`) with users management, Prompt Studio, Tests module, analytics, and settings workspaces
 - `/admin` redirects into the real tests workspace; the old mock overview page is removed
-- Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/stats`)
+- Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/organizations`); link statistics live in the analytics workspace (`/admin/analytics`)
 - Public student flow (`/t/*`) is product-ready, supports selectable public templates, selectable entry profile modes, `STANDARD` public branding, autosave, and scoped themes isolated from admin screens
 - Strict template guardrails remain enforced through `AI_GUIDE.md`, `template/features.manifest.json`, `template/fsd.rules.json`, and `scripts/verify-architecture.mjs`
 
@@ -105,18 +105,23 @@ npm run dev:container
 
 Exposed URLs from host:
 
-- Frontend: `http://localhost:55173`
-- Backend: `http://localhost:53000`
-- Swagger: `http://localhost:53000/api`
-- Postgres: `localhost:55432`
-- Adminer: `http://localhost:58080`
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api`
+- Postgres: `localhost:5432`
+- Adminer: `http://localhost:8080`
+
+These are the same host ports the root compose stack uses, so stop its `frontend` and `backend`
+containers before starting the dev container.
 
 Current UI note:
 
 - This branch exposes `/login` and a protected admin workspace under `/admin`.
 - `/admin` redirects to `/admin/tests`; there is no separate mock dashboard/overview page.
 - There is no public signup. Admins create accounts on `/admin/users` (`POST /admin/users`); the
-  first admin comes from `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` or the seed.
+  first admin comes from the seed (`npm run prisma:seed`) locally, and from
+  `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` in the deploy image, whose entrypoint runs
+  the bootstrap script. The root compose stack does not pass those variables to the backend.
 - Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
 
 ## Auth Session Contract
@@ -210,7 +215,9 @@ Built-in prof-orientation v3+ contract:
   `scoringKind = PROF_ORIENTATION_V3_PLUS`
 - the imported draft contains 10 multi-choice methodology questions and 11 slider
   questions
-- the built-in methodology prompt uses `openai/gpt-oss-120b`
+- LLM enrichment uses the analysis prompt version selected on the test topic; the built-in
+  prompt is seeded with `deepseek/deepseek-v4-flash` only when no published built-in prompt
+  version exists yet
 - public multi-choice questions enforce `settings.maxChoices = 2`
 - `finishSession` saves deterministic algorithm analysis first, then runs optional
   LLM enrichment under `summary.llm`
@@ -233,7 +240,9 @@ Analytics report contract:
 Admin routes:
 
 - `"/admin/public-links"`: create/manage public links for tests
-- `"/admin/public-links/stats"`: dedicated statistics workspace with table-first layout
+- `"/admin/public-links/organizations"`: education organizations used by public links
+- `"/admin/analytics"`: analytics workspace with the attempts table and the summary report
+- `"/admin/public-links/stats"`: legacy entry point; redirects to `/admin/analytics?tab=attempts`
 
 Admin capabilities baseline:
 
@@ -251,7 +260,7 @@ Admin capabilities baseline:
   - `DEMOGRAPHIC`: demographic profile before the test, with attempt limit forced to `1`
   - `EDUCATION`: current education-based profile before the test
   - `EDUCATION_DEMOGRAPHIC`: education profile plus demographic questionnaire before the test
-- filters by test + public link on stats page
+- filters by test + public link in the analytics workspace
 - table actions for student-level details (analysis and submitted answers)
 - link selector copy uses business language (`тестов пройдено`)
 
@@ -309,6 +318,9 @@ UI/theming contract for public pages:
 
 ## Required Workflow for New Features
 
+Classify the change first (`AI_GUIDE.md`, "Phase 0: Feature Ownership Classification"). Most work
+extends an existing feature and skips the generator in step 3.
+
 1. Update DB schema (`server/prisma/schema.prisma`)
 2. Run:
 
@@ -317,14 +329,17 @@ npm run prisma:generate
 npm run prisma:push
 ```
 
-3. Scaffold backend resource:
+Then add the matching checked-in migration (`AI_GUIDE.md`, "Phase 1: Data Modeling");
+`verify:local` and `verify:template` fail without it.
+
+3. For a `new-feature` only, scaffold the backend resource:
 
 ```powershell
 npm run gen:nest <name>
 ```
 
 4. Implement real DTO/controller/service logic (replace scaffold placeholders)
-5. Run backend and regenerate frontend hooks:
+5. Regenerate frontend hooks:
 
 ```powershell
 npm run gen:api
@@ -352,7 +367,9 @@ npm run prisma:push
 npm run gen:nest news
 ```
 
-Implement controller/service/DTO with existing patterns (`createZodDto`, Swagger decorators, user-scoped queries). 4. Regenerate API hooks:
+Implement controller/service/DTO with existing patterns (`createZodDto`, Swagger decorators, user-scoped queries).
+
+4. Regenerate API hooks:
 
 ```powershell
 npm run gen:api
@@ -402,7 +419,7 @@ browser flows.
 
 Prisma migration note:
 
-- If `server/prisma/schema.prisma` changed, the branch must include the matching checked-in migration under `server/prisma/migrations`.
+- If `server/prisma/schema.prisma` changed, the branch must include the matching checked-in migration under `server/prisma/migrations`. `AI_GUIDE.md` ("Phase 1: Data Modeling") has the command that generates it.
 - `npm run verify:prisma-migrations` is the focused local check for schema/migration drift.
 - Production releases use `prisma migrate deploy`; do not rely on `prisma db push` for production updates.
 

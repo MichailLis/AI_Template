@@ -21,8 +21,9 @@
 winget install --id Git.Git -e
 winget install --id GitHub.cli -e
 
-# Node.js LTS (v20+ или v22+)
+# Node.js 24.21.0 и npm 11.19.0 — версия закреплена в .nvmrc и в engines всех трёх package.json
 winget install --id OpenJS.NodeJS.LTS -e
+node --version   # должно быть v24.21.0; иначе поставьте эту версию через nvm-windows
 
 # Docker Desktop (для PostgreSQL и контейнеров)
 winget install --id Docker.DockerDesktop -e
@@ -56,8 +57,8 @@ git checkout main
 Проект состоит из трех уровней: корневые скрипты, `client` (React 19 / Vite) и `server` (NestJS 11).
 
 ```powershell
-# Установка корневых зависимостей и хуков husky
-npm install
+# Установка корневых зависимостей и хуков husky (строго по lock-файлу)
+npm ci
 
 # Установка зависимостей для client и server
 npm run install:all
@@ -87,19 +88,19 @@ Copy-Item server/.env.example server/.env
 
 ## 5. Восстановление трекера задач Beads (`bd`)
 
-История задач, статусы, зависимости, комментарии и заметки агентов сохранены в файле `.beads/issues.jsonl`.
+Задачи живут в локальной базе Dolt; `.beads/issues.jsonl` — её пассивный экспорт, который лежит в git.
+`bd bootstrap` сам выбирает источник: данные Dolt в `refs/dolt/data` на origin, если они там есть,
+иначе импорт из `.beads/issues.jsonl`. Существующие задачи он не удаляет.
 
 ```powershell
 # 1. Установка CLI beads глобально
-npm install -g @gastownhall/beads
+npm install -g @beads/bd
 
-# 2. Инициализация Beads в репозитории
-bd init --no-db
+# 2. Посмотреть план восстановления, затем выполнить его
+bd bootstrap --dry-run
+bd bootstrap --yes
 
-# 3. Импорт всей истории задач и воспоминаний
-bd import -i .beads/issues.jsonl
-
-# 4. Проверка статуса базы
+# 3. Проверка статуса базы
 bd status
 bd list
 ```
@@ -134,15 +135,19 @@ npm run prisma:seed
 
 ## 7. Запуск проекта для разработки
 
-Для локальной разработки на хосте:
+После шага 6 проект уже работает в Docker — отдельно запускать ничего не нужно.
+
+Запуск на хосте вместо Docker — отдельный режим. Контейнеры `frontend` и `backend` занимают те же
+порты 5173 и 3000, поэтому сначала остановите их:
 
 ```powershell
+docker compose stop frontend backend
 npm run dev
 ```
 
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
 - **Backend:** [http://localhost:3000](http://localhost:3000)
-- **Swagger API:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+- **Swagger API:** [http://localhost:3000/api](http://localhost:3000/api)
 - **Adminer (веб-клиент БД):** [http://localhost:8080](http://localhost:8080)
 
 ---

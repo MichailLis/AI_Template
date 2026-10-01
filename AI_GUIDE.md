@@ -129,8 +129,8 @@ Goal: avoid another large refactor wave by enforcing guardrails continuously.
 Maintainability thresholds for proactive extraction:
 
 - Prefer splitting files before they cross ~350 lines (lint warning).
-- Hard fail target is 420 effective lines. Current guard is tightened in steps:
-  client source at 420, server source at 700 during backend extraction, server specs at 900.
+- Hard fail limits are effective lines per file, enforced by `npm run verify:maintainability`:
+  client source 420, server source 700, server specs 900, repository scripts 700, client CSS 2000.
 - Prefer reducer/extraction when a module accumulates more than ~14 `useState` calls.
 - Treat complexity warnings as mandatory refactor candidates for the next small PR.
 
@@ -287,7 +287,10 @@ Current ownership map:
   must not deep-import analysis prompt internals.
 - `openrouter` is infrastructure/integration code. Feature code must not import OpenRouter
   utilities through another feature module; expose integration services from the integration owner.
-- Integration-only backend modules such as `openrouter` are declared in
+- `audit` is the change journal, also an integration module. `admin`, `analysis-prompts`, `tests`
+  and `app-settings` write events through `AuditService`; each feature serves the history of its
+  own entities from its own route.
+- Integration-only backend modules (`openrouter`, `audit`) are declared in
   `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent
   product workflow and lifecycle.
@@ -315,6 +318,25 @@ Verification gates:
    ```powershell
    npm run prisma:push
    ```
+4. Add the checked-in migration. `prisma:push` changes only your database;
+   `npm run verify:prisma-migrations` (part of `verify:local` and `verify:template`) fails until
+   `server/prisma/migrations` reproduces the schema. Generate the SQL from the difference between
+   the committed migrations and the schema, against a disposable shadow database:
+
+   ```powershell
+   docker exec ai_template_postgres createdb -U user migration_shadow
+   cd server
+   $env:SHADOW_DATABASE_URL = "postgresql://user:password@localhost:5432/migration_shadow?schema=public"
+   New-Item -ItemType Directory prisma/migrations/<YYYYMMDDHHMMSS>_<name>
+   npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --script --output prisma/migrations/<YYYYMMDDHHMMSS>_<name>/migration.sql
+   cd ..
+   docker exec ai_template_postgres dropdb -U user migration_shadow
+   npm run verify:prisma-migrations
+   ```
+
+   Read the generated SQL before committing it, and add any data backfill by hand. Do not use
+   `prisma migrate dev` on a database that was synced with `prisma:push`: it reports drift and
+   offers to reset the database.
 
 ### Phase 2: Backend API
 
@@ -474,10 +496,9 @@ for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
 `npm run verify:paired-rules` runs `scripts/verify-paired-rules.mjs` to ensure paired implementations and constants across client and server remain synchronized against `template/paired-rules.json` and `template/paired-rules.vectors.json`.
 `npm run verify:gates` runs `scripts/verify-gates.mjs` to verify via in-memory mutation testing that repository verification gates detect real invariant violations and maintain full gate coverage.
-`npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight check over changed scopes; it is not a gate and does not replace `verify:local` or the release gate `verify:template`.
+`npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight over changed scopes. Without `--run` it runs only its guards (CRLF corruption, Orval line-ending noise) and prints the plan; `npm run verify:diff -- --run` executes the planned checks. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
 `npm run audit:explain [-- --base <ref>]` runs `scripts/audit-explain.mjs` to split the vulnerabilities npm reports into the ones this branch introduced, inherited, and fixed, per lock file; it is a diagnostic for a red `audit:all`, never a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
-`npm run doctor:agent-tooling` diagnoses the RTK policy and hook exclusions, Serena, root TypeScript, TypeScript Language Server, codebase-memory, Compose naming, Orval lockfile alignment, and Prisma package alignment. It is not a gate and exits 0 even when it reports problems; inspect its status lines and directly smoke-test critical tools. It belongs in neither `verify:local` nor `verify:template`.
 
 ## PR-Ready Checklist (Feature Delivery)
 
@@ -486,6 +507,7 @@ Use this checklist before opening PR or finalizing work.
 1. **Data model synced**
    - `server/prisma/schema.prisma` updated.
    - `npm run prisma:generate` and `npm run prisma:push` passed.
+   - The matching migration is checked in and `npm run verify:prisma-migrations` passed.
 2. **Backend completed**
    - Module/controller/service/DTOs implemented.
    - Controllers include `@ApiOperation` and `@ApiResponse`.
