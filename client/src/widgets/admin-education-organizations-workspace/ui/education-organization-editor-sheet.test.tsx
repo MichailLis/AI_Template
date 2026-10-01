@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -99,16 +99,23 @@ describe('EducationOrganizationEditorSheet', () => {
 
   it('shows validation messages next to fields and focuses the first error', async () => {
     const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const onClose = vi.fn();
 
     render(
-      <EducationOrganizationEditorSheet open mode="create" onClose={vi.fn()} onSubmit={vi.fn()} />,
+      <EducationOrganizationEditorSheet open mode="create" onClose={onClose} onSubmit={onSubmit} />,
     );
 
     await user.type(screen.getByLabelText('Название *'), 'А');
     await user.click(screen.getByRole('button', { name: 'Создать заведение' }));
 
-    expect(screen.getByText('Название должно содержать не менее 2 символов')).toBeInTheDocument();
-    expect(screen.getByLabelText('Название *')).toHaveFocus();
+    expect(
+      await screen.findByText('Название должно содержать не менее 2 символов'),
+    ).toBeInTheDocument();
+    // RHF retries focus after submission has finished and the field is enabled again.
+    await waitFor(() => expect(screen.getByLabelText('Название *')).toHaveFocus());
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('maps server validation details to the matching field', async () => {
