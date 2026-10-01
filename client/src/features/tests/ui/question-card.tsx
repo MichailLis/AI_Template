@@ -57,7 +57,7 @@ export function QuestionCard({
       className={cn(
         'relative transition-all duration-150',
         adminClassNames.panel.card,
-        isDragging ? 'scale-[0.99] opacity-60 shadow-sm' : '',
+        isDragging ? 'scale-[0.99] opacity-60 shadow-xs' : '',
         isDropTarget ? adminClassNames.drag.ring : '',
       )}
       draggable={!isReorderingQuestions}

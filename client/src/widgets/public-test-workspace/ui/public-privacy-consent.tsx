@@ -24,7 +24,7 @@ export function PublicPrivacyConsent({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-md border border-border/70 bg-background/80 p-3 text-sm leading-6 text-foreground shadow-sm',
+        'flex items-start gap-3 rounded-md border border-border/70 bg-background/80 p-3 text-sm leading-6 text-foreground shadow-xs',
         className,
       )}
     >
@@ -35,7 +35,7 @@ export function PublicPrivacyConsent({
         required
         aria-label="Я ознакомлен(а) с Политикой обработки персональных данных и даю согласие на обработку персональных данных."
         onChange={(event) => onCheckedChange(event.target.checked)}
-        className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="mt-1 h-4 w-4 shrink-0 rounded-sm border-border text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       />
       <span>
         <label htmlFor={checkboxId} className="cursor-pointer">

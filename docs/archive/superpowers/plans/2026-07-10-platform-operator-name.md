@@ -64,9 +64,7 @@ Keep stored JSON backward compatible by defaulting a missing value to `PUBLIC_OP
 
 ```ts
 const setting = await this.prisma.$transaction(async (transaction) => {
-  const saved = await transaction.appSetting.upsert({
-    /* existing key/value data */
-  });
+  const saved = await transaction.appSetting.upsert({/* existing key/value data */});
   await transaction.testPublicLink.updateMany({
     where: { personalDataProcessingMode: 'PUBLIC' },
     data: { operatorFullNameSnapshot: payload.operatorFullName },

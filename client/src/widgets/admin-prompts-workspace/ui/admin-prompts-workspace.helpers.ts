@@ -92,17 +92,16 @@ export const applySimulationSuccess = (
   latencyMs: number,
   totalTokens: number,
 ): SimulationRun[] => {
-  return runs.map(
-    (run): SimulationRun =>
-      run.id === runId
-        ? {
-            ...run,
-            status: 'success',
-            output: result.output,
-            latencyMs,
-            totalTokens,
-          }
-        : run,
+  return runs.map((run): SimulationRun =>
+    run.id === runId
+      ? {
+          ...run,
+          status: 'success',
+          output: result.output,
+          latencyMs,
+          totalTokens,
+        }
+      : run,
   );
 };
 
@@ -111,15 +110,14 @@ export const applySimulationError = (
   runId: string,
   errorMessage: string,
 ): SimulationRun[] => {
-  return runs.map(
-    (run): SimulationRun =>
-      run.id === runId
-        ? {
-            ...run,
-            status: 'error',
-            errorMessage,
-          }
-        : run,
+  return runs.map((run): SimulationRun =>
+    run.id === runId
+      ? {
+          ...run,
+          status: 'error',
+          errorMessage,
+        }
+      : run,
   );
 };
 

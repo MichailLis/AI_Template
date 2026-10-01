@@ -32,6 +32,11 @@ Mandatory behavior for agents:
 
 ## Docker Runtime Contract
 
+The runtime contract is Node.js 24.21.0 LTS with npm 11.19.0, pinned in `.nvmrc`,
+all three package manifests, CI, and the Node Docker images. The official Node image
+includes npm 11.19.0; use `npm ci` with the committed lockfiles. The optional VS Code
+workspace uses the supported `javascript-node:5.2.1-24-bookworm` devcontainer image.
+
 For normal project startup, agents must use the root `docker-compose.yml` only.
 
 Required command:
@@ -76,16 +81,16 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 
 ### Frontend Container Rebuild Before Tests
 
-When files under `client/` are changed, rebuild/recreate the frontend container before running
-frontend-related verification such as lint, build, Vitest/Jest, Playwright, smoke checks, or
-`verify:*` gates:
+When files under `client/` are changed and manual browser testing will use
+`http://localhost:5173`, rebuild/recreate the frontend container first:
 
 ```powershell
 docker compose up -d --build --force-recreate frontend
 ```
 
-Use the root `docker-compose.yml` only. Host-level checks - Vitest, ESLint and `tsc` - run against
-the sources directly and need no container rebuild; the rule applies to browser-level verification.
+Use the root `docker-compose.yml` only. Host-level checks — Vitest, ESLint, and `tsc` — need no
+container rebuild. Browser gates such as `verify:template` and `verify:e2e:critical` build the
+client independently with `vite preview` and also do not use the Docker frontend container.
 
 ## Search Mode (Exhaustive, For Non-Trivial Tasks)
 

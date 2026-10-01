@@ -18,9 +18,7 @@ const ORGANIZATIONS_LIMIT = 10;
 type EducationOrganizationItem = AdminEducationOrganizationsListResponseDtoOrganizationsItem;
 
 export type EducationOrganizationEditorState =
-  | 'closed'
-  | { mode: 'create' }
-  | { mode: 'edit'; organization: EducationOrganizationItem };
+  'closed' | { mode: 'create' } | { mode: 'edit'; organization: EducationOrganizationItem };
 
 export function useAdminEducationOrganizationsWorkspace() {
   const [page, setPage] = useState(1);

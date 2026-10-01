@@ -44,12 +44,36 @@ describe('OpenAPI contract (e2e)', () => {
     expect(document.components?.schemas?.ErrorResponseDto).toBeDefined();
   });
 
+  it('documents nullable user fields with OpenAPI 3.0 schemas accepted by API generators', () => {
+    const authSchema = document.components?.schemas?.AuthResponseDto as {
+      properties: { user: { properties: Record<string, unknown> } };
+    };
+    const usersSchema = document.components?.schemas?.AdminUsersResponseDto as {
+      properties: { users: { items: { properties: Record<string, unknown> } } };
+    };
+    const userSchema = document.components?.schemas?.AdminUserResponseDto as {
+      properties: Record<string, unknown>;
+    };
+
+    expect(authSchema.properties.user.properties.name).toEqual({
+      type: 'string',
+      nullable: true,
+    });
+    expect(usersSchema.properties.users.items.properties.deactivatedAt).toEqual({
+      type: 'string',
+      nullable: true,
+    });
+    expect(userSchema.properties.name).toEqual({
+      type: 'string',
+      nullable: true,
+    });
+  });
+
   it('documents refresh response as access token only', () => {
     const refreshOperation = document.paths?.['/auth/refresh']?.post;
     const okResponse = refreshOperation?.responses?.['200'];
     const refreshSchema = document.components?.schemas?.RefreshResponseDto as
-      | { properties?: Record<string, unknown> }
-      | undefined;
+      { properties?: Record<string, unknown> } | undefined;
 
     expect(okResponse).toBeDefined();
     expect(JSON.stringify(okResponse)).toContain('RefreshResponseDto');
@@ -63,8 +87,7 @@ describe('OpenAPI contract (e2e)', () => {
   it('documents refresh authentication as the refresh-token cookie scheme', () => {
     const refreshOperation = document.paths?.['/auth/refresh']?.post;
     const securitySchemes = document.components?.securitySchemes as
-      | Record<string, { type?: string; in?: string; name?: string }>
-      | undefined;
+      Record<string, { type?: string; in?: string; name?: string }> | undefined;
 
     expect(refreshOperation?.security).toEqual([{ [refreshCookieName]: [] }]);
     expect(securitySchemes?.[refreshCookieName]).toMatchObject({

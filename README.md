@@ -68,6 +68,11 @@ Linux/Windows deployment commands.
 
 ## Local Node Development
 
+Use Node.js 24.21.0 LTS (see `.nvmrc`) and npm 11.19.0 for the root, client, and
+server packages. Docker uses `node:24.21.0-bookworm`, which includes this npm version.
+CI pins checkout 7.0.1, setup-node 7.0.0, and cache 6.0.0; self-hosted runners need
+Actions Runner 2.327.1 or later (2.329.0 for authenticated Git inside container actions).
+
 If you intentionally want to run the apps on the host instead of Docker:
 
 ```powershell

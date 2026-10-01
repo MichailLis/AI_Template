@@ -304,6 +304,12 @@ docker compose --env-file .env.deploy -f docker-compose.build.yml push
 
 Для multi-arch публикации:
 
+Frontend Dockerfile запускает `build:production`: строгая проверка всего runtime-кода и
+Vite-конфига, затем production bundle. Контекст сборки остаётся `client`; исходные
+`*.test.*` / `*.spec.*` исключены только из этой проверки, так как тестовые fixtures
+находятся в корневом `template/`. Обычный `npm run build --prefix client` и CI продолжают
+проверять все исходные тесты; перед публикацией обязателен `npm run verify:template`.
+
 ```bash
 docker buildx create --use
 docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t your-dockerhub/ai-template-backend:prod --push server

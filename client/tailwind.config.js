@@ -7,9 +7,37 @@ export default {
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        xs: 'calc(var(--radius) - 4px)',
       },
       colors: {
+        // Preserve the v3 palette used by existing privacy/status surfaces.
+        slate: {
+          50: '#f8fafc',
+          200: '#e2e8f0',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
+        },
+        amber: {
+          50: '#fffbeb',
+          200: '#fde68a',
+          400: '#fbbf24',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+        },
+        red: {
+          200: '#fecaca',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
+        },
+        emerald: { 500: '#10b981' },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

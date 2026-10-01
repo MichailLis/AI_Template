@@ -69,7 +69,7 @@ export function PublicLinkBrandingColorField({
               aria-label={`Выбрать ${swatch} для ${label}`}
               aria-pressed={isSelected}
               title={swatch}
-              className={`size-7 rounded-full border border-border shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              className={`size-7 rounded-full border border-border shadow-xs transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                 isSelected ? 'ring-2 ring-ring ring-offset-2' : ''
               }`}
               style={{ backgroundColor: swatch }}

@@ -1,6 +1,6 @@
 export const adminToneClassNames = {
   info: {
-    active: 'border-admin-info-border bg-admin-info-soft text-admin-info-foreground shadow-sm',
+    active: 'border-admin-info-border bg-admin-info-soft text-admin-info-foreground shadow-xs',
     icon: 'bg-admin-info-soft text-admin-info',
     surface: 'bg-admin-info-soft/30',
     softSurface: 'bg-admin-info-soft/80',
@@ -11,7 +11,7 @@ export const adminToneClassNames = {
   },
   success: {
     active:
-      'border-admin-success-border bg-admin-success-soft text-admin-success-foreground shadow-sm',
+      'border-admin-success-border bg-admin-success-soft text-admin-success-foreground shadow-xs',
     icon: 'bg-admin-success-soft text-admin-success',
     surface: 'bg-admin-success-soft/30',
     softSurface: 'bg-admin-success-soft/80',
@@ -22,7 +22,7 @@ export const adminToneClassNames = {
   },
   warning: {
     active:
-      'border-admin-warning-border bg-admin-warning-soft text-admin-warning-foreground shadow-sm',
+      'border-admin-warning-border bg-admin-warning-soft text-admin-warning-foreground shadow-xs',
     icon: 'bg-admin-warning-soft text-admin-warning',
     surface: 'bg-admin-warning-soft/30',
     softSurface: 'bg-admin-warning-soft/80',
@@ -33,7 +33,7 @@ export const adminToneClassNames = {
   },
   danger: {
     active:
-      'border-admin-danger-border bg-admin-danger-soft text-admin-danger-foreground shadow-sm',
+      'border-admin-danger-border bg-admin-danger-soft text-admin-danger-foreground shadow-xs',
     icon: 'bg-admin-danger-soft text-admin-danger',
     surface: 'bg-admin-danger-soft/30',
     softSurface: 'bg-admin-danger-soft/80',
@@ -43,7 +43,7 @@ export const adminToneClassNames = {
     gradient: 'from-admin-danger to-admin-accent',
   },
   neutral: {
-    active: 'border-admin-border bg-admin-panel-muted text-admin-foreground shadow-sm',
+    active: 'border-admin-border bg-admin-panel-muted text-admin-foreground shadow-xs',
     icon: 'bg-admin-panel-muted text-admin-muted',
     surface: 'bg-admin-panel-muted/60',
     softSurface: 'bg-admin-panel-muted/80',
@@ -54,7 +54,7 @@ export const adminToneClassNames = {
   },
   accent: {
     active:
-      'border-admin-accent-border bg-admin-accent-soft text-admin-accent-foreground shadow-sm',
+      'border-admin-accent-border bg-admin-accent-soft text-admin-accent-foreground shadow-xs',
     icon: 'bg-admin-accent-soft text-admin-accent',
     surface: 'bg-admin-accent-soft/30',
     softSurface: 'bg-admin-accent-soft/80',
@@ -115,8 +115,8 @@ export const adminClassNames = {
   },
   nav: {
     button:
-      'h-9 w-full justify-start gap-2 rounded-lg border border-transparent px-2.5 text-admin-muted hover:border-admin-border hover:bg-admin-panel hover:text-admin-foreground hover:shadow-sm',
-    mobileButton: 'h-8 bg-admin-panel/80 shadow-sm',
+      'h-9 w-full justify-start gap-2 rounded-lg border border-transparent px-2.5 text-admin-muted hover:border-admin-border hover:bg-admin-panel hover:text-admin-foreground hover:shadow-xs',
+    mobileButton: 'h-8 bg-admin-panel/80 shadow-xs',
     icon: 'grid size-6 place-items-center rounded-md bg-admin-panel-muted text-admin-muted',
     groupLabelMobile: 'mb-2 text-xs font-semibold uppercase tracking-wide text-admin-muted',
     groupLabelDesktop:
@@ -124,30 +124,30 @@ export const adminClassNames = {
   },
   sidebar: {
     desktop:
-      'hidden overflow-hidden border-r border-admin-border bg-admin-panel/90 text-admin-foreground shadow-[1px_0_0_hsl(var(--admin-foreground)/0.03)] backdrop-blur md:sticky md:top-0 md:flex md:h-screen md:flex-col',
+      'hidden overflow-hidden border-r border-admin-border bg-admin-panel/90 text-admin-foreground shadow-[1px_0_0_hsl(var(--admin-foreground)/0.03)] backdrop-blur-sm md:sticky md:top-0 md:flex md:h-screen md:flex-col',
     header: 'flex h-16 items-center border-b border-admin-border px-5',
     brandMark:
-      'rounded-lg bg-gradient-to-br from-admin-info via-admin-accent to-admin-success px-2 py-1 text-xs font-semibold text-white shadow-sm',
+      'rounded-lg bg-linear-to-br/srgb from-admin-info via-admin-accent to-admin-success px-2 py-1 text-xs font-semibold text-white shadow-xs',
     brandTitle: 'block text-sm font-semibold text-admin-foreground',
     brandSubtitle: 'block text-xs text-admin-muted',
     nav: 'flex-1 overflow-hidden p-3',
   },
   header: {
-    root: 'sticky top-0 z-10 border-b border-admin-border bg-admin-panel/90 backdrop-blur',
+    root: 'sticky top-0 z-10 border-b border-admin-border bg-admin-panel/90 backdrop-blur-sm',
     eyebrow: 'text-xs font-medium uppercase tracking-wide text-muted-foreground',
     title: 'text-sm font-semibold text-foreground',
     /** Поиск в шапке переключает разделы, а не ищет данные, поэтому места занимает немного. */
-    input: 'w-40 border-admin-border bg-admin-panel-muted/80 shadow-sm lg:w-52',
-    button: 'bg-admin-panel shadow-sm',
+    input: 'w-40 border-admin-border bg-admin-panel-muted/80 shadow-xs lg:w-52',
+    button: 'bg-admin-panel shadow-xs',
     userBadge:
-      'max-w-48 truncate rounded-lg border border-admin-border bg-admin-panel px-3 py-1.5 text-xs font-medium text-admin-muted shadow-sm',
+      'max-w-48 truncate rounded-lg border border-admin-border bg-admin-panel px-3 py-1.5 text-xs font-medium text-admin-muted shadow-xs',
     mobileNav: 'border-t border-admin-border bg-admin-panel-muted/80 px-4 py-3 md:hidden',
   },
   panel: {
-    card: 'min-w-0 border-admin-border bg-admin-panel shadow-sm',
-    cardMuted: 'min-w-0 border-admin-border bg-admin-panel-muted/80 shadow-sm',
-    errorCard: 'min-w-0 border-admin-danger-border bg-admin-danger-soft shadow-sm',
-    hero: 'min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-sm',
+    card: 'min-w-0 border-admin-border bg-admin-panel shadow-xs',
+    cardMuted: 'min-w-0 border-admin-border bg-admin-panel-muted/80 shadow-xs',
+    errorCard: 'min-w-0 border-admin-danger-border bg-admin-danger-soft shadow-xs',
+    hero: 'min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-xs',
     frame: 'rounded-md border border-admin-border bg-admin-panel',
     /**
      * Секция внутри карточки: только заливка, без рамки и тени. Раньше это была белая рамка
@@ -157,7 +157,7 @@ export const adminClassNames = {
     mutedSection: 'rounded-xl bg-admin-panel-muted/70 px-3 py-2',
     compactSection: 'rounded-md bg-admin-panel-muted p-3',
     compactCard: 'rounded-md border border-admin-border bg-admin-panel p-3',
-    subtleCard: 'rounded-md border border-admin-border bg-admin-panel p-3 shadow-sm',
+    subtleCard: 'rounded-md border border-admin-border bg-admin-panel p-3 shadow-xs',
     loading:
       'rounded-md border border-admin-border bg-admin-panel-muted p-4 text-sm text-admin-muted',
     empty: 'rounded-md border border-dashed border-admin-border p-3 text-sm text-admin-muted',
@@ -172,18 +172,18 @@ export const adminClassNames = {
     listRow:
       'border-b border-admin-border px-4 py-2.5 transition-colors last:border-b-0 hover:bg-admin-panel-muted/60',
     selectedRow: 'bg-admin-panel-muted',
-    inlineItem: 'flex items-start gap-3 rounded-md bg-admin-panel p-3 text-sm shadow-sm',
+    inlineItem: 'flex items-start gap-3 rounded-md bg-admin-panel p-3 text-sm shadow-xs',
     mutedBar: 'bg-admin-panel-muted',
     selectableItem:
       'rounded-md border border-l-4 border-l-transparent border-admin-border bg-admin-panel transition-[border-color,background-color,box-shadow]',
     selectedItem:
-      'border-admin-accent-border border-l-admin-accent bg-admin-accent-soft text-admin-accent-foreground shadow-sm',
+      'border-admin-accent-border border-l-admin-accent bg-admin-accent-soft text-admin-accent-foreground shadow-xs',
     interactive:
-      'rounded-xl border border-admin-border bg-admin-panel-muted/60 shadow-sm transition-[border-color,background-color,box-shadow] hover:border-admin-border hover:bg-admin-panel hover:shadow-md',
+      'rounded-xl border border-admin-border bg-admin-panel-muted/60 shadow-xs transition-[border-color,background-color,box-shadow] hover:border-admin-border hover:bg-admin-panel hover:shadow-md',
   },
   metric: {
-    card: 'relative min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-sm',
-    rail: 'absolute inset-x-0 top-0 h-1 bg-gradient-to-r',
+    card: 'relative min-w-0 overflow-hidden border-admin-border bg-admin-panel shadow-xs',
+    rail: 'absolute inset-x-0 top-0 h-1 bg-linear-to-r/srgb',
     icon: 'grid size-9 place-items-center rounded-lg',
     value: 'text-3xl font-semibold text-admin-foreground',
     sparkTrack: 'flex h-10 items-end gap-1',
@@ -197,7 +197,7 @@ export const adminClassNames = {
   },
   form: {
     select:
-      'h-10 w-full rounded-md border border-admin-border bg-admin-panel px-3 py-2 text-sm text-admin-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-admin-panel-muted disabled:text-admin-muted',
+      'h-10 w-full rounded-md border border-admin-border bg-admin-panel px-3 py-2 text-sm text-admin-foreground shadow-xs outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-admin-panel-muted disabled:text-admin-muted',
     range: 'h-2 w-full cursor-pointer appearance-none rounded-lg bg-admin-border accent-primary',
     checkboxLabel: 'flex items-center gap-2 text-sm text-admin-foreground',
     fieldHint: 'text-xs text-admin-muted',
@@ -271,18 +271,18 @@ export const adminClassNames = {
     clickableRow: 'cursor-pointer hover:bg-admin-panel-muted/40',
     mutedCell: 'text-admin-muted',
     sortButton:
-      '-ml-2 inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-admin-muted hover:bg-admin-panel hover:text-admin-foreground',
+      '-ml-2 inline-flex h-7 items-center gap-1 rounded-sm px-2 text-xs font-medium text-admin-muted hover:bg-admin-panel hover:text-admin-foreground',
   },
   toolbar: {
     tabs: 'inline-flex w-fit flex-wrap rounded-lg border border-admin-border bg-admin-panel-muted p-1',
-    activeTab: 'bg-admin-panel shadow-sm hover:bg-admin-panel',
+    activeTab: 'bg-admin-panel shadow-xs hover:bg-admin-panel',
     inactiveTab: 'text-admin-muted hover:text-admin-foreground',
     input: 'bg-admin-panel',
   },
   filters: {
-    input: 'w-full max-w-sm bg-admin-panel shadow-sm',
+    input: 'w-full max-w-sm bg-admin-panel shadow-xs',
     total:
-      'ml-auto rounded-full border border-admin-border bg-admin-panel px-3 py-1.5 text-sm text-admin-muted shadow-sm',
+      'ml-auto rounded-full border border-admin-border bg-admin-panel px-3 py-1.5 text-sm text-admin-muted shadow-xs',
   },
   actionMenu: {
     // Ширина по самому длинному пункту: при фиксированной w-48 «Снять права администратора» обрезался.

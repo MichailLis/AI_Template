@@ -52,9 +52,9 @@ function PublicEntryLoadingState() {
     <PublicEntryStateCard
       title="Загрузка параметров теста"
       description="Пожалуйста, подождите..."
-      accentClassName="bg-gradient-to-r from-primary via-accent to-secondary"
+      accentClassName="bg-linear-to-r/srgb from-primary via-accent to-secondary"
       icon={
-        <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-4 shadow-md">
+        <div className="rounded-xl bg-linear-to-br/srgb from-primary to-accent p-4 shadow-md">
           <GraduationCap className="h-8 w-8 animate-pulse text-white" />
         </div>
       }
@@ -142,7 +142,7 @@ export function PublicTestEntryWorkspace() {
     return (
       <PublicEntryStateCard
         title="Ссылка недействительна"
-        accentClassName="bg-gradient-to-r from-red-500 via-red-400 to-red-500"
+        accentClassName="bg-linear-to-r/srgb from-red-500 via-red-400 to-red-500"
       />
     );
   }
@@ -156,7 +156,7 @@ export function PublicTestEntryWorkspace() {
       <PublicEntryStateCard
         title="Ссылка недоступна"
         description="Проверьте корректность ссылки или обратитесь к администратору теста."
-        accentClassName="bg-gradient-to-r from-red-500 via-red-400 to-red-500"
+        accentClassName="bg-linear-to-r/srgb from-red-500 via-red-400 to-red-500"
       />
     );
   }

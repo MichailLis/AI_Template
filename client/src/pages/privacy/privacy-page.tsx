@@ -77,7 +77,7 @@ const isSectionHeading = (block: string) =>
 function PrivacyLoadingState() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12 text-slate-700">
-      <div className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-6 shadow-xs">
         Загружаем политику...
       </div>
     </main>
@@ -87,7 +87,7 @@ function PrivacyLoadingState() {
 function PrivacyErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12 text-slate-800">
-      <div className="mx-auto flex max-w-4xl flex-col gap-4 rounded-lg border border-red-200 bg-white p-6 shadow-sm">
+      <div className="mx-auto flex max-w-4xl flex-col gap-4 rounded-lg border border-red-200 bg-white p-6 shadow-xs">
         <h1 className="text-2xl font-semibold tracking-normal">Политика временно недоступна</h1>
         <p className="text-sm text-slate-600">
           Не удалось загрузить актуальную редакцию политики обработки персональных данных.
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <article className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <article className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-5 shadow-xs sm:p-8">
         <header className="border-b border-slate-200 pb-5">
           <h1 className="text-3xl font-semibold tracking-normal">
             Политика обработки персональных данных

@@ -17,7 +17,7 @@ export type AdminPublicAttemptDetailResponseDtoAnalysis = {
   resultKind: AdminPublicAttemptDetailResponseDtoAnalysisResultKind;
   /** Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения) */
   status: AdminPublicAttemptDetailResponseDtoAnalysisStatus;
-  summary: unknown | null;
+  summary: unknown;
   /** @nullable */
   rawText: string | null;
   /** @nullable */

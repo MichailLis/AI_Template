@@ -36,14 +36,14 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-screen flex-col border-l border-admin-border bg-background shadow-2xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:w-[min(720px,100vw)]',
+        'fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-screen flex-col border-l border-admin-border bg-background shadow-2xl outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:w-[min(720px,100vw)]',
         className,
       )}
       {...props}
     >
       {children}
       <DialogPrimitive.Close
-        className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-md text-admin-muted transition-colors hover:bg-admin-panel-muted hover:text-admin-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+        className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-md text-admin-muted transition-colors hover:bg-admin-panel-muted hover:text-admin-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
         disabled={closeDisabled}
         aria-label="Закрыть"
         title="Закрыть"

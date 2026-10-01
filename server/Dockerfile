@@ -1,4 +1,4 @@
-FROM node:22-bookworm AS deps
+FROM node:24.21.0-bookworm AS deps
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY src ./src
 RUN npm run prisma:generate && npm run build
 RUN npm prune --omit=dev
 
-FROM node:22-bookworm AS runtime
+FROM node:24.21.0-bookworm AS runtime
 
 WORKDIR /app
 

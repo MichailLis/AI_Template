@@ -141,10 +141,10 @@ function ResultHeroCopy({ hasAnalysis }: { hasAnalysis: boolean }) {
   return (
     <div className="relative min-w-0 max-w-3xl space-y-4">
       <div className="space-y-3">
-        <h1 className="text-balance text-3xl font-black leading-tight md:text-5xl">
+        <h1 className="text-balance text-3xl font-black leading-tight md:text-5xl md:leading-12">
           {hasAnalysis ? 'Результат теста' : 'Тестирование завершено'}
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-white/78 md:text-base">
+        <p className="max-w-2xl text-sm leading-relaxed text-inherit md:text-base md:leading-6">
           {hasAnalysis
             ? 'Итог прохождения и анализ инженерно-технического профиля.'
             : 'Ответы сохранены. Результат пришлет преподаватель или анализ не предусмотрен.'}
@@ -175,7 +175,7 @@ function ResultHero({ hasAnalysis }: { hasAnalysis: boolean }) {
       <div className="relative flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
         <ResultHeroCopy hasAnalysis={hasAnalysis} />
         {hasAnalysis ? (
-          <ResultPdfButton className="public-result-pdf-action w-fit shrink-0 rounded-xl border-white/25 bg-white/12 text-white shadow-sm backdrop-blur hover:bg-white/18 hover:text-white" />
+          <ResultPdfButton className="public-result-pdf-action w-fit shrink-0 rounded-xl border-white/25 bg-transparent text-white shadow-xs backdrop-blur-sm hover:bg-transparent hover:text-white" />
         ) : null}
       </div>
     </div>
@@ -184,7 +184,7 @@ function ResultHero({ hasAnalysis }: { hasAnalysis: boolean }) {
 
 function ProfessionAtlasLink({ url }: { url: string }) {
   return (
-    <aside className="rounded-2xl border border-border/70 bg-white/85 p-5 shadow-sm">
+    <aside className="rounded-2xl border border-border/70 bg-white/85 p-5 shadow-xs">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 gap-3">
           <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -202,7 +202,7 @@ function ProfessionAtlasLink({ url }: { url: string }) {
           href={url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-xs transition hover:bg-primary/90"
         >
           Открыть Атлас профессий
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
@@ -319,7 +319,7 @@ export function PublicTestResultWorkspace() {
 
         {hasAnalysis ? (
           <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
-            <ResultPdfButton className="rounded-xl px-5 shadow-sm" />
+            <ResultPdfButton className="rounded-xl px-5 shadow-xs" />
           </div>
         ) : null}
       </section>

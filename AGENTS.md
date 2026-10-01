@@ -10,10 +10,17 @@ downward, cross-slice through `index.ts`). The machine-readable sources of truth
 `template/features.manifest.json` and `template/fsd.rules.json`, enforced by `scripts/verify-*.mjs`.
 Read those files rather than descriptions of them.
 
-The stack — NestJS 11, Prisma 7, React 19, Vite 7, Orval, Zustand, Tailwind 3, shadcn/ui — is
+The stack — NestJS 11, Prisma 7, React 19, Vite 8, Orval, Zustand, Tailwind 4, shadcn/ui — is
 fixed on purpose: it keeps the architecture from drifting under AI-driven development. Version
 bumps stay inside the current major; do not swap libraries and do not weaken a gate to make a
 check pass.
+
+Tailwind 4 uses the supported `@tailwindcss/postcss` pipeline and the existing HSL theme via
+`@config`; preserve custom shadcn components and `tailwindcss-animate`. CSS support starts at
+Safari 16.4, Chrome 111, and Firefox 128. Tailwind 5 requires a separately approved migration.
+Existing `space-x-*`/`space-y-*` classes retain v3 visible-sibling margins through supported
+CSS compatibility utilities; new flex/grid layouts should use `gap`. Keep existing gradients
+in sRGB and preserve the legacy named palette shades used by privacy/status surfaces.
 
 ## Docker runtime
 

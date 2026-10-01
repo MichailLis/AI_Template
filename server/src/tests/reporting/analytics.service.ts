@@ -216,8 +216,7 @@ export class TestsAnalyticsService {
     }
 
     const linkWhere:
-      | Prisma.TestPublicLinkWhereInput
-      | (Prisma.TestPublicLinkWhereInput & { id: number }) =
+      Prisma.TestPublicLinkWhereInput | (Prisma.TestPublicLinkWhereInput & { id: number }) =
       query.scope === 'TOPIC'
         ? {
             ...getLinkStatusFilter(query.linkStatus),

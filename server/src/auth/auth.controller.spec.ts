@@ -5,7 +5,7 @@ import { REFRESH_TOKEN_COOKIE_NAME } from './auth-cookie';
 import { AuthService } from './auth.service';
 import { SigninDto } from './dto/auth.dto';
 
-type MockResponse = Response & {
+type MockResponse = Omit<Response, 'clearCookie' | 'cookie'> & {
   clearCookie: jest.Mock;
   cookie: jest.Mock;
 };

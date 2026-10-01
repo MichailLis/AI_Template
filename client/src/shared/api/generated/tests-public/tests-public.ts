@@ -210,6 +210,9 @@ export const testsPublicControllerStartSession = (
   );
 };
 
+export const getTestsPublicControllerStartSessionMutationKey = () =>
+  ['testsPublicControllerStartSession'] as const;
+
 export const getTestsPublicControllerStartSessionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -227,7 +230,7 @@ export const getTestsPublicControllerStartSessionMutationOptions = <
   TestsPublicControllerStartSessionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsPublicControllerStartSession'];
+  const mutationKey = getTestsPublicControllerStartSessionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -439,6 +442,9 @@ export const testsPublicControllerSaveAnswers = (
   );
 };
 
+export const getTestsPublicControllerSaveAnswersMutationKey = () =>
+  ['testsPublicControllerSaveAnswers'] as const;
+
 export const getTestsPublicControllerSaveAnswersMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -456,7 +462,7 @@ export const getTestsPublicControllerSaveAnswersMutationOptions = <
   TestsPublicControllerSaveAnswersMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsPublicControllerSaveAnswers'];
+  const mutationKey = getTestsPublicControllerSaveAnswersMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -524,6 +530,9 @@ export const testsPublicControllerFinishSession = (
   );
 };
 
+export const getTestsPublicControllerFinishSessionMutationKey = () =>
+  ['testsPublicControllerFinishSession'] as const;
+
 export const getTestsPublicControllerFinishSessionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -541,7 +550,7 @@ export const getTestsPublicControllerFinishSessionMutationOptions = <
   TestsPublicControllerFinishSessionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsPublicControllerFinishSession'];
+  const mutationKey = getTestsPublicControllerFinishSessionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
