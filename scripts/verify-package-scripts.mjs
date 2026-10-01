@@ -170,6 +170,7 @@ for (const scriptName of ['verify:local', 'verify:template']) {
 
 for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:package-scripts');
+  requireRootScriptSegment(scriptName, 'npm run verify:stack');
   requireRootScriptSegment(scriptName, 'npm run verify:runtime-config');
   requireRootScriptSegment(scriptName, 'npm run test:scripts');
   requireRootScriptSegment(scriptName, 'npm run verify:prisma-migrations');

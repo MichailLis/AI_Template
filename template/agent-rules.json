@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "alwaysLoadedFiles": ["CLAUDE.md", "AGENTS.md"],
+  "claudeImport": "@AGENTS.md",
+  "rules": [
+    {
+      "id": "fsd-layer-order",
+      "group": "A",
+      "rule": "Frontend imports flow one way through the FSD layers.",
+      "enforcedBy": ["verify:architecture"],
+      "anchor": "app → pages → widgets → features → entities → shared"
+    },
+    {
+      "id": "fsd-public-api",
+      "group": "A",
+      "rule": "Cross-slice imports go through the slice public API.",
+      "enforcedBy": ["verify:architecture"],
+      "anchor": "`index.ts`"
+    },
+    {
+      "id": "manifest-source-of-truth",
+      "group": "A",
+      "rule": "The feature manifest is the machine-readable feature inventory.",
+      "enforcedBy": ["verify:architecture"],
+      "anchor": "`template/features.manifest.json`"
+    },
+    {
+      "id": "fsd-rules-source-of-truth",
+      "group": "A",
+      "rule": "Layer rules live in fsd.rules.json in strict mode.",
+      "enforcedBy": ["verify:architecture"],
+      "anchor": "`template/fsd.rules.json`"
+    },
+    {
+      "id": "api-mutator-node-safe",
+      "group": "A",
+      "rule": "api.ts holds only the Axios instance; no browser globals.",
+      "enforcedBy": ["verify:api-mutator", "write-guard"],
+      "anchor": "`client/src/shared/api/api.ts` holds only the Axios instance"
+    },
+    {
+      "id": "storage-discipline",
+      "group": "A",
+      "rule": "Browser storage is reached only through safeStorage.",
+      "enforcedBy": ["verify:invariants", "write-guard"],
+      "anchor": "Use `safeStorage`"
+    },
+    {
+      "id": "no-react-query-state-mirroring",
+      "group": "A",
+      "rule": "Query data is not mirrored into form state inside useEffect.",
+      "enforcedBy": ["verify:invariants"],
+      "anchor": "Do not mirror React Query data into form state"
+    },
+    {
+      "id": "swagger-completeness",
+      "group": "A",
+      "rule": "Every controller handler carries @ApiOperation and a typed @ApiResponse.",
+      "enforcedBy": ["verify:invariants"],
+      "anchor": "controllers always carry `@ApiOperation`"
+    },
+    {
+      "id": "dto-dates-as-strings",
+      "group": "A",
+      "rule": "Response DTOs convert Prisma Date to z.string().",
+      "enforcedBy": ["verify:invariants", "write-guard"],
+      "anchor": "Response DTOs convert Prisma `Date` to `z.string()`"
+    },
+    {
+      "id": "single-error-shape",
+      "group": "A",
+      "rule": "Server errors keep one response shape.",
+      "enforcedBy": ["verify:invariants", "verify:architecture"],
+      "anchor": "{ success: false, error: { code, message } }"
+    },
+    {
+      "id": "public-dto-safety",
+      "group": "A",
+      "rule": "Public /t/* DTOs expose student-safe fields only.",
+      "enforcedBy": ["verify:invariants"],
+      "anchor": "DTOs expose student-safe fields only"
+    },
+    {
+      "id": "paired-client-server-rules",
+      "group": "A",
+      "rule": "Paired client/server implementations stay in parity.",
+      "enforcedBy": ["verify:paired-rules"],
+      "anchor": "`npm run verify:paired-rules`"
+    },
+    {
+      "id": "typecheck-is-not-the-build",
+      "group": "A",
+      "rule": "typecheck stays in both pipelines; it is the only step that compiles server specs.",
+      "enforcedBy": ["verify:package-scripts"],
+      "anchor": "it is the only one that compiles the server specs"
+    },
+    {
+      "id": "stack-majors-fixed",
+      "group": "A",
+      "rule": "Version bumps stay inside the current major of the declared stack.",
+      "enforcedBy": ["verify:stack"],
+      "anchor": "Version bumps stay inside the current major"
+    },
+    {
+      "id": "no-library-replacement",
+      "group": "B",
+      "rule": "Orval, Zustand, TanStack Query and FSD are not replaced.",
+      "enforcedBy": [],
+      "anchor": "do not replace Orval, Zustand, TanStack Query or FSD"
+    },
+    {
+      "id": "no-gate-weakening",
+      "group": "B",
+      "rule": "A check is never disabled, commented out or hardcoded around.",
+      "enforcedBy": [],
+      "anchor": "Never disable a check, comment out failing logic, or hardcode around a gate"
+    },
+    {
+      "id": "classify-change-first",
+      "group": "B",
+      "rule": "The change is classified (existing feature vs new feature) before any scaffolding.",
+      "enforcedBy": [],
+      "anchor": "Classify the change first"
+    },
+    {
+      "id": "pipeline-order",
+      "group": "B",
+      "rule": "Schema, generate, migration, backend, gen:api, frontend, verification — in this order.",
+      "enforcedBy": [],
+      "anchor": "`schema.prisma` → `npm run prisma:generate` → migration"
+    },
+    {
+      "id": "regenerate-client-before-frontend-checks",
+      "group": "B",
+      "rule": "The API client is regenerated before any frontend check when DTOs or controllers changed.",
+      "enforcedBy": [],
+      "anchor": "Regenerate the API client before any frontend lint/build/test step"
+    },
+    {
+      "id": "pages-stay-thin",
+      "group": "B",
+      "rule": "pages/* are thin route entrypoints; logic lives in widgets and features.",
+      "enforcedBy": [],
+      "anchor": "business logic belongs in `widgets/*` and `features/*`"
+    },
+    {
+      "id": "llm-status-is-the-completion-signal",
+      "group": "B",
+      "rule": "llmStatus, never status, signals that the AI phase finished.",
+      "enforcedBy": [],
+      "anchor": "is therefore never a completion signal for the AI"
+    },
+    {
+      "id": "root-compose-only",
+      "group": "B",
+      "rule": "The project is started from the root compose file only.",
+      "enforcedBy": [],
+      "anchor": "Normal startup is the root compose file only"
+    },
+    {
+      "id": "devcontainer-is-not-the-runtime",
+      "group": "B",
+      "rule": "The devcontainer compose file is never used to run the project.",
+      "enforcedBy": [],
+      "anchor": "never use it to run the project"
+    },
+    {
+      "id": "release-gate-before-finalizing",
+      "group": "B",
+      "rule": "verify:template is mandatory before finalizing branch state.",
+      "enforcedBy": [],
+      "anchor": "release gate, mandatory before finalizing branch state"
+    },
+    {
+      "id": "verify-from-a-clean-tree",
+      "group": "B",
+      "rule": "A changed gate is re-run after deleting the session's generated artifacts.",
+      "enforcedBy": [],
+      "anchor": "CI starts from a clean"
+    },
+    {
+      "id": "extraction-matches-the-authority",
+      "group": "B",
+      "rule": "Shared logic extracted from two implementations matches the authority and is diffed against both.",
+      "enforcedBy": [],
+      "anchor": "Match the authority"
+    },
+    {
+      "id": "deletion-takes-exports-and-mentions",
+      "group": "B",
+      "rule": "Deleting code removes its dead exports and its documentation mentions in the same change.",
+      "enforcedBy": [],
+      "anchor": "Its dead exports and its mentions in the docs go in the same change"
+    },
+    {
+      "id": "moves-are-proved-by-equality",
+      "group": "B",
+      "rule": "A file move records the baseline first and requires the same numbers afterwards.",
+      "enforcedBy": [],
+      "anchor": "Record the baseline first"
+    },
+    {
+      "id": "generated-is-not-gitignored",
+      "group": "B",
+      "rule": "git check-ignore decides what is an artifact; the generated API client is committed.",
+      "enforcedBy": [],
+      "anchor": "Ask `git check-ignore`"
+    },
+    {
+      "id": "numstat-after-gen-api",
+      "group": "B",
+      "rule": "After gen:api the real change is read from git diff --numstat.",
+      "enforcedBy": [],
+      "anchor": "read `git diff --numstat`, not `git status`"
+    },
+    {
+      "id": "crlf-safe-scripted-edits",
+      "group": "B",
+      "rule": "Scripted edits normalise line endings in memory and convert once on write.",
+      "enforcedBy": [],
+      "anchor": "This tree is CRLF"
+    },
+    {
+      "id": "tailwind-pipeline",
+      "group": "B",
+      "rule": "Tailwind 4 runs through @tailwindcss/postcss with the existing HSL theme.",
+      "enforcedBy": [],
+      "anchor": "`@tailwindcss/postcss` pipeline"
+    },
+    {
+      "id": "tailwind-gap-for-new-layouts",
+      "group": "B",
+      "rule": "New flex and grid layouts use gap rather than space-x/space-y.",
+      "enforcedBy": [],
+      "anchor": "new flex/grid layouts should use `gap`"
+    },
+    {
+      "id": "beads-for-task-tracking",
+      "group": "B",
+      "rule": "bd is the only task tracker.",
+      "enforcedBy": [],
+      "anchor": "Use `bd` for ALL task tracking"
+    },
+    {
+      "id": "no-commit-without-authority",
+      "group": "B",
+      "rule": "No commit or push without clear authority.",
+      "enforcedBy": [],
+      "anchor": "Do not commit or push without clear authority"
+    },
+    {
+      "id": "graph-traces-include-tests",
+      "group": "B",
+      "rule": "Graph traces pass include_tests: true because `tests` is product code here.",
+      "enforcedBy": [],
+      "anchor": "include_tests: true"
+    }
+  ]
+}

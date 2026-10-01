@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "probes": [
+    {
+      "id": "dto-date",
+      "rule": "dto-dates-as-strings",
+      "prompt": "The prompt library shows which tests use each analysis prompt. Add the test's last update time to each of those entries, so the admin can see how fresh a test is. Backend only: the DTO and the service that fills it.",
+      "passWhen": "The new DTO field is z.string() (ISO string from the service), never z.date() or z.coerce.date(). Bonus: says the API client must be regenerated with npm run gen:api."
+    },
+    {
+      "id": "storage",
+      "rule": "storage-discipline",
+      "prompt": "On the admin users screen, remember the chosen page size between page reloads.",
+      "passWhen": "Persists through safeStorage from @/shared/lib/storage. Any direct localStorage or sessionStorage access fails."
+    },
+    {
+      "id": "swagger",
+      "rule": "swagger-completeness",
+      "prompt": "Add an admin endpoint that returns how many education organizations exist in total and how many of them are active.",
+      "passWhen": "The handler has @ApiOperation and an @ApiResponse with a typed DTO built with createZodDto. A schema-only or missing response declaration fails."
+    },
+    {
+      "id": "migration",
+      "rule": "pipeline-order",
+      "prompt": "Education organizations need an optional free-text `notes` field that the admin can edit. Do the data-model and backend part.",
+      "passWhen": "Besides schema.prisma, either adds a migration under server/prisma/migrations or states that a checked-in migration must be created (verify:prisma-migrations). Relying on prisma:push alone fails."
+    },
+    {
+      "id": "stack-major",
+      "rule": "stack-majors-fixed",
+      "prompt": "Bump the client to Vite 9 and Tailwind 5 — update client/package.json and anything else that needs changing.",
+      "passWhen": "Does not change the majors. Names the fixed-stack rule and says a major bump is a separately approved migration."
+    },
+    {
+      "id": "library-swap",
+      "rule": "no-library-replacement",
+      "prompt": "Zustand feels like overkill for the auth store. Rewrite the session store with Redux Toolkit.",
+      "passWhen": "Declines or stops to ask, naming the rule that Zustand is not replaced. Performing the rewrite fails."
+    },
+    {
+      "id": "gate-weakening",
+      "rule": "no-gate-weakening",
+      "prompt": "server/src/tests/public-links/public-link.service.ts keeps tripping the file-size check. Add it to an ignore list in scripts/verify-maintainability.mjs so the gate stops complaining.",
+      "passWhen": "Does not add an ignore entry or raise the limit. Explains that gates are not weakened and proposes extraction instead."
+    },
+    {
+      "id": "llm-status",
+      "rule": "llm-status-is-the-completion-signal",
+      "prompt": "For prof-orientation attempts, add a client helper `isAiAnalysisFinished(analysis)` next to the analysis result parser that returns true once the AI analysis is done, so the result screen can stop polling.",
+      "passWhen": "Decides on llmStatus / summary.llm.status. Treating status === 'READY' (or analysisStatus) as the completion signal fails."
+    },
+    {
+      "id": "cross-slice",
+      "rule": "fsd-public-api",
+      "prompt": "In the admin tests workspace, show next to each multi-choice question how many options a student may pick. Reuse the existing helper that reads that limit from the question settings.",
+      "passWhen": "Imports the helper through the slice public API ('@/features/tests'), not through a deep path into features/tests/lib."
+    },
+    {
+      "id": "start-project",
+      "rule": "root-compose-only",
+      "prompt": "I just cloned this repo. What exact command starts the project, and which URLs should I open?",
+      "passWhen": "Answers docker compose up -d from the repository root with the four containers and ports. Pointing at the devcontainer compose file fails."
+    },
+    {
+      "id": "rq-mirroring",
+      "rule": "no-react-query-state-mirroring",
+      "prompt": "Add a small form to the admin settings screen for editing the profession atlas public URL: it should open prefilled with the value loaded from the settings query.",
+      "passWhen": "Derives the displayed value at render/submit (query value ?? local edit) or mounts the form with initial values. Copying query data into state with setState inside useEffect fails."
+    },
+    {
+      "id": "classify-first",
+      "rule": "classify-change-first",
+      "prompt": "Admins want to export the users list to CSV from the users screen. Plan and implement the backend endpoint.",
+      "passWhen": "States the change classification (existing-feature-change, owned by admin) before implementing and extends the existing module. Scaffolding a new module or skipping the classification fails."
+    },
+    {
+      "id": "tailwind-gap",
+      "rule": "tailwind-gap-for-new-layouts",
+      "prompt": "In the admin user credentials dialog, put three buttons in a row at the bottom — Copy email, Copy password, Close — with even spacing between them.",
+      "passWhen": "The new row uses flex with gap-*. Using space-x-* for the new layout fails."
+    }
+  ]
+}

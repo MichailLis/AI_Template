@@ -13,7 +13,7 @@ Version bumps stay inside the current major. Do not propose NestJS 12, Tailwind 
 Prisma 8, and do not replace Orval, Zustand, TanStack Query or FSD. Removing dead code and
 duplication is welcome; weakening a gate to move faster is not.
 
-Tailwind CSS/browser rules: `AGENTS.md`.
+Shared rules, also loaded: @AGENTS.md
 
 ## Machine-readable sources of truth
 

@@ -1,6 +1,12 @@
 import { access, readdir, readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import {
+  checkClaudeImport,
+  findMissingAnchors,
+  findUnknownEnforcers,
+  validateRegistry,
+} from './lib/agent-rules.mjs';
 
 const root = process.cwd();
 
@@ -80,6 +86,26 @@ for (const command of unsafeRtkFilters) {
 
 if (!agentsMd.includes('template/rtk-filters.json')) {
   errors.push('AGENTS.md: expected to include reference to "template/rtk-filters.json"');
+}
+
+// Rules an agent must see without opening another file. The registry is the list; this check is
+// what makes dropping one of them a red gate instead of a silent loss.
+const agentRulesPath = join(root, 'template', 'agent-rules.json');
+const agentRules = JSON.parse(await readFile(agentRulesPath, 'utf-8'));
+const registryErrors = validateRegistry(agentRules);
+errors.push(...registryErrors);
+
+if (registryErrors.length === 0) {
+  const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf-8'));
+  // Enforcers that are not npm scripts: the PreToolUse write guard and ESLint rules.
+  const knownEnforcers = [...Object.keys(rootPackage.scripts ?? {}), 'write-guard', 'eslint'];
+  errors.push(...findUnknownEnforcers(agentRules, knownEnforcers));
+
+  const alwaysLoaded = await Promise.all(
+    agentRules.alwaysLoadedFiles.map((fileName) => readFile(join(root, fileName), 'utf-8')),
+  );
+  errors.push(...findMissingAnchors(agentRules, alwaysLoaded.join('\n')));
+  errors.push(...checkClaudeImport(claudeMd, agentRules.claudeImport));
 }
 
 // Paths the documents point at must exist. Documentation that names a file which was renamed or
