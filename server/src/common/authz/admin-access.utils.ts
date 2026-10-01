@@ -1,7 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import type { Role } from '@prisma/client';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 
 type AdminAccessUser = {
   role: Role;

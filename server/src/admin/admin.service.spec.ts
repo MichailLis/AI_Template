@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 
-import { PrismaService } from '../prisma.service';
+import type { PrismaService } from '../prisma.service';
 import { TEMPORARY_PASSWORD_LENGTH } from './admin-password.utils';
 import { AdminService } from './admin.service';
 import type { AuditService } from '../audit/audit.service';

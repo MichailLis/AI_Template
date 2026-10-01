@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
 import { createEducationOrganizationRecordFixture } from '../session/spec-fixtures';

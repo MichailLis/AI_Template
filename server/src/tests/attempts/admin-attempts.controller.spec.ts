@@ -1,5 +1,5 @@
 import { TestsAdminAttemptsController } from '../attempts/admin-attempts.controller';
-import { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
+import type { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
 
 describe('TestsAdminAttemptsController', () => {
   let controller: TestsAdminAttemptsController;

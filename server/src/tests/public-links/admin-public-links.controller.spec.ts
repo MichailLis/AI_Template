@@ -4,7 +4,7 @@ import {
   type AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
 import { TestsAdminPublicLinksController } from '../public-links/admin-public-links.controller';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
+import type { TestsPublicLinkService } from '../public-links/public-link.service';
 
 describe('TestsAdminPublicLinksController', () => {
   let controller: TestsAdminPublicLinksController;

@@ -1,10 +1,10 @@
 import { ConflictException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 
-import { PrismaService } from '../prisma.service';
+import type { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
+import type { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
 import type { OpenRouterClientService } from '../openrouter/openrouter.client';
 import type { AuditService } from '../audit/audit.service';
 import type { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';

@@ -1,7 +1,7 @@
-import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import { PrismaService } from '../../prisma.service';
+import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import type { PrismaService } from '../../prisma.service';
 import { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
-import { TestsAnalysisService } from '../analysis/analysis.service';
+import type { TestsAnalysisService } from '../analysis/analysis.service';
 
 type PrismaMock = {
   user: {

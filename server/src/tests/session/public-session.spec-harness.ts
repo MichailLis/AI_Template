@@ -1,10 +1,10 @@
-import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
-import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import { PrismaService } from '../../prisma.service';
+import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
+import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import type { PrismaService } from '../../prisma.service';
 
-import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
-import { TestsAnalysisService } from '../analysis/analysis.service';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
+import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { TestsAnalysisService } from '../analysis/analysis.service';
+import type { TestsPublicLinkService } from '../public-links/public-link.service';
 import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 

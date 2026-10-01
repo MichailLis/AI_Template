@@ -1,6 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { assertAdminUser, ensureAdminAccess } from './admin-access.utils';
 
 describe('ensureAdminAccess', () => {

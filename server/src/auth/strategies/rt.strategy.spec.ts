@@ -1,6 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import type { ConfigService } from '@nestjs/config';
+import type { Request } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../auth-cookie';
 import { RefreshTokenStrategy } from './rt.strategy';

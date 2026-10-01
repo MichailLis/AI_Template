@@ -2,8 +2,8 @@ import type { Response } from 'express';
 
 import { AuthController } from './auth.controller';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth-cookie';
-import { AuthService } from './auth.service';
-import { SigninDto } from './dto/auth.dto';
+import type { AuthService } from './auth.service';
+import type { SigninDto } from './dto/auth.dto';
 
 type MockResponse = Omit<Response, 'clearCookie' | 'cookie'> & {
   clearCookie: jest.Mock;

@@ -1,5 +1,5 @@
-import { PrismaService } from '../../prisma.service';
-import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
+import type { PrismaService } from '../../prisma.service';
+import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from './education-organization.service';
 import { TestsPublicLinkService } from './public-link.service';

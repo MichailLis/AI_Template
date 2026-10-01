@@ -1,7 +1,7 @@
 import { ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 
-import { PrismaService } from '../prisma.service';
+import type { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { OpenRouterApiKeyService } from './openrouter-api-key.service';
 

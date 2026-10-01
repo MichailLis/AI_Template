@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
-import { TestsQuestionService } from '../topics/question.service';
+import type { TestsQuestionService } from '../topics/question.service';
 import { TestsService } from '../topics/topics.service';
 
 jest.mock('../../common/authz/admin-access.utils', () => ({

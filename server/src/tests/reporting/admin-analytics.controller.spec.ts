@@ -1,12 +1,10 @@
 import { StreamableFile, type Type } from '@nestjs/common';
 
 import { TestsAdminAnalyticsController } from '../reporting/admin-analytics.controller';
-import { TestsAnalyticsExportService } from '../reporting/analytics-export.service';
-import { TestsAnalyticsService } from '../reporting/analytics.service';
-import {
-  AdminTestAnalyticsQueryDto,
-  AdminTestAnalyticsSummaryDto,
-} from '../dto/tests-analytics.dto';
+import type { TestsAnalyticsExportService } from '../reporting/analytics-export.service';
+import type { TestsAnalyticsService } from '../reporting/analytics.service';
+import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
+import { AdminTestAnalyticsQueryDto } from '../dto/tests-analytics.dto';
 import { type Response } from 'express';
 
 describe('TestsAdminAnalyticsController', () => {

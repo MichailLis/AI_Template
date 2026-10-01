@@ -1,6 +1,6 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsAnalyticsService } from '../reporting/analytics.service';
 import { PROF_ORIENTATION_DIRECTIONS } from '../prof-orientation-v3-plus/types';

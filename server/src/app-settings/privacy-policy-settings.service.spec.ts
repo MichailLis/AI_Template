@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
-import { PrismaService } from '../prisma.service';
+import type { PrismaService } from '../prisma.service';
 import { PrivacyPolicySettingsService } from './privacy-policy-settings.service';
 import type { AuditService } from '../audit/audit.service';
 

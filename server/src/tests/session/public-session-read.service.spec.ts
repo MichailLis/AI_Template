@@ -1,15 +1,15 @@
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 
 import type { AuditService } from '../../audit/audit.service';
-import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
+import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
-import { OpenRouterClientService } from '../../openrouter/openrouter.client';
-import { PrismaService } from '../../prisma.service';
-import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
+import type { OpenRouterClientService } from '../../openrouter/openrouter.client';
+import type { PrismaService } from '../../prisma.service';
+import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
-import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
+import type { TestsPublicLinkService } from '../public-links/public-link.service';
+import type { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 
 describe('TestsPublicSessionService read paths', () => {
