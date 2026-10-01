@@ -59,6 +59,23 @@ export const deriveRtkHookExclusions = (unsafe) => {
   return exclusions;
 };
 
+/** Parses the repository RTK policy without allowing malformed input to become an empty policy. */
+export const parseRtkFilterPolicy = (content) => {
+  if (typeof content !== 'string') return { valid: false, requiredHookExclusions: [] };
+  try {
+    const policy = JSON.parse(content);
+    if (!Array.isArray(policy.unsafe) || !Array.isArray(policy.safe)) {
+      return { valid: false, requiredHookExclusions: [] };
+    }
+    return {
+      valid: true,
+      requiredHookExclusions: deriveRtkHookExclusions(policy.unsafe),
+    };
+  } catch {
+    return { valid: false, requiredHookExclusions: [] };
+  }
+};
+
 /**
  * Checks whether rtk config contains all required hook exclusions.
  *
@@ -66,8 +83,16 @@ export const deriveRtkHookExclusions = (unsafe) => {
  * @param {string[]} requiredHookExclusions
  * @returns {{ id: 'rtk', status: 'ok' | 'problem', message: string, fix: string | null }}
  */
-export const checkRtkHookExclusions = (configText, requiredHookExclusions = []) => {
+export const checkRtkHookExclusions = (configText, requiredHookExclusions = [], hasRtk = false) => {
   if (configText === null || configText === undefined) {
+    if (hasRtk) {
+      return {
+        id: 'rtk',
+        status: 'problem',
+        message: 'rtk is installed but config.toml was not found or could not be read',
+        fix: 'Create the RTK config and add the required commands to hooks.exclude_commands',
+      };
+    }
     return {
       id: 'rtk',
       status: 'ok',
@@ -95,6 +120,16 @@ export const checkRtkHookExclusions = (configText, requiredHookExclusions = []) 
     fix: `Add missing exclusions (${missing.map((cmd) => `"${cmd}"`).join(', ')}) to hooks.exclude_commands in rtk config.toml`,
   };
 };
+
+/** Fails closed when the repository RTK policy cannot be parsed. */
+export const checkRtkPolicy = (isValid) => ({
+  id: 'rtk-policy',
+  status: isValid ? 'ok' : 'problem',
+  message: isValid
+    ? 'template/rtk-filters.json parsed successfully'
+    : 'template/rtk-filters.json is missing or invalid',
+  fix: isValid ? null : 'Restore a valid template/rtk-filters.json from version control',
+});
 
 /**
  * Checks whether the Serena binary is resolved on PATH.
@@ -145,6 +180,14 @@ export const checkRootTypescript = (hasTypescript) => {
     fix: 'Ensure typescript is installed in devDependencies and present in root node_modules',
   };
 };
+
+/** Checks whether a required executable is resolvable on PATH. */
+export const checkRequiredBinary = (binaryName, isAvailable, installCommand) => ({
+  id: binaryName,
+  status: isAvailable ? 'ok' : 'problem',
+  message: isAvailable ? `${binaryName} resolved on PATH` : `${binaryName} is not found on PATH`,
+  fix: isAvailable ? null : installCommand,
+});
 
 /**
  * Checks whether docker-compose.yml pins the top-level project name to "ai_template".
@@ -240,34 +283,88 @@ export const checkOrvalLockfileDrift = (lockedVersion, installedVersion) => {
   };
 };
 
+/** Ensures Prisma's generator CLI and generated-client runtime use the same release. */
+export const checkPrismaVersionAlignment = (cliVersion, clientVersion, adapterVersion) => {
+  if (
+    cliVersion &&
+    clientVersion &&
+    adapterVersion &&
+    cliVersion === clientVersion &&
+    cliVersion === adapterVersion
+  ) {
+    return {
+      id: 'prisma',
+      status: 'ok',
+      message: `Prisma CLI, @prisma/client, and @prisma/adapter-pg all use ${cliVersion}`,
+      fix: null,
+    };
+  }
+  return {
+    id: 'prisma',
+    status: 'problem',
+    message: `Prisma CLI ${cliVersion ?? 'missing'}, @prisma/client ${clientVersion ?? 'missing'}, and @prisma/adapter-pg ${adapterVersion ?? 'missing'} are not aligned`,
+    fix: 'Install matching prisma, @prisma/client, and @prisma/adapter-pg versions in server/package.json',
+  };
+};
+
 /**
  * Runs all agent tooling checks over the supplied inputs.
  *
  * @param {{
  *   rtkConfig?: string | null,
  *   requiredHookExclusions?: string[],
+ *   hasValidRtkPolicy?: boolean,
+ *   hasRtk?: boolean,
  *   hasSerena?: boolean,
  *   hasRootTypescript?: boolean,
+ *   hasTypescriptLanguageServer?: boolean,
+ *   hasCodebaseMemory?: boolean,
  *   dockerComposeContent?: string | null,
  *   lockedOrvalVersion?: string | null,
  *   installedOrvalVersion?: string | null
+ *   installedPrismaVersion?: string | null,
+ *   installedPrismaClientVersion?: string | null
+ *   installedPrismaAdapterVersion?: string | null
  * }} inputs
  * @returns {Array<{ id: string, status: 'ok' | 'problem', message: string, fix: string | null }>}
  */
 export const runAgentToolingChecks = ({
   rtkConfig = null,
   requiredHookExclusions = [],
+  hasValidRtkPolicy = false,
+  hasRtk = false,
   hasSerena = false,
   hasRootTypescript = false,
+  hasTypescriptLanguageServer = false,
+  hasCodebaseMemory = false,
   dockerComposeContent = null,
   lockedOrvalVersion = null,
   installedOrvalVersion = null,
+  installedPrismaVersion = null,
+  installedPrismaClientVersion = null,
+  installedPrismaAdapterVersion = null,
 }) => [
-  checkRtkHookExclusions(rtkConfig, requiredHookExclusions),
+  checkRtkPolicy(hasValidRtkPolicy),
+  checkRtkHookExclusions(rtkConfig, requiredHookExclusions, hasRtk),
   checkSerenaBinary(hasSerena),
   checkRootTypescript(hasRootTypescript),
+  checkRequiredBinary(
+    'typescript-language-server',
+    hasTypescriptLanguageServer,
+    'npm install -g typescript-language-server',
+  ),
+  checkRequiredBinary(
+    'codebase-memory-mcp',
+    hasCodebaseMemory,
+    'npm install -g codebase-memory-mcp',
+  ),
   checkComposeProjectName(dockerComposeContent),
   checkOrvalLockfileDrift(lockedOrvalVersion, installedOrvalVersion),
+  checkPrismaVersionAlignment(
+    installedPrismaVersion,
+    installedPrismaClientVersion,
+    installedPrismaAdapterVersion,
+  ),
 ];
 
 /**

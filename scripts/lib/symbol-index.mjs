@@ -304,10 +304,14 @@ export const formatSymbolReport = (result) => {
       lines.push(
         'NEXT     Name is ambiguous — rg cannot tell you which tree owns which call site.',
       );
-      lines.push('         Use Serena find_referencing_symbols scoped to one file.');
+      lines.push(
+        '         Use TypeScript LSP references scoped to one declaration; use Serena as a structural cross-check.',
+      );
     } else {
       lines.push(`NEXT     Name is ambiguous (${declarationsCount} declarations).`);
-      lines.push('         Use Serena find_referencing_symbols scoped to one file.');
+      lines.push(
+        '         Use TypeScript LSP references scoped to one declaration; use Serena as a structural cross-check.',
+      );
     }
   } else {
     // zero_declarations
