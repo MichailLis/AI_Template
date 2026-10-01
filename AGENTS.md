@@ -61,18 +61,44 @@ Host-level checks — Vitest, ESLint, `tsc` — do not need a container rebuild.
 
 ## Tooling
 
-`rtk` compresses shell output, but several of its filters report success instead of error. The
-list of safe filters is fixed and defined in `template/rtk-filters.json`. Only `rtk run`, `rtk err`,
-`rtk json`, `rtk prisma`, `rtk npm`, `rtk ls`, and `rtk read` are safe; run everything else without
-a wrapper. Consult `CLAUDE.md` and `template/rtk-filters.json` for the full list and empirical findings.
+Without waiting for the user to name a tool, select one from the task's evidence need:
 
-Run `npm run find:symbol -- <name>` to check whether a symbol name is unique before renaming.
+- For a bounded implementation search when the symbol name is unknown, call Probe `search_code`
+  once to find candidates. For broader architecture or relationship discovery in the indexed tree,
+  use codebase-memory `search_graph` / `trace_path` instead; call `list_projects` before its first
+  use, pass `include_tests: true` to traces, and check coverage for cited files. Graph negatives
+  and stale coverage are not proof of absence.
+- For complete TypeScript symbol bodies use Serena `find_symbol`; for usages, callers, or a
+  rename/move/delete impact claim, use the direct TypeScript LSP if available, otherwise call
+  Serena `find_referencing_symbols` scoped to the declaration before claiming completeness.
+  Inspect the returned references: imports and type mentions are not calls. Verify consequential
+  conclusions in source. Plain exact-name lookups do not require a structural call.
+- For token usage or savings questions, run codeburn (`status` for totals, `context` / `optimize`
+  for attribution) rather than estimating from shell output. Check the latest covered date against
+  the requested period: its summary cache can lag raw Codex logs. Report cached input separately
+  and do not attribute aggregate savings to one tool without comparable per-call evidence.
+
+Use raw `rg` for exact function names, error codes, config keys, constants, regexes, TODOs, and
+literals. `mcp-ripgrep` is not configured: its shell quoting is broken on native Windows. Use
+`npm run find:symbol -- <name>` before a rename. When a direct TypeScript LSP tool is available, warm
+it with the lightweight `typescript.tsserverRequest/projectInfo` request before consequential
+references/call-hierarchy work. In Codex sessions without that direct tool, use Serena references
+and implementations, then confirm consequential results in source with raw `rg`. Use Serena for
+symbol-bounded reads and edits. Probe and codebase-memory are discovery aids only; confirm their
+results in source or with an available LSP before changing code.
+
+`rtk` compresses shell output, but correctness gates and searches run directly. The fixed safe set
+in `template/rtk-filters.json` is `rtk run`, `rtk err`, `rtk json`, `rtk prisma`, `rtk npm`, and
+`rtk read`. On native Windows, `rtk ls` fails without a Unix `ls`; use `rg --files` or
+`Get-ChildItem` instead. Consult `CLAUDE.md` and `docs/tooling-evidence.md` for measured failure
+modes.
 
 Install Serena once with `uv tool install serena-agent --from git+https://github.com/oraios/serena`.
 The root `.mcp.json` calls the installed binary directly: running through `uvx --from git+…` executes
 a network git fetch on every start (99s on warm cache, over 5 minutes on cold cache) and exceeds the
 30-second MCP connection timeout, whereas the installed binary starts in 1.4s.
 
-Run `npm run doctor:agent-tooling` once on a new machine to verify local tooling prerequisites (rtk hook exclusions, Serena binary, root TypeScript, compose project name, and orval lockfile drift in the client).
-
-Codex is not used in this repository.
+Run `npm run doctor:agent-tooling` once on a new machine to diagnose the RTK policy and hook
+exclusions, Serena, root TypeScript, TypeScript Language Server, codebase-memory, Compose naming,
+Orval lockfile alignment, and Prisma package alignment. It is not a gate and exits 0 even when it
+reports problems, so inspect every status line and directly smoke-test critical tools.
