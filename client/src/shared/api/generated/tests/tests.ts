@@ -225,6 +225,9 @@ export const testsControllerCreateTopic = (
   );
 };
 
+export const getTestsControllerCreateTopicMutationKey = () =>
+  ['testsControllerCreateTopic'] as const;
+
 export const getTestsControllerCreateTopicMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -242,7 +245,7 @@ export const getTestsControllerCreateTopicMutationOptions = <
   TestsControllerCreateTopicMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerCreateTopic'];
+  const mutationKey = getTestsControllerCreateTopicMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -307,6 +310,9 @@ export const testsControllerArchiveTopic = (
   );
 };
 
+export const getTestsControllerArchiveTopicMutationKey = () =>
+  ['testsControllerArchiveTopic'] as const;
+
 export const getTestsControllerArchiveTopicMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -324,7 +330,7 @@ export const getTestsControllerArchiveTopicMutationOptions = <
   TestsControllerArchiveTopicMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerArchiveTopic'];
+  const mutationKey = getTestsControllerArchiveTopicMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -389,6 +395,9 @@ export const testsControllerRestoreTopic = (
   );
 };
 
+export const getTestsControllerRestoreTopicMutationKey = () =>
+  ['testsControllerRestoreTopic'] as const;
+
 export const getTestsControllerRestoreTopicMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -406,7 +415,7 @@ export const getTestsControllerRestoreTopicMutationOptions = <
   TestsControllerRestoreTopicMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerRestoreTopic'];
+  const mutationKey = getTestsControllerRestoreTopicMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -477,6 +486,9 @@ export const testsControllerCreateTopicFromAi = (
   );
 };
 
+export const getTestsControllerCreateTopicFromAiMutationKey = () =>
+  ['testsControllerCreateTopicFromAi'] as const;
+
 export const getTestsControllerCreateTopicFromAiMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -494,7 +506,7 @@ export const getTestsControllerCreateTopicFromAiMutationOptions = <
   TestsControllerCreateTopicFromAiMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerCreateTopicFromAi'];
+  const mutationKey = getTestsControllerCreateTopicFromAiMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -558,6 +570,9 @@ export const testsControllerImportProfOrientationV3Plus = (
   );
 };
 
+export const getTestsControllerImportProfOrientationV3PlusMutationKey = () =>
+  ['testsControllerImportProfOrientationV3Plus'] as const;
+
 export const getTestsControllerImportProfOrientationV3PlusMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -575,7 +590,7 @@ export const getTestsControllerImportProfOrientationV3PlusMutationOptions = <
   void,
   TContext
 > => {
-  const mutationKey = ['testsControllerImportProfOrientationV3Plus'];
+  const mutationKey = getTestsControllerImportProfOrientationV3PlusMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -640,6 +655,9 @@ export const testsControllerDeleteTopic = (
   );
 };
 
+export const getTestsControllerDeleteTopicMutationKey = () =>
+  ['testsControllerDeleteTopic'] as const;
+
 export const getTestsControllerDeleteTopicMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -657,7 +675,7 @@ export const getTestsControllerDeleteTopicMutationOptions = <
   TestsControllerDeleteTopicMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerDeleteTopic'];
+  const mutationKey = getTestsControllerDeleteTopicMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -863,6 +881,9 @@ export const testsControllerUpdateTopicDraft = (
   );
 };
 
+export const getTestsControllerUpdateTopicDraftMutationKey = () =>
+  ['testsControllerUpdateTopicDraft'] as const;
+
 export const getTestsControllerUpdateTopicDraftMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -880,7 +901,7 @@ export const getTestsControllerUpdateTopicDraftMutationOptions = <
   TestsControllerUpdateTopicDraftMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerUpdateTopicDraft'];
+  const mutationKey = getTestsControllerUpdateTopicDraftMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -955,6 +976,9 @@ export const testsControllerCreateQuestion = (
   );
 };
 
+export const getTestsControllerCreateQuestionMutationKey = () =>
+  ['testsControllerCreateQuestion'] as const;
+
 export const getTestsControllerCreateQuestionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -972,7 +996,7 @@ export const getTestsControllerCreateQuestionMutationOptions = <
   TestsControllerCreateQuestionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerCreateQuestion'];
+  const mutationKey = getTestsControllerCreateQuestionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1047,6 +1071,9 @@ export const testsControllerReorderQuestions = (
   );
 };
 
+export const getTestsControllerReorderQuestionsMutationKey = () =>
+  ['testsControllerReorderQuestions'] as const;
+
 export const getTestsControllerReorderQuestionsMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1064,7 +1091,7 @@ export const getTestsControllerReorderQuestionsMutationOptions = <
   TestsControllerReorderQuestionsMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerReorderQuestions'];
+  const mutationKey = getTestsControllerReorderQuestionsMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1140,6 +1167,9 @@ export const testsControllerUpdateQuestion = (
   );
 };
 
+export const getTestsControllerUpdateQuestionMutationKey = () =>
+  ['testsControllerUpdateQuestion'] as const;
+
 export const getTestsControllerUpdateQuestionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1157,7 +1187,7 @@ export const getTestsControllerUpdateQuestionMutationOptions = <
   TestsControllerUpdateQuestionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerUpdateQuestion'];
+  const mutationKey = getTestsControllerUpdateQuestionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1227,6 +1257,9 @@ export const testsControllerDeleteQuestion = (
   );
 };
 
+export const getTestsControllerDeleteQuestionMutationKey = () =>
+  ['testsControllerDeleteQuestion'] as const;
+
 export const getTestsControllerDeleteQuestionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1244,7 +1277,7 @@ export const getTestsControllerDeleteQuestionMutationOptions = <
   TestsControllerDeleteQuestionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerDeleteQuestion'];
+  const mutationKey = getTestsControllerDeleteQuestionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1312,6 +1345,9 @@ export const testsControllerPublishTopic = (
   );
 };
 
+export const getTestsControllerPublishTopicMutationKey = () =>
+  ['testsControllerPublishTopic'] as const;
+
 export const getTestsControllerPublishTopicMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1329,7 +1365,7 @@ export const getTestsControllerPublishTopicMutationOptions = <
   TestsControllerPublishTopicMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsControllerPublishTopic'];
+  const mutationKey = getTestsControllerPublishTopicMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1400,6 +1436,9 @@ export const testsAdminPublicLinksControllerCreatePublicLink = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerCreatePublicLinkMutationKey = () =>
+  ['testsAdminPublicLinksControllerCreatePublicLink'] as const;
+
 export const getTestsAdminPublicLinksControllerCreatePublicLinkMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1417,7 +1456,7 @@ export const getTestsAdminPublicLinksControllerCreatePublicLinkMutationOptions =
   TestsAdminPublicLinksControllerCreatePublicLinkMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerCreatePublicLink'];
+  const mutationKey = getTestsAdminPublicLinksControllerCreatePublicLinkMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1786,6 +1825,9 @@ export const testsAdminPublicLinksControllerUpdatePublicLink = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerUpdatePublicLinkMutationKey = () =>
+  ['testsAdminPublicLinksControllerUpdatePublicLink'] as const;
+
 export const getTestsAdminPublicLinksControllerUpdatePublicLinkMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1803,7 +1845,7 @@ export const getTestsAdminPublicLinksControllerUpdatePublicLinkMutationOptions =
   TestsAdminPublicLinksControllerUpdatePublicLinkMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerUpdatePublicLink'];
+  const mutationKey = getTestsAdminPublicLinksControllerUpdatePublicLinkMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1875,6 +1917,9 @@ export const testsAdminPublicLinksControllerDeletePublicLink = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerDeletePublicLinkMutationKey = () =>
+  ['testsAdminPublicLinksControllerDeletePublicLink'] as const;
+
 export const getTestsAdminPublicLinksControllerDeletePublicLinkMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1892,7 +1937,7 @@ export const getTestsAdminPublicLinksControllerDeletePublicLinkMutationOptions =
   TestsAdminPublicLinksControllerDeletePublicLinkMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerDeletePublicLink'];
+  const mutationKey = getTestsAdminPublicLinksControllerDeletePublicLinkMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1961,6 +2006,9 @@ export const testsAdminPublicLinksControllerRegeneratePublicLinkShortCode = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationKey = () =>
+  ['testsAdminPublicLinksControllerRegeneratePublicLinkShortCode'] as const;
+
 export const getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1978,7 +2026,7 @@ export const getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMuta
   TestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerRegeneratePublicLinkShortCode'];
+  const mutationKey = getTestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2050,6 +2098,9 @@ export const testsAdminPublicLinksControllerRestorePublicLink = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerRestorePublicLinkMutationKey = () =>
+  ['testsAdminPublicLinksControllerRestorePublicLink'] as const;
+
 export const getTestsAdminPublicLinksControllerRestorePublicLinkMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2067,7 +2118,7 @@ export const getTestsAdminPublicLinksControllerRestorePublicLinkMutationOptions 
   TestsAdminPublicLinksControllerRestorePublicLinkMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerRestorePublicLink'];
+  const mutationKey = getTestsAdminPublicLinksControllerRestorePublicLinkMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2136,6 +2187,9 @@ export const testsAdminPublicLinksControllerMoveToActivePublishedVersion = (
   );
 };
 
+export const getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationKey = () =>
+  ['testsAdminPublicLinksControllerMoveToActivePublishedVersion'] as const;
+
 export const getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2153,7 +2207,7 @@ export const getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutat
   TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['testsAdminPublicLinksControllerMoveToActivePublishedVersion'];
+  const mutationKey = getTestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2589,6 +2643,9 @@ export const testsAdminEducationOrganizationsControllerCreateEducationOrganizati
   );
 };
 
+export const getTestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationKey =
+  () => ['testsAdminEducationOrganizationsControllerCreateEducationOrganization'] as const;
+
 export const getTestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationOptions =
   <TError = ErrorType<ErrorResponseDto>, TContext = unknown>(options?: {
     mutation?: UseMutationOptions<
@@ -2608,7 +2665,8 @@ export const getTestsAdminEducationOrganizationsControllerCreateEducationOrganiz
     TestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationVariables,
     TContext
   > => {
-    const mutationKey = ['testsAdminEducationOrganizationsControllerCreateEducationOrganization'];
+    const mutationKey =
+      getTestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationKey();
     const { mutation: mutationOptions, request: requestOptions } = options
       ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
         ? options
@@ -2698,6 +2756,9 @@ export const testsAdminEducationOrganizationsControllerUpdateEducationOrganizati
   );
 };
 
+export const getTestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationKey =
+  () => ['testsAdminEducationOrganizationsControllerUpdateEducationOrganization'] as const;
+
 export const getTestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationOptions =
   <TError = ErrorType<ErrorResponseDto>, TContext = unknown>(options?: {
     mutation?: UseMutationOptions<
@@ -2717,7 +2778,8 @@ export const getTestsAdminEducationOrganizationsControllerUpdateEducationOrganiz
     TestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationVariables,
     TContext
   > => {
-    const mutationKey = ['testsAdminEducationOrganizationsControllerUpdateEducationOrganization'];
+    const mutationKey =
+      getTestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationKey();
     const { mutation: mutationOptions, request: requestOptions } = options
       ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
         ? options

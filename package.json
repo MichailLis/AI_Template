@@ -1,6 +1,11 @@
 {
   "name": "fullstack-project",
   "version": "1.0.0",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": "24.21.0",
+    "npm": "11.19.0"
+  },
   "scripts": {
     "install:all": "npm ci --prefix client && npm ci --prefix server",
     "dev:client": "npm run dev --prefix client",
@@ -47,9 +52,9 @@
     "concurrently": "^9.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "playwright": "^1.60.0",
-    "prettier": "^3.4.2",
+    "playwright": "^1.63.0",
+    "prettier": "^3.9.9",
     "prettier-plugin-prisma": "^5.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.3"
   }
 }

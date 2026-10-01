@@ -14,7 +14,7 @@ export function ZoneButton({ icon: Icon, label, onClick }: ZoneButtonProps) {
       type="button"
       size="sm"
       variant="secondary"
-      className="h-8 gap-1.5 border border-border/70 bg-card/95 px-2.5 text-xs text-foreground shadow-sm backdrop-blur hover:text-foreground"
+      className="h-8 gap-1.5 border border-border/70 bg-card/95 px-2.5 text-xs text-foreground shadow-xs backdrop-blur-sm hover:text-foreground"
       onClick={onClick}
     >
       <Icon className="h-3.5 w-3.5" aria-hidden="true" />

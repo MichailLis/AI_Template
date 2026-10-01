@@ -19,7 +19,7 @@ export function PublicPersonalDataOperator({
     <section
       aria-label="Оператор персональных данных"
       className={cn(
-        'flex items-start gap-3 rounded-md border border-border/70 bg-background/80 p-3 text-sm leading-5 text-foreground shadow-sm',
+        'flex items-start gap-3 rounded-md border border-border/70 bg-background/80 p-3 text-sm leading-5 text-foreground shadow-xs',
         className,
       )}
     >
@@ -27,7 +27,7 @@ export function PublicPersonalDataOperator({
         <img
           src={personalData.logoUrl}
           alt={`Логотип ${displayName}`}
-          className="h-10 w-10 shrink-0 rounded object-contain"
+          className="h-10 w-10 shrink-0 rounded-sm object-contain"
         />
       ) : null}
       <div className="min-w-0 space-y-1">

@@ -5,10 +5,7 @@ export const PROF_ORIENTATION_DIRECTIONS = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3'] 
 export type ProfOrientationDirectionId = (typeof PROF_ORIENTATION_DIRECTIONS)[number];
 
 export type ProfOrientationProfileType =
-  | 'single_profile'
-  | 'mixed_profile'
-  | 'broad_interest'
-  | 'low_definition';
+  'single_profile' | 'mixed_profile' | 'broad_interest' | 'low_definition';
 
 export type ProfOrientationConfidenceLevel = 'high' | 'medium' | 'mixed' | 'broad' | 'low';
 

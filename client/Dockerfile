@@ -1,4 +1,4 @@
-FROM node:22-bookworm AS build
+FROM node:24.21.0-bookworm AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY . .
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=${VITE_API_URL}
 
-RUN npm run build
+RUN npm run build:production
 
 FROM nginx:alpine AS runtime
 

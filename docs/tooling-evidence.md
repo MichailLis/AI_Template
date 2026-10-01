@@ -384,3 +384,19 @@ Empirical evaluation of index freshness in `codebase-memory`:
   - `recommended_action`: `"read_source_and_reindex"`
 - **Observed failure mode:** `query_graph` and `search_graph` queries answered based on the earlier indexed snapshot from the specified generation timestamp (`2026-09-06T14:35:22Z`), completely omitting subsequent edits. The query responses provided no inline signal or warning of index staleness.
 - **Practical requirement:** Agents must execute `check_index_coverage` before relying on graph responses for newly created or recently modified files; when `freshness` returns `metadata_changed`, inspect source files directly and reindex as recommended.
+
+## 9. Zod / Swagger compatibility pin (2026-10-01)
+
+Client and server pin Zod 4.4.3 while using nestjs-zod 5.5.0 and NestJS 11.2.7.
+The official npm registry's newer stable Zod 4.6.5 and the pre-4.6 candidate 4.5.4
+both reproduced an OpenAPI 3.0 regression: nullable primitives emit array-valued
+`type`, which nestjs-zod's cleanup does not normalize. Orval 8.26.0 rejects nested
+properties, and Swagger interprets top-level scalar properties as arrays. A
+post-document normalizer cannot restore scalar metadata already lost by Swagger.
+
+The [nestjs-zod author documentation](https://github.com/BenLorantfy/nestjs-zod#cleanupopenapidoc-ensure-proper-openapi-output)
+describes the required OpenAPI cleanup and 3.0 nullable representation. The installed
+5.5.0 converter handles `anyOf` null branches but not array-valued `type`. Restoring
+4.4.3 produces the unchanged committed Orval client and model files; the OpenAPI
+boundary test covers both nested and top-level nullable user fields. Revisit this
+pin only after that test and generated contract parity pass with a newer version.

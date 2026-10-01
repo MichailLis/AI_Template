@@ -200,10 +200,10 @@ function StandardProcessingScreen({
           <p className="text-sm text-muted-foreground md:text-base">{description}</p>
         </div>
 
-        <div className="w-full space-y-2 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm">
+        <div className="w-full space-y-2 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-xs">
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted/70">
             <div
-              className={`h-full w-1/2 rounded-full bg-gradient-to-r ${
+              className={`h-full w-1/2 rounded-full bg-linear-to-r/srgb ${
                 isReadyPhase ? 'from-primary to-emerald-500' : 'from-primary to-accent'
               } ${isReadyPhase ? 'w-full' : 'animate-pulse'}`}
             />
@@ -214,7 +214,7 @@ function StandardProcessingScreen({
           </div>
         </div>
 
-        <div className="w-full rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm">
+        <div className="w-full rounded-2xl border border-border/60 bg-card/90 p-4 shadow-xs">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-primary" />
             Этапы подготовки

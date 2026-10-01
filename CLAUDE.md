@@ -5,13 +5,15 @@ This file is the short version: the invariants that cost the most when violated.
 
 ## Stack (do not drift)
 
-NestJS 11 + Prisma 7 + PostgreSQL · React 19 + Vite 7 + TanStack Query + Orval + Zustand +
-Tailwind 3 + shadcn/ui · Docker Compose.
+NestJS 11 + Prisma 7 + PostgreSQL · React 19 + Vite 8 + TanStack Query + Orval + Zustand +
+Tailwind 4 + shadcn/ui · Docker Compose.
 
 The stack and its gates exist to keep the architecture from drifting under AI-driven development.
-Version bumps stay inside the current major. Do not propose NestJS 12, Tailwind 4, Vite 8 or
+Version bumps stay inside the current major. Do not propose NestJS 12, Tailwind 5, Vite 9 or
 Prisma 8, and do not replace Orval, Zustand, TanStack Query or FSD. Removing dead code and
 duplication is welcome; weakening a gate to move faster is not.
+
+Tailwind CSS/browser rules: `AGENTS.md`.
 
 ## Machine-readable sources of truth
 
@@ -240,4 +242,5 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - Explicit user or orchestrator instructions override this Beads block.
 - Do not commit or push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
+
 <!-- END BEADS INTEGRATION -->

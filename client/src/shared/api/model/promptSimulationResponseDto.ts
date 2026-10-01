@@ -9,7 +9,7 @@
 export interface PromptSimulationResponseDto {
   model: string;
   output: string;
-  syntheticAnswers: unknown | null;
+  syntheticAnswers: unknown;
   /**
    * @minimum 0
    * @maximum 9007199254740991

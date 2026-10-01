@@ -1,6 +1,34 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
+
+/* Existing layouts use v3 sibling margins, including fieldset legends and hidden children. */
+@utility space-y-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    margin-top: calc(--spacing(--value(number)) * (1 - var(--tw-space-y-reverse, 0)));
+    margin-bottom: calc(--spacing(--value(number)) * var(--tw-space-y-reverse, 0));
+  }
+}
+
+@utility space-x-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    margin-left: calc(--spacing(--value(number)) * (1 - var(--tw-space-x-reverse, 0)));
+    margin-right: calc(--spacing(--value(number)) * var(--tw-space-x-reverse, 0));
+  }
+}
+
+/* Zero specificity preserves explicit child margins. This follows the built-in utilities,
+ * while the more specific visible-sibling rules above retain v3 margins (also on the last child).
+ * Existing space-x/y classes keep legacy semantics; use gap for new flex/grid layouts. */
+@layer utilities {
+  :where([class*='space-y-'] > :not(:last-child)) {
+    margin-block-start: 0;
+    margin-block-end: 0;
+  }
+  :where([class*='space-x-'] > :not(:last-child)) {
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+  }
+}
 
 @layer base {
   :root {
@@ -75,5 +103,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
   }
 }

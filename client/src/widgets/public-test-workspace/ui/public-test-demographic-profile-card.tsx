@@ -39,7 +39,7 @@ function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
     <Button
       type="submit"
       disabled={isSubmitting}
-      className="h-12 w-full bg-gradient-to-r from-primary to-accent font-medium shadow-md transition-all hover:from-primary/90 hover:to-accent/90 hover:shadow-lg"
+      className="h-12 w-full bg-linear-to-r/srgb from-primary to-accent font-medium shadow-md transition-all hover:from-primary/90 hover:to-accent/90 hover:shadow-lg"
     >
       {isSubmitting ? (
         <span className="flex items-center gap-2">
@@ -61,14 +61,14 @@ function DemographicCardHeader() {
     <CardHeader className="space-y-3 pb-4 pt-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <CardTitle className="bg-gradient-to-br from-primary via-accent to-secondary bg-clip-text text-2xl font-bold text-transparent">
+          <CardTitle className="bg-linear-to-br/srgb from-primary via-accent to-secondary bg-clip-text text-2xl font-bold text-transparent">
             Анкета перед тестом
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             Заполните основные данные и начните тест
           </CardDescription>
         </div>
-        <div className="ml-4 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent p-3 shadow-md">
+        <div className="ml-4 shrink-0 rounded-xl bg-linear-to-br/srgb from-primary to-accent p-3 shadow-md">
           <ClipboardList className="h-7 w-7 text-white" />
         </div>
       </div>
@@ -170,7 +170,7 @@ export function PublicTestDemographicProfileCard({
   return (
     <div className="order-1 lg:order-2">
       <Card className="relative overflow-hidden border border-border/60 bg-card shadow-xl lg:sticky lg:top-8">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-secondary" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r/srgb from-primary via-accent to-secondary" />
         <DemographicCardHeader />
 
         <CardContent className="px-6 pb-6">

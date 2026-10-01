@@ -59,8 +59,7 @@ interface ValidateGenerationInputParams {
 }
 
 type GenerationValidationResult =
-  | { ok: true; parsedQuestionCount: number }
-  | { ok: false; error: string };
+  { ok: true; parsedQuestionCount: number } | { ok: false; error: string };
 
 export const validateGenerationInput = ({
   topicTitle,
@@ -100,8 +99,7 @@ interface BuildCreatePayloadParams {
 }
 
 type BuildCreatePayloadResult =
-  | { ok: true; payload: CreateTestsTopicFromAiDto }
-  | { ok: false; error: string };
+  { ok: true; payload: CreateTestsTopicFromAiDto } | { ok: false; error: string };
 
 export const buildCreatePayloadResult = ({
   topicTitle,

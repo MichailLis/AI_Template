@@ -73,7 +73,7 @@ function QuestionNavigation({
           type="button"
           onClick={onBack}
           variant="ghost"
-          className="h-11 rounded-xl border border-primary/15 bg-white/70 px-5 font-semibold text-foreground/75 shadow-sm hover:border-primary/30 hover:bg-white hover:text-foreground"
+          className="h-11 rounded-xl border border-primary/15 bg-white/70 px-5 font-semibold text-foreground/75 shadow-xs hover:border-primary/30 hover:bg-white hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Назад
@@ -94,7 +94,7 @@ function QuestionNavigation({
             onNext();
           }}
           disabled={disabled}
-          className="h-11 rounded-xl bg-gradient-to-r from-primary to-accent px-7 font-semibold shadow-lg shadow-primary/20 hover:opacity-95 disabled:from-muted disabled:to-muted disabled:text-muted-foreground disabled:shadow-none"
+          className="h-11 rounded-xl bg-linear-to-r/srgb from-primary to-accent px-7 font-semibold shadow-lg shadow-primary/20 hover:opacity-95 disabled:from-muted disabled:to-muted disabled:text-muted-foreground disabled:shadow-none"
         >
           {content}
         </Button>
@@ -129,11 +129,11 @@ export function PublicQuestionCard({
       <div className="mx-auto flex min-h-[inherit] w-full max-w-3xl flex-col">
         <div className="flex flex-1 flex-col justify-center gap-6 py-2 md:py-4">
           <div className="space-y-3 text-center">
-            <h1 className="text-balance text-2xl font-bold leading-tight text-foreground md:text-4xl">
+            <h1 className="text-balance text-2xl font-bold leading-tight text-foreground md:text-4xl md:leading-10">
               {question.title}
             </h1>
             {question.description ? (
-              <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+              <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base md:leading-6">
                 {question.description}
               </p>
             ) : null}

@@ -25,7 +25,7 @@ export function AccessPendingScreen() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <section className="flex max-w-md flex-col items-center gap-4 rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <section className="flex max-w-md flex-col items-center gap-4 rounded-lg border border-slate-200 bg-white p-6 text-center shadow-xs">
         <h1 className="text-lg font-semibold text-slate-900">Доступ пока не выдан</h1>
         <p className="text-sm text-slate-600">
           Вы вошли как {email}. Разделы панели доступны только администраторам — если доступ нужен,

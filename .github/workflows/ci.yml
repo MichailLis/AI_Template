@@ -46,17 +46,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22
+          node-version: 24.21.0
           cache: npm
           cache-dependency-path: |
             package-lock.json
             client/package-lock.json
             server/package-lock.json
+
+      - name: Setup npm
+        run: npm install --global npm@11.19.0
 
       - name: Install root dependencies
         run: npm ci
@@ -70,7 +73,7 @@ jobs:
       # setup-node caches npm only. Without this, verify:e2e:critical downloads Chromium on
       # every run, because `playwright install` writes outside the npm cache.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6.0.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}

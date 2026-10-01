@@ -58,7 +58,7 @@ export function TestEditorDraftSection({
         Вы редактируете версию в работе. Пользователи видят только опубликованную версию.
       </div>
 
-      <div className={`sticky top-2 z-10 p-3 backdrop-blur ${adminClassNames.panel.card}`}>
+      <div className={`sticky top-2 z-10 p-3 backdrop-blur-sm ${adminClassNames.panel.card}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className={`text-sm font-medium ${adminClassNames.text.heading}`}>Действия</p>

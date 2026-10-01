@@ -40,6 +40,8 @@ export const authControllerSignin = (
   );
 };
 
+export const getAuthControllerSigninMutationKey = () => ['authControllerSignin'] as const;
+
 export const getAuthControllerSigninMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -57,7 +59,7 @@ export const getAuthControllerSigninMutationOptions = <
   AuthControllerSigninMutationVariables,
   TContext
 > => {
-  const mutationKey = ['authControllerSignin'];
+  const mutationKey = getAuthControllerSigninMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -115,6 +117,8 @@ export const authControllerLogout = (
   return customInstance<void>({ url: `/auth/logout`, method: 'POST', signal }, options);
 };
 
+export const getAuthControllerLogoutMutationKey = () => ['authControllerLogout'] as const;
+
 export const getAuthControllerLogoutMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -132,7 +136,7 @@ export const getAuthControllerLogoutMutationOptions = <
   void,
   TContext
 > => {
-  const mutationKey = ['authControllerLogout'];
+  const mutationKey = getAuthControllerLogoutMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -185,6 +189,9 @@ export const authControllerRefreshTokens = (
   );
 };
 
+export const getAuthControllerRefreshTokensMutationKey = () =>
+  ['authControllerRefreshTokens'] as const;
+
 export const getAuthControllerRefreshTokensMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -202,7 +209,7 @@ export const getAuthControllerRefreshTokensMutationOptions = <
   void,
   TContext
 > => {
-  const mutationKey = ['authControllerRefreshTokens'];
+  const mutationKey = getAuthControllerRefreshTokensMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options

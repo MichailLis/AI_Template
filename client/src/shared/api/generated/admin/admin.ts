@@ -347,6 +347,8 @@ export const adminControllerCreateUser = (
   );
 };
 
+export const getAdminControllerCreateUserMutationKey = () => ['adminControllerCreateUser'] as const;
+
 export const getAdminControllerCreateUserMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -364,7 +366,7 @@ export const getAdminControllerCreateUserMutationOptions = <
   AdminControllerCreateUserMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerCreateUser'];
+  const mutationKey = getAdminControllerCreateUserMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -436,6 +438,8 @@ export const adminControllerUpdateUser = (
   );
 };
 
+export const getAdminControllerUpdateUserMutationKey = () => ['adminControllerUpdateUser'] as const;
+
 export const getAdminControllerUpdateUserMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -453,7 +457,7 @@ export const getAdminControllerUpdateUserMutationOptions = <
   AdminControllerUpdateUserMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerUpdateUser'];
+  const mutationKey = getAdminControllerUpdateUserMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -525,6 +529,9 @@ export const adminControllerResetUserPassword = (
   );
 };
 
+export const getAdminControllerResetUserPasswordMutationKey = () =>
+  ['adminControllerResetUserPassword'] as const;
+
 export const getAdminControllerResetUserPasswordMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -542,7 +549,7 @@ export const getAdminControllerResetUserPasswordMutationOptions = <
   AdminControllerResetUserPasswordMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerResetUserPassword'];
+  const mutationKey = getAdminControllerResetUserPasswordMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -617,6 +624,9 @@ export const adminControllerUpdateUserStatus = (
   );
 };
 
+export const getAdminControllerUpdateUserStatusMutationKey = () =>
+  ['adminControllerUpdateUserStatus'] as const;
+
 export const getAdminControllerUpdateUserStatusMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -634,7 +644,7 @@ export const getAdminControllerUpdateUserStatusMutationOptions = <
   AdminControllerUpdateUserStatusMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerUpdateUserStatus'];
+  const mutationKey = getAdminControllerUpdateUserStatusMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -703,6 +713,9 @@ export const adminControllerRevokeUserSessions = (
   );
 };
 
+export const getAdminControllerRevokeUserSessionsMutationKey = () =>
+  ['adminControllerRevokeUserSessions'] as const;
+
 export const getAdminControllerRevokeUserSessionsMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -720,7 +733,7 @@ export const getAdminControllerRevokeUserSessionsMutationOptions = <
   AdminControllerRevokeUserSessionsMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerRevokeUserSessions'];
+  const mutationKey = getAdminControllerRevokeUserSessionsMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -926,6 +939,9 @@ export const adminControllerUpdateUserRole = (
   );
 };
 
+export const getAdminControllerUpdateUserRoleMutationKey = () =>
+  ['adminControllerUpdateUserRole'] as const;
+
 export const getAdminControllerUpdateUserRoleMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -943,7 +959,7 @@ export const getAdminControllerUpdateUserRoleMutationOptions = <
   AdminControllerUpdateUserRoleMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminControllerUpdateUserRole'];
+  const mutationKey = getAdminControllerUpdateUserRoleMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1306,6 +1322,9 @@ export const adminSettingsControllerUpdateProfessionAtlasUrl = (
   );
 };
 
+export const getAdminSettingsControllerUpdateProfessionAtlasUrlMutationKey = () =>
+  ['adminSettingsControllerUpdateProfessionAtlasUrl'] as const;
+
 export const getAdminSettingsControllerUpdateProfessionAtlasUrlMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1323,7 +1342,7 @@ export const getAdminSettingsControllerUpdateProfessionAtlasUrlMutationOptions =
   AdminSettingsControllerUpdateProfessionAtlasUrlMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminSettingsControllerUpdateProfessionAtlasUrl'];
+  const mutationKey = getAdminSettingsControllerUpdateProfessionAtlasUrlMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1545,6 +1564,9 @@ export const adminSettingsControllerUpdatePrivacyPolicy = (
   );
 };
 
+export const getAdminSettingsControllerUpdatePrivacyPolicyMutationKey = () =>
+  ['adminSettingsControllerUpdatePrivacyPolicy'] as const;
+
 export const getAdminSettingsControllerUpdatePrivacyPolicyMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1562,7 +1584,7 @@ export const getAdminSettingsControllerUpdatePrivacyPolicyMutationOptions = <
   AdminSettingsControllerUpdatePrivacyPolicyMutationVariables,
   TContext
 > => {
-  const mutationKey = ['adminSettingsControllerUpdatePrivacyPolicy'];
+  const mutationKey = getAdminSettingsControllerUpdatePrivacyPolicyMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -1922,6 +1944,9 @@ export const analysisPromptsControllerCreatePrompt = (
   );
 };
 
+export const getAnalysisPromptsControllerCreatePromptMutationKey = () =>
+  ['analysisPromptsControllerCreatePrompt'] as const;
+
 export const getAnalysisPromptsControllerCreatePromptMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1939,7 +1964,7 @@ export const getAnalysisPromptsControllerCreatePromptMutationOptions = <
   AnalysisPromptsControllerCreatePromptMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerCreatePrompt'];
+  const mutationKey = getAnalysisPromptsControllerCreatePromptMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2299,6 +2324,9 @@ export const analysisPromptsControllerGeneratePrompt = (
   );
 };
 
+export const getAnalysisPromptsControllerGeneratePromptMutationKey = () =>
+  ['analysisPromptsControllerGeneratePrompt'] as const;
+
 export const getAnalysisPromptsControllerGeneratePromptMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2316,7 +2344,7 @@ export const getAnalysisPromptsControllerGeneratePromptMutationOptions = <
   AnalysisPromptsControllerGeneratePromptMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerGeneratePrompt'];
+  const mutationKey = getAnalysisPromptsControllerGeneratePromptMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2391,6 +2419,9 @@ export const analysisPromptsControllerUpdatePrompt = (
   );
 };
 
+export const getAnalysisPromptsControllerUpdatePromptMutationKey = () =>
+  ['analysisPromptsControllerUpdatePrompt'] as const;
+
 export const getAnalysisPromptsControllerUpdatePromptMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2408,7 +2439,7 @@ export const getAnalysisPromptsControllerUpdatePromptMutationOptions = <
   AnalysisPromptsControllerUpdatePromptMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerUpdatePrompt'];
+  const mutationKey = getAnalysisPromptsControllerUpdatePromptMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2476,6 +2507,9 @@ export const analysisPromptsControllerDeletePrompt = (
   );
 };
 
+export const getAnalysisPromptsControllerDeletePromptMutationKey = () =>
+  ['analysisPromptsControllerDeletePrompt'] as const;
+
 export const getAnalysisPromptsControllerDeletePromptMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2493,7 +2527,7 @@ export const getAnalysisPromptsControllerDeletePromptMutationOptions = <
   AnalysisPromptsControllerDeletePromptMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerDeletePrompt'];
+  const mutationKey = getAnalysisPromptsControllerDeletePromptMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2715,6 +2749,9 @@ export const analysisPromptsControllerPublishVersion = (
   );
 };
 
+export const getAnalysisPromptsControllerPublishVersionMutationKey = () =>
+  ['analysisPromptsControllerPublishVersion'] as const;
+
 export const getAnalysisPromptsControllerPublishVersionMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2732,7 +2769,7 @@ export const getAnalysisPromptsControllerPublishVersionMutationOptions = <
   AnalysisPromptsControllerPublishVersionMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerPublishVersion'];
+  const mutationKey = getAnalysisPromptsControllerPublishVersionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -2806,6 +2843,9 @@ export const analysisPromptsControllerSimulatePrompt = (
   );
 };
 
+export const getAnalysisPromptsControllerSimulatePromptMutationKey = () =>
+  ['analysisPromptsControllerSimulatePrompt'] as const;
+
 export const getAnalysisPromptsControllerSimulatePromptMutationOptions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2823,7 +2863,7 @@ export const getAnalysisPromptsControllerSimulatePromptMutationOptions = <
   AnalysisPromptsControllerSimulatePromptMutationVariables,
   TContext
 > => {
-  const mutationKey = ['analysisPromptsControllerSimulatePrompt'];
+  const mutationKey = getAnalysisPromptsControllerSimulatePromptMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
