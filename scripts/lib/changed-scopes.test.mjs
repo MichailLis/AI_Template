@@ -206,6 +206,11 @@ describe('getAffectedScopes', () => {
 });
 
 describe('findCrlfCorruption', () => {
+  it('ignores binary content that happens to contain the byte sequence', () => {
+    const binary = '\u0089PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR\r\r\n\u0000';
+    assert.deepEqual(findCrlfCorruption({ relativePath: 'shot.png', source: binary }), []);
+  });
+
   it('returns empty array when there is no \\r\\r\\n corruption', () => {
     const cleanUnix = 'line 1\nline 2\nline 3\n';
     const cleanWindows = 'line 1\r\nline 2\r\nline 3\r\n';

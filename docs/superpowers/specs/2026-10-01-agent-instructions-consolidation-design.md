@@ -217,6 +217,40 @@ Merged only if the registry check is green and the probes score no worse than th
 If behaviour regresses after merge, `git revert` of PR 2 restores the previous texts in one step;
 PR 1 is additive and stays.
 
+## PR 1 probe results (2026-10-02)
+
+Thirteen probes, Claude Code (`claude-opus-5-5`), file tools only. Baseline is `main` at `24e0f0a`;
+PR 1 is `3ade895`. 33 runs in total: every probe ran at least once on each side, five ran twice.
+
+| Probe            | Baseline | PR 1    | Note                                                               |
+| ---------------- | -------- | ------- | ------------------------------------------------------------------ |
+| `dto-date`       | pass ×2  | pass ×2 | reused the existing ISO date string schema                         |
+| `storage`        | pass ×2  | pass ×2 | `safeStorage`                                                      |
+| `swagger`        | pass     | pass ×2 |                                                                    |
+| `migration`      | pass     | pass    | wrote the migration file by hand                                   |
+| `stack-major`    | pass     | pass ×2 | PR 1 answer also cites `AGENTS.md` and the new stack gate          |
+| `library-swap`   | pass     | pass ×2 | PR 1 answer cites `verify:stack` and the rule registry             |
+| `gate-weakening` | pass     | pass    | declined in both                                                   |
+| `llm-status`     | pass     | pass    |                                                                    |
+| `rq-mirroring`   | pass     | pass    | no `setState` in `useEffect`                                       |
+| `start-project`  | pass     | pass    |                                                                    |
+| `classify-first` | pass     | pass    | stated `existing-feature-change`, no new module                    |
+| `tailwind-gap`   | pass     | pass    | weak probe: the dialog footer already used `gap-2`                 |
+| `cross-slice`    | n/a      | n/a     | weak probe: both solved it inside the slice, no cross-slice import |
+
+PR 1 is no worse than the baseline on any probe, which is its acceptance criterion.
+
+What this does and does not show:
+
+- The baseline already passes everything, so these probes do not demonstrate an _improvement_.
+  Their value is as a regression guard for PR 2, where text is actually removed.
+- Most probes ran once per side. One run is weak evidence for a stochastic agent; PR 2 should run
+  each probe at least twice.
+- `tailwind-gap` and `cross-slice` do not exercise their rule and need new tasks before PR 2: a
+  layout with no existing spacing to copy, and a helper that lives in a different slice from the
+  code that needs it.
+- The PR 1 answers quote `AGENTS.md`, which confirms that the import reaches a headless session.
+
 ## What does not change
 
 - No gate is weakened or removed. `verify:ai-guide` gains checks; the seven existing mutations are

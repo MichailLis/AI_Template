@@ -227,6 +227,13 @@ export const findCrlfCorruption = ({ relativePath, source }) => {
     return [];
   }
 
+  // A NUL byte marks binary content, the same test git uses. Reading a PNG as UTF-8 does not
+  // throw, and its bytes can contain 0D 0D 0A by chance; a binary file has no line endings to
+  // corrupt, so that is not a finding.
+  if (source.includes('\u0000')) {
+    return [];
+  }
+
   const errors = [];
   const regex = /\r\r\n/g;
   let match;

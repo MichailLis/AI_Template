@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -156,20 +156,37 @@ const runProbe = async ({ probe, run, commit, args }) => {
     });
   } catch (error) {
     Object.assign(record, { ok: false, error: error.message });
-  } finally {
-    try {
-      git(['worktree', 'remove', '--force', worktree]);
-    } catch {
-      rmSync(worktree, { recursive: true, force: true });
-      spawnSync('git', ['worktree', 'prune'], { cwd: rootDir });
-    }
   }
 
-  const fileName = `${probe.id}.run${run}.json`;
-  writeFileSync(join(args.outDir, fileName), `${JSON.stringify(record, null, 2)}\n`);
+  // The result is on disk before cleanup starts, so a worktree that cannot be removed costs a
+  // leftover directory and never a finished probe.
+  writeFileSync(resultPath({ probe, run, args }), `${JSON.stringify(record, null, 2)}\n`);
   console.log(`[${record.ok ? 'done' : 'FAIL'}] ${args.label} ${probe.id} run ${run}`);
+  removeWorktree(worktree);
 
   return record;
+};
+
+const resultPath = ({ probe, run, args }) => join(args.outDir, `${probe.id}.run${run}.json`);
+
+/**
+ * Best effort. On Windows a process the agent started can keep a handle on the directory for a
+ * moment after the agent exits, and `git worktree remove` or `rmSync` then fails with EPERM.
+ * Leftovers are reported and cleared by the final `git worktree prune`; they must not end the run.
+ */
+const removeWorktree = (worktree) => {
+  try {
+    git(['worktree', 'remove', '--force', worktree]);
+    return;
+  } catch {
+    // Fall through to the filesystem.
+  }
+
+  try {
+    rmSync(worktree, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
+  } catch (error) {
+    console.warn(`[warn] could not remove ${worktree}: ${error.code ?? error.message}`);
+  }
 };
 
 const main = async () => {
@@ -182,11 +199,13 @@ const main = async () => {
   args.outDir = resolve(args.out, args.label);
   mkdirSync(args.outDir, { recursive: true });
 
+  // A recorded result is kept: re-running the same command resumes an interrupted run.
   const queue = probes
     .filter((probe) => !args.only || args.only.has(probe.id))
     .flatMap((probe) =>
       Array.from({ length: args.runs }, (_, index) => ({ probe, run: index + 1, commit, args })),
-    );
+    )
+    .filter((item) => !existsSync(resultPath(item)));
 
   console.log(
     `${queue.length} probe runs at ${args.ref} (${commit.slice(0, 7)}) -> ${args.outDir}`,
@@ -199,6 +218,7 @@ const main = async () => {
   });
 
   await Promise.all(workers);
+  spawnSync('git', ['worktree', 'prune'], { cwd: rootDir });
 };
 
 await main();
