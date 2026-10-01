@@ -213,27 +213,22 @@ describe('TestsService analysis prompt attachment', () => {
         activePublishedVersion: null,
       },
     ]);
-    prismaMock.testPublicLink.findMany.mockResolvedValue([
-      { topicVersion: { topicId: 1 } },
-      { topicVersion: { topicId: 1 } },
+    prismaMock.testTopicVersion.findMany.mockResolvedValue([
+      { topicId: 1, status: 'PUBLISHED', _count: { publicLinks: 1, studentAttempts: 0 } },
+      { topicId: 1, status: 'DRAFT', _count: { publicLinks: 1, studentAttempts: 0 } },
     ]);
 
     const result = await service.listTopics(5);
 
-    expect(prismaMock.testPublicLink.findMany).toHaveBeenCalledWith({
+    expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith({
       where: {
-        archivedAt: null,
-        isActive: true,
-        topicVersion: {
-          topicId: {
-            in: [1, 2],
-          },
-        },
+        topicId: { in: [1, 2] },
       },
       select: {
-        topicVersion: {
+        topicId: true,
+        _count: {
           select: {
-            topicId: true,
+            publicLinks: { where: { archivedAt: null, isActive: true } },
           },
         },
       },
@@ -288,9 +283,9 @@ describe('TestsService analysis prompt attachment', () => {
       },
     ]);
     prismaMock.testTopicVersion.findMany.mockResolvedValue([
-      { topicId: 1, _count: { studentAttempts: 3 } },
-      { topicId: 1, _count: { studentAttempts: 2 } },
-      { topicId: 2, _count: { studentAttempts: 1 } },
+      { topicId: 1, _count: { studentAttempts: 3, publicLinks: 0 } },
+      { topicId: 1, _count: { studentAttempts: 2, publicLinks: 0 } },
+      { topicId: 2, _count: { studentAttempts: 1, publicLinks: 0 } },
     ]);
 
     const result = await service.listTopics(5);

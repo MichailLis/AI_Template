@@ -317,28 +317,29 @@ export class TestsService {
       return countByTopicId;
     }
 
-    const activeLinks = await this.prisma.testPublicLink.findMany({
+    // Count from versions in one SQL statement: loading each link's required version
+    // separately can return null when another connection cascades a topic deletion.
+    const versions = await this.prisma.testTopicVersion.findMany({
       where: {
-        archivedAt: null,
-        isActive: true,
-        topicVersion: {
-          topicId: {
-            in: topicIds,
-          },
-        },
+        topicId: { in: topicIds },
       },
       select: {
-        topicVersion: {
+        topicId: true,
+        _count: {
           select: {
-            topicId: true,
+            publicLinks: {
+              where: { archivedAt: null, isActive: true },
+            },
           },
         },
       },
     });
 
-    for (const link of activeLinks) {
-      const topicId = link.topicVersion.topicId;
-      countByTopicId.set(topicId, (countByTopicId.get(topicId) ?? 0) + 1);
+    for (const version of versions) {
+      countByTopicId.set(
+        version.topicId,
+        (countByTopicId.get(version.topicId) ?? 0) + version._count.publicLinks,
+      );
     }
 
     return countByTopicId;
