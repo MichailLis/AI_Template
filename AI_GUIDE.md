@@ -9,26 +9,11 @@ Current branch baseline:
 - Frontend auth UI route: `/login`
 - Admin workspace, Prompt Studio, tests editor, public links, analytics, public student flow, and Polus public template
 
+The rules every agent must follow are in `AGENTS.md`, which every agent loads in full. This guide
+is the long-form reference behind it: the criteria, commands and reasons that are too long to
+load into every session. It does not restate the stack, the runtime topology or the invariants.
+
 Auth-only mode is still a supported cleanup target for a dedicated template-finalization branch. Do not remove current business modules from this branch unless the task explicitly asks to return to auth-only.
-
-## Tech Stack
-
-- Backend: NestJS, Prisma 7, PostgreSQL, JWT (Passport), nestjs-zod, Swagger
-- Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
-- Infra: Docker Compose (frontend + backend + Postgres + Adminer)
-- Frontend architecture: Strict FSD with template guardrails (enforced)
-
-## AI Agent Operating Mode (Local Development)
-
-This repository is optimized for AI-agent implementation loops.
-
-Mandatory behavior for agents:
-
-1. Read `AI_GUIDE.md` first and treat it as repository source-of-truth.
-2. Start with search and evidence collection before edits.
-3. Prefer small, reversible commits over broad refactors.
-4. Never bypass architecture/lint/test gates to "make it pass".
-5. Keep changes scoped to the user's request; no opportunistic rewrites.
 
 ## Docker Runtime Contract
 
@@ -37,20 +22,8 @@ all three package manifests, CI, and the Node Docker images. The official Node i
 includes npm 11.19.0; use `npm ci` with the committed lockfiles. The optional VS Code
 workspace uses the supported `javascript-node:5.2.1-24-bookworm` devcontainer image.
 
-For normal project startup, agents must use the root `docker-compose.yml` only.
-
-Required command:
-
-```powershell
-docker compose up -d
-```
-
-Expected runtime services:
-
-- `ai_template_frontend` on `http://localhost:5173`
-- `ai_template_backend` on `http://localhost:3000`
-- `ai_template_postgres` on `localhost:5432`
-- `ai_template_adminer` on `http://localhost:8080`
+Startup, the four containers and the rule about the devcontainer compose file are in
+`AGENTS.md`, "Runtime".
 
 Runtime security defaults:
 
@@ -60,9 +33,8 @@ Runtime security defaults:
 - `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
   wildcard origins with credentialed auth cookies.
 
-Do not use `.devcontainer/docker-compose.devcontainer.yml` to start the project for the user.
-That compose file is only for the VS Code "Reopen in Container" workflow and creates a single
-`workspace` container that runs frontend and backend together. It is not the project runtime topology.
+The devcontainer compose file creates a single `workspace` container that runs frontend and
+backend together; that is why it is not the project runtime topology.
 
 ### OpenRouter Configuration
 
@@ -78,43 +50,6 @@ OPENROUTER_TIMEOUT_MS=120000
 OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
 OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
-
-### Frontend Container Rebuild Before Manual Browser Testing
-
-When files under `client/` are changed and manual browser testing will use
-`http://localhost:5173`, rebuild/recreate the frontend container first:
-
-```powershell
-docker compose up -d --build --force-recreate frontend
-```
-
-Use the root `docker-compose.yml` only. Host-level checks — Vitest, ESLint, and `tsc` — need no
-container rebuild. Browser gates such as `verify:template` and `verify:e2e:critical` build the
-client independently with `vite preview` and also do not use the Docker frontend container.
-
-## Search Mode (Exhaustive, For Non-Trivial Tasks)
-
-Use exhaustive search mode when request touches unfamiliar areas, multiple modules, or architecture decisions.
-
-Execution protocol:
-
-1. Run parallel internal discovery first:
-   - symbol uniqueness check via `npm run find:symbol -- <name>` before refactoring or renaming
-   - codebase search (`grep` / `rg` / AST search)
-   - structure scan (feature, widget, page, shared layers)
-   - existing pattern lookup in neighboring modules
-2. In parallel, run external reference scan for unfamiliar libraries:
-   - official docs first
-   - high-quality OSS examples second
-3. Do not stop at the first hit. Confirm patterns from multiple matches.
-4. Summarize findings before implementation (what exists, what differs, what to reuse).
-5. Then implement minimally, following discovered conventions.
-
-Stop conditions for search:
-
-- You can name exact target files and existing pattern to follow.
-- Additional searches return repetitive information.
-- Required external behavior is confirmed by official docs.
 
 ## Refactor Debt Prevention (Always-On)
 
@@ -210,29 +145,16 @@ guard stayed quiet.
 
 ## Frontend Architecture Contract (Strict FSD)
 
-Source of truth:
+The layer order and the public-API rule are in `AGENTS.md`, "Frontend architecture". What that
+section does not say:
 
-- `template/fsd.rules.json` (layer rules)
-- `scripts/verify-architecture.mjs` (automated checks)
-- `template/features.manifest.json` (feature inventory + route/module wiring + `publicRoutes` + `generatedApiDirs`)
-
-Layer order (imports only "down"):
-
-- `app -> pages -> widgets -> features -> entities -> shared`
-
-Rules:
-
-1. `pages/*` are route entrypoints/composition only. No deep business logic inside page files.
-2. Cross-slice imports in `widgets/features/entities` must go through slice public API (`index.ts`) in strict mode.
-3. Feature inventory and public student routes still come from `template/features.manifest.json`; FSD does not replace manifest discipline.
-4. Any architecture change must keep `npm run verify:architecture` green.
-5. Feature implementation order remains strict: data model -> backend -> `gen:api` -> frontend -> full verification.
-
-Current branch state:
-
-- `template/fsd.rules.json` uses `mode: "strict"`.
-- `transition.allowLayerBypass` and `transition.allowDeepImports` must remain empty.
-- Any temporary bypass must be explicitly documented and removed before merge.
+- `template/fsd.rules.json` uses `mode: "strict"`. `transition.allowLayerBypass` and
+  `transition.allowDeepImports` must remain empty; a temporary bypass must be documented and
+  removed before merge.
+- Feature inventory and public student routes come from `template/features.manifest.json`; FSD does
+  not replace manifest discipline.
+- `scripts/verify-architecture.mjs` is the automated check, and any architecture change must keep
+  `npm run verify:architecture` green.
 
 ## Feature Pipeline (Required Order)
 
@@ -387,79 +309,32 @@ you are touching; do not load them all up front.
 - [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
 - [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.
 
-## Reference Example For AI Agents (Illustrative)
-
-Example goal: implement `news` feature with editor UI (example only, not part of the current baseline).
-
-1. Schema:
-   - Add `News` model to `server/prisma/schema.prisma`.
-   - Add relation on `User`.
-2. Backend:
-   - `npm run gen:nest news`
-   - Implement:
-     - `server/src/news/news.controller.ts`
-     - `server/src/news/news.service.ts`
-     - `server/src/news/dto/create-news.dto.ts`
-     - `server/src/news/dto/news-response.dto.ts`
-   - Keep rules:
-     - use `createZodDto`
-     - `createdAt/updatedAt` as `z.string()` in response DTO
-     - `@ApiOperation` + `@ApiResponse`
-3. Frontend:
-   - `npm run gen:api`
-   - Add form/page and route wiring:
-     - `client/src/features/create-news/ui/create-news-form.tsx`
-     - `client/src/pages/news/news-page.tsx`
-     - `client/src/app/App.tsx`
-4. Guardrails:
-   - Update `template/features.manifest.json`
-   - Run `npm run verify:template`
-5. Temporary feature cleanup, only when the feature was created just for pipeline checks:
-   - Remove temporary module files and wiring
-   - Remove feature entry from manifest
-   - Run `npm run verify:template` again
-
 ## Stability Rules
 
-1. Core typecheck/lint/test/build commands must pass during implementation loops:
-   ```powershell
-   npm run typecheck
-   npm run lint
-   npm run test --prefix server
-   npm run test:e2e --prefix server
-   npm run test:run --prefix client
-   npm run build --prefix server
-   npm run build --prefix client
-   ```
-2. End-to-end template verification must pass:
+The invariants themselves are in `AGENTS.md`, "Non-obvious invariants". This section adds what is
+not there.
 
-   ```powershell
-   npm run verify:template
-   ```
-
-   This is the release-level gate: Prisma generation/sync, OpenAPI/API client generation, architecture checks, maintainability, typecheck, lint, server unit/e2e tests, client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical browser e2e.
-
-   `npm run typecheck` is not redundant with `npm run build --prefix server`. `nest build` compiles through `server/tsconfig.build.json`, which excludes `**/*spec.ts`, so the server specs are the one part of the tree no other gate ever compiles. Type errors accumulate there silently while every check stays green — thirty-three of them had, before the gate was added. `npm run typecheck` runs `tsc --noEmit` over `server/tsconfig.json`, which includes them.
-
+1. **What the release gate runs.** `npm run verify:template`: Prisma generation/sync, OpenAPI/API
+   client generation, architecture checks, maintainability, typecheck, lint, server unit/e2e tests,
+   client Vitest, server/client builds, smoke checks, `format:check`, `audit:all`, and critical
+   browser e2e.
+2. **Why `typecheck` is not redundant with the server build.** `nest build` compiles through
+   `server/tsconfig.build.json`, which excludes `**/*spec.ts`, so the server specs are the one part
+   of the tree no other gate ever compiles. Type errors accumulate there silently while every check
+   stays green — thirty-three of them had, before the gate was added. `npm run typecheck` runs
+   `tsc --noEmit` over `server/tsconfig.json`, which includes them.
 3. Do not keep dead feature files/routes in the template.
 4. Keep auth flow always working while adding/removing features.
-5. Use `import type` for type-only imports.
-6. **Storage Safety:** NEVER use `localStorage` or `sessionStorage` directly. Always use `safeStorage` from `@/shared/lib/storage` to avoid "Access to storage is not allowed" errors in restricted browser contexts.
-7. **API Architecture (Node.js Compatibility):**
-   - `client/src/shared/api/api.ts` MUST contain ONLY the Axios instance creation. No browser-specific code (localStorage, window, etc.) is allowed here because this file is imported by Orval generator in a Node.js environment.
-   - `client/src/shared/api/api.ts` MUST NOT contain `import.meta` (it causes Orval/esbuild warnings in Node target).
-   - `client/src/shared/api/api.ts` must export `customInstance`, default `api`, and `configureApiBaseUrl`.
-   - All browser-specific interceptors (auth token injection, refresh logic) MUST reside in `client/src/shared/api/interceptors.ts`.
-   - `client/src/app/App.tsx` must call:
-     - `configureApiBaseUrl(import.meta.env.VITE_API_URL)`
-     - `configureInterceptorsRuntime(...)`
-     - `setupInterceptors(api)`
-   - Enforced by `npm run verify:api-mutator`.
-8. Keep server error format unified:
-   ```json
-   { "success": false, "error": { "code": "...", "message": "..." } }
-   ```
-9. Runtime API discovery must validate required API routes before accepting discovered origin (prevents binding to unrelated local Swagger instances).
+5. **The API mutator contract in full** (enforced by `npm run verify:api-mutator`):
+   - `client/src/shared/api/api.ts` must export `customInstance`, default `api`, and
+     `configureApiBaseUrl`, and must not contain `import.meta` (it causes Orval/esbuild warnings
+     in the Node target).
+   - `client/src/app/App.tsx` must call `configureApiBaseUrl(import.meta.env.VITE_API_URL)`,
+     `configureInterceptorsRuntime(...)` and `setupInterceptors(api)`.
+6. Storage goes through `safeStorage` because direct access throws "Access to storage is not
+   allowed" in restricted browser contexts.
+7. Runtime API discovery must validate required API routes before accepting a discovered origin
+   (prevents binding to unrelated local Swagger instances).
 
 ## Local Verification Entry Points
 
@@ -496,41 +371,11 @@ for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
 `npm run verify:paired-rules` runs `scripts/verify-paired-rules.mjs` to ensure paired implementations and constants across client and server remain synchronized against `template/paired-rules.json` and `template/paired-rules.vectors.json`.
 `npm run verify:stack` runs `scripts/verify-stack.mjs` to compare the three `package.json` files with `template/stack.json`, which declares the allowed major of each stack package (NestJS, Prisma, React, Vite, Tailwind, Orval, Zustand, TanStack Query). A major bump or the removal of a stack library fails until the declaration is changed in the same, separately approved, change.
-`npm run verify:ai-guide` also checks `template/agent-rules.json`: every rule listed there must still be present in the always-loaded instruction files (`CLAUDE.md`, `AGENTS.md`), and `CLAUDE.md` must import `AGENTS.md`. Rewording a rule out of those files turns the gate red; to retire a rule, change the registry on purpose.
+`npm run verify:ai-guide` also checks `template/agent-rules.json`: every rule listed there must still be present in `AGENTS.md`, the rule body every agent loads, and `CLAUDE.md` must import it. The two files together must stay inside the always-loaded size budget. Rewording a rule out of those files turns the gate red; to retire a rule, change the registry on purpose.
 `npm run verify:gates` runs `scripts/verify-gates.mjs` to verify via in-memory mutation testing that repository verification gates detect real invariant violations and maintain full gate coverage.
 `npm run verify:diff` runs `scripts/verify-diff.mjs` as an auxiliary fast pre-flight over changed scopes. Without `--run` it runs only its guards (CRLF corruption, Orval line-ending noise) and prints the plan; `npm run verify:diff -- --run` executes the planned checks. It is not a gate and does not replace `verify:local` or the release gate `verify:template`.
 `npm run find:symbol -- <name>` runs `scripts/find-symbol.mjs` to check whether a symbol name is unique across `client/src`, `server/src`, and `scripts`, warn on client/server drift, detect candidate unused exports, and route to Serena or `rg`.
 `npm run audit:explain [-- --base <ref>]` runs `scripts/audit-explain.mjs` to split the vulnerabilities npm reports into the ones this branch introduced, inherited, and fixed, per lock file; it is a diagnostic for a red `audit:all`, never a gate, so it exits 0 whatever it finds and belongs in neither `verify:local` nor `verify:template`.
-
-## PR-Ready Checklist (Feature Delivery)
-
-Use this checklist before opening PR or finalizing work.
-
-1. **Data model synced**
-   - `server/prisma/schema.prisma` updated.
-   - `npm run prisma:generate` and `npm run prisma:push` passed.
-   - The matching migration is checked in and `npm run verify:prisma-migrations` passed.
-2. **Backend completed**
-   - Module/controller/service/DTOs implemented.
-   - Controllers include `@ApiOperation` and `@ApiResponse`.
-3. **Manifest aligned**
-   - Feature added or updated in `template/features.manifest.json`.
-   - `backendFiles`, `frontendFiles`, and `generatedApiFile` paths are correct.
-4. **Mutator contract preserved**
-   - `client/src/shared/api/api.ts` remains Node-safe.
-   - `npm run verify:api-mutator` passed.
-5. **Frontend API regenerated**
-   - `npm run gen:api` passed.
-   - Generated hooks are used by the new UI.
-6. **Routes and navigation wired**
-   - Route added in `client/src/app/App.tsx`.
-   - `publicRoutes` from manifest are wired in `client/src/app/App.tsx`.
-7. **Core tests green**
-   - `npm run test --prefix server`, `npm run test:e2e --prefix server`, and `npm run test:run --prefix client` passed when the branch changed related behavior.
-8. **Full pipeline green**
-   - `npm run verify:template` passed with no failures.
-9. **No hidden bypasses**
-   - Do not disable checks, do not comment out failing logic, do not hardcode obsolete smoke paths.
 
 ## Generator Status
 

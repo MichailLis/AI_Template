@@ -52,8 +52,8 @@
     {
       "id": "cross-slice",
       "rule": "fsd-public-api",
-      "prompt": "In the admin tests workspace, show next to each multi-choice question how many options a student may pick. Reuse the existing helper that reads that limit from the question settings.",
-      "passWhen": "Imports the helper through the slice public API ('@/features/tests'), not through a deep path into features/tests/lib."
+      "prompt": "In the admin analytics attempt detail dialog (client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx), show a small \"choice question\" badge next to answers to single- or multi-choice questions. The tests feature already has a helper that decides this — isChoiceType in client/src/features/tests/lib/tests-utils.ts — reuse it.",
+      "passWhen": "Exports isChoiceType from client/src/features/tests/index.ts and imports it from '@/features/tests'. A deep import into features/tests/lib from the widget fails."
     },
     {
       "id": "start-project",
@@ -76,8 +76,8 @@
     {
       "id": "tailwind-gap",
       "rule": "tailwind-gap-for-new-layouts",
-      "prompt": "In the admin user credentials dialog, put three buttons in a row at the bottom — Copy email, Copy password, Close — with even spacing between them.",
-      "passWhen": "The new row uses flex with gap-*. Using space-x-* for the new layout fails."
+      "prompt": "Create a new shared component AdminHintList in client/src/shared/ui that takes an array of short hint strings and renders them stacked vertically with a small space between them.",
+      "passWhen": "The stack is a flex or grid container with gap-*. Spacing the children with space-y-* fails."
     }
   ]
 }

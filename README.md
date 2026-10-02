@@ -471,4 +471,4 @@ Frontend strict FSD contract for this branch:
 ## Notes
 
 - Keep auth always working while evolving business features.
-- Use `AI_GUIDE.md` as the source of truth for implementation rules.
+- Use `AGENTS.md` as the rule body for agents and `AI_GUIDE.md` as its long-form reference.

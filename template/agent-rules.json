@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "alwaysLoadedFiles": ["CLAUDE.md", "AGENTS.md"],
+  "alwaysLoadedFiles": ["AGENTS.md"],
   "claudeImport": "@AGENTS.md",
   "rules": [
     {
@@ -254,6 +254,33 @@
       "rule": "Graph traces pass include_tests: true because `tests` is product code here.",
       "enforcedBy": [],
       "anchor": "include_tests: true"
+    }
+  ],
+  "dropped": [
+    {
+      "id": "operating-mode-generic-advice",
+      "was": "AI_GUIDE.md, \"AI Agent Operating Mode\": start with search, prefer small reversible commits, keep changes scoped, never bypass gates.",
+      "reason": "Generic advice a current model already follows; the one rule in it that changes behaviour is kept as no-gate-weakening."
+    },
+    {
+      "id": "search-mode",
+      "was": "AI_GUIDE.md, \"Search Mode (Exhaustive, For Non-Trivial Tasks)\".",
+      "reason": "Generic search procedure. The repository-specific part (find:symbol before a rename, which tool for which question) lives in docs/agent-tooling.md."
+    },
+    {
+      "id": "illustrative-news-example",
+      "was": "AI_GUIDE.md, \"Reference Example For AI Agents (Illustrative)\".",
+      "reason": "A hypothetical feature walked through the same steps as \"Feature Pipeline\"; it named files that do not exist and had to be exempted from the path check."
+    },
+    {
+      "id": "pr-ready-checklist",
+      "was": "AI_GUIDE.md, \"PR-Ready Checklist (Feature Delivery)\".",
+      "reason": "Restated the gates and the pipeline item by item. verify:template is the checklist; README keeps the human-facing definition of done."
+    },
+    {
+      "id": "guide-tech-stack-and-runtime-duplicates",
+      "was": "AI_GUIDE.md: \"Tech Stack\", the startup command and container list, the frontend-rebuild subsection, the FSD layer order, and the invariants restated under \"Stability Rules\".",
+      "reason": "Verbatim duplicates of AGENTS.md. The unique parts of those sections were kept in AI_GUIDE.md."
     }
   ]
 }

@@ -7,7 +7,7 @@ description: Use when adding or changing a feature in this template — editing 
 
 This skill sequences a fullstack change in this template. It does not restate the rules — read
 `AI_GUIDE.md` ("Feature Pipeline (Required Order)", "Phase 0: Feature Ownership Classification",
-"Verifying A Change (Always-On)") and `CLAUDE.md` ("Feature pipeline", "Non-obvious invariants")
+"Verifying A Change (Always-On)") and `AGENTS.md` ("Feature pipeline", "Non-obvious invariants")
 for the full rationale. This is the sequence to actually run.
 
 ## 1. Classify the change first
@@ -44,7 +44,7 @@ decision.
 **If backend DTOs or controllers changed, step 4 must happen before any frontend lint, build, or
 test step.** A frontend check run against a stale generated client passes for the wrong reason.
 
-## 3. The traps that cost the most (from `CLAUDE.md`, "Verifying your own work")
+## 3. The traps that cost the most (from `AGENTS.md`, "Verifying your own work")
 
 - **After `npm run gen:api`, read `git diff --numstat`, not `git status`.** Orval rewrites every
   generated file with LF, so `git status` can list hundreds of modified files where only one or

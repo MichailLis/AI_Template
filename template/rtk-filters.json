@@ -10,5 +10,5 @@
     "rtk read -l aggressive"
   ],
   "safe": ["rtk run", "rtk err", "rtk json", "rtk prisma", "rtk npm", "rtk read"],
-  "warningDocuments": ["CLAUDE.md", "docs/tooling-evidence.md"]
+  "warningDocuments": ["AGENTS.md", "docs/agent-tooling.md", "docs/tooling-evidence.md"]
 }

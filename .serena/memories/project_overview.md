@@ -28,7 +28,7 @@ platform with an operator admin area under `/admin` and a public student flow un
 
 ## Sources of truth
 
-`AI_GUIDE.md` for implementation rules, `CLAUDE.md` for the short form, and two machine-readable
+`AGENTS.md` for the rules every agent loads, `AI_GUIDE.md` for the long form, and two machine-readable
 files that the verification scripts actually enforce: `template/features.manifest.json` (feature
 inventory, routes, module wiring, `publicRoutes`, `generatedApiDirs`) and `template/fsd.rules.json`
 (layer rules, `mode: "strict"`). Read those two files directly rather than any prose summary.

@@ -24,7 +24,7 @@ import { spawnSyncNpm } from './lib/npm-runner.mjs';
  *
  * A non-zero exit means an operational failure only: an unusable `--base`, a lock file git could
  * not produce, an audit that did not run. The one thing this tool must never do is report a clean
- * result for an audit that never happened; `CLAUDE.md` names several tools in this repository that
+ * result for an audit that never happened; `docs/agent-tooling.md` names several tools here that
  * do exactly that, and every doubtful path here is written to fail loudly instead.
  */
 
