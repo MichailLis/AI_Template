@@ -1,5 +1,8 @@
 * text=auto
 
+# Append-only log: two branches each add lines at the end, and both sets are wanted.
+.beads/interactions.jsonl merge=union
+
 *.sh text eol=lf
 Dockerfile text eol=lf
 *.conf text eol=lf

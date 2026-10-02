@@ -150,6 +150,11 @@ Use `bd` for ALL task tracking (`bd prime` prints the workflow); do not keep mar
 Do not commit or push without clear authority from the current user request or the active Beads
 profile. At handoff, report changed files, validation, and proposed next commands.
 
+The tracker lives in git too. The pre-commit hook refreshes `.beads/issues.jsonl` from the
+database and stages it with `.beads/interactions.jsonl`; do not unstage them or leave them
+uncommitted at handoff. On a merge conflict in `.beads/issues.jsonl`, take either side and commit
+again: the hook rewrites the file.
+
 ## Tooling
 
 Tool selection, measured failure modes and setup for rtk, Serena, codebase-memory, Probe,

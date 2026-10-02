@@ -1,3 +1,12 @@
 npx lint-staged
 # beads: keep issue tracking in sync (no-op when bd is not installed)
 command -v bd >/dev/null 2>&1 && bd hooks run pre-commit || true
+# beads: the tracker lives in git too. Refresh the issue export from the database and commit it
+# with the journal. The export goes to a temporary file first, so a failed export (bd missing, or
+# its database unreachable from a throwaway worktree) leaves the committed copy untouched.
+beads_export="$(git rev-parse --git-dir)/beads-issues-export.tmp"
+if command -v bd >/dev/null 2>&1 && bd export -o "$beads_export" >/dev/null 2>&1 && [ -s "$beads_export" ]; then
+  mv "$beads_export" .beads/issues.jsonl
+  git add .beads/issues.jsonl .beads/interactions.jsonl
+fi
+rm -f "$beads_export"
