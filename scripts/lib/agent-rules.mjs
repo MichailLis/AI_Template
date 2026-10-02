@@ -79,6 +79,22 @@ export const validateRegistry = (registry) => {
     }
   }
 
+  // Retired text is recorded rather than deleted: an entry without a reason is a rule that was
+  // simply lost.
+  for (const [index, entry] of (registry.dropped ?? []).entries()) {
+    const label = isNonEmptyString(entry?.id) ? `dropped "${entry.id}"` : `dropped #${index + 1}`;
+
+    if (!isNonEmptyString(entry?.id) || !isNonEmptyString(entry?.was)) {
+      errors.push(`agent-rules.json: ${label} must say what was removed ("id" and "was")`);
+    }
+    if (!isNonEmptyString(entry?.reason)) {
+      errors.push(`agent-rules.json: ${label} must give the reason it was removed`);
+    }
+    if (isNonEmptyString(entry?.id) && seen.has(entry.id)) {
+      errors.push(`agent-rules.json: "${entry.id}" is listed both as a rule and as dropped`);
+    }
+  }
+
   return errors;
 };
 

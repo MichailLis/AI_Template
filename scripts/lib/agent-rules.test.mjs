@@ -115,3 +115,26 @@ describe('the committed registry', () => {
     assert.ok(committed.rules.some((entry) => entry.group === 'B'));
   });
 });
+
+describe('dropped entries', () => {
+  const withDropped = (dropped) => ({ ...registry(), dropped });
+
+  it('accepts a retired text with its reason', () => {
+    const errors = validateRegistry(
+      withDropped([{ id: 'search-mode', was: 'AI_GUIDE.md, "Search Mode"', reason: 'Generic.' }]),
+    );
+    assert.deepEqual(errors, []);
+  });
+
+  it('rejects a retired text without a reason', () => {
+    const errors = validateRegistry(withDropped([{ id: 'search-mode', was: 'AI_GUIDE.md' }]));
+    assert.match(errors.join('\n'), /must give the reason/);
+  });
+
+  it('rejects an id that is both a live rule and dropped', () => {
+    const errors = validateRegistry(
+      withDropped([{ id: 'storage-discipline', was: 'somewhere', reason: 'none' }]),
+    );
+    assert.match(errors.join('\n'), /both as a rule and as dropped/);
+  });
+});

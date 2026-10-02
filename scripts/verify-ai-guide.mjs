@@ -11,14 +11,16 @@ import {
 const root = process.cwd();
 
 /**
- * Byte size budget for CLAUDE.md.
+ * Byte size budget for the always-loaded instructions.
  *
- * CLAUDE.md is loaded in full at session startup before any code is read,
- * imposing a permanent token tax on every turn. The file must grow deliberately
- * rather than accumulate ad-hoc content. Move empirical evidence, benchmarks,
- * and measurement details to docs/tooling-evidence.md instead of expanding this budget.
+ * Claude Code loads CLAUDE.md and, through its import, AGENTS.md in full at session startup,
+ * before any code is read: a permanent token tax on every turn and every subagent. Codex loads
+ * AGENTS.md alone. The budget is measured on both files together, because that is what a session
+ * actually pays for. The text must grow deliberately rather than accumulate ad-hoc content: tool
+ * notes belong in docs/agent-tooling.md, measurements in docs/tooling-evidence.md, long-form
+ * procedure in AI_GUIDE.md.
  */
-const CLAUDE_MD_MAX_BYTES = 18_500;
+const ALWAYS_LOADED_MAX_BYTES = 14_500;
 
 const aiGuidePath = join(root, 'AI_GUIDE.md');
 const readmePath = join(root, 'README.md');
@@ -42,28 +44,35 @@ const claudeMd = claudeMdBuffer.toString('utf-8');
  * the same commit weighs ~200 bytes more on disk than on Linux. Measuring the raw buffer made the
  * gate pass in CI and fail locally for reasons that have nothing to do with the content.
  */
-const claudeMdByteLength = Buffer.byteLength(claudeMd.replace(/\r\n/g, '\n'), 'utf-8');
+const lfByteLength = (text) => Buffer.byteLength(text.replace(/\r\n/g, '\n'), 'utf-8');
+const alwaysLoadedByteLength = lfByteLength(claudeMd) + lfByteLength(agentsMd);
 const rtkFilters = JSON.parse(rtkFiltersContent);
 const unsafeRtkFilters = Array.isArray(rtkFilters.unsafe) ? rtkFilters.unsafe : [];
 const warningDocuments = new Set(
   Array.isArray(rtkFilters.warningDocuments) ? rtkFilters.warningDocuments : [],
 );
 
+// AGENTS.md is the rule body and points into AI_GUIDE.md for the long form. These are the sections
+// it points at: renaming one would leave an always-loaded pointer aimed at nothing.
 const requiredAiGuideTokens = [
-  '## AI Agent Operating Mode (Local Development)',
-  '## Search Mode (Exhaustive, For Non-Trivial Tasks)',
+  '## Verifying A Change (Always-On)',
+  '## Feature Pipeline (Required Order)',
+  '### Phase 0: Feature Ownership Classification',
+  '### Phase 1: Data Modeling',
   '## Refactor Debt Prevention (Always-On)',
   '## Local Verification Entry Points',
   'npm run verify:local',
   'npm run verify:template',
 ];
 
-const requiredReadmeTokens = ['Use `AI_GUIDE.md` as the source of truth for implementation rules.'];
+const requiredReadmeTokens = [
+  'Use `AGENTS.md` as the rule body for agents and `AI_GUIDE.md` as its long-form reference.',
+];
 
 const errors = [];
-if (claudeMdByteLength > CLAUDE_MD_MAX_BYTES) {
+if (alwaysLoadedByteLength > ALWAYS_LOADED_MAX_BYTES) {
   errors.push(
-    `CLAUDE.md: size ${claudeMdByteLength} bytes exceeds budget of ${CLAUDE_MD_MAX_BYTES} bytes. Move empirical evidence and measurements to docs/tooling-evidence.md instead of expanding the budget.`,
+    `CLAUDE.md + AGENTS.md: ${alwaysLoadedByteLength} bytes of always-loaded instructions exceed the budget of ${ALWAYS_LOADED_MAX_BYTES} bytes. Move tool notes to docs/agent-tooling.md and long-form procedure to AI_GUIDE.md instead of expanding the budget.`,
   );
 }
 
@@ -79,8 +88,8 @@ for (const token of requiredReadmeTokens) {
   }
 }
 for (const command of unsafeRtkFilters) {
-  if (!claudeMd.includes(command)) {
-    errors.push(`CLAUDE.md: missing warning for unsafe rtk command "${command}"`);
+  if (!agentsMd.includes(command)) {
+    errors.push(`AGENTS.md: missing warning for unsafe rtk command "${command}"`);
   }
 }
 

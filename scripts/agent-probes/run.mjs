@@ -15,18 +15,20 @@ import { join, resolve } from 'node:path';
  * It costs tokens and its result depends on the model, so it is absent from verify:local and
  * verify:template. Grading is done by reading the recorded output against each probe's `passWhen`.
  *
- * The agent gets file tools only (no shell): the compose project name and container names are
- * fixed globally, so a probe that ran `docker compose` from a worktree would hit the live stack.
+ * The compose project name and container names are fixed globally, so a probe that ran
+ * `docker compose` from a worktree would hit the live stack. Claude Code therefore gets file tools
+ * only. Codex cannot edit without its shell sandbox, so it runs in `workspace-write` (no network)
+ * and is told in a fixed preamble to leave containers and databases alone.
  *
  * Usage:
  *   node scripts/agent-probes/run.mjs --ref <git-ref> --label <name> --out <dir>
- *        [--only id,id] [--runs 2] [--concurrency 4] [--timeout-ms 900000]
+ *        [--agent claude|codex|codex-orca] [--only id,id] [--runs 2] [--concurrency 4] [--timeout-ms 900000]
  */
 
 const rootDir = process.cwd();
 
 const readArgs = (argv) => {
-  const args = { runs: 1, concurrency: 4, timeoutMs: 900_000, only: null };
+  const args = { agent: 'claude', runs: 1, concurrency: 4, timeoutMs: 900_000, only: null };
 
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index + 1];
@@ -40,6 +42,9 @@ const readArgs = (argv) => {
         break;
       case '--out':
         args.out = value;
+        break;
+      case '--agent':
+        args.agent = value;
         break;
       case '--only':
         args.only = new Set(value.split(','));
@@ -60,7 +65,7 @@ const readArgs = (argv) => {
     index += 1;
   }
 
-  if (!args.ref || !args.label || !args.out) {
+  if (!args.ref || !args.label || !args.out || !AGENTS[args.agent]) {
     console.error(
       'Usage: run.mjs --ref <git-ref> --label <name> --out <dir> [--only ids] [--runs N]',
     );
@@ -80,16 +85,205 @@ const git = (gitArgs, cwd = rootDir) => {
   return result.stdout;
 };
 
-/** Runs one headless agent in `cwd` and resolves with its stdout, or with the reason it failed. */
-const runAgent = ({ cwd, prompt, timeoutMs }) =>
-  new Promise((resolvePromise) => {
-    // One command string: on Windows `claude` is a .cmd shim and needs a shell, and every argument
-    // here is a fixed literal, so nothing user-supplied is ever concatenated into it.
-    const child = spawn(
+const CODEX_LAST_MESSAGE_FILE = '.agent-probe-last-message.txt';
+
+const parseClaudeOutput = (stdout) => {
+  try {
+    const parsed = JSON.parse(stdout);
+
+    return {
+      answer: typeof parsed.result === 'string' ? parsed.result : stdout,
+      turns: parsed.num_turns ?? null,
+      costUsd: parsed.total_cost_usd ?? null,
+      models: parsed.modelUsage ? Object.keys(parsed.modelUsage) : [],
+    };
+  } catch {
+    return { answer: stdout, turns: null, costUsd: null, models: [] };
+  }
+};
+
+/**
+ * Each command is one string of fixed literals: on Windows both CLIs are .cmd shims and need a
+ * shell, and nothing user-supplied is concatenated in. The prompt always travels through stdin.
+ */
+const AGENTS = {
+  claude: {
+    command:
       'claude -p --output-format json --permission-mode acceptEdits ' +
-        '--allowedTools Read,Edit,Write,Glob,Grep --no-session-persistence',
-      { cwd, shell: true, stdio: ['pipe', 'pipe', 'pipe'] },
-    );
+      '--allowedTools Read,Edit,Write,Glob,Grep --no-session-persistence',
+    preamble: '',
+    parse: ({ stdout }) => parseClaudeOutput(stdout),
+  },
+  codex: {
+    command:
+      'codex exec --skip-git-repo-check -s workspace-write ' + `-o ${CODEX_LAST_MESSAGE_FILE} -`,
+    preamble:
+      'Harness note: this is an isolated copy of the repository. Do not start, stop or modify ' +
+      'Docker containers or databases, and do not install dependencies.\n\n',
+    parse: ({ stdout, cwd }) => {
+      const lastMessagePath = join(cwd, CODEX_LAST_MESSAGE_FILE);
+      const answer = existsSync(lastMessagePath) ? readFileSync(lastMessagePath, 'utf8') : stdout;
+      rmSync(lastMessagePath, { force: true });
+
+      return { answer, turns: null, costUsd: null, models: [] };
+    },
+  },
+  'codex-orca': {
+    run: (options) => runCodexThroughOrca(options),
+    parse: ({ result }) => ({ answer: result.answer, turns: null, costUsd: null, models: [] }),
+  },
+};
+
+const ORCA_ANSWER_FILE = '.agent-probe-answer.md';
+
+const orca = (orcaArgs, timeoutMs = 120_000) => {
+  const result = spawnSync('orca', [...orcaArgs, '--json'], {
+    encoding: 'utf8',
+    shell: true,
+    timeout: timeoutMs,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+
+  try {
+    const parsed = JSON.parse(result.stdout);
+
+    return parsed.ok ? parsed.result : { error: JSON.stringify(parsed).slice(0, 400) };
+  } catch {
+    return { error: result.error?.message ?? `orca ${orcaArgs[0]} ${orcaArgs[1]}: no JSON output` };
+  }
+};
+
+/**
+ * Codex through an Orca terminal: a fresh interactive session per probe, rooted in the worktree.
+ *
+ * `codex exec` is the simpler route and stays available as `--agent codex`, but an account can
+ * reject the configured model for non-interactive use while accepting it in the TUI. This driver
+ * starts the TUI in its own Orca tab, sends the task, waits for it to go idle and closes the tab.
+ * It never touches a terminal it did not create.
+ *
+ * The TUI's screen is not a reliable transcript, so the task asks Codex to write its final reply
+ * into a file, which is read and removed before the diff is taken.
+ */
+const runCodexThroughOrca = async ({ cwd, prompt, timeoutMs }) => {
+  const worktreePath = cwd.replace(/\\/g, '/');
+  const created = orca([
+    'terminal',
+    'create',
+    '--worktree',
+    'active',
+    '--title',
+    '"agent-probe"',
+    '--command',
+    `"codex -C ${worktreePath} -s workspace-write -a never"`,
+  ]);
+  const handle = created.terminal?.handle;
+
+  if (!handle) {
+    return { ok: false, error: `orca terminal create failed: ${created.error}`, answer: '' };
+  }
+
+  try {
+    const ready = orca([
+      'terminal',
+      'wait',
+      '--terminal',
+      handle,
+      '--for',
+      'tui-idle',
+      '--timeout-ms',
+      '90000',
+    ]);
+
+    // A prompt typed into a TUI that is still starting is lost, so an unready terminal is a
+    // failed run rather than a probe the agent "did not answer".
+    if (!ready.wait?.satisfied) {
+      return { ok: false, error: 'codex TUI did not become ready', answer: '' };
+    }
+
+    const task =
+      'Harness note: this is an isolated copy of the repository. Do not start, stop or modify ' +
+      'Docker containers or databases, and do not install dependencies. When you are done, also ' +
+      `write your final reply verbatim into the file ${ORCA_ANSWER_FILE} at the repository root. ` +
+      `Task: ${prompt.replace(/\s+/g, ' ')}`;
+    // The text is one shell argument; double quotes are the only character that could end it.
+    const sent = orca([
+      'terminal',
+      'send',
+      '--terminal',
+      handle,
+      '--text',
+      `"${task.replace(/"/g, "'")}"`,
+      '--enter',
+    ]);
+
+    if (!sent.send?.accepted) {
+      return { ok: false, error: `orca terminal send failed: ${sent.error}`, answer: '' };
+    }
+
+    // Give the TUI a moment to leave the idle state before waiting for it to return there.
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 20_000));
+
+    const answerPath = join(cwd, ORCA_ANSWER_FILE);
+    const deadline = Date.now() + timeoutMs;
+    let idle = false;
+    let blockedBy = null;
+
+    // Idle with no answer file means Codex paused between steps, not that it finished.
+    while (Date.now() < deadline) {
+      const waited = orca(
+        ['terminal', 'wait', '--terminal', handle, '--for', 'tui-idle', '--timeout-ms', '120000'],
+        150_000,
+      );
+      idle = Boolean(waited.wait?.satisfied);
+
+      if (idle && existsSync(answerPath)) {
+        break;
+      }
+
+      // An idle TUI with no answer may be sitting on a dialog rather than thinking. The one seen
+      // in practice is the rate-limit prompt, which waits for a key press forever and otherwise
+      // looks exactly like a forty-minute hang. Never answer it: the choice is the account
+      // owner's, and one option changes their model.
+      if (idle) {
+        const screen = String(
+          orca(['terminal', 'show', '--terminal', handle]).terminal?.preview ?? '',
+        );
+
+        if (/rate limit/i.test(screen)) {
+          blockedBy = 'codex is waiting on a rate-limit dialog; the probe did not run';
+          break;
+        }
+      }
+    }
+
+    const answer = existsSync(answerPath) ? readFileSync(answerPath, 'utf8') : '';
+    rmSync(answerPath, { force: true });
+
+    if (answer) {
+      return { ok: true, error: null, answer };
+    }
+
+    return {
+      ok: false,
+      error: blockedBy ?? (idle ? 'no answer file written' : 'timed out'),
+      answer: '',
+    };
+  } finally {
+    orca(['terminal', 'close', '--terminal', handle]);
+    // The TUI holds the worktree open for a moment after its tab closes.
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 3_000));
+  }
+};
+
+/** Runs one headless agent in `cwd` and resolves with its stdout, or with the reason it failed. */
+const runAgent = ({ agent, cwd, prompt, timeoutMs }) =>
+  agent.run
+    ? agent.run({ cwd, prompt, timeoutMs })
+    : runAgentCommand({ agent, cwd, prompt, timeoutMs });
+
+const runAgentCommand = ({ agent, cwd, prompt, timeoutMs }) =>
+  new Promise((resolvePromise) => {
+    const child = spawn(agent.command, { cwd, shell: true, stdio: ['pipe', 'pipe', 'pipe'] });
 
     let stdout = '';
     let stderr = '';
@@ -111,46 +305,44 @@ const runAgent = ({ cwd, prompt, timeoutMs }) =>
     });
 
     // The prompt goes through stdin so shell quoting on Windows cannot alter it.
-    child.stdin.end(prompt);
+    child.stdin.end(agent.preamble + prompt);
   });
-
-const parseAgentOutput = (stdout) => {
-  try {
-    const parsed = JSON.parse(stdout);
-
-    return {
-      answer: typeof parsed.result === 'string' ? parsed.result : stdout,
-      turns: parsed.num_turns ?? null,
-      costUsd: parsed.total_cost_usd ?? null,
-      models: parsed.modelUsage ? Object.keys(parsed.modelUsage) : [],
-    };
-  } catch {
-    return { answer: stdout, turns: null, costUsd: null, models: [] };
-  }
-};
 
 const runProbe = async ({ probe, run, commit, args }) => {
   const worktree = mkdtempSync(join(tmpdir(), `agent-probe-${probe.id}-`));
-  const record = { probe: probe.id, rule: probe.rule, label: args.label, commit, run };
+  const agent = AGENTS[args.agent];
+  const record = {
+    probe: probe.id,
+    rule: probe.rule,
+    agent: args.agent,
+    label: args.label,
+    commit,
+    run,
+  };
 
   try {
     git(['worktree', 'add', '--detach', '--force', worktree, commit]);
 
     const result = await runAgent({
+      agent,
       cwd: worktree,
       prompt: probe.prompt,
       timeoutMs: args.timeoutMs,
     });
+
+    // Read the agent's own output first: for Codex that also removes its last-message file, which
+    // must not show up in the diff as something the agent changed.
+    const output = agent.parse({ stdout: result.stdout, cwd: worktree, result });
 
     // Untracked files are part of what the agent did; `git diff` alone would hide a new migration.
     git(['add', '-A'], worktree);
     const diff = git(['diff', '--cached', '--no-color'], worktree);
     const files = git(['diff', '--cached', '--name-status'], worktree).trim();
 
-    Object.assign(record, parseAgentOutput(result.stdout), {
+    Object.assign(record, output, {
       ok: result.ok,
       error: result.error,
-      stderr: result.stderr.slice(-2000),
+      stderr: (result.stderr ?? '').slice(-2000),
       files,
       diff,
     });

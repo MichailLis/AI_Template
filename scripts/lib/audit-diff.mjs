@@ -27,7 +27,7 @@ const severityRank = (severity) => {
  * Raised whenever a report cannot be trusted to describe a completed audit.
  *
  * This repository already carries tools that answer "no errors found" when the underlying
- * command never ran, and `CLAUDE.md` names them one by one. The rule for this module is the
+ * command never ran, and `docs/agent-tooling.md` names them one by one. The rule for this module is the
  * opposite: an audit that did not produce a well-formed report is a failure, never a clean
  * result, so every doubtful input raises instead of degrading to an empty finding set.
  */
