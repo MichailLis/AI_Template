@@ -7,6 +7,8 @@ import {
   GATE_MUTATIONS,
   applyMutation,
   checkGateCoverage,
+  classifyGateRun,
+  describeGateRun,
   extractPipelineGates,
 } from './lib/gate-mutations.mjs';
 
@@ -96,7 +98,46 @@ const main = () => {
   }
   console.log('');
 
-  // 3. Execute Mutations
+  // 3. Baseline: every gate must run, and pass, on the unmutated tree. A mutation is "caught" when
+  // its gate fails, so a gate that is already red, or that cannot be started at all, would make
+  // every one of its mutations look caught while proving nothing.
+  console.log('--- Baseline: gates on the unmutated tree ---');
+  const runnableMutations = GATE_MUTATIONS.filter(
+    (mutation) => !mutation.requiredFile || existsSync(join(rootDir, mutation.requiredFile)),
+  );
+  const baselineErrors = [];
+
+  for (const script of new Set(runnableMutations.map((mutation) => mutation.script))) {
+    const baseline = spawnSync(process.execPath, [join(rootDir, script)], {
+      cwd: rootDir,
+      stdio: 'pipe',
+      env: process.env,
+    });
+    const verdict = classifyGateRun(baseline);
+
+    if (verdict === 'passed') {
+      console.log(`[GREEN]  ${script}`);
+    } else if (verdict === 'not-run') {
+      baselineErrors.push(
+        `${script} could not be started (${describeGateRun(baseline)}); nothing can be concluded about its mutations`,
+      );
+    } else {
+      baselineErrors.push(
+        `${script} already fails without any mutation; its mutations would all look caught`,
+      );
+    }
+  }
+
+  if (baselineErrors.length > 0) {
+    console.error('\nFAILURE: mutation verification needs green, runnable gates to start from:');
+    for (const error of baselineErrors) {
+      console.error(`  - ${error}`);
+    }
+    process.exit(1);
+  }
+  console.log('');
+
+  // 4. Execute Mutations
   console.log('--- Executing Gate Mutations ---');
   let passedCount = 0;
   let failedCount = 0;
@@ -146,7 +187,7 @@ const main = () => {
       });
     } catch (err) {
       console.error(`Error applying mutation ${mutation.id}:`, err.message);
-      gateResult = { status: 0, error: err };
+      gateResult = { status: null, error: err };
     } finally {
       // 4. Restore original buffer and byte-check immediately
       writeFileSync(targetPath, originalBuffer);
@@ -161,10 +202,24 @@ const main = () => {
       activeRestore = null;
     }
 
-    // 5. Evaluate outcome (expected: non-zero exit code)
-    if (gateResult.status !== 0) {
+    // 5. Evaluate outcome. Only a gate that ran and exited non-zero has caught anything: a
+    // process that never started has no exit status, and counting that as "not zero" would report
+    // a catch for a check that did not happen.
+    const verdict = classifyGateRun(gateResult);
+
+    if (verdict === 'failed') {
       passedCount++;
       console.log(`[CAUGHT] ${mutation.id.padEnd(46)} (${mutation.gate})`);
+    } else if (verdict === 'not-run') {
+      failedCount++;
+      console.error(
+        `[NO RUN] ${mutation.id.padEnd(46)} (${mutation.gate}) did not run: ${describeGateRun(gateResult)}`,
+      );
+      leaks.push({
+        mutation,
+        gate: mutation.gate,
+        error: `Gate did not run (${describeGateRun(gateResult)}); the mutation was not tested`,
+      });
     } else {
       failedCount++;
       console.error(

@@ -254,6 +254,13 @@
       "rule": "Graph traces pass include_tests: true because `tests` is product code here.",
       "enforcedBy": [],
       "anchor": "include_tests: true"
+    },
+    {
+      "id": "tracker-committed-with-the-change",
+      "group": "B",
+      "rule": "The Beads issue export and journal are committed with every change, never left dirty.",
+      "enforcedBy": [],
+      "anchor": "The tracker lives in git too"
     }
   ],
   "dropped": [

@@ -593,3 +593,37 @@ export const checkGateCoverage = ({
     totalGates: pipelineGates.length,
   };
 };
+
+/**
+ * Verdict on one gate process, from the result of `spawnSync`.
+ *
+ * `status !== 0` is not "the gate failed". When the process cannot be started (EPERM in a sandbox,
+ * a missing binary) `status` is `null` and `error` is set, and when it is killed by a signal
+ * `status` is `null` too. Neither is evidence that the gate examined anything, so they are kept
+ * apart from a real non-zero exit.
+ *
+ * @param {{ status?: number | null, error?: unknown, signal?: string | null } | null | undefined} result
+ * @returns {'passed' | 'failed' | 'not-run'}
+ */
+export const classifyGateRun = (result) => {
+  if (!result || result.error || typeof result.status !== 'number') {
+    return 'not-run';
+  }
+
+  return result.status === 0 ? 'passed' : 'failed';
+};
+
+/** One line saying why a gate process did not run, for the report. */
+export const describeGateRun = (result) => {
+  if (!result) {
+    return 'no result';
+  }
+  if (result.error) {
+    return result.error.code ?? result.error.message ?? String(result.error);
+  }
+  if (result.signal) {
+    return `killed by ${result.signal}`;
+  }
+
+  return `exit status ${result.status}`;
+};

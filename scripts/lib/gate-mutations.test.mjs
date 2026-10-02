@@ -6,6 +6,8 @@ import {
   GATE_MUTATIONS,
   applyMutation,
   checkGateCoverage,
+  classifyGateRun,
+  describeGateRun,
   extractPipelineGates,
 } from './gate-mutations.mjs';
 
@@ -224,5 +226,40 @@ describe('GATE_MUTATIONS and GATE_EXCEPTIONS registry invariants', () => {
         `Exception for ${exception.gate} must provide a substantial reason`,
       );
     }
+  });
+});
+
+describe('classifyGateRun', () => {
+  it('reads a zero exit as passed and a non-zero exit as failed', () => {
+    assert.equal(classifyGateRun({ status: 0, error: undefined, signal: null }), 'passed');
+    assert.equal(classifyGateRun({ status: 1, error: undefined, signal: null }), 'failed');
+    assert.equal(classifyGateRun({ status: 2 }), 'failed');
+  });
+
+  // The bug this exists for: spawnSync that cannot start the process returns status null, and
+  // `status !== 0` then reported the mutation as caught by a gate that never ran.
+  it('does not treat a process that could not start as a failed gate', () => {
+    const spawnFailure = {
+      status: null,
+      signal: null,
+      error: Object.assign(new Error('spawn EPERM'), { code: 'EPERM' }),
+    };
+    assert.equal(classifyGateRun(spawnFailure), 'not-run');
+    assert.equal(describeGateRun(spawnFailure), 'EPERM');
+  });
+
+  it('does not treat a killed process as a failed gate', () => {
+    const killed = { status: null, signal: 'SIGTERM' };
+    assert.equal(classifyGateRun(killed), 'not-run');
+    assert.equal(describeGateRun(killed), 'killed by SIGTERM');
+  });
+
+  it('treats a missing result as not run', () => {
+    assert.equal(classifyGateRun(undefined), 'not-run');
+    assert.equal(classifyGateRun(null), 'not-run');
+  });
+
+  it('treats an error alongside a zero status as not run', () => {
+    assert.equal(classifyGateRun({ status: 0, error: new Error('boom') }), 'not-run');
   });
 });
