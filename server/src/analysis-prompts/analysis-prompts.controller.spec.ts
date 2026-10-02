@@ -1,5 +1,5 @@
 import { AnalysisPromptsController } from './analysis-prompts.controller';
-import { AnalysisPromptsService } from './analysis-prompts.service';
+import type { AnalysisPromptsService } from './analysis-prompts.service';
 
 describe('AnalysisPromptsController', () => {
   let controller: AnalysisPromptsController;

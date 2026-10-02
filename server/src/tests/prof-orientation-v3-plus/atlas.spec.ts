@@ -1,6 +1,6 @@
-import { ProfessionAtlasClientService } from '../../app-settings/profession-atlas-client.service';
-import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import { PrismaService } from '../../prisma.service';
+import type { ProfessionAtlasClientService } from '../../app-settings/profession-atlas-client.service';
+import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import type { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from './atlas';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from './types';
 import type { ProfOrientationSummary } from './types';

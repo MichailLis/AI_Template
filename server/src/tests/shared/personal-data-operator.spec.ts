@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { resolvePersonalDataOperator } from '../shared/personal-data-operator';
 
 describe('resolvePersonalDataOperator', () => {

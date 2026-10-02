@@ -1,9 +1,9 @@
 import { AdminSettingsController } from './admin-settings.controller';
-import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { OpenRouterClientService } from '../openrouter/openrouter.client';
-import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
+import type { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import type { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
+import type { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
+import type { OpenRouterClientService } from '../openrouter/openrouter.client';
+import type { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;

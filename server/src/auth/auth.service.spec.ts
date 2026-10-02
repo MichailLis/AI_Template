@@ -1,11 +1,11 @@
 import { ForbiddenException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import type { ConfigService } from '@nestjs/config';
+import type { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 
-import { PrismaService } from '../prisma.service';
+import type { PrismaService } from '../prisma.service';
 import { AuthService } from './auth.service';
-import { SigninDto } from './dto/auth.dto';
+import type { SigninDto } from './dto/auth.dto';
 
 jest.mock('argon2', () => ({
   hash: jest.fn(),

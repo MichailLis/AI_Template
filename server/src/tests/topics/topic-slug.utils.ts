@@ -1,4 +1,4 @@
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { normalizeSlug } from '../shared/domain.utils';
 
 export const ensureUniqueTopicSlug = async (prisma: PrismaService, baseSlug: string) => {

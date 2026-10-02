@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "packages": [
+    { "name": "@nestjs/core", "manifest": "server/package.json", "major": 11 },
+    { "name": "@nestjs/common", "manifest": "server/package.json", "major": 11 },
+    { "name": "prisma", "manifest": "server/package.json", "major": 7 },
+    { "name": "@prisma/client", "manifest": "server/package.json", "major": 7 },
+    { "name": "react", "manifest": "client/package.json", "major": 19 },
+    { "name": "react-dom", "manifest": "client/package.json", "major": 19 },
+    { "name": "vite", "manifest": "client/package.json", "major": 8 },
+    { "name": "tailwindcss", "manifest": "client/package.json", "major": 4 },
+    { "name": "orval", "manifest": "client/package.json", "major": 8 },
+    { "name": "zustand", "manifest": "client/package.json", "major": 5 },
+    { "name": "@tanstack/react-query", "manifest": "client/package.json", "major": 5 }
+  ]
+}

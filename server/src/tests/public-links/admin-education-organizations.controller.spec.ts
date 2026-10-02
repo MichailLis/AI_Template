@@ -3,7 +3,7 @@ import {
   type AdminUpdateEducationOrganizationDto,
 } from '../dto/tests-links.dto';
 import { TestsAdminEducationOrganizationsController } from '../public-links/admin-education-organizations.controller';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
+import type { TestsPublicLinkService } from '../public-links/public-link.service';
 
 describe('TestsAdminEducationOrganizationsController', () => {
   let controller: TestsAdminEducationOrganizationsController;

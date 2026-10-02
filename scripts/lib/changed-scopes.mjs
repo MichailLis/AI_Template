@@ -7,6 +7,7 @@ export const VERIFY_LOCAL_ORDER = [
   'prisma:generate',
   'verify:ai-guide',
   'verify:package-scripts',
+  'verify:stack',
   'verify:runtime-config',
   'test:scripts',
   'verify:api-mutator',
@@ -36,7 +37,8 @@ export const VERIFY_LOCAL_ORDER = [
  * - client/src/** -> verify:invariants, verify:maintainability, lint, client tests
  * - scripts/** -> test:scripts, verify:package-scripts, verify:invariants, verify:maintainability
  * - docker-compose.yml, server/Dockerfile, client/Dockerfile, client/vite.config.ts, server/package.json -> verify:runtime-config
- * - any package.json -> verify:package-scripts
+ * - any package.json -> verify:package-scripts, verify:stack
+ * - template/stack.json -> verify:stack
  * - template/*.json -> verify:contracts
  * - .github/workflows/ci.yml -> verify:package-scripts
  * - AI_GUIDE.md, README.md, AGENTS.md, CLAUDE.md, docs/**, .serena/memories/**, .claude/skills/**,
@@ -99,6 +101,11 @@ export const getScriptsForFile = (filePath) => {
 
   if (norm === 'package.json' || norm.endsWith('/package.json')) {
     scripts.add('verify:package-scripts');
+    scripts.add('verify:stack');
+  }
+
+  if (norm === 'template/stack.json') {
+    scripts.add('verify:stack');
   }
 
   if (norm.startsWith('template/') && norm.endsWith('.json')) {
@@ -217,6 +224,13 @@ export const getAffectedScopes = (relativePaths) => {
  */
 export const findCrlfCorruption = ({ relativePath, source }) => {
   if (typeof source !== 'string') {
+    return [];
+  }
+
+  // A NUL byte marks binary content, the same test git uses. Reading a PNG as UTF-8 does not
+  // throw, and its bytes can contain 0D 0D 0A by chance; a binary file has no line endings to
+  // corrupt, so that is not a finding.
+  if (source.includes('\u0000')) {
     return [];
   }
 

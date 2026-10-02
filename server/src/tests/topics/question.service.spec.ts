@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { TestsQuestionService } from '../topics/question.service';
 
 type QuestionOrderUpdateArgs = {

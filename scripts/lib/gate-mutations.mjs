@@ -171,6 +171,29 @@ export const GATE_MUTATIONS = [
     append: '\nUse `rtk tsc` to check compiler output.\n',
   },
 
+  {
+    id: 'ai-guide-agent-rule-dropped',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'CLAUDE.md',
+    description: 'Reword the "never disable a check" rule out of the always-loaded instructions',
+    action: 'replace',
+    search: 'Never disable a check, comment out failing logic, or hardcode around a gate',
+    replace: 'Prefer not to skip a check or work around a gate',
+  },
+  {
+    id: 'ai-guide-claude-import-removed',
+    gate: 'verify-ai-guide.mjs',
+    script: 'scripts/verify-ai-guide.mjs',
+    npmScript: 'verify:ai-guide',
+    file: 'CLAUDE.md',
+    description: 'Turn the @AGENTS.md import in CLAUDE.md into a plain mention',
+    action: 'replace',
+    search: '@AGENTS.md',
+    replace: '`AGENTS.md`',
+  },
+
   // 5. verify-runtime-config.mjs
   {
     id: 'runtime-config-backend-npm-install',
@@ -310,7 +333,31 @@ export const GATE_MUTATIONS = [
     skipReason: 'server/openapi.json is missing (requires gen:openapi)',
   },
 
-  // 8. verify-paired-rules.mjs
+  // 8. verify-stack.mjs
+  {
+    id: 'stack-major-bump',
+    gate: 'verify-stack.mjs',
+    script: 'scripts/verify-stack.mjs',
+    npmScript: 'verify:stack',
+    file: 'client/package.json',
+    description: 'Bump vite to the next major in client/package.json',
+    action: 'replace',
+    search: '"vite": "^8',
+    replace: '"vite": "^9',
+  },
+  {
+    id: 'stack-library-removed',
+    gate: 'verify-stack.mjs',
+    script: 'scripts/verify-stack.mjs',
+    npmScript: 'verify:stack',
+    file: 'client/package.json',
+    description: 'Remove zustand from client/package.json dependencies',
+    action: 'replace',
+    search: '"zustand": ',
+    replace: '"zustand-removed": ',
+  },
+
+  // 9. verify-paired-rules.mjs
   {
     id: 'paired-rules-constant-mismatch',
     gate: 'verify-paired-rules.mjs',

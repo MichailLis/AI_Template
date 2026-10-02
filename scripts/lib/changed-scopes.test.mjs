@@ -66,14 +66,21 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     ]);
   });
 
-  it('triggers verify:package-scripts for any package.json or ci.yml', () => {
+  it('triggers verify:package-scripts and verify:stack for any package.json, and ci.yml', () => {
     const rootPkg = getOrderedScripts(['package.json']);
-    assert.deepEqual(rootPkg, ['verify:package-scripts', 'format:check']);
+    assert.deepEqual(rootPkg, ['verify:package-scripts', 'verify:stack', 'format:check']);
 
     const serverPkg = getOrderedScripts(['server/package.json']);
     assert.deepEqual(serverPkg, [
       'verify:package-scripts',
+      'verify:stack',
       'verify:runtime-config',
+      'format:check',
+    ]);
+
+    assert.deepEqual(getOrderedScripts(['template/stack.json']), [
+      'verify:stack',
+      'verify:contracts',
       'format:check',
     ]);
 
@@ -146,11 +153,12 @@ describe('getScriptsForFile and getOrderedScripts', () => {
     const scripts = getOrderedScripts(changed);
 
     // Expected relative order according to verify:local:
-    // verify:ai-guide, verify:package-scripts, test:scripts, verify:invariants,
+    // verify:ai-guide, verify:package-scripts, verify:stack, test:scripts, verify:invariants,
     // verify:maintainability, format:check
     assert.deepEqual(scripts, [
       'verify:ai-guide',
       'verify:package-scripts',
+      'verify:stack',
       'test:scripts',
       'verify:invariants',
       'verify:maintainability',
@@ -198,6 +206,11 @@ describe('getAffectedScopes', () => {
 });
 
 describe('findCrlfCorruption', () => {
+  it('ignores binary content that happens to contain the byte sequence', () => {
+    const binary = '\u0089PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR\r\r\n\u0000';
+    assert.deepEqual(findCrlfCorruption({ relativePath: 'shot.png', source: binary }), []);
+  });
+
   it('returns empty array when there is no \\r\\r\\n corruption', () => {
     const cleanUnix = 'line 1\nline 2\nline 3\n';
     const cleanWindows = 'line 1\r\nline 2\r\nline 3\r\n';

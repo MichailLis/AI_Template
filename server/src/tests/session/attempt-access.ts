@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import type { PrismaService } from '../../prisma.service';
 import { attemptWithSessionInclude, type AttemptWithSessionData } from '../attempts/attempt.query';
 import { ensurePublicLinkAccessible } from '../public-links/public-link-access';
 

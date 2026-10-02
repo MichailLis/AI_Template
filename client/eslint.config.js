@@ -50,7 +50,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': [
-        'warn',
+        'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
       ],
 
