@@ -226,6 +226,7 @@ const runCodexThroughOrca = async ({ cwd, prompt, timeoutMs }) => {
     const answerPath = join(cwd, ORCA_ANSWER_FILE);
     const deadline = Date.now() + timeoutMs;
     let idle = false;
+    let blockedBy = null;
 
     // Idle with no answer file means Codex paused between steps, not that it finished.
     while (Date.now() < deadline) {
@@ -238,14 +239,35 @@ const runCodexThroughOrca = async ({ cwd, prompt, timeoutMs }) => {
       if (idle && existsSync(answerPath)) {
         break;
       }
+
+      // An idle TUI with no answer may be sitting on a dialog rather than thinking. The one seen
+      // in practice is the rate-limit prompt, which waits for a key press forever and otherwise
+      // looks exactly like a forty-minute hang. Never answer it: the choice is the account
+      // owner's, and one option changes their model.
+      if (idle) {
+        const screen = String(
+          orca(['terminal', 'show', '--terminal', handle]).terminal?.preview ?? '',
+        );
+
+        if (/rate limit/i.test(screen)) {
+          blockedBy = 'codex is waiting on a rate-limit dialog; the probe did not run';
+          break;
+        }
+      }
     }
 
     const answer = existsSync(answerPath) ? readFileSync(answerPath, 'utf8') : '';
     rmSync(answerPath, { force: true });
 
-    return answer
-      ? { ok: true, error: null, answer }
-      : { ok: false, error: idle ? 'no answer file written' : 'timed out', answer: '' };
+    if (answer) {
+      return { ok: true, error: null, answer };
+    }
+
+    return {
+      ok: false,
+      error: blockedBy ?? (idle ? 'no answer file written' : 'timed out'),
+      answer: '',
+    };
   } finally {
     orca(['terminal', 'close', '--terminal', handle]);
     // The TUI holds the worktree open for a moment after its tab closes.

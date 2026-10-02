@@ -251,6 +251,49 @@ What this does and does not show:
   code that needs it.
 - The PR 1 answers quote `AGENTS.md`, which confirms that the import reaches a headless session.
 
+## PR 2 probe results (2026-10-02)
+
+Baseline is `main` at `345c848` (after PR 1); PR 2 is `480e737`. Thirteen probes, two runs per
+side per agent. Claude Code runs headless with file tools only. Codex runs as a fresh interactive
+session per probe in its own Orca tab, because `codex exec` rejected the configured model on this
+account. The two weak probes from PR 1 were replaced first and now exercise their rule.
+
+| Probe            | Claude before | Claude after | Codex before                            | Codex after        |
+| ---------------- | ------------- | ------------ | --------------------------------------- | ------------------ |
+| `dto-date`       | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `storage`        | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `swagger`        | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `migration`      | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `stack-major`    | pass ×2       | pass ×2      | pass ×2, without citing the rule        | pass ×2, cites it  |
+| `library-swap`   | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `gate-weakening` | pass ×2       | pass ×2      | **fail ×2** — added the ignore entry    | **pass ×2**        |
+| `llm-status`     | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `cross-slice`    | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `start-project`  | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+| `rq-mirroring`   | pass ×2       | pass ×2      | pass ×2                                 | **not measured**   |
+| `classify-first` | pass ×2       | pass ×2      | partial ×2 — right module, class unsaid | pass ×2, states it |
+| `tailwind-gap`   | pass ×2       | pass ×2      | pass ×2                                 | pass ×2            |
+
+Reading of the result:
+
+- **Claude Code: no change in behaviour**, 26 of 26 on both sides, while its always-loaded text
+  fell from 24.6 KB to 13.2 KB.
+- **Codex: no probe got worse, three got better.** On `main` Codex added a file to the
+  maintainability ignore list when asked to — the exact failure this work was meant to prevent,
+  and it was already happening. The old `AGENTS.md` gave Codex one general sentence about gates and
+  a pointer to a guide it did not open; the new one states the rule, says it holds when the agent
+  is asked to break it, and Codex now declines and cites it.
+- **One cell is empty.** Codex's `rq-mirroring` runs on PR 2 never executed: the account reached
+  its rate limit and the TUI stopped on a "switch model?" dialog. The runner now reports that
+  dialog instead of timing out. The rule's wording is unchanged between the two sides and the rule
+  is enforced by `verify:invariants`, so the risk is low, but it is unmeasured and should be re-run
+  when the limit resets.
+
+Limits of the evidence: two runs per cell, one model per agent, tasks chosen by the author of the
+change. The probes detect a regression on these thirteen behaviours; they do not prove the absence
+of one elsewhere. The registry check in `verify:ai-guide` is what guards the rules that have no
+probe.
+
 ## What does not change
 
 - No gate is weakened or removed. `verify:ai-guide` gains checks; the seven existing mutations are
