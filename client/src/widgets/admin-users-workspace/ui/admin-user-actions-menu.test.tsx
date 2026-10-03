@@ -160,6 +160,28 @@ describe('AdminUserActionsMenu', () => {
     expect(screen.queryByRole('button', { name: /отключить доступ/i })).not.toBeInTheDocument();
   });
 
+  /** Находка аудита D01: меню в портале закрывается по Escape и сообщает состояние через aria-expanded. */
+  it('closes on Escape and exposes aria-expanded on the trigger', async () => {
+    renderMenu({ id: 3, email: 'member@example.com', role: 'USER' });
+
+    expect(screen.getByRole('button', { name: 'Действия для member@example.com' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('asks to open the menu when the trigger is activated', async () => {
+    renderMenu({ id: 3, email: 'member@example.com', role: 'USER' }, { isOpen: false });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Действия для member@example.com' }));
+
+    expect(onToggleOpen).toHaveBeenCalledWith(3);
+  });
+
   it('renders no actions until the menu is opened', () => {
     renderMenu({ id: 3, email: 'member@example.com', role: 'USER' }, { isOpen: false });
 

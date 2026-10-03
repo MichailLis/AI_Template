@@ -91,6 +91,8 @@ export function useAdminEducationOrganizationsWorkspace() {
     organizationsTotal: listOrganizationsQuery.data?.total ?? 0,
     organizationsTotalPages: listOrganizationsQuery.data?.totalPages ?? 1,
     isFetchingOrganizations: listOrganizationsQuery.isFetching,
+    isOrganizationsError: listOrganizationsQuery.isError,
+    retryOrganizations: () => void listOrganizationsQuery.refetch(),
     openCreateEditor: () => setEditorState({ mode: 'create' }),
     openEditEditor: (organization: EducationOrganizationItem) =>
       setEditorState({ mode: 'edit', organization }),

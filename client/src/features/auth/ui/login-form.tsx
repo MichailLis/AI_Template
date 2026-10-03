@@ -134,7 +134,12 @@ export const LoginForm = () => {
             <FormItem className="grid gap-2 space-y-0">
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="m@example.com" {...field} />
+                <Input
+                  inputMode="email"
+                  autoComplete="username"
+                  placeholder="m@example.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -147,7 +152,7 @@ export const LoginForm = () => {
             <FormItem className="grid gap-2 space-y-0">
               <FormLabel>Пароль</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input type="password" autoComplete="current-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

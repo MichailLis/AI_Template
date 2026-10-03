@@ -171,6 +171,7 @@ describe('PublicLinksAttemptDetailDialog', () => {
               questionId: 12,
               questionType: 'MULTI_CHOICE',
               questionTitle: 'Что тебе интереснее?',
+              answerText: 'Работать в команде, Выступать публично',
               answerPayload: { optionIds: [3, 5] },
               updatedAt: '2026-05-12T11:10:00.000Z',
             },
@@ -190,5 +191,44 @@ describe('PublicLinksAttemptDetailDialog', () => {
     expect(technicalDetails).toBeInTheDocument();
     expect(technicalDetails).not.toHaveAttribute('open');
     expect(technicalDetails?.textContent).toContain('"optionIds"');
+  });
+
+  /** Находка UI-аудита 2026-10-02 (H01): без раскрытия «Технических данных» ответа не было видно. */
+  it('shows the answer in words outside the collapsed technical block', () => {
+    render(
+      <PublicLinksAttemptDetailDialog
+        isOpen
+        detailView="answers"
+        detailAttempt={{
+          ...detailAttempt,
+          answers: [
+            {
+              questionId: 12,
+              questionType: 'MULTI_CHOICE',
+              questionTitle: 'Что тебе интереснее?',
+              answerText: 'Работать в команде, Выступать публично',
+              answerPayload: ['team', 'speaking'],
+              updatedAt: '2026-05-12T11:10:00.000Z',
+            },
+            {
+              questionId: 13,
+              questionType: 'TEXT',
+              questionTitle: 'Опиши проект',
+              answerText: null,
+              answerPayload: '',
+              updatedAt: '2026-05-12T11:11:00.000Z',
+            },
+          ],
+        }}
+        isLoading={false}
+        onClose={vi.fn()}
+        formatDateTime={(value) => value ?? '—'}
+        toPrettyJson={(value) => JSON.stringify(value, null, 2)}
+      />,
+    );
+
+    const answer = screen.getByText('Работать в команде, Выступать публично');
+    expect(answer.closest('details')).toBeNull();
+    expect(screen.getByText('Ответ не дан')).toBeInTheDocument();
   });
 });

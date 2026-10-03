@@ -221,17 +221,31 @@ function AttemptRowCells({
       </TableCell>
       <TableCell className="whitespace-nowrap">{formatDateTime(attempt.startedAt)}</TableCell>
       <TableCell className="text-right">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpenAttemptDetails(attempt.attemptId, 'answers');
-          }}
-        >
-          Ответы
-        </Button>
+        {/* Клик по строке удобен мышью, но строка не получает фокус: оба режима открываются и кнопками. */}
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenAttemptDetails(attempt.attemptId, 'analysis');
+            }}
+          >
+            Анализ
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenAttemptDetails(attempt.attemptId, 'answers');
+            }}
+          >
+            Ответы
+          </Button>
+        </div>
       </TableCell>
     </>
   );
@@ -288,7 +302,7 @@ export function PublicLinksAttemptsTableCard({
       onSort: () => toggleSort('started'),
       sortDirection: sortField === 'started' ? sortDirection : null,
     },
-    { id: 'view', header: 'Ответы', className: 'min-w-24 text-right' },
+    { id: 'view', header: 'Подробнее', className: 'min-w-48 text-right' },
   ];
 
   return (
@@ -297,7 +311,7 @@ export function PublicLinksAttemptsTableCard({
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
           {selectedPublicLink
-            ? `Тестов пройдено: ${total}. Клик по строке открывает анализ; сортировка действует в пределах страницы.`
+            ? `Тестов пройдено: ${total}. Анализ и ответы открываются кнопками в строке или кликом по строке; сортировка действует в пределах страницы.`
             : 'Сначала выберите ссылку'}
         </CardDescription>
       </CardHeader>

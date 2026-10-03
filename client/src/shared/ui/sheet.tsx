@@ -2,6 +2,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import * as React from 'react';
 
+import { useRestoreFocus } from '@/shared/lib/use-restore-focus';
 import { cn } from '@/shared/lib/utils';
 
 const Sheet = DialogPrimitive.Root;
@@ -30,29 +31,39 @@ interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof Dialog
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ className, children, closeDisabled = false, ...props }, ref) => (
-  <DialogPrimitive.Portal>
-    <SheetOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-screen flex-col border-l border-admin-border bg-background shadow-2xl outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:w-[min(720px,100vw)]',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close
-        className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-md text-admin-muted transition-colors hover:bg-admin-panel-muted hover:text-admin-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-        disabled={closeDisabled}
-        aria-label="Закрыть"
-        title="Закрыть"
-      >
-        <X aria-hidden="true" className="size-4" />
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPrimitive.Portal>
-));
+>(
+  (
+    { className, children, closeDisabled = false, onOpenAutoFocus, onCloseAutoFocus, ...props },
+    ref,
+  ) => {
+    const focusHandlers = useRestoreFocus({ onOpenAutoFocus, onCloseAutoFocus });
+
+    return (
+      <DialogPrimitive.Portal>
+        <SheetOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            'fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-screen flex-col border-l border-admin-border bg-background shadow-2xl outline-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:w-[min(720px,100vw)]',
+            className,
+          )}
+          {...focusHandlers}
+          {...props}
+        >
+          {children}
+          <DialogPrimitive.Close
+            className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-md text-admin-muted transition-colors hover:bg-admin-panel-muted hover:text-admin-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            disabled={closeDisabled}
+            aria-label="Закрыть"
+            title="Закрыть"
+          >
+            <X aria-hidden="true" className="size-4" />
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    );
+  },
+);
 SheetContent.displayName = DialogPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

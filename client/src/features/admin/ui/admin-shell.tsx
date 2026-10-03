@@ -1,5 +1,5 @@
 import { LogOut, Menu, Search } from 'lucide-react';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
@@ -158,7 +158,7 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
           <p className={adminClassNames.header.eyebrow}>
             {activeNavItem?.description ?? 'Операции'}
           </p>
-          <p className={adminClassNames.header.title}>{activeNavItem?.label ?? 'Админ-панель'}</p>
+          <h1 className={adminClassNames.header.title}>{activeNavItem?.label ?? 'Админ-панель'}</h1>
         </div>
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <form className="hidden items-center gap-2 md:flex" onSubmit={handleSearchSubmit}>
@@ -238,6 +238,18 @@ export const AdminShell = ({
   isLoggingOut,
 }: AdminShellProps) => {
   const activeNavHref = resolveActiveNavHref(activePath);
+  const sectionLabel = navItems.find((item) => item.href === activeNavHref)?.label;
+
+  // Одинаковый <title> на всех разделах делал вкладки и историю неразличимыми (WCAG 2.4.2).
+  useEffect(() => {
+    const previousTitle = document.title;
+
+    document.title = sectionLabel ? `${sectionLabel} — Админка` : 'Админка';
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [sectionLabel]);
 
   return (
     <div className={adminClassNames.shell.root}>

@@ -11,6 +11,7 @@ import {
 } from '@/shared/ui/admin-design-tokens';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { hasV3PlusReport } from './test-analytics-v3.model';
@@ -24,6 +25,7 @@ interface TestAnalyticsSummaryCardProps {
   isFetching: boolean;
   isEnabled: boolean;
   isError: boolean;
+  onRetry: () => void;
   actions: ReactNode;
 }
 
@@ -207,6 +209,7 @@ export function TestAnalyticsSummaryCard({
   isFetching,
   isEnabled,
   isError,
+  onRetry,
   actions,
 }: TestAnalyticsSummaryCardProps) {
   return (
@@ -247,7 +250,14 @@ export function TestAnalyticsSummaryCard({
         ) : null}
 
         {isEnabled && isError ? (
-          <AdminStateBlock tone="danger">
+          <AdminStateBlock
+            tone="danger"
+            action={
+              <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+                Повторить
+              </Button>
+            }
+          >
             <span className="inline-flex items-center gap-2">
               <AlertTriangle className="size-4" />
               Не удалось загрузить сводный отчет.

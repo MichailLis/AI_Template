@@ -100,6 +100,14 @@ export class TestsAdminAttemptService {
           orderBy: {
             updatedAt: 'desc',
           },
+          include: {
+            question: {
+              select: {
+                options: { select: { label: true, value: true } },
+                sliderBands: { select: { minValue: true, maxValue: true, label: true } },
+              },
+            },
+          },
         },
         analysis: true,
       },

@@ -37,7 +37,7 @@ export function AdminListToolbar<T extends string>({
   onSearchChange,
 }: AdminListToolbarProps<T>) {
   return (
-    <div className="flex flex-col gap-3 border-b border-admin-border p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-admin-border p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <AdminTabs
         ariaLabel={tabsLabel}
         tabs={tabs}
@@ -45,7 +45,8 @@ export function AdminListToolbar<T extends string>({
         onTabChange={onTabChange}
       />
 
-      <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+      {/* flex-wrap: рядом с боковым меню на 768–896 px строка не помещалась и кнопка «Создать» вылезала за карточку. */}
+      <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:max-w-full sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
         <Input
           id={searchId}
           value={searchValue}

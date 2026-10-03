@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
@@ -161,7 +162,7 @@ function TestsListItemRow({
               Есть неопубликованные изменения
             </Badge>
           ) : null}
-          <span>{topic.draftQuestionCount} вопросов</span>
+          <span>{`${topic.draftQuestionCount} ${pluralizeRu(topic.draftQuestionCount, ['вопрос', 'вопроса', 'вопросов'])}`}</span>
           <span>{`Активных ссылок: ${topic.activePublicLinkCount}`}</span>
           <span>{`Прохождений: ${topic.attemptCount}`}</span>
           <span>Обновлен {formatDateTime(topic.updatedAt)}</span>

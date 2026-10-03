@@ -105,20 +105,20 @@ describe('AdminEducationOrganizationsWorkspace', () => {
     renderWorkspace();
 
     expect(apiMocks.listParams).toHaveBeenLastCalledWith({ page: 1, limit: 10 });
-    expect(screen.getByRole('button', { name: 'Все заведения' })).toHaveAttribute(
-      'aria-pressed',
+    expect(screen.getByRole('tab', { name: 'Все заведения' })).toHaveAttribute(
+      'aria-selected',
       'true',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Требуют заполнения' }));
+    await user.click(screen.getByRole('tab', { name: 'Требуют заполнения' }));
 
     expect(apiMocks.listParams).toHaveBeenLastCalledWith({
       page: 1,
       limit: 10,
       needsPersonalData: true,
     });
-    expect(screen.getByRole('button', { name: 'Требуют заполнения' })).toHaveAttribute(
-      'aria-pressed',
+    expect(screen.getByRole('tab', { name: 'Требуют заполнения' })).toHaveAttribute(
+      'aria-selected',
       'true',
     );
   });

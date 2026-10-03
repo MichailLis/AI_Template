@@ -14,6 +14,8 @@ export type AdminPublicAttemptDetailResponseDtoAnswersItem = {
   questionId: number;
   questionType: string;
   questionTitle: string;
+  /** @nullable */
+  answerText: string | null;
   answerPayload: unknown;
   updatedAt: string;
 };

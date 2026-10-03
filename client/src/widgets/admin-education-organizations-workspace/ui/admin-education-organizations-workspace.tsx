@@ -1,5 +1,5 @@
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
-import { Button } from '@/shared/ui/button';
+import { AdminTabs } from '@/shared/ui/admin-tabs';
 
 import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
@@ -16,6 +16,8 @@ export function AdminEducationOrganizationsWorkspace() {
     organizationsTotal,
     organizationsTotalPages,
     isFetchingOrganizations,
+    isOrganizationsError,
+    retryOrganizations,
     openCreateEditor,
     openEditEditor,
     closeEditor,
@@ -31,26 +33,15 @@ export function AdminEducationOrganizationsWorkspace() {
 
       {/* Незаполненные реквизиты встречаются у многих заведений; фильтр отбирает их на сервере,
           чтобы не листать страницы. */}
-      <div className="flex flex-wrap gap-2" aria-label="Фильтр заведений">
-        <Button
-          type="button"
-          size="sm"
-          variant={needsPersonalDataOnly ? 'outline' : 'secondary'}
-          aria-pressed={!needsPersonalDataOnly}
-          onClick={() => changeNeedsPersonalDataOnly(false)}
-        >
-          Все заведения
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={needsPersonalDataOnly ? 'secondary' : 'outline'}
-          aria-pressed={needsPersonalDataOnly}
-          onClick={() => changeNeedsPersonalDataOnly(true)}
-        >
-          Требуют заполнения
-        </Button>
-      </div>
+      <AdminTabs
+        ariaLabel="Фильтр заведений"
+        tabs={[
+          { value: 'all', label: 'Все заведения' },
+          { value: 'needs-data', label: 'Требуют заполнения' },
+        ]}
+        activeTab={needsPersonalDataOnly ? 'needs-data' : 'all'}
+        onTabChange={(tab) => changeNeedsPersonalDataOnly(tab === 'needs-data')}
+      />
 
       <EducationOrganizationsListCard
         organizations={organizations}
@@ -58,6 +49,8 @@ export function AdminEducationOrganizationsWorkspace() {
         total={organizationsTotal}
         totalPages={organizationsTotalPages}
         isFetching={isFetchingOrganizations}
+        isError={isOrganizationsError}
+        onRetry={retryOrganizations}
         onEditOrganization={openEditEditor}
         onPreviousPage={handlePreviousPage}
         onNextPage={handleNextPage}

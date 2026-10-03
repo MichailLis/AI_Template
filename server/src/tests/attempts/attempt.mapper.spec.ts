@@ -1,4 +1,4 @@
-import { mapAttemptListItem } from './attempt.mapper';
+import { describeAnswer, mapAttemptListItem } from './attempt.mapper';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from '../prof-orientation-v3-plus/types';
 
 const createAttempt = (analysis: unknown) =>
@@ -79,5 +79,51 @@ describe('mapAttemptListItem analysis result kind', () => {
       analysisStatus: null,
       analysisResultKind: 'MISSING',
     });
+  });
+});
+
+/** Находка UI-аудита 2026-10-02 (H01): в «Ответах студента» был виден только сырой JSON. */
+describe('describeAnswer', () => {
+  const question = {
+    options: [
+      { label: 'Исследовать и разбираться', value: 'research' },
+      { label: 'Работать в команде', value: 'team' },
+      { label: 'Выступать публично', value: 'speaking' },
+    ],
+    sliderBands: [
+      { minValue: 1, maxValue: 3, label: 'Некомфортно' },
+      { minValue: 4, maxValue: 5, label: 'Комфортно' },
+    ],
+  };
+
+  it('replaces an option code with the label the student saw', () => {
+    expect(describeAnswer('research', question)).toBe('Исследовать и разбираться');
+  });
+
+  it('lists every chosen option of a multiple choice by label', () => {
+    expect(describeAnswer(['team', 'speaking'], question)).toBe(
+      'Работать в команде, Выступать публично',
+    );
+  });
+
+  it('keeps free text as typed', () => {
+    expect(describeAnswer('Собираю роботов', { options: [], sliderBands: [] })).toBe(
+      'Собираю роботов',
+    );
+  });
+
+  it('puts the slider band next to the number', () => {
+    expect(describeAnswer(1, question)).toBe('1 — Некомфортно');
+    expect(describeAnswer(7, question)).toBe('7');
+  });
+
+  it('falls back to the code when the option no longer exists', () => {
+    expect(describeAnswer('removed', question)).toBe('removed');
+  });
+
+  it('returns null for an empty or unknown answer', () => {
+    expect(describeAnswer('  ', question)).toBeNull();
+    expect(describeAnswer([], question)).toBeNull();
+    expect(describeAnswer({ unexpected: true }, question)).toBeNull();
   });
 });

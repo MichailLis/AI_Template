@@ -18,6 +18,7 @@ interface AttemptAnswer {
   questionId: number;
   questionType: string;
   questionTitle: string;
+  answerText: string | null;
   answerPayload: unknown;
   updatedAt: string;
 }
@@ -213,6 +214,13 @@ export function PublicLinksAttemptDetailDialog({
                     <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
                       #{answer.questionId} • {getQuestionTypeLabel(answer.questionType)} •{' '}
                       {formatDateTime(answer.updatedAt)}
+                    </p>
+                    {/* Ответ словами виден сразу: раньше без раскрытия «Технических данных» не было
+                        видно, что ученик ответил, а внутри лежали коды вариантов. */}
+                    <p
+                      className={`mt-2 whitespace-pre-wrap text-sm ${adminClassNames.text.heading}`}
+                    >
+                      {answer.answerText ?? 'Ответ не дан'}
                     </p>
                     {/* Сырой ответ нужен только при разборе проблемы, поэтому он свернут. */}
                     <details className="mt-2">

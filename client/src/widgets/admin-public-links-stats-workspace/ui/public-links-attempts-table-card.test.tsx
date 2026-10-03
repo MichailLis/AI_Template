@@ -349,6 +349,20 @@ describe('PublicLinksAttemptsTableCard', () => {
     expect(onOpenAttemptDetails).toHaveBeenCalledTimes(2);
   });
 
+  /** Находка аудита D03: строка не получает фокус, поэтому анализ должен открываться и кнопкой. */
+  it('opens the analysis from a keyboard-reachable row button', async () => {
+    const user = userEvent.setup();
+    const onOpenAttemptDetails = vi.fn();
+    renderTable({ onOpenAttemptDetails });
+
+    const analysisButton = screen.getAllByRole('button', { name: 'Анализ' })[0];
+    analysisButton.focus();
+    await user.keyboard('{Enter}');
+
+    expect(onOpenAttemptDetails).toHaveBeenCalledTimes(1);
+    expect(onOpenAttemptDetails).toHaveBeenLastCalledWith(401, 'analysis');
+  });
+
   it('reports the page size back to the caller', async () => {
     const user = userEvent.setup();
     const onPageSizeChange = vi.fn();

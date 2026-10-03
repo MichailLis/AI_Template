@@ -1,6 +1,7 @@
 import { BarChart3, ListFilter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
@@ -132,7 +133,7 @@ function LinkNavigationFilters({
 
             return (
               <option key={link.id} value={link.id}>
-                {`${link.shortCode} — ${attemptsCount} попыток`}
+                {`${link.shortCode} — ${attemptsCount} ${pluralizeRu(attemptsCount, ['попытка', 'попытки', 'попыток'])}`}
               </option>
             );
           })}
@@ -251,12 +252,12 @@ export function AdminAnalyticsNavigationCard({
         >
           <div className="flex items-center gap-2">
             <ListFilter className="size-4" />
-            <h3
+            <h2
               id={ANALYTICS_FILTERS_HEADING_ID}
               className={`text-sm font-medium ${adminClassNames.text.heading}`}
             >
               Фильтры
-            </h3>
+            </h2>
           </div>
           <LinkNavigationFilters {...navigationProps} />
           {reportFilters}

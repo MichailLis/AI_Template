@@ -13,6 +13,42 @@ import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
 
+interface AnswerQuestionLabels {
+  options: Array<{ label: string; value: string }>;
+  sliderBands: Array<{ minValue: number; maxValue: number; label: string }>;
+}
+
+/**
+ * Ответ ученика словами, как он его видел: подпись варианта вместо его кода, деление слайдера рядом
+ * с числом. Без этого администратор видел только сырой JSON («research», ["team"], 1) под
+ * «Техническими данными ответа». null — если ответ пустой или формата, который не разобрать.
+ */
+export const describeAnswer = (
+  answerPayload: Prisma.JsonValue,
+  question: AnswerQuestionLabels | null | undefined,
+): string | null => {
+  const labelOf = (value: string) =>
+    question?.options.find((option) => option.value === value)?.label ?? value;
+
+  if (typeof answerPayload === 'string') {
+    const text = answerPayload.trim();
+    return text ? labelOf(text) : null;
+  }
+  if (Array.isArray(answerPayload)) {
+    const labels = answerPayload
+      .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
+      .map(labelOf);
+    return labels.length ? labels.join(', ') : null;
+  }
+  if (typeof answerPayload === 'number' && Number.isFinite(answerPayload)) {
+    const band = question?.sliderBands.find(
+      (item) => answerPayload >= item.minValue && answerPayload <= item.maxValue,
+    );
+    return band ? `${answerPayload} — ${band.label}` : String(answerPayload);
+  }
+  return null;
+};
+
 const mapPublicQuestion = (
   question: AttemptWithSessionData['topicVersion']['questions'][number],
 ) => {
@@ -69,6 +105,7 @@ interface AttemptDetailRecord {
     questionTitleSnapshot: string;
     answerPayload: Prisma.JsonValue;
     updatedAt: Date;
+    question?: AnswerQuestionLabels | null;
   }>;
   analysis: {
     providerMode: string;
@@ -228,6 +265,7 @@ export const mapAttemptDetail = (
       questionId: answer.questionId,
       questionType: answer.questionTypeSnapshot,
       questionTitle: answer.questionTitleSnapshot,
+      answerText: describeAnswer(answer.answerPayload, answer.question),
       answerPayload: answer.answerPayload,
       updatedAt: answer.updatedAt.toISOString(),
     })),

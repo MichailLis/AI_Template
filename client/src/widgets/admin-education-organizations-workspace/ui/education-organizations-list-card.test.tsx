@@ -46,6 +46,8 @@ describe('EducationOrganizationsListCard', () => {
         total={2}
         totalPages={1}
         isFetching={false}
+        isError={false}
+        onRetry={vi.fn()}
         onEditOrganization={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
@@ -68,6 +70,8 @@ describe('EducationOrganizationsListCard', () => {
         total={2}
         totalPages={1}
         isFetching={false}
+        isError={false}
+        onRetry={vi.fn()}
         onEditOrganization={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
@@ -89,6 +93,8 @@ describe('EducationOrganizationsListCard', () => {
         total={1}
         totalPages={1}
         isFetching={false}
+        isError={false}
+        onRetry={vi.fn()}
         onEditOrganization={onEditOrganization}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
@@ -100,5 +106,29 @@ describe('EducationOrganizationsListCard', () => {
     await user.keyboard('{Enter}');
 
     expect(onEditOrganization).toHaveBeenCalledWith(organization);
+  });
+
+  /** Находка аудита D16: ошибка загрузки выглядела как пустой список, и заведение заводили заново. */
+  it('shows a load error with a retry instead of the empty-list message', async () => {
+    const onRetry = vi.fn();
+    render(
+      <EducationOrganizationsListCard
+        organizations={[]}
+        page={1}
+        total={0}
+        totalPages={1}
+        isFetching={false}
+        isError
+        onRetry={onRetry}
+        onEditOrganization={vi.fn()}
+        onPreviousPage={vi.fn()}
+        onNextPage={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Пока нет учебных заведений')).not.toBeInTheDocument();
+    expect(screen.getByText(/Не удалось загрузить учебные заведения/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

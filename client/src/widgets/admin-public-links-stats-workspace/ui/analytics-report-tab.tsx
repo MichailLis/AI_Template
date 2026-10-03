@@ -29,6 +29,7 @@ export function AnalyticsReportTab({ report }: AnalyticsReportTabProps) {
         isFetching={analyticsSummaryQuery.isFetching}
         isEnabled={isAnalyticsQueryEnabled}
         isError={analyticsSummaryQuery.isError}
+        onRetry={() => void analyticsSummaryQuery.refetch()}
         actions={
           <TestAnalyticsExportActions
             canExport={Boolean(analyticsSummary) && isAnalyticsQueryEnabled}

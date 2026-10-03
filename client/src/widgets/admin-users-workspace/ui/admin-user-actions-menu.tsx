@@ -14,7 +14,7 @@ import { useId } from 'react';
 import { cn } from '@/shared/lib/utils';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 
 import type { UserRole } from './admin-users-workspace.types';
 import type { ReactNode } from 'react';
@@ -115,20 +115,21 @@ export function AdminUserActionsMenu({
   };
 
   return (
-    <div className="relative flex justify-end">
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`Действия для ${user.email}`}
-        onClick={() => onToggleOpen(user.id)}
-        disabled={pendingUserId === user.id}
-      >
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-
-      {isOpen ? (
-        <Card className={adminClassNames.actionMenu.card}>
-          <CardContent className={adminClassNames.actionMenu.content}>
+    <div className="flex justify-end">
+      <Popover open={isOpen} onOpenChange={(open) => (open ? onToggleOpen(user.id) : onClose())}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Действия для ${user.email}`}
+            disabled={pendingUserId === user.id}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        {/* Меню в портале: обертка таблицы с overflow-auto больше не обрезает пункты. */}
+        <PopoverContent align="end" className={adminClassNames.actionMenu.card}>
+          <div className={adminClassNames.actionMenu.content}>
             <MenuItem disabled={isPending} onSelect={select(onEdit)}>
               <Pencil className="mr-2 h-4 w-4" />
               Изменить данные
@@ -192,9 +193,9 @@ export function AdminUserActionsMenu({
                 Нельзя применить к своей учетке: вы потеряете доступ к админке.
               </p>
             ) : null}
-          </CardContent>
-        </Card>
-      ) : null}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

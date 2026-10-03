@@ -64,6 +64,18 @@ export function PromptEditorVariablesSection({
           </div>
         ) : null}
 
+        {/* Поля заполнены по умолчанию, плейсхолдер не виден: шапка колонок подсказывает, где ключ, а где значение. */}
+        {variables.length > 0 ? (
+          <div
+            aria-hidden="true"
+            className={`hidden items-center gap-2 px-1 text-xs font-medium md:grid md:grid-cols-[170px_minmax(0,1fr)_auto] ${adminClassNames.text.muted}`}
+          >
+            <span>Ключ</span>
+            <span>Значение</span>
+            <span className="w-9" />
+          </div>
+        ) : null}
+
         {variables.map((variable) => (
           <div
             key={variable.id}

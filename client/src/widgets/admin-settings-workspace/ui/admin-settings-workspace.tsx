@@ -140,12 +140,14 @@ export function AdminSettingsWorkspace() {
       onError: (error) => {
         toast.error(getApiErrorMessage(error));
       },
-      onSuccess: async () => {
+      onSuccess: () => {
         setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' });
-        await queryClient.invalidateQueries({
+        toast.success('Настройки Атласа профессий сохранены');
+        // Не ждем: перечитывание настроек заново проверяет покрытие через API Атласа, и при
+        // недоступном Атласе кнопка висела в «Сохраняем…» до тайм-аута, хотя адреса уже сохранены.
+        void queryClient.invalidateQueries({
           queryKey: getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey(),
         });
-        toast.success('Настройки Атласа профессий сохранены');
       },
     },
   });

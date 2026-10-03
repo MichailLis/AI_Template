@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { formatDateTime } from '@/shared/lib/date-format';
 
@@ -70,6 +71,7 @@ const renderCard = (summary: AdminTestAnalyticsSummaryDto) =>
       isFetching={false}
       isEnabled
       isError={false}
+      onRetry={() => {}}
       actions={null}
     />,
   );
@@ -188,5 +190,29 @@ describe('TestAnalyticsSummaryCard V3+ figures', () => {
     expect(screen.getByText('V3+ результаты')).toBeInTheDocument();
     expect(screen.getByText('результатов V3+ пока нет')).toBeInTheDocument();
     expect(screen.queryByText(/от готового анализа/)).not.toBeInTheDocument();
+  });
+});
+
+/** Находка аудита D17: ошибка сводного отчета не давала повторить запрос без перезагрузки. */
+describe('TestAnalyticsSummaryCard load error', () => {
+  afterEach(cleanup);
+
+  it('offers a retry when the report fails to load', async () => {
+    const onRetry = vi.fn();
+    render(
+      <TestAnalyticsSummaryCard
+        summary={null}
+        isLoading={false}
+        isFetching={false}
+        isEnabled
+        isError
+        onRetry={onRetry}
+        actions={null}
+      />,
+    );
+
+    expect(screen.getByText('Не удалось загрузить сводный отчет.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

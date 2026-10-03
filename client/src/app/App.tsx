@@ -87,7 +87,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Suspense fallback={<RouteLoadingScreen />}>
-          <main>
+          <div>
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />
@@ -123,9 +123,10 @@ function App() {
               </Route>
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
-          </main>
+          </div>
         </Suspense>
-        <Toaster position="top-right" richColors />
+        {/* Без подписи скринридер объявлял область уведомлений по-английски: «Notifications alt+T». */}
+        <Toaster position="top-right" richColors containerAriaLabel="Уведомления" />
       </Router>
     </QueryClientProvider>
   );

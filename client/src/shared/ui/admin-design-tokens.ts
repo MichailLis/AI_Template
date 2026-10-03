@@ -130,7 +130,7 @@ export const adminClassNames = {
       'rounded-lg bg-linear-to-br/srgb from-admin-info via-admin-accent to-admin-success px-2 py-1 text-xs font-semibold text-white shadow-xs',
     brandTitle: 'block text-sm font-semibold text-admin-foreground',
     brandSubtitle: 'block text-xs text-admin-muted',
-    nav: 'flex-1 overflow-hidden p-3',
+    nav: 'min-h-0 flex-1 overflow-y-auto p-3',
   },
   header: {
     root: 'sticky top-0 z-10 border-b border-admin-border bg-admin-panel/90 backdrop-blur-sm',
@@ -286,7 +286,7 @@ export const adminClassNames = {
   },
   actionMenu: {
     // Ширина по самому длинному пункту: при фиксированной w-48 «Снять права администратора» обрезался.
-    card: 'absolute right-0 top-10 z-20 w-max min-w-48 max-w-[calc(100vw-2rem)] border-admin-border shadow-md',
+    card: 'w-max min-w-48 max-w-[calc(100vw-2rem)] border-admin-border p-0 shadow-md',
     content: 'flex flex-col gap-2 p-2',
     item: 'h-8 justify-start px-2 text-left text-sm',
     dangerItem:

@@ -38,11 +38,11 @@ export function AdminSettingsHero({
             <SlidersHorizontal className="size-5" />
           </div>
           <div className="min-w-0">
-            <h1
+            <h2
               className={`text-2xl font-semibold tracking-normal ${adminClassNames.text.heading}`}
             >
               Настройки
-            </h1>
+            </h2>
             <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
               OpenRouter используется для анализа ответов. Атлас профессий показывается на публичной
               странице результата.

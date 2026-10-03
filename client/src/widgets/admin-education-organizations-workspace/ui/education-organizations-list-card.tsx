@@ -4,6 +4,7 @@ import { GROUP_VALIDATION_MODE_LABELS } from '@/shared/lib/group-validation';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
+import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/ui/card';
@@ -17,6 +18,8 @@ interface EducationOrganizationsListCardProps {
   total: number;
   totalPages: number;
   isFetching: boolean;
+  isError: boolean;
+  onRetry: () => void;
   onEditOrganization: (
     organization: AdminEducationOrganizationsListResponseDtoOrganizationsItem,
   ) => void;
@@ -40,10 +43,33 @@ export function EducationOrganizationsListCard({
   total,
   totalPages,
   isFetching,
+  isError,
+  onRetry,
   onEditOrganization,
   onPreviousPage,
   onNextPage,
 }: EducationOrganizationsListCardProps) {
+  // Без этой ветки ошибка загрузки выглядела как «Пока нет учебных заведений», и заведение
+  // заводили повторно.
+  if (isError) {
+    return (
+      <Card className={adminClassNames.panel.card}>
+        <CardContent className="p-0">
+          <AdminStateBlock
+            tone="danger"
+            action={
+              <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+                Повторить
+              </Button>
+            }
+          >
+            Не удалось загрузить учебные заведения. Проверьте подключение и повторите попытку.
+          </AdminStateBlock>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={adminClassNames.panel.card}>
       <CardHeader className="pb-3">

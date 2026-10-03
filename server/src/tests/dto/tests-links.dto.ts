@@ -323,6 +323,8 @@ export const AdminPublicAttemptAnswerSchema = z.object({
   questionId: z.number().int().min(1),
   questionType: z.string(),
   questionTitle: z.string(),
+  /** Ответ словами: подписи вариантов вместо их кодов, деление слайдера рядом с числом. */
+  answerText: z.string().nullable(),
   answerPayload: z.unknown(),
   updatedAt: z.string(),
 });

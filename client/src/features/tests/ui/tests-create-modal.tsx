@@ -1,4 +1,5 @@
 import { PlusCircle } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import {
   adminBadgeClassNames,
@@ -43,8 +44,34 @@ export function TestsCreateModal({
   onNewTestDescriptionChange,
   onCreateTest,
 }: TestsCreateModalProps) {
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [hasTriedToSubmit, setHasTriedToSubmit] = useState(false);
+  // Ошибка живет, пока название пустое: как только его ввели, она пропадает сама.
+  const titleError =
+    hasTriedToSubmit && !newTestTitle.trim() ? 'Укажите название теста' : undefined;
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setHasTriedToSubmit(false);
+    }
+
+    onOpenChange(nextOpen);
+  };
+
+  // Кнопка остается активной, как в формах пользователя и заведения: причина отказа
+  // показывается у поля, а не молчаливым disabled.
+  const handleCreate = () => {
+    if (!newTestTitle.trim()) {
+      setHasTriedToSubmit(true);
+      titleInputRef.current?.focus();
+      return;
+    }
+
+    onCreateTest();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={adminClassNames.dialog.content}>
         <DialogHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -74,6 +101,8 @@ export function TestsCreateModal({
             description={newTestDescription}
             disabled={isCreating}
             titleLabel="Название теста *"
+            titleError={titleError}
+            titleInputRef={titleInputRef}
             onTitleChange={onNewTestTitleChange}
             onSlugChange={onNewTestSlugChange}
             onDescriptionChange={onNewTestDescriptionChange}
@@ -84,16 +113,12 @@ export function TestsCreateModal({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
             disabled={isCreating}
           >
             Отмена
           </Button>
-          <Button
-            type="button"
-            onClick={onCreateTest}
-            disabled={isCreating || !newTestTitle.trim()}
-          >
+          <Button type="button" onClick={handleCreate} disabled={isCreating}>
             {isCreating ? 'Создание...' : 'Создать тест'}
           </Button>
         </DialogFooter>

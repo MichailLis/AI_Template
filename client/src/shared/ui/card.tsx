@@ -20,13 +20,16 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn('font-semibold leading-none tracking-tight', className)}
-      {...props}
-    />
+/**
+ * Заголовок карточки — `h2`: страницы админки строятся из карточек под `h1` в шапке, и без
+ * заголовков навигация по структуре страницы (WCAG 1.3.1) не работала. Вид прежний: preflight
+ * Tailwind сбрасывает размер и поля заголовков, а стили задают сами классы.
+ */
+const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, children, ...props }, ref) => (
+    <h2 ref={ref} className={cn('font-semibold leading-none tracking-tight', className)} {...props}>
+      {children}
+    </h2>
   ),
 );
 CardTitle.displayName = 'CardTitle';

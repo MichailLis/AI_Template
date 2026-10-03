@@ -1,5 +1,6 @@
 import { Loader2, Play, Save } from 'lucide-react';
 
+import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -90,9 +91,15 @@ export function PromptSaveRunFooter({
           <Badge variant="outline" className={adminBadgeClassNames.neutral}>
             {detectedVariablesCount} переменные
           </Badge>
-          <span>{selectedQuestionsCount} вопросов выбранного теста</span>
+          <span>{`${selectedQuestionsCount} ${pluralizeRu(selectedQuestionsCount, ['вопрос', 'вопроса', 'вопросов'])} выбранного теста`}</span>
         </div>
-        <Button type="button" onClick={onRunSimulation} disabled={!canRun || isGenerating}>
+        {/* На 320 px подпись длиннее экрана: кнопка переносит текст, а не расширяет страницу. */}
+        <Button
+          type="button"
+          className="h-auto max-w-full whitespace-normal py-2 text-left"
+          onClick={onRunSimulation}
+          disabled={!canRun || isGenerating}
+        >
           {isGenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
