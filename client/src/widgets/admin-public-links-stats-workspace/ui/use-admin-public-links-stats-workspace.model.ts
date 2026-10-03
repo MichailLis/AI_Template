@@ -79,9 +79,16 @@ export const resolveEffectiveTopicId = (
   return topicOptions[0].id;
 };
 
+/**
+ * Ссылка, выбранная вручную, или первая ссылка с прохождениями. Раньше бралась просто первая в
+ * списке, и вкладка «Прохождения» открывалась пустой, когда прохождения были у соседней ссылки.
+ * Пока счетчики попыток не загружены (`null`), ссылка не выбирается: иначе таблица успевала
+ * показать первую ссылку и тут же переключалась.
+ */
 export const resolveEffectivePublicLinkId = (
   selectedPublicLinkId: number | null,
   linksForTopic: PublicLinkSummary[],
+  attemptsCountById: ReadonlyMap<number, number> | null,
 ) => {
   if (linksForTopic.length === 0) {
     return null;
@@ -91,7 +98,13 @@ export const resolveEffectivePublicLinkId = (
     return selectedPublicLinkId;
   }
 
-  return linksForTopic[0].id;
+  if (!attemptsCountById) {
+    return null;
+  }
+
+  const withAttempts = linksForTopic.find((link) => (attemptsCountById.get(link.id) ?? 0) > 0);
+
+  return (withAttempts ?? linksForTopic[0]).id;
 };
 
 export const buildAnalyticsParams = ({

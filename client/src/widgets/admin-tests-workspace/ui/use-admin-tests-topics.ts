@@ -47,9 +47,16 @@ export function useAdminTestsTopics() {
     return routeSelectedTopicId;
   }, [location.pathname, routeSelectedTopicId]);
 
+  /**
+   * `focusAddQuestion` — после создания пустого теста: окно создания закрывается вместе со списком,
+   * и фокус иначе падал на body. Редактор по этому флагу ставит его на «Добавить вопрос».
+   */
   const navigateToTopic = useCallback(
-    (topicId: number) => {
-      navigate(`/admin/tests/${topicId}`);
+    (topicId: number, options?: { focusAddQuestion?: boolean }) => {
+      navigate(
+        `/admin/tests/${topicId}`,
+        options?.focusAddQuestion ? { state: { focusAddQuestion: true } } : undefined,
+      );
     },
     [navigate],
   );

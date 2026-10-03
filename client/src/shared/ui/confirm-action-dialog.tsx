@@ -21,6 +21,11 @@ interface ConfirmActionDialogProps {
   hideConfirm?: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  /**
+   * Куда вернуть фокус после закрытия, если элемента, открывшего окно, больше нет: например,
+   * строку удалили. Без `preventDefault()` фокус возвращается на открывший элемент.
+   */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 export function ConfirmActionDialog({
@@ -34,6 +39,7 @@ export function ConfirmActionDialog({
   hideConfirm = false,
   onConfirm,
   onClose,
+  onCloseAutoFocus,
 }: ConfirmActionDialogProps) {
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -45,7 +51,10 @@ export function ConfirmActionDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       {/* `admin-surface` — тот же портальный случай, что и у обычных диалогов: без него кнопка
           подтверждения выпадает из админской палитры. */}
-      <AlertDialogContent className="admin-surface max-w-md border-admin-border">
+      <AlertDialogContent
+        className="admin-surface max-w-md border-admin-border"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

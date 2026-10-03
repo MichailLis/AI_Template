@@ -1,4 +1,5 @@
 import { Copy } from 'lucide-react';
+import { useRef } from 'react';
 import { toast } from 'sonner';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -27,6 +28,31 @@ export function AdminUserCredentialsDialog({
   credentials,
   onClose,
 }: AdminUserCredentialsDialogProps) {
+  // Email нужен и после закрытия, когда credentials уже null; запоминается при открытии окна.
+  const emailRef = useRef<string | null>(null);
+
+  /**
+   * Окно открывается из формы создания или из подтверждения сброса, и к закрытию обоих уже нет —
+   * фокус падал на body. Возвращаем его на «…» этого пользователя, а если строки на странице нет
+   * (другая страница списка или фильтр) — на «Добавить пользователя».
+   */
+  const handleCloseAutoFocus = (event: Event) => {
+    const email = emailRef.current;
+    const target =
+      (email
+        ? document.querySelector<HTMLElement>(
+            `[aria-label="${CSS.escape(`Действия для ${email}`)}"]`,
+          )
+        : null) ??
+      [...document.querySelectorAll<HTMLElement>('button')].find(
+        (button) => button.textContent?.trim() === 'Добавить пользователя',
+      );
+    if (target) {
+      event.preventDefault();
+      target.focus();
+    }
+  };
+
   const handleCopy = async () => {
     if (!credentials) {
       return;
@@ -42,7 +68,13 @@ export function AdminUserCredentialsDialog({
 
   return (
     <Dialog open={credentials !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`sm:max-w-md ${adminClassNames.dialog.content}`}>
+      <DialogContent
+        className={`sm:max-w-md ${adminClassNames.dialog.content}`}
+        onOpenAutoFocus={() => {
+          emailRef.current = credentials?.email ?? null;
+        }}
+        onCloseAutoFocus={handleCloseAutoFocus}
+      >
         <DialogHeader>
           <DialogTitle>
             {credentials?.reason === 'reset' ? 'Новый пароль' : 'Пользователь создан'}

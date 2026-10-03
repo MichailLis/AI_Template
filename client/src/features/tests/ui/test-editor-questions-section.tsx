@@ -1,3 +1,6 @@
+import { useCallback, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
@@ -44,6 +47,27 @@ export function TestEditorQuestionsSection({
   onMoveUp,
   onMoveDown,
 }: TestEditorQuestionsSectionProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const shouldFocusAddQuestion =
+    (location.state as { focusAddQuestion?: boolean } | null)?.focusAddQuestion === true;
+  // Флаг приходит после создания теста. Фокус ставится, как только кнопка появилась в DOM, а
+  // снимается флаг в эффекте: `navigate()` до монтирования React Router игнорирует. Без снятия
+  // возврат на страницу по истории снова дергал бы фокус.
+  const addQuestionRef = useCallback(
+    (button: HTMLButtonElement | null) => {
+      if (button && shouldFocusAddQuestion) {
+        button.focus();
+      }
+    },
+    [shouldFocusAddQuestion],
+  );
+  useEffect(() => {
+    if (shouldFocusAddQuestion) {
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    }
+  }, [location.pathname, location.search, navigate, shouldFocusAddQuestion]);
+
   return (
     <>
       {/* Название теста и число вопросов стоят в заголовке карточки, поэтому секция их не
@@ -54,7 +78,9 @@ export function TestEditorQuestionsSection({
             ? 'Используйте кнопки «Вверх» и «Вниз» или перетаскивайте карточки за иконку слева.'
             : 'Вопросы добавляются и редактируются в модальном окне.'}
         </p>
-        <Button onClick={onCreateQuestion}>Добавить вопрос</Button>
+        <Button ref={addQuestionRef} onClick={onCreateQuestion} data-question-add="">
+          Добавить вопрос
+        </Button>
       </div>
 
       <div className="space-y-3 pt-3">

@@ -2,7 +2,10 @@ import { type TestTopicListItem } from '@/features/tests';
 import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { DeleteQuestionConfirmDialog } from './delete-question-confirm-dialog';
+
 interface PendingQuestion {
+  id: number;
   title: string;
 }
 
@@ -188,13 +191,10 @@ export function AdminTestsConfirmDialogs({
         onClose={onCloseRestoreTopic}
       />
 
-      <ConfirmActionDialog
-        open={Boolean(pendingDeleteQuestion)}
-        title="Удалить вопрос?"
+      <DeleteQuestionConfirmDialog
+        pendingQuestion={pendingDeleteQuestion}
         description={getDeleteQuestionDescription(pendingDeleteQuestion)}
-        confirmLabel="Удалить вопрос"
-        variant="destructive"
-        isConfirming={isDeletingQuestion}
+        isDeleting={isDeletingQuestion}
         onConfirm={onConfirmDeleteQuestion}
         onClose={onCloseDeleteQuestion}
       />

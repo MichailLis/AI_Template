@@ -89,7 +89,7 @@ interface UseAdminTestsWorkspaceActionsParams {
   archiveTopicMutation: ArchiveTopicMutation;
   restoreTopicMutation: RestoreTopicMutation;
   setListMode: (value: 'active' | 'archived') => void;
-  navigateToTopic: (topicId: number) => void;
+  navigateToTopic: (topicId: number, options?: { focusAddQuestion?: boolean }) => void;
   navigateToList: () => void;
 }
 

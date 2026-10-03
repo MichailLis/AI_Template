@@ -8,6 +8,7 @@ import {
   readNumber,
   readTab,
   resolveAnalyticsTab,
+  resolveEffectivePublicLinkId,
 } from './use-admin-public-links-stats-workspace.model';
 
 describe('analytics selection read from the query string', () => {
@@ -96,5 +97,61 @@ describe('buildAnalyticsFileName', () => {
       date: '2026-09-14T10:00:00.000Z',
     });
     expect(fileName).toBe('test-8-topic-2026-09-14.xlsx');
+  });
+});
+
+/** Задача ait-688: вкладка «Прохождения» открывалась на ссылке без попыток. */
+describe('resolveEffectivePublicLinkId', () => {
+  const links = [
+    { id: 1, topicId: 7, shortCode: 'COLLEGE1', title: 'Тест' },
+    { id: 2, topicId: 7, shortCode: 'DEMO2026', title: 'Тест' },
+  ];
+
+  it('picks the first link that has attempts', () => {
+    expect(
+      resolveEffectivePublicLinkId(
+        null,
+        links,
+        new Map([
+          [1, 0],
+          [2, 7],
+        ]),
+      ),
+    ).toBe(2);
+  });
+
+  it('falls back to the first link when no link has attempts', () => {
+    expect(
+      resolveEffectivePublicLinkId(
+        null,
+        links,
+        new Map([
+          [1, 0],
+          [2, 0],
+        ]),
+      ),
+    ).toBe(1);
+  });
+
+  it('keeps a link chosen by hand even without attempts', () => {
+    expect(
+      resolveEffectivePublicLinkId(
+        1,
+        links,
+        new Map([
+          [1, 0],
+          [2, 7],
+        ]),
+      ),
+    ).toBe(1);
+  });
+
+  it('waits for the attempt counts instead of showing the first link and switching', () => {
+    expect(resolveEffectivePublicLinkId(null, links, null)).toBeNull();
+    expect(resolveEffectivePublicLinkId(2, links, null)).toBe(2);
+  });
+
+  it('returns null when the test has no links', () => {
+    expect(resolveEffectivePublicLinkId(null, [], new Map())).toBeNull();
   });
 });

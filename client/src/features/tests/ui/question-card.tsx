@@ -33,6 +33,19 @@ interface QuestionCardProps {
   onMoveDown?: (questionId: number) => void;
 }
 
+/** Полоса над или под карточкой, куда встанет перетаскиваемый вопрос. */
+function DropIndicator({ position }: { position: 'before' | 'after' }) {
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute left-3 right-3 h-1 rounded-full',
+        position === 'before' ? '-top-1' : '-bottom-1',
+        adminClassNames.drag.indicator,
+      )}
+    />
+  );
+}
+
 export function QuestionCard({
   question,
   isFirst = false,
@@ -69,16 +82,7 @@ export function QuestionCard({
       }}
       onDragEnd={onDragEnd}
     >
-      {isDropTarget && dropPosition === 'before' ? (
-        <div
-          className={`pointer-events-none absolute -top-1 left-3 right-3 h-1 rounded-full ${adminClassNames.drag.indicator}`}
-        />
-      ) : null}
-      {isDropTarget && dropPosition === 'after' ? (
-        <div
-          className={`pointer-events-none absolute -bottom-1 left-3 right-3 h-1 rounded-full ${adminClassNames.drag.indicator}`}
-        />
-      ) : null}
+      {isDropTarget && dropPosition ? <DropIndicator position={dropPosition} /> : null}
       <CardContent className="p-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -134,6 +138,7 @@ export function QuestionCard({
               size="sm"
               onClick={() => onEditQuestion(question)}
               disabled={isReorderingQuestions || isAnyDragging}
+              data-question-edit={question.id}
             >
               <Pencil className="mr-1 h-4 w-4" />
               Изменить

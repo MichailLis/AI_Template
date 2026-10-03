@@ -63,7 +63,7 @@ const usePublicLinkAttemptCounts = (linksForTopic: PublicLinkSummary[]) => {
     })),
   });
 
-  return useMemo(() => {
+  const counts = useMemo(() => {
     const result = new Map<number, number>();
 
     linksForTopic.forEach((link, index) => {
@@ -72,6 +72,10 @@ const usePublicLinkAttemptCounts = (linksForTopic: PublicLinkSummary[]) => {
 
     return result;
   }, [linkAttemptsCountQueries, linksForTopic]);
+  // Ошибка запроса тоже считается ответом: такая ссылка просто идет как ссылка без попыток.
+  const isReady = linkAttemptsCountQueries.every((query) => !query.isPending);
+
+  return { counts, isReady };
 };
 
 export const usePublicLinkSelection = (
@@ -103,10 +107,16 @@ export const usePublicLinkSelection = (
     [effectiveTopicId, visiblePublicLinks],
   );
 
-  const linkAttemptsCountById = usePublicLinkAttemptCounts(linksForTopic);
+  const { counts: linkAttemptsCountById, isReady: areAttemptCountsReady } =
+    usePublicLinkAttemptCounts(linksForTopic);
   const effectivePublicLinkId = useMemo(
-    () => resolveEffectivePublicLinkId(selectedPublicLinkId, linksForTopic),
-    [linksForTopic, selectedPublicLinkId],
+    () =>
+      resolveEffectivePublicLinkId(
+        selectedPublicLinkId,
+        linksForTopic,
+        areAttemptCountsReady ? linkAttemptsCountById : null,
+      ),
+    [areAttemptCountsReady, linkAttemptsCountById, linksForTopic, selectedPublicLinkId],
   );
   const selectedPublicLink =
     linksForTopic.find((link) => link.id === effectivePublicLinkId) ?? null;

@@ -28,7 +28,7 @@ interface CreateTestDeps {
   createTopicMutation: CreateTopicMutation;
   draftAutosave: DraftAutosave;
   refetchTopicsOnly: () => void;
-  navigateToTopic: (topicId: number) => void;
+  navigateToTopic: (topicId: number, options?: { focusAddQuestion?: boolean }) => void;
 }
 
 export const createHandleCreateTest = ({
@@ -65,7 +65,7 @@ export const createHandleCreateTest = ({
           setNewTestDescription('');
           draftAutosave.resetAutosaveMeta();
           refetchTopicsOnly();
-          navigateToTopic(result.topicId);
+          navigateToTopic(result.topicId, { focusAddQuestion: true });
         },
         onError: (error) => {
           toast.error(parseApiError(error));
