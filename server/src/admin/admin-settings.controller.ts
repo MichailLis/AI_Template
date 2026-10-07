@@ -13,6 +13,7 @@ import {
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
   ProfessionAtlasCoverageResponseDto,
+  UpdateAiProviderDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
 } from './dto/admin-settings.dto';
@@ -52,6 +53,18 @@ export class AdminSettingsController {
         health,
       },
     };
+  }
+
+  @Patch('ai-provider')
+  @ApiOperation({ summary: 'Update AI provider settings (provider, base URL, API key, model)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminAiProviderSettingsResponseDto })
+  async updateAiProviderSettings(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: UpdateAiProviderDto,
+  ) {
+    await this.aiProviderConfig.updateAiProviderSettings(userId, dto);
+
+    return this.getAiProviderSettings(userId);
   }
 
   @Get('profession-atlas')

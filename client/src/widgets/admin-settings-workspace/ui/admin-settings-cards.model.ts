@@ -12,6 +12,7 @@ export type ProfessionAtlasCoverage = NonNullable<ProfessionAtlasSettings['cover
 export type PrivacyPolicySettings = AdminPrivacyPolicySettingsResponseDto['privacyPolicy'];
 
 export const sourceLabels: Record<AiProviderSettings['source'], string> = {
+  DB: 'Админ-панель',
   ENV: 'Переменная окружения',
   NONE: 'Не задан',
 };

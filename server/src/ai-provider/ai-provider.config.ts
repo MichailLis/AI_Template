@@ -81,10 +81,24 @@ export const isAiProviderId = (value: string): value is AiProviderId =>
   (AI_PROVIDER_IDS as readonly string[]).includes(value);
 
 /**
+ * Значения, сохранённые в админке. Если задан `provider`, БД главная для провайдера, адреса и
+ * модели: переменные `AI_PROVIDER`, `AI_BASE_URL`, `AI_DEFAULT_MODEL` тогда игнорируются, чтобы
+ * адрес из env не прилипал к другому провайдеру. Ключ берётся из БД, а при его отсутствии из env.
+ */
+export interface StoredAiProviderSettings {
+  provider: AiProviderId | null;
+  baseUrl: string | null;
+  apiKey: string | null;
+  defaultModel: string | null;
+}
+
+export type AiApiKeySource = 'DB' | 'ENV' | 'NONE';
+
+/**
  * `AI_PROVIDER` не задан: по умолчанию polza.ai. Исключение — старое окружение, где задан только
  * `OPENROUTER_API_KEY`: оно продолжает ходить в OpenRouter, пока не появится `AI_API_KEY`.
  */
-const resolveProviderId = (config: ConfigService): AiProviderId => {
+const resolveEnvProviderId = (config: ConfigService): AiProviderId => {
   const rawProvider = readString(config, 'AI_PROVIDER')?.toLowerCase();
 
   if (rawProvider) {
@@ -104,18 +118,28 @@ const resolveProviderId = (config: ConfigService): AiProviderId => {
   return DEFAULT_AI_PROVIDER;
 };
 
-export const resolveAiProviderSettings = (config: ConfigService): AiProviderSettings => {
-  const provider = resolveProviderId(config);
+export const resolveAiProviderSettings = (
+  config: ConfigService,
+  stored?: StoredAiProviderSettings,
+): AiProviderSettings & { apiKeySource: AiApiKeySource } => {
+  const useStored = Boolean(stored?.provider);
+  const provider = stored?.provider ?? resolveEnvProviderId(config);
   const preset = AI_PROVIDER_PRESETS[provider];
-  const isOpenRouter = provider === 'openrouter';
-  const legacy = (name: string) => (isOpenRouter ? readString(config, `OPENROUTER_${name}`) : null);
+  const legacy = (name: string) =>
+    !useStored && provider === 'openrouter' ? readString(config, `OPENROUTER_${name}`) : null;
+  const envApiKey = readString(config, 'AI_API_KEY') ?? legacy('API_KEY');
+  const apiKey = stored?.apiKey ?? envApiKey;
+  const configuredBaseUrl = useStored ? stored?.baseUrl : readString(config, 'AI_BASE_URL');
 
   return {
     provider,
     label: preset.label,
-    baseUrl: readString(config, 'AI_BASE_URL')?.replace(/\/+$/, '') || preset.defaultBaseUrl,
-    apiKey: readString(config, 'AI_API_KEY') ?? legacy('API_KEY'),
-    defaultModel: readString(config, 'AI_DEFAULT_MODEL') ?? legacy('DEFAULT_MODEL'),
+    baseUrl: configuredBaseUrl?.replace(/\/+$/, '') || preset.defaultBaseUrl,
+    apiKey,
+    apiKeySource: stored?.apiKey ? 'DB' : envApiKey ? 'ENV' : 'NONE',
+    defaultModel: useStored
+      ? (stored?.defaultModel ?? null)
+      : (readString(config, 'AI_DEFAULT_MODEL') ?? legacy('DEFAULT_MODEL')),
     supportsOpenRouterExtensions: preset.supportsOpenRouterExtensions,
     ...(preset.modelsQuery ? { modelsQuery: preset.modelsQuery } : {}),
   };

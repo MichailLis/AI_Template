@@ -55,7 +55,9 @@ Required non-local values:
 - `JWT_REFRESH_SECRET`
 - `CORS_ALLOWED_ORIGINS`
 
-AI provider variables are backend-only (details in `AI_GUIDE.md`, "AI Provider Configuration"):
+AI provider settings are normally entered in the admin panel and stored in the database (key encrypted).
+The variables below are the initial/fallback configuration; saved values win. Backend-only (details in
+`AI_GUIDE.md`, "AI Provider Configuration"):
 
 - `AI_PROVIDER` — `polza` (default), `openrouter` or `openai-compatible`
 - `AI_BASE_URL` — overrides the preset address; required for `openai-compatible`

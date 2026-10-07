@@ -5,10 +5,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminSettingsWorkspace } from './admin-settings-workspace';
 
 const updatePrivacyPolicy = vi.fn();
+const updateAiProvider = vi.fn();
 
 vi.mock('@/shared/api/generated/admin/admin', () => ({
   getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey: () => ['privacy-policy'],
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey: () => ['profession-atlas'],
+  getAdminSettingsControllerGetAiProviderSettingsQueryKey: () => ['ai-provider'],
+  useAdminSettingsControllerUpdateAiProviderSettings: () => ({
+    mutate: updateAiProvider,
+    isPending: false,
+  }),
   useAdminSettingsControllerGetAiProviderSettings: () => ({
     data: {
       aiProvider: {
@@ -114,7 +120,7 @@ describe('AdminSettingsWorkspace tabs', () => {
   });
 
   const AI_PROVIDER_CARD =
-    'OpenAI-совместимый API. Провайдер, адрес и ключ задаются только переменными окружения сервера: AI_PROVIDER, AI_BASE_URL, AI_API_KEY.';
+    'OpenAI-совместимый API. Провайдер, адрес, ключ и модель задаются здесь; без сохранённых настроек действуют переменные окружения сервера (AI_*).';
   const ATLAS_CARD = 'Карточки, предприятия, мероприятия и учебные заведения для результата Polus.';
   const PRIVACY_CARD =
     'Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.';

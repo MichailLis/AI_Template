@@ -321,6 +321,8 @@ export * from './testsTopicDetailResponseDtoPublishedAnalysisPromptVersion';
 export * from './testsTopicListResponseDto';
 export * from './testsTopicListResponseDtoTopicsItem';
 export * from './testsTopicListResponseDtoTopicsItemScoringKind';
+export * from './updateAiProviderDto';
+export * from './updateAiProviderDtoProvider';
 export * from './updateAnalysisPromptVersionDto';
 export * from './updatePrivacyPolicyDto';
 export * from './updateProfessionAtlasUrlDto';

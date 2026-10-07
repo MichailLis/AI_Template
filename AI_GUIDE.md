@@ -61,7 +61,14 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
 | `openrouter`        | `https://openrouter.ai/api/v1` | Plus `provider` routing, `response-healing`, attribution headers |
 | `openai-compatible` | none, `AI_BASE_URL` required   | Standard Chat Completions only                                   |
 
-- Switching provider is a configuration change: set `AI_PROVIDER`, `AI_API_KEY` and, for any
+- The provider is configured in the admin panel (`/admin/settings`, tab «Интеграции»): provider,
+  base URL, API key and default model. Saved values live in `app_settings` (`ai.*`) and override
+  the env variables below; the key is stored AES-256-GCM encrypted with a key derived from
+  `JWT_REFRESH_SECRET` and is never returned by the API (only a masked value). Rotating
+  `JWT_REFRESH_SECRET` makes the saved key unreadable: it is then treated as unset (the env key
+  applies) and must be entered again. Changes are written to the audit journal without the key.
+  Without saved settings the env variables below are used, which suits first deployment.
+- Switching provider by env: set `AI_PROVIDER`, `AI_API_KEY` and, for any
   other service, `AI_BASE_URL`. Model ids saved in prompt versions are provider-specific; when a
   saved id is missing from the new catalog, analysis falls back to the catalog default model.
 - OpenRouter extensions are sent only to `openrouter`: a strict OpenAI-compatible service answers

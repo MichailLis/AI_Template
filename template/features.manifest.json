@@ -155,7 +155,7 @@
         },
         {
           "path": "/admin/settings/ai-provider",
-          "methods": ["get"],
+          "methods": ["get", "patch"],
           "protected": true
         },
         {

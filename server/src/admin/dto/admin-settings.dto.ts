@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { AI_PROVIDER_IDS } from '../../ai-provider/ai-provider.config';
 
-export const AiProviderApiKeySourceSchema = z.enum(['ENV', 'NONE']);
+export const AiProviderApiKeySourceSchema = z.enum(['DB', 'ENV', 'NONE']);
 
 /**
  * Результат живой проверки связи с провайдером ИИ. Устроен так же, как `coverage` у атласа:
@@ -29,6 +29,14 @@ export const AiProviderSettingsSchema = z.object({
 
 export const AdminAiProviderSettingsResponseSchema = z.object({
   aiProvider: AiProviderSettingsSchema,
+});
+
+export const UpdateAiProviderSchema = z.object({
+  provider: z.enum(AI_PROVIDER_IDS),
+  baseUrl: z.string().trim().url().max(2048).nullable(),
+  apiKey: z.string().trim().min(1).max(512).optional(),
+  clearApiKey: z.boolean().optional(),
+  defaultModel: z.string().trim().max(256).nullable(),
 });
 
 export const ProfessionAtlasCoverageItemSchema = z.object({
@@ -93,6 +101,8 @@ export const UpdatePrivacyPolicySchema = z.object({
 export class AdminAiProviderSettingsResponseDto extends createZodDto(
   AdminAiProviderSettingsResponseSchema,
 ) {}
+
+export class UpdateAiProviderDto extends createZodDto(UpdateAiProviderSchema) {}
 
 export class AdminProfessionAtlasSettingsResponseDto extends createZodDto(
   AdminProfessionAtlasSettingsResponseSchema,

@@ -45,6 +45,7 @@ import type {
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
   ResetUserPasswordDto,
+  UpdateAiProviderDto,
   UpdateAnalysisPromptVersionDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
@@ -1157,6 +1158,103 @@ export function useAdminSettingsControllerGetAiProviderSettings<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+/**
+ * @summary Update AI provider settings (provider, base URL, API key, model)
+ */
+export const adminSettingsControllerUpdateAiProviderSettings = (
+  updateAiProviderDto: UpdateAiProviderDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminAiProviderSettingsResponseDto>(
+    {
+      url: `/admin/settings/ai-provider`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateAiProviderDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerUpdateAiProviderSettingsMutationKey = () =>
+  ['adminSettingsControllerUpdateAiProviderSettings'] as const;
+
+export const getAdminSettingsControllerUpdateAiProviderSettingsMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>,
+    TError,
+    AdminSettingsControllerUpdateAiProviderSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>,
+  TError,
+  AdminSettingsControllerUpdateAiProviderSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminSettingsControllerUpdateAiProviderSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>,
+    AdminSettingsControllerUpdateAiProviderSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminSettingsControllerUpdateAiProviderSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerUpdateAiProviderSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>
+>;
+export type AdminSettingsControllerUpdateAiProviderSettingsMutationBody = UpdateAiProviderDto;
+export type AdminSettingsControllerUpdateAiProviderSettingsMutationError =
+  ErrorType<ErrorResponseDto>;
+export type AdminSettingsControllerUpdateAiProviderSettingsMutationVariables = {
+  data: UpdateAiProviderDto;
+};
+
+/**
+ * @summary Update AI provider settings (provider, base URL, API key, model)
+ */
+export const useAdminSettingsControllerUpdateAiProviderSettings = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>,
+      TError,
+      AdminSettingsControllerUpdateAiProviderSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdateAiProviderSettings>>,
+  TError,
+  AdminSettingsControllerUpdateAiProviderSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerUpdateAiProviderSettingsMutationOptions(options),
+    queryClient,
+  );
+};
 /**
  * @summary Get profession atlas settings
  */

@@ -3,6 +3,7 @@ import { FileText, KeyRound, Link2 } from 'lucide-react';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { AiProviderForm } from './admin-settings-ai-provider-form';
 import {
   AiProviderStateBadge,
   AiProviderStatusPanel,
@@ -43,8 +44,8 @@ export function AiProviderSettingsCard({
               Провайдер ИИ
             </CardTitle>
             <CardDescription>
-              OpenAI-совместимый API. Провайдер, адрес и ключ задаются только переменными окружения
-              сервера: AI_PROVIDER, AI_BASE_URL, AI_API_KEY.
+              OpenAI-совместимый API. Провайдер, адрес, ключ и модель задаются здесь; без
+              сохранённых настроек действуют переменные окружения сервера (AI_*).
             </CardDescription>
           </div>
           {aiProvider ? <AiProviderStateBadge aiProvider={aiProvider} /> : null}
@@ -64,6 +65,12 @@ export function AiProviderSettingsCard({
         ) : null}
 
         {aiProvider ? <AiProviderStatusPanel aiProvider={aiProvider} /> : null}
+        {aiProvider ? (
+          <AiProviderForm
+            key={`${aiProvider.provider}|${aiProvider.baseUrl}|${aiProvider.defaultModel}|${aiProvider.updatedAt}`}
+            aiProvider={aiProvider}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

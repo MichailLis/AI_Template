@@ -151,8 +151,9 @@ Required backend environment variables:
 - Root Docker Compose: copy `.env.example` to `.env` or export the variables in the shell.
 
 The backend calls any OpenAI-compatible API through the official `openai` SDK. Polza.ai is the
-default; OpenRouter and any other service are selected by configuration (see `AI_GUIDE.md`,
-"AI Provider Configuration").
+default; OpenRouter and any other service are selected in the admin panel (`/admin/settings`:
+provider, base URL, API key, model; the key is stored encrypted) or, as the initial/fallback
+configuration, by the env variables below (see `AI_GUIDE.md`, "AI Provider Configuration").
 
 ```env
 AI_API_KEY=

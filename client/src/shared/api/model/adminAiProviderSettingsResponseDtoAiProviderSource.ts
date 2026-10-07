@@ -10,6 +10,7 @@ export type AdminAiProviderSettingsResponseDtoAiProviderSource =
   (typeof AdminAiProviderSettingsResponseDtoAiProviderSource)[keyof typeof AdminAiProviderSettingsResponseDtoAiProviderSource];
 
 export const AdminAiProviderSettingsResponseDtoAiProviderSource = {
+  DB: 'DB',
   ENV: 'ENV',
   NONE: 'NONE',
 } as const;

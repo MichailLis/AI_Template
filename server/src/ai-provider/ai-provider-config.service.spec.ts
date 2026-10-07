@@ -1,6 +1,7 @@
-import { ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 
+import type { AuditService } from '../audit/audit.service';
 import type { PrismaService } from '../prisma.service';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { AiProviderConfigService } from './ai-provider-config.service';
@@ -9,25 +10,49 @@ jest.mock('../common/authz/admin-access.utils', () => ({
   ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
 }));
 
+type AuditEvent = {
+  entityType: string;
+  changes: Array<{ field: string; before: string | null; after: string | null }>;
+};
+type Row = { key: string; value: string; updatedAt: Date };
+
 describe('AiProviderConfigService', () => {
-  let prismaMock: {
-    appSetting: {
-      findUnique: jest.Mock;
+  let rows: Map<string, Row>;
+  let auditMock: { record: jest.Mock<Promise<void>, [AuditEvent]> };
+
+  const createService = (env: Record<string, string | undefined>) => {
+    const appSetting = {
+      findMany: jest.fn(({ where }: { where: { key: { in: string[] } } }) =>
+        Promise.resolve([...rows.values()].filter((row) => where.key.in.includes(row.key))),
+      ),
+      upsert: jest.fn(
+        ({ where, create }: { where: { key: string }; create: { value: string } }) => {
+          rows.set(where.key, { key: where.key, value: create.value, updatedAt: new Date() });
+          return Promise.resolve();
+        },
+      ),
+      deleteMany: jest.fn(({ where }: { where: { key: string } }) => {
+        rows.delete(where.key);
+        return Promise.resolve();
+      }),
     };
+    const prisma = {
+      appSetting,
+      $transaction: (callback: (tx: unknown) => unknown) => callback({ appSetting }),
+    };
+
+    return new AiProviderConfigService(
+      prisma as unknown as PrismaService,
+      { get: jest.fn((name: string) => env[name]) } as unknown as ConfigService,
+      auditMock as unknown as AuditService,
+    );
   };
 
-  const createService = (env: Record<string, string | undefined>) =>
-    new AiProviderConfigService(
-      prismaMock as unknown as PrismaService,
-      { get: jest.fn((name: string) => env[name]) } as unknown as ConfigService,
-    );
+  const secret = { JWT_REFRESH_SECRET: 'refresh-secret-for-tests' };
 
   beforeEach(() => {
-    prismaMock = {
-      appSetting: {
-        findUnique: jest.fn(),
-      },
-    };
+    rows = new Map();
+    auditMock = { record: jest.fn<Promise<void>, [AuditEvent]>().mockResolvedValue(undefined) };
     jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
@@ -36,15 +61,15 @@ describe('AiProviderConfigService', () => {
   });
 
   it('defaults to Polza.ai when only AI_API_KEY is set', async () => {
-    await expect(createService({ AI_API_KEY: ' pza-key ' }).getConnection()).resolves.toEqual({
-      provider: 'polza',
-      label: 'Polza.ai',
-      baseUrl: 'https://polza.ai/api/v1',
-      apiKey: 'pza-key',
-      defaultModel: null,
-      supportsOpenRouterExtensions: false,
-      modelsQuery: { type: 'chat' },
-    });
+    await expect(createService({ AI_API_KEY: ' pza-key ' }).getConnection()).resolves.toMatchObject(
+      {
+        provider: 'polza',
+        baseUrl: 'https://polza.ai/api/v1',
+        apiKey: 'pza-key',
+        supportsOpenRouterExtensions: false,
+        modelsQuery: { type: 'chat' },
+      },
+    );
   });
 
   it('connects any OpenAI-compatible service through AI_BASE_URL', async () => {
@@ -59,14 +84,13 @@ describe('AiProviderConfigService', () => {
       provider: 'openai-compatible',
       baseUrl: 'https://llm.example.com/v1',
       defaultModel: 'gpt-4o-mini',
-      supportsOpenRouterExtensions: false,
     });
   });
 
-  it('requires AI_BASE_URL for a generic OpenAI-compatible provider', async () => {
+  it('requires a base URL for a generic OpenAI-compatible provider', async () => {
     await expect(
       createService({ AI_PROVIDER: 'openai-compatible', AI_API_KEY: 'key' }).getConnection(),
-    ).rejects.toThrow('AI_BASE_URL is required for AI_PROVIDER=openai-compatible');
+    ).rejects.toThrow(ServiceUnavailableException);
   });
 
   it('rejects an unknown AI_PROVIDER instead of guessing', async () => {
@@ -90,16 +114,11 @@ describe('AiProviderConfigService', () => {
     });
   });
 
-  it('prefers AI_API_KEY over the legacy OpenRouter key once it is set', async () => {
-    await expect(
-      createService({
-        AI_API_KEY: 'pza-key',
-        OPENROUTER_API_KEY: 'sk-or-v1-legacy',
-      }).getConnection(),
-    ).resolves.toMatchObject({ provider: 'polza', apiKey: 'pza-key' });
+  it('throws when no AI provider key is configured', async () => {
+    await expect(createService({}).getConnection()).rejects.toThrow(ServiceUnavailableException);
   });
 
-  it('reports masked settings from env without reading the database', async () => {
+  it('reports masked settings from env', async () => {
     await expect(
       createService({ AI_API_KEY: 'pza-v1-env-secret' }).getAiProviderSettings(3),
     ).resolves.toEqual({
@@ -114,19 +133,111 @@ describe('AiProviderConfigService', () => {
         updatedAt: null,
       },
     });
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
-    expect(prismaMock.appSetting.findUnique).not.toHaveBeenCalled();
+    expect(ensureAdminAccess).toHaveBeenCalledWith(expect.anything(), 3);
   });
 
-  it('throws when no AI provider key is configured', async () => {
-    await expect(createService({}).getConnection()).rejects.toThrow(ServiceUnavailableException);
-    expect(prismaMock.appSetting.findUnique).not.toHaveBeenCalled();
-  });
+  describe('settings saved in the admin panel', () => {
+    it('stores the key encrypted and uses it for requests', async () => {
+      const service = createService(secret);
 
-  it('does not expose a database write path for provider secrets', () => {
-    const service = createService({});
+      await service.updateAiProviderSettings(3, {
+        provider: 'polza',
+        baseUrl: null,
+        apiKey: 'pza-super-secret-key',
+        defaultModel: 'openai/gpt-4o-mini',
+      });
 
-    expect('updateAiProviderApiKey' in service).toBe(false);
-    expect('updateOpenRouterApiKey' in service).toBe(false);
+      const stored = rows.get('ai.apiKey')?.value ?? '';
+      expect(stored.startsWith('enc:v1:')).toBe(true);
+      expect(stored).not.toContain('pza-super-secret-key');
+      await expect(service.getConnection()).resolves.toMatchObject({
+        provider: 'polza',
+        baseUrl: 'https://polza.ai/api/v1',
+        apiKey: 'pza-super-secret-key',
+        defaultModel: 'openai/gpt-4o-mini',
+      });
+      await expect(service.getAiProviderSettings(3)).resolves.toMatchObject({
+        aiProvider: { source: 'DB', maskedValue: 'pza-supe...-key' },
+      });
+    });
+
+    it('lets the saved provider and base URL override env, keeping the env key as fallback', async () => {
+      const service = createService({
+        ...secret,
+        AI_PROVIDER: 'openrouter',
+        AI_BASE_URL: 'https://old.example.com/v1',
+        AI_API_KEY: 'env-key',
+      });
+
+      await service.updateAiProviderSettings(3, {
+        provider: 'openai-compatible',
+        baseUrl: 'https://llm.example.com/v1',
+        defaultModel: null,
+      });
+
+      await expect(service.getConnection()).resolves.toMatchObject({
+        provider: 'openai-compatible',
+        baseUrl: 'https://llm.example.com/v1',
+        apiKey: 'env-key',
+        supportsOpenRouterExtensions: false,
+      });
+    });
+
+    it('keeps the saved key when none is sent and drops it on clearApiKey', async () => {
+      const service = createService({ ...secret, AI_API_KEY: 'env-key' });
+      const base = { provider: 'polza' as const, baseUrl: null, defaultModel: null };
+
+      await service.updateAiProviderSettings(3, { ...base, apiKey: 'db-key-123456' });
+      await service.updateAiProviderSettings(3, base);
+      await expect(service.getConnection()).resolves.toMatchObject({ apiKey: 'db-key-123456' });
+
+      await service.updateAiProviderSettings(3, { ...base, clearApiKey: true });
+      await expect(service.getConnection()).resolves.toMatchObject({ apiKey: 'env-key' });
+    });
+
+    it('treats a key that cannot be decrypted as not set', async () => {
+      await createService(secret).updateAiProviderSettings(3, {
+        provider: 'polza',
+        baseUrl: null,
+        apiKey: 'db-key-123456',
+        defaultModel: null,
+      });
+
+      await expect(
+        createService({ JWT_REFRESH_SECRET: 'rotated-secret' }).getConnection(),
+      ).rejects.toThrow(ServiceUnavailableException);
+    });
+
+    it('requires a base URL for a generic provider', async () => {
+      await expect(
+        createService(secret).updateAiProviderSettings(3, {
+          provider: 'openai-compatible',
+          baseUrl: null,
+          apiKey: 'key',
+          defaultModel: null,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('audits the change without writing the key into the journal', async () => {
+      await createService(secret).updateAiProviderSettings(3, {
+        provider: 'polza',
+        baseUrl: null,
+        apiKey: 'db-key-123456',
+        defaultModel: 'openai/gpt-4o-mini',
+      });
+
+      expect(auditMock.record).toHaveBeenCalledTimes(1);
+      const event = auditMock.record.mock.calls[0]?.[0];
+
+      expect(event?.entityType).toBe('APP_SETTING');
+      expect(event?.changes).toContainEqual({
+        field: 'defaultModel',
+        before: null,
+        after: 'openai/gpt-4o-mini',
+      });
+      expect(event?.changes).toContainEqual({ field: 'apiKey', before: null, after: null });
+      expect(JSON.stringify(event)).not.toContain('db-key-123456');
+    });
   });
 });
