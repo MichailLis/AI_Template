@@ -6,6 +6,12 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './adminAiProviderSettingsResponseDto';
+export * from './adminAiProviderSettingsResponseDtoAiProvider';
+export * from './adminAiProviderSettingsResponseDtoAiProviderHealth';
+export * from './adminAiProviderSettingsResponseDtoAiProviderHealthStatus';
+export * from './adminAiProviderSettingsResponseDtoAiProviderProvider';
+export * from './adminAiProviderSettingsResponseDtoAiProviderSource';
 export * from './adminControllerGetUsersParams';
 export * from './adminControllerGetUsersRole';
 export * from './adminControllerGetUsersSortBy';
@@ -33,11 +39,6 @@ export * from './adminEducationOrganizationDtoGroupValidationMode';
 export * from './adminEducationOrganizationsListResponseDto';
 export * from './adminEducationOrganizationsListResponseDtoOrganizationsItem';
 export * from './adminEducationOrganizationsListResponseDtoOrganizationsItemGroupValidationMode';
-export * from './adminOpenRouterSettingsResponseDto';
-export * from './adminOpenRouterSettingsResponseDtoOpenRouter';
-export * from './adminOpenRouterSettingsResponseDtoOpenRouterHealth';
-export * from './adminOpenRouterSettingsResponseDtoOpenRouterHealthStatus';
-export * from './adminOpenRouterSettingsResponseDtoOpenRouterSource';
 export * from './adminOverviewResponseDto';
 export * from './adminOverviewResponseDtoCardsItem';
 export * from './adminOverviewResponseDtoShortcutsItem';

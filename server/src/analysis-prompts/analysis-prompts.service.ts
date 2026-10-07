@@ -12,8 +12,8 @@ import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { runSerializableTransaction } from '../common/prisma-transaction.utils';
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { OpenRouterClientService } from '../openrouter/openrouter.client';
+import { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
+import { AiProviderClientService } from '../ai-provider/ai-provider.client';
 import { TestsPromptSimulationReadService } from '../tests/analysis/prompt-simulation-read.service';
 import type { GeneratePromptDto } from './dto/generate-prompt.dto';
 import { calculatePromptUsage, type PromptActiveTest } from './prompt-usage.utils';
@@ -96,8 +96,8 @@ const parseJsonOutput = (output: string): unknown => {
 export class AnalysisPromptsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
-    private readonly openRouterClient: OpenRouterClientService,
+    private readonly aiProviderConfig: AiProviderConfigService,
+    private readonly aiProviderClient: AiProviderClientService,
     private readonly testsPromptSimulationReadService: TestsPromptSimulationReadService,
     private readonly auditService: AuditService,
   ) {}
@@ -376,17 +376,17 @@ export class AnalysisPromptsService {
   async getPromptModels(userId: number) {
     await ensureAdminAccess(this.prisma, userId);
 
-    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+    const connection = await this.aiProviderConfig.getConnection();
 
-    return this.openRouterClient.fetchModels(apiKey);
+    return this.aiProviderClient.fetchModels(connection);
   }
 
   async generatePrompt(userId: number, dto: GeneratePromptDto) {
     await ensureAdminAccess(this.prisma, userId);
 
-    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+    const connection = await this.aiProviderConfig.getConnection();
 
-    return this.openRouterClient.generatePrompt(apiKey, dto);
+    return this.aiProviderClient.generatePrompt(connection, dto);
   }
 
   async createPrompt(
@@ -634,7 +634,7 @@ export class AnalysisPromptsService {
   ): Promise<PromptSimulationResponseDto> {
     await ensureAdminAccess(this.prisma, userId);
 
-    const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
+    const connection = await this.aiProviderConfig.getConnection();
     const questionPayloads =
       await this.testsPromptSimulationReadService.getPromptSimulationQuestionPayloads(
         dto.questionIds,
@@ -645,7 +645,7 @@ export class AnalysisPromptsService {
         ? null
         : parseJsonOutput(
             (
-              await this.openRouterClient.generatePrompt(apiKey, {
+              await this.aiProviderClient.generatePrompt(connection, {
                 model: dto.model,
                 prompt: this.buildSyntheticAnswersPrompt(questionPayloads),
                 temperature: 0.2,
@@ -657,7 +657,7 @@ export class AnalysisPromptsService {
             ).output,
           );
 
-    const analysisResponse = await this.openRouterClient.generatePrompt(apiKey, {
+    const analysisResponse = await this.aiProviderClient.generatePrompt(connection, {
       model: dto.model,
       prompt: this.buildAnalysisPrompt(dto.prompt, questionPayloads, syntheticAnswers),
       temperature: dto.temperature ?? 0.2,

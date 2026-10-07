@@ -65,7 +65,7 @@ Important surfaces:
 - `/admin/public-links` — public link lifecycle and STANDARD branding builder.
 - `/admin/public-links/stats` — student attempts table.
 - `/admin/analytics` — test analytics report and XLSX/PDF export.
-- `/admin/settings` — OpenRouter status and profession atlas URL settings.
+- `/admin/settings` — AI provider status and profession atlas URL settings.
 - `/t/:code`, `/t/:code/session/:sessionToken`, `/t/:code/result/:sessionToken` — public student flow.
 
 Public student pages are wrapped in `PublicThemeLayout`. `STANDARD` pages may receive per-link `publicBranding`; `POLUS` keeps its dedicated scoped assets/styles and ignores the branding builder. Run pages use debounce autosave before manual save or finish actions.

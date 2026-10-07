@@ -9,9 +9,13 @@ const updatePrivacyPolicy = vi.fn();
 vi.mock('@/shared/api/generated/admin/admin', () => ({
   getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey: () => ['privacy-policy'],
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey: () => ['profession-atlas'],
-  useAdminSettingsControllerGetOpenRouterSettings: () => ({
+  useAdminSettingsControllerGetAiProviderSettings: () => ({
     data: {
-      openRouter: {
+      aiProvider: {
+        provider: 'polza',
+        label: 'Polza.ai',
+        baseUrl: 'https://polza.ai/api/v1',
+        defaultModel: null,
         isConfigured: true,
         maskedValue: 'sk-or-v1...cret',
         source: 'ENV',
@@ -96,7 +100,7 @@ describe('AdminSettingsWorkspace integration health header', () => {
   it('reports the result of the connection checks instead of mere configuration', () => {
     renderWorkspace();
 
-    expect(screen.getByText(/^OpenRouter недоступен · /)).toBeInTheDocument();
+    expect(screen.getByText(/^Polza\.ai недоступен · /)).toBeInTheDocument();
     expect(screen.getByText(/^Атлас недоступен · /)).toBeInTheDocument();
     expect(screen.queryByText('OpenRouter готов')).not.toBeInTheDocument();
     expect(screen.queryByText('Атлас подключен')).not.toBeInTheDocument();
@@ -109,7 +113,8 @@ describe('AdminSettingsWorkspace tabs', () => {
     vi.clearAllMocks();
   });
 
-  const OPEN_ROUTER_CARD = 'Ключ берется только из переменной окружения сервера.';
+  const AI_PROVIDER_CARD =
+    'OpenAI-совместимый API. Провайдер, адрес и ключ задаются только переменными окружения сервера: AI_PROVIDER, AI_BASE_URL, AI_API_KEY.';
   const ATLAS_CARD = 'Карточки, предприятия, мероприятия и учебные заведения для результата Polus.';
   const PRIVACY_CARD =
     'Глобальная публичная политика для страницы /privacy и согласия перед стартом теста.';
@@ -117,7 +122,7 @@ describe('AdminSettingsWorkspace tabs', () => {
   it('shows only the integrations tab content by default', () => {
     renderWorkspace();
 
-    expect(screen.getByText(OPEN_ROUTER_CARD)).toBeInTheDocument();
+    expect(screen.getByText(AI_PROVIDER_CARD)).toBeInTheDocument();
     expect(screen.queryByText(ATLAS_CARD)).not.toBeInTheDocument();
     expect(screen.queryByText(PRIVACY_CARD)).not.toBeInTheDocument();
   });
@@ -128,7 +133,7 @@ describe('AdminSettingsWorkspace tabs', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Атлас профессий' }));
 
     expect(screen.getByText(ATLAS_CARD)).toBeInTheDocument();
-    expect(screen.queryByText(OPEN_ROUTER_CARD)).not.toBeInTheDocument();
+    expect(screen.queryByText(AI_PROVIDER_CARD)).not.toBeInTheDocument();
     expect(screen.queryByText(PRIVACY_CARD)).not.toBeInTheDocument();
   });
 });

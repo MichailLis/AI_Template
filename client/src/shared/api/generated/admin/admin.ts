@@ -22,8 +22,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminAiProviderSettingsResponseDto,
   AdminControllerGetUsersParams,
-  AdminOpenRouterSettingsResponseDto,
   AdminOverviewResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
@@ -1014,29 +1014,29 @@ export const useAdminControllerUpdateUserRole = <
   return useMutation(getAdminControllerUpdateUserRoleMutationOptions(options), queryClient);
 };
 /**
- * @summary Get OpenRouter settings with a live connection check
+ * @summary Get AI provider settings with a live connection check
  */
-export const adminSettingsControllerGetOpenRouterSettings = (
+export const adminSettingsControllerGetAiProviderSettings = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<AdminOpenRouterSettingsResponseDto>(
-    { url: `/admin/settings/openrouter`, method: 'GET', signal },
+  return customInstance<AdminAiProviderSettingsResponseDto>(
+    { url: `/admin/settings/ai-provider`, method: 'GET', signal },
     options,
   );
 };
 
-export const getAdminSettingsControllerGetOpenRouterSettingsQueryKey = () => {
-  return [`/admin/settings/openrouter`] as const;
+export const getAdminSettingsControllerGetAiProviderSettingsQueryKey = () => {
+  return [`/admin/settings/ai-provider`] as const;
 };
 
-export const getAdminSettingsControllerGetOpenRouterSettingsQueryOptions = <
-  TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+export const getAdminSettingsControllerGetAiProviderSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
-      Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+      Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
       TError,
       TData
     >
@@ -1046,41 +1046,41 @@ export const getAdminSettingsControllerGetOpenRouterSettingsQueryOptions = <
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getAdminSettingsControllerGetOpenRouterSettingsQueryKey();
+    queryOptions?.queryKey ?? getAdminSettingsControllerGetAiProviderSettingsQueryKey();
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
-  > = ({ signal }) => adminSettingsControllerGetOpenRouterSettings(requestOptions, signal);
+    Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>
+  > = ({ signal }) => adminSettingsControllerGetAiProviderSettings(requestOptions, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+    Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type AdminSettingsControllerGetOpenRouterSettingsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
+export type AdminSettingsControllerGetAiProviderSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>
 >;
-export type AdminSettingsControllerGetOpenRouterSettingsQueryError = ErrorType<ErrorResponseDto>;
+export type AdminSettingsControllerGetAiProviderSettingsQueryError = ErrorType<ErrorResponseDto>;
 
-export function useAdminSettingsControllerGetOpenRouterSettings<
-  TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+export function useAdminSettingsControllerGetAiProviderSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+        Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+          Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
           TError,
-          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
+          Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>
         >,
         'initialData'
       >;
@@ -1088,23 +1088,23 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminSettingsControllerGetOpenRouterSettings<
-  TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+export function useAdminSettingsControllerGetAiProviderSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+        Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+          Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
           TError,
-          Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>
+          Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>
         >,
         'initialData'
       >;
@@ -1112,14 +1112,14 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminSettingsControllerGetOpenRouterSettings<
-  TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+export function useAdminSettingsControllerGetAiProviderSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+        Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
         TError,
         TData
       >
@@ -1129,17 +1129,17 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Get OpenRouter settings with a live connection check
+ * @summary Get AI provider settings with a live connection check
  */
 
-export function useAdminSettingsControllerGetOpenRouterSettings<
-  TData = Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+export function useAdminSettingsControllerGetAiProviderSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof adminSettingsControllerGetOpenRouterSettings>>,
+        Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
         TError,
         TData
       >
@@ -1148,7 +1148,7 @@ export function useAdminSettingsControllerGetOpenRouterSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getAdminSettingsControllerGetOpenRouterSettingsQueryOptions(options);
+  const queryOptions = getAdminSettingsControllerGetAiProviderSettingsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -2162,7 +2162,7 @@ export function useAnalysisPromptsControllerListTestQuestions<
 }
 
 /**
- * @summary Get available OpenRouter models
+ * @summary Get available AI provider models
  */
 export const analysisPromptsControllerGetPromptModels = (
   options?: SecondParameter<typeof customInstance>,
@@ -2276,7 +2276,7 @@ export function useAnalysisPromptsControllerGetPromptModels<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Get available OpenRouter models
+ * @summary Get available AI provider models
  */
 
 export function useAnalysisPromptsControllerGetPromptModels<
@@ -2305,7 +2305,7 @@ export function useAnalysisPromptsControllerGetPromptModels<
 }
 
 /**
- * @summary Generate response from prompt via OpenRouter
+ * @summary Generate response from prompt via the AI provider
  */
 export const analysisPromptsControllerGeneratePrompt = (
   generatePromptDto: GeneratePromptDto,
@@ -2371,7 +2371,7 @@ export type AnalysisPromptsControllerGeneratePromptMutationError = ErrorType<Err
 export type AnalysisPromptsControllerGeneratePromptMutationVariables = { data: GeneratePromptDto };
 
 /**
- * @summary Generate response from prompt via OpenRouter
+ * @summary Generate response from prompt via the AI provider
  */
 export const useAnalysisPromptsControllerGeneratePrompt = <
   TError = ErrorType<ErrorResponseDto>,

@@ -4,7 +4,7 @@ import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-c
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { AuditModule } from '../audit/audit.module';
-import { OpenRouterModule } from '../openrouter/openrouter.module';
+import { AiProviderModule } from '../ai-provider/ai-provider.module';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus/atlas';
 import { TestsAdminAnalyticsController } from './reporting/admin-analytics.controller';
 import { TestsAdminAttemptService } from './attempts/admin-attempt.service';
@@ -19,7 +19,7 @@ import { TestsPublicAttemptAllocationService } from './session/attempt-allocatio
 import { TestsPublicSessionService } from './session/public-session.service';
 
 @Module({
-  imports: [OpenRouterModule, TestsPublicLinksModule, AuditModule],
+  imports: [AiProviderModule, TestsPublicLinksModule, AuditModule],
   controllers: [TestsPublicController, TestsAdminAttemptsController, TestsAdminAnalyticsController],
   providers: [
     TestsAnalyticsService,

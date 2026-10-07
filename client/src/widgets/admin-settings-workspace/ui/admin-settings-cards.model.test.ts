@@ -4,20 +4,28 @@ import { formatDateTime } from '@/shared/lib/date-format';
 
 import {
   formatAtlasErrorMessage,
-  getOpenRouterHealthBadge,
+  getAiProviderHealthBadge,
   getProfessionAtlasHealthBadge,
-  type OpenRouterSettings,
+  type AiProviderSettings,
   type ProfessionAtlasSettings,
 } from './admin-settings-cards.model';
 
 const CHECKED_AT = '2026-09-12T20:05:00.000Z';
 
-const createOpenRouter = (health: OpenRouterSettings['health']): OpenRouterSettings => ({
+const createAiProvider = (
+  health: AiProviderSettings['health'],
+  overrides: Partial<AiProviderSettings> = {},
+): AiProviderSettings => ({
+  provider: 'openrouter',
+  label: 'OpenRouter',
+  baseUrl: 'https://openrouter.ai/api/v1',
+  defaultModel: null,
   isConfigured: health.status !== 'not_configured',
   maskedValue: health.status === 'not_configured' ? null : 'sk-or-v1...cret',
   source: health.status === 'not_configured' ? 'NONE' : 'ENV',
   updatedAt: null,
   health,
+  ...overrides,
 });
 
 const createAtlas = (
@@ -47,20 +55,34 @@ const createAtlas = (
  * Находка аудита UX-02: в шапке настроек стояло «OpenRouter готов» и «Атлас подключен», а ниже на
  * той же странице — «Недоступен · fetch failed». Бейдж обязан отражать результат проверки.
  */
-describe('getOpenRouterHealthBadge', () => {
+describe('getAiProviderHealthBadge', () => {
   it('reports a working connection with the check time', () => {
     expect(
-      getOpenRouterHealthBadge(createOpenRouter({ status: 'ok', checkedAt: CHECKED_AT })),
+      getAiProviderHealthBadge(createAiProvider({ status: 'ok', checkedAt: CHECKED_AT })),
     ).toEqual({
       label: `OpenRouter работает · ${formatDateTime(CHECKED_AT)}`,
       tone: 'success',
     });
   });
 
+  it('names the configured provider in the badge', () => {
+    expect(
+      getAiProviderHealthBadge(
+        createAiProvider(
+          { status: 'ok', checkedAt: CHECKED_AT },
+          { provider: 'polza', label: 'Polza.ai', baseUrl: 'https://polza.ai/api/v1' },
+        ),
+      ),
+    ).toEqual({
+      label: `Polza.ai работает · ${formatDateTime(CHECKED_AT)}`,
+      tone: 'success',
+    });
+  });
+
   it('reports a configured but unreachable OpenRouter as unavailable, not ready', () => {
     expect(
-      getOpenRouterHealthBadge(
-        createOpenRouter({
+      getAiProviderHealthBadge(
+        createAiProvider({
           status: 'failed',
           checkedAt: CHECKED_AT,
           errorMessage: 'User not found.',
@@ -74,15 +96,15 @@ describe('getOpenRouterHealthBadge', () => {
 
   it('asks for a key when none is configured', () => {
     expect(
-      getOpenRouterHealthBadge(
-        createOpenRouter({ status: 'not_configured', checkedAt: CHECKED_AT }),
+      getAiProviderHealthBadge(
+        createAiProvider({ status: 'not_configured', checkedAt: CHECKED_AT }),
       ),
     ).toEqual({ label: 'OpenRouter: ключ не задан', tone: 'warning' });
   });
 
   it('does not claim anything while the settings are still loading', () => {
-    expect(getOpenRouterHealthBadge(undefined)).toEqual({
-      label: 'OpenRouter: проверяем связь',
+    expect(getAiProviderHealthBadge(undefined)).toEqual({
+      label: 'ИИ: проверяем связь',
       tone: 'neutral',
     });
   });
@@ -92,15 +114,15 @@ describe('getOpenRouterHealthBadge', () => {
    * обещание проверки, которой не будет.
    */
   it('says the check could not be done when the settings request failed', () => {
-    expect(getOpenRouterHealthBadge(undefined, { isError: true })).toEqual({
-      label: 'OpenRouter: не удалось проверить',
+    expect(getAiProviderHealthBadge(undefined, { isError: true })).toEqual({
+      label: 'ИИ: не удалось проверить',
       tone: 'danger',
     });
   });
 
   it('keeps the last known result when only a refetch failed', () => {
     expect(
-      getOpenRouterHealthBadge(createOpenRouter({ status: 'ok', checkedAt: CHECKED_AT }), {
+      getAiProviderHealthBadge(createAiProvider({ status: 'ok', checkedAt: CHECKED_AT }), {
         isError: true,
       }),
     ).toEqual({

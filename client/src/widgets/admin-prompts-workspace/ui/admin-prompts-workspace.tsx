@@ -7,7 +7,7 @@ import { AdminPromptsWorkspaceContent } from './admin-prompts-workspace-content'
 import { useAdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
 
 /**
- * Каталог моделей OpenRouter нужен одному выпадающему списку в редакторе, а библиотека промптов и
+ * Каталог моделей провайдера ИИ нужен одному выпадающему списку в редакторе, а библиотека промптов и
  * их версии лежат в собственной базе. Раньше недоступный каталог гасил весь раздел целиком, и
  * админ не мог даже прочитать сохраненный промпт; теперь ошибка каталога — это полоса
  * предупреждения над рабочей областью.
@@ -18,8 +18,8 @@ function AdminPromptsModelsWarning({ onRetry }: { onRetry: () => void }) {
       className={`flex flex-wrap items-center justify-between gap-3 ${adminClassNames.panel.warningInline}`}
     >
       <p>
-        Каталог моделей OpenRouter недоступен. Промпты и версии открыты для чтения и правки, выбор
-        модели временно недоступен.
+        Каталог моделей провайдера ИИ недоступен. Промпты и версии открыты для чтения и правки,
+        выбор модели временно недоступен.
       </p>
       <Button type="button" size="sm" variant="outline" onClick={onRetry}>
         Повторить

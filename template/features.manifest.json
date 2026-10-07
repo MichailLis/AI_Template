@@ -13,20 +13,24 @@
   "generatedApiDirs": ["privacy-policy", "tests-public"],
   "integrationModules": [
     {
-      "name": "openrouter",
-      "backendModule": "OpenRouterModule",
+      "name": "ai-provider",
+      "backendModule": "AiProviderModule",
       "ownership": {
         "kind": "integration",
-        "owns": ["OpenRouter API client", "OpenRouter API key resolution"]
+        "owns": [
+          "OpenAI-compatible AI provider client (Polza.ai, OpenRouter, any base URL)",
+          "AI provider configuration and API key resolution"
+        ]
       },
       "ownedRoots": {
-        "backend": ["server/src/openrouter"]
+        "backend": ["server/src/ai-provider"]
       },
       "backendFiles": [
-        "server/src/openrouter/openrouter.module.ts",
-        "server/src/openrouter/openrouter-api-key.service.ts",
-        "server/src/openrouter/openrouter.client.ts",
-        "server/src/openrouter/openrouter.utils.ts"
+        "server/src/ai-provider/ai-provider.module.ts",
+        "server/src/ai-provider/ai-provider.config.ts",
+        "server/src/ai-provider/ai-provider-config.service.ts",
+        "server/src/ai-provider/ai-provider.client.ts",
+        "server/src/ai-provider/ai-provider.utils.ts"
       ]
     },
     {
@@ -150,7 +154,7 @@
           "protected": true
         },
         {
-          "path": "/admin/settings/openrouter",
+          "path": "/admin/settings/ai-provider",
           "methods": ["get"],
           "protected": true
         },

@@ -9,7 +9,7 @@ NestJS backend for the AI Template product workspace.
 - Passport/JWT auth
 - `nestjs-zod` DTO validation
 - Swagger/OpenAPI generation
-- OpenRouter integration through a backend-only module
+- OpenAI-compatible AI provider integration (Polza.ai by default, OpenRouter, any base URL) through a backend-only module
 - Jest unit/e2e tests
 
 ## Runtime
@@ -55,17 +55,20 @@ Required non-local values:
 - `JWT_REFRESH_SECRET`
 - `CORS_ALLOWED_ORIGINS`
 
-OpenRouter variables are backend-only:
+AI provider variables are backend-only (details in `AI_GUIDE.md`, "AI Provider Configuration"):
 
-- `OPENROUTER_API_KEY`
-- `OPENROUTER_DEFAULT_MODEL`
-- `OPENROUTER_HTTP_REFERER`
-- `OPENROUTER_APP_NAME`
-- `OPENROUTER_TIMEOUT_MS`
-- `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS`
-- `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`
+- `AI_PROVIDER` — `polza` (default), `openrouter` or `openai-compatible`
+- `AI_BASE_URL` — overrides the preset address; required for `openai-compatible`
+- `AI_API_KEY`
+- `AI_DEFAULT_MODEL`
+- `AI_TIMEOUT_MS`
+- `AI_PROF_ORIENTATION_TIMEOUT_MS`
+- `AI_PROF_ORIENTATION_TIMEOUT_RETRIES`
+- `OPENROUTER_HTTP_REFERER`, `OPENROUTER_APP_NAME` — OpenRouter attribution headers
 
-Do not expose `OPENROUTER_API_KEY` through frontend/Vite env.
+`OPENROUTER_API_KEY` and the other `OPENROUTER_*` names are still read as fallbacks, so an
+environment configured before `AI_*` keeps working. Do not expose `AI_API_KEY` through
+frontend/Vite env.
 
 ## Domain Modules
 
@@ -73,7 +76,7 @@ Do not expose `OPENROUTER_API_KEY` through frontend/Vite env.
 - `admin` — admin shell APIs, user management (create, edit, reset password, deactivate, end sessions, role), and settings.
 - `app-settings` — persisted system settings such as profession atlas URL.
 - `analysis-prompts` — Prompt Studio lifecycle, model proxy, generation, and simulation endpoints.
-- `openrouter` — integration-owned OpenRouter API client/key resolution.
+- `ai-provider` — integration-owned OpenAI-compatible client (official `openai` SDK) and provider/key resolution.
 - `tests` — tests authoring, public links, education organizations, public sessions, analytics, exports, and prof-orientation v3+ methodology.
 
 ## Public Test API Highlights

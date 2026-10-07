@@ -350,10 +350,10 @@ describe('PublicTestResultWorkspace', () => {
           meaning: 'Алгоритмическое описание карточки можно показать после ошибки ИИ.',
           llm: {
             status: 'failed',
-            errorMessage: 'OpenRouter request timeout',
+            errorMessage: 'AI provider request timeout',
           },
         }),
-        errorMessage: 'OpenRouter request timeout',
+        errorMessage: 'AI provider request timeout',
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
     });

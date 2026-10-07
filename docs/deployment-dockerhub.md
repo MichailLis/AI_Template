@@ -81,13 +81,15 @@ BOOTSTRAP_ADMIN_PASSWORD=change-this-admin-password
 BOOTSTRAP_ADMIN_NAME=Administrator
 BOOTSTRAP_ADMIN_RESET_PASSWORD=false
 
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL=
+AI_PROVIDER=polza
+AI_BASE_URL=
+AI_API_KEY=
+AI_DEFAULT_MODEL=
+AI_TIMEOUT_MS=120000
+AI_PROF_ORIENTATION_TIMEOUT_MS=180000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 OPENROUTER_HTTP_REFERER=https://your-domain.example
 OPENROUTER_APP_NAME=AI Template Admin
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 Важно:
@@ -96,10 +98,11 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 - Значения `change-this-*` обязательно замените перед реальным продакшеном.
 - `CORS_ALLOWED_ORIGINS` должен содержать реальные frontend origins через запятую.
   В production-like окружениях backend не стартует без этого значения.
-- OpenRouter-переменные должны оставаться backend-only и совпадать с контрактом
-  в `.env.deploy.example` и `docker-compose.deploy.yml`; не добавляйте
-  `OPENROUTER_API_KEY` в frontend env или Vite-переменные.
-- Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
+- Переменные провайдера ИИ (`AI_*`, `OPENROUTER_*`) должны оставаться backend-only и
+  совпадать с контрактом в `.env.deploy.example` и `docker-compose.deploy.yml`; не добавляйте
+  `AI_API_KEY` в frontend env или Vite-переменные. Провайдер по умолчанию — Polza.ai, другой
+  OpenAI-совместимый сервис подключается через `AI_PROVIDER` и `AI_BASE_URL`.
+- Если реальный `AI_API_KEY`, JWT secret или пароль уже попадал в логи,
   `docker compose config` или чат, поверните его у провайдера перед повторным
   использованием.
 - В образе нет захардкоженного админа. Первый админ создается только если заданы
@@ -226,13 +229,15 @@ BOOTSTRAP_ADMIN_PASSWORD=change-this-admin-password
 BOOTSTRAP_ADMIN_NAME=Administrator
 BOOTSTRAP_ADMIN_RESET_PASSWORD=false
 
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL=
+AI_PROVIDER=polza
+AI_BASE_URL=
+AI_API_KEY=
+AI_DEFAULT_MODEL=
+AI_TIMEOUT_MS=120000
+AI_PROF_ORIENTATION_TIMEOUT_MS=180000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 OPENROUTER_HTTP_REFERER=http://127.0.0.1:18080
 OPENROUTER_APP_NAME=AI Template Admin
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 Запуск:

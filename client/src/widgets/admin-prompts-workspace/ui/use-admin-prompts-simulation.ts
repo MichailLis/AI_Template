@@ -80,7 +80,7 @@ export function useAdminPromptsSimulation({
     }
 
     if (selectedModelItem?.supportsStructuredOutputs !== true) {
-      toast.error('Выберите модель OpenRouter со structured outputs');
+      toast.error('Выберите модель со structured outputs');
       return;
     }
 

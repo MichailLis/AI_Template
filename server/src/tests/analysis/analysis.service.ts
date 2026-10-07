@@ -11,11 +11,13 @@ import {
   TestAnalysisResultJsonSchema,
   TestAnalysisResultSchema,
 } from '../../common/analysis/test-analysis-result.contract';
+import { readFirstEnv, type AiProviderConnection } from '../../ai-provider/ai-provider.config';
 import {
-  OpenRouterClientService,
-  type OpenRouterPromptRequest,
-} from '../../openrouter/openrouter.client';
-import { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
+  AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE,
+  AiProviderClientService,
+  type AiPromptRequest,
+} from '../../ai-provider/ai-provider.client';
+import { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import { PrismaService } from '../../prisma.service';
 import {
   ProfOrientationV3PlusEnrichmentJsonSchema,
@@ -92,9 +94,10 @@ interface ProfOrientationAttemptAnalysisRecord {
   }>;
 }
 
-const PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS = 180_000;
+const PROF_ORIENTATION_AI_TIMEOUT_MS = 180_000;
 const PROF_ORIENTATION_TIMEOUT_RETRIES = 1;
 const PROF_ORIENTATION_MAX_TIMEOUT_RETRIES = 2;
+/** Маршрутизация OpenRouter; другим провайдерам клиент её не передаёт. */
 const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
   order: ['cloudflare', 'baidu'],
   allow_fallbacks: true,
@@ -107,8 +110,8 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
-    private readonly openRouterClient: OpenRouterClientService,
+    private readonly aiProviderConfig: AiProviderConfigService,
+    private readonly aiProviderClient: AiProviderClientService,
   ) {}
 
   private buildAttemptAnalysisPrompt(input: {
@@ -178,12 +181,15 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     return error instanceof Error ? error.message : 'Analysis generation failed';
   }
 
-  private isOpenRouterTimeoutError(error: unknown) {
-    return this.toErrorMessage(error) === 'OpenRouter request timeout';
+  private isAiProviderTimeoutError(error: unknown) {
+    return this.toErrorMessage(error) === AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE;
   }
 
-  private getProfOrientationOpenRouterTimeoutMs() {
-    const rawValue = this.config.get<string | number>('OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS');
+  private getProfOrientationAiTimeoutMs() {
+    const rawValue = readFirstEnv(this.config, [
+      'AI_PROF_ORIENTATION_TIMEOUT_MS',
+      'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS',
+    ]);
     const parsedValue =
       typeof rawValue === 'number'
         ? rawValue
@@ -195,16 +201,14 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
       return parsedValue;
     }
 
-    return Math.max(
-      this.openRouterClient.resolveTimeoutMs(),
-      PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS,
-    );
+    return Math.max(this.aiProviderClient.resolveTimeoutMs(), PROF_ORIENTATION_AI_TIMEOUT_MS);
   }
 
   private getProfOrientationTimeoutRetries() {
-    const rawValue = this.config.get<string | number>(
+    const rawValue = readFirstEnv(this.config, [
+      'AI_PROF_ORIENTATION_TIMEOUT_RETRIES',
       'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES',
-    );
+    ]);
     const parsedValue =
       typeof rawValue === 'number'
         ? rawValue
@@ -220,18 +224,18 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
   }
 
   private async generateProfOrientationPromptWithTimeoutRetry(
-    apiKey: string,
-    dto: OpenRouterPromptRequest,
+    connection: AiProviderConnection,
+    dto: AiPromptRequest,
   ) {
     const retries = this.getProfOrientationTimeoutRetries();
-    const timeoutMs = this.getProfOrientationOpenRouterTimeoutMs();
+    const timeoutMs = this.getProfOrientationAiTimeoutMs();
     let attempt = 0;
 
     while (true) {
       try {
-        return await this.openRouterClient.generatePrompt(apiKey, dto, { timeoutMs });
+        return await this.aiProviderClient.generatePrompt(connection, dto, { timeoutMs });
       } catch (error) {
-        if (!this.isOpenRouterTimeoutError(error) || attempt >= retries) {
+        if (!this.isAiProviderTimeoutError(error) || attempt >= retries) {
           throw error;
         }
 
@@ -240,9 +244,9 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     }
   }
 
-  private async resolveStructuredModel(apiKey: string, savedModel: string) {
+  private async resolveStructuredModel(connection: AiProviderConnection, savedModel: string) {
     try {
-      const catalog = await this.openRouterClient.fetchModels(apiKey);
+      const catalog = await this.aiProviderClient.fetchModels(connection);
 
       if (catalog.models.some((model) => model.id === savedModel)) {
         return savedModel;
@@ -454,11 +458,11 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     }
 
     try {
-      const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
-      const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
+      const connection = await this.aiProviderConfig.getConnection();
+      const model = await this.resolveStructuredModel(connection, promptVersion.model);
       const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
       const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.openRouterClient.generatePrompt(apiKey, {
+      const response = await this.aiProviderClient.generatePrompt(connection, {
         model,
         prompt: this.buildAttemptAnalysisPrompt({
           prompt: promptVersion.prompt,
@@ -510,11 +514,11 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     }
 
     try {
-      const apiKey = await this.openRouterApiKeyService.getOpenRouterApiKey();
-      const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
+      const connection = await this.aiProviderConfig.getConnection();
+      const model = await this.resolveStructuredModel(connection, promptVersion.model);
       const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
       const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.generateProfOrientationPromptWithTimeoutRetry(apiKey, {
+      const response = await this.generateProfOrientationPromptWithTimeoutRetry(connection, {
         model,
         prompt: this.buildProfOrientationEnrichmentPrompt({
           prompt: promptVersion.prompt,

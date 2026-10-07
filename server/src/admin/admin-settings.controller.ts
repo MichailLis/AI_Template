@@ -6,12 +6,12 @@ import { AtGuard } from '../auth/guards';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
-import { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import { OpenRouterClientService, type OpenRouterHealth } from '../openrouter/openrouter.client';
+import { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
+import { AiProviderClientService, type AiProviderHealth } from '../ai-provider/ai-provider.client';
 import {
+  AdminAiProviderSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
-  AdminOpenRouterSettingsResponseDto,
   ProfessionAtlasCoverageResponseDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
@@ -25,8 +25,8 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 @Controller('admin/settings')
 export class AdminSettingsController {
   constructor(
-    private readonly openRouterApiKeyService: OpenRouterApiKeyService,
-    private readonly openRouterClient: OpenRouterClientService,
+    private readonly aiProviderConfig: AiProviderConfigService,
+    private readonly aiProviderClient: AiProviderClientService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
     private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
@@ -36,21 +36,19 @@ export class AdminSettingsController {
    * Настройки несут результат живой проверки связи, как настройки атласа несут `coverage`: бейдж
    * в шапке должен отвечать на вопрос «работает ли», а не «задан ли ключ».
    */
-  @Get('openrouter')
-  @ApiOperation({ summary: 'Get OpenRouter settings with a live connection check' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminOpenRouterSettingsResponseDto })
-  async getOpenRouterSettings(@GetCurrentUserId() userId: number) {
-    const settings = await this.openRouterApiKeyService.getOpenRouterSettings(userId);
+  @Get('ai-provider')
+  @ApiOperation({ summary: 'Get AI provider settings with a live connection check' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminAiProviderSettingsResponseDto })
+  async getAiProviderSettings(@GetCurrentUserId() userId: number) {
+    const settings = await this.aiProviderConfig.getAiProviderSettings(userId);
 
-    const health: OpenRouterHealth = settings.openRouter.isConfigured
-      ? await this.openRouterClient.checkHealth(
-          await this.openRouterApiKeyService.getOpenRouterApiKey(),
-        )
+    const health: AiProviderHealth = settings.aiProvider.isConfigured
+      ? await this.aiProviderClient.checkHealth(await this.aiProviderConfig.getConnection())
       : { status: 'not_configured', checkedAt: new Date().toISOString() };
 
     return {
-      openRouter: {
-        ...settings.openRouter,
+      aiProvider: {
+        ...settings.aiProvider,
         health,
       },
     };

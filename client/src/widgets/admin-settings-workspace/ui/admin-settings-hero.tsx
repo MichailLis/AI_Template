@@ -17,15 +17,15 @@ const integrationBadgeClassNames: Record<IntegrationHealthTone, string> = {
 };
 
 /**
- * Шапка настроек. Бейджи показывают результат проверки связи (см. `getOpenRouterHealthBadge` и
+ * Шапка настроек. Бейджи показывают результат проверки связи (см. `getAiProviderHealthBadge` и
  * `getProfessionAtlasHealthBadge`), а не наличие настроек: раньше здесь стояло «OpenRouter готов»
  * и «Атлас подключен», пока ниже на той же странице атлас был «Недоступен · fetch failed».
  */
 export function AdminSettingsHero({
-  openRouterBadge,
+  aiProviderBadge,
   professionAtlasBadge,
 }: {
-  openRouterBadge: IntegrationHealthBadge;
+  aiProviderBadge: IntegrationHealthBadge;
   professionAtlasBadge: IntegrationHealthBadge;
 }) {
   return (
@@ -44,14 +44,14 @@ export function AdminSettingsHero({
               Настройки
             </h1>
             <p className={`mt-1 text-sm ${adminClassNames.text.body}`}>
-              OpenRouter используется для анализа ответов. Атлас профессий показывается на публичной
-              странице результата.
+              Провайдер ИИ (OpenAI-совместимый API) используется для анализа ответов. Атлас
+              профессий показывается на публичной странице результата.
             </p>
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Badge variant="outline" className={integrationBadgeClassNames[openRouterBadge.tone]}>
-            {openRouterBadge.label}
+          <Badge variant="outline" className={integrationBadgeClassNames[aiProviderBadge.tone]}>
+            {aiProviderBadge.label}
           </Badge>
           <Badge
             variant="outline"

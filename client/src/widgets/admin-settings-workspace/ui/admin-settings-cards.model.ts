@@ -1,17 +1,17 @@
 import { formatDateTime } from '@/shared/lib/date-format';
 
 import type {
-  AdminOpenRouterSettingsResponseDto,
+  AdminAiProviderSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
 } from '@/shared/api/model';
 
-export type OpenRouterSettings = AdminOpenRouterSettingsResponseDto['openRouter'];
+export type AiProviderSettings = AdminAiProviderSettingsResponseDto['aiProvider'];
 export type ProfessionAtlasSettings = AdminProfessionAtlasSettingsResponseDto['professionAtlas'];
 export type ProfessionAtlasCoverage = NonNullable<ProfessionAtlasSettings['coverage']>;
 export type PrivacyPolicySettings = AdminPrivacyPolicySettingsResponseDto['privacyPolicy'];
 
-export const sourceLabels: Record<OpenRouterSettings['source'], string> = {
+export const sourceLabels: Record<AiProviderSettings['source'], string> = {
   ENV: 'Переменная окружения',
   NONE: 'Не задан',
 };
@@ -52,29 +52,30 @@ const withCheckTime = (label: string, checkedAt: string) =>
 /**
  * Бейдж в шапке отвечает на вопрос «работает ли», а не «задан ли ключ». Раньше «OpenRouter готов»
  * показывался по одному наличию ключа и оставался зелёным при отозванном ключе или упавшем
- * сервисе. Отказ OpenRouter — danger: без него не работает ИИ-анализ.
+ * сервисе. Отказ провайдера ИИ — danger: без него не работает ИИ-анализ. Бейдж называет
+ * подключённого провайдера (Polza.ai, OpenRouter, …), пока настройки не загружены — «ИИ».
  */
-export const getOpenRouterHealthBadge = (
-  openRouter: OpenRouterSettings | undefined,
+export const getAiProviderHealthBadge = (
+  aiProvider: AiProviderSettings | undefined,
   { isError = false }: IntegrationHealthOptions = {},
 ): IntegrationHealthBadge => {
-  if (!openRouter) {
+  if (!aiProvider) {
     return isError
-      ? { label: 'OpenRouter: не удалось проверить', tone: 'danger' }
-      : { label: 'OpenRouter: проверяем связь', tone: 'neutral' };
+      ? { label: 'ИИ: не удалось проверить', tone: 'danger' }
+      : { label: 'ИИ: проверяем связь', tone: 'neutral' };
   }
 
-  const { health } = openRouter;
+  const { health, label } = aiProvider;
 
   if (health.status === 'ok') {
-    return { label: withCheckTime('OpenRouter работает', health.checkedAt), tone: 'success' };
+    return { label: withCheckTime(`${label} работает`, health.checkedAt), tone: 'success' };
   }
 
   if (health.status === 'failed') {
-    return { label: withCheckTime('OpenRouter недоступен', health.checkedAt), tone: 'danger' };
+    return { label: withCheckTime(`${label} недоступен`, health.checkedAt), tone: 'danger' };
   }
 
-  return { label: 'OpenRouter: ключ не задан', tone: 'warning' };
+  return { label: `${label}: ключ не задан`, tone: 'warning' };
 };
 
 /**

@@ -54,14 +54,14 @@ export class AnalysisPromptsController {
   }
 
   @Get('models')
-  @ApiOperation({ summary: 'Get available OpenRouter models' })
+  @ApiOperation({ summary: 'Get available AI provider models' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptModelsResponseDto })
   getPromptModels(@GetCurrentUserId() userId: number) {
     return this.analysisPromptsService.getPromptModels(userId);
   }
 
   @Post('generate')
-  @ApiOperation({ summary: 'Generate response from prompt via OpenRouter' })
+  @ApiOperation({ summary: 'Generate response from prompt via the AI provider' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
   generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
     return this.analysisPromptsService.generatePrompt(userId, dto);

@@ -1,12 +1,13 @@
 import {
+  extractAiProviderErrorMessage,
   filterStructuredOutputPromptModels,
-  parseOpenRouterModels,
+  parsePromptModels,
   resolveDefaultPromptModel,
-} from './openrouter.utils';
+} from './ai-provider.utils';
 
-describe('openrouter utils', () => {
+describe('ai provider utils', () => {
   it('keeps only concrete models that support strict structured outputs for analysis prompts', () => {
-    const models = parseOpenRouterModels({
+    const models = parsePromptModels({
       data: [
         {
           id: 'baidu/qianfan-ocr-fast:free',
@@ -92,5 +93,78 @@ describe('openrouter utils', () => {
       'openai/gpt-oss-20b:free',
     );
     expect(resolveDefaultPromptModel(models, 'openrouter/free')).toBe('openai/gpt-oss-20b:free');
+  });
+
+  it('reads the Polza.ai catalog where capabilities and prices live in top_provider', () => {
+    const models = parsePromptModels({
+      object: 'list',
+      data: [
+        {
+          id: 'openai/gpt-4o',
+          name: 'GPT-4o',
+          type: 'chat',
+          context_length: 128000,
+          top_provider: {
+            supported_parameters: ['temperature', 'tools', 'response_format'],
+            pricing: {
+              prompt_per_million: '7.50',
+              completion_per_million: '22.50',
+              currency: 'RUB',
+            },
+          },
+        },
+        {
+          id: 'some/tools-only',
+          name: 'Tools only',
+          type: 'chat',
+          top_provider: { supported_parameters: ['tools'], pricing: { currency: 'RUB' } },
+        },
+        {
+          id: 'openai/text-embedding-3-small',
+          name: 'Embeddings',
+          type: 'embedding',
+          top_provider: { supported_parameters: ['response_format'], pricing: { currency: 'RUB' } },
+        },
+      ],
+    });
+
+    expect(filterStructuredOutputPromptModels(models)).toEqual([
+      {
+        id: 'openai/gpt-4o',
+        label: 'GPT-4o (openai/gpt-4o)',
+        provider: 'openai',
+        isFree: false,
+        supportsStructuredOutputs: true,
+        contextLength: 128000,
+        promptPrice: 7.5,
+        completionPrice: 22.5,
+      },
+    ]);
+  });
+
+  it('keeps models of a plain OpenAI-style catalog that reports no capabilities', () => {
+    const models = parsePromptModels({
+      object: 'list',
+      data: [{ id: 'gpt-4o-mini', object: 'model', owned_by: 'openai' }],
+    });
+
+    expect(filterStructuredOutputPromptModels(models)).toEqual([
+      expect.objectContaining({
+        id: 'gpt-4o-mini',
+        provider: 'openai',
+        supportsStructuredOutputs: true,
+      }),
+    ]);
+  });
+
+  it('extracts the provider message from an SDK error body', () => {
+    expect(
+      extractAiProviderErrorMessage(
+        Object.assign(new Error('401 User not found.'), { error: { message: 'User not found.' } }),
+        'fallback',
+      ),
+    ).toBe('User not found.');
+    expect(extractAiProviderErrorMessage(new Error('boom'), 'fallback')).toBe('boom');
+    expect(extractAiProviderErrorMessage(null, 'fallback')).toBe('fallback');
   });
 });

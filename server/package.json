@@ -49,6 +49,7 @@
     "dotenv": "^17.2.4",
     "exceljs": "^4.4.0",
     "nestjs-zod": "^5.5.0",
+    "openai": "^7.30.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pdfmake": "^0.3.11",
