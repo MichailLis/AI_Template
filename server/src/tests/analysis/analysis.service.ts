@@ -1,4 +1,4 @@
-import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   Prisma,
@@ -92,18 +92,21 @@ interface ProfOrientationAttemptAnalysisRecord {
   }>;
 }
 
-const PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS = 180_000;
-const PROF_ORIENTATION_TIMEOUT_RETRIES = 1;
+const PROF_ORIENTATION_OPENROUTER_TIMEOUT_MS = 90_000;
+const PROF_ORIENTATION_TIMEOUT_RETRIES = 2;
 const PROF_ORIENTATION_MAX_TIMEOUT_RETRIES = 2;
+// Замеры 2026-10-08: Cloudflare отвечал 60–175 с и стоил в 15 раз дороже, поэтому исключён.
 const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
-  order: ['cloudflare', 'baidu'],
-  allow_fallbacks: true,
+  preferred_min_throughput: { p50: 50 },
+  ignore: ['cloudflare'],
 } as const;
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 
 @Injectable()
 export class TestsAnalysisService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(TestsAnalysisService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
@@ -221,6 +224,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
 
   private async generateProfOrientationPromptWithTimeoutRetry(
     apiKey: string,
+    attemptId: number,
     dto: OpenRouterPromptRequest,
   ) {
     const retries = this.getProfOrientationTimeoutRetries();
@@ -228,10 +232,34 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     let attempt = 0;
 
     while (true) {
+      const startedAt = Date.now();
+
       try {
-        return await this.openRouterClient.generatePrompt(apiKey, dto, { timeoutMs });
+        const response = await this.openRouterClient.generatePrompt(
+          apiKey,
+          { ...dto, sessionId: `prof-orientation-${attemptId}-try-${attempt + 1}` },
+          { timeoutMs },
+        );
+
+        this.logger.log(
+          `Prof-orientation enrichment attempt ${attemptId} succeeded on try ${attempt + 1} in ${Date.now() - startedAt} ms (provider: ${response.provider ?? 'unknown'}, usage: ${JSON.stringify(response.usage ?? null)})`,
+        );
+
+        return response;
       } catch (error) {
-        if (!this.isOpenRouterTimeoutError(error) || attempt >= retries) {
+        // Повтор пока только на таймаут (ait-fuu). Быстрые ошибки провайдера (5xx, "Provider
+        // returned error") тоже можно повторять: они занимают секунды, а при балансировке и
+        // уникальном session_id обычно уходят к другому провайдеру (попытка 335: 3,7 с). Ошибки
+        // ключа, лимита денег и 4xx повторять нельзя. Решение владельца: пока не расширять.
+        if (!this.isOpenRouterTimeoutError(error)) {
+          throw error;
+        }
+
+        this.logger.warn(
+          `Prof-orientation enrichment attempt ${attemptId} timed out on try ${attempt + 1} after ${Date.now() - startedAt} ms`,
+        );
+
+        if (attempt >= retries) {
           throw error;
         }
 
@@ -514,21 +542,25 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
       const model = await this.resolveStructuredModel(apiKey, promptVersion.model);
       const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
       const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.generateProfOrientationPromptWithTimeoutRetry(apiKey, {
-        model,
-        prompt: this.buildProfOrientationEnrichmentPrompt({
-          prompt: promptVersion.prompt,
-          algorithmSummary: currentSummary,
-          questions,
-          answers,
-        }),
-        temperature: promptVersion.temperature,
-        responseFormat: 'json',
-        responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
-        requireParameters: true,
-        useResponseHealing: true,
-        provider: PROF_ORIENTATION_OPENROUTER_PROVIDER,
-      });
+      const response = await this.generateProfOrientationPromptWithTimeoutRetry(
+        apiKey,
+        attempt.id,
+        {
+          model,
+          prompt: this.buildProfOrientationEnrichmentPrompt({
+            prompt: promptVersion.prompt,
+            algorithmSummary: currentSummary,
+            questions,
+            answers,
+          }),
+          temperature: promptVersion.temperature,
+          responseFormat: 'json',
+          responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
+          requireParameters: true,
+          useResponseHealing: true,
+          provider: PROF_ORIENTATION_OPENROUTER_PROVIDER,
+        },
+      );
       const parsedOutput = parseProfOrientationV3PlusEnrichment(JSON.parse(response.output));
       const summary = {
         ...currentSummary,

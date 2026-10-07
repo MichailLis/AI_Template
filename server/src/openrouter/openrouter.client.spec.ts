@@ -115,4 +115,107 @@ describe('openrouter client', () => {
       allow_fallbacks: true,
     });
   });
+
+  it('returns the serving provider and usage from the OpenRouter response', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: '{"ok":true}' } }],
+          provider: 'StreamLake',
+          usage: {
+            prompt_tokens: 15200,
+            completion_tokens: 900,
+            completion_tokens_details: { reasoning_tokens: 0 },
+            cost: 0.0004,
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const result = await createClient(undefined).generatePrompt('test-key', {
+      model: 'deepseek/deepseek-v4-flash',
+      prompt: 'Return JSON',
+      responseFormat: 'json',
+      responseSchema: { schema: { type: 'object', additionalProperties: true } },
+    });
+
+    expect(result.provider).toBe('StreamLake');
+    expect(result.usage).toEqual({
+      prompt_tokens: 15200,
+      completion_tokens: 900,
+      completion_tokens_details: { reasoning_tokens: 0 },
+      cost: 0.0004,
+    });
+  });
+
+  it('passes the preferred minimum throughput threshold through to the request', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: '{"ok":true}' } }],
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await createClient(undefined).generatePrompt('test-key', {
+      model: 'deepseek/deepseek-v4-flash',
+      prompt: 'Return JSON',
+      responseFormat: 'json',
+      responseSchema: { schema: { type: 'object', additionalProperties: true } },
+      provider: {
+        preferred_min_throughput: { p50: 50 },
+        ignore: ['cloudflare'],
+      },
+    });
+
+    const requestBody = fetchMock.mock.calls[0]?.[1]?.body;
+
+    if (typeof requestBody !== 'string') {
+      throw new Error('Expected OpenRouter request body to be serialized JSON');
+    }
+
+    const body = JSON.parse(requestBody) as { provider?: unknown };
+
+    expect(body.provider).toEqual({
+      require_parameters: true,
+      preferred_min_throughput: { p50: 50 },
+      ignore: ['cloudflare'],
+    });
+  });
+
+  it('sends sessionId as session_id and omits it when not provided', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }), {
+          status: 200,
+        }),
+      ),
+    );
+    const client = createClient(undefined);
+
+    await client.generatePrompt('test-key', {
+      model: 'deepseek/deepseek-v4-flash',
+      prompt: 'Return JSON',
+      sessionId: 'prof-orientation-5-try-1',
+    });
+    await client.generatePrompt('test-key', {
+      model: 'deepseek/deepseek-v4-flash',
+      prompt: 'Return JSON',
+    });
+
+    const bodies = fetchMock.mock.calls.map((call) => {
+      const rawBody = call[1]?.body;
+
+      if (typeof rawBody !== 'string') {
+        throw new Error('Expected OpenRouter request body to be serialized JSON');
+      }
+
+      return JSON.parse(rawBody) as object;
+    });
+
+    expect(bodies[0]).toMatchObject({ session_id: 'prof-orientation-5-try-1' });
+    expect(bodies[1]).not.toHaveProperty('session_id');
+  });
 });

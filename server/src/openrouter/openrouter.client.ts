@@ -16,11 +16,34 @@ interface OpenRouterProviderPreferences {
   order?: readonly string[];
   allow_fallbacks?: boolean;
   sort?: OpenRouterProviderSort;
+  preferred_min_throughput?: number | OpenRouterPercentileThresholds;
+  ignore?: readonly string[];
+}
+
+interface OpenRouterPercentileThresholds {
+  p50?: number;
+  p75?: number;
+  p90?: number;
+  p99?: number;
 }
 
 type OpenRouterProviderRequest = OpenRouterProviderPreferences & {
   require_parameters?: boolean;
 };
+
+export interface OpenRouterUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  completion_tokens_details?: { reasoning_tokens?: number };
+  cost?: number;
+}
+
+export interface OpenRouterPromptResult {
+  model: string;
+  output: string;
+  provider?: string;
+  usage?: OpenRouterUsage;
+}
 
 export interface OpenRouterPromptRequest {
   model: string;
@@ -35,6 +58,7 @@ export interface OpenRouterPromptRequest {
   requireParameters?: boolean;
   useResponseHealing?: boolean;
   provider?: OpenRouterProviderPreferences;
+  sessionId?: string;
 }
 
 export const resolveOpenRouterTimeoutMs = (config: ConfigService, timeoutMs?: number) => {
@@ -83,11 +107,16 @@ const buildPromptRequestBody = (dto: OpenRouterPromptRequest) => {
         };
     provider?: OpenRouterProviderRequest;
     plugins?: Array<{ id: 'response-healing' }>;
+    session_id?: string;
   } = {
     model: dto.model,
     temperature: dto.temperature ?? 0.7,
     messages: [{ role: 'user', content: dto.prompt }],
   };
+
+  if (dto.sessionId) {
+    openRouterRequestBody.session_id = dto.sessionId;
+  }
   const provider: OpenRouterProviderRequest = { ...(dto.provider ?? {}) };
 
   if (responseFormat === 'json') {
@@ -199,7 +228,7 @@ const generateOpenRouterPrompt = async (
   apiKey: string,
   dto: OpenRouterPromptRequest,
   options?: { timeoutMs?: number },
-) => {
+): Promise<OpenRouterPromptResult> => {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -232,6 +261,8 @@ const generateOpenRouterPrompt = async (
               }>;
         };
       }>;
+      provider?: string;
+      usage?: OpenRouterUsage;
     };
 
     const output = extractCompletionOutput(payload);
@@ -254,6 +285,8 @@ const generateOpenRouterPrompt = async (
     return {
       model: dto.model,
       output: formattedOutput,
+      provider: payload.provider,
+      usage: payload.usage,
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {

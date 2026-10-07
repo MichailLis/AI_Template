@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 
 import { TestAnalysisResultJsonSchema } from '../../common/analysis/test-analysis-result.contract';
@@ -691,11 +692,11 @@ describe('TestsAnalysisService', () => {
       expect.objectContaining({
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
         provider: {
-          order: ['cloudflare', 'baidu'],
-          allow_fallbacks: true,
+          preferred_min_throughput: { p50: 50 },
+          ignore: ['cloudflare'],
         },
       }),
-      { timeoutMs: 180_000 },
+      { timeoutMs: 120_000 },
     );
     const promptOptions = openRouterClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('Профессор Полюс говорит');
@@ -743,7 +744,7 @@ describe('TestsAnalysisService', () => {
     expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
     const firstPromptCall = openRouterClientMock.generatePrompt.mock.calls[0] as unknown[];
     expect(firstPromptCall[2]).toMatchObject({
-      timeoutMs: 180_000,
+      timeoutMs: 120_000,
     });
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
@@ -760,6 +761,106 @@ describe('TestsAnalysisService', () => {
           analysis: validProfOrientationEnrichment,
         },
       },
+    });
+  });
+
+  describe('prof-orientation enrichment timeout policy', () => {
+    const mockPromptAttempt = () => {
+      prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
+        id: 5,
+        analysis: {
+          summary: {
+            resultKind: 'prof_orientation_v3_plus',
+            primaryDirection: { id: 'A1', name: '3D-моделирование' },
+            confidence: { level: 'high' },
+            profile: { type: 'single_profile' },
+            llm: { status: 'pending' },
+          },
+        },
+        topicVersion: {
+          scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+          analysisPromptVersion: {
+            id: 42,
+            model: 'google/gemini-2.0-flash-exp:free',
+            temperature: 0.2,
+            prompt: 'Enrich prof-orientation result',
+          },
+          questions: [],
+        },
+        answers: [],
+      });
+      prismaMock.testStudentAnalysis.update.mockResolvedValue({});
+    };
+
+    it('uses the configured 90s timeout and up to two retries', async () => {
+      configMock.get.mockImplementation((key: string) => {
+        if (key === 'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS') return '90000';
+        if (key === 'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES') return '2';
+        return key === 'OPENROUTER_API_KEY' ? 'test-key' : undefined;
+      });
+      mockPromptAttempt();
+      jest
+        .mocked(openRouterClientMock.generatePrompt)
+        .mockRejectedValueOnce(new Error('OpenRouter request timeout'))
+        .mockRejectedValueOnce(new Error('OpenRouter request timeout'))
+        .mockResolvedValue({
+          model: 'google/gemini-2.0-flash-exp:free',
+          output: JSON.stringify(validProfOrientationEnrichment),
+        });
+
+      await service.runAttemptAnalysis(5);
+
+      expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(3);
+      for (const call of openRouterClientMock.generatePrompt.mock.calls) {
+        expect((call as unknown[])[2]).toMatchObject({ timeoutMs: 90_000 });
+      }
+      expect(
+        openRouterClientMock.generatePrompt.mock.calls.map(
+          (call) => (call as unknown[])[1] as { sessionId?: string },
+        ),
+      ).toEqual([
+        expect.objectContaining({ sessionId: 'prof-orientation-5-try-1' }),
+        expect.objectContaining({ sessionId: 'prof-orientation-5-try-2' }),
+        expect.objectContaining({ sessionId: 'prof-orientation-5-try-3' }),
+      ]);
+    });
+
+    it('stops after the default two retries and records the timeout as failed', async () => {
+      mockPromptAttempt();
+      jest
+        .mocked(openRouterClientMock.generatePrompt)
+        .mockRejectedValue(new Error('OpenRouter request timeout'));
+
+      await service.runAttemptAnalysis(5);
+
+      expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(3);
+      const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
+        (args: AnalysisUpdateArgs) => Promise<unknown>
+      >;
+      expect(updateMock.mock.calls[0]?.[0]?.data.summary).toMatchObject({
+        llm: { status: 'failed', errorMessage: 'OpenRouter request timeout' },
+      });
+    });
+
+    it('logs the attempt, duration, provider and usage without the API key or prompt', async () => {
+      mockPromptAttempt();
+      const logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+      jest.mocked(openRouterClientMock.generatePrompt).mockResolvedValue({
+        model: 'google/gemini-2.0-flash-exp:free',
+        output: JSON.stringify(validProfOrientationEnrichment),
+        provider: 'StreamLake',
+        usage: { prompt_tokens: 15200, completion_tokens: 900, cost: 0.0004 },
+      });
+
+      await service.runAttemptAnalysis(5);
+
+      const message = String(logSpy.mock.calls.at(-1)?.[0]);
+      expect(message).toContain('attempt 5 succeeded on try 1');
+      expect(message).toContain('provider: StreamLake');
+      expect(message).toContain('"prompt_tokens":15200');
+      expect(message).not.toContain('test-key');
+      expect(message).not.toContain('Enrich prof-orientation result');
+      logSpy.mockRestore();
     });
   });
 
