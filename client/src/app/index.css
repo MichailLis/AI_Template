@@ -80,6 +80,62 @@
     --admin-accent-soft: 183 100% 96%;
     --admin-accent-border: 185 70% 82%;
     --admin-accent-foreground: 186 80% 24%;
+    --admin-code: 222.2 84% 4.9%;
+    --admin-code-foreground: 0 0% 100%;
+  }
+
+  /* Тёмная тема админки: класс ставит useDocumentTheme на <html> только внутри AdminShell. */
+  .dark {
+    color-scheme: dark;
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 33% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 33% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 210 40% 96%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 220 30% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 220 30% 17%;
+    --muted-foreground: 215 18% 66%;
+    --accent: 220 30% 17%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 218 25% 22%;
+    --input: 218 25% 22%;
+    --ring: 212 27% 84%;
+    --admin-canvas: 222 40% 7%;
+    --admin-canvas-soft: 222 38% 9%;
+    --admin-canvas-warm: 200 30% 9%;
+    --admin-panel: 222 33% 11%;
+    --admin-panel-muted: 220 30% 15%;
+    --admin-border: 218 25% 22%;
+    --admin-foreground: 210 40% 96%;
+    --admin-muted: 215 18% 66%;
+    --admin-info: 199 89% 55%;
+    --admin-info-soft: 202 50% 15%;
+    --admin-info-border: 201 50% 28%;
+    --admin-info-foreground: 199 90% 78%;
+    --admin-success: 158 64% 48%;
+    --admin-success-soft: 158 40% 13%;
+    --admin-success-border: 157 40% 26%;
+    --admin-success-foreground: 152 70% 75%;
+    --admin-warning: 38 92% 55%;
+    --admin-warning-soft: 38 50% 13%;
+    --admin-warning-border: 38 55% 27%;
+    --admin-warning-foreground: 43 95% 72%;
+    --admin-danger: 346 80% 62%;
+    --admin-danger-soft: 346 45% 15%;
+    --admin-danger-border: 346 45% 30%;
+    --admin-danger-foreground: 350 90% 82%;
+    --admin-accent: 188 86% 50%;
+    --admin-accent-soft: 188 50% 12%;
+    --admin-accent-border: 188 50% 26%;
+    --admin-accent-foreground: 186 85% 72%;
+    --admin-code: 222 45% 5%;
+    --admin-code-foreground: 210 40% 92%;
   }
 }
 
@@ -94,6 +150,11 @@
     --primary: 190 80% 30%;
     --primary-foreground: 0 0% 100%;
     --ring: 190 80% 30%;
+  }
+
+  .dark .admin-surface {
+    --primary: 190 80% 34%;
+    --ring: 188 80% 55%;
   }
 }
 

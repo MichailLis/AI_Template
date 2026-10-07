@@ -84,6 +84,10 @@ export default {
           border: 'hsl(var(--admin-border) / <alpha-value>)',
           foreground: 'hsl(var(--admin-foreground) / <alpha-value>)',
           muted: 'hsl(var(--admin-muted) / <alpha-value>)',
+          code: {
+            DEFAULT: 'hsl(var(--admin-code) / <alpha-value>)',
+            foreground: 'hsl(var(--admin-code-foreground) / <alpha-value>)',
+          },
           info: {
             DEFAULT: 'hsl(var(--admin-info) / <alpha-value>)',
             soft: 'hsl(var(--admin-info-soft) / <alpha-value>)',
