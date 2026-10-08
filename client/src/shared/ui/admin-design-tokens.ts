@@ -139,6 +139,8 @@ export const adminClassNames = {
     /** Поиск в шапке переключает разделы, а не ищет данные, поэтому места занимает немного. */
     input: 'w-40 border-admin-border bg-admin-panel-muted/80 shadow-xs lg:w-52',
     button: 'bg-admin-panel shadow-xs',
+    themeToggle:
+      'inline-flex items-center gap-0.5 rounded-lg border border-admin-border bg-admin-panel-muted p-0.5',
     userBadge:
       'max-w-48 truncate rounded-lg border border-admin-border bg-admin-panel px-3 py-1.5 text-xs font-medium text-admin-muted shadow-xs',
     mobileNav: 'border-t border-admin-border bg-admin-panel-muted/80 px-4 py-3 md:hidden',
@@ -222,7 +224,7 @@ export const adminClassNames = {
     thumb: 'inline-block h-5 w-5 rounded-full bg-admin-panel transition-transform',
   },
   code: {
-    block: 'max-h-48 overflow-auto rounded-md bg-admin-foreground p-3 text-xs text-white',
+    block: 'max-h-48 overflow-auto rounded-md bg-admin-code p-3 text-xs text-admin-code-foreground',
     softBlock:
       'max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-md bg-admin-panel-muted p-3 text-xs text-admin-foreground',
   },

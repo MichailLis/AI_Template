@@ -2,6 +2,7 @@ import { LogOut, Menu, Search } from 'lucide-react';
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { useDocumentTheme } from '@/shared/lib/use-document-theme';
 import { cn } from '@/shared/lib/utils';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
@@ -16,6 +17,7 @@ import {
   resolveActiveNavHref,
   type AdminNavItem,
 } from './admin-navigation';
+import { AdminThemeToggle } from './admin-theme-toggle';
 
 interface AdminShellProps {
   children: ReactNode;
@@ -186,6 +188,7 @@ function AdminHeader({ userLabel, activeNavHref, onLogout, isLoggingOut }: Admin
               <Search />
             </Button>
           </form>
+          <AdminThemeToggle />
           <span className={adminClassNames.header.userBadge}>{userLabel}</span>
           <Button
             variant="outline"
@@ -238,6 +241,7 @@ export const AdminShell = ({
   isLoggingOut,
 }: AdminShellProps) => {
   const activeNavHref = resolveActiveNavHref(activePath);
+  useDocumentTheme();
 
   return (
     <div className={adminClassNames.shell.root}>
