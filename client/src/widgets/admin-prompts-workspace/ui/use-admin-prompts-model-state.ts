@@ -19,7 +19,7 @@ export interface AdminPromptsModelState {
   setModelFilter: Dispatch<SetStateAction<ModelFilter>>;
 }
 
-/** OpenRouter request settings plus the model-picker filters. */
+/** AI provider request settings plus the model-picker filters. */
 export function useAdminPromptsModelState(): AdminPromptsModelState {
   const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState('0.7');

@@ -132,41 +132,47 @@ Current UI note:
 - `POST /auth/refresh` reads the refresh cookie and returns a new `accessToken`; it does not return a refresh token in the response body.
 - Browser refresh handling lives in `client/src/shared/api/interceptors.ts`; generated API code and `client/src/shared/api/api.ts` must not read browser storage directly.
 
-## Prompt Studio (OpenRouter Foundation)
+## Prompt Studio (AI Provider Foundation)
 
 Prompt Studio is available at `"/admin/prompts"` and currently includes:
 
-- model catalog loaded from OpenRouter (`all/free/paid` filter + search)
+- model catalog loaded from the configured AI provider (`all/free/paid` filter + search)
 - safe default to free models when available
 - prompt editor with line numbers
 - editable test variables (add/remove) with duplicate-key validation
 - prompt simulation area with test source selector, selected question preview, run history, metrics, and JSON view
 - response format switch (`text` / `json`)
 - strict structured JSON support for generation (`response_format: json_schema`) when schema is provided
-- provider parameter strictness support (`provider.require_parameters`) for schema-compatible routing
-- optional response-healing plugin support for malformed JSON repair
+- OpenRouter only: provider parameter strictness (`provider.require_parameters`) and the response-healing plugin
 
 Required backend environment variables:
 
 - Local host development: copy `server/.env.example` to `server/.env`.
 - Root Docker Compose: copy `.env.example` to `.env` or export the variables in the shell.
 
+The backend calls any OpenAI-compatible API through the official `openai` SDK. Polza.ai is the
+default; OpenRouter and any other service are selected in the admin panel (`/admin/settings`:
+provider, base URL, API key, model; the key is stored encrypted) or, as the initial/fallback
+configuration, by the env variables below (see `AI_GUIDE.md`, "AI Provider Configuration").
+
 ```env
-OPENROUTER_API_KEY=
+AI_API_KEY=
 # optional
-OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
-OPENROUTER_HTTP_REFERER="http://localhost:5173"
-OPENROUTER_APP_NAME="AI Template Admin"
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+AI_PROVIDER=polza            # polza | openrouter | openai-compatible
+AI_BASE_URL=                 # required for openai-compatible, e.g. https://api.openai.com/v1
+AI_DEFAULT_MODEL="openai/gpt-4o-mini"
+AI_TIMEOUT_MS=120000
+AI_PROF_ORIENTATION_TIMEOUT_MS=180000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+OPENROUTER_HTTP_REFERER="http://localhost:5173"   # OpenRouter only
+OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
 ```
 
 Security note:
 
-- Never expose OpenRouter API key in frontend code.
-- If a real OpenRouter key is ever printed, committed, or shared through `docker compose config`, rotate it in OpenRouter before reuse.
-- All OpenRouter requests must go through backend (`/admin/prompts/*`).
+- Never expose the AI provider API key in frontend code.
+- If a real AI provider key is ever printed, committed, or shared through `docker compose config`, rotate it at the provider before reuse.
+- All AI provider requests must go through backend (`/admin/prompts/*`).
 
 ## Tests Module (Draft/Publish Baseline)
 
@@ -196,9 +202,9 @@ Current UX baseline for question editing:
 
 AI generation safety rules in tests workspace:
 
-- model picker shows only models that advertise `structured_outputs` support
+- model picker shows only models that advertise structured output support (`response_format`; OpenRouter also `structured_outputs`)
 - generation requests use strict JSON schema (`responseSchema.strict=true`) to constrain allowed question types
-- requests do not use OpenRouter web-search plugin (`web`) or `:online` model variants
+- requests do not use the web-search plugin (`web`) or `:online` model variants
 
 Domain constraints currently applied:
 
@@ -224,7 +230,7 @@ Built-in prof-orientation v3+ contract:
 - LLM enrichment may explain and expand result blocks, but must not change the
   deterministic primary direction, scores, confidence, profile type, or
   professions
-- prof-orientation OpenRouter calls use a longer timeout by default and retry only
+- prof-orientation AI provider calls use a longer timeout by default and retry only
   timeout failures; see `docs/2026-05-19-prof-orientation-v3-plus.md`
 
 Analytics report contract:
@@ -266,7 +272,7 @@ Admin capabilities baseline:
 
 Admin settings:
 
-- `/admin/settings` shows OpenRouter key status from backend-only configuration.
+- `/admin/settings` shows the AI provider, its address, key status and a live connection check from backend-only configuration.
 - `/admin/settings` also manages the optional profession atlas URL.
 - When configured, public and admin attempt result views can show the profession atlas link for prof-orientation results.
 

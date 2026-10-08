@@ -1,17 +1,17 @@
 import { AdminSettingsController } from './admin-settings.controller';
 import type { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import type { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
-import type { OpenRouterApiKeyService } from '../openrouter/openrouter-api-key.service';
-import type { OpenRouterClientService } from '../openrouter/openrouter.client';
+import type { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
+import type { AiProviderClientService } from '../ai-provider/ai-provider.client';
 import type { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
-  let openRouterApiKeyService: {
-    getOpenRouterSettings: jest.Mock;
-    getOpenRouterApiKey: jest.Mock;
+  let aiProviderConfig: {
+    getAiProviderSettings: jest.Mock;
+    getConnection: jest.Mock;
   };
-  let openRouterClient: {
+  let aiProviderClient: {
     checkHealth: jest.Mock;
   };
   let professionAtlasSettingsService: {
@@ -27,11 +27,11 @@ describe('AdminSettingsController', () => {
   };
 
   beforeEach(() => {
-    openRouterApiKeyService = {
-      getOpenRouterSettings: jest.fn(),
-      getOpenRouterApiKey: jest.fn(),
+    aiProviderConfig = {
+      getAiProviderSettings: jest.fn(),
+      getConnection: jest.fn(),
     };
-    openRouterClient = {
+    aiProviderClient = {
       checkHealth: jest.fn(),
     };
     professionAtlasSettingsService = {
@@ -47,8 +47,8 @@ describe('AdminSettingsController', () => {
     };
 
     controller = new AdminSettingsController(
-      openRouterApiKeyService as unknown as OpenRouterApiKeyService,
-      openRouterClient as unknown as OpenRouterClientService,
+      aiProviderConfig as unknown as AiProviderConfigService,
+      aiProviderClient as unknown as AiProviderClientService,
       professionAtlasSettingsService as unknown as ProfessionAtlasSettingsService,
       privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
       profOrientationAtlasService as unknown as ProfOrientationAtlasService,
@@ -59,24 +59,33 @@ describe('AdminSettingsController', () => {
    * Находка аудита UX-02: «OpenRouter готов» показывался по наличию ключа. Настройки должны нести
    * результат реальной проверки связи, как атлас несёт `coverage`.
    */
-  it('returns masked OpenRouter settings together with a live connection check', async () => {
-    openRouterApiKeyService.getOpenRouterSettings.mockResolvedValue({
-      openRouter: {
+  it('returns masked AI provider settings together with a live connection check', async () => {
+    const connection = { baseUrl: 'https://polza.ai/api/v1', apiKey: 'pza-env-secret' };
+    aiProviderConfig.getAiProviderSettings.mockResolvedValue({
+      aiProvider: {
+        provider: 'polza',
+        label: 'Polza.ai',
+        baseUrl: 'https://polza.ai/api/v1',
+        defaultModel: null,
         isConfigured: true,
         maskedValue: 'sk-or-v1...cret',
         source: 'ENV',
         updatedAt: null,
       },
     });
-    openRouterApiKeyService.getOpenRouterApiKey.mockResolvedValue('sk-or-v1-env-secret');
-    openRouterClient.checkHealth.mockResolvedValue({
+    aiProviderConfig.getConnection.mockResolvedValue(connection);
+    aiProviderClient.checkHealth.mockResolvedValue({
       status: 'failed',
       checkedAt: '2026-09-12T20:05:00.000Z',
       errorMessage: 'User not found.',
     });
 
-    await expect(controller.getOpenRouterSettings(3)).resolves.toEqual({
-      openRouter: {
+    await expect(controller.getAiProviderSettings(3)).resolves.toEqual({
+      aiProvider: {
+        provider: 'polza',
+        label: 'Polza.ai',
+        baseUrl: 'https://polza.ai/api/v1',
+        defaultModel: null,
         isConfigured: true,
         maskedValue: 'sk-or-v1...cret',
         source: 'ENV',
@@ -88,13 +97,13 @@ describe('AdminSettingsController', () => {
         },
       },
     });
-    expect(openRouterApiKeyService.getOpenRouterSettings).toHaveBeenCalledWith(3);
-    expect(openRouterClient.checkHealth).toHaveBeenCalledWith('sk-or-v1-env-secret');
+    expect(aiProviderConfig.getAiProviderSettings).toHaveBeenCalledWith(3);
+    expect(aiProviderClient.checkHealth).toHaveBeenCalledWith(connection);
   });
 
-  it('does not call OpenRouter when no key is configured', async () => {
-    openRouterApiKeyService.getOpenRouterSettings.mockResolvedValue({
-      openRouter: {
+  it('does not call the AI provider when no key is configured', async () => {
+    aiProviderConfig.getAiProviderSettings.mockResolvedValue({
+      aiProvider: {
         isConfigured: false,
         maskedValue: null,
         source: 'NONE',
@@ -102,11 +111,11 @@ describe('AdminSettingsController', () => {
       },
     });
 
-    const result = await controller.getOpenRouterSettings(3);
+    const result = await controller.getAiProviderSettings(3);
 
-    expect(result.openRouter.health.status).toBe('not_configured');
-    expect(openRouterClient.checkHealth).not.toHaveBeenCalled();
-    expect(openRouterApiKeyService.getOpenRouterApiKey).not.toHaveBeenCalled();
+    expect(result.aiProvider.health.status).toBe('not_configured');
+    expect(aiProviderClient.checkHealth).not.toHaveBeenCalled();
+    expect(aiProviderConfig.getConnection).not.toHaveBeenCalled();
   });
 
   it('returns profession atlas settings', async () => {

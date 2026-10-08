@@ -81,7 +81,7 @@ Copy-Item server/.env.example server/.env
 > **Примечание:** Если вы используете интеграцию с ИИ, укажите ваш ключ в `server/.env`:
 >
 > ```env
-> OPENROUTER_API_KEY=sk-or-v1-...
+> AI_API_KEY=...
 > ```
 
 ---

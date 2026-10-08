@@ -3,9 +3,10 @@ import { FileText, KeyRound, Link2 } from 'lucide-react';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { AiProviderForm } from './admin-settings-ai-provider-form';
 import {
-  OpenRouterStateBadge,
-  OpenRouterStatusPanel,
+  AiProviderStateBadge,
+  AiProviderStatusPanel,
   ProfessionAtlasCoveragePanel,
   ProfessionAtlasForm,
   ProfessionAtlasStatusPanel,
@@ -14,25 +15,25 @@ import {
 import { PrivacyPolicyForm, PrivacyPolicyStatusPanel } from './admin-settings-privacy.parts';
 
 import type {
-  OpenRouterSettings,
+  AiProviderSettings,
   PrivacyPolicySettings,
   ProfessionAtlasSettings,
 } from './admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
-interface OpenRouterSettingsCardProps {
+interface AiProviderSettingsCardProps {
   isError: boolean;
   isLoading: boolean;
-  openRouter: OpenRouterSettings | undefined;
+  aiProvider: AiProviderSettings | undefined;
   onRetry: () => void;
 }
 
-export function OpenRouterSettingsCard({
+export function AiProviderSettingsCard({
   isError,
   isLoading,
-  openRouter,
+  aiProvider,
   onRetry,
-}: OpenRouterSettingsCardProps) {
+}: AiProviderSettingsCardProps) {
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
       <CardHeader className={adminClassNames.border.bottom}>
@@ -40,11 +41,14 @@ export function OpenRouterSettingsCard({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-lg">
               <KeyRound className="size-4 shrink-0 text-admin-muted" />
-              Ключ API OpenRouter
+              Провайдер ИИ
             </CardTitle>
-            <CardDescription>Ключ берется только из переменной окружения сервера.</CardDescription>
+            <CardDescription>
+              OpenAI-совместимый API. Провайдер, адрес, ключ и модель задаются здесь; без
+              сохранённых настроек действуют переменные окружения сервера (AI_*).
+            </CardDescription>
           </div>
-          {openRouter ? <OpenRouterStateBadge openRouter={openRouter} /> : null}
+          {aiProvider ? <AiProviderStateBadge aiProvider={aiProvider} /> : null}
         </div>
       </CardHeader>
 
@@ -55,12 +59,18 @@ export function OpenRouterSettingsCard({
 
         {isError ? (
           <SettingsLoadError
-            message="Не удалось загрузить настройки OpenRouter."
+            message="Не удалось загрузить настройки провайдера ИИ."
             onRetry={onRetry}
           />
         ) : null}
 
-        {openRouter ? <OpenRouterStatusPanel openRouter={openRouter} /> : null}
+        {aiProvider ? <AiProviderStatusPanel aiProvider={aiProvider} /> : null}
+        {aiProvider ? (
+          <AiProviderForm
+            key={`${aiProvider.provider}|${aiProvider.baseUrl}|${aiProvider.defaultModel}|${aiProvider.updatedAt}`}
+            aiProvider={aiProvider}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

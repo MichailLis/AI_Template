@@ -65,13 +65,15 @@ BOOTSTRAP_ADMIN_PASSWORD=CHANGE_ADMIN_PASSWORD
 BOOTSTRAP_ADMIN_NAME=Administrator
 BOOTSTRAP_ADMIN_RESET_PASSWORD=false
 
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL=
+AI_PROVIDER=polza
+AI_BASE_URL=
+AI_API_KEY=
+AI_DEFAULT_MODEL=
+AI_TIMEOUT_MS=120000
+AI_PROF_ORIENTATION_TIMEOUT_MS=180000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 OPENROUTER_HTTP_REFERER=https://YOUR_DOMAIN
 OPENROUTER_APP_NAME=AI Template Admin
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 ```
 
 Заменить:
@@ -83,7 +85,7 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 - `admin@example.com`
 - `CHANGE_ADMIN_PASSWORD`
 
-Если реальный `OPENROUTER_API_KEY`, JWT secret или пароль уже попадал в логи,
+Если реальный `AI_API_KEY`, JWT secret или пароль уже попадал в логи,
 `docker compose config` или чат, поверните его у провайдера перед повторным
 использованием.
 
@@ -91,9 +93,11 @@ OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
 Для production-like окружений сервер не стартует без этого значения или с
 локальными placeholder-секретами.
 
-OpenRouter-переменные должны оставаться backend-only и совпадать с контрактом в
-`.env.deploy.example` и `docker-compose.deploy.yml`. Не добавляйте
-`OPENROUTER_API_KEY` в frontend env или Vite-переменные.
+Переменные провайдера ИИ (`AI_*`, `OPENROUTER_*`) должны оставаться backend-only и
+совпадать с контрактом в `.env.deploy.example` и `docker-compose.deploy.yml`. Не добавляйте
+`AI_API_KEY` в frontend env или Vite-переменные. Провайдер по умолчанию — Polza.ai;
+OpenRouter или любой другой OpenAI-совместимый сервис подключается через `AI_PROVIDER` и
+`AI_BASE_URL` (см. `AI_GUIDE.md`, «AI Provider Configuration»).
 
 ## 4. Запустить
 

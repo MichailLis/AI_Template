@@ -12,7 +12,8 @@ platform with an operator admin area under `/admin` and a public student flow un
   Tailwind 3, shadcn/ui. Strict Feature-Sliced Design.
 - Infrastructure: Docker Compose with four containers — `ai_template_frontend` (5173),
   `ai_template_backend` (3000), `ai_template_postgres` (5432), `ai_template_adminer` (8080).
-- Integration: OpenRouter for LLM calls, proxied through the backend only; the API key never
+- Integration: OpenAI-compatible AI provider (Polza.ai by default, OpenRouter optional) for LLM
+  calls, proxied through the backend only; the API key never
   reaches the frontend.
 
 ## Bounded contexts
@@ -23,7 +24,7 @@ platform with an operator admin area under `/admin` and a public student flow un
 - `tests` — test authoring and publishing, public links, education organizations, attempt/session/
   result flows, and the public `/t/*` routes. The largest context by far.
 - `analysis-prompts` — prompt lifecycle and simulation, the `/admin/prompts` workspace.
-- `openrouter` — integration module, declared in the manifest under `integrationModules`.
+- `ai-provider` — integration module, declared in the manifest under `integrationModules`.
 - `app-settings` — system configuration.
 
 ## Sources of truth

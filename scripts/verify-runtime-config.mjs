@@ -43,13 +43,18 @@ const deployComposePath = join(rootDir, 'docker-compose.deploy.yml');
 const deployComposeSource = readFileSync(deployComposePath, 'utf8');
 const runtimeEnvNames = [
   'CORS_ALLOWED_ORIGINS',
-  'OPENROUTER_DEFAULT_MODEL',
+  'AI_PROVIDER',
+  'AI_BASE_URL',
+  'AI_DEFAULT_MODEL',
+  'AI_TIMEOUT_MS',
+  'AI_PROF_ORIENTATION_TIMEOUT_MS',
+  'AI_PROF_ORIENTATION_TIMEOUT_RETRIES',
   'OPENROUTER_HTTP_REFERER',
   'OPENROUTER_APP_NAME',
-  'OPENROUTER_TIMEOUT_MS',
-  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS',
-  'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES',
 ];
+// Secrets: examples document them with an empty value. OPENROUTER_API_KEY is the legacy name
+// the backend still reads as a fallback for AI_PROVIDER=openrouter.
+const secretEnvNames = ['AI_API_KEY', 'OPENROUTER_API_KEY'];
 const requiredRuntimeApiDiscoveryMarkers = [
   '/api-json',
   '/auth/signin',
@@ -232,11 +237,17 @@ if (!clientViteConfigSource.includes('VITE_API_URL')) {
 
 for (const envExamplePath of envExamplePaths) {
   const envExample = readFileSync(join(rootDir, envExamplePath), 'utf8');
-  const openRouterKeyMatch = envExample.match(/^OPENROUTER_API_KEY=(.*)$/m);
-  const openRouterKeyValue = openRouterKeyMatch?.[1]?.trim() ?? '';
+  for (const secretEnvName of secretEnvNames) {
+    const secretValue =
+      envExample.match(new RegExp(`^${secretEnvName}=(.*)$`, 'm'))?.[1]?.trim() ?? '';
 
-  if (openRouterKeyValue) {
-    fail(`${envExamplePath} must leave OPENROUTER_API_KEY empty`);
+    if (secretValue) {
+      fail(`${envExamplePath} must leave ${secretEnvName} empty`);
+    }
+  }
+
+  if (!/^AI_API_KEY=/m.test(envExample)) {
+    fail(`${envExamplePath} must document AI_API_KEY`);
   }
 
   if (new RegExp(`${legacyDevJwtValue}|${openRouterKeyPrefix}-`, 'i').test(envExample)) {

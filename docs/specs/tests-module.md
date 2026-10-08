@@ -77,10 +77,11 @@ Built-in prof-orientation v3+ baseline:
    An enrichment left `pending` past the staleness window is re-queued by
    `recoverStalePendingLlmAnalyses`, which must therefore match `ALGORITHM_LLM`
    records that are already `READY`, not only `PENDING` ones.
-8. Prof-orientation OpenRouter calls may use
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS` and
-   `OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES`; retries are allowed only for
-   `OpenRouter request timeout` and must stay capped at 2.
+8. Prof-orientation AI provider calls may use
+   `AI_PROF_ORIENTATION_TIMEOUT_MS` and
+   `AI_PROF_ORIENTATION_TIMEOUT_RETRIES` (legacy `OPENROUTER_*` names are read as
+   fallbacks); retries are allowed only for `AI provider request timeout` and must
+   stay capped at 2.
 9. Polus result UI should merge LLM explanations into existing methodology blocks
    and avoid exposing raw method internals to students.
 10. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.

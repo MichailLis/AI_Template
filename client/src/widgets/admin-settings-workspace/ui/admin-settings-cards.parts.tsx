@@ -19,20 +19,20 @@ import {
 } from './admin-settings-cards.model';
 
 import type {
-  OpenRouterSettings,
+  AiProviderSettings,
   ProfessionAtlasCoverage,
   ProfessionAtlasSettings,
 } from './admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
-export function OpenRouterStateBadge({ openRouter }: { openRouter: OpenRouterSettings }) {
-  const className = openRouter.isConfigured
+export function AiProviderStateBadge({ aiProvider }: { aiProvider: AiProviderSettings }) {
+  const className = aiProvider.isConfigured
     ? adminBadgeClassNames.success
     : adminBadgeClassNames.warning;
 
   return (
     <Badge variant="outline" className={className}>
-      {openRouter.isConfigured ? 'Ключ настроен' : 'Ключ не настроен'}
+      {aiProvider.isConfigured ? 'Ключ настроен' : 'Ключ не настроен'}
     </Badge>
   );
 }
@@ -60,25 +60,35 @@ export function SettingsLoadError({ message, onRetry }: { message: string; onRet
   );
 }
 
-export function OpenRouterStatusPanel({ openRouter }: { openRouter: OpenRouterSettings }) {
+export function AiProviderStatusPanel({ aiProvider }: { aiProvider: AiProviderSettings }) {
   return (
     <div className={`grid gap-3 text-sm sm:grid-cols-3 ${adminClassNames.panel.loading}`}>
       <div>
-        <p className={adminClassNames.text.kicker}>Источник</p>
+        <p className={adminClassNames.text.kicker}>Провайдер</p>
+        <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>{aiProvider.label}</p>
+      </div>
+      <div className="min-w-0 sm:col-span-2">
+        <p className={adminClassNames.text.kicker}>Адрес API</p>
+        <p className={`mt-1 break-all font-mono ${adminClassNames.text.heading}`}>
+          {aiProvider.baseUrl ?? 'не задан (AI_BASE_URL)'}
+        </p>
+      </div>
+      <div>
+        <p className={adminClassNames.text.kicker}>Источник ключа</p>
         <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>
-          {sourceLabels[openRouter.source]}
+          {sourceLabels[aiProvider.source]}
         </p>
       </div>
       <div>
         <p className={adminClassNames.text.kicker}>Текущий ключ</p>
         <p className={`mt-1 font-mono ${adminClassNames.text.heading}`}>
-          {openRouter.maskedValue ?? 'не задан'}
+          {aiProvider.maskedValue ?? 'не задан'}
         </p>
       </div>
-      <div>
-        <p className={adminClassNames.text.kicker}>Обновлен</p>
-        <p className={`mt-1 font-medium ${adminClassNames.text.heading}`}>
-          {formatUpdatedAt(openRouter.updatedAt)}
+      <div className="min-w-0">
+        <p className={adminClassNames.text.kicker}>Модель по умолчанию</p>
+        <p className={`mt-1 break-all font-mono ${adminClassNames.text.heading}`}>
+          {aiProvider.defaultModel ?? 'первая подходящая из каталога'}
         </p>
       </div>
     </div>
