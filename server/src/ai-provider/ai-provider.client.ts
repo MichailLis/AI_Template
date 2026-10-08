@@ -25,11 +25,33 @@ interface OpenRouterProviderPreferences {
   order?: readonly string[];
   allow_fallbacks?: boolean;
   sort?: OpenRouterProviderSort;
+  preferred_min_throughput?: number | OpenRouterPercentileThresholds;
+  ignore?: readonly string[];
+}
+
+interface OpenRouterPercentileThresholds {
+  p50?: number;
+  p75?: number;
+  p90?: number;
+  p99?: number;
 }
 
 type OpenRouterProviderRequest = OpenRouterProviderPreferences & {
   require_parameters?: boolean;
 };
+
+export interface AiPromptUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  cost?: number;
+}
+
+export interface AiPromptResult {
+  model: string;
+  output: string;
+  provider?: string;
+  usage?: AiPromptUsage;
+}
 
 export interface AiPromptRequest {
   model: string;
@@ -47,6 +69,8 @@ export interface AiPromptRequest {
   useResponseHealing?: boolean;
   /** OpenRouter: предпочтения маршрутизации. */
   provider?: OpenRouterProviderPreferences;
+  /** OpenRouter: `session_id`, привязка запросов к одному провайдеру. Уникальный id снимает её. */
+  sessionId?: string;
 }
 
 export const resolveAiTimeoutMs = (config: ConfigService, timeoutMs?: number) => {
@@ -85,12 +109,17 @@ export const buildPromptRequestBody = (
   const body: ChatCompletionCreateParamsNonStreaming & {
     provider?: OpenRouterProviderRequest;
     plugins?: Array<{ id: 'response-healing' }>;
+    session_id?: string;
   } = {
     model: dto.model,
     temperature: dto.temperature ?? 0.7,
     messages: [{ role: 'user', content: dto.prompt }],
   };
   const provider: OpenRouterProviderRequest = { ...(dto.provider ?? {}) };
+
+  if (dto.sessionId && connection.supportsOpenRouterExtensions) {
+    body.session_id = dto.sessionId;
+  }
 
   if (responseFormat === 'json') {
     body.response_format = dto.responseSchema
@@ -240,7 +269,7 @@ export class AiProviderClientService {
     connection: AiProviderConnection,
     dto: AiPromptRequest,
     options?: { timeoutMs?: number },
-  ) {
+  ): Promise<AiPromptResult> {
     const client = this.createClient(connection, this.resolveTimeoutMs(options?.timeoutMs));
     const { body, responseFormat } = buildPromptRequestBody(dto, connection);
 
@@ -263,9 +292,13 @@ export class AiProviderClientService {
             })()
           : output;
 
+      const meta = completion as { provider?: unknown; usage?: AiPromptUsage };
+
       return {
         model: dto.model,
         output: formattedOutput,
+        provider: typeof meta.provider === 'string' ? meta.provider : undefined,
+        usage: meta.usage,
       };
     } catch (error) {
       throw toProviderError(error, connection.label, AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);

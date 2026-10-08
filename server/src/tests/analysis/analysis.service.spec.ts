@@ -693,13 +693,14 @@ describe('TestsAnalysisService', () => {
       expect.objectContaining({
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
         provider: {
-          order: ['cloudflare', 'baidu'],
-          allow_fallbacks: true,
+          preferred_min_throughput: { p50: 50 },
+          ignore: ['cloudflare'],
         },
       }),
-      { timeoutMs: 180_000 },
+      { timeoutMs: 90_000 },
     );
     const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
+    expect(promptOptions?.sessionId).toMatch(/^prof-orientation-\d+-try-1$/);
     expect(promptOptions?.prompt).toContain('Профессор Полюс говорит');
     expect(promptOptions?.prompt).toContain('240-420 символов');
     expect(promptOptions?.prompt).toContain('не раскрывай внутреннюю механику подсчета');
@@ -745,8 +746,12 @@ describe('TestsAnalysisService', () => {
     expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledTimes(2);
     const firstPromptCall = aiProviderClientMock.generatePrompt.mock.calls[0] as unknown[];
     expect(firstPromptCall[2]).toMatchObject({
-      timeoutMs: 180_000,
+      timeoutMs: 90_000,
     });
+    const sessionIds = aiProviderClientMock.generatePrompt.mock.calls.map(
+      (call) => (call[1] as { sessionId?: string }).sessionId,
+    );
+    expect(sessionIds).toEqual(['prof-orientation-5-try-1', 'prof-orientation-5-try-2']);
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
     >;

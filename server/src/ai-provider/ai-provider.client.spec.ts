@@ -195,6 +195,50 @@ describe('ai provider client', () => {
     expect(body.plugins).toEqual([{ id: 'response-healing' }]);
   });
 
+  it('sends session_id and throughput routing only to OpenRouter and returns provider and usage', async () => {
+    const withRouting = {
+      ...structuredRequest,
+      sessionId: 'prof-orientation-1-try-1',
+      provider: { preferred_min_throughput: { p50: 50 }, ignore: ['cloudflare'] },
+    };
+    const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
+          id: 'x',
+          object: 'chat.completion',
+          created: 0,
+          model: 'm',
+          provider: 'Alibaba',
+          usage: { prompt_tokens: 10, completion_tokens: 5, cost: 0.001 },
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: { role: 'assistant', content: '{"ok":true}' },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const result = await createClient(undefined).generatePrompt(openRouterConnection, withRouting);
+    await createClient(undefined).generatePrompt(polzaConnection, withRouting);
+
+    const openRouterBody = readRequest(fetchMock, 0).body;
+    const polzaBody = readRequest(fetchMock, 1).body;
+
+    expect(openRouterBody.session_id).toBe('prof-orientation-1-try-1');
+    expect(openRouterBody.provider).toEqual({
+      require_parameters: true,
+      preferred_min_throughput: { p50: 50 },
+      ignore: ['cloudflare'],
+    });
+    expect(polzaBody.session_id).toBeUndefined();
+    expect(polzaBody.provider).toBeUndefined();
+    expect(result.provider).toBe('Alibaba');
+    expect(result.usage).toMatchObject({ prompt_tokens: 10, completion_tokens: 5, cost: 0.001 });
+  });
+
   it('surfaces the provider error message without the status prefix', async () => {
     jest
       .spyOn(global, 'fetch')
