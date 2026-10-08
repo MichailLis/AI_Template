@@ -49,8 +49,8 @@ AI_BASE_URL=                 # empty = preset address; required for openai-compa
 AI_API_KEY=
 AI_DEFAULT_MODEL="openai/gpt-4o-mini"
 AI_TIMEOUT_MS=120000
-AI_PROF_ORIENTATION_TIMEOUT_MS=180000
-AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+AI_PROF_ORIENTATION_TIMEOUT_MS=90000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
 OPENROUTER_HTTP_REFERER="http://localhost:5173"   # OpenRouter only
 OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
 ```
