@@ -60,13 +60,6 @@ function PolusIntroPanel() {
             По итогам вы получите подходящие направления, профессии и первые практические шаги.
           </span>
         </div>
-        <div className="polus-metric-row polus-metric-row--stats">
-          <span>Около 15 минут</span>
-          <span aria-hidden="true">•</span>
-          <span>4 блока</span>
-          <span aria-hidden="true">•</span>
-          <span>Персональный результат</span>
-        </div>
       </div>
 
       <div className="polus-professor" aria-label="Сопровождение теста">
