@@ -36,20 +36,50 @@ Runtime security defaults:
 The devcontainer compose file creates a single `workspace` container that runs frontend and
 backend together; that is why it is not the project runtime topology.
 
-### OpenRouter Configuration
+### AI Provider Configuration
 
-The API key is backend-only and must never reach the frontend. Prompt behaviour itself is
-documented in [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md).
+The backend talks to any OpenAI-compatible API (`POST /chat/completions`, `GET /models`) through
+the official `openai` SDK in `server/src/ai-provider`. The API key is backend-only and must never
+reach the frontend. Prompt behaviour itself is documented in
+[`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md).
 
 ```env
-OPENROUTER_API_KEY=
-OPENROUTER_DEFAULT_MODEL="openai/gpt-4o-mini"
-OPENROUTER_HTTP_REFERER="http://localhost:5173"
-OPENROUTER_APP_NAME="AI Template Admin"
-OPENROUTER_TIMEOUT_MS=120000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS=180000
-OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+AI_PROVIDER=polza            # polza (default) | openrouter | openai-compatible
+AI_BASE_URL=                 # empty = preset address; required for openai-compatible
+AI_API_KEY=
+AI_DEFAULT_MODEL="openai/gpt-4o-mini"
+AI_TIMEOUT_MS=120000
+AI_PROF_ORIENTATION_TIMEOUT_MS=180000
+AI_PROF_ORIENTATION_TIMEOUT_RETRIES=1
+OPENROUTER_HTTP_REFERER="http://localhost:5173"   # OpenRouter only
+OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
 ```
+
+| `AI_PROVIDER`       | Default `AI_BASE_URL`          | What the request carries                                         |
+| ------------------- | ------------------------------ | ---------------------------------------------------------------- |
+| `polza`             | `https://polza.ai/api/v1`      | Standard Chat Completions; catalog requested with `type=chat`    |
+| `openrouter`        | `https://openrouter.ai/api/v1` | Plus `provider` routing, `response-healing`, attribution headers |
+| `openai-compatible` | none, `AI_BASE_URL` required   | Standard Chat Completions only                                   |
+
+- The provider is configured in the admin panel (`/admin/settings`, tab «Интеграции»): provider,
+  base URL, API key and default model. Saved values live in `app_settings` (`ai.*`) and override
+  the env variables below; the key is stored AES-256-GCM encrypted with a key derived from
+  `JWT_REFRESH_SECRET` and is never returned by the API (only a masked value). Rotating
+  `JWT_REFRESH_SECRET` makes the saved key unreadable: it is then treated as unset (the env key
+  applies) and must be entered again. Changes are written to the audit journal without the key.
+  Without saved settings the env variables below are used, which suits first deployment.
+- Switching provider by env: set `AI_PROVIDER`, `AI_API_KEY` and, for any
+  other service, `AI_BASE_URL`. Model ids saved in prompt versions are provider-specific; when a
+  saved id is missing from the new catalog, analysis falls back to the catalog default model.
+- OpenRouter extensions are sent only to `openrouter`: a strict OpenAI-compatible service answers
+  400 to unknown fields.
+- The model catalog keeps models that report structured output support (`response_format`, and
+  for OpenRouter also `structured_outputs`). A catalog that reports no capabilities at all keeps
+  every model; the request itself then decides.
+- Legacy names: with `AI_PROVIDER` and `AI_API_KEY` unset, a set `OPENROUTER_API_KEY` selects
+  `openrouter`, and `OPENROUTER_DEFAULT_MODEL`, `OPENROUTER_TIMEOUT_MS`,
+  `OPENROUTER_PROF_ORIENTATION_TIMEOUT_*` are read as fallbacks, so an environment configured
+  before `AI_*` keeps working unchanged.
 
 ## Refactor Debt Prevention (Always-On)
 
@@ -207,12 +237,12 @@ Current ownership map:
 - `analysis-prompts` owns prompt lifecycle, prompt simulation, and the `/admin/prompts` operator
   workflow. Tests may reference published prompt versions through database relations/contracts, but
   must not deep-import analysis prompt internals.
-- `openrouter` is infrastructure/integration code. Feature code must not import OpenRouter
+- `ai-provider` is infrastructure/integration code. Feature code must not import AI provider
   utilities through another feature module; expose integration services from the integration owner.
 - `audit` is the change journal, also an integration module. `admin`, `analysis-prompts`, `tests`
   and `app-settings` write events through `AuditService`; each feature serves the history of its
   own entities from its own route.
-- Integration-only backend modules (`openrouter`, `audit`) are declared in
+- Integration-only backend modules (`ai-provider`, `audit`) are declared in
   `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent
   product workflow and lifecycle.
@@ -304,7 +334,7 @@ Verification gates:
 These describe the product built on this template rather than the template itself. Read the one
 you are touching; do not load them all up front.
 
-- [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md) — working on `/admin/prompts`, prompt versioning, or OpenRouter calls.
+- [`docs/specs/prompt-studio.md`](docs/specs/prompt-studio.md) — working on `/admin/prompts`, prompt versioning, or AI provider calls.
 - [`docs/specs/tests-module.md`](docs/specs/tests-module.md) — working on test authoring, publishing, or the built-in prof-orientation methodology.
 - [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
 - [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.

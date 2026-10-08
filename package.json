@@ -49,6 +49,9 @@
     "prisma:studio": "npm run prisma:studio --prefix server",
     "prepare": "husky"
   },
+  "overrides": {
+    "shell-quote": "^1.12.0"
+  },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "husky": "^9.1.7",

@@ -1,28 +1,42 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-export const OpenRouterApiKeySourceSchema = z.enum(['ENV', 'NONE']);
+import { AI_PROVIDER_IDS } from '../../ai-provider/ai-provider.config';
+
+export const AiProviderApiKeySourceSchema = z.enum(['DB', 'ENV', 'NONE']);
 
 /**
- * Результат живой проверки связи с OpenRouter. Устроен так же, как `coverage` у атласа: статус,
- * время проверки и причина отказа.
+ * Результат живой проверки связи с провайдером ИИ. Устроен так же, как `coverage` у атласа:
+ * статус, время проверки и причина отказа.
  */
-export const OpenRouterHealthSchema = z.object({
+export const AiProviderHealthSchema = z.object({
   status: z.enum(['ok', 'failed', 'not_configured']),
   checkedAt: z.string().datetime(),
   errorMessage: z.string().optional(),
 });
 
-export const OpenRouterApiKeySettingsSchema = z.object({
+export const AiProviderSettingsSchema = z.object({
+  provider: z.enum(AI_PROVIDER_IDS),
+  label: z.string(),
+  baseUrl: z.string().nullable(),
+  defaultModel: z.string().nullable(),
   isConfigured: z.boolean(),
   maskedValue: z.string().nullable(),
-  source: OpenRouterApiKeySourceSchema,
+  source: AiProviderApiKeySourceSchema,
   updatedAt: z.string().datetime().nullable(),
-  health: OpenRouterHealthSchema,
+  health: AiProviderHealthSchema,
 });
 
-export const AdminOpenRouterSettingsResponseSchema = z.object({
-  openRouter: OpenRouterApiKeySettingsSchema,
+export const AdminAiProviderSettingsResponseSchema = z.object({
+  aiProvider: AiProviderSettingsSchema,
+});
+
+export const UpdateAiProviderSchema = z.object({
+  provider: z.enum(AI_PROVIDER_IDS),
+  baseUrl: z.string().trim().url().max(2048).nullable(),
+  apiKey: z.string().trim().min(1).max(512).optional(),
+  clearApiKey: z.boolean().optional(),
+  defaultModel: z.string().trim().max(256).nullable(),
 });
 
 export const ProfessionAtlasCoverageItemSchema = z.object({
@@ -84,9 +98,11 @@ export const UpdatePrivacyPolicySchema = z.object({
   operatorFullName: z.string().trim().min(1).max(512),
 });
 
-export class AdminOpenRouterSettingsResponseDto extends createZodDto(
-  AdminOpenRouterSettingsResponseSchema,
+export class AdminAiProviderSettingsResponseDto extends createZodDto(
+  AdminAiProviderSettingsResponseSchema,
 ) {}
+
+export class UpdateAiProviderDto extends createZodDto(UpdateAiProviderSchema) {}
 
 export class AdminProfessionAtlasSettingsResponseDto extends createZodDto(
   AdminProfessionAtlasSettingsResponseSchema,

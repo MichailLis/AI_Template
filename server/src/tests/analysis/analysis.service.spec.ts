@@ -1,14 +1,16 @@
 import type { ConfigService } from '@nestjs/config';
 
 import { TestAnalysisResultJsonSchema } from '../../common/analysis/test-analysis-result.contract';
-import type { OpenRouterClientService } from '../../openrouter/openrouter.client';
-import type { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
+import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
+import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import type { PrismaService } from '../../prisma.service';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from '../prof-orientation-v3-plus/fixture';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 
 import { TestsAnalysisService } from '../analysis/analysis.service';
+import { TEST_AI_PROVIDER_CONNECTION as testConnection } from '../../ai-provider/spec-fixtures';
+import { AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE } from '../../ai-provider/ai-provider.client';
 
 type AnalysisUpsertArgs = {
   create: {
@@ -39,10 +41,10 @@ type AnalysisUpdateArgs = {
   };
 };
 
-type OpenRouterClientMock = {
-  fetchModels: jest.MockedFunction<OpenRouterClientService['fetchModels']>;
-  generatePrompt: jest.MockedFunction<OpenRouterClientService['generatePrompt']>;
-  resolveTimeoutMs: jest.MockedFunction<OpenRouterClientService['resolveTimeoutMs']>;
+type AiProviderClientMock = {
+  fetchModels: jest.MockedFunction<AiProviderClientService['fetchModels']>;
+  generatePrompt: jest.MockedFunction<AiProviderClientService['generatePrompt']>;
+  resolveTimeoutMs: jest.MockedFunction<AiProviderClientService['resolveTimeoutMs']>;
 };
 
 const validAnalysisResult = {
@@ -121,10 +123,10 @@ describe('TestsAnalysisService', () => {
   let configMock: {
     get: jest.Mock;
   };
-  let openRouterApiKeyServiceMock: {
-    getOpenRouterApiKey: jest.Mock;
+  let aiProviderConfigMock: {
+    getConnection: jest.Mock;
   };
-  let openRouterClientMock: OpenRouterClientMock;
+  let aiProviderClientMock: AiProviderClientMock;
 
   beforeEach(() => {
     prismaMock = {
@@ -142,12 +144,12 @@ describe('TestsAnalysisService', () => {
       },
     };
     configMock = {
-      get: jest.fn((key: string) => (key === 'OPENROUTER_API_KEY' ? 'test-key' : undefined)),
+      get: jest.fn((key: string) => (key === 'AI_API_KEY' ? 'test-key' : undefined)),
     };
-    openRouterApiKeyServiceMock = {
-      getOpenRouterApiKey: jest.fn().mockResolvedValue('test-key'),
+    aiProviderConfigMock = {
+      getConnection: jest.fn().mockResolvedValue(testConnection),
     };
-    openRouterClientMock = {
+    aiProviderClientMock = {
       fetchModels: jest.fn().mockResolvedValue({
         defaultModel: 'google/gemini-2.0-flash-exp:free',
         models: [
@@ -180,8 +182,8 @@ describe('TestsAnalysisService', () => {
     service = new TestsAnalysisService(
       prismaMock as unknown as PrismaService,
       configMock as unknown as ConfigService,
-      openRouterApiKeyServiceMock as unknown as OpenRouterApiKeyService,
-      openRouterClientMock as unknown as OpenRouterClientService,
+      aiProviderConfigMock as unknown as AiProviderConfigService,
+      aiProviderClientMock as unknown as AiProviderClientService,
     );
   });
 
@@ -483,7 +485,7 @@ describe('TestsAnalysisService', () => {
     expect(getProfOrientationLlmStatus(withoutPromptArgs?.create.summary)).toBe('not_requested');
   });
 
-  it('runAttemptAnalysis stores structured ready analysis from OpenRouter', async () => {
+  it('runAttemptAnalysis stores structured ready analysis from AI provider', async () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
@@ -516,15 +518,15 @@ describe('TestsAnalysisService', () => {
         },
       ],
     });
-    openRouterClientMock.generatePrompt.mockResolvedValue({
+    aiProviderClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validAnalysisResult),
     });
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
-      'test-key',
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith(
+      testConnection,
       expect.objectContaining({
         model: 'google/gemini-2.0-flash-exp:free',
         responseFormat: 'json',
@@ -533,7 +535,7 @@ describe('TestsAnalysisService', () => {
         useResponseHealing: true,
       }),
     );
-    const promptOptions = openRouterClientMock.generatePrompt.mock.calls[0]?.[1];
+    const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('introduction');
     expect(promptOptions?.prompt).toContain('2-4 предложения');
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
@@ -550,7 +552,7 @@ describe('TestsAnalysisService', () => {
     });
   });
 
-  it('runAttemptAnalysis stores failed status when OpenRouter output is invalid', async () => {
+  it('runAttemptAnalysis stores failed status when AI provider output is invalid', async () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
@@ -564,7 +566,7 @@ describe('TestsAnalysisService', () => {
       },
       answers: [],
     });
-    openRouterClientMock.generatePrompt.mockResolvedValue({
+    aiProviderClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: '{"skillsLevel":null}',
     });
@@ -617,15 +619,15 @@ describe('TestsAnalysisService', () => {
         },
       ],
     });
-    openRouterClientMock.generatePrompt.mockResolvedValue({
+    aiProviderClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validAnalysisResult),
     });
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
-      'test-key',
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith(
+      testConnection,
       expect.objectContaining({
         model: 'google/gemini-2.0-flash-exp:free',
       }),
@@ -657,7 +659,7 @@ describe('TestsAnalysisService', () => {
       },
       answers: [],
     });
-    openRouterClientMock.generatePrompt.mockResolvedValue({
+    aiProviderClientMock.generatePrompt.mockResolvedValue({
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validProfOrientationEnrichment),
     });
@@ -686,8 +688,8 @@ describe('TestsAnalysisService', () => {
     });
     expect(updateArgs?.data.status).toBe('READY');
     expect(getProfOrientationLlmStatus(updateArgs?.data.summary)).toBe('ready');
-    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledWith(
-      'test-key',
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith(
+      testConnection,
       expect.objectContaining({
         responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
         provider: {
@@ -697,7 +699,7 @@ describe('TestsAnalysisService', () => {
       }),
       { timeoutMs: 180_000 },
     );
-    const promptOptions = openRouterClientMock.generatePrompt.mock.calls[0]?.[1];
+    const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('Профессор Полюс говорит');
     expect(promptOptions?.prompt).toContain('240-420 символов');
     expect(promptOptions?.prompt).toContain('не раскрывай внутреннюю механику подсчета');
@@ -705,7 +707,7 @@ describe('TestsAnalysisService', () => {
     expect(promptOptions?.prompt).toContain('не используй технические ключи');
   });
 
-  it('runAttemptAnalysis retries prof-orientation enrichment once after OpenRouter timeout', async () => {
+  it('runAttemptAnalysis retries prof-orientation enrichment once after AI provider timeout', async () => {
     const algorithmSummary = {
       resultKind: 'prof_orientation_v3_plus',
       primaryDirection: { id: 'A1', name: '3D-моделирование' },
@@ -731,8 +733,8 @@ describe('TestsAnalysisService', () => {
       answers: [],
     });
     jest
-      .mocked(openRouterClientMock.generatePrompt)
-      .mockRejectedValueOnce(new Error('OpenRouter request timeout'))
+      .mocked(aiProviderClientMock.generatePrompt)
+      .mockRejectedValueOnce(new Error(AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE))
       .mockResolvedValue({
         model: 'google/gemini-2.0-flash-exp:free',
         output: JSON.stringify(validProfOrientationEnrichment),
@@ -740,8 +742,8 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(2);
-    const firstPromptCall = openRouterClientMock.generatePrompt.mock.calls[0] as unknown[];
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledTimes(2);
+    const firstPromptCall = aiProviderClientMock.generatePrompt.mock.calls[0] as unknown[];
     expect(firstPromptCall[2]).toMatchObject({
       timeoutMs: 180_000,
     });
@@ -789,12 +791,12 @@ describe('TestsAnalysisService', () => {
       answers: [],
     });
     jest
-      .mocked(openRouterClientMock.generatePrompt)
-      .mockRejectedValue(new Error('OpenRouter returned an empty response'));
+      .mocked(aiProviderClientMock.generatePrompt)
+      .mockRejectedValue(new Error('AI provider returned an empty response'));
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-    expect(openRouterClientMock.generatePrompt).toHaveBeenCalledTimes(1);
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledTimes(1);
     const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
       (args: AnalysisUpdateArgs) => Promise<unknown>
     >;
@@ -807,7 +809,7 @@ describe('TestsAnalysisService', () => {
         resultKind: 'prof_orientation_v3_plus',
         llm: {
           status: 'failed',
-          errorMessage: 'OpenRouter returned an empty response',
+          errorMessage: 'AI provider returned an empty response',
         },
       },
     });

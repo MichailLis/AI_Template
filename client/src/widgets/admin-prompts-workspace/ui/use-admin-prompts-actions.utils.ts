@@ -59,7 +59,7 @@ export const getPromptSaveError = (
   }
 
   if (selectedModelItem?.supportsStructuredOutputs !== true) {
-    return 'Выберите модель OpenRouter со structured outputs';
+    return 'Выберите модель со structured outputs';
   }
 
   if (!preparedPrompt) {

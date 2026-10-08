@@ -7,7 +7,7 @@ import {
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey,
   useAdminSettingsControllerGetPrivacyPolicySettings,
   useAdminSettingsControllerGetProfessionAtlasSettings,
-  useAdminSettingsControllerGetOpenRouterSettings,
+  useAdminSettingsControllerGetAiProviderSettings,
   useAdminSettingsControllerUpdatePrivacyPolicy,
   useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
@@ -17,12 +17,12 @@ import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
 
 import {
-  OpenRouterSettingsCard,
+  AiProviderSettingsCard,
   PrivacyPolicySettingsCard,
   ProfessionAtlasSettingsCard,
 } from './admin-settings-cards';
 import {
-  getOpenRouterHealthBadge,
+  getAiProviderHealthBadge,
   getProfessionAtlasHealthBadge,
 } from './admin-settings-cards.model';
 import { AdminSettingsHero } from './admin-settings-hero';
@@ -133,7 +133,7 @@ export function AdminSettingsWorkspace() {
     publicUrl: '',
   });
 
-  const settingsQuery = useAdminSettingsControllerGetOpenRouterSettings();
+  const settingsQuery = useAdminSettingsControllerGetAiProviderSettings();
   const professionAtlasQuery = useAdminSettingsControllerGetProfessionAtlasSettings();
   const updateProfessionAtlasUrlMutation = useAdminSettingsControllerUpdateProfessionAtlasUrl({
     mutation: {
@@ -150,7 +150,7 @@ export function AdminSettingsWorkspace() {
     },
   });
 
-  const openRouter = settingsQuery.data?.openRouter;
+  const aiProvider = settingsQuery.data?.aiProvider;
   const professionAtlas = professionAtlasQuery.data?.professionAtlas;
   const professionAtlasPublicUrl = professionAtlasForm.isDirty
     ? professionAtlasForm.publicUrl
@@ -183,7 +183,7 @@ export function AdminSettingsWorkspace() {
   return (
     <div className={`mx-auto max-w-4xl ${adminClassNames.layout.page}`}>
       <AdminSettingsHero
-        openRouterBadge={getOpenRouterHealthBadge(openRouter, { isError: settingsQuery.isError })}
+        aiProviderBadge={getAiProviderHealthBadge(aiProvider, { isError: settingsQuery.isError })}
         professionAtlasBadge={getProfessionAtlasHealthBadge(professionAtlas, {
           isError: professionAtlasQuery.isError,
         })}
@@ -202,10 +202,10 @@ export function AdminSettingsWorkspace() {
         className={adminClassNames.layout.page}
       >
         {settingsTab === 'integrations' ? (
-          <OpenRouterSettingsCard
+          <AiProviderSettingsCard
             isError={settingsQuery.isError}
             isLoading={settingsQuery.isLoading}
-            openRouter={openRouter}
+            aiProvider={aiProvider}
             onRetry={() => {
               void settingsQuery.refetch();
             }}

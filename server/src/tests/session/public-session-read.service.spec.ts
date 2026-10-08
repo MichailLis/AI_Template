@@ -3,8 +3,8 @@ import type { ConfigService } from '@nestjs/config';
 import type { AuditService } from '../../audit/audit.service';
 import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import type { OpenRouterApiKeyService } from '../../openrouter/openrouter-api-key.service';
-import type { OpenRouterClientService } from '../../openrouter/openrouter.client';
+import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
+import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
 import type { PrismaService } from '../../prisma.service';
 import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { TestsAnalysisService } from '../analysis/analysis.service';
@@ -74,8 +74,8 @@ describe('TestsPublicSessionService read paths', () => {
     const analysisService = new TestsAnalysisService(
       prismaMock,
       {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-      {} as OpenRouterClientService,
+      {} as AiProviderConfigService,
+      {} as AiProviderClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -127,8 +127,8 @@ describe('TestsPublicSessionService read paths', () => {
     const analysisService = new TestsAnalysisService(
       prismaMock,
       {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-      {} as OpenRouterClientService,
+      {} as AiProviderConfigService,
+      {} as AiProviderClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -191,8 +191,8 @@ describe('TestsPublicSessionService read paths', () => {
     const analysisService = new TestsAnalysisService(
       prismaMock,
       {} as ConfigService,
-      {} as OpenRouterApiKeyService,
-      {} as OpenRouterClientService,
+      {} as AiProviderConfigService,
+      {} as AiProviderClientService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
