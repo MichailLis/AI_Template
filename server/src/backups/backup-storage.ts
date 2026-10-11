@@ -16,7 +16,12 @@ import {
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
-import { BackupMetadataSchema, type BackupMetadata } from './backups.types';
+import {
+  BackupMetadataSchema,
+  BackupSettingsSchema,
+  type BackupMetadata,
+  type BackupSettings,
+} from './backups.types';
 
 export const DEFAULT_BACKUP_DIR = '/backups';
 
@@ -51,6 +56,10 @@ export class BackupStorage {
 
   private metadataPath(id: string) {
     return join(this.directory, `${id}.json`);
+  }
+
+  private get settingsPath() {
+    return join(this.directory, 'settings.json');
   }
 
   async exists() {
@@ -108,12 +117,33 @@ export class BackupStorage {
     }
   }
 
-  /** Запись через временный файл: прерванная запись не оставляет полупустой JSON. */
   async write(backup: BackupMetadata) {
-    const path = this.metadataPath(backup.id);
+    await this.writeJsonAtomically(this.metadataPath(backup.id), backup);
+  }
+
+  /** `null` — настройки еще не сохранялись или файл поврежден: действуют значения по умолчанию. */
+  async readSettings(): Promise<BackupSettings | null> {
+    try {
+      const parsed = BackupSettingsSchema.safeParse(
+        JSON.parse(await readFile(this.settingsPath, 'utf8')),
+      );
+
+      return parsed.success ? parsed.data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async writeSettings(settings: BackupSettings) {
+    await this.ensureWritable();
+    await this.writeJsonAtomically(this.settingsPath, settings);
+  }
+
+  /** Запись через временный файл: прерванная запись не оставляет полупустой JSON. */
+  private async writeJsonAtomically(path: string, value: unknown) {
     const temporaryPath = `${path}.tmp`;
 
-    await writeFile(temporaryPath, `${JSON.stringify(backup, null, 2)}\n`, 'utf8');
+    await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
     await rename(temporaryPath, path);
   }
 

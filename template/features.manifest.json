@@ -72,6 +72,8 @@
       "backendFiles": [
         "server/src/backups/backups.module.ts",
         "server/src/backups/backups.service.ts",
+        "server/src/backups/backup-settings.service.ts",
+        "server/src/backups/backup-scheduler.ts",
         "server/src/backups/backup-storage.ts",
         "server/src/backups/backups.types.ts",
         "server/src/backups/pg-tools.runner.ts",
@@ -201,6 +203,11 @@
         {
           "path": "/admin/backups",
           "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/settings",
+          "methods": ["patch"],
           "protected": true
         },
         {

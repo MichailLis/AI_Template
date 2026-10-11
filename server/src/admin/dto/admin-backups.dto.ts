@@ -1,7 +1,11 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-import { BACKUP_STATUSES, BACKUP_TRIGGERS } from '../../backups/backups.types';
+import {
+  BACKUP_STATUSES,
+  BACKUP_TRIGGERS,
+  BackupSettingsSchema,
+} from '../../backups/backups.types';
 
 /** Путь к файлу на сервере наружу не отдается: клиенту хватает идентификатора и имени. */
 export const AdminBackupSchema = z.object({
@@ -33,10 +37,9 @@ export const AdminBackupAvailabilitySchema = z.object({
 
 export const AdminBackupsOverviewResponseSchema = z.object({
   availability: AdminBackupAvailabilitySchema,
-  retention: z.object({
-    days: z.number().int().positive(),
-    maxCount: z.number().int().positive(),
-  }),
+  settings: BackupSettingsSchema,
+  /** Ближайший запуск по расписанию; null — расписание выключено. */
+  nextScheduledAt: z.string().datetime().nullable(),
   /** Идет ли сейчас создание копии: клиент опрашивает список, пока операция не закончится. */
   isBusy: z.boolean(),
   backups: z.array(AdminBackupSchema),
@@ -55,6 +58,16 @@ export const AdminBackupDownloadLinkResponseSchema = z.object({
   path: z.string(),
   expiresAt: z.string().datetime(),
 });
+
+export const AdminBackupSettingsResponseSchema = z.object({
+  settings: BackupSettingsSchema,
+});
+
+export class UpdateBackupSettingsDto extends createZodDto(BackupSettingsSchema) {}
+
+export class AdminBackupSettingsResponseDto extends createZodDto(
+  AdminBackupSettingsResponseSchema,
+) {}
 
 export class AdminBackupsOverviewResponseDto extends createZodDto(
   AdminBackupsOverviewResponseSchema,

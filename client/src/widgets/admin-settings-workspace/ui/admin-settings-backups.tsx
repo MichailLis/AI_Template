@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { BackupScheduleForm } from './admin-settings-backup-schedule';
 import {
   backupStatusLabels,
   formatBackupSize,
@@ -108,7 +109,7 @@ export function BackupsSettingsCard() {
             <CardDescription>
               Полная копия базы в формате pg_dump. Копии хранятся на сервере
               {overview
-                ? ` ${overview.retention.days} дн., не больше ${overview.retention.maxCount} шт.`
+                ? ` ${overview.settings.retentionDays} дн., не больше ${overview.settings.maxCount} шт.`
                 : '.'}{' '}
               Скачайте копию, чтобы у вас был экземпляр вне сервера.
             </CardDescription>
@@ -139,6 +140,13 @@ export function BackupsSettingsCard() {
             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
             <span>Резервное копирование недоступно: {availability.reason}</span>
           </div>
+        ) : null}
+
+        {overview ? (
+          <BackupScheduleForm
+            settings={overview.settings}
+            nextScheduledAt={overview.nextScheduledAt}
+          />
         ) : null}
 
         {overview && overview.backups.length === 0 ? (

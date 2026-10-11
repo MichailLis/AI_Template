@@ -26,6 +26,7 @@ import type {
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
   AdminBackupResponseDto,
+  AdminBackupSettingsResponseDto,
   AdminBackupsOverviewResponseDto,
   AdminControllerGetUsersParams,
   AdminOverviewResponseDto,
@@ -51,6 +52,7 @@ import type {
   ResetUserPasswordDto,
   UpdateAiProviderDto,
   UpdateAnalysisPromptVersionDto,
+  UpdateBackupSettingsDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
   UpdateUserDto,
@@ -2090,6 +2092,99 @@ export const useAdminBackupsControllerCreateBackup = <
   TContext
 > => {
   return useMutation(getAdminBackupsControllerCreateBackupMutationOptions(options), queryClient);
+};
+/**
+ * @summary Update the backup schedule and retention
+ */
+export const adminBackupsControllerUpdateSettings = (
+  updateBackupSettingsDto: UpdateBackupSettingsDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupSettingsResponseDto>(
+    {
+      url: `/admin/backups/settings`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateBackupSettingsDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerUpdateSettingsMutationKey = () =>
+  ['adminBackupsControllerUpdateSettings'] as const;
+
+export const getAdminBackupsControllerUpdateSettingsMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>,
+    TError,
+    AdminBackupsControllerUpdateSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>,
+  TError,
+  AdminBackupsControllerUpdateSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerUpdateSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>,
+    AdminBackupsControllerUpdateSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminBackupsControllerUpdateSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerUpdateSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>
+>;
+export type AdminBackupsControllerUpdateSettingsMutationBody = UpdateBackupSettingsDto;
+export type AdminBackupsControllerUpdateSettingsMutationError = ErrorType<ErrorResponseDto>;
+export type AdminBackupsControllerUpdateSettingsMutationVariables = {
+  data: UpdateBackupSettingsDto;
+};
+
+/**
+ * @summary Update the backup schedule and retention
+ */
+export const useAdminBackupsControllerUpdateSettings = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>,
+      TError,
+      AdminBackupsControllerUpdateSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerUpdateSettings>>,
+  TError,
+  AdminBackupsControllerUpdateSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerUpdateSettingsMutationOptions(options), queryClient);
 };
 /**
  * @summary Delete a database backup

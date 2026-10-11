@@ -12,13 +12,12 @@ import { AuditService } from '../audit/audit.service';
 import type { AuditAction } from '../audit/audit.types';
 import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
+import { BackupSettingsService, getNextScheduledRun } from './backup-settings.service';
 import { BackupStorage, isBackupId } from './backup-storage';
 import { parsePgToolMajorVersion, toPgConnectionEnv } from './database-connection.utils';
 import { PgToolMissingError, PgToolsRunner } from './pg-tools.runner';
-import type { BackupMetadata } from './backups.types';
+import type { BackupMetadata, BackupTrigger } from './backups.types';
 
-const DEFAULT_RETENTION_DAYS = 14;
-const DEFAULT_MAX_COUNT = 30;
 const DEFAULT_DUMP_TIMEOUT_MS = 30 * 60 * 1000;
 const VERSION_CHECK_TIMEOUT_MS = 10_000;
 const AVAILABILITY_CACHE_MS = 60_000;
@@ -69,8 +68,6 @@ const toErrorMessage = (error: unknown) => {
 @Injectable()
 export class BackupsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BackupsService.name);
-  private readonly retentionDays: number;
-  private readonly maxCount: number;
   private readonly dumpTimeoutMs: number;
   private activeBackupId: string | null = null;
   private availabilityCache: { checkedAt: number; value: BackupAvailability } | null = null;
@@ -82,12 +79,8 @@ export class BackupsService implements OnApplicationBootstrap {
     private readonly config: ConfigService,
     private readonly storage: BackupStorage,
     private readonly runner: PgToolsRunner,
+    private readonly settingsService: BackupSettingsService,
   ) {
-    this.retentionDays = readPositiveInt(
-      config.get<string>('BACKUP_RETENTION_DAYS'),
-      DEFAULT_RETENTION_DAYS,
-    );
-    this.maxCount = readPositiveInt(config.get<string>('BACKUP_MAX_COUNT'), DEFAULT_MAX_COUNT);
     this.dumpTimeoutMs = readPositiveInt(
       config.get<string>('BACKUP_TIMEOUT_MS'),
       DEFAULT_DUMP_TIMEOUT_MS,
@@ -116,14 +109,16 @@ export class BackupsService implements OnApplicationBootstrap {
   async getOverview(userId: number) {
     await ensureAdminAccess(this.prisma, userId);
 
-    const [availability, backups] = await Promise.all([
+    const [availability, backups, settings] = await Promise.all([
       this.getAvailability(),
       this.storage.list(),
+      this.settingsService.getSettings(),
     ]);
 
     return {
       availability,
-      retention: { days: this.retentionDays, maxCount: this.maxCount },
+      settings,
+      nextScheduledAt: getNextScheduledRun(settings, new Date())?.toISOString() ?? null,
       isBusy: this.activeBackupId !== null,
       backups: await this.toResponseItems(backups),
     };
@@ -132,6 +127,21 @@ export class BackupsService implements OnApplicationBootstrap {
   async createBackup(userId: number) {
     await ensureAdminAccess(this.prisma, userId);
 
+    const backup = await this.startBackup('MANUAL', userId);
+    const [item] = await this.toResponseItems([backup]);
+
+    return { backup: item };
+  }
+
+  get isBusy() {
+    return this.activeBackupId !== null;
+  }
+
+  /**
+   * Общий запуск для кнопки и расписания: права проверяет вызывающий. Возвращается описание копии
+   * в статусе RUNNING, сам дамп идет в фоне.
+   */
+  async startBackup(trigger: BackupTrigger, userId: number | null): Promise<BackupMetadata> {
     if (this.activeBackupId) {
       throw new ConflictException('Копия уже создается, дождитесь окончания', 'BACKUP_IN_PROGRESS');
     }
@@ -159,7 +169,7 @@ export class BackupsService implements OnApplicationBootstrap {
         id,
         fileName: `${id}.dump`,
         status: 'RUNNING',
-        trigger: 'MANUAL',
+        trigger,
         createdAt: now.toISOString(),
         completedAt: null,
         createdByUserId: userId,
@@ -178,9 +188,7 @@ export class BackupsService implements OnApplicationBootstrap {
 
     void this.runBackup(backup);
 
-    const [item] = await this.toResponseItems([backup]);
-
-    return { backup: item };
+    return backup;
   }
 
   async deleteBackup(userId: number, id: string) {
@@ -361,7 +369,8 @@ export class BackupsService implements OnApplicationBootstrap {
    * не удаляется никогда, даже если она старше срока: иначе долгий простой оставил бы ноль копий.
    */
   private async pruneExpiredBackups() {
-    const expiresBefore = new Date(Date.now() - this.retentionDays * DAY_MS).toISOString();
+    const { retentionDays, maxCount } = await this.settingsService.getSettings();
+    const expiresBefore = new Date(Date.now() - retentionDays * DAY_MS).toISOString();
     const backups = (await this.storage.list()).filter((backup) => backup.status !== 'RUNNING');
     const latestReadyId = backups.find((backup) => backup.status === 'READY')?.id;
 
@@ -370,7 +379,7 @@ export class BackupsService implements OnApplicationBootstrap {
         continue;
       }
 
-      if (backup.createdAt < expiresBefore || index >= this.maxCount) {
+      if (backup.createdAt < expiresBefore || index >= maxCount) {
         await this.storage.remove(backup.id);
 
         if (backup.status === 'READY') {

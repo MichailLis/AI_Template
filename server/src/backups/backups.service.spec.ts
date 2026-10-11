@@ -7,6 +7,8 @@ import type { Readable } from 'node:stream';
 
 import type { AuditService } from '../audit/audit.service';
 import type { PrismaService } from '../prisma.service';
+import { BackupScheduler } from './backup-scheduler';
+import { BackupSettingsService } from './backup-settings.service';
 import { BackupStorage } from './backup-storage';
 import { BackupsService } from './backups.service';
 import { PgToolMissingError, type PgToolRunOptions } from './pg-tools.runner';
@@ -38,17 +40,27 @@ describe('BackupsService', () => {
     $queryRaw: jest.Mock;
   };
   let service: BackupsService;
+  let settingsService: BackupSettingsService;
+  let scheduler: BackupScheduler;
 
   const createService = () => {
     const config = { get: (key: string) => env[key] } as unknown as ConfigService;
     storage = new BackupStorage(config);
+    settingsService = new BackupSettingsService(
+      prisma as unknown as PrismaService,
+      audit as unknown as AuditService,
+      storage,
+      config,
+    );
     service = new BackupsService(
       prisma as unknown as PrismaService,
       audit as unknown as AuditService,
       config,
       storage,
       runner,
+      settingsService,
     );
+    scheduler = new BackupScheduler(service, settingsService, storage);
   };
 
   const waitForIdle = async () => {
@@ -373,5 +385,133 @@ describe('BackupsService', () => {
       service.createDownloadLink(2, 'backup-20261011T100000Z-abcdef'),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(runner.run).not.toHaveBeenCalled();
+  });
+
+  describe('settings', () => {
+    it('falls back to env defaults until an admin saves settings', async () => {
+      env.BACKUP_RETENTION_DAYS = '7';
+      createService();
+
+      expect((await service.getOverview(ADMIN_ID)).settings).toEqual({
+        scheduleEnabled: true,
+        scheduleHourUtc: 3,
+        retentionDays: 7,
+        maxCount: 30,
+      });
+    });
+
+    it('saves settings to the volume and records the change', async () => {
+      await settingsService.updateSettings(ADMIN_ID, {
+        scheduleEnabled: false,
+        scheduleHourUtc: 22,
+        retentionDays: 14,
+        maxCount: 30,
+      });
+
+      const overview = await service.getOverview(ADMIN_ID);
+
+      expect(overview.settings).toMatchObject({ scheduleEnabled: false, scheduleHourUtc: 22 });
+      expect(overview.nextScheduledAt).toBeNull();
+      expect(JSON.parse(await readFile(join(directory, 'settings.json'), 'utf8'))).toMatchObject({
+        scheduleHourUtc: 22,
+      });
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'BACKUP_SETTINGS_UPDATED',
+          changes: [
+            { field: 'scheduleEnabled', before: 'true', after: 'false' },
+            { field: 'scheduleHourUtc', before: '3', after: '22' },
+          ],
+        }),
+      );
+    });
+
+    it('rejects out-of-range values', async () => {
+      await expect(
+        settingsService.updateSettings(ADMIN_ID, {
+          scheduleEnabled: true,
+          scheduleHourUtc: 24,
+          retentionDays: 0,
+          maxCount: 30,
+        }),
+      ).rejects.toThrow('Некорректные настройки');
+    });
+
+    it('applies the saved retention when pruning', async () => {
+      await settingsService.updateSettings(ADMIN_ID, {
+        scheduleEnabled: true,
+        scheduleHourUtc: 3,
+        retentionDays: 14,
+        maxCount: 1,
+      });
+      await seedBackup({
+        id: 'backup-20261010T000000Z-bbbbbb',
+        createdAt: new Date(Date.now() - 60_000).toISOString(),
+      });
+
+      const { backup } = await service.createBackup(ADMIN_ID);
+      await waitForIdle();
+
+      expect((await service.getOverview(ADMIN_ID)).backups.map((item) => item.id)).toEqual([
+        backup.id,
+      ]);
+    });
+  });
+
+  describe('schedule', () => {
+    const at = (iso: string) => new Date(iso);
+
+    it('starts a scheduled backup once the hour has come', async () => {
+      expect(await scheduler.runIfDue(at('2026-10-11T02:50:00Z'))).toBe(true);
+      await waitForIdle();
+
+      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+
+      expect(backup).toMatchObject({ trigger: 'SCHEDULED', status: 'READY', createdBy: null });
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'BACKUP_CREATED', actorUserId: null }),
+      );
+    });
+
+    it('skips when a fresh successful backup already exists', async () => {
+      await seedBackup({
+        id: 'backup-20261011T100000Z-aaaaaa',
+        createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      });
+
+      expect(await scheduler.runIfDue()).toBe(false);
+      expect(runner.run).not.toHaveBeenCalled();
+    });
+
+    it('does not retry a failed scheduled backup within the same slot', async () => {
+      const now = new Date();
+      await seedBackup({
+        id: 'backup-20261011T030000Z-aaaaaa',
+        status: 'FAILED',
+        trigger: 'SCHEDULED',
+        createdAt: now.toISOString(),
+      });
+
+      expect(await scheduler.runIfDue(now)).toBe(false);
+    });
+
+    it('does nothing when the schedule is off', async () => {
+      await settingsService.updateSettings(ADMIN_ID, {
+        scheduleEnabled: false,
+        scheduleHourUtc: 3,
+        retentionDays: 14,
+        maxCount: 30,
+      });
+
+      expect(await scheduler.runIfDue()).toBe(false);
+      expect(runner.run).not.toHaveBeenCalled();
+    });
+
+    it('skips quietly when pg_dump is unavailable', async () => {
+      runner.run.mockRejectedValue(new PgToolMissingError('pg_dump'));
+
+      expect(await scheduler.runIfDue()).toBe(false);
+      expect(await readdir(directory)).toEqual([]);
+    });
   });
 });

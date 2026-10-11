@@ -1,4 +1,5 @@
 import type {
+  AdminBackupsOverviewResponseDtoSettings,
   AdminBackupsOverviewResponseDto,
   AdminBackupsOverviewResponseDtoBackupsItem,
   AdminBackupsOverviewResponseDtoBackupsItemStatus,
@@ -6,6 +7,23 @@ import type {
 
 export type BackupsOverview = AdminBackupsOverviewResponseDto;
 export type BackupItem = AdminBackupsOverviewResponseDtoBackupsItem;
+export type BackupSettings = AdminBackupsOverviewResponseDtoSettings;
+
+export const SCHEDULE_HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/**
+ * Сервер хранит час запуска по UTC. Админу показывается его местное время и UTC в скобках,
+ * чтобы час не путался при переезде сервера или смене часового пояса.
+ */
+export const formatScheduleHour = (hourUtc: number, now = new Date()) => {
+  const local = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hourUtc),
+  );
+
+  return `${pad(local.getHours())}:${pad(local.getMinutes())} (${pad(hourUtc)}:00 UTC)`;
+};
 
 /** Пока копия создается, список опрашивается: статус меняется на сервере без участия клиента. */
 export const BACKUPS_POLL_INTERVAL_MS = 2_000;
@@ -37,8 +55,13 @@ export const formatBackupSize = (sizeBytes: number | null) => {
   return `${value.toFixed(digits).replace('.', ',')} ${SIZE_UNITS[unitIndex]}`;
 };
 
-export const getBackupAuthorLabel = (backup: BackupItem) =>
-  backup.createdBy ? (backup.createdBy.name ?? backup.createdBy.email) : 'Система';
+export const getBackupAuthorLabel = (backup: BackupItem) => {
+  if (backup.createdBy) {
+    return backup.createdBy.name ?? backup.createdBy.email;
+  }
+
+  return backup.trigger === 'SCHEDULED' ? 'По расписанию' : 'Система';
+};
 
 export const shouldPollBackups = (overview: BackupsOverview | undefined) =>
   Boolean(overview?.isBusy || overview?.backups.some((backup) => backup.status === 'RUNNING'));

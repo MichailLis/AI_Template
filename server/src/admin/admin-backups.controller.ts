@@ -1,10 +1,12 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Res,
   StreamableFile,
@@ -15,6 +17,7 @@ import type { Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { BackupSettingsService } from '../backups/backup-settings.service';
 import { BackupsService } from '../backups/backups.service';
 import {
   ApiErrorResponses,
@@ -24,7 +27,9 @@ import {
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
   AdminBackupResponseDto,
+  AdminBackupSettingsResponseDto,
   AdminBackupsOverviewResponseDto,
+  UpdateBackupSettingsDto,
 } from './dto/admin-backups.dto';
 
 const DUMP_CONTENT_TYPE = 'application/octet-stream';
@@ -35,7 +40,10 @@ const DUMP_CONTENT_TYPE = 'application/octet-stream';
 @UseGuards(AtGuard)
 @Controller('admin/backups')
 export class AdminBackupsController {
-  constructor(private readonly backupsService: BackupsService) {}
+  constructor(
+    private readonly backupsService: BackupsService,
+    private readonly backupSettingsService: BackupSettingsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List database backups and check whether backups are available' })
@@ -50,6 +58,13 @@ export class AdminBackupsController {
   @ApiResponse({ status: HttpStatus.ACCEPTED, type: AdminBackupResponseDto })
   createBackup(@GetCurrentUserId() userId: number) {
     return this.backupsService.createBackup(userId);
+  }
+
+  @Patch('settings')
+  @ApiOperation({ summary: 'Update the backup schedule and retention' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminBackupSettingsResponseDto })
+  async updateSettings(@GetCurrentUserId() userId: number, @Body() dto: UpdateBackupSettingsDto) {
+    return { settings: await this.backupSettingsService.updateSettings(userId, dto) };
   }
 
   @Delete(':id')
