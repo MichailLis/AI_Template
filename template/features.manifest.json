@@ -513,6 +513,11 @@
           "protected": true
         },
         {
+          "path": "/admin/tests/public-links/{linkId}/attempts/export.xlsx",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
           "path": "/admin/tests/attempts/{attemptId}",
           "methods": ["get"],
           "protected": true
