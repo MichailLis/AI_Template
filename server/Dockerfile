@@ -31,9 +31,19 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Клиент PostgreSQL 16 из репозитория PGDG для резервных копий из админки: в bookworm по умолчанию
+# версия 15, а pg_dump 15 не снимает копию с сервера postgres:16.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && apt-get install -y --no-install-recommends ca-certificates openssl curl \
+  && install -d /usr/share/postgresql-common/pgdg \
+  && curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+  && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-client-16 \
   && rm -rf /var/lib/apt/lists/*
+
+# Том с копиями монтируется сюда; Docker переносит владельца каталога в пустой именованный том.
+RUN install -d -o node -g node /backups
 
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist

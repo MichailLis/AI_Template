@@ -22,6 +22,10 @@ export const AUDIT_ACTIONS = [
   'PUBLIC_LINK_ARCHIVED',
   'PUBLIC_LINK_RESTORED',
   'PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION',
+  'BACKUP_CREATED',
+  'BACKUP_FAILED',
+  'BACKUP_DELETED',
+  'BACKUP_DOWNLOADED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

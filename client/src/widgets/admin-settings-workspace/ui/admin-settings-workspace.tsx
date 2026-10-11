@@ -16,6 +16,7 @@ import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
 
+import { BackupsSettingsCard } from './admin-settings-backups';
 import {
   AiProviderSettingsCard,
   PrivacyPolicySettingsCard,
@@ -30,7 +31,7 @@ import { usePrivacyPolicyFormState } from './use-privacy-policy-form-state';
 
 import type { FormEvent } from 'react';
 
-type AdminSettingsTab = 'integrations' | 'atlas' | 'privacy';
+type AdminSettingsTab = 'integrations' | 'atlas' | 'privacy' | 'backups';
 
 const SETTINGS_PANEL_ID = 'admin-settings-panel';
 
@@ -38,6 +39,7 @@ const SETTINGS_TABS: Array<{ value: AdminSettingsTab; label: string }> = [
   { value: 'integrations', label: 'Интеграции' },
   { value: 'atlas', label: 'Атлас профессий' },
   { value: 'privacy', label: 'Политика данных' },
+  { value: 'backups', label: 'Резервные копии' },
 ];
 
 const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
@@ -246,6 +248,8 @@ export function AdminSettingsWorkspace() {
         ) : null}
 
         {settingsTab === 'privacy' ? <PrivacyPolicySettingsWorkspaceCard /> : null}
+
+        {settingsTab === 'backups' ? <BackupsSettingsCard /> : null}
       </div>
     </div>
   );

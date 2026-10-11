@@ -52,6 +52,10 @@ services:
       OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-AI Template Admin}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_DEFAULT_MODEL: ${OPENROUTER_DEFAULT_MODEL:-}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_MAX_COUNT: ${BACKUP_MAX_COUNT:-30}
+    volumes:
+      - backups_data:/backups
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,3 +88,5 @@ services:
 volumes:
   postgres_data:
     name: ${POSTGRES_VOLUME_NAME:-ai_template_postgres_data}
+  backups_data:
+    name: ${BACKUPS_VOLUME_NAME:-ai_template_backups}

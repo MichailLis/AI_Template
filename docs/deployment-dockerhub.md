@@ -378,3 +378,35 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec postgres
 Не полагайтесь на старые заметки вида "текущий релиз не меняет schema": за последние
 итерации в проект добавлялись миграции для режимов входа, Polus/public template,
 аналитических индексов, case-insensitive identity и `publicBranding`.
+
+## 11. Резервные копии из админки
+
+В админке есть раздел «Настройки → Резервные копии». Кнопка «Создать копию» запускает
+`pg_dump` внутри контейнера backend и сохраняет полную копию базы в формате PostgreSQL
+custom (`.dump`). Копию можно скачать: браузер получает одноразовую ссылку, которая
+действует минуту.
+
+Что нужно на сервере:
+
+- Образ backend содержит `postgresql-client-16`. Если PostgreSQL в стеке когда-нибудь
+  обновится до новой мажорной версии, обновите и клиент в `server/Dockerfile`: старый
+  `pg_dump` не снимает копию с более нового сервера, и раздел покажет причину.
+- Копии лежат в томе `BACKUPS_VOLUME_NAME` (по умолчанию `ai_template_backups`),
+  смонтированном в `/backups`. Том живет на той же машине, что и база, поэтому от потери
+  диска он не защищает: регулярно скачивайте свежую копию.
+- Хранение: `BACKUP_RETENTION_DAYS` (по умолчанию 14 дней) и `BACKUP_MAX_COUNT`
+  (по умолчанию 30 копий). Старые копии удаляются после каждой новой; последняя успешная
+  копия не удаляется никогда.
+- Все действия с копиями записываются в журнал изменений.
+
+Восстановить скачанную копию вручную:
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml stop backend
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
+  sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner --no-acl --single-transaction' \
+  < backup-YYYYMMDDTHHMMSSZ-xxxxxx.dump
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml start backend
+```
+
+Восстановление перезаписывает текущие данные. Перед ним создайте свежую копию.

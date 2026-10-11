@@ -23,6 +23,10 @@ import type {
 
 import type {
   AdminAiProviderSettingsResponseDto,
+  AdminBackupDeleteResponseDto,
+  AdminBackupDownloadLinkResponseDto,
+  AdminBackupResponseDto,
+  AdminBackupsOverviewResponseDto,
   AdminControllerGetUsersParams,
   AdminOverviewResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
@@ -1875,6 +1879,540 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary List database backups and check whether backups are available
+ */
+export const adminBackupsControllerGetOverview = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupsOverviewResponseDto>(
+    { url: `/admin/backups`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerGetOverviewQueryKey = () => {
+  return [`/admin/backups`] as const;
+};
+
+export const getAdminBackupsControllerGetOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminBackupsControllerGetOverviewQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>> = ({
+    signal,
+  }) => adminBackupsControllerGetOverview(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminBackupsControllerGetOverviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>
+>;
+export type AdminBackupsControllerGetOverviewQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminBackupsControllerGetOverview<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupsControllerGetOverview<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupsControllerGetOverview<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List database backups and check whether backups are available
+ */
+
+export function useAdminBackupsControllerGetOverview<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminBackupsControllerGetOverviewQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary Start a database backup in the background
+ */
+export const adminBackupsControllerCreateBackup = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupResponseDto>(
+    { url: `/admin/backups`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerCreateBackupMutationKey = () =>
+  ['adminBackupsControllerCreateBackup'] as const;
+
+export const getAdminBackupsControllerCreateBackupMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerCreateBackupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>,
+    void
+  > = () => {
+    return adminBackupsControllerCreateBackup(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerCreateBackupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>
+>;
+
+export type AdminBackupsControllerCreateBackupMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Start a database backup in the background
+ */
+export const useAdminBackupsControllerCreateBackup = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateBackup>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerCreateBackupMutationOptions(options), queryClient);
+};
+/**
+ * @summary Delete a database backup
+ */
+export const adminBackupsControllerDeleteBackup = (
+  id: string,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupDeleteResponseDto>(
+    { url: `/admin/backups/${id}`, method: 'DELETE', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerDeleteBackupMutationKey = () =>
+  ['adminBackupsControllerDeleteBackup'] as const;
+
+export const getAdminBackupsControllerDeleteBackupMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>,
+    TError,
+    AdminBackupsControllerDeleteBackupMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>,
+  TError,
+  AdminBackupsControllerDeleteBackupMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerDeleteBackupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>,
+    AdminBackupsControllerDeleteBackupMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminBackupsControllerDeleteBackup(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerDeleteBackupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>
+>;
+
+export type AdminBackupsControllerDeleteBackupMutationError = ErrorType<ErrorResponseDto>;
+export type AdminBackupsControllerDeleteBackupMutationVariables = { id: string };
+
+/**
+ * @summary Delete a database backup
+ */
+export const useAdminBackupsControllerDeleteBackup = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>,
+      TError,
+      AdminBackupsControllerDeleteBackupMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerDeleteBackup>>,
+  TError,
+  AdminBackupsControllerDeleteBackupMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerDeleteBackupMutationOptions(options), queryClient);
+};
+/**
+ * @summary Issue a one-time link to download a database backup
+ */
+export const adminBackupsControllerCreateDownloadLink = (
+  id: string,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupDownloadLinkResponseDto>(
+    { url: `/admin/backups/${id}/download-link`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerCreateDownloadLinkMutationKey = () =>
+  ['adminBackupsControllerCreateDownloadLink'] as const;
+
+export const getAdminBackupsControllerCreateDownloadLinkMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>,
+    TError,
+    AdminBackupsControllerCreateDownloadLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>,
+  TError,
+  AdminBackupsControllerCreateDownloadLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerCreateDownloadLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>,
+    AdminBackupsControllerCreateDownloadLinkMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminBackupsControllerCreateDownloadLink(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerCreateDownloadLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>
+>;
+
+export type AdminBackupsControllerCreateDownloadLinkMutationError = ErrorType<ErrorResponseDto>;
+export type AdminBackupsControllerCreateDownloadLinkMutationVariables = { id: string };
+
+/**
+ * @summary Issue a one-time link to download a database backup
+ */
+export const useAdminBackupsControllerCreateDownloadLink = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>,
+      TError,
+      AdminBackupsControllerCreateDownloadLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerCreateDownloadLink>>,
+  TError,
+  AdminBackupsControllerCreateDownloadLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getAdminBackupsControllerCreateDownloadLinkMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Download a database backup by a one-time link
+ */
+export const adminBackupDownloadControllerDownload = (
+  token: string,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<Blob>(
+    { url: `/admin/backups/download/${token}`, method: 'GET', responseType: 'blob', signal },
+    options,
+  );
+};
+
+export const getAdminBackupDownloadControllerDownloadQueryKey = (token: string) => {
+  return [`/admin/backups/download/${token}`] as const;
+};
+
+export const getAdminBackupDownloadControllerDownloadQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminBackupDownloadControllerDownloadQueryKey(token);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>
+  > = ({ signal }) => adminBackupDownloadControllerDownload(token, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: token !== null && token !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminBackupDownloadControllerDownloadQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>
+>;
+export type AdminBackupDownloadControllerDownloadQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminBackupDownloadControllerDownload<
+  TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  token: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupDownloadControllerDownload<
+  TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupDownloadControllerDownload<
+  TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download a database backup by a one-time link
+ */
+
+export function useAdminBackupDownloadControllerDownload<
+  TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminBackupDownloadControllerDownloadQueryOptions(token, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

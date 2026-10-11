@@ -97,6 +97,7 @@ enum AuditEntityType {
   ANALYSIS_PROMPT
   APP_SETTING
   PUBLIC_LINK
+  DATABASE_BACKUP
 }
 
 model User {
