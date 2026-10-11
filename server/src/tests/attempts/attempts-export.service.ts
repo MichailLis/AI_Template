@@ -29,8 +29,12 @@ export interface AttemptExportRow {
   resultSummary: { primaryDirectionLabel: string | null; profileTitle: string | null } | null;
 }
 
-/** Подписи совпадают с таблицей прохождений в админке (`analysis-result-kind-labels.ts`). */
-const analysisResultKindLabels: Record<string, string> = {
+/**
+ * Подписи совпадают с таблицей прохождений в админке (`analysis-result-kind-labels.ts`): файл
+ * сверяют с экраном. Gate `paired-rules` сверяет только скалярные константы, поэтому при правке
+ * подписей на клиенте эту карту нужно обновить вручную.
+ */
+const exportAnalysisKindLabels: Record<string, string> = {
   AI: 'ИИ-анализ готов',
   ALGORITHM_AI_PENDING: 'Алгоритм готов, ИИ считается',
   ALGORITHM_ONLY: 'Только алгоритм, ИИ не отработал',
@@ -119,7 +123,7 @@ const toRowValues = (row: AttemptExportRow): Array<string | number | Date> => [
   formatExportDuration(row.durationSeconds),
   toText(row.resultSummary?.primaryDirectionLabel),
   toText(row.resultSummary?.profileTitle),
-  analysisResultKindLabels[row.analysisResultKind] ?? row.analysisResultKind,
+  exportAnalysisKindLabels[row.analysisResultKind] ?? row.analysisResultKind,
   row.llmStatus ? getReportLlmStatusLabel(row.llmStatus) : '',
 ];
 
