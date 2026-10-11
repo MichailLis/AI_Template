@@ -225,6 +225,37 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 - `client/src/widgets/admin-public-links-workspace/ui/public-links-list-card.row.tsx` - Public link row action
 - `client/src/features/tests/public-branding.ts` - Branding-to-theme adapter
 
+### резервная копия (database backup)
+
+**Definition:** Full copy of the application database (`pg_dump` file) made, kept and restored from the admin settings.
+
+**Use when:**
+
+- Naming the settings tab and its card
+- Describing create, download, upload, restore and undo actions
+- Explaining schedule, retention and disk space
+
+**Forbidden alternates:**
+
+- `бэкап` (jargon in UI copy)
+- `дамп` (technical; allowed only as the file format "файл .dump")
+- `снапшот` (different mechanism)
+- `backup` (English)
+
+**Examples:**
+
+- ✅ "Резервные копии" (tab)
+- ✅ "Создать копию", "Загрузить копию", "Восстановить", "Отменить восстановление"
+- ✅ "Копия каждый день"
+- ❌ "Сделать бэкап"
+- ❌ "Backups"
+
+**Mapped UI surfaces:**
+
+- `client/src/widgets/admin-settings-workspace/ui/admin-settings-backups.tsx` - Tab card and backup list
+- `client/src/widgets/admin-settings-workspace/ui/admin-settings-backup-restore.tsx` - Restore dialog and status
+- `client/src/widgets/admin-settings-workspace/ui/admin-settings-backup-schedule.tsx` - Schedule and retention form
+
 ---
 
 ## Mapping Table: Term → UI Surfaces
@@ -241,6 +272,7 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 | аналитика             | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Аналитика" (id: 'analytics' - aggregate metrics only)                                                                                            |
 | автосохранение        | `client/src/widgets/public-test-workspace/ui/use-public-test-run-autosave.ts`                     | Student-facing status for background answer saves                                                                                                          |
 | конструктор брендинга | `client/src/widgets/admin-public-links-workspace/ui/public-link-branding-builder.tsx`             | Admin editor for STANDARD public link appearance                                                                                                           |
+| резервная копия       | `client/src/widgets/admin-settings-workspace/ui/admin-settings-backups.tsx`                       | Settings tab "Резервные копии", buttons "Создать копию", "Загрузить копию", "Восстановить"                                                                 |
 
 ---
 

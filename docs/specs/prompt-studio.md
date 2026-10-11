@@ -19,6 +19,14 @@ Required behavior:
 8. When schema is required, set `requireParameters` (OpenRouter: `provider.require_parameters=true`) to avoid routing to providers that ignore required params. The client sends OpenRouter extensions only when `AI_PROVIDER=openrouter`.
 9. Do not enable OpenRouter web-search for tests generation (`plugins: [{id: "web"}]` and `:online` variants are out of scope).
 10. Archived prompt versions remain valid for already published test versions that reference them; archive hides prompt versions from future selection/editing workflows, it must not break historical runtime analysis.
+11. A prompt cannot be deleted (archived) while a non-archived test has it on its **published** version:
+    background analysis reads the prompt from the test version and ignores the archive flag, so the
+    deletion would not stop it. `GET /admin/prompts` returns `activeTests` for each prompt (title, slug,
+    `onPublishedVersion`); the delete dialog names the blocking tests and hides the confirm button. A prompt
+    attached only to drafts may be deleted after a warning that lists those drafts.
+12. A draft whose analysis prompt has been deleted cannot be published (`400`, "Подключите другой
+    промпт перед публикацией"). The test editor shows the same reason up front through
+    `promptArchived` on the prompt version.
 
 The AI provider environment variables are documented with the rest of the runtime configuration in
 `AI_GUIDE.md`, under "AI Provider Configuration".

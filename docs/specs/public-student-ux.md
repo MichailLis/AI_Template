@@ -35,6 +35,18 @@ UI/theming rules:
     - `DEMOGRAPHIC` shows the demographic profile form.
     - `EDUCATION` shows the education profile form.
     - `EDUCATION_DEMOGRAPHIC` shows education fields plus the demographic questionnaire; Polus hybrid entry includes name, surname initial, and patronymic initial.
+11. The admin dark theme must never reach public pages: `useDocumentTheme` puts the `dark` class on
+    `<html>` only while the admin shell is mounted and removes it on unmount, and public tokens stay
+    under `.theme-public`.
+12. A link with `timeLimitMinutes` gives its attempt an `expiresAt`. The run screen shows a countdown
+    (`PublicTestRunTimer`, with a warning state near the end; the Polus variant has its own style).
+    Once the time is over the server refuses answers (`Test session expired`) and the student sees the
+    expired screen: the attempt is closed, no result is built, and the Polus variant offers a way back
+    to the entry page. The result DTO for such an attempt reports a `FAILED` analysis with the
+    message "Test session expired before completion" and no summary.
+13. A student who comes back into a session (or presses "Назад") on a `SINGLE_CHOICE` question that
+    already has a saved answer must still get an explicit "next" action: picking the same option again
+    cannot advance, so the auto-advance on choice applies only to unanswered questions.
 
 ---
 

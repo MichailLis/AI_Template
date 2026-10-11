@@ -33,6 +33,19 @@ Runtime security defaults:
 - `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
   wildcard origins with credentialed auth cookies.
 
+Database backups add runtime requirements:
+
+- The backend image must carry `pg_dump`/`pg_restore` of the same major version as the
+  PostgreSQL server (`postgresql-client-16` from PGDG in `server/Dockerfile` and in the dev
+  image `server/docker/dev.Dockerfile`). Bumping the `postgres` image major means bumping the
+  client too; the backups tab reports a mismatch instead of failing silently.
+- The `/backups` volume holds copies, `settings.json` (schedule, retention) and `state.json`
+  (restore state, session boundary). Keep them out of the database: a restore replaces it.
+- `BACKUP_RETENTION_DAYS`, `BACKUP_MAX_COUNT`, `BACKUP_MAX_UPLOAD_MB` are backend env vars with
+  defaults; the admin settings override retention once saved.
+- Restore needs `POSTGRES_USER` to create and rename databases (the official image user is a
+  superuser) and roughly twice the database size on disk while the previous database is kept.
+
 The devcontainer compose file creates a single `workspace` container that runs frontend and
 backend together; that is why it is not the project runtime topology.
 
@@ -338,6 +351,7 @@ you are touching; do not load them all up front.
 - [`docs/specs/tests-module.md`](docs/specs/tests-module.md) — working on test authoring, publishing, or the built-in prof-orientation methodology.
 - [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
 - [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.
+- [`docs/specs/database-backups.md`](docs/specs/database-backups.md) — working on database backups, restore, the `/backups` volume, or maintenance mode.
 
 ## Stability Rules
 
@@ -385,6 +399,15 @@ Use these commands during local AI-agent development:
 
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
+
+Two checks inside both pipelines are easy to miss because their names say little.
+`npm run verify:runtime-config` (`scripts/verify-runtime-config.mjs`) checks the runtime wiring: the root
+`docker-compose.yml` has exactly the expected services with health checks and `npm ci` (never
+`npm install`), no hardcoded secrets, backend CORS read from `CORS_ALLOWED_ORIGINS` and never
+credentialed for every origin, the Dockerfiles, and the AI provider variables in the three env example
+files. `npm run verify:maintainability` (`scripts/verify-maintainability.mjs`) caps file size per scope
+(client source 420 effective lines, server source 700, server specs 900, repository scripts 700, client styles 2000) and
+`useState` calls per file (14): split the file instead of raising a limit.
 
 `.husky/pre-push` runs `npm run verify:diff -- --run` on every `git push`. It checks only the
 scopes the diff touches — 60 seconds on a branch of 38 changed files — and stays a pre-flight,
