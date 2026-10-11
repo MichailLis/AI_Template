@@ -70,6 +70,7 @@ export * from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKin
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemLlmStatus';
+export * from './adminPublicAttemptsListResponseDtoAttemptsItemResultSummary';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStatus';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStudentGender';

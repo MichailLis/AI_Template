@@ -304,6 +304,19 @@ export const AdminPublicAttemptSummarySchema = z.object({
   analysisResultKind: AdminAnalysisResultKindSchema.describe(
     'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
   ),
+  durationSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe('Время прохождения в секундах; null, пока попытка не завершена'),
+  resultSummary: z
+    .object({
+      primaryDirectionLabel: z.string().nullable(),
+      profileTitle: z.string().nullable(),
+    })
+    .nullable()
+    .describe('Краткий итог для таблицы; null, если алгоритмического итога V3+ ещё нет'),
 });
 
 export const AdminPublicAttemptsListQuerySchema = z.object({

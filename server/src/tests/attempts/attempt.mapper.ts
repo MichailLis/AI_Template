@@ -9,6 +9,7 @@ import type {
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
 import { getAnalysisResultKind } from '../analysis/analysis-result-kind';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
+import { getV3Summary } from '../reporting/analytics-summary';
 
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
@@ -188,6 +189,22 @@ export const mapSessionState = (
   };
 };
 
+const getAttemptDurationSeconds = (attempt: { startedAt: Date; finishedAt: Date | null }) =>
+  attempt.finishedAt
+    ? Math.max(0, Math.round((attempt.finishedAt.getTime() - attempt.startedAt.getTime()) / 1000))
+    : null;
+
+const getAttemptResultSummary = (summary: unknown) => {
+  const v3Summary = getV3Summary(summary);
+
+  return v3Summary
+    ? {
+        primaryDirectionLabel: v3Summary.primaryDirection?.name ?? null,
+        profileTitle: v3Summary.profile.title ?? null,
+      }
+    : null;
+};
+
 export const mapAttemptListItem = (
   attempt: AttemptListRecord,
   toAttemptStatus: (attempt: AttemptListRecord) => string,
@@ -203,6 +220,8 @@ export const mapAttemptListItem = (
     analysisStatus: attempt.analysis?.status ?? null,
     llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
     analysisResultKind: getAnalysisResultKind(attempt.analysis),
+    durationSeconds: getAttemptDurationSeconds(attempt),
+    resultSummary: getAttemptResultSummary(attempt.analysis?.summary),
   };
 };
 

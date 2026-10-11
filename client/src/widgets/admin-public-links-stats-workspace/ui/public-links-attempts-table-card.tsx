@@ -5,6 +5,7 @@ import {
   getAnalysisResultKindTone,
 } from '@/shared/lib/analysis-result-kind-labels';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
+import { formatDurationSeconds } from '@/shared/lib/date-format';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -52,6 +53,11 @@ interface PublicAttemptRow {
   startedAt: string;
   finishedAt: string | null;
   expiresAt: string | null;
+  durationSeconds?: number | null;
+  resultSummary?: {
+    primaryDirectionLabel: string | null;
+    profileTitle: string | null;
+  } | null;
 }
 
 interface SelectedPublicLink {
@@ -219,6 +225,31 @@ function AttemptRowCells({
           </p>
         ) : null}
       </TableCell>
+      <TableCell className="whitespace-nowrap">
+        {attempt.status === 'IN_PROGRESS' ? 'идёт' : formatDurationSeconds(attempt.durationSeconds)}
+      </TableCell>
+      <TableCell className="min-w-40 max-w-64">
+        {attempt.resultSummary?.primaryDirectionLabel || attempt.resultSummary?.profileTitle ? (
+          <>
+            <p
+              className={`truncate ${adminClassNames.text.heading}`}
+              title={attempt.resultSummary.primaryDirectionLabel ?? undefined}
+            >
+              {attempt.resultSummary.primaryDirectionLabel ?? '—'}
+            </p>
+            {attempt.resultSummary.profileTitle ? (
+              <p
+                className={`truncate text-xs ${adminClassNames.text.muted}`}
+                title={attempt.resultSummary.profileTitle}
+              >
+                {attempt.resultSummary.profileTitle}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          '—'
+        )}
+      </TableCell>
       <TableCell className="whitespace-nowrap">{formatDateTime(attempt.startedAt)}</TableCell>
       <TableCell className="text-right">
         <Button
@@ -281,6 +312,8 @@ export function PublicLinksAttemptsTableCard({
     { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
     { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
     { id: 'student', header: 'Студент', className: 'min-w-64' },
+    { id: 'duration', header: 'Время', className: 'whitespace-nowrap' },
+    { id: 'result', header: 'Результат', className: 'min-w-40' },
     {
       id: 'started',
       header: 'Начало работы',
@@ -297,7 +330,7 @@ export function PublicLinksAttemptsTableCard({
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
           {selectedPublicLink
-            ? `Тестов пройдено: ${total}. Клик по строке открывает анализ; сортировка действует в пределах страницы.`
+            ? `Всего попыток: ${total}, включая незавершённые. Клик по строке открывает анализ; сортировка действует в пределах страницы.`
             : 'Сначала выберите ссылку'}
         </CardDescription>
       </CardHeader>

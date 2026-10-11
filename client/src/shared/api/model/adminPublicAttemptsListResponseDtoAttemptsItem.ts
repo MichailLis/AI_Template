@@ -9,6 +9,7 @@ import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKind }
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode } from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemLlmStatus';
+import type { AdminPublicAttemptsListResponseDtoAttemptsItemResultSummary } from './adminPublicAttemptsListResponseDtoAttemptsItemResultSummary';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStatus } from './adminPublicAttemptsListResponseDtoAttemptsItemStatus';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel';
 import type { AdminPublicAttemptsListResponseDtoAttemptsItemStudentGender } from './adminPublicAttemptsListResponseDtoAttemptsItemStudentGender';
@@ -61,4 +62,16 @@ export type AdminPublicAttemptsListResponseDtoAttemptsItem = {
   llmStatus: AdminPublicAttemptsListResponseDtoAttemptsItemLlmStatus;
   /** Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа */
   analysisResultKind: AdminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKind;
+  /**
+   * Время прохождения в секундах; null, пока попытка не завершена
+   * @minimum 0
+   * @maximum 9007199254740991
+   * @nullable
+   */
+  durationSeconds: number | null;
+  /**
+   * Краткий итог для таблицы; null, если алгоритмического итога V3+ ещё нет
+   * @nullable
+   */
+  resultSummary: AdminPublicAttemptsListResponseDtoAttemptsItemResultSummary;
 };

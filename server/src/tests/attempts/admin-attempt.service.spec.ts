@@ -128,6 +128,8 @@ describe('TestsAdminAttemptService', () => {
           analysisStatus: 'READY',
           llmStatus: null,
           analysisResultKind: 'AI',
+          durationSeconds: Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000),
+          resultSummary: null,
         },
       ],
     });
