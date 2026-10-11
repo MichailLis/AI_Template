@@ -12,6 +12,11 @@ Routes and ownership:
 Behavior baseline:
 
 1. Public link lifecycle is `create/regenerate/archive/restore`.
+   A link is bound to one test version and does not follow later publications by itself. The links
+   list shows that version, and `POST /admin/tests/public-links/:linkId/move-to-active-version` moves
+   the link to the currently published version of its test (`400` when the test has no published
+   version, `404` for an archived link). Attempts already started keep finishing on their own version.
+   The move is written to the audit journal as `PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION`.
 2. Archive must disable student access without deleting historical attempts/results.
 3. The attempts tab is table-first (avoid oversized decorative summary blocks above core
    filters/table). Its table stays narrow enough to read without horizontal scrolling: attempt

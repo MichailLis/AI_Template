@@ -144,6 +144,9 @@ Current UI note:
   `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` in the deploy image, whose entrypoint runs
   the bootstrap script. The root compose stack does not pass those variables to the backend.
 - Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
+- The admin has a light, dark and system theme, switched in the header (the choice is kept in the
+  browser through `safeStorage`; "system" follows `prefers-color-scheme`). The `dark` class is set on
+  `<html>` only while the admin shell is mounted, so the public `/t/*` pages always stay light.
 
 ## Auth Session Contract
 
