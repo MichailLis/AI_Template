@@ -98,6 +98,10 @@ manual browser testing on `http://localhost:5173`:
 docker compose up -d --build --force-recreate frontend
 ```
 
+The backend container runs on an image built from `server/docker/dev.Dockerfile` (Node plus
+`pg_dump` for database backups); after that file changes, run
+`docker compose up -d --build backend`.
+
 Local Vitest, ESLint and type checks run on the host and need no container rebuild.
 
 ## Gates

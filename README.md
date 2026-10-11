@@ -9,6 +9,7 @@ Current project state:
 - `/admin` redirects into the real tests workspace; the old mock overview page is removed
 - Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/organizations`); link statistics live in the analytics workspace (`/admin/analytics`)
 - Public student flow (`/t/*`) is product-ready, supports selectable public templates, selectable entry profile modes, `STANDARD` public branding, autosave, and scoped themes isolated from admin screens
+- Database backups from the admin panel (`/admin/settings`, tab «Резервные копии»): manual and scheduled `pg_dump` copies, download, restore with undo, upload of an existing `.dump`, disk space checks
 - Strict template guardrails remain enforced through `AI_GUIDE.md`, `template/features.manifest.json`, `template/fsd.rules.json`, and `scripts/verify-architecture.mjs`
 
 ## Stack
@@ -34,6 +35,9 @@ docker compose up -d
 - Postgres: `localhost:5432`
 
 The `backend` container restores server dependencies with `npm ci`, generates Prisma client, syncs the schema, and starts Nest in watch mode.
+Its image is built from `server/docker/dev.Dockerfile` (Node plus `postgresql-client-16` for database backups);
+`docker compose up -d` builds it on first start. After that file changes, rebuild it with
+`docker compose up -d --build backend`.
 The `frontend` container restores client dependencies with `npm ci` and starts Vite.
 
 Useful commands:
@@ -65,6 +69,23 @@ Deploy port model:
 
 See [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md) for build, push, and
 Linux/Windows deployment commands.
+
+## Database Backups
+
+Admins manage backups in `/admin/settings`, tab «Резервные копии»:
+
+- **Create and download:** a full `pg_dump -Fc` copy runs in the background; the file downloads through a one-time link.
+- **Schedule and retention:** a daily copy at 03:00 UTC by default; the hour, retention days and copy count are editable. The latest successful copy is never pruned.
+- **Restore with undo:** restores into a temporary database, checks it (schema not newer than the app, an active admin exists), then swaps databases by rename. The API answers 503 during the swap and everyone signs in again afterwards. The replaced database is kept until the next restore, so the restore can be undone.
+- **Upload:** an existing `.dump` from this or another server can be uploaded (500 MB by default) and restored the same way.
+- **Disk space:** the tab shows free space and warns when it fits fewer than three copies; a scheduled copy skipped for lack of space shows up as a failed entry.
+
+Copies, their metadata, schedule settings and restore state live in the `/backups` volume of the
+backend container, not in the database, so a restore does not roll them back. The volume sits on
+the same disk as the database: download copies to keep one off the server. Every action goes to
+the audit log. Deployment details (image, volume, env vars, nginx limits, manual restore) are in
+[`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md), section 11; the design and its
+risks are in [`docs/plans/2026-10-08-admin-db-backup-plan.md`](docs/plans/2026-10-08-admin-db-backup-plan.md).
 
 ## Local Node Development
 
