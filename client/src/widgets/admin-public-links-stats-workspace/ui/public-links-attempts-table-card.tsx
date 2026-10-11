@@ -79,6 +79,8 @@ interface PublicLinksAttemptsTableCardProps {
   onPageSizeChange: (pageSize: number) => void;
   /** Поиск и фильтры: рисует вкладка, потому что их состояние уходит в запрос к серверу. */
   toolbar?: ReactNode;
+  /** Ошибка выгрузки, показывается под панелью поиска. */
+  exportError?: string | null;
   hasActiveFilters?: boolean;
   /** Сортировка выполняется на сервере и действует на весь список, а не на страницу. */
   sortBy: AttemptsSortField;
@@ -274,6 +276,7 @@ export function PublicLinksAttemptsTableCard({
   onNextPage,
   onPageSizeChange,
   toolbar,
+  exportError = null,
   hasActiveFilters = false,
   sortBy,
   sortOrder,
@@ -319,6 +322,9 @@ export function PublicLinksAttemptsTableCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {selectedPublicLink ? toolbar : null}
+        {exportError ? (
+          <p className={`text-xs ${adminClassNames.text.muted}`}>{exportError}</p>
+        ) : null}
 
         {isLoading ? (
           <AdminSkeletonRows rows={5} columns={5} label="Загружаем прохождения" />

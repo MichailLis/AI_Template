@@ -44,6 +44,7 @@ import type {
   TestsAdminAnalyticsControllerExportPdfParams,
   TestsAdminAnalyticsControllerExportXlsxParams,
   TestsAdminAnalyticsControllerGetSummaryParams,
+  TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
   TestsAdminAttemptsControllerListPublicLinkAttemptsParams,
   TestsAdminEducationOrganizationsControllerListEducationOrganizationsParams,
   TestsControllerListTopicsParams,
@@ -3010,6 +3011,188 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions(
+    linkId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary Export student attempts of a public link in XLSX
+ */
+export const testsAdminAttemptsControllerExportPublicLinkAttempts = (
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<Blob>(
+    {
+      url: `/admin/tests/public-links/${linkId}/attempts/export.xlsx`,
+      method: 'GET',
+      params,
+      responseType: 'blob',
+      signal,
+    },
+    options,
+  );
+};
+
+export const getTestsAdminAttemptsControllerExportPublicLinkAttemptsQueryKey = (
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+) => {
+  return [
+    `/admin/tests/public-links/${linkId}/attempts/export.xlsx`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getTestsAdminAttemptsControllerExportPublicLinkAttemptsQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getTestsAdminAttemptsControllerExportPublicLinkAttemptsQueryKey(linkId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>
+  > = ({ signal }) =>
+    testsAdminAttemptsControllerExportPublicLinkAttempts(linkId, params, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: linkId !== null && linkId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsAdminAttemptsControllerExportPublicLinkAttemptsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>
+>;
+export type TestsAdminAttemptsControllerExportPublicLinkAttemptsQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
+  TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  params: undefined | TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
+  TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+          TError,
+          Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
+  TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export student attempts of a public link in XLSX
+ */
+
+export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
+  TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  linkId: number,
+  params?: TestsAdminAttemptsControllerExportPublicLinkAttemptsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsAdminAttemptsControllerExportPublicLinkAttemptsQueryOptions(
     linkId,
     params,
     options,

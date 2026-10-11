@@ -8,6 +8,9 @@ import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { buildAttemptListOrderBy, buildAttemptListWhere } from './attempt-list-query';
 
+/** Верхняя граница выгрузки: файл должен собираться в памяти за один запрос. */
+export const ATTEMPTS_EXPORT_LIMIT = 5000;
+
 @Injectable()
 export class TestsAdminAttemptService {
   constructor(
@@ -70,6 +73,42 @@ export class TestsAdminAttemptService {
       limit,
       total,
       totalPages,
+      attempts: attempts.map((attempt) =>
+        mapAttemptListItem(attempt, (currentAttempt) =>
+          this.analysisService.toAttemptStatus(currentAttempt),
+        ),
+      ),
+    };
+  }
+
+  async listAttemptsForExport(
+    userId: number,
+    linkId: number,
+    query: AdminPublicAttemptsListQueryDto,
+  ) {
+    await ensureAdminAccess(this.prisma, userId);
+
+    const link = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true, shortCode: true },
+    });
+
+    if (!link) {
+      throw new NotFoundException('Public link not found');
+    }
+
+    const attempts = await this.prisma.testStudentAttempt.findMany({
+      where: buildAttemptListWhere(linkId, query),
+      include: {
+        publicLink: { select: { entryProfileMode: true } },
+        analysis: { select: { providerMode: true, status: true, summary: true } },
+      },
+      orderBy: buildAttemptListOrderBy(query),
+      take: ATTEMPTS_EXPORT_LIMIT,
+    });
+
+    return {
+      shortCode: link.shortCode,
       attempts: attempts.map((attempt) =>
         mapAttemptListItem(attempt, (currentAttempt) =>
           this.analysisService.toAttemptStatus(currentAttempt),
