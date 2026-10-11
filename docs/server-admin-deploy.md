@@ -74,7 +74,16 @@ AI_PROF_ORIENTATION_TIMEOUT_MS=90000
 AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
 OPENROUTER_HTTP_REFERER=https://YOUR_DOMAIN
 OPENROUTER_APP_NAME=AI Template Admin
+
+BACKUP_RETENTION_DAYS=14
+BACKUP_MAX_COUNT=30
+BACKUP_MAX_UPLOAD_MB=500
+BACKUPS_VOLUME_NAME=ai_template_backups
 ```
+
+Резервные копии базы делаются из админки («Настройки → Резервные копии») и лежат в томе
+`BACKUPS_VOLUME_NAME` на этом же сервере. Регулярно скачивайте копию, чтобы она была и вне
+сервера. Подробности — `docs/deployment-dockerhub.md`, раздел 11.
 
 Заменить:
 
