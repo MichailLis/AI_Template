@@ -351,6 +351,7 @@ you are touching; do not load them all up front.
 - [`docs/specs/tests-module.md`](docs/specs/tests-module.md) — working on test authoring, publishing, or the built-in prof-orientation methodology.
 - [`docs/specs/public-links-and-stats.md`](docs/specs/public-links-and-stats.md) — working on `/admin/public-links` or its statistics workspace.
 - [`docs/specs/public-student-ux.md`](docs/specs/public-student-ux.md) — working on the public `/t/*` routes, public theming, or the Polus template.
+- [`docs/specs/database-backups.md`](docs/specs/database-backups.md) — working on database backups, restore, the `/backups` volume, or maintenance mode.
 
 ## Stability Rules
 
