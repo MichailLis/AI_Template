@@ -54,6 +54,36 @@
         "server/src/audit/audit.types.ts",
         "server/src/audit/dto/audit-history.dto.ts"
       ]
+    },
+    {
+      "name": "backups",
+      "backendModule": "BackupsModule",
+      "ownership": {
+        "kind": "integration",
+        "owns": [
+          "Database backups through pg_dump",
+          "Backup files and their metadata in the backups volume",
+          "Backup retention"
+        ]
+      },
+      "ownedRoots": {
+        "backend": ["server/src/backups"]
+      },
+      "backendFiles": [
+        "server/src/backups/backups.module.ts",
+        "server/src/backups/backups.service.ts",
+        "server/src/backups/backup-settings.service.ts",
+        "server/src/backups/backup-scheduler.ts",
+        "server/src/backups/backup-restore.service.ts",
+        "server/src/backups/backup-import.service.ts",
+        "server/src/backups/database-admin.ts",
+        "server/src/backups/maintenance-state.ts",
+        "server/src/backups/maintenance.middleware.ts",
+        "server/src/backups/backup-storage.ts",
+        "server/src/backups/backups.types.ts",
+        "server/src/backups/pg-tools.runner.ts",
+        "server/src/backups/database-connection.utils.ts"
+      ]
     }
   ],
   "features": [
@@ -66,7 +96,7 @@
       "schema": "adminOverviewSchema",
       "ownership": {
         "kind": "admin-shell",
-        "owns": ["admin shell", "users", "settings"],
+        "owns": ["admin shell", "users", "settings", "database backups UI and routes"],
         "routeNamespaceNote": "/admin/* hosts protected operator UI; routes under it can belong to other features."
       },
       "verification": {
@@ -100,7 +130,9 @@
         "server/src/admin/dto/update-user.dto.ts",
         "server/src/admin/dto/update-user-role.dto.ts",
         "server/src/admin/dto/update-user-status.dto.ts",
-        "server/src/app-settings/profession-atlas-settings.service.ts"
+        "server/src/app-settings/profession-atlas-settings.service.ts",
+        "server/src/admin/admin-backups.controller.ts",
+        "server/src/admin/dto/admin-backups.dto.ts"
       ],
       "frontendFiles": [
         "client/src/pages/admin/admin-page.tsx",
@@ -172,6 +204,50 @@
           "path": "/admin/settings/privacy-policy",
           "methods": ["get", "patch"],
           "protected": true
+        },
+        {
+          "path": "/admin/backups",
+          "methods": ["get", "post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/settings",
+          "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/import",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/operation",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/restore/undo",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/{id}/restore",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/{id}",
+          "methods": ["delete"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/{id}/download-link",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/download/{token}",
+          "methods": ["get"]
         }
       ]
     },

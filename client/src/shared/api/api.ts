@@ -21,6 +21,9 @@ export const configureApiBaseUrl = (baseUrl?: string) => {
   }
 };
 
+/** Полный адрес маршрута API для обычной ссылки браузера (скачивание файла без Axios). */
+export const buildApiUrl = (path: string) => api.getUri({ url: path });
+
 export type ErrorType<Error> = AxiosError<Error>;
 
 export const customInstance = <T>(

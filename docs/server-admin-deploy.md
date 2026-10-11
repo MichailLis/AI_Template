@@ -139,7 +139,9 @@ curl -f http://localhost/api/api-json
 
 ## 6. Обновить
 
-Перед обновлением, если данные важны, сделать backup:
+Перед обновлением, если данные важны, сделать backup. Проще всего в админке: «Настройки →
+Резервные копии» → «Создать копию» → «Скачать» (подробности в
+`docs/deployment-dockerhub.md`, раздел 11). Или вручную:
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
