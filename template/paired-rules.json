@@ -282,6 +282,18 @@
         "file": "server/src/tests/prof-orientation-v3-plus/atlas.ts"
       },
       "reason": "Форматирование технической ошибки подключения к сервису Атласа (fetch failed) в понятное пользователю сообщение на русском языке на стороне сервера и локальный хелпер в карточках настроек клиента."
+    },
+    {
+      "name": "RESTORE_CONFIRMATION",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/widgets/admin-settings-workspace/ui/admin-settings-backups.model.ts"
+      },
+      "server": {
+        "file": "server/src/backups/backup-restore.service.ts"
+      },
+      "reason": "Слово подтверждения восстановления базы из резервной копии (RESTORE). Сервер авторитетно отклоняет другое значение; клиент держит кнопку выключенной, пока слово не введено."
     }
   ]
 }
