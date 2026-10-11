@@ -208,14 +208,14 @@ function AttemptRowCells({
         <div className="flex flex-col items-start gap-1">
           <Badge
             variant="outline"
-            className={getAnalysisResultBadgeClassName(attempt.analysisResultKind)}
+            className={`whitespace-nowrap ${getAnalysisResultBadgeClassName(attempt.analysisResultKind)}`}
           >
             {getAnalysisResultKindLabel(attempt.analysisResultKind)}
           </Badge>
           <LlmStatusBadge status={attempt.llmStatus} />
         </div>
       </TableCell>
-      <TableCell className="min-w-64 max-w-96">
+      <TableCell className="min-w-40 max-w-44">
         <p className={`truncate ${adminClassNames.text.heading}`}>
           {getAttemptProfilePrimary(attempt) || '—'}
         </p>
@@ -225,10 +225,7 @@ function AttemptRowCells({
           </p>
         ) : null}
       </TableCell>
-      <TableCell className="whitespace-nowrap">
-        {attempt.status === 'IN_PROGRESS' ? 'идёт' : formatDurationSeconds(attempt.durationSeconds)}
-      </TableCell>
-      <TableCell className="min-w-40 max-w-64">
+      <TableCell className="min-w-36 max-w-44">
         {attempt.resultSummary?.primaryDirectionLabel || attempt.resultSummary?.profileTitle ? (
           <>
             <p
@@ -250,7 +247,16 @@ function AttemptRowCells({
           '—'
         )}
       </TableCell>
-      <TableCell className="whitespace-nowrap">{formatDateTime(attempt.startedAt)}</TableCell>
+      <TableCell className="whitespace-nowrap">
+        <p>{formatDateTime(attempt.startedAt)}</p>
+        {attempt.status === 'IN_PROGRESS' || attempt.durationSeconds != null ? (
+          <p className={`text-xs ${adminClassNames.text.muted}`}>
+            {attempt.status === 'IN_PROGRESS'
+              ? 'идёт'
+              : `за ${formatDurationSeconds(attempt.durationSeconds)}`}
+          </p>
+        ) : null}
+      </TableCell>
       <TableCell className="text-right">
         <Button
           type="button"
@@ -311,12 +317,11 @@ export function PublicLinksAttemptsTableCard({
     },
     { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
     { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
-    { id: 'student', header: 'Студент', className: 'min-w-64' },
-    { id: 'duration', header: 'Время', className: 'whitespace-nowrap' },
-    { id: 'result', header: 'Результат', className: 'min-w-40' },
+    { id: 'student', header: 'Студент', className: 'min-w-44' },
+    { id: 'result', header: 'Результат', className: 'min-w-36' },
     {
       id: 'started',
-      header: 'Начало работы',
+      header: 'Начало и время',
       className: 'whitespace-nowrap',
       onSort: () => toggleSort('started'),
       sortDirection: sortField === 'started' ? sortDirection : null,

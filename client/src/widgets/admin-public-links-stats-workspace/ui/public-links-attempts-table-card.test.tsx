@@ -257,7 +257,7 @@ describe('PublicLinksAttemptsTableCard', () => {
       />,
     );
 
-    expect(screen.getAllByRole('columnheader')).toHaveLength(8);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(7);
     expect(
       screen.queryByRole('columnheader', { name: 'Завершение работы' }),
     ).not.toBeInTheDocument();
@@ -424,7 +424,7 @@ describe('PublicLinksAttemptsTableCard duration and result', () => {
       />,
     );
 
-    expect(screen.getByText('12 мин 05 с')).toBeInTheDocument();
+    expect(screen.getByText('за 12 мин 05 с')).toBeInTheDocument();
     expect(screen.getByText('3D-моделирование')).toBeInTheDocument();
     expect(screen.getByText('Широкий профиль')).toBeInTheDocument();
     expect(screen.getByText('идёт')).toBeInTheDocument();
