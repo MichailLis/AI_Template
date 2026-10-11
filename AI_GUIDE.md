@@ -386,6 +386,15 @@ Use these commands during local AI-agent development:
 `verify:local` is the default loop for daily implementation.
 `verify:template` is mandatory before finalizing branch state.
 
+Two checks inside both pipelines are easy to miss because their names say little.
+`npm run verify:runtime-config` (`scripts/verify-runtime-config.mjs`) checks the runtime wiring: the root
+`docker-compose.yml` has exactly the expected services with health checks and `npm ci` (never
+`npm install`), no hardcoded secrets, backend CORS read from `CORS_ALLOWED_ORIGINS` and never
+credentialed for every origin, the Dockerfiles, and the AI provider variables in the three env example
+files. `npm run verify:maintainability` (`scripts/verify-maintainability.mjs`) caps file size per scope
+(client source 420 effective lines, server source 700, server specs 900, repository scripts 700, client styles 2000) and
+`useState` calls per file (14): split the file instead of raising a limit.
+
 `.husky/pre-push` runs `npm run verify:diff -- --run` on every `git push`. It checks only the
 scopes the diff touches — 60 seconds on a branch of 38 changed files — and stays a pre-flight,
 not a gate: `verify:template` remains the release gate, and `scripts/verify-package-scripts.mjs`

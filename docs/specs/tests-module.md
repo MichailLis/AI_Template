@@ -41,6 +41,10 @@ Frontend UX baseline for tests editor:
 5. Keep labels and helper copy clear enough for non-technical content managers.
 6. Topic list must support safe deletion with explicit confirmation.
 7. Sidebar cards must gracefully handle long titles/slugs (no overflow beyond card bounds).
+8. Permanent deletion is allowed only for a test that has no published version, no public links and no
+   attempts; the server reports this as `canDelete` on each topic of the list. The archived list
+   disables "Удалить навсегда" and states the reason next to it; the single confirmation is the dialog
+   (there is no intermediate "Подтвердить удаление" item). Everything else can only be archived.
 
 AI-assisted tests generation baseline:
 
@@ -59,6 +63,11 @@ Built-in prof-orientation v3+ baseline:
 3. Each import creates a new draft Polus-compatible topic with a unique slug/title,
    10 `MULTI_CHOICE` questions, 11 `SLIDER` questions,
    `scoringKind = PROF_ORIENTATION_V3_PLUS`, and full `scoringConfig`.
+   The "Импорт v3+" action opens a confirmation dialog first: it lists the copies that already exist
+   (draft only, published with its version, or archived) with a link to open each, and the confirm
+   button reads "Создать еще одну" when copies exist and "Импортировать" otherwise. After a successful
+   import the toast opens the new draft and offers "Отменить": the undo deletes that draft and returns
+   to the list, so an accidental extra copy does not need the archive-and-delete route.
 4. Built-in methodology LLM enrichment must use the analysis prompt version
    selected on the test topic. Seed the built-in prompt with
    `deepseek/deepseek-v4-flash` only when no published built-in prompt version
