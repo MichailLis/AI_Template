@@ -19,11 +19,16 @@ import { pipeline } from 'node:stream/promises';
 import {
   BackupMetadataSchema,
   BackupSettingsSchema,
+  BackupStateSchema,
   type BackupMetadata,
   type BackupSettings,
+  type BackupState,
 } from './backups.types';
 
 export const DEFAULT_BACKUP_DIR = '/backups';
+
+const RENAME_ATTEMPTS = 5;
+const RENAME_RETRY_DELAY_MS = 20;
 
 /** Идентификатор попадает в путь к файлу, поэтому формат проверяется до любого обращения к диску. */
 const BACKUP_ID_PATTERN = /^backup-\d{8}T\d{6}Z-[a-f0-9]{6}$/;
@@ -60,6 +65,10 @@ export class BackupStorage {
 
   private get settingsPath() {
     return join(this.directory, 'settings.json');
+  }
+
+  private get statePath() {
+    return join(this.directory, 'state.json');
   }
 
   async exists() {
@@ -139,12 +148,48 @@ export class BackupStorage {
     await this.writeJsonAtomically(this.settingsPath, settings);
   }
 
+  async readState(): Promise<BackupState> {
+    try {
+      const parsed = BackupStateSchema.safeParse(
+        JSON.parse(await readFile(this.statePath, 'utf8')),
+      );
+
+      if (parsed.success) {
+        return parsed.data;
+      }
+    } catch {
+      // Файла еще нет: восстановлений не было.
+    }
+
+    return { sessionEpochMs: 0, previousDatabase: null };
+  }
+
+  async writeState(state: BackupState) {
+    await this.ensureWritable();
+    await this.writeJsonAtomically(this.statePath, state);
+  }
+
   /** Запись через временный файл: прерванная запись не оставляет полупустой JSON. */
   private async writeJsonAtomically(path: string, value: unknown) {
     const temporaryPath = `${path}.tmp`;
 
     await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-    await rename(temporaryPath, path);
+
+    // На Windows rename падает с EPERM, пока файл открыт на чтение параллельным запросом списка.
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        await rename(temporaryPath, path);
+        return;
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+
+        if ((code !== 'EPERM' && code !== 'EBUSY') || attempt >= RENAME_ATTEMPTS) {
+          throw error;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, RENAME_RETRY_DELAY_MS));
+      }
+    }
   }
 
   async remove(id: string) {

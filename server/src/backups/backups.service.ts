@@ -14,6 +14,7 @@ import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { BackupSettingsService, getNextScheduledRun } from './backup-settings.service';
 import { BackupStorage, isBackupId } from './backup-storage';
+import { MaintenanceState } from './maintenance-state';
 import { parsePgToolMajorVersion, toPgConnectionEnv } from './database-connection.utils';
 import { PgToolMissingError, PgToolsRunner } from './pg-tools.runner';
 import type { BackupMetadata, BackupTrigger } from './backups.types';
@@ -70,6 +71,7 @@ export class BackupsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BackupsService.name);
   private readonly dumpTimeoutMs: number;
   private activeBackupId: string | null = null;
+  private activeRun: Promise<void> | null = null;
   private availabilityCache: { checkedAt: number; value: BackupAvailability } | null = null;
   private readonly downloadLinks = new Map<string, DownloadLink>();
 
@@ -80,6 +82,7 @@ export class BackupsService implements OnApplicationBootstrap {
     private readonly storage: BackupStorage,
     private readonly runner: PgToolsRunner,
     private readonly settingsService: BackupSettingsService,
+    private readonly maintenance: MaintenanceState,
   ) {
     this.dumpTimeoutMs = readPositiveInt(
       config.get<string>('BACKUP_TIMEOUT_MS'),
@@ -146,6 +149,10 @@ export class BackupsService implements OnApplicationBootstrap {
       throw new ConflictException('Копия уже создается, дождитесь окончания', 'BACKUP_IN_PROGRESS');
     }
 
+    if (this.maintenance.isActive) {
+      throw new ConflictException('Идет восстановление базы', 'RESTORE_IN_PROGRESS');
+    }
+
     const now = new Date();
     const id = `backup-${formatBackupTimestamp(now)}-${randomBytes(3).toString('hex')}`;
     // Замок берется до первого await: иначе два почти одновременных запроса оба прошли бы проверку.
@@ -186,9 +193,18 @@ export class BackupsService implements OnApplicationBootstrap {
       throw error;
     }
 
-    void this.runBackup(backup);
+    this.activeRun = this.runBackup(backup);
 
     return backup;
+  }
+
+  /** Ждет окончания текущей копии и возвращает ее итоговое описание. */
+  async waitForBackup(id: string): Promise<BackupMetadata | null> {
+    if (this.activeBackupId === id && this.activeRun) {
+      await this.activeRun;
+    }
+
+    return this.storage.read(id);
   }
 
   async deleteBackup(userId: number, id: string) {
@@ -361,6 +377,7 @@ export class BackupsService implements OnApplicationBootstrap {
       );
     } finally {
       this.activeBackupId = null;
+      this.activeRun = null;
     }
   }
 
@@ -437,7 +454,7 @@ export class BackupsService implements OnApplicationBootstrap {
     }
   }
 
-  private async findBackup(id: string) {
+  async findBackup(id: string) {
     const backup = isBackupId(id) ? await this.storage.read(id) : null;
 
     if (!backup) {

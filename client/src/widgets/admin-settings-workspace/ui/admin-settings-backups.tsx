@@ -1,4 +1,5 @@
-import { DatabaseBackup, Download, Plus, Trash2, TriangleAlert } from 'lucide-react';
+import { DatabaseBackup, Download, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
+import { useState } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -7,6 +8,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { RestoreBackupDialog, RestoreStatusPanel } from './admin-settings-backup-restore';
 import { BackupScheduleForm } from './admin-settings-backup-schedule';
 import {
   backupStatusLabels,
@@ -15,6 +17,7 @@ import {
 } from './admin-settings-backups.model';
 import { SettingsLoadError } from './admin-settings-cards.parts';
 import { toBackupErrorMessage, useBackupsSettings } from './use-backups-settings';
+import { useRestoreOperation } from './use-restore-operation';
 
 import type { BackupItem } from './admin-settings-backups.model';
 
@@ -27,11 +30,20 @@ const statusBadgeClassNames: Record<BackupItem['status'], string> = {
 interface BackupRowProps {
   backup: BackupItem;
   isDownloading: boolean;
+  isRestoreBlocked: boolean;
+  onRestore: (backup: BackupItem) => void;
   onDownload: (backup: BackupItem) => void;
   onDelete: (backup: BackupItem) => void;
 }
 
-function BackupRow({ backup, isDownloading, onDownload, onDelete }: BackupRowProps) {
+function BackupRow({
+  backup,
+  isDownloading,
+  isRestoreBlocked,
+  onDownload,
+  onRestore,
+  onDelete,
+}: BackupRowProps) {
   return (
     <li
       className={`flex flex-wrap items-start justify-between gap-3 ${adminClassNames.panel.listRow}`}
@@ -70,6 +82,16 @@ function BackupRow({ backup, isDownloading, onDownload, onDelete }: BackupRowPro
           type="button"
           size="sm"
           variant="outline"
+          disabled={backup.status !== 'READY' || isRestoreBlocked}
+          onClick={() => onRestore(backup)}
+        >
+          <RotateCcw />
+          Восстановить
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
           aria-label={`Удалить копию ${backup.fileName}`}
           disabled={backup.status === 'RUNNING'}
           onClick={() => onDelete(backup)}
@@ -95,6 +117,8 @@ export function BackupsSettingsCard() {
     isDeleting,
     confirmDelete,
   } = useBackupsSettings();
+  const restore = useRestoreOperation();
+  const [backupToRestore, setBackupToRestore] = useState<BackupItem | null>(null);
   const availability = overview?.availability;
 
   return (
@@ -114,7 +138,12 @@ export function BackupsSettingsCard() {
               Скачайте копию, чтобы у вас был экземпляр вне сервера.
             </CardDescription>
           </div>
-          <Button type="button" size="sm" disabled={!canCreate} onClick={createBackup}>
+          <Button
+            type="button"
+            size="sm"
+            disabled={!canCreate || restore.isRunning}
+            onClick={createBackup}
+          >
             <Plus />
             {isRunning ? 'Копия создается...' : 'Создать копию'}
           </Button>
@@ -134,6 +163,8 @@ export function BackupsSettingsCard() {
             }}
           />
         ) : null}
+
+        <RestoreStatusPanel status={restore.status} onRefresh={restore.refreshOperation} />
 
         {availability && !availability.available ? (
           <div className={`flex items-start gap-2 ${adminClassNames.panel.warningInline}`}>
@@ -160,6 +191,8 @@ export function BackupsSettingsCard() {
                 key={backup.id}
                 backup={backup}
                 isDownloading={isDownloading}
+                isRestoreBlocked={isRunning || restore.isRunning}
+                onRestore={setBackupToRestore}
                 onDownload={downloadBackup}
                 onDelete={setBackupToDelete}
               />
@@ -174,6 +207,12 @@ export function BackupsSettingsCard() {
           </p>
         ) : null}
       </CardContent>
+
+      <RestoreBackupDialog
+        backup={backupToRestore}
+        onClose={() => setBackupToRestore(null)}
+        onStarted={restore.refreshOperation}
+      />
 
       <ConfirmActionDialog
         open={backupToDelete !== null}

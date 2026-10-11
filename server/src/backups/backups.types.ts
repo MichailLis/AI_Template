@@ -2,8 +2,11 @@ import { z } from 'zod';
 
 export const BACKUP_STATUSES = ['RUNNING', 'READY', 'FAILED'] as const;
 
-/** Кто запустил копию: админ кнопкой или расписание. Импорт и копия перед восстановлением добавят свои значения. */
-export const BACKUP_TRIGGERS = ['MANUAL', 'SCHEDULED'] as const;
+/**
+ * Кто запустил копию: админ кнопкой, расписание или восстановление (копия текущей базы перед
+ * тем, как ее заменить). Импорт добавит свое значение.
+ */
+export const BACKUP_TRIGGERS = ['MANUAL', 'SCHEDULED', 'PRE_RESTORE'] as const;
 
 /** Описание копии, которое хранится рядом с файлом дампа (`<id>.json`). */
 export const BackupMetadataSchema = z.object({
@@ -52,3 +55,20 @@ export const BackupSettingsSchema = z.object({
 });
 
 export type BackupSettings = z.infer<typeof BackupSettingsSchema>;
+
+/**
+ * Состояние восстановления, которое должно пережить и перезапуск backend, и саму подмену базы:
+ * граница действия старых сессий и база, сохраненная до восстановления.
+ */
+export const BackupStateSchema = z.object({
+  sessionEpochMs: z.number().int().nonnegative(),
+  previousDatabase: z
+    .object({
+      name: z.string(),
+      restoredAt: z.string(),
+      backupId: z.string(),
+    })
+    .nullable(),
+});
+
+export type BackupState = z.infer<typeof BackupStateSchema>;

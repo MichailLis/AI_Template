@@ -12,4 +12,5 @@ export type AdminBackupResponseDtoBackupTrigger =
 export const AdminBackupResponseDtoBackupTrigger = {
   MANUAL: 'MANUAL',
   SCHEDULED: 'SCHEDULED',
+  PRE_RESTORE: 'PRE_RESTORE',
 } as const;

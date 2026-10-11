@@ -28,6 +28,9 @@ export const formatScheduleHour = (hourUtc: number, now = new Date()) => {
 /** Пока копия создается, список опрашивается: статус меняется на сервере без участия клиента. */
 export const BACKUPS_POLL_INTERVAL_MS = 2_000;
 
+/** Совпадает с RESTORE_CONFIRMATION на сервере. */
+export const RESTORE_CONFIRMATION = 'RESTORE';
+
 export const backupStatusLabels: Record<AdminBackupsOverviewResponseDtoBackupsItemStatus, string> =
   {
     RUNNING: 'Создается',
@@ -55,12 +58,17 @@ export const formatBackupSize = (sizeBytes: number | null) => {
   return `${value.toFixed(digits).replace('.', ',')} ${SIZE_UNITS[unitIndex]}`;
 };
 
-export const getBackupAuthorLabel = (backup: BackupItem) => {
-  if (backup.createdBy) {
-    return backup.createdBy.name ?? backup.createdBy.email;
-  }
+const backupTriggerLabels: Record<BackupItem['trigger'], string | null> = {
+  MANUAL: null,
+  SCHEDULED: 'По расписанию',
+  PRE_RESTORE: 'Перед восстановлением',
+};
 
-  return backup.trigger === 'SCHEDULED' ? 'По расписанию' : 'Система';
+/** Кто и почему создал копию: «Перед восстановлением · Иван», «По расписанию». */
+export const getBackupAuthorLabel = (backup: BackupItem) => {
+  const author = backup.createdBy ? (backup.createdBy.name ?? backup.createdBy.email) : null;
+
+  return [backupTriggerLabels[backup.trigger], author].filter(Boolean).join(' · ') || 'Система';
 };
 
 export const shouldPollBackups = (overview: BackupsOverview | undefined) =>

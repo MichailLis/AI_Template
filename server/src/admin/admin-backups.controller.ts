@@ -17,6 +17,7 @@ import type { Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { BackupRestoreService } from '../backups/backup-restore.service';
 import { BackupSettingsService } from '../backups/backup-settings.service';
 import { BackupsService } from '../backups/backups.service';
 import {
@@ -26,9 +27,12 @@ import {
 import {
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
+  AdminBackupOperationResponseDto,
   AdminBackupResponseDto,
   AdminBackupSettingsResponseDto,
   AdminBackupsOverviewResponseDto,
+  AdminRestoreStartResponseDto,
+  RestoreBackupDto,
   UpdateBackupSettingsDto,
 } from './dto/admin-backups.dto';
 
@@ -43,6 +47,7 @@ export class AdminBackupsController {
   constructor(
     private readonly backupsService: BackupsService,
     private readonly backupSettingsService: BackupSettingsService,
+    private readonly backupRestoreService: BackupRestoreService,
   ) {}
 
   @Get()
@@ -65,6 +70,33 @@ export class AdminBackupsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminBackupSettingsResponseDto })
   async updateSettings(@GetCurrentUserId() userId: number, @Body() dto: UpdateBackupSettingsDto) {
     return { settings: await this.backupSettingsService.updateSettings(userId, dto) };
+  }
+
+  @Get('operation')
+  @ApiOperation({ summary: 'Get the state of a database restore (works during maintenance)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminBackupOperationResponseDto })
+  getOperation(@GetCurrentUserId() userId: number) {
+    return this.backupRestoreService.getStatus(userId);
+  }
+
+  @Post('restore/undo')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Bring back the database that was replaced by the last restore' })
+  @ApiResponse({ status: HttpStatus.ACCEPTED, type: AdminRestoreStartResponseDto })
+  undoRestore(@GetCurrentUserId() userId: number) {
+    return this.backupRestoreService.startUndo(userId);
+  }
+
+  @Post(':id/restore')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Restore the database from a backup on the server' })
+  @ApiResponse({ status: HttpStatus.ACCEPTED, type: AdminRestoreStartResponseDto })
+  restoreBackup(
+    @GetCurrentUserId() userId: number,
+    @Param('id') id: string,
+    @Body() dto: RestoreBackupDto,
+  ) {
+    return this.backupRestoreService.startRestore(userId, id, dto.confirmation);
   }
 
   @Delete(':id')

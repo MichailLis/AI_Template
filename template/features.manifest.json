@@ -74,6 +74,10 @@
         "server/src/backups/backups.service.ts",
         "server/src/backups/backup-settings.service.ts",
         "server/src/backups/backup-scheduler.ts",
+        "server/src/backups/backup-restore.service.ts",
+        "server/src/backups/database-admin.ts",
+        "server/src/backups/maintenance-state.ts",
+        "server/src/backups/maintenance.middleware.ts",
         "server/src/backups/backup-storage.ts",
         "server/src/backups/backups.types.ts",
         "server/src/backups/pg-tools.runner.ts",
@@ -208,6 +212,21 @@
         {
           "path": "/admin/backups/settings",
           "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/operation",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/restore/undo",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/{id}/restore",
+          "methods": ["post"],
           "protected": true
         },
         {

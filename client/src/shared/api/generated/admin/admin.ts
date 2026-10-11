@@ -25,6 +25,7 @@ import type {
   AdminAiProviderSettingsResponseDto,
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
+  AdminBackupOperationResponseDto,
   AdminBackupResponseDto,
   AdminBackupSettingsResponseDto,
   AdminBackupsOverviewResponseDto,
@@ -34,6 +35,7 @@ import type {
   AdminProfessionAtlasSettingsResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
+  AdminRestoreStartResponseDto,
   AdminUserCredentialsResponseDto,
   AdminUserResponseDto,
   AdminUsersResponseDto,
@@ -50,6 +52,7 @@ import type {
   PromptSimulationResponseDto,
   PromptTestQuestionsResponseDto,
   ResetUserPasswordDto,
+  RestoreBackupDto,
   UpdateAiProviderDto,
   UpdateAnalysisPromptVersionDto,
   UpdateBackupSettingsDto,
@@ -2185,6 +2188,305 @@ export const useAdminBackupsControllerUpdateSettings = <
   TContext
 > => {
   return useMutation(getAdminBackupsControllerUpdateSettingsMutationOptions(options), queryClient);
+};
+/**
+ * @summary Get the state of a database restore (works during maintenance)
+ */
+export const adminBackupsControllerGetOperation = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupOperationResponseDto>(
+    { url: `/admin/backups/operation`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerGetOperationQueryKey = () => {
+  return [`/admin/backups/operation`] as const;
+};
+
+export const getAdminBackupsControllerGetOperationQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminBackupsControllerGetOperationQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>> = ({
+    signal,
+  }) => adminBackupsControllerGetOperation(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminBackupsControllerGetOperationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
+>;
+export type AdminBackupsControllerGetOperationQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminBackupsControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupsControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupsControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the state of a database restore (works during maintenance)
+ */
+
+export function useAdminBackupsControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminBackupsControllerGetOperationQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary Bring back the database that was replaced by the last restore
+ */
+export const adminBackupsControllerUndoRestore = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminRestoreStartResponseDto>(
+    { url: `/admin/backups/restore/undo`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerUndoRestoreMutationKey = () =>
+  ['adminBackupsControllerUndoRestore'] as const;
+
+export const getAdminBackupsControllerUndoRestoreMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerUndoRestoreMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>,
+    void
+  > = () => {
+    return adminBackupsControllerUndoRestore(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerUndoRestoreMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>
+>;
+
+export type AdminBackupsControllerUndoRestoreMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Bring back the database that was replaced by the last restore
+ */
+export const useAdminBackupsControllerUndoRestore = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerUndoRestore>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerUndoRestoreMutationOptions(options), queryClient);
+};
+/**
+ * @summary Restore the database from a backup on the server
+ */
+export const adminBackupsControllerRestoreBackup = (
+  id: string,
+  restoreBackupDto: RestoreBackupDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminRestoreStartResponseDto>(
+    {
+      url: `/admin/backups/${id}/restore`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: restoreBackupDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerRestoreBackupMutationKey = () =>
+  ['adminBackupsControllerRestoreBackup'] as const;
+
+export const getAdminBackupsControllerRestoreBackupMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>,
+    TError,
+    AdminBackupsControllerRestoreBackupMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>,
+  TError,
+  AdminBackupsControllerRestoreBackupMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerRestoreBackupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>,
+    AdminBackupsControllerRestoreBackupMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminBackupsControllerRestoreBackup(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerRestoreBackupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>
+>;
+export type AdminBackupsControllerRestoreBackupMutationBody = RestoreBackupDto;
+export type AdminBackupsControllerRestoreBackupMutationError = ErrorType<ErrorResponseDto>;
+export type AdminBackupsControllerRestoreBackupMutationVariables = {
+  id: string;
+  data: RestoreBackupDto;
+};
+
+/**
+ * @summary Restore the database from a backup on the server
+ */
+export const useAdminBackupsControllerRestoreBackup = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>,
+      TError,
+      AdminBackupsControllerRestoreBackupMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerRestoreBackup>>,
+  TError,
+  AdminBackupsControllerRestoreBackupMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerRestoreBackupMutationOptions(options), queryClient);
 };
 /**
  * @summary Delete a database backup

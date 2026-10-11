@@ -16,6 +16,13 @@ const createBackup = vi.fn();
 const deleteBackup = vi.fn();
 const createDownloadLink = vi.fn();
 const updateSettings = vi.fn();
+const restoreBackup = vi.fn();
+const undoRestore = vi.fn();
+let operationStatus: {
+  maintenance: boolean;
+  operation: Record<string, unknown> | null;
+  previousDatabase: { name: string; restoredAt: string; backupId: string } | null;
+};
 let overview: BackupsOverview;
 let downloadLinkOptions: { mutation: { onSuccess: (link: { path: string }) => void } };
 
@@ -34,6 +41,10 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
   useAdminBackupsControllerCreateBackup: () => ({ mutate: createBackup, isPending: false }),
   useAdminBackupsControllerDeleteBackup: () => ({ mutate: deleteBackup, isPending: false }),
   useAdminBackupsControllerUpdateSettings: () => ({ mutate: updateSettings, isPending: false }),
+  getAdminBackupsControllerGetOperationQueryKey: () => ['backups-operation'],
+  useAdminBackupsControllerGetOperation: () => ({ data: operationStatus }),
+  useAdminBackupsControllerRestoreBackup: () => ({ mutate: restoreBackup, isPending: false }),
+  useAdminBackupsControllerUndoRestore: () => ({ mutate: undoRestore, isPending: false }),
   useAdminBackupsControllerCreateDownloadLink: (options: typeof downloadLinkOptions) => {
     downloadLinkOptions = options;
 
@@ -63,6 +74,7 @@ const renderCard = () =>
 
 describe('BackupsSettingsCard', () => {
   beforeEach(() => {
+    operationStatus = { maintenance: false, operation: null, previousDatabase: null };
     overview = {
       availability: {
         available: true,
@@ -162,6 +174,7 @@ describe('BackupsSettingsCard', () => {
 
 describe('BackupScheduleForm', () => {
   beforeEach(() => {
+    operationStatus = { maintenance: false, operation: null, previousDatabase: null };
     overview = {
       availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
       settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
@@ -207,6 +220,118 @@ describe('BackupScheduleForm', () => {
   });
 });
 
+describe('restore', () => {
+  beforeEach(() => {
+    operationStatus = { maintenance: false, operation: null, previousDatabase: null };
+    overview = {
+      availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
+      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+      nextScheduledAt: null,
+      isBusy: false,
+      backups: [readyBackup],
+    };
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('restores only after the confirmation word is typed', () => {
+    renderCard();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Восстановить' }));
+    const submit = screen.getByRole('button', { name: 'Восстановить' }) as HTMLButtonElement;
+    const dialogSubmit = screen
+      .getAllByRole('button', { name: 'Восстановить' })
+      .find((button) => button.getAttribute('type') === 'submit') as HTMLButtonElement;
+
+    expect(submit).toBeTruthy();
+    expect(dialogSubmit.disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('Для подтверждения введите RESTORE'), {
+      target: { value: 'restore' },
+    });
+    expect(dialogSubmit.disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('Для подтверждения введите RESTORE'), {
+      target: { value: 'RESTORE' },
+    });
+    fireEvent.click(dialogSubmit);
+
+    expect(restoreBackup).toHaveBeenCalledWith({
+      id: readyBackup.id,
+      data: { confirmation: 'RESTORE' },
+    });
+  });
+
+  it('shows progress and blocks new operations while a restore runs', () => {
+    operationStatus = {
+      maintenance: true,
+      operation: {
+        kind: 'RESTORE',
+        status: 'RUNNING',
+        backupId: readyBackup.id,
+        fileName: readyBackup.fileName,
+        step: 'Развертывание копии во временной базе',
+        startedAt: '2026-10-11T10:00:00.000Z',
+        finishedAt: null,
+        errorMessage: null,
+      },
+      previousDatabase: null,
+    };
+    renderCard();
+
+    expect(screen.getByText(/Развертывание копии во временной базе/)).toBeTruthy();
+    expect(
+      (screen.getByRole('button', { name: 'Создать копию' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Восстановить' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it('explains a failed restore', () => {
+    operationStatus = {
+      maintenance: false,
+      operation: {
+        kind: 'RESTORE',
+        status: 'FAILED',
+        backupId: readyBackup.id,
+        fileName: readyBackup.fileName,
+        step: 'Проверка копии',
+        startedAt: '2026-10-11T10:00:00.000Z',
+        finishedAt: '2026-10-11T10:01:00.000Z',
+        errorMessage: 'В копии нет ни одного активного администратора',
+      },
+      previousDatabase: null,
+    };
+    renderCard();
+
+    expect(screen.getByText(/В копии нет ни одного активного администратора/)).toBeTruthy();
+    expect(screen.getByText(/Рабочая база не изменилась/)).toBeTruthy();
+  });
+
+  it('offers to undo the last restore with confirmation', () => {
+    operationStatus = {
+      maintenance: false,
+      operation: null,
+      previousDatabase: {
+        name: 'app_before_20261011t100000',
+        restoredAt: '2026-10-11T10:00:00.000Z',
+        backupId: readyBackup.id,
+      },
+    };
+    renderCard();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Отменить восстановление' }));
+    expect(undoRestore).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Вернуть прежнюю базу' }));
+
+    expect(undoRestore).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('backups model', () => {
   it.each([
     [null, '—'],
@@ -219,6 +344,12 @@ describe('backups model', () => {
 
   it('shows the schedule hour in UTC next to local time', () => {
     expect(formatScheduleHour(3)).toMatch(/^\d{2}:00 \(03:00 UTC\)$/);
+  });
+
+  it('labels the reason and the author of a backup', () => {
+    expect(getBackupAuthorLabel({ ...readyBackup, trigger: 'PRE_RESTORE' })).toBe(
+      'Перед восстановлением · Администратор',
+    );
   });
 
   it('labels scheduled backups', () => {

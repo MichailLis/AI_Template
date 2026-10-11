@@ -80,3 +80,47 @@ export class AdminBackupDeleteResponseDto extends createZodDto(AdminBackupDelete
 export class AdminBackupDownloadLinkResponseDto extends createZodDto(
   AdminBackupDownloadLinkResponseSchema,
 ) {}
+
+export const RestoreOperationSchema = z.object({
+  kind: z.enum(['RESTORE', 'UNDO']),
+  status: z.enum(['RUNNING', 'SUCCEEDED', 'FAILED']),
+  backupId: z.string().nullable(),
+  fileName: z.string().nullable(),
+  /** Текущий шаг человеческим языком: «Развертывание копии во временной базе». */
+  step: z.string(),
+  startedAt: z.string().datetime(),
+  finishedAt: z.string().datetime().nullable(),
+  errorMessage: z.string().nullable(),
+});
+
+export const AdminBackupOperationResponseSchema = z.object({
+  /** Идет подмена базы: остальные маршруты API отвечают 503. */
+  maintenance: z.boolean(),
+  /** Последняя операция восстановления с момента запуска backend; null — их не было. */
+  operation: RestoreOperationSchema.nullable(),
+  /** База, сохраненная до последнего восстановления: пока она есть, восстановление можно отменить. */
+  previousDatabase: z
+    .object({
+      name: z.string(),
+      restoredAt: z.string().datetime(),
+      backupId: z.string(),
+    })
+    .nullable(),
+});
+
+export const RestoreBackupSchema = z.object({
+  /** Слово RESTORE: защита от случайного нажатия. */
+  confirmation: z.string(),
+});
+
+export const AdminRestoreStartResponseSchema = z.object({
+  operation: RestoreOperationSchema,
+});
+
+export class AdminBackupOperationResponseDto extends createZodDto(
+  AdminBackupOperationResponseSchema,
+) {}
+
+export class RestoreBackupDto extends createZodDto(RestoreBackupSchema) {}
+
+export class AdminRestoreStartResponseDto extends createZodDto(AdminRestoreStartResponseSchema) {}

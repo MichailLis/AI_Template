@@ -11,6 +11,7 @@ import { BackupScheduler } from './backup-scheduler';
 import { BackupSettingsService } from './backup-settings.service';
 import { BackupStorage } from './backup-storage';
 import { BackupsService } from './backups.service';
+import { MaintenanceState } from './maintenance-state';
 import { PgToolMissingError, type PgToolRunOptions } from './pg-tools.runner';
 import type { BackupMetadata } from './backups.types';
 
@@ -42,10 +43,12 @@ describe('BackupsService', () => {
   let service: BackupsService;
   let settingsService: BackupSettingsService;
   let scheduler: BackupScheduler;
+  let maintenance: MaintenanceState;
 
   const createService = () => {
     const config = { get: (key: string) => env[key] } as unknown as ConfigService;
     storage = new BackupStorage(config);
+    maintenance = new MaintenanceState();
     settingsService = new BackupSettingsService(
       prisma as unknown as PrismaService,
       audit as unknown as AuditService,
@@ -59,6 +62,7 @@ describe('BackupsService', () => {
       storage,
       runner,
       settingsService,
+      maintenance,
     );
     scheduler = new BackupScheduler(service, settingsService, storage);
   };
@@ -513,5 +517,12 @@ describe('BackupsService', () => {
       expect(await scheduler.runIfDue()).toBe(false);
       expect(await readdir(directory)).toEqual([]);
     });
+  });
+
+  it('refuses to start a backup while a restore holds the maintenance lock', async () => {
+    maintenance.activate('restore');
+
+    await expect(service.createBackup(ADMIN_ID)).rejects.toBeInstanceOf(ConflictException);
+    expect(await readdir(directory)).toEqual([]);
   });
 });
