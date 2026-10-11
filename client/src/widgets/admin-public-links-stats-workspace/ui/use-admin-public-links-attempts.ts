@@ -8,15 +8,22 @@ import {
 import { ATTEMPTS_LIMIT } from './use-admin-public-links-stats-workspace.model';
 
 import type { AttemptDetailView } from './use-admin-public-links-stats-workspace.model';
+import type { TestsAdminAttemptsControllerListPublicLinkAttemptsParams } from '@/shared/api/model';
+
+export type AttemptsListFilters = Pick<
+  TestsAdminAttemptsControllerListPublicLinkAttemptsParams,
+  'search' | 'status' | 'sortBy' | 'sortOrder'
+>;
 
 export const usePaginatedPublicAttempts = (
   effectivePublicLinkId: number | null,
   attemptsPage: number,
   attemptsLimit: number = ATTEMPTS_LIMIT,
+  filters: AttemptsListFilters = {},
 ) => {
   const publicAttemptsQuery = useTestsAdminAttemptsControllerListPublicLinkAttempts(
     effectivePublicLinkId ?? 0,
-    { page: attemptsPage, limit: attemptsLimit },
+    { page: attemptsPage, limit: attemptsLimit, ...filters },
     { query: { enabled: Boolean(effectivePublicLinkId) } },
   );
   const publicAttempts = useMemo(
