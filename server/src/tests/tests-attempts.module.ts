@@ -9,6 +9,7 @@ import { ProfOrientationAtlasService } from './prof-orientation-v3-plus/atlas';
 import { TestsAdminAnalyticsController } from './reporting/admin-analytics.controller';
 import { TestsAdminAttemptService } from './attempts/admin-attempt.service';
 import { TestsAdminAttemptsController } from './attempts/admin-attempts.controller';
+import { TestsAttemptsExportService } from './attempts/attempts-export.service';
 import { TestsAnalyticsExportService } from './reporting/analytics-export.service';
 import { TestsAnalyticsPdfRendererService } from './reporting/analytics-pdf-renderer.service';
 import { TestsAnalyticsService } from './reporting/analytics.service';
@@ -29,6 +30,7 @@ import { TestsPublicSessionService } from './session/public-session.service';
     TestsPublicSessionService,
     TestsPublicAttemptAllocationService,
     TestsAdminAttemptService,
+    TestsAttemptsExportService,
     PrivacyPolicySettingsService,
     ProfessionAtlasSettingsService,
     ProfessionAtlasClientService,

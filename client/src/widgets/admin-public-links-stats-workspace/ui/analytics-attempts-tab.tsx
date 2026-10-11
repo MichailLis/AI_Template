@@ -1,15 +1,19 @@
+import { FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { testsAdminAttemptsControllerExportPublicLinkAttempts } from '@/shared/api/generated/tests/tests';
 import { formatDateTimeOrDash, formatDateTimePreciseOrDash } from '@/shared/lib/date-format';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
+import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
 import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
+import { downloadTestAnalyticsBlob } from './test-analytics-download';
 import { useAttemptDetail, usePaginatedPublicAttempts } from './use-admin-public-links-attempts';
 
 interface AnalyticsAttemptsTabProps {
-  selectedPublicLink: { id: number } | null;
+  selectedPublicLink: { id: number; shortCode?: string } | null;
   effectivePublicLinkId: number | null;
   attemptsPage: number;
   attemptsLimit: number;
@@ -54,6 +58,37 @@ export function AnalyticsAttemptsTab({
   }, [searchInput]);
 
   const resetPage = () => setAttemptsPage(() => 1);
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // Файл строится по тем же поиску, статусу и сортировке, что и таблица, но без постраничности.
+  const handleExport = async () => {
+    if (!effectivePublicLinkId) {
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      const blob = await testsAdminAttemptsControllerExportPublicLinkAttempts(
+        effectivePublicLinkId,
+        { search: search || undefined, status: status || undefined, sortBy, sortOrder },
+      );
+
+      downloadTestAnalyticsBlob(
+        blob,
+        `attempts-${selectedPublicLink?.shortCode ?? effectivePublicLinkId}-${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx`,
+      );
+    } catch {
+      setExportError('Не удалось сформировать файл. Попробуйте еще раз.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const {
     publicAttempts,
@@ -127,8 +162,20 @@ export function AnalyticsAttemptsTab({
               <option value="EXPIRED">Истекло</option>
               <option value="ABANDONED">Брошено</option>
             </AdminSelectField>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="sm:ml-auto sm:h-9"
+              disabled={isExporting || !selectedPublicLink}
+              onClick={() => void handleExport()}
+            >
+              <FileSpreadsheet />
+              {isExporting ? 'Готовим XLSX...' : 'Выгрузить XLSX'}
+            </Button>
           </div>
         }
+        exportError={exportError}
         hasActiveFilters={Boolean(search || status)}
         sortBy={sortBy}
         sortOrder={sortOrder}

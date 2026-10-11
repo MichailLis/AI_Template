@@ -30,6 +30,12 @@ Behavior baseline:
    to the whole list, not to the visible page. The status filter follows the derived status shown
    in the table: an attempt with `finishedAt` is completed, an open attempt past `expiresAt` is
    expired. The list header counts all attempts, unfinished ones included.
+   The toolbar also has an `Выгрузить XLSX` button: it downloads the list with the same search,
+   status and sorting as the table, without paging, from
+   `GET /admin/tests/public-links/:linkId/attempts/export.xlsx` (admin only, at most 5000 rows).
+   The file has one row per attempt: student profile, status, start, finish, duration, leading
+   direction, profile, analysis and AI status. Student-entered text that starts with `=`, `+`,
+   `-` or `@` is written with a leading apostrophe so a spreadsheet does not run it as a formula.
 4. Filters must support both test and public link selection, and one selection must serve both
    analytics tabs.
 5. Link labels in selectors should use business copy (`тестов пройдено`).
