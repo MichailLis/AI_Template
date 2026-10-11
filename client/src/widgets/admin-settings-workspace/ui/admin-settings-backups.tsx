@@ -1,4 +1,4 @@
-import { DatabaseBackup, Download, Plus, RotateCcw, Trash2, TriangleAlert } from 'lucide-react';
+import { DatabaseBackup, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatDateTime } from '@/shared/lib/date-format';
@@ -10,7 +10,7 @@ import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
 import { BackupImportButton } from './admin-settings-backup-import';
 import { RestoreBackupDialog, RestoreStatusPanel } from './admin-settings-backup-restore';
-import { BackupScheduleForm } from './admin-settings-backup-schedule';
+import { BackupOverviewSections } from './admin-settings-backup-storage';
 import {
   backupStatusLabels,
   formatBackupSize,
@@ -125,7 +125,6 @@ export function BackupsSettingsCard() {
   } = useBackupsSettings();
   const restore = useRestoreOperation();
   const [backupToRestore, setBackupToRestore] = useState<BackupItem | null>(null);
-  const availability = overview?.availability;
 
   return (
     <Card className={`rounded-lg ${adminClassNames.panel.card}`}>
@@ -175,19 +174,7 @@ export function BackupsSettingsCard() {
 
         <RestoreStatusPanel status={restore.status} onRefresh={restore.refreshOperation} />
 
-        {availability && !availability.available ? (
-          <div className={`flex items-start gap-2 ${adminClassNames.panel.warningInline}`}>
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-            <span>Резервное копирование недоступно: {availability.reason}</span>
-          </div>
-        ) : null}
-
-        {overview ? (
-          <BackupScheduleForm
-            settings={overview.settings}
-            nextScheduledAt={overview.nextScheduledAt}
-          />
-        ) : null}
+        {overview ? <BackupOverviewSections overview={overview} /> : null}
 
         {overview && overview.backups.length === 0 ? (
           <div className={adminClassNames.panel.emptyCenter}>Копий пока нет</div>
@@ -207,13 +194,6 @@ export function BackupsSettingsCard() {
               />
             ))}
           </ul>
-        ) : null}
-
-        {availability?.pgDumpVersion ? (
-          <p className={`text-xs ${adminClassNames.text.muted}`}>
-            {availability.pgDumpVersion}
-            {availability.serverVersion ? ` · сервер PostgreSQL ${availability.serverVersion}` : ''}
-          </p>
         ) : null}
       </CardContent>
 

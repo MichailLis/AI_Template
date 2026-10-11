@@ -54,6 +54,7 @@ describe('backups model', () => {
     expect(
       shouldPollBackups({
         availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
+        storage: { freeBytes: null, usedBytes: 0, databaseBytes: null, lowSpace: false },
         settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
         nextScheduledAt: '2026-10-12T03:00:00.000Z',
         isBusy: false,

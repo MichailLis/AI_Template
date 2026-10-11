@@ -68,12 +68,29 @@ export class BackupScheduler implements OnModuleInit, OnModuleDestroy {
     const availability = await this.backups.getAvailability({ force: true });
 
     if (!availability.available) {
-      this.logger.warn(`Scheduled backup skipped: ${availability.reason ?? 'unavailable'}`);
+      await this.recordSkipped(availability.reason ?? 'Резервное копирование недоступно');
       return false;
     }
 
-    await this.backups.startBackup('SCHEDULED', null);
+    try {
+      await this.backups.startBackup('SCHEDULED', null);
+    } catch (error) {
+      await this.recordSkipped(error instanceof Error ? error.message : String(error));
+      return false;
+    }
 
     return true;
+  }
+
+  /**
+   * Пропуск записывается в список как неудачная плановая копия: админ видит причину (например,
+   * нехватку места), а повтор до следующего дня не запускается, потому что слот уже занят.
+   */
+  private async recordSkipped(reason: string) {
+    this.logger.warn(`Scheduled backup skipped: ${reason}`);
+
+    if (await this.storage.exists()) {
+      await this.backups.recordFailedBackup('SCHEDULED', null, reason);
+    }
   }
 }

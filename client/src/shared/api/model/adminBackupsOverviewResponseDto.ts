@@ -8,9 +8,11 @@
 import type { AdminBackupsOverviewResponseDtoAvailability } from './adminBackupsOverviewResponseDtoAvailability';
 import type { AdminBackupsOverviewResponseDtoBackupsItem } from './adminBackupsOverviewResponseDtoBackupsItem';
 import type { AdminBackupsOverviewResponseDtoSettings } from './adminBackupsOverviewResponseDtoSettings';
+import type { AdminBackupsOverviewResponseDtoStorage } from './adminBackupsOverviewResponseDtoStorage';
 
 export interface AdminBackupsOverviewResponseDto {
   availability: AdminBackupsOverviewResponseDtoAvailability;
+  storage: AdminBackupsOverviewResponseDtoStorage;
   settings: AdminBackupsOverviewResponseDtoSettings;
   /**
    * @nullable

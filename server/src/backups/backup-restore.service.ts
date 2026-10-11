@@ -122,6 +122,7 @@ export class BackupRestoreService implements OnApplicationBootstrap {
     }
 
     this.assertIdle();
+    await this.assertEnoughSpaceForRestore(backup);
     this.operation = this.createOperation('RESTORE', backup);
     void this.runExclusive(() => this.restore(userId, backup));
 
@@ -142,6 +143,30 @@ export class BackupRestoreService implements OnApplicationBootstrap {
     void this.runExclusive(() => this.undo(userId, previousDatabase.name));
 
     return { operation: this.operation };
+  }
+
+  /**
+   * На время восстановления на диске живут сразу две базы и копия текущей. Тома Docker обычно
+   * лежат на одном диске, поэтому место считается по каталогу копий: нужна еще одна база и дамп.
+   */
+  private async assertEnoughSpaceForRestore(backup: BackupMetadata) {
+    const [freeBytes, databaseBytes] = await Promise.all([
+      this.storage.freeBytes(),
+      this.backups.getDatabaseSizeBytes(),
+    ]);
+
+    if (freeBytes === null || databaseBytes === null) {
+      return;
+    }
+
+    const requiredBytes = databaseBytes + (backup.sizeBytes ?? 0);
+
+    if (freeBytes < requiredBytes) {
+      throw new ConflictException(
+        `Недостаточно места для восстановления: свободно ${Math.floor(freeBytes / 1024 / 1024)} МБ, нужно около ${Math.ceil(requiredBytes / 1024 / 1024)} МБ (вторая база на время подмены и копия текущей). Удалите старые копии или освободите место на сервере`,
+        'BACKUP_NO_SPACE',
+      );
+    }
   }
 
   private assertIdle() {

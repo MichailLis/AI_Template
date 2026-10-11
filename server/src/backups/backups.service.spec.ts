@@ -512,11 +512,35 @@ describe('BackupsService', () => {
       expect(runner.run).not.toHaveBeenCalled();
     });
 
-    it('skips quietly when pg_dump is unavailable', async () => {
+    it('records a skipped scheduled backup so the admin sees why', async () => {
       runner.run.mockRejectedValue(new PgToolMissingError('pg_dump'));
 
       expect(await scheduler.runIfDue()).toBe(false);
-      expect(await readdir(directory)).toEqual([]);
+
+      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+
+      expect(backup).toMatchObject({
+        trigger: 'SCHEDULED',
+        status: 'FAILED',
+        errorMessage: 'pg_dump не установлен в контейнере backend',
+      });
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'BACKUP_FAILED', actorUserId: null }),
+      );
+      // Слот занят неудачной попыткой: до следующего дня повтора нет.
+      expect(await scheduler.runIfDue()).toBe(false);
+      expect((await service.getOverview(ADMIN_ID)).backups).toHaveLength(1);
+    });
+
+    it('records a scheduled backup skipped for lack of disk space', async () => {
+      jest.spyOn(storage, 'freeBytes').mockResolvedValue(100);
+
+      expect(await scheduler.runIfDue()).toBe(false);
+
+      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+
+      expect(backup.status).toBe('FAILED');
+      expect(backup.errorMessage).toContain('Недостаточно места на диске');
     });
   });
 
@@ -543,5 +567,25 @@ describe('BackupsService', () => {
       backup.id,
       'backup-20260101T000000Z-aaaaaa',
     ]);
+  });
+
+  it('reports disk usage and warns when space runs low', async () => {
+    await seedBackup({ id: 'backup-20261011T100000Z-aaaaaa', sizeBytes: 1000 });
+    jest.spyOn(storage, 'freeBytes').mockResolvedValue(2500);
+
+    const { storage: usage } = await service.getOverview(ADMIN_ID);
+
+    expect(usage).toEqual({
+      freeBytes: 2500,
+      usedBytes: 1000,
+      databaseBytes: 1024,
+      lowSpace: true,
+    });
+  });
+
+  it('does not warn with plenty of space', async () => {
+    jest.spyOn(storage, 'freeBytes').mockResolvedValue(10 * 1024 * 1024);
+
+    expect((await service.getOverview(ADMIN_ID)).storage.lowSpace).toBe(false);
   });
 });

@@ -69,6 +69,21 @@ const readyBackup = {
   createdBy: { id: 1, email: 'admin@example.com', name: 'Администратор' },
 };
 
+const makeOverview = (patch: Partial<BackupsOverview>): BackupsOverview => ({
+  availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
+  storage: {
+    freeBytes: 10 * 1024 ** 3,
+    usedBytes: 0,
+    databaseBytes: 50 * 1024 ** 2,
+    lowSpace: false,
+  },
+  settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+  nextScheduledAt: null,
+  isBusy: false,
+  backups: [],
+  ...patch,
+});
+
 const renderCard = () =>
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -79,18 +94,17 @@ const renderCard = () =>
 describe('BackupsSettingsCard', () => {
   beforeEach(() => {
     operationStatus = { maintenance: false, operation: null, previousDatabase: null };
-    overview = {
+    overview = makeOverview({
       availability: {
         available: true,
         reason: null,
         pgDumpVersion: 'pg_dump (PostgreSQL) 16.4',
         serverVersion: '16.4',
       },
-      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
       nextScheduledAt: '2026-10-12T03:00:00.000Z',
       isBusy: false,
       backups: [readyBackup],
-    };
+    });
   });
 
   afterEach(() => {
@@ -136,7 +150,7 @@ describe('BackupsSettingsCard', () => {
   });
 
   it('explains why backups are unavailable and blocks creation', () => {
-    overview = {
+    overview = makeOverview({
       ...overview,
       availability: {
         available: false,
@@ -145,7 +159,7 @@ describe('BackupsSettingsCard', () => {
         serverVersion: '16.4',
       },
       backups: [],
-    };
+    });
     renderCard();
 
     expect(
@@ -160,11 +174,11 @@ describe('BackupsSettingsCard', () => {
   });
 
   it('blocks a second backup while one is running', () => {
-    overview = {
+    overview = makeOverview({
       ...overview,
       isBusy: true,
       backups: [{ ...readyBackup, status: 'RUNNING', sizeBytes: null, sha256: null }],
-    };
+    });
     renderCard();
 
     expect(
@@ -179,13 +193,11 @@ describe('BackupsSettingsCard', () => {
 describe('BackupScheduleForm', () => {
   beforeEach(() => {
     operationStatus = { maintenance: false, operation: null, previousDatabase: null };
-    overview = {
-      availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
-      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+    overview = makeOverview({
       nextScheduledAt: '2026-10-12T03:00:00.000Z',
       isBusy: false,
       backups: [],
-    };
+    });
   });
 
   afterEach(() => {
@@ -227,13 +239,11 @@ describe('BackupScheduleForm', () => {
 describe('restore', () => {
   beforeEach(() => {
     operationStatus = { maintenance: false, operation: null, previousDatabase: null };
-    overview = {
-      availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
-      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+    overview = makeOverview({
       nextScheduledAt: null,
       isBusy: false,
       backups: [readyBackup],
-    };
+    });
   });
 
   afterEach(() => {
@@ -336,12 +346,34 @@ describe('restore', () => {
   });
 });
 
+describe('disk space', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('shows free space and warns when it runs low', () => {
+    operationStatus = { maintenance: false, operation: null, previousDatabase: null };
+    overview = makeOverview({
+      storage: {
+        freeBytes: 30 * 1024 ** 2,
+        usedBytes: 200 * 1024 ** 2,
+        databaseBytes: 50 * 1024 ** 2,
+        lowSpace: true,
+      },
+    });
+    renderCard();
+
+    expect(
+      screen.getByText('На диске: свободно 30 МБ · копии занимают 200 МБ · база 50 МБ'),
+    ).toBeTruthy();
+    expect(screen.getByText(/Место на диске заканчивается/)).toBeTruthy();
+  });
+});
+
 describe('import', () => {
   beforeEach(() => {
     operationStatus = { maintenance: false, operation: null, previousDatabase: null };
-    overview = {
-      availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
-      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+    overview = makeOverview({
       nextScheduledAt: null,
       isBusy: false,
       backups: [
@@ -351,7 +383,7 @@ describe('import', () => {
           originalFileName: 'prod-2026-10-01.dump',
         },
       ],
-    };
+    });
   });
 
   afterEach(() => {

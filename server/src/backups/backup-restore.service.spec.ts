@@ -39,6 +39,7 @@ describe('BackupRestoreService', () => {
   let maintenance: MaintenanceState;
   let backups: {
     findBackup: jest.Mock;
+    getDatabaseSizeBytes: jest.Mock;
     startBackup: jest.Mock;
     waitForBackup: jest.Mock;
     isBusy: boolean;
@@ -88,6 +89,7 @@ describe('BackupRestoreService', () => {
 
     backups = {
       findBackup: jest.fn().mockResolvedValue(readyBackup),
+      getDatabaseSizeBytes: jest.fn().mockResolvedValue(1024),
       startBackup: jest.fn().mockResolvedValue({ ...readyBackup, id: 'pre', status: 'RUNNING' }),
       waitForBackup: jest
         .fn()
@@ -282,5 +284,15 @@ describe('BackupRestoreService', () => {
 
     await expect(service.getStatus(ADMIN_ID)).resolves.toMatchObject({ maintenance: true });
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('refuses to start when the disk cannot hold a second database', async () => {
+    jest.spyOn(storage, 'freeBytes').mockResolvedValue(10 * 1024 * 1024);
+    backups.getDatabaseSizeBytes.mockResolvedValue(50 * 1024 * 1024);
+
+    await expect(service.startRestore(ADMIN_ID, BACKUP_ID, 'RESTORE')).rejects.toThrow(
+      'Недостаточно места для восстановления',
+    );
+    expect(backups.startBackup).not.toHaveBeenCalled();
   });
 });

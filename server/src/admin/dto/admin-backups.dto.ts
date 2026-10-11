@@ -39,6 +39,13 @@ export const AdminBackupAvailabilitySchema = z.object({
 
 export const AdminBackupsOverviewResponseSchema = z.object({
   availability: AdminBackupAvailabilitySchema,
+  /** Место на диске под копии; freeBytes null — файловая система его не сообщает. */
+  storage: z.object({
+    freeBytes: z.number().nonnegative().nullable(),
+    usedBytes: z.number().nonnegative(),
+    databaseBytes: z.number().nonnegative().nullable(),
+    lowSpace: z.boolean(),
+  }),
   settings: BackupSettingsSchema,
   /** Ближайший запуск по расписанию; null — расписание выключено. */
   nextScheduledAt: z.string().datetime().nullable(),

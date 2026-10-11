@@ -25,6 +25,10 @@ const AVAILABILITY_CACHE_MS = 60_000;
 const DOWNLOAD_LINK_TTL_MS = 60_000;
 const ERROR_MESSAGE_LIMIT = 500;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Свободного места меньше, чем на столько копий, — показывается предупреждение. */
+const LOW_SPACE_BACKUPS = 3;
+
+const formatMegabytes = (bytes: number) => `${Math.ceil(bytes / 1024 / 1024)} МБ`;
 
 export interface BackupAvailability {
   available: boolean;
@@ -124,6 +128,7 @@ export class BackupsService implements OnApplicationBootstrap {
 
     return {
       availability,
+      storage: await this.getStorageUsage(backups),
       settings,
       nextScheduledAt: getNextScheduledRun(settings, new Date())?.toISOString() ?? null,
       isBusy: this.activeBackupId !== null,
@@ -413,23 +418,79 @@ export class BackupsService implements OnApplicationBootstrap {
   }
 
   private async assertEnoughFreeSpace() {
-    const freeBytes = await this.storage.freeBytes();
-
-    if (freeBytes === null) {
-      return;
-    }
+    const [freeBytes, databaseBytes] = await Promise.all([
+      this.storage.freeBytes(),
+      this.getDatabaseSizeBytes(),
+    ]);
 
     // Сжатый дамп заметно меньше базы с индексами, поэтому размер базы — запас с избытком.
-    const [{ size }] = await this.prisma.$queryRaw<Array<{ size: bigint }>>`
-      SELECT pg_database_size(current_database()) AS size
-    `;
-
-    if (freeBytes < Number(size)) {
+    if (freeBytes !== null && databaseBytes !== null && freeBytes < databaseBytes) {
       throw new ConflictException(
-        'Недостаточно места на диске для резервной копии',
+        `Недостаточно места на диске для резервной копии: свободно ${formatMegabytes(freeBytes)}, нужно около ${formatMegabytes(databaseBytes)}. Удалите старые копии или освободите место на сервере`,
         'BACKUP_NO_SPACE',
       );
     }
+  }
+
+  async getDatabaseSizeBytes(): Promise<number | null> {
+    try {
+      const [{ size }] = await this.prisma.$queryRaw<Array<{ size: bigint }>>`
+        SELECT pg_database_size(current_database()) AS size
+      `;
+
+      return Number(size);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Сколько места на диске под копии: свободно, занято копиями, размер базы. Предупреждение
+   * загорается, когда свободного места меньше, чем на три копии размера последней (или базы).
+   */
+  private async getStorageUsage(backups: BackupMetadata[]) {
+    const [freeBytes, databaseBytes] = await Promise.all([
+      this.storage.freeBytes(),
+      this.getDatabaseSizeBytes(),
+    ]);
+    const ready = backups.filter((backup) => backup.status === 'READY');
+    const usedBytes = ready.reduce((total, backup) => total + (backup.sizeBytes ?? 0), 0);
+    const estimatedBackupBytes = ready[0]?.sizeBytes ?? databaseBytes ?? 0;
+    const lowSpace =
+      freeBytes !== null &&
+      (freeBytes < estimatedBackupBytes * LOW_SPACE_BACKUPS ||
+        (databaseBytes !== null && freeBytes < databaseBytes));
+
+    return { freeBytes, usedBytes, databaseBytes, lowSpace };
+  }
+
+  /**
+   * Копия, которую не удалось даже начать (нет места, нет pg_dump), тоже попадает в список со
+   * статусом «Ошибка»: иначе пропущенная плановая копия видна только в логе сервера.
+   */
+  async recordFailedBackup(trigger: BackupTrigger, userId: number | null, reason: string) {
+    const now = new Date().toISOString();
+    const id = createBackupId(new Date());
+    const failed: BackupMetadata = {
+      id,
+      fileName: `${id}.dump`,
+      status: 'FAILED',
+      trigger,
+      createdAt: now,
+      completedAt: now,
+      createdByUserId: userId,
+      sizeBytes: null,
+      sha256: null,
+      serverVersion: null,
+      lastMigration: null,
+      errorMessage: reason.slice(0, ERROR_MESSAGE_LIMIT),
+      originalFileName: null,
+    };
+
+    await this.storage.write(failed);
+    await this.recordAudit('BACKUP_FAILED', failed, userId);
+
+    return failed;
   }
 
   private async readServerVersion() {
