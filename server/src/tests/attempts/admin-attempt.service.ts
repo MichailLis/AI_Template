@@ -6,6 +6,7 @@ import type { AdminPublicAttemptsListQueryDto } from '../dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from '../attempts/attempt.mapper';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsAnalysisService } from '../analysis/analysis.service';
+import { buildAttemptListOrderBy, buildAttemptListWhere } from './attempt-list-query';
 
 @Injectable()
 export class TestsAdminAttemptService {
@@ -37,9 +38,7 @@ export class TestsAdminAttemptService {
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
-    const where = {
-      publicLinkId: linkId,
-    };
+    const where = buildAttemptListWhere(linkId, query);
     const total = await this.prisma.testStudentAttempt.count({ where });
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const currentPage = Math.min(page, totalPages);
@@ -61,9 +60,7 @@ export class TestsAdminAttemptService {
           },
         },
       },
-      orderBy: {
-        startedAt: 'desc',
-      },
+      orderBy: buildAttemptListOrderBy(query),
       skip,
       take: limit,
     });

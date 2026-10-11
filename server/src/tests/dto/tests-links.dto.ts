@@ -304,11 +304,28 @@ export const AdminPublicAttemptSummarySchema = z.object({
   analysisResultKind: AdminAnalysisResultKindSchema.describe(
     'Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа',
   ),
+  durationSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe('Время прохождения в секундах; null, пока попытка не завершена'),
+  resultSummary: z
+    .object({
+      primaryDirectionLabel: z.string().nullable(),
+      profileTitle: z.string().nullable(),
+    })
+    .nullable()
+    .describe('Краткий итог для таблицы; null, если алгоритмического итога V3+ ещё нет'),
 });
 
 export const AdminPublicAttemptsListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
+  search: z.string().trim().max(100).optional(),
+  status: z.enum(['IN_PROGRESS', 'COMPLETED', 'EXPIRED', 'ABANDONED']).optional(),
+  sortBy: z.enum(['startedAt', 'finishedAt', 'attemptNumber', 'studentName']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
 export const AdminPublicAttemptsListResponseSchema = z.object({

@@ -6,6 +6,7 @@ import {
   formatDateTimeOrDash,
   formatDateTimePrecise,
   formatDateTimePreciseOrDash,
+  formatDurationSeconds,
   formatTime,
 } from './date-format';
 
@@ -54,5 +55,18 @@ describe('пропущенные и некорректные значения', 
   it('возвращает исходную строку, если это не дата', () => {
     expect(formatDateTimeOrDash('')).toBe('');
     expect(formatDateTime('не дата')).toBe('не дата');
+  });
+});
+
+describe('формат длительности', () => {
+  it('пишет секунды, минуты и часы', () => {
+    expect(formatDurationSeconds(45)).toBe('45 с');
+    expect(formatDurationSeconds(725)).toBe('12 мин 05 с');
+    expect(formatDurationSeconds(3720)).toBe('1 ч 02 мин');
+  });
+
+  it('показывает прочерк, когда значения нет', () => {
+    expect(formatDurationSeconds(null)).toBe('—');
+    expect(formatDurationSeconds(undefined)).toBe('—');
   });
 });

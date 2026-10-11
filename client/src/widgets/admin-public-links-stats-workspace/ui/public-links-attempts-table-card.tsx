@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react';
-
 import {
   getAnalysisResultKindLabel,
   getAnalysisResultKindTone,
 } from '@/shared/lib/analysis-result-kind-labels';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
+import { formatDurationSeconds } from '@/shared/lib/date-format';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { AdminDataTable } from '@/shared/ui/admin-data-table';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -20,6 +19,7 @@ import { LlmStatusBadge } from './llm-status-badge';
 import { ATTEMPTS_LIMIT_OPTIONS } from './use-admin-public-links-stats-workspace.model';
 
 import type { AdminDataTableSortDirection } from '@/shared/ui/admin-data-table';
+import type { ReactNode } from 'react';
 
 type AttemptDetailView = 'analysis' | 'answers';
 
@@ -52,6 +52,11 @@ interface PublicAttemptRow {
   startedAt: string;
   finishedAt: string | null;
   expiresAt: string | null;
+  durationSeconds?: number | null;
+  resultSummary?: {
+    primaryDirectionLabel: string | null;
+    profileTitle: string | null;
+  } | null;
 }
 
 interface SelectedPublicLink {
@@ -72,30 +77,16 @@ interface PublicLinksAttemptsTableCardProps {
   onPreviousPage: () => void;
   onNextPage: () => void;
   onPageSizeChange: (pageSize: number) => void;
+  /** Поиск и фильтры: рисует вкладка, потому что их состояние уходит в запрос к серверу. */
+  toolbar?: ReactNode;
+  hasActiveFilters?: boolean;
+  /** Сортировка выполняется на сервере и действует на весь список, а не на страницу. */
+  sortBy: AttemptsSortField;
+  sortOrder: AdminDataTableSortDirection;
+  onSortChange: (field: AttemptsSortField) => void;
 }
 
-type AttemptsSortField = 'attempt' | 'started';
-
-/**
- * Сортировка идет по строкам текущей страницы. Сервер отдает попытки постранично и порядок не
- * параметризует, поэтому колоночная сортировка честно объявлена как сортировка видимой страницы —
- * иначе она врала бы про весь набор.
- */
-const sortAttempts = (
-  attempts: PublicAttemptRow[],
-  field: AttemptsSortField,
-  direction: AdminDataTableSortDirection,
-) => {
-  const sign = direction === 'asc' ? 1 : -1;
-
-  return [...attempts].sort((left, right) => {
-    if (field === 'attempt') {
-      return (left.attemptNumber - right.attemptNumber) * sign;
-    }
-
-    return left.startedAt.localeCompare(right.startedAt) * sign;
-  });
-};
+type AttemptsSortField = 'attemptNumber' | 'startedAt' | 'studentName';
 
 const getAttemptStatusBadgeClassName = (status: string) => {
   if (status === 'COMPLETED' || status === 'FINISHED') {
@@ -202,14 +193,14 @@ function AttemptRowCells({
         <div className="flex flex-col items-start gap-1">
           <Badge
             variant="outline"
-            className={getAnalysisResultBadgeClassName(attempt.analysisResultKind)}
+            className={`whitespace-nowrap ${getAnalysisResultBadgeClassName(attempt.analysisResultKind)}`}
           >
             {getAnalysisResultKindLabel(attempt.analysisResultKind)}
           </Badge>
           <LlmStatusBadge status={attempt.llmStatus} />
         </div>
       </TableCell>
-      <TableCell className="min-w-64 max-w-96">
+      <TableCell className="min-w-40 max-w-44">
         <p className={`truncate ${adminClassNames.text.heading}`}>
           {getAttemptProfilePrimary(attempt) || '—'}
         </p>
@@ -219,7 +210,38 @@ function AttemptRowCells({
           </p>
         ) : null}
       </TableCell>
-      <TableCell className="whitespace-nowrap">{formatDateTime(attempt.startedAt)}</TableCell>
+      <TableCell className="min-w-36 max-w-44">
+        {attempt.resultSummary?.primaryDirectionLabel || attempt.resultSummary?.profileTitle ? (
+          <>
+            <p
+              className={`truncate ${adminClassNames.text.heading}`}
+              title={attempt.resultSummary.primaryDirectionLabel ?? undefined}
+            >
+              {attempt.resultSummary.primaryDirectionLabel ?? '—'}
+            </p>
+            {attempt.resultSummary.profileTitle ? (
+              <p
+                className={`truncate text-xs ${adminClassNames.text.muted}`}
+                title={attempt.resultSummary.profileTitle}
+              >
+                {attempt.resultSummary.profileTitle}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          '—'
+        )}
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
+        <p>{formatDateTime(attempt.startedAt)}</p>
+        {attempt.status === 'IN_PROGRESS' || attempt.durationSeconds != null ? (
+          <p className={`text-xs ${adminClassNames.text.muted}`}>
+            {attempt.status === 'IN_PROGRESS'
+              ? 'идёт'
+              : `за ${formatDurationSeconds(attempt.durationSeconds)}`}
+          </p>
+        ) : null}
+      </TableCell>
       <TableCell className="text-right">
         <Button
           type="button"
@@ -251,42 +273,36 @@ export function PublicLinksAttemptsTableCard({
   onPreviousPage,
   onNextPage,
   onPageSizeChange,
+  toolbar,
+  hasActiveFilters = false,
+  sortBy,
+  sortOrder,
+  onSortChange,
 }: PublicLinksAttemptsTableCardProps) {
-  const [sortField, setSortField] = useState<AttemptsSortField>('attempt');
-  const [sortDirection, setSortDirection] = useState<AdminDataTableSortDirection>('asc');
-
-  const sortedAttempts = useMemo(
-    () => sortAttempts(publicAttempts, sortField, sortDirection),
-    [publicAttempts, sortDirection, sortField],
-  );
-
-  const toggleSort = (field: AttemptsSortField) => {
-    if (field === sortField) {
-      setSortDirection((previous) => (previous === 'asc' ? 'desc' : 'asc'));
-      return;
-    }
-
-    setSortField(field);
-    setSortDirection('asc');
-  };
-
   const columns = [
     {
       id: 'attempt',
       header: 'Попытка',
       className: 'whitespace-nowrap',
-      onSort: () => toggleSort('attempt'),
-      sortDirection: sortField === 'attempt' ? sortDirection : null,
+      onSort: () => onSortChange('attemptNumber'),
+      sortDirection: sortBy === 'attemptNumber' ? sortOrder : null,
     },
     { id: 'status', header: 'Статус', className: 'whitespace-nowrap' },
     { id: 'analysis', header: 'Анализ', className: 'whitespace-nowrap' },
-    { id: 'student', header: 'Студент', className: 'min-w-64' },
+    {
+      id: 'student',
+      header: 'Студент',
+      className: 'min-w-44',
+      onSort: () => onSortChange('studentName'),
+      sortDirection: sortBy === 'studentName' ? sortOrder : null,
+    },
+    { id: 'result', header: 'Результат', className: 'min-w-36' },
     {
       id: 'started',
-      header: 'Начало работы',
+      header: 'Начало и время',
       className: 'whitespace-nowrap',
-      onSort: () => toggleSort('started'),
-      sortDirection: sortField === 'started' ? sortDirection : null,
+      onSort: () => onSortChange('startedAt'),
+      sortDirection: sortBy === 'startedAt' ? sortOrder : null,
     },
     { id: 'view', header: 'Ответы', className: 'min-w-24 text-right' },
   ];
@@ -297,11 +313,13 @@ export function PublicLinksAttemptsTableCard({
         <CardTitle>Прохождения студентов</CardTitle>
         <CardDescription>
           {selectedPublicLink
-            ? `Тестов пройдено: ${total}. Клик по строке открывает анализ; сортировка действует в пределах страницы.`
+            ? `${hasActiveFilters ? 'Найдено' : 'Всего'} попыток: ${total}, включая незавершённые. Клик по строке открывает анализ; сортировка действует на весь список.`
             : 'Сначала выберите ссылку'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
+        {selectedPublicLink ? toolbar : null}
+
         {isLoading ? (
           <AdminSkeletonRows rows={5} columns={5} label="Загружаем прохождения" />
         ) : null}
@@ -315,9 +333,13 @@ export function PublicLinksAttemptsTableCard({
         {!isLoading && selectedPublicLink ? (
           <AdminDataTable
             columns={columns}
-            items={sortedAttempts}
+            items={publicAttempts}
             getRowKey={(attempt) => attempt.attemptId}
-            emptyMessage="По выбранной ссылке пока нет прохождений. Студенты могут начать тестирование по ссылке."
+            emptyMessage={
+              hasActiveFilters
+                ? 'По заданному поиску и статусу ничего не найдено. Сбросьте фильтры.'
+                : 'По выбранной ссылке пока нет прохождений. Студенты могут начать тестирование по ссылке.'
+            }
             stickyHeader
             onRowClick={(attempt) => onOpenAttemptDetails(attempt.attemptId, 'analysis')}
             renderRow={(attempt) => (

@@ -5,6 +5,9 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { TestsAdminAttemptsControllerListPublicLinkAttemptsSortBy } from './testsAdminAttemptsControllerListPublicLinkAttemptsSortBy';
+import type { TestsAdminAttemptsControllerListPublicLinkAttemptsSortOrder } from './testsAdminAttemptsControllerListPublicLinkAttemptsSortOrder';
+import type { TestsAdminAttemptsControllerListPublicLinkAttemptsStatus } from './testsAdminAttemptsControllerListPublicLinkAttemptsStatus';
 
 export type TestsAdminAttemptsControllerListPublicLinkAttemptsParams = {
   /**
@@ -17,4 +20,11 @@ export type TestsAdminAttemptsControllerListPublicLinkAttemptsParams = {
    * @maximum 50
    */
   limit?: number;
+  /**
+   * @maxLength 100
+   */
+  search?: string;
+  status?: TestsAdminAttemptsControllerListPublicLinkAttemptsStatus;
+  sortBy?: TestsAdminAttemptsControllerListPublicLinkAttemptsSortBy;
+  sortOrder?: TestsAdminAttemptsControllerListPublicLinkAttemptsSortOrder;
 };

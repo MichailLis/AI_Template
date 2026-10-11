@@ -79,3 +79,25 @@ export const formatDateTimePreciseOrDash = (value: string | null | undefined) =>
 
   return formatDateTimePrecise(value);
 };
+
+/** Длительность в секундах: `45 с`, `12 мин 05 с`, `1 ч 02 мин`. Для прохождений теста. */
+export const formatDurationSeconds = (totalSeconds: number | null | undefined) => {
+  if (totalSeconds === null || totalSeconds === undefined || !Number.isFinite(totalSeconds)) {
+    return '—';
+  }
+
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours} ч ${String(minutes).padStart(2, '0')} мин`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes} мин ${String(rest).padStart(2, '0')} с`;
+  }
+
+  return `${rest} с`;
+};

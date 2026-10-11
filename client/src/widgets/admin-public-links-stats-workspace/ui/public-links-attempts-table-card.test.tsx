@@ -108,6 +108,9 @@ describe('PublicLinksAttemptsTableCard', () => {
         onPageSizeChange={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
+        sortBy="startedAt"
+        sortOrder="desc"
+        onSortChange={vi.fn()}
       />,
     );
 
@@ -155,6 +158,9 @@ describe('PublicLinksAttemptsTableCard', () => {
         onPageSizeChange={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
+        sortBy="startedAt"
+        sortOrder="desc"
+        onSortChange={vi.fn()}
       />,
     );
 
@@ -209,6 +215,9 @@ describe('PublicLinksAttemptsTableCard', () => {
         onPageSizeChange={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
+        sortBy="startedAt"
+        sortOrder="desc"
+        onSortChange={vi.fn()}
       />,
     );
 
@@ -254,10 +263,13 @@ describe('PublicLinksAttemptsTableCard', () => {
         onPageSizeChange={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
+        sortBy="startedAt"
+        sortOrder="desc"
+        onSortChange={vi.fn()}
       />,
     );
 
-    expect(screen.getAllByRole('columnheader')).toHaveLength(6);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(7);
     expect(
       screen.queryByRole('columnheader', { name: 'Завершение работы' }),
     ).not.toBeInTheDocument();
@@ -310,30 +322,49 @@ describe('PublicLinksAttemptsTableCard', () => {
         onPageSizeChange={vi.fn()}
         onPreviousPage={vi.fn()}
         onNextPage={vi.fn()}
+        sortBy="startedAt"
+        sortOrder="desc"
+        onSortChange={vi.fn()}
         {...overrides}
       />,
     );
 
-  it('reverses the visible order when the sortable header is pressed', async () => {
+  it('reports the sort field to the caller and marks the active column', async () => {
     const user = userEvent.setup();
-    renderTable();
+    const onSortChange = vi.fn();
+    renderTable({ onSortChange, sortBy: 'attemptNumber', sortOrder: 'asc' });
 
-    const readAttemptOrder = () =>
-      screen.getAllByText(/^#\d+$/).map((element) => element.textContent);
-
-    expect(readAttemptOrder()).toEqual(['#1', '#2']);
     expect(screen.getByRole('columnheader', { name: /Попытка/ })).toHaveAttribute(
       'aria-sort',
       'ascending',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Попытка' }));
+    await user.click(screen.getByRole('button', { name: 'Студент' }));
+    await user.click(screen.getByRole('button', { name: /Начало и время/ }));
 
-    expect(readAttemptOrder()).toEqual(['#2', '#1']);
-    expect(screen.getByRole('columnheader', { name: /Попытка/ })).toHaveAttribute(
-      'aria-sort',
-      'descending',
-    );
+    expect(onSortChange).toHaveBeenNthCalledWith(1, 'studentName');
+    expect(onSortChange).toHaveBeenNthCalledWith(2, 'startedAt');
+  });
+
+  it('keeps the rows in the order the server returned them', () => {
+    renderTable({ sortBy: 'startedAt', sortOrder: 'desc' });
+
+    expect(screen.getAllByText(/^#\d+$/).map((element) => element.textContent)).toEqual([
+      '#1',
+      '#2',
+    ]);
+  });
+
+  it('shows the toolbar and a filter-specific empty message', () => {
+    renderTable({
+      publicAttempts: [],
+      total: 0,
+      hasActiveFilters: true,
+      toolbar: <input aria-label="Поиск по прохождениям" />,
+    });
+
+    expect(screen.getByLabelText('Поиск по прохождениям')).toBeInTheDocument();
+    expect(screen.getByText(/ничего не найдено/)).toBeInTheDocument();
   });
 
   it('opens the analysis from a row click and the answers from the row button', async () => {

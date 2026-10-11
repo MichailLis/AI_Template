@@ -187,13 +187,19 @@ export function PublicLinksAttemptDetailDialog({
                 <Badge variant="outline">{getAttemptStatusLabel(detailAttempt.status)}</Badge>
               </div>
 
-              <PublicTestStudentAnalysisView
-                analysis={detailAttempt.analysis}
-                professionAtlasUrl={detailAttempt.professionAtlasUrl}
-                generatedAtLabel={`Сгенерировано: ${formatDateTime(
-                  detailAttempt.analysis?.generatedAt ?? null,
-                )}`}
-              />
+              {detailAttempt.status === 'IN_PROGRESS' && !detailAttempt.analysis ? (
+                <p className={`text-sm ${adminClassNames.text.muted}`}>
+                  Прохождение не завершено: анализ появится после ответа на все вопросы.
+                </p>
+              ) : (
+                <PublicTestStudentAnalysisView
+                  analysis={detailAttempt.analysis}
+                  professionAtlasUrl={detailAttempt.professionAtlasUrl}
+                  generatedAtLabel={`Сгенерировано: ${formatDateTime(
+                    detailAttempt.analysis?.generatedAt ?? null,
+                  )}`}
+                />
+              )}
             </div>
           ) : null}
 

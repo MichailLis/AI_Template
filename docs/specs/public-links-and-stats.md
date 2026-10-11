@@ -19,9 +19,17 @@ Behavior baseline:
    The move is written to the audit journal as `PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION`.
 2. Archive must disable student access without deleting historical attempts/results.
 3. The attempts tab is table-first (avoid oversized decorative summary blocks above core
-   filters/table). Its table stays narrow enough to read without horizontal scrolling: attempt
-   number with id, attempt status, analysis status, student, start time, and row actions.
-   Completion and expiry timing belong to the attempt card, not to the table.
+   filters/table). Above the table sit a search box (student name, education organization,
+   group or class, residence) and a status filter. Its table stays narrow enough to read without
+   horizontal scrolling at 1440px: attempt number with id, attempt status, analysis status,
+   student, result (leading direction and profile), start time with the duration under it
+   (`за 7 мин 06 с`, `идёт` while the attempt is open), and row actions. Exact completion and
+   expiry timestamps belong to the attempt card, not to the table.
+   Search, status filter and sorting (attempt number, student name, start time) run on the server
+   (`GET /admin/tests/public-links/:linkId/attempts?search=&status=&sortBy=&sortOrder=`) and apply
+   to the whole list, not to the visible page. The status filter follows the derived status shown
+   in the table: an attempt with `finishedAt` is completed, an open attempt past `expiresAt` is
+   expired. The list header counts all attempts, unfinished ones included.
 4. Filters must support both test and public link selection, and one selection must serve both
    analytics tabs.
 5. Link labels in selectors should use business copy (`тестов пройдено`).

@@ -93,6 +93,7 @@ export * from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisResultKin
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemAnalysisStatus';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemEntryProfileMode';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemLlmStatus';
+export * from './adminPublicAttemptsListResponseDtoAttemptsItemResultSummary';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStatus';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStudentEducationLevel';
 export * from './adminPublicAttemptsListResponseDtoAttemptsItemStudentGender';
@@ -334,6 +335,9 @@ export * from './testsAdminAnalyticsControllerGetSummaryLinkStatus';
 export * from './testsAdminAnalyticsControllerGetSummaryParams';
 export * from './testsAdminAnalyticsControllerGetSummaryScope';
 export * from './testsAdminAttemptsControllerListPublicLinkAttemptsParams';
+export * from './testsAdminAttemptsControllerListPublicLinkAttemptsSortBy';
+export * from './testsAdminAttemptsControllerListPublicLinkAttemptsSortOrder';
+export * from './testsAdminAttemptsControllerListPublicLinkAttemptsStatus';
 export * from './testsAdminEducationOrganizationsControllerListEducationOrganizationsParams';
 export * from './testsControllerListTopicsParams';
 export * from './testsTopicDetailResponseDto';
