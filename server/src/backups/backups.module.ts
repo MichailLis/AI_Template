@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule, RequestMethod } from '@nestjs/common';
 
 import { AuditModule } from '../audit/audit.module';
+import { BackupImportService } from './backup-import.service';
 import { BackupRestoreService } from './backup-restore.service';
 import { BackupScheduler } from './backup-scheduler';
 import { BackupSettingsService } from './backup-settings.service';
@@ -22,13 +23,14 @@ import { PgToolsRunner } from './pg-tools.runner';
     BackupsService,
     BackupSettingsService,
     BackupRestoreService,
+    BackupImportService,
     BackupScheduler,
     BackupStorage,
     DatabaseAdmin,
     MaintenanceState,
     PgToolsRunner,
   ],
-  exports: [BackupsService, BackupSettingsService, BackupRestoreService],
+  exports: [BackupsService, BackupSettingsService, BackupRestoreService, BackupImportService],
 })
 export class BackupsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

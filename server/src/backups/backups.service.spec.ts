@@ -92,6 +92,7 @@ describe('BackupsService', () => {
       serverVersion: '16.4',
       lastMigration: null,
       errorMessage: null,
+      originalFileName: null,
       ...overrides,
     };
 
@@ -524,5 +525,23 @@ describe('BackupsService', () => {
 
     await expect(service.createBackup(ADMIN_ID)).rejects.toBeInstanceOf(ConflictException);
     expect(await readdir(directory)).toEqual([]);
+  });
+
+  it('never prunes an imported backup automatically', async () => {
+    env.BACKUP_MAX_COUNT = '1';
+    createService();
+    await seedBackup({
+      id: 'backup-20260101T000000Z-aaaaaa',
+      trigger: 'IMPORTED',
+      createdAt: new Date('2026-01-01T00:00:00Z').toISOString(),
+    });
+
+    const { backup } = await service.createBackup(ADMIN_ID);
+    await waitForIdle();
+
+    expect((await service.getOverview(ADMIN_ID)).backups.map((item) => item.id)).toEqual([
+      backup.id,
+      'backup-20260101T000000Z-aaaaaa',
+    ]);
   });
 });

@@ -51,6 +51,10 @@ const formatBackupTimestamp = (date: Date) =>
     .replace(/[-:]/g, '')
     .replace(/\.\d{3}Z$/, 'Z');
 
+/** Имя копии: время создания по UTC и случайный хвост, формат проверяет isBackupId. */
+export const createBackupId = (date: Date) =>
+  `backup-${formatBackupTimestamp(date)}-${randomBytes(3).toString('hex')}`;
+
 const toErrorMessage = (error: unknown) => {
   if (error instanceof PgToolMissingError) {
     return 'pg_dump не установлен в контейнере backend';
@@ -154,7 +158,7 @@ export class BackupsService implements OnApplicationBootstrap {
     }
 
     const now = new Date();
-    const id = `backup-${formatBackupTimestamp(now)}-${randomBytes(3).toString('hex')}`;
+    const id = createBackupId(now);
     // Замок берется до первого await: иначе два почти одновременных запроса оба прошли бы проверку.
     this.activeBackupId = id;
 
@@ -185,6 +189,7 @@ export class BackupsService implements OnApplicationBootstrap {
         serverVersion: availability.serverVersion,
         lastMigration: await this.readLastMigration(),
         errorMessage: null,
+        originalFileName: null,
       };
 
       await this.storage.write(backup);
@@ -392,7 +397,8 @@ export class BackupsService implements OnApplicationBootstrap {
     const latestReadyId = backups.find((backup) => backup.status === 'READY')?.id;
 
     for (const [index, backup] of backups.entries()) {
-      if (backup.id === latestReadyId) {
+      // Загруженная админом копия удаляется только вручную: ее загрузили, чтобы восстановить.
+      if (backup.id === latestReadyId || backup.trigger === 'IMPORTED') {
         continue;
       }
 
@@ -489,7 +495,7 @@ export class BackupsService implements OnApplicationBootstrap {
     });
   }
 
-  private async toResponseItems(backups: BackupMetadata[]) {
+  async toResponseItems(backups: BackupMetadata[]) {
     const userIds = [
       ...new Set(
         backups.map((backup) => backup.createdByUserId).filter((id): id is number => id !== null),
@@ -514,6 +520,7 @@ export class BackupsService implements OnApplicationBootstrap {
       sizeBytes: backup.sizeBytes,
       sha256: backup.sha256,
       errorMessage: backup.errorMessage,
+      originalFileName: backup.originalFileName,
       createdBy:
         backup.createdByUserId === null ? null : (usersById.get(backup.createdByUserId) ?? null),
     }));

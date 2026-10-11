@@ -18,6 +18,8 @@ export const AdminBackupSchema = z.object({
   sizeBytes: z.number().int().nonnegative().nullable(),
   sha256: z.string().nullable(),
   errorMessage: z.string().nullable(),
+  /** Имя загруженного файла у импортированной копии. */
+  originalFileName: z.string().nullable(),
   createdBy: z
     .object({
       id: z.number().int(),

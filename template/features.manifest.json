@@ -75,6 +75,7 @@
         "server/src/backups/backup-settings.service.ts",
         "server/src/backups/backup-scheduler.ts",
         "server/src/backups/backup-restore.service.ts",
+        "server/src/backups/backup-import.service.ts",
         "server/src/backups/database-admin.ts",
         "server/src/backups/maintenance-state.ts",
         "server/src/backups/maintenance.middleware.ts",
@@ -212,6 +213,11 @@
         {
           "path": "/admin/backups/settings",
           "methods": ["patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/backups/import",
+          "methods": ["post"],
           "protected": true
         },
         {

@@ -32,5 +32,7 @@ export type AdminBackupsOverviewResponseDtoBackupsItem = {
   /** @nullable */
   errorMessage: string | null;
   /** @nullable */
+  originalFileName: string | null;
+  /** @nullable */
   createdBy: AdminBackupsOverviewResponseDtoBackupsItemCreatedBy;
 };

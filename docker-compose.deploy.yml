@@ -54,6 +54,7 @@ services:
       OPENROUTER_DEFAULT_MODEL: ${OPENROUTER_DEFAULT_MODEL:-}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
       BACKUP_MAX_COUNT: ${BACKUP_MAX_COUNT:-30}
+      BACKUP_MAX_UPLOAD_MB: ${BACKUP_MAX_UPLOAD_MB:-500}
     volumes:
       - backups_data:/backups
     depends_on:

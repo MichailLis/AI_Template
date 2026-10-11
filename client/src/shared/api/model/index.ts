@@ -24,6 +24,7 @@ export * from './adminBackupResponseDtoBackup';
 export * from './adminBackupResponseDtoBackupCreatedBy';
 export * from './adminBackupResponseDtoBackupStatus';
 export * from './adminBackupResponseDtoBackupTrigger';
+export * from './adminBackupsControllerImportBackupParams';
 export * from './adminBackupSettingsResponseDto';
 export * from './adminBackupSettingsResponseDtoSettings';
 export * from './adminBackupsOverviewResponseDto';

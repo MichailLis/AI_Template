@@ -8,15 +8,27 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Req,
   Res,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import type { Request, Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { BackupImportService } from '../backups/backup-import.service';
 import { BackupRestoreService } from '../backups/backup-restore.service';
 import { BackupSettingsService } from '../backups/backup-settings.service';
 import { BackupsService } from '../backups/backups.service';
@@ -24,6 +36,7 @@ import {
   ApiErrorResponses,
   ApiPublicErrorResponses,
 } from '../common/decorators/api-error-responses.decorator';
+import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import {
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
@@ -48,6 +61,7 @@ export class AdminBackupsController {
     private readonly backupsService: BackupsService,
     private readonly backupSettingsService: BackupSettingsService,
     private readonly backupRestoreService: BackupRestoreService,
+    private readonly backupImportService: BackupImportService,
   ) {}
 
   @Get()
@@ -70,6 +84,32 @@ export class AdminBackupsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminBackupSettingsResponseDto })
   async updateSettings(@GetCurrentUserId() userId: number, @Body() dto: UpdateBackupSettingsDto) {
     return { settings: await this.backupSettingsService.updateSettings(userId, dto) };
+  }
+
+  /**
+   * Дамп приходит телом запроса как есть (application/octet-stream), без multipart: файл пишется
+   * на диск потоком, а исходное имя передается параметром.
+   */
+  @Post('import')
+  @ApiOperation({ summary: 'Upload a pg_dump custom-format file as a backup' })
+  @ApiConsumes(DUMP_CONTENT_TYPE)
+  @ApiBody({ schema: { type: 'string', format: 'binary' } })
+  @ApiQuery({ name: 'fileName', required: false, type: String })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AdminBackupResponseDto })
+  @ApiResponse({ status: HttpStatus.PAYLOAD_TOO_LARGE, type: ErrorResponseDto })
+  importBackup(
+    @GetCurrentUserId() userId: number,
+    @Req() request: Request,
+    @Query('fileName') fileName?: string,
+  ) {
+    const declaredLength = Number(request.headers['content-length']);
+
+    return this.backupImportService.importBackup(
+      userId,
+      request,
+      Number.isFinite(declaredLength) ? declaredLength : undefined,
+      fileName,
+    );
   }
 
   @Get('operation')

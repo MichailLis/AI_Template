@@ -4,9 +4,9 @@ export const BACKUP_STATUSES = ['RUNNING', 'READY', 'FAILED'] as const;
 
 /**
  * Кто запустил копию: админ кнопкой, расписание или восстановление (копия текущей базы перед
- * тем, как ее заменить). Импорт добавит свое значение.
+ * тем, как ее заменить) или загрузка готового дампа админом.
  */
-export const BACKUP_TRIGGERS = ['MANUAL', 'SCHEDULED', 'PRE_RESTORE'] as const;
+export const BACKUP_TRIGGERS = ['MANUAL', 'SCHEDULED', 'PRE_RESTORE', 'IMPORTED'] as const;
 
 /** Описание копии, которое хранится рядом с файлом дампа (`<id>.json`). */
 export const BackupMetadataSchema = z.object({
@@ -23,6 +23,8 @@ export const BackupMetadataSchema = z.object({
   serverVersion: z.string().nullable(),
   lastMigration: z.string().nullable(),
   errorMessage: z.string().nullable(),
+  /** Имя файла, под которым админ загрузил дамп; у созданных на сервере копий его нет. */
+  originalFileName: z.string().nullable().default(null),
 });
 
 export type BackupMetadata = z.infer<typeof BackupMetadataSchema>;

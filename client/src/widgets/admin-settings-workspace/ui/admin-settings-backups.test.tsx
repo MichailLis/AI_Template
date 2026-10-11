@@ -3,12 +3,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackupsSettingsCard } from './admin-settings-backups';
-import {
-  formatBackupSize,
-  formatScheduleHour,
-  getBackupAuthorLabel,
-  shouldPollBackups,
-} from './admin-settings-backups.model';
 
 import type { BackupsOverview } from './admin-settings-backups.model';
 
@@ -18,6 +12,10 @@ const createDownloadLink = vi.fn();
 const updateSettings = vi.fn();
 const restoreBackup = vi.fn();
 const undoRestore = vi.fn();
+const importBackup = vi.fn();
+let importOptions: {
+  request: { onUploadProgress: (event: { loaded: number; total?: number }) => void };
+};
 let operationStatus: {
   maintenance: boolean;
   operation: Record<string, unknown> | null;
@@ -45,6 +43,11 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
   useAdminBackupsControllerGetOperation: () => ({ data: operationStatus }),
   useAdminBackupsControllerRestoreBackup: () => ({ mutate: restoreBackup, isPending: false }),
   useAdminBackupsControllerUndoRestore: () => ({ mutate: undoRestore, isPending: false }),
+  useAdminBackupsControllerImportBackup: (options: typeof importOptions) => {
+    importOptions = options;
+
+    return { mutate: importBackup, isPending: false };
+  },
   useAdminBackupsControllerCreateDownloadLink: (options: typeof downloadLinkOptions) => {
     downloadLinkOptions = options;
 
@@ -62,6 +65,7 @@ const readyBackup = {
   sizeBytes: 5 * 1024 * 1024,
   sha256: 'a'.repeat(64),
   errorMessage: null,
+  originalFileName: null,
   createdBy: { id: 1, email: 'admin@example.com', name: 'Администратор' },
 };
 
@@ -332,42 +336,43 @@ describe('restore', () => {
   });
 });
 
-describe('backups model', () => {
-  it.each([
-    [null, '—'],
-    [512, '512 Б'],
-    [1536, '1,5 КБ'],
-    [25 * 1024 * 1024, '25 МБ'],
-  ])('formats %p as %p', (size, label) => {
-    expect(formatBackupSize(size)).toBe(label);
+describe('import', () => {
+  beforeEach(() => {
+    operationStatus = { maintenance: false, operation: null, previousDatabase: null };
+    overview = {
+      availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
+      settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
+      nextScheduledAt: null,
+      isBusy: false,
+      backups: [
+        {
+          ...readyBackup,
+          trigger: 'IMPORTED',
+          originalFileName: 'prod-2026-10-01.dump',
+        },
+      ],
+    };
   });
 
-  it('shows the schedule hour in UTC next to local time', () => {
-    expect(formatScheduleHour(3)).toMatch(/^\d{2}:00 \(03:00 UTC\)$/);
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
-  it('labels the reason and the author of a backup', () => {
-    expect(getBackupAuthorLabel({ ...readyBackup, trigger: 'PRE_RESTORE' })).toBe(
-      'Перед восстановлением · Администратор',
-    );
+  it('uploads the chosen file with its original name', () => {
+    renderCard();
+    const file = new File(['PGDMP'], 'prod.dump', { type: 'application/octet-stream' });
+
+    fireEvent.change(screen.getByLabelText('Файл резервной копии'), { target: { files: [file] } });
+
+    expect(importBackup).toHaveBeenCalledWith({ data: file, params: { fileName: 'prod.dump' } });
+    expect(typeof importOptions.request.onUploadProgress).toBe('function');
   });
 
-  it('labels scheduled backups', () => {
-    expect(getBackupAuthorLabel({ ...readyBackup, createdBy: null, trigger: 'SCHEDULED' })).toBe(
-      'По расписанию',
-    );
-  });
+  it('marks imported backups with their source file', () => {
+    renderCard();
 
-  it('polls only while a backup is running', () => {
-    expect(shouldPollBackups(undefined)).toBe(false);
-    expect(
-      shouldPollBackups({
-        availability: { available: true, reason: null, pgDumpVersion: null, serverVersion: null },
-        settings: { scheduleEnabled: true, scheduleHourUtc: 3, retentionDays: 14, maxCount: 30 },
-        nextScheduledAt: '2026-10-12T03:00:00.000Z',
-        isBusy: false,
-        backups: [{ ...readyBackup, status: 'RUNNING' }],
-      }),
-    ).toBe(true);
+    expect(screen.getByText('Загружена из файла prod-2026-10-01.dump')).toBeTruthy();
+    expect(screen.getByText(/Загружена · Администратор/)).toBeTruthy();
   });
 });

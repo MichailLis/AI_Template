@@ -62,6 +62,7 @@ const backupTriggerLabels: Record<BackupItem['trigger'], string | null> = {
   MANUAL: null,
   SCHEDULED: 'По расписанию',
   PRE_RESTORE: 'Перед восстановлением',
+  IMPORTED: 'Загружена',
 };
 
 /** Кто и почему создал копию: «Перед восстановлением · Иван», «По расписанию». */

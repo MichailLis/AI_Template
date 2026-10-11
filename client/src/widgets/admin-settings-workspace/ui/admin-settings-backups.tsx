@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { BackupImportButton } from './admin-settings-backup-import';
 import { RestoreBackupDialog, RestoreStatusPanel } from './admin-settings-backup-restore';
 import { BackupScheduleForm } from './admin-settings-backup-schedule';
 import {
@@ -63,6 +64,11 @@ function BackupRow({
         <p className={`break-all font-mono text-xs ${adminClassNames.text.muted}`}>
           {backup.fileName}
         </p>
+        {backup.originalFileName ? (
+          <p className={`break-all text-xs ${adminClassNames.text.muted}`}>
+            Загружена из файла {backup.originalFileName}
+          </p>
+        ) : null}
         {backup.errorMessage ? (
           <p className="break-words text-xs text-admin-danger-foreground">{backup.errorMessage}</p>
         ) : null}
@@ -138,15 +144,18 @@ export function BackupsSettingsCard() {
               Скачайте копию, чтобы у вас был экземпляр вне сервера.
             </CardDescription>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            disabled={!canCreate || restore.isRunning}
-            onClick={createBackup}
-          >
-            <Plus />
-            {isRunning ? 'Копия создается...' : 'Создать копию'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <BackupImportButton disabled={restore.isRunning} />
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canCreate || restore.isRunning}
+              onClick={createBackup}
+            >
+              <Plus />
+              {isRunning ? 'Копия создается...' : 'Создать копию'}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 

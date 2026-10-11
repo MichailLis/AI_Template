@@ -29,6 +29,7 @@ export const AUDIT_ACTIONS = [
   'BACKUP_SETTINGS_UPDATED',
   'BACKUP_RESTORED',
   'BACKUP_RESTORE_UNDONE',
+  'BACKUP_IMPORTED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

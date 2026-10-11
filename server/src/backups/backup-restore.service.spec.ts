@@ -30,6 +30,7 @@ const readyBackup: BackupMetadata = {
   serverVersion: '16.4',
   lastMigration: null,
   errorMessage: null,
+  originalFileName: null,
 };
 
 describe('BackupRestoreService', () => {

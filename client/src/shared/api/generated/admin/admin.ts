@@ -28,6 +28,7 @@ import type {
   AdminBackupOperationResponseDto,
   AdminBackupResponseDto,
   AdminBackupSettingsResponseDto,
+  AdminBackupsControllerImportBackupParams,
   AdminBackupsOverviewResponseDto,
   AdminControllerGetUsersParams,
   AdminOverviewResponseDto,
@@ -2188,6 +2189,102 @@ export const useAdminBackupsControllerUpdateSettings = <
   TContext
 > => {
   return useMutation(getAdminBackupsControllerUpdateSettingsMutationOptions(options), queryClient);
+};
+/**
+ * @summary Upload a pg_dump custom-format file as a backup
+ */
+export const adminBackupsControllerImportBackup = (
+  adminBackupsControllerImportBackupBody: Blob,
+  params?: AdminBackupsControllerImportBackupParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupResponseDto>(
+    {
+      url: `/admin/backups/import`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      data: adminBackupsControllerImportBackupBody,
+      params,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminBackupsControllerImportBackupMutationKey = () =>
+  ['adminBackupsControllerImportBackup'] as const;
+
+export const getAdminBackupsControllerImportBackupMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>,
+    TError,
+    AdminBackupsControllerImportBackupMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>,
+  TError,
+  AdminBackupsControllerImportBackupMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminBackupsControllerImportBackupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>,
+    AdminBackupsControllerImportBackupMutationVariables
+  > = (props) => {
+    const { data, params } = props ?? {};
+
+    return adminBackupsControllerImportBackup(data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminBackupsControllerImportBackupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>
+>;
+export type AdminBackupsControllerImportBackupMutationBody = Blob;
+export type AdminBackupsControllerImportBackupMutationError = ErrorType<ErrorResponseDto>;
+export type AdminBackupsControllerImportBackupMutationVariables = {
+  data: Blob;
+  params?: AdminBackupsControllerImportBackupParams;
+};
+
+/**
+ * @summary Upload a pg_dump custom-format file as a backup
+ */
+export const useAdminBackupsControllerImportBackup = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>,
+      TError,
+      AdminBackupsControllerImportBackupMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminBackupsControllerImportBackup>>,
+  TError,
+  AdminBackupsControllerImportBackupMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminBackupsControllerImportBackupMutationOptions(options), queryClient);
 };
 /**
  * @summary Get the state of a database restore (works during maintenance)
