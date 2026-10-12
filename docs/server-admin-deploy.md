@@ -148,46 +148,38 @@ curl -f http://localhost/api/api-json
 
 ## 6. Обновить
 
-Перед обновлением, если данные важны, сделать backup. Проще всего в админке: «Настройки →
-Резервные копии» → «Создать копию» → «Скачать» (подробности в
-`docs/deployment-dockerhub.md`, раздел 11). Или вручную:
+Полная инструкция с откатом — `docs/deployment-dockerhub.md`, раздел 8 (и `README.md` ветки
+`prod_ready`). Коротко:
 
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
-  sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backup-$(date +%Y%m%d-%H%M%S).sql"
-```
+1. Копия базы, обязательно до всего остального: `sh scripts/backup-db.sh` (скрипт есть в ветке
+   `prod_ready`). Скачайте файл с сервера. Для сравнения: `sh scripts/db-counts.sh > counts-before.txt`.
+2. Подтянуть файлы и образы:
 
-Подтянуть свежие deploy-файлы и образы:
+   ```bash
+   git fetch origin
+   git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+   ```
 
-```bash
-git fetch origin
-git checkout prod
-git pull --ff-only origin prod
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
-```
-
-Проверить:
-
-```bash
-curl -f http://localhost/health
-curl -f http://localhost/api/api-json
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 backend
-```
+3. Проверить: `curl -f http://localhost/health`, лог backend (`All migrations have been
+successfully applied`), `sh scripts/db-counts.sh | diff counts-before.txt -`.
+4. Откат: `APP_IMAGE_TAG=prod-YYYYMMDD` в `.env.deploy` и `sh scripts/restore-db.sh <файл копии>`.
 
 Что будет с базой:
 
 - `pull` и `up -d` не удаляют PostgreSQL volume.
 - Данные удаляются только при `docker compose down -v`, ручном удалении volume или смене
   `POSTGRES_VOLUME_NAME` на пустой volume.
-- Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy`.
+- Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy`: только
+  добавляет таблицы и колонки из `server/prisma/migrations`.
 - Если серверная база была создана через `prisma db push` и не содержит таблицу
-  `_prisma_migrations`, будущий релиз со schema change может остановиться с `P3005`.
+  `_prisma_migrations`, релиз со schema change может остановиться с `P3005`.
 - Не считайте релиз безмиграционным по старой заметке: если менялся
   `server/prisma/schema.prisma`, в commit должна быть соответствующая migration.
 
-Перед обновлением релиза со schema change проверьте локально:
+Перед публикацией релиза со schema change проверьте локально:
 
 ```bash
 npm run verify:prisma-migrations
