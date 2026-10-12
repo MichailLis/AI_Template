@@ -321,6 +321,20 @@ docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t y
 docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t your-dockerhub/ai-template-frontend:prod --push client
 ```
 
+Перед `push` проверьте тот самый образ, который уйдёт в Docker Hub (проверка через API не
+заменяет браузер):
+
+1. Соберите frontend. На Windows в Git Bash не передавайте `--build-arg VITE_API_URL=/api`:
+   оболочка превращает `/api` в `C:/Program Files/Git/api` (так был сломан релиз `prod-a508aa8`).
+   Либо не задавайте аргумент (по умолчанию `/api`), либо `MSYS_NO_PATHCONV=1 docker build ...`.
+   Dockerfile сам падает, если `VITE_API_URL` не начинается с `/` или `http(s)://`, или если в
+   бандле нашёлся путь вида `C:/Program Files`.
+2. Бандл: `docker run --rm --entrypoint sh <образ> -c 'grep -rl "Program Files" /usr/share/nginx/html'`
+   ничего не печатает.
+3. Поднимите отдельный стек из этих образов (раздел 7, другие порты и тома) и войдите в админку в
+   браузере: логин и пароль вводятся в форму, открывается `/admin/tests`. Если браузерный вход не
+   удался по любой причине, образ не публикуется.
+
 ## 10. Важное про существующую базу и миграции
 
 `docker compose pull` и `up -d` не удаляют PostgreSQL volume. Данные сохраняются в
