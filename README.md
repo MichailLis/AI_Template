@@ -256,6 +256,8 @@ Built-in prof-orientation v3+ contract:
   professions
 - prof-orientation AI provider calls use a longer timeout by default and retry only
   timeout failures; see `docs/2026-05-19-prof-orientation-v3-plus.md`
+- every AI provider call additionally retries provider overload (HTTP 429/502/503/504) twice, after 2 s and 5 s;
+  other errors, including timeouts, are not retried there. A failed background analysis is written to the server log
 
 Analytics report contract:
 

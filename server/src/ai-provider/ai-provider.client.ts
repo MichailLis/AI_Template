@@ -18,6 +18,11 @@ const DEFAULT_AI_TIMEOUT_MS = 120_000;
 
 export const AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE = 'AI provider request timeout';
 
+/** Пауза перед каждым повтором при 429/502/503/504; таймауты не повторяются (их повторяет вызывающий код). */
+export const AI_PROVIDER_RETRY_DELAYS_MS = [2_000, 5_000] as const;
+const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 type OpenRouterProviderSort = 'price' | 'throughput' | 'latency';
 
 /** Маршрутизация OpenRouter. Другим провайдерам не передаётся. */
@@ -189,7 +194,8 @@ export const AI_PROVIDER_HEALTH_CHECK_CACHE_TTL_MS = 30_000;
 /**
  * Клиент OpenAI-совместимого API на официальном OpenAI SDK. Провайдер выбирается настройками
  * (`AiProviderConfigService.getConnection`): SDK получает `baseURL` и ключ, остальное одинаково.
- * Повторы SDK выключены: таймауты и повторы задаются вызывающим кодом.
+ * Повторы SDK выключены: таймауты повторяет вызывающий код, а перегрузку провайдера (429/502/503/504)
+ * `generatePrompt` повторяет сам с паузой.
  */
 @Injectable()
 export class AiProviderClientService {
@@ -265,6 +271,29 @@ export class AiProviderClientService {
     }
   }
 
+  private async createCompletionWithRetry(
+    client: OpenAI,
+    body: ReturnType<typeof buildPromptRequestBody>['body'],
+  ) {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await client.chat.completions.create(body);
+      } catch (error) {
+        const delay = AI_PROVIDER_RETRY_DELAYS_MS[attempt];
+        const retryable =
+          error instanceof OpenAI.APIError &&
+          typeof error.status === 'number' &&
+          RETRYABLE_STATUSES.has(error.status);
+
+        if (!retryable || delay === undefined) {
+          throw error;
+        }
+
+        await sleep(delay);
+      }
+    }
+  }
+
   async generatePrompt(
     connection: AiProviderConnection,
     dto: AiPromptRequest,
@@ -274,7 +303,7 @@ export class AiProviderClientService {
     const { body, responseFormat } = buildPromptRequestBody(dto, connection);
 
     try {
-      const completion = await client.chat.completions.create(body);
+      const completion = await this.createCompletionWithRetry(client, body);
       const output = extractCompletionOutput(completion.choices?.[0]?.message);
 
       if (!output) {
