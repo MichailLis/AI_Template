@@ -139,7 +139,8 @@ curl -f http://localhost/api/api-json
 
 - Приложение: `http://SERVER_IP/`
 - Логин: `http://SERVER_IP/login`
-- Adminer: `http://SERVER_IP:8081`
+- Adminer доступен только с самого сервера (`127.0.0.1:8081`). С вашего компьютера откройте SSH-туннель:
+  `ssh -L 8081:127.0.0.1:8081 user@SERVER_IP`, затем `http://localhost:8081`.
 
 Вход в приложение:
 
