@@ -146,7 +146,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 
 - Приложение: `http://localhost:8080`
 - Логин: `http://localhost:8080/login`
-- Adminer: `http://localhost:8081`
+- Adminer: `http://localhost:8081` (порт привязан к `127.0.0.1`; на удалённом сервере открывайте его через SSH-туннель `ssh -L 8081:127.0.0.1:8081 user@SERVER_IP`)
 - OpenAPI JSON через Nginx: `http://localhost:8080/api/api-json`
 
 Для входа в приложение используйте:

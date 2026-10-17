@@ -23,7 +23,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - '${ADMINER_PORT:-8081}:8080'
+      # Только localhost: Docker открывает опубликованные порты в обход firewall, а Adminer — форма входа в БД.
+      - '127.0.0.1:${ADMINER_PORT:-8081}:8080'
 
   backend:
     image: ${DOCKERHUB_NAMESPACE:?Set DOCKERHUB_NAMESPACE in the deploy env file}/ai-template-backend:${APP_IMAGE_TAG:-prod}
