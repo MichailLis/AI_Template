@@ -10,9 +10,9 @@ import { getSessionAttemptByTokenOrThrow } from '../session/attempt-access';
 import { ensureAttemptCanAcceptAnswers } from '../session/attempt.guards';
 import { toOptionalIsoString } from '../shared/date.utils';
 import {
-  buildDemographicStudentKeyHash,
   buildEducationDemographicStudentKeyHash,
   buildStudentKeyHash,
+  createRandomToken,
   toPrismaRequiredJsonInput,
 } from '../shared/domain.utils';
 import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
@@ -130,16 +130,20 @@ export class TestsPublicSessionService {
       'Укажите группу или класс',
     );
     const demographicProfile = isEducationDemographicMode ? resolveDemographicProfile(dto) : null;
-    let studentLastInitial: string | null = null;
-    let studentMiddleInitial: string | null = null;
+    let studentLastInitial: string | null;
+    let studentMiddleInitial: string | null;
     let studentKeyHash: string;
 
     if (demographicProfile) {
+      studentLastInitial = dto.studentLastInitial?.trim() || null;
+      studentMiddleInitial = dto.studentMiddleInitial?.trim() || null;
       studentKeyHash = buildEducationDemographicStudentKeyHash({
         studentName,
         studentAge: demographicProfile.studentAge,
         educationOrganization: resolvedEducationOrganization,
         groupOrClass: normalizedGroupOrClass,
+        studentLastInitial,
+        studentMiddleInitial,
       });
     } else {
       studentLastInitial = normalizeRequiredString(
@@ -186,10 +190,9 @@ export class TestsPublicSessionService {
 
     return this.startAllocatedSession({
       link,
-      studentKeyHash: buildDemographicStudentKeyHash({
-        publicLinkId: link.id,
-        ...demographicProfile,
-      }),
+      // Anonymous: nobody can be recognised, so every start is a new participant. A profile match
+      // must never decide who gets which resume token (see 590fe89).
+      studentKeyHash: createRandomToken(32),
       profile: {
         studentName: null,
         studentLastInitial: null,

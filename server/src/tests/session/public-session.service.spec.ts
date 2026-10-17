@@ -154,105 +154,34 @@ describe('TestsPublicSessionService start', () => {
     expect(result.session.sessionToken).toBe('resume-demo');
   });
 
-  it('does not resume DEMOGRAPHIC sessions from matching profiles', async () => {
-    const link = createAccessibleLinkFixture({ entryProfileMode: 'DEMOGRAPHIC' });
-    link.allowResume = true;
-    link.maxAttemptsPerStudent = 1;
+  it('lets every participant with the same DEMOGRAPHIC profile start their own attempt', async () => {
+    const link = createAccessibleLinkFixture({
+      entryProfileMode: 'DEMOGRAPHIC',
+      educationOrganization: null,
+      allowResume: true,
+      maxAttemptsPerStudent: 1,
+    });
     getAccessiblePublicLinkByCodeMock.mockResolvedValue(link);
-    findManyMock.mockResolvedValue([
-      {
-        id: 1,
-        attemptNumber: 1,
-        status: 'IN_PROGRESS',
-        resumeToken: 'another-participant-token',
-        expiresAt: new Date(Date.now() + 60_000),
-      },
-    ]);
-
-    const getSessionByTokenSpy = jest
-      .spyOn(service, 'getSessionByToken')
-      .mockResolvedValue(createPublicSessionStateResponse('another-participant-token'));
-
-    await expect(
-      service.startSessionByCode('DEMO2026', createPublicSessionDemographicStartDto()),
-    ).rejects.toThrow('Attempts limit reached for this test link');
-    expect(getSessionByTokenSpy).not.toHaveBeenCalled();
-  });
-
-  it('startSessionByCode builds a stable DEMOGRAPHIC key from normalized profile and link', async () => {
-    getAccessiblePublicLinkByCodeMock
-      .mockResolvedValueOnce(
-        createAccessibleLinkFixture({
-          id: 100,
-          entryProfileMode: 'DEMOGRAPHIC',
-          educationOrganization: null,
-          maxAttemptsPerStudent: 3,
-        }),
-      )
-      .mockResolvedValueOnce(
-        createAccessibleLinkFixture({
-          id: 100,
-          entryProfileMode: 'DEMOGRAPHIC',
-          educationOrganization: null,
-          maxAttemptsPerStudent: 3,
-        }),
-      )
-      .mockResolvedValueOnce(
-        createAccessibleLinkFixture({
-          id: 101,
-          entryProfileMode: 'DEMOGRAPHIC',
-          educationOrganization: null,
-          maxAttemptsPerStudent: 3,
-        }),
-      );
     updateManyMock.mockResolvedValue({ count: 0 });
     findManyMock.mockResolvedValue([]);
     createAttemptMock
       .mockResolvedValueOnce({ resumeToken: 'resume-demo-1' })
-      .mockResolvedValueOnce({ resumeToken: 'resume-demo-2' })
-      .mockResolvedValueOnce({ resumeToken: 'resume-demo-3' });
-
-    jest
+      .mockResolvedValueOnce({ resumeToken: 'resume-demo-2' });
+    const getSessionByTokenSpy = jest
       .spyOn(service, 'getSessionByToken')
       .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-1'))
-      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-2'))
-      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-3'));
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-demo-2'));
 
-    await service.startSessionByCode(
-      'DEMO2026',
-      createPublicSessionDemographicStartDto({
-        gender: 'MALE',
-        age: 18,
-        residence: '  КаЗаНь   Центр  ',
-        educationLevel: 'SECONDARY_SPECIAL',
-      }),
-    );
-    await service.startSessionByCode(
-      'DEMO2026',
-      createPublicSessionDemographicStartDto({
-        gender: 'MALE',
-        age: 18,
-        residence: 'казань центр',
-        educationLevel: 'SECONDARY_SPECIAL',
-      }),
-    );
-    await service.startSessionByCode(
-      'DEMO2027',
-      createPublicSessionDemographicStartDto({
-        gender: 'MALE',
-        age: 18,
-        residence: 'казань центр',
-        educationLevel: 'SECONDARY_SPECIAL',
-      }),
-    );
+    await service.startSessionByCode('DEMO2026', createPublicSessionDemographicStartDto());
+    await service.startSessionByCode('DEMO2026', createPublicSessionDemographicStartDto());
 
     const firstKey = createAttemptMock.mock.calls[0]?.[0].data.studentKeyHash;
     const secondKey = createAttemptMock.mock.calls[1]?.[0].data.studentKeyHash;
-    const anotherLinkKey = createAttemptMock.mock.calls[2]?.[0].data.studentKeyHash;
 
     expect(firstKey).toEqual(expect.any(String));
-    expect(firstKey).toBe(secondKey);
-    expect(firstKey).not.toBe(anotherLinkKey);
+    expect(firstKey).not.toBe(secondKey);
+    expect(getSessionByTokenSpy).toHaveBeenNthCalledWith(1, 'resume-demo-1');
+    expect(getSessionByTokenSpy).toHaveBeenNthCalledWith(2, 'resume-demo-2');
   });
 
   it('startSessionByCode rejects incomplete DEMOGRAPHIC profile data', async () => {
@@ -329,6 +258,37 @@ describe('TestsPublicSessionService start', () => {
     expect(createCall?.data.studentKeyHash).toEqual(expect.any(String));
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-hybrid');
     expect(result.session.sessionToken).toBe('resume-hybrid');
+  });
+
+  it('tells EDUCATION_DEMOGRAPHIC namesakes apart by surname initial', async () => {
+    const link = createAccessibleLinkFixture({
+      entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
+      allowResume: true,
+      maxAttemptsPerStudent: 3,
+    });
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(link);
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([]);
+    createAttemptMock.mockResolvedValue({ resumeToken: 'resume-hybrid' });
+    jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-hybrid'));
+
+    for (const studentLastInitial of ['И', 'П', undefined]) {
+      await service.startSessionByCode(
+        'HYBRID2026',
+        createPublicSessionEducationDemographicStartDto({ studentLastInitial }),
+      );
+    }
+
+    const [first, second, withoutInitial] = createAttemptMock.mock.calls.map(
+      (call) => call[0].data,
+    );
+
+    expect(first?.studentLastInitial).toBe('И');
+    expect(first?.studentKeyHash).not.toBe(second?.studentKeyHash);
+    expect(withoutInitial?.studentLastInitial).toBeNull();
+    expect(withoutInitial?.studentKeyHash).not.toBe(first?.studentKeyHash);
   });
 
   it('startSessionByCode returns resumable session when allowResume is enabled', async () => {

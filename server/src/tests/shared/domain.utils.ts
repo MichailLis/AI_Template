@@ -91,31 +91,18 @@ export const buildEducationDemographicStudentKeyHash = (input: {
   studentAge: number;
   educationOrganization: string;
   groupOrClass: string;
+  studentLastInitial?: string | null;
+  studentMiddleInitial?: string | null;
 }) => {
   const fingerprint = [
     normalizeStudentIdentityPart(input.studentName),
     String(input.studentAge),
     normalizeStudentIdentityPart(input.educationOrganization),
     normalizeStudentIdentityPart(input.groupOrClass),
-  ].join('|');
-
-  return createHash('sha256').update(fingerprint).digest('hex');
-};
-
-export const buildDemographicStudentKeyHash = (input: {
-  publicLinkId: number;
-  studentGender: string;
-  studentAge: number;
-  studentResidence: string;
-  studentEducationLevel: string;
-}) => {
-  const fingerprint = [
-    'demographic',
-    String(input.publicLinkId),
-    input.studentGender,
-    String(input.studentAge),
-    normalizeStudentIdentityPart(input.studentResidence),
-    input.studentEducationLevel,
+    // Initials tell namesakes apart; omitted when not entered so earlier keys stay valid.
+    ...[input.studentLastInitial, input.studentMiddleInitial]
+      .filter((part): part is string => Boolean(part?.trim()))
+      .map(normalizeStudentIdentityPart),
   ].join('|');
 
   return createHash('sha256').update(fingerprint).digest('hex');

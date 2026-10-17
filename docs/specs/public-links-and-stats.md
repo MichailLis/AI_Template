@@ -45,9 +45,9 @@ Behavior baseline:
    - `POLUS` -> branded Polus public template; selected during public-link creation only.
 8. Public link DTOs and responses must expose `publicTemplate` through admin link lists, public link access, session state, and result fetches without changing `/t/*` routes.
 9. Public links have an entry profile mode:
-   - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`.
+   - `DEMOGRAPHIC` -> collect gender, age, residence, and education level before the test; force `maxAttemptsPerStudent = 1`. Nobody is identified in this mode: every start is a new participant with a random key, so participants with the same profile do not block each other and a profile match never returns another person's resume token.
    - `EDUCATION` -> collect the current education-based profile before the test.
-   - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior.
+   - `EDUCATION_DEMOGRAPHIC` -> collect education fields plus the demographic questionnaire before the test; use education attempt/resume behavior. The surname and patronymic initials, when the form sends them, are part of the student key, so namesakes in one class get separate attempts.
 10. Stats tables and attempt details must display the correct profile type without assuming education fields are always present.
 11. Admin attempt lists, analytics attempt rows, and the analytics CSV export must carry
     `llmStatus` next to `analysisStatus`. `analysisStatus` reports the algorithmic analysis
