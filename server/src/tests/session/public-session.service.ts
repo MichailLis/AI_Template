@@ -43,6 +43,9 @@ export type SessionStateResponse = {
   session: ReturnType<typeof mapSessionState>;
 };
 
+const isRecordNotFoundError = (error: unknown) =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2025';
+
 @Injectable()
 export class TestsPublicSessionService {
   constructor(
@@ -285,27 +288,36 @@ export class TestsPublicSessionService {
     const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
 
     if (attempt.status === 'COMPLETED') {
-      return {
-        sessionToken,
-        status: 'COMPLETED',
-        finishedAt: toOptionalIsoString(attempt.finishedAt),
-        analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
-      };
+      return this.toCompletedResponse(sessionToken, attempt);
     }
 
     ensureAttemptCanAcceptAnswers(attempt);
     validatePublicAttemptAnswersForFinish(attempt.topicVersion.questions, attempt.answers);
 
     const finishedAttempt = await this.prisma.$transaction(async (tx) => {
-      const updatedAttempt = await tx.testStudentAttempt.update({
-        where: {
-          id: attempt.id,
-        },
-        data: {
-          status: 'COMPLETED',
-          finishedAt: new Date(),
-        },
-      });
+      // Only the request that flips IN_PROGRESS -> COMPLETED continues; a concurrent duplicate gets
+      // P2025 here and must not write a second analysis or enqueue a second LLM run.
+      const updatedAttempt = await tx.testStudentAttempt
+        .update({
+          where: {
+            id: attempt.id,
+            status: 'IN_PROGRESS',
+          },
+          data: {
+            status: 'COMPLETED',
+            finishedAt: new Date(),
+          },
+        })
+        .catch((error: unknown) => {
+          if (isRecordNotFoundError(error)) {
+            return null;
+          }
+          throw error;
+        });
+
+      if (!updatedAttempt) {
+        return null;
+      }
 
       const answersCount = await tx.testStudentAnswer.count({
         where: {
@@ -340,6 +352,13 @@ export class TestsPublicSessionService {
       };
     });
 
+    if (!finishedAttempt) {
+      return this.toCompletedResponse(
+        sessionToken,
+        await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken),
+      );
+    }
+
     let analysis = finishedAttempt.analysis;
 
     if (
@@ -367,6 +386,18 @@ export class TestsPublicSessionService {
       status: 'COMPLETED',
       finishedAt: toOptionalIsoString(finishedAttempt.updatedAttempt.finishedAt),
       analysis: this.analysisService.toPublicAnalysisResponse(analysis),
+    };
+  }
+
+  private toCompletedResponse(
+    sessionToken: string,
+    attempt: Awaited<ReturnType<typeof getSessionAttemptByTokenOrThrow>>,
+  ) {
+    return {
+      sessionToken,
+      status: 'COMPLETED' as const,
+      finishedAt: toOptionalIsoString(attempt.finishedAt),
+      analysis: this.analysisService.toPublicAnalysisResponse(attempt.analysis),
     };
   }
 

@@ -255,6 +255,33 @@ describe('TestsPublicSessionService lifecycle', () => {
     });
   });
 
+  it('finishSession does not analyse twice when a concurrent request already completed the attempt', async () => {
+    const inProgress = {
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      answers: [],
+      topicVersion: { analysisPromptVersionId: 42, questions: [{ id: 100 }] },
+    };
+    jest
+      .mocked(getSessionAttemptByTokenOrThrow)
+      .mockResolvedValueOnce(inProgress as never)
+      .mockResolvedValueOnce({
+        ...inProgress,
+        status: 'COMPLETED',
+        finishedAt: new Date('2026-05-01T10:00:00.000Z'),
+      } as never);
+    txMock.testStudentAttempt.update.mockRejectedValue({ code: 'P2025' });
+
+    const result = await service.finishSession('session-token');
+
+    expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
+    expect(enqueueAttemptAnalysisMock).not.toHaveBeenCalled();
+    expect(result.status).toBe('COMPLETED');
+  });
+
   it('finishSession rejects incomplete required answers before completing attempt', async () => {
     jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
       id: 5,

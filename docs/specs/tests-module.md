@@ -79,6 +79,9 @@ Built-in prof-orientation v3+ baseline:
    phase later succeeds or fails. The top-level analysis `status` describes the
    algorithmic phase only and is never a completion signal for the LLM phase:
    waiting on it returns immediately and proves nothing about the model call.
+   `finishSession` moves an attempt `IN_PROGRESS` -> `COMPLETED` with a conditional update;
+   a concurrent duplicate request loses that race, writes no second analysis, does not enqueue
+   a second LLM run and returns the already completed result.
 7. LLM enrichment writes only to `summary.llm`; it must not mutate deterministic
    direction, score, confidence, profile, or profession fields. Its outcome lives in
    `summary.llm.status` (`not_requested`, `pending`, `ready`, `failed`) — that field,
