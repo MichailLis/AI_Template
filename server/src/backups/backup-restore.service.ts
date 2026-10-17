@@ -277,8 +277,11 @@ export class BackupRestoreService implements OnApplicationBootstrap {
 
   private async undo(userId: number, previousName: string) {
     this.maintenance.activate(MAINTENANCE_MESSAGE);
-    this.setStep('Возврат базы до восстановления');
+    // Приложение могло обновиться после восстановления: прежняя база не получала новых миграций.
+    this.setStep('Проверка базы до восстановления');
+    await this.prepareRestoredDatabase(previousName);
 
+    this.setStep('Возврат базы до восстановления');
     const restoredName = `${this.databases.databaseName}_undone_${compactTimestamp(new Date())}`;
     await this.databases.swapDatabases(this.databases.databaseName, previousName, restoredName);
     await this.databases.dropDatabase(restoredName);

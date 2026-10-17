@@ -275,6 +275,46 @@ describe('BackupRestoreService', () => {
     );
   });
 
+  it('brings the previous database up to date before undoing a restore', async () => {
+    restoredMigration = '20260101000000_old';
+    await storage.writeState({
+      sessionEpochMs: 1,
+      previousDatabase: {
+        name: 'app_before_20261011t100000',
+        restoredAt: '2026-10-11T10:00:00.000Z',
+        backupId: BACKUP_ID,
+      },
+    });
+
+    await service.startUndo(ADMIN_ID);
+    const operation = await waitForOperation();
+
+    expect(operation.status).toBe('SUCCEEDED');
+    expect(databases.databaseUrlFor).toHaveBeenCalledWith('app_before_20261011t100000');
+    expect(runner.run).toHaveBeenCalledWith('npx', ['prisma', 'migrate', 'deploy'], {
+      env: expect.any(Object) as Record<string, string>,
+      timeoutMs: expect.any(Number) as number,
+    });
+  });
+
+  it('does not undo into a database made by a newer version of the app', async () => {
+    restoredMigration = '29991231000000_future';
+    await storage.writeState({
+      sessionEpochMs: 1,
+      previousDatabase: {
+        name: 'app_before_20261011t100000',
+        restoredAt: '2026-10-11T10:00:00.000Z',
+        backupId: BACKUP_ID,
+      },
+    });
+
+    await service.startUndo(ADMIN_ID);
+    const operation = await waitForOperation();
+
+    expect(operation.status).toBe('FAILED');
+    expect(databases.swapDatabases).not.toHaveBeenCalled();
+  });
+
   it('has nothing to undo without a saved previous database', async () => {
     await expect(service.startUndo(ADMIN_ID)).rejects.toBeInstanceOf(ConflictException);
   });

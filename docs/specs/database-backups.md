@@ -33,7 +33,7 @@ Required behavior:
    `<db>_restore` → checks there (schema not newer than the app, an older one is brought forward
    with `prisma migrate deploy`; at least one active admin; refresh tokens cleared) → swap by
    `ALTER DATABASE ... RENAME`. The replaced database stays as `<db>_before_<time>` until the next
-   restore; undo swaps it back. Any failure before the swap leaves the working database untouched.
+   restore; undo swaps it back after running the same check on the saved database (older schema is brought up with migrations, a newer one refuses the undo). Any failure before the swap leaves the working database untouched.
 8. After a swap, access tokens issued before it are rejected (`server/src/auth/session-epoch.ts`,
    boundary persisted in `state.json`), so every user signs in again.
 9. Import accepts the raw body (`application/octet-stream`, no multipart), streams it to disk, and
