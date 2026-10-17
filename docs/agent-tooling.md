@@ -110,3 +110,5 @@ reports problems, so inspect every status line and directly smoke-test critical 
   - Evidence: `docs/tooling-evidence.md#6-orca-orchestration`.
 
 - **Codex/Beads hooks:** `bd prime` context was observed in both a fresh and resumed Codex task. Hook exit zero alone is not proof; inspect injected context when validating lifecycle behavior.
+
+- **ponytail (Claude Code plugin):** third-party "lazy senior dev" mode, pinned to `v5.3.2` in `.claude/settings.json` (`extraKnownMarketplaces` + `enabledPlugins`). Claude Code asks to trust the folder and install it on first open; no manual step. Commands: `/ponytail:ponytail-audit [path]` (read-only whole-repo audit), `/ponytail:ponytail-review`, `/ponytail:ponytail-debt`, `/ponytail:ponytail-gain`, `/ponytail:ponytail-help`, `/ponytail lite|full|ultra`, "stop ponytail" to switch it off. The bare `/ponytail-audit` form is not registered; the plugin prefix is required. Reviewed: no network calls unless a webhook URL is set (empty by default); hooks run local `node` scripts; it writes a per-project cost CSV to `~/.config/ponytail/band/` and mode flags under `~/.claude`. Bump the pinned tag only after re-reading the hooks.
