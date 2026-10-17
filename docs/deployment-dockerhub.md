@@ -162,6 +162,10 @@ Adminer использует не app-логин, а данные PostgreSQL:
 - Password: значение `POSTGRES_PASSWORD`
 - Database: значение `POSTGRES_DB`
 
+Вход в админку (`POST /api/auth/signin`) ограничен в nginx: 10 попыток в минуту с одного IP
+(плюс запас в 5 запросов), дальше ответ `429`. Если перед nginx стоит ещё один прокси, nginx видит
+только его адрес и лимит общий для всех: передавайте реальный IP (`real_ip_header`).
+
 ## 6. Проверка через curl
 
 Linux/macOS:
