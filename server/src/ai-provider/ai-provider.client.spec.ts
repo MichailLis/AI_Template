@@ -1,7 +1,11 @@
 import type { ConfigService } from '@nestjs/config';
 
 import type { AiProviderConnection } from './ai-provider.config';
-import { AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE, AiProviderClientService } from './ai-provider.client';
+import {
+  AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE,
+  AI_PROVIDER_RETRY_DELAYS_MS,
+  AiProviderClientService,
+} from './ai-provider.client';
 
 const polzaConnection: AiProviderConnection = {
   provider: 'polza',
@@ -65,6 +69,7 @@ describe('ai provider client', () => {
     } as unknown as ConfigService);
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -247,6 +252,51 @@ describe('ai provider client', () => {
     await expect(
       createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
     ).rejects.toThrow(/^User not found\.$/);
+  });
+
+  it('retries a 429 with a pause and returns the later success', async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ error: { message: 'Too many requests' } }, 429))
+      .mockResolvedValueOnce(completion('{"ok":true}'));
+
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    await jest.advanceTimersByTimeAsync(AI_PROVIDER_RETRY_DELAYS_MS[0]);
+
+    await expect(pending).resolves.toMatchObject({ model: structuredRequest.model });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  it('gives up after the last retry and keeps the provider error', async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockImplementation(() =>
+        Promise.resolve(jsonResponse({ error: { message: 'Too many requests' } }, 429)),
+      );
+
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    const assertion = expect(pending).rejects.toThrow('Too many requests');
+    await jest.advanceTimersByTimeAsync(
+      AI_PROVIDER_RETRY_DELAYS_MS[0] + AI_PROVIDER_RETRY_DELAYS_MS[1],
+    );
+
+    await assertion;
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    jest.useRealTimers();
+  });
+
+  it('does not retry a request the provider rejected as invalid', async () => {
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(jsonResponse({ error: { message: 'Bad key' } }, 401));
+
+    await expect(
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+    ).rejects.toThrow('Bad key');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('maps an SDK timeout to the timeout message analysis retries on', async () => {

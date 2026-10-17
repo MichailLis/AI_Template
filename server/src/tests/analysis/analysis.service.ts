@@ -396,11 +396,15 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
   }
 
   enqueueAttemptAnalysis(attemptId: number) {
-    void this.runAttemptAnalysis(attemptId).catch(() => undefined);
+    void this.runAttemptAnalysis(attemptId).catch((error: unknown) =>
+      this.logger.error(`Analysis of attempt ${attemptId} failed`, error),
+    );
   }
 
   onApplicationBootstrap() {
-    void this.recoverStalePendingLlmAnalyses().catch(() => undefined);
+    void this.recoverStalePendingLlmAnalyses().catch((error: unknown) =>
+      this.logger.error('Recovery of pending analyses failed', error),
+    );
   }
 
   async recoverStalePendingLlmAnalyses(now = new Date()) {
