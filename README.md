@@ -76,7 +76,7 @@ Admins manage backups in `/admin/settings`, tab «Резервные копии�
 
 - **Create and download:** a full `pg_dump -Fc` copy runs in the background; the file downloads through a one-time link.
 - **Schedule and retention:** a daily copy at 03:00 UTC by default; the hour, retention days and copy count are editable. The latest successful copy is never pruned.
-- **Restore with undo:** restores into a temporary database, checks it (schema not newer than the app, an active admin exists), then swaps databases by rename. The API answers 503 during the swap and everyone signs in again afterwards. The replaced database is kept until the next restore, so the restore can be undone.
+- **Restore with undo:** restores into a temporary database, checks it (schema not newer than the app, an active admin exists), then swaps databases by rename. The API answers 503 during the swap and everyone signs in again afterwards. The replaced database is kept until the next restore, so the restore can be undone; the undo runs the same check first and brings the old database up to the current schema with migrations.
 - **Upload:** an existing `.dump` from this or another server can be uploaded (500 MB by default) and restored the same way.
 - **Disk space:** the tab shows free space and warns when it fits fewer than three copies; a scheduled copy skipped for lack of space shows up as a failed entry.
 
