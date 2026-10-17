@@ -254,50 +254,79 @@ docker compose --project-name ai_template_clean --env-file .env.deploy.clean -f 
 
 ## 8. Обновление контейнеров на сервере
 
-Перед обновлением проверьте, что `.env.deploy` указывает на нужные образы:
+Все файлы для развёртывания из образов (compose, пример `.env`, скрипты копии и отката) лежат в
+ветке `prod_ready`; в `prod` те же `docker-compose.deploy.yml` и `.env.deploy.example`. Пошаговая
+инструкция для сервера с командами «копия базы → обновление → проверка → откат» — в `README.md`
+ветки `prod_ready`. Ниже то же самое в сокращении. Порядок проверен на отдельном стеке: поднят
+предыдущий релиз с данными (300+ прохождений, пользователи, тесты, промпты), затем выполнено
+обновление; число строк во всех таблицах и их идентификаторы совпали до и после, откат из копии
+вернул исходное состояние.
 
-```env
-DOCKERHUB_NAMESPACE=morro665065
-APP_IMAGE_TAG=prod
-```
+Что делает обновление с базой: `pull` и `up -d` не трогают том PostgreSQL; backend при старте
+выполняет `prisma migrate deploy`, то есть только добавляет таблицы и колонки из
+`server/prisma/migrations`. Единственная правка существующих данных в последних релизах —
+миграция `20260912000000`, которая переводит устаревшие опубликованные версии промптов в архив.
 
-Если сервер использует git checkout с deploy-файлами, сначала подтяните актуальные
-`docker-compose.deploy.yml` и `.env.deploy.example`:
+1. **Копия базы. Без неё не обновлять.**
 
-```bash
-git fetch origin
-git checkout prod
-git pull --ff-only origin prod
-```
+   ```bash
+   sh scripts/backup-db.sh          # db-backups/db-ГГГГММДД-ЧЧММСС.dump, проверяется на читаемость
+   sh scripts/db-counts.sh > counts-before.txt
+   ```
 
-Сделайте резервную копию базы перед обновлением, если данные важны:
+   Скопируйте `.dump` на другую машину. Без скриптов: `pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"`
+   внутри контейнера `postgres` (формат custom, читается `pg_restore`).
 
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
-  sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backup-$(date +%Y%m%d-%H%M%S).sql"
-```
+2. **Новые файлы развёртывания и образы.**
 
-Затем подтяните новые образы и пересоздайте только изменившиеся контейнеры:
+   ```bash
+   git fetch origin
+   git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+   ```
 
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
-```
+   В `.env.deploy` должно быть `DOCKERHUB_NAMESPACE=morro665065` и `APP_IMAGE_TAG=prod`.
+   Старые переменные `OPENROUTER_API_KEY` и `OPENROUTER_DEFAULT_MODEL` продолжают работать;
+   `OPENROUTER_*_TIMEOUT*` больше не передаются в контейнер (действуют `AI_TIMEOUT_MS` и
+   `AI_PROF_ORIENTATION_*`).
 
-Проверьте HTTP и логи backend:
+3. **Проверка.**
 
-```bash
-curl -f http://localhost:${APP_HTTP_PORT:-8080}/health
-curl -f http://localhost:${APP_HTTP_PORT:-8080}/api/api-json
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 backend
-```
+   ```bash
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=60 backend
+   curl -f http://localhost:${APP_HTTP_PORT:-8080}/health
+   sh scripts/db-counts.sh > counts-after.txt && diff counts-before.txt counts-after.txt
+   ```
 
-Для отката укажите предыдущий `APP_IMAGE_TAG` и снова выполните `pull` + `up -d`.
-Если используется переиспользуемый tag `prod`, откат возможен только если предыдущий
-образ дополнительно опубликован под отдельным immutable tag.
+   В логе должно быть «All migrations have been successfully applied». В `diff` допустимо только:
+   новая таблица `audit_events` с 0 строк и новые записи в `_prisma_migrations`. Затем зайдите в
+   админку, аналитику, «Настройки → Резервные копии» и откройте публичную ссылку `/t/<код>`.
+
+4. **Откат.** Верните в `.env.deploy` предыдущий неизменяемый тег (`APP_IMAGE_TAG=prod-YYYYMMDD`,
+   см. раздел 9) и восстановите базу из копии шага 1:
+
+   ```bash
+   sh scripts/restore-db.sh db-backups/db-ГГГГММДД-ЧЧММСС.dump   # попросит ввести RESTORE
+   ```
+
+   Скрипт останавливает backend и frontend, пересоздаёт базу (`DROP DATABASE ... WITH (FORCE)` +
+   `CREATE DATABASE`), заливает копию и запускает контейнеры заново. Не используйте
+   `pg_restore --clean` поверх базы с более новой схемой: таблицы новых миграций остаются в базе и
+   мешают удалению старых.
 
 ## 9. Сборка и публикация своих образов
+
+Схема тегов в Docker Hub: `prod` (текущий релиз, его тянет сервер), `prod-<короткий коммит>`
+(неизменяемая копия того же релиза) и `prod-YYYYMMDD` (предыдущий релиз, сохраняется перед
+перезаписью `prod`, чтобы было куда откатываться). Перед публикацией нового `prod` сохраните
+старый образ:
+
+```bash
+docker buildx imagetools create -t your-dockerhub/ai-template-backend:prod-YYYYMMDD your-dockerhub/ai-template-backend:prod
+docker buildx imagetools create -t your-dockerhub/ai-template-frontend:prod-YYYYMMDD your-dockerhub/ai-template-frontend:prod
+```
 
 Если нужно опубликовать образы в свой Docker Hub namespace:
 
