@@ -162,7 +162,7 @@ again: the hook rewrites the file.
 ## Tooling
 
 Tool selection, measured failure modes and setup for rtk, Serena, codebase-memory, Probe,
-codeburn, omp and Orca live in `docs/agent-tooling.md`. Read it before relying on one of them. The `ponytail` plugin is project-level (`.claude/settings.json`): `/ponytail:ponytail-audit` is a read-only audit, and its terse mode is on by default; its output never replaces a gate.
+codeburn, omp and Orca live in `docs/agent-tooling.md`. Read it before relying on one of them. The `ponytail` plugin is project-level (`.claude/settings.json`): `/ponytail:ponytail-audit` is a read-only audit, and its terse mode is on by default; its output is a list of leads, never a replacement for a gate. Details and when to run each command: `docs/agent-tooling.md`.
 These are machine-local: `.mcp.json` ships only Serena. Two traps are kept here because they
 produce a wrong result rather than an error:
 
