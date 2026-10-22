@@ -13,6 +13,24 @@ const fail = (message: string) => {
   process.exitCode = 1;
 };
 
+/**
+ * Скрипт запускается при каждом старте контейнера. Роль существующего пользователя не трогаем:
+ * иначе понижение bootstrap-аккаунта откатывалось бы при следующем деплое. Сброс пароля
+ * отзывает refresh-сессии, выданные со старым паролем.
+ */
+export const planExistingUserUpdates = (
+  existing: { name: string | null },
+  options: { name: string; hashedPassword: string | null },
+) => {
+  const updates: { password?: string; hashedRefreshToken?: null; name?: string } = {};
+  if (options.hashedPassword) {
+    updates.password = options.hashedPassword;
+    updates.hashedRefreshToken = null;
+  }
+  if (!existing.name && options.name) updates.name = options.name;
+  return updates;
+};
+
 const main = async () => {
   if (!email && !password) {
     console.log('[bootstrap-admin] BOOTSTRAP_ADMIN_EMAIL is not set, skipping admin bootstrap.');
@@ -48,10 +66,10 @@ const main = async () => {
       return;
     }
 
-    const updates: { role?: 'ADMIN'; password?: string; name?: string } = {};
-    if (existing.role !== 'ADMIN') updates.role = 'ADMIN';
-    if (resetPassword) updates.password = await argon2.hash(password);
-    if (!existing.name && name) updates.name = name;
+    const updates = planExistingUserUpdates(existing, {
+      name,
+      hashedPassword: resetPassword ? await argon2.hash(password) : null,
+    });
 
     if (Object.keys(updates).length === 0) {
       console.log(`[bootstrap-admin] Admin user ${email} already exists, no changes needed.`);
@@ -69,8 +87,10 @@ const main = async () => {
   }
 };
 
-void main().catch((error: unknown) => {
-  console.error('[bootstrap-admin] Failed to bootstrap admin user.');
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  void main().catch((error: unknown) => {
+    console.error('[bootstrap-admin] Failed to bootstrap admin user.');
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
