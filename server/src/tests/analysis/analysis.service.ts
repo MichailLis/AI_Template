@@ -106,6 +106,30 @@ const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 
+const PUBLIC_ANALYSIS_ERROR_MESSAGE = 'Analysis failed';
+
+/** Removes `llm.errorMessage`, `atlas.errorMessage` and `atlas.apiUrl`: admin-only diagnostics. */
+const stripInternalAnalysisFields = <T>(summary: T): T => {
+  if (typeof summary !== 'object' || summary === null) {
+    return summary;
+  }
+
+  const result = { ...summary } as Record<string, unknown>;
+  for (const [key, hidden] of [
+    ['llm', ['errorMessage']],
+    ['atlas', ['errorMessage', 'apiUrl']],
+  ] as const) {
+    const section = result[key];
+    if (typeof section === 'object' && section !== null) {
+      const copy = { ...section } as Record<string, unknown>;
+      hidden.forEach((field) => delete copy[field]);
+      result[key] = copy;
+    }
+  }
+
+  return result as T;
+};
+
 @Injectable()
 export class TestsAnalysisService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TestsAnalysisService.name);
@@ -626,8 +650,9 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
     return {
       providerMode: analysis.providerMode,
       status: analysis.status,
-      summary: analysis.summary,
-      errorMessage: analysis.errorMessage,
+      summary: stripInternalAnalysisFields(analysis.summary),
+      // Raw provider/parser text can name internal hosts or models; students get a fixed message.
+      errorMessage: analysis.errorMessage ? PUBLIC_ANALYSIS_ERROR_MESSAGE : null,
       generatedAt: analysis.generatedAt ? analysis.generatedAt.toISOString() : null,
     };
   }

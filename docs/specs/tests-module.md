@@ -79,6 +79,9 @@ Built-in prof-orientation v3+ baseline:
    phase later succeeds or fails. The top-level analysis `status` describes the
    algorithmic phase only and is never a completion signal for the LLM phase:
    waiting on it returns immediately and proves nothing about the model call.
+   Public analysis responses (`/t/*` result and finish) never carry raw error text: `errorMessage` is a fixed
+   `Analysis failed`, and `summary.llm.errorMessage`, `summary.atlas.errorMessage` and `summary.atlas.apiUrl` are removed.
+   The full values stay in the admin DTOs.
    `finishSession` moves an attempt `IN_PROGRESS` -> `COMPLETED` with a conditional update;
    a concurrent duplicate request loses that race, writes no second analysis, does not enqueue
    a second LLM run and returns the already completed result.

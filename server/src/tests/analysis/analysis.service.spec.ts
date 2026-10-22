@@ -264,6 +264,31 @@ describe('TestsAnalysisService', () => {
     expect(result).not.toHaveProperty('rawText');
   });
 
+  it('toPublicAnalysisResponse hides provider errors and the atlas address from students', () => {
+    const result = service.toPublicAnalysisResponse({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: {
+        profile: 'keep',
+        llm: { status: 'failed', errorMessage: 'upstream https://secret.internal timed out' },
+        atlas: {
+          status: 'failed',
+          apiUrl: 'http://atlas.internal/api',
+          errorMessage: 'ECONNREFUSED',
+        },
+      },
+      errorMessage: 'ZodError: introduction expected string',
+      generatedAt: null,
+    } as never);
+
+    expect(result.errorMessage).toBe('Analysis failed');
+    expect(result.summary).toEqual({
+      profile: 'keep',
+      llm: { status: 'failed' },
+      atlas: { status: 'failed' },
+    });
+  });
+
   it('recovers stale pending LLM analyses by re-enqueuing their attempts', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
     prismaMock.testStudentAnalysis.findMany.mockResolvedValue([{ attemptId: 5 }, { attemptId: 8 }]);
