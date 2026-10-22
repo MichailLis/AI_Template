@@ -34,8 +34,8 @@ Behavior baseline:
    status and sorting as the table, without paging, from
    `GET /admin/tests/public-links/:linkId/attempts/export.xlsx` (admin only, at most 5000 rows).
    The file has one row per attempt: student profile, status, start, finish, duration, leading
-   direction, profile, analysis and AI status. Student-entered text that starts with `=`, `+`,
-   `-` or `@` is written with a leading apostrophe so a spreadsheet does not run it as a formula.
+   direction, profile, analysis and AI status. Student-entered text is written as is: the XLSX
+   writer stores `=1+1` as a string, not a formula, so nothing needs escaping.
 4. Filters must support both test and public link selection, and one selection must serve both
    analytics tabs.
 5. Link labels in selectors should use business copy (`тестов пройдено`).

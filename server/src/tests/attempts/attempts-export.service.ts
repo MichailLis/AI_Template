@@ -92,14 +92,6 @@ export const formatExportDuration = (seconds: number | null): string => {
   return `${rest} с`;
 };
 
-/**
- * Значения, которые Excel может принять за формулу, получают апостроф-префикс: имя и город вводит
- * сам студент на публичной странице, а ячейка вида `=HYPERLINK(...)` в файле администратора была
- * бы исполнимой.
- */
-export const neutralizeFormula = (value: string): string =>
-  /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
-
 const toInitials = (row: AttemptExportRow) =>
   row.studentLastInitial && row.studentMiddleInitial
     ? `${row.studentLastInitial}.${row.studentMiddleInitial}.`
@@ -109,13 +101,13 @@ const toRowValues = (row: AttemptExportRow): Array<string | number | Date> => [
   row.attemptId,
   row.attemptNumber,
   getReportAttemptStatusLabel(row.status),
-  neutralizeFormula(toText(row.studentName)),
+  toText(row.studentName),
   toInitials(row),
-  neutralizeFormula(toText(row.educationOrganization)),
-  neutralizeFormula(toText(row.groupOrClass)),
+  toText(row.educationOrganization),
+  toText(row.groupOrClass),
   row.studentGender ? getReportValueLabel(row.studentGender) : '',
   row.studentAge ?? '',
-  neutralizeFormula(toText(row.studentResidence)),
+  toText(row.studentResidence),
   row.studentEducationLevel ? getReportValueLabel(row.studentEducationLevel) : '',
   new Date(row.startedAt),
   row.finishedAt ? new Date(row.finishedAt) : '',

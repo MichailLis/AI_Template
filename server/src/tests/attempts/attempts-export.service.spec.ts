@@ -2,7 +2,6 @@ import ExcelJS from 'exceljs';
 
 import {
   formatExportDuration,
-  neutralizeFormula,
   TestsAttemptsExportService,
   type AttemptExportRow,
 } from './attempts-export.service';
@@ -47,15 +46,6 @@ describe('formatExportDuration', () => {
     expect(formatExportDuration(426)).toBe('7 мин 06 с');
     expect(formatExportDuration(3720)).toBe('1 ч 02 мин');
     expect(formatExportDuration(null)).toBe('');
-  });
-});
-
-describe('neutralizeFormula', () => {
-  it('prefixes values that a spreadsheet would run as a formula', () => {
-    expect(neutralizeFormula('=HYPERLINK("http://x")')).toBe(`'=HYPERLINK("http://x")`);
-    expect(neutralizeFormula('+7 999')).toBe("'+7 999");
-    expect(neutralizeFormula('@sum')).toBe("'@sum");
-    expect(neutralizeFormula('Москва')).toBe('Москва');
   });
 });
 
@@ -106,11 +96,14 @@ describe('TestsAttemptsExportService', () => {
     expect(row.getCell(18).value).toBe('Нет анализа');
   });
 
-  it('does not let a student-entered name become a formula', async () => {
+  it('keeps a formula-like student name as plain text', async () => {
     const sheet = await readSheet(
       await service.toExcel([buildRow({ studentName: '=1+1' })], 'ABC123'),
     );
 
-    expect(sheet.getRow(2).getCell(4).value).toBe("'=1+1");
+    const cell = sheet.getRow(2).getCell(4);
+
+    expect(cell.type).toBe(ExcelJS.ValueType.String);
+    expect(cell.value).toBe('=1+1');
   });
 });
