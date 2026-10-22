@@ -204,7 +204,8 @@ export const PublicSessionSaveAnswerItemSchema = z.object({
 });
 
 export const PublicSessionSaveAnswersRequestSchema = z.object({
-  answers: z.array(PublicSessionSaveAnswerItemSchema).min(1),
+  // A test has far fewer questions; the cap keeps one unauthenticated request from holding a long transaction.
+  answers: z.array(PublicSessionSaveAnswerItemSchema).min(1).max(200),
 });
 
 export const PublicSessionSaveAnswersResponseSchema = z.object({

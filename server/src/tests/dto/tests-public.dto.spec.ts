@@ -5,11 +5,23 @@ import {
   PublicTestQuestionSchema,
   PublicSessionAnalysisSchema,
   PublicSessionResultResponseSchema,
+  PublicSessionSaveAnswersRequestSchema,
   PublicSessionStateSchema,
   PublicSessionStartRequestSchema,
 } from './tests-public.dto';
 
 describe('tests public DTO schemas', () => {
+  it('rejects an answers batch larger than any test can need', () => {
+    const answer = { questionId: 1, answerPayload: 'x' };
+
+    expect(
+      PublicSessionSaveAnswersRequestSchema.safeParse({ answers: Array(200).fill(answer) }).success,
+    ).toBe(true);
+    expect(
+      PublicSessionSaveAnswersRequestSchema.safeParse({ answers: Array(201).fill(answer) }).success,
+    ).toBe(false);
+  });
+
   const publicBranding = {
     version: 1,
     background: {
