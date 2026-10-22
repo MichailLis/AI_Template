@@ -12,6 +12,7 @@ import {
   type ProfOrientationProfileType,
   type ProfOrientationSummary,
 } from './types';
+import { isRecord } from '../../common/type-guards';
 
 type QuestionType = 'OPEN_TEXT' | 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'SLIDER';
 
@@ -35,9 +36,6 @@ interface ScoreInput {
   config?: ProfOrientationV3PlusConfig;
   llmStatus?: ProfOrientationSummary['llm']['status'];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const roundScore = (value: number) => Math.round(value * 10) / 10;
 

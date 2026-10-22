@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isRecord } from '../../common/type-guards';
 
 const NonEmptyStringSchema = z.string().trim().min(1);
 const PROFESSOR_SUMMARY_MAX_LENGTH = 420;
@@ -72,9 +73,6 @@ export const ProfOrientationV3PlusEnrichmentJsonSchema = {
 } as const;
 
 export type ProfOrientationV3PlusEnrichment = z.infer<typeof ProfOrientationV3PlusEnrichmentSchema>;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const toTrimmedString = (value: unknown) =>
   typeof value === 'string' && value.trim() ? value.trim() : null;

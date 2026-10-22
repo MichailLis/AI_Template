@@ -21,18 +21,4 @@ const attemptStatusLabels: Record<string, string> = {
   ABANDONED: 'Брошено',
 };
 
-const analysisStatusLabels: Record<string, string> = {
-  PENDING: 'В очереди',
-  READY: 'Готов',
-  FAILED: 'Ошибка',
-};
-
 export const getAttemptStatusLabel = (status: string) => attemptStatusLabels[status] ?? status;
-
-export const getAnalysisStatusLabel = (status: string | null | undefined) => {
-  if (!status) {
-    return 'Нет анализа';
-  }
-
-  return analysisStatusLabels[status] ?? status;
-};

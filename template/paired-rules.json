@@ -141,9 +141,9 @@
         "file": "client/src/shared/lib/type-guards.ts"
       },
       "server": {
-        "file": "server/src/app-settings/profession-atlas-client.service.ts"
+        "file": "server/src/common/type-guards.ts"
       },
-      "reason": "Случайное совпадение стандартного TypeScript-тайпгарда typeof === 'object' && !== null && !Array.isArray. На сервере дублируется локально в 4 файлах, на клиенте экспортируется как общая утилита. Не является бизнес-правилом на границе доверия."
+      "reason": "Случайное совпадение стандартного TypeScript-тайпгарда typeof === 'object' && !== null && !Array.isArray. На сервере и на клиенте экспортируется как общая утилита своей стороны. Не является бизнес-правилом на границе доверия."
     },
     {
       "name": "normalizeProfessionTitle",
@@ -194,17 +194,6 @@
         "file": "server/src/tests/reporting/analytics-report-labels.ts"
       },
       "reason": "Два независимых слоя представления: клиентский словарь подписывает статусы прохождения на экранах админки, серверный — в выгружаемых XLSX/PDF-отчётах. Формулировки намеренно совпадают, но расхождение было бы только текстовым: статус прохождения задаётся и валидируется сервером, ни один из словарей не участвует в данных или проверках."
-    },
-    {
-      "name": "analysisStatusLabels",
-      "type": "unrelated",
-      "client": {
-        "file": "client/src/shared/lib/attempt-status-labels.ts"
-      },
-      "server": {
-        "file": "server/src/tests/reporting/analytics-report-labels.ts"
-      },
-      "reason": "Подписи статусов анализа для экранов админки (клиент) и для выгружаемых отчётов (сервер). Формулировки совпадают по замыслу, но это вопрос текста, а не корректности: статус анализа хранится и меняется только на сервере, подписи его не читают и не пишут."
     },
     {
       "name": "confidenceLevelLabels",
