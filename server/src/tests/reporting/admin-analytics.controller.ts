@@ -42,6 +42,7 @@ const ApiAnalyticsQuery = () =>
     ApiQuery({ name: 'linkStatus', required: false, enum: ANALYTICS_LINK_STATUS_VALUES }),
     ApiQuery({ name: 'dateFrom', required: false, type: String, format: 'date' }),
     ApiQuery({ name: 'dateTo', required: false, type: String, format: 'date' }),
+    ApiQuery({ name: 'timeZone', required: false, type: String, example: 'Europe/Moscow' }),
   );
 
 const apiBinaryResponse = (contentType: string, description: string) => ({

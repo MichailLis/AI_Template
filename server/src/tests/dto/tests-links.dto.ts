@@ -326,6 +326,8 @@ export const AdminPublicAttemptsListQuerySchema = z.object({
   status: z.enum(['IN_PROGRESS', 'COMPLETED', 'EXPIRED', 'ABANDONED']).optional(),
   sortBy: z.enum(['startedAt', 'finishedAt', 'attemptNumber', 'studentName']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
+  /** IANA-пояс браузера: используется только выгрузкой в Excel. */
+  timeZone: z.string().max(64).optional(),
 });
 
 export const AdminPublicAttemptsListResponseSchema = z.object({

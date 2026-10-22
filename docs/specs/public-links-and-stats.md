@@ -55,6 +55,9 @@ Behavior baseline:
     has failed, or was never requested, so any filter, badge, or monitoring that means "the
     AI finished" must read `llmStatus` (`not_requested` / `pending` / `ready` / `failed`,
     or `null` when the analysis has no separate LLM phase).
+12. Report dates follow the viewer's time zone, not UTC. The browser sends its IANA zone as
+    `timeZone`; the server turns `dateFrom`/`dateTo` into local-day boundaries with it and
+    formats times in the XLSX/PDF exports in the same zone. A missing or unknown zone means UTC.
 
 ---
 

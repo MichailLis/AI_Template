@@ -27,4 +27,8 @@ export type TestsAdminAttemptsControllerExportPublicLinkAttemptsParams = {
   status?: TestsAdminAttemptsControllerExportPublicLinkAttemptsStatus;
   sortBy?: TestsAdminAttemptsControllerExportPublicLinkAttemptsSortBy;
   sortOrder?: TestsAdminAttemptsControllerExportPublicLinkAttemptsSortOrder;
+  /**
+   * @maxLength 64
+   */
+  timeZone?: string;
 };

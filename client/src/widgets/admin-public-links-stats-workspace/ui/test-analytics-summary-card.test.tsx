@@ -25,6 +25,7 @@ const createSummary = (
     linkStatus: 'ALL',
     dateFrom: null,
     dateTo: null,
+    timeZone: 'UTC',
   },
   coverage: {
     publicLinks: 1,

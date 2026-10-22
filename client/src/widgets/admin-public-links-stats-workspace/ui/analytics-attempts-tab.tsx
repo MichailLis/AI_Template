@@ -2,7 +2,11 @@ import { FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { testsAdminAttemptsControllerExportPublicLinkAttempts } from '@/shared/api/generated/tests/tests';
-import { formatDateTimeOrDash, formatDateTimePreciseOrDash } from '@/shared/lib/date-format';
+import {
+  formatDateTimeOrDash,
+  formatDateTimePreciseOrDash,
+  getBrowserTimeZone,
+} from '@/shared/lib/date-format';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -74,7 +78,13 @@ export function AnalyticsAttemptsTab({
     try {
       const blob = await testsAdminAttemptsControllerExportPublicLinkAttempts(
         effectivePublicLinkId,
-        { search: search || undefined, status: status || undefined, sortBy, sortOrder },
+        {
+          search: search || undefined,
+          status: status || undefined,
+          sortBy,
+          sortOrder,
+          timeZone: getBrowserTimeZone(),
+        },
       );
 
       downloadTestAnalyticsBlob(

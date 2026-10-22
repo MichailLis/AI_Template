@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import ExcelJS from 'exceljs';
 
+import { formatInTimeZone } from '../../common/time-zone';
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
 import { TestsAnalyticsPdfRendererService } from '../reporting/analytics-pdf-renderer.service';
 import {
@@ -129,7 +130,10 @@ export class TestsAnalyticsExportService {
       { label: 'Тема', value: summary.topic.title },
       { label: 'Слаг', value: summary.topic.slug },
       { label: 'Количество вопросов', value: summary.topic.questionCount },
-      { label: 'Сформировано', value: summary.topic.generatedAt },
+      {
+        label: 'Сформировано',
+        value: `${formatInTimeZone(summary.topic.generatedAt, summary.filters.timeZone)} (${summary.filters.timeZone})`,
+      },
     ]);
 
     sheet.addRow([]);
@@ -307,8 +311,10 @@ export class TestsAnalyticsExportService {
         row.attemptId,
         row.publicLinkId,
         row.shortCode,
-        row.startedAt,
-        toDisplayValue(row.finishedAt),
+        formatInTimeZone(row.startedAt, summary.filters.timeZone),
+        row.finishedAt
+          ? formatInTimeZone(row.finishedAt, summary.filters.timeZone)
+          : toDisplayValue(null),
         getReportAttemptStatusLabel(row.status),
         getReportAnalysisStatusLabel(row.analysisStatus),
         getReportLlmStatusLabel(row.llmStatus),

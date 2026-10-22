@@ -110,6 +110,7 @@ export const buildReportFilterRows = (
   { label: 'Ссылки в отчете', value: labelOrRaw(linkStatusLabels, filters.linkStatus) },
   { label: 'Период с', value: filters.dateFrom ?? 'не задан' },
   { label: 'Период по', value: filters.dateTo ?? 'не задан' },
+  { label: 'Часовой пояс', value: filters.timeZone },
 ];
 
 /**

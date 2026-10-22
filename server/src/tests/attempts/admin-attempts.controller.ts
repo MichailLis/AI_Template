@@ -72,10 +72,13 @@ export class TestsAdminAttemptsController {
     res.setHeader('Content-Type', XLSX_CONTENT_TYPE);
     res.setHeader('Content-Disposition', disposition);
 
-    return new StreamableFile(await this.attemptsExportService.toExcel(attempts, shortCode), {
-      type: XLSX_CONTENT_TYPE,
-      disposition,
-    });
+    return new StreamableFile(
+      await this.attemptsExportService.toExcel(attempts, shortCode, query.timeZone),
+      {
+        type: XLSX_CONTENT_TYPE,
+        disposition,
+      },
+    );
   }
 
   @Get('attempts/:attemptId')

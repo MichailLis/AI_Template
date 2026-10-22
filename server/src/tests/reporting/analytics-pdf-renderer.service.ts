@@ -6,6 +6,7 @@ import path from 'node:path';
 import pdfMake from 'pdfmake';
 import type { TDocumentDefinitions, TFontDictionary } from 'pdfmake/interfaces';
 
+import { formatInTimeZone } from '../../common/time-zone';
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
 import { buildReportConfidenceRows, buildReportFilterRows } from './analytics-report-labels';
 
@@ -147,7 +148,10 @@ export class TestsAnalyticsPdfRendererService {
       },
       content: [
         { text: summary.topic.title, style: 'title' },
-        { text: `Сформировано: ${summary.topic.generatedAt}`, style: 'small' },
+        {
+          text: `Сформировано: ${formatInTimeZone(summary.topic.generatedAt, summary.filters.timeZone)} (${summary.filters.timeZone})`,
+          style: 'small',
+        },
         { text: 'Параметры отчета', style: 'subtitle' },
         { ul: filters, style: 'small' },
         { text: 'Покрытие', style: 'subtitle' },

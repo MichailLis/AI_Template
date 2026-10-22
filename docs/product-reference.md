@@ -132,6 +132,11 @@ Analytics report contract:
 - export endpoints: `GET /admin/tests/topics/:topicId/analytics/export.xlsx` and
   `GET /admin/tests/topics/:topicId/analytics/export.pdf`
 - filters include scope, public link, link status, and date range
+- time zone: the browser sends its IANA zone as `timeZone` (analytics summary, both exports and the
+  attempts export). The server takes `dateFrom`/`dateTo` as whole local days in that zone, writes
+  start/finish in XLSX as local wall-clock time, and prints the PDF "generated" line and the analytics
+  attempts sheet in that zone. Missing or unknown zone means UTC. The resolved zone is returned as
+  `filters.timeZone` and listed in the report parameters
 - attempts list for one public link: `GET /admin/tests/public-links/:linkId/attempts` with
   `page`, `limit`, `search`, `status` (`IN_PROGRESS|COMPLETED|EXPIRED|ABANDONED`), `sortBy`
   (`startedAt|attemptNumber|studentName|finishedAt`) and `sortOrder`; each item carries

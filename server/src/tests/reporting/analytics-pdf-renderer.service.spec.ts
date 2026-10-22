@@ -16,6 +16,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     linkStatus: 'ALL',
     dateFrom: '2026-05-01',
     dateTo: '2026-05-20',
+    timeZone: 'UTC',
   },
   coverage: {
     publicLinks: 1,

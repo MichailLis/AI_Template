@@ -582,6 +582,51 @@ describe('TestsAnalyticsService', () => {
     );
   });
 
+  it('takes the day boundaries in the client time zone', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+    const summary = await service.getSummary(7, 1, {
+      scope: 'TOPIC',
+      linkStatus: 'ALL',
+      dateFrom: '2026-10-12',
+      dateTo: '2026-10-12',
+      timeZone: 'Asia/Novosibirsk',
+    });
+
+    // урок в 08:00 по Новосибирску (01:00 UTC) попадает в 12 октября
+    expect(prismaMock.testStudentAttempt.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          publicLinkId: { in: [11] },
+          startedAt: {
+            gte: new Date('2026-10-11T17:00:00.000Z'),
+            lte: new Date('2026-10-12T16:59:59.999Z'),
+          },
+        },
+      }),
+    );
+    expect(summary.filters.timeZone).toBe('Asia/Novosibirsk');
+  });
+
+  it('falls back to UTC for an unknown time zone', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
+    prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
+    prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
+    prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+
+    const summary = await service.getSummary(7, 1, {
+      scope: 'TOPIC',
+      linkStatus: 'ALL',
+      dateFrom: '2026-10-12',
+      timeZone: 'Mars/Olympus',
+    });
+
+    expect(summary.filters.timeZone).toBe('UTC');
+  });
+
   it('loads attempts with required relations/fields', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN' });
     prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
