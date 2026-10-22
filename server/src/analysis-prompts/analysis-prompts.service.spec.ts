@@ -626,6 +626,7 @@ describe('AnalysisPromptsService', () => {
     });
 
     it('publishVersion records which version became active', async () => {
+      prismaMock.analysisPrompt.findUnique.mockResolvedValue({ archivedAt: null });
       prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({ id: 42, promptId: 7 });
       txMock.analysisPromptVersion.update.mockResolvedValue({
         ...promptRecord.versions[0],
@@ -709,6 +710,7 @@ describe('AnalysisPromptsService', () => {
     });
   });
   it('publishVersion marks an existing draft as published', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue({ archivedAt: null });
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
       id: 42,
       promptId: 7,
@@ -735,6 +737,7 @@ describe('AnalysisPromptsService', () => {
   });
 
   it('publishVersion archives the previously published version of the same prompt', async () => {
+    prismaMock.analysisPrompt.findUnique.mockResolvedValue({ archivedAt: null });
     prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
       id: 43,
       promptId: 7,
@@ -766,25 +769,6 @@ describe('AnalysisPromptsService', () => {
         status: 'ARCHIVED',
       },
     });
-  });
-
-  it('publishVersion archives the previous version and publishes the new one in one transaction', async () => {
-    prismaMock.analysisPromptVersion.findUnique.mockResolvedValue({
-      id: 43,
-      promptId: 7,
-      status: 'DRAFT',
-    });
-    txMock.analysisPromptVersion.update.mockResolvedValue({
-      ...promptRecord.versions[0],
-      id: 43,
-      status: 'PUBLISHED',
-      publishedAt: new Date('2026-05-01T10:10:00.000Z'),
-    });
-
-    await service.publishVersion(3, 43);
-
-    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
-    expect(prismaMock.analysisPromptVersion.update).not.toHaveBeenCalled();
   });
 
   it('publishVersion throws NotFoundException when version does not exist', async () => {

@@ -581,9 +581,19 @@ export class AnalysisPromptsService {
     /**
      * У промпта действует ровно одна опубликованная версия. Без архивации прежней в базе
      * накапливались две PUBLISHED-версии одновременно, и селектор в настройках теста предлагал
-     * подключить устаревшую версию с другой моделью.
+     * подключить устаревшую версию с другой моделью. Serializable: два одновременных publish
+     * иначе оставляют две PUBLISHED-версии, а параллельная архивация промпта не видна.
      */
-    const version = await this.prisma.$transaction(async (tx) => {
+    const version = await runSerializableTransaction(this.prisma, async (tx) => {
+      const prompt = await tx.analysisPrompt.findUnique({
+        where: { id: existingVersion.promptId },
+        select: { archivedAt: true },
+      });
+
+      if (!prompt || prompt.archivedAt) {
+        throw new NotFoundException('Analysis prompt not found');
+      }
+
       await tx.analysisPromptVersion.updateMany({
         where: {
           promptId: existingVersion.promptId,

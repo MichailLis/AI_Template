@@ -415,6 +415,7 @@ describe('TestsService analysis prompt attachment', () => {
       where: {
         id: 42,
         status: 'PUBLISHED',
+        analysisPrompt: { archivedAt: null },
       },
       select: { id: true },
     });

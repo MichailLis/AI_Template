@@ -581,6 +581,7 @@ export class TestsService {
         where: {
           id: dto.analysisPromptVersionId,
           status: 'PUBLISHED',
+          analysisPrompt: { archivedAt: null },
         },
         select: { id: true },
       });
