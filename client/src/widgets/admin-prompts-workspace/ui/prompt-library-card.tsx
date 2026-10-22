@@ -38,8 +38,6 @@ interface PromptLibraryItemProps {
   onDeletePrompt: (promptId: number) => void;
 }
 
-const formatPromptDate = (value: string) => formatDateTime(value);
-
 type PromptActiveTest = AnalysisPromptListResponseDtoPromptsItem['activeTests'][number];
 
 const formatTestList = (tests: PromptActiveTest[]) =>
@@ -197,7 +195,7 @@ function PromptLibraryItem({
           className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${adminClassNames.text.muted}`}
         >
           {latestVersion ? <span className="min-w-0 truncate">{latestVersion.model}</span> : null}
-          <span>Обновлен {formatPromptDate(prompt.updatedAt)}</span>
+          <span>Обновлен {formatDateTime(prompt.updatedAt)}</span>
         </div>
 
         <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>{usageText}</p>

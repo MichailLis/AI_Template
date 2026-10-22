@@ -12,6 +12,7 @@ import type {
   ShareItem,
   V3AnalyticsSections,
 } from '../reporting/analytics.types';
+import { isRecord } from '../../common/type-guards';
 
 type CountRecord = {
   label: string;
@@ -19,9 +20,6 @@ type CountRecord = {
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);

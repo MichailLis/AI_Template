@@ -1,4 +1,5 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
+import { isRecord } from '../common/type-guards';
 
 const ATLAS_API_TIMEOUT_MS = 10_000;
 
@@ -67,9 +68,6 @@ export interface AtlasEvent {
   audience: string | null;
   registrationUrl: string | null;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const getString = (value: unknown) => (typeof value === 'string' ? value : null);
 
