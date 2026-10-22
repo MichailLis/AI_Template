@@ -8,6 +8,9 @@
 import type { PublicSessionSaveAnswersRequestDtoAnswersItem } from './publicSessionSaveAnswersRequestDtoAnswersItem';
 
 export interface PublicSessionSaveAnswersRequestDto {
-  /** @minItems 1 */
+  /**
+   * @minItems 1
+   * @maxItems 200
+   */
   answers: PublicSessionSaveAnswersRequestDtoAnswersItem[];
 }
