@@ -1,17 +1,44 @@
-# Fullstack AI Template (NestJS + React + Prisma)
+# AI Template: career guidance and testing platform
 
-Strict fullstack product template for AI-assisted feature delivery.
+Fullstack product (NestJS + React + Prisma) for running tests and career-guidance assessments with
+AI-enriched analysis. Students pass tests through public links; admins manage everything in `/admin`.
 
-Current project state:
+## What it does
 
-- Auth is fully wired: access token in response body, refresh token in an `HttpOnly` cookie
-- Admin feature is enabled (`/admin`) with users management, Prompt Studio, Tests module, analytics, and settings workspaces
-- `/admin` redirects into the real tests workspace; the old mock overview page is removed
-- Public links admin flow is split into dedicated pages (`/admin/public-links`, `/admin/public-links/organizations`); link statistics live in the analytics workspace (`/admin/analytics`)
-- Public student flow (`/t/*`) is product-ready, supports selectable public templates, selectable entry profile modes, `STANDARD` public branding, autosave, and scoped themes isolated from admin screens
-- Database backups from the admin panel (`/admin/settings`, tab «Резервные копии»): manual and scheduled `pg_dump` copies, download, restore with undo, upload of an existing `.dump`, disk space checks
-- Which branch holds what (source, release snapshot, deploy bundle): see [Branches](#branches)
-- Strict template guardrails remain enforced through `AI_GUIDE.md`, `template/features.manifest.json`, `template/fsd.rules.json`, and `scripts/verify-architecture.mjs`
+- **Tests:** topics, draft/publish versions, four question types, AI-assisted test creation, built-in prof-orientation v3+ methodology.
+- **Public links:** students open `/t/<code>` with no account; two templates (`STANDARD` with a branding constructor, `POLUS`), autosave, a safe result page.
+- **AI analysis:** any OpenAI-compatible provider (Polza.ai by default, OpenRouter, others), set in the admin panel; Prompt Studio for prompts.
+- **Analytics:** per-link attempts table and summary report with XLSX/PDF export.
+- **Admin:** users, light/dark theme, audit log, database backups and restore from `/admin/settings`.
+
+Details: [`docs/product-reference.md`](docs/product-reference.md).
+
+## Quick Start
+
+```powershell
+docker compose up -d
+```
+
+| Service  | URL                         |
+| -------- | --------------------------- |
+| Frontend | `http://localhost:5173`     |
+| Backend  | `http://localhost:3000`     |
+| Swagger  | `http://localhost:3000/api` |
+| Adminer  | `http://localhost:8080`     |
+| Postgres | `localhost:5432`            |
+
+There is no public signup: the first admin comes from the seed (`npm run prisma:seed`), later
+accounts are created in `/admin/users`. Set `AI_API_KEY` (copy `.env.example` to `.env`) or enter
+the provider in `/admin/settings` to enable AI features.
+
+After `server/docker/dev.Dockerfile` changes, rebuild with `docker compose up -d --build backend`.
+Running on the host or in a dev container: [`docs/development.md`](docs/development.md).
+
+## Stack
+
+- Backend: NestJS 11, Prisma 7, PostgreSQL, nestjs-zod, Swagger
+- Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind 4, shadcn/ui
+- Infra: Docker Compose (`frontend`, `backend`, `postgres`, `adminer`)
 
 ## Branches
 
@@ -22,510 +49,29 @@ Current project state:
 | `prod_ready`         | Deploy bundle only (`docker-compose.deploy.yml`, `.env.deploy.example`, database backup/restore scripts, server instructions). No application source. |
 | `auth-only-baseline` | Frozen February 2026 auth-only template (login and nothing else). Kept as a reference, not updated.                                                   |
 
-## Stack
-
-- Backend: NestJS, Prisma 7, PostgreSQL, nestjs-zod, Swagger
-- Frontend: React 19, Vite, TanStack Query, Orval, Zustand, Tailwind, shadcn/ui
-- Infra: Docker Compose (`frontend`, `backend`, `postgres`, `adminer`)
-
-## Quick Start
-
-1. Start the full Docker stack:
-
-```powershell
-docker compose up -d
-```
-
-2. Open the app:
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3000`
-- Swagger: `http://localhost:3000/api`
-- Adminer: `http://localhost:8080`
-- Postgres: `localhost:5432`
-
-The `backend` container restores server dependencies with `npm ci`, generates Prisma client, syncs the schema, and starts Nest in watch mode.
-Its image is built from `server/docker/dev.Dockerfile` (Node plus `postgresql-client-16` for database backups);
-`docker compose up -d` builds it on first start. After that file changes, rebuild it with
-`docker compose up -d --build backend`.
-The `frontend` container restores client dependencies with `npm ci` and starts Vite.
-
-Useful commands:
-
-```powershell
-docker compose logs -f backend frontend
-docker compose down
-```
-
-## Production Docker Hub Deployment
-
-Production deployment uses separate Docker Hub images for backend and frontend. The frontend
-image includes Nginx, serves the React SPA, and proxies `/api/*` to the backend container.
-
-Published images for the current production bundle:
-
-- `morro665065/ai-template-backend:prod`
-- `morro665065/ai-template-frontend:prod`
-
-The `latest` tag is not published for these images. Keep `APP_IMAGE_TAG=prod`
-unless you have published your own immutable tag.
-
-Deploy port model:
-
-- `APP_HTTP_PORT` publishes the frontend/Nginx container to the host.
-- `ADMINER_PORT` publishes Adminer to `127.0.0.1` only (not reachable from other machines).
-- Backend `PORT=3000` is internal to the Docker network and is not bound to host
-  port `3000`; change `APP_HTTP_PORT` if the public app port is busy.
-
-See [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md) for build, push, and
-Linux/Windows deployment commands. Updating an installed server (database copy first, checks,
-rollback) is section 8 of the same file. The Nginx in the frontend image limits sign-in attempts
-to 10 per minute per IP (burst 5, then 429).
-
-## Database Backups
-
-Admins manage backups in `/admin/settings`, tab «Резервные копии»:
-
-- **Create and download:** a full `pg_dump -Fc` copy runs in the background; the file downloads through a one-time link.
-- **Schedule and retention:** a daily copy at 03:00 UTC by default; the hour, retention days and copy count are editable. The latest successful copy is never pruned.
-- **Restore with undo:** restores into a temporary database, checks it (schema not newer than the app, an active admin exists), then swaps databases by rename. The API answers 503 during the swap and everyone signs in again afterwards. The replaced database is kept until the next restore, so the restore can be undone; the undo runs the same check first and brings the old database up to the current schema with migrations.
-- **Upload:** an existing `.dump` from this or another server can be uploaded (500 MB by default) and restored the same way.
-- **Disk space:** the tab shows free space and warns when it fits fewer than three copies; a scheduled copy skipped for lack of space shows up as a failed entry.
-
-Copies, their metadata, schedule settings and restore state live in the `/backups` volume of the
-backend container, not in the database, so a restore does not roll them back. The volume sits on
-the same disk as the database: download copies to keep one off the server. Every action goes to
-the audit log. Deployment details (image, volume, env vars, nginx limits, manual restore) are in
-[`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md), section 11; the design and its
-risks are in [`docs/plans/2026-10-08-admin-db-backup-plan.md`](docs/plans/2026-10-08-admin-db-backup-plan.md).
-
-## Local Node Development
-
-Use Node.js 24.21.0 LTS (see `.nvmrc`) and npm 11.19.0 for the root, client, and
-server packages. Docker uses `node:24.21.0-bookworm`, which includes this npm version.
-CI pins checkout 7.0.1, setup-node 7.0.0, and cache 6.0.0; self-hosted runners need
-Actions Runner 2.327.1 or later (2.329.0 for authenticated Git inside container actions).
-
-If you intentionally want to run the apps on the host instead of Docker:
-
-```powershell
-npm ci
-npm run install:all
-docker compose up -d postgres adminer
-npm run prisma:generate
-npm run prisma:push
-npm run dev
-```
-
-## Dev Container
-
-The dev container is only for VS Code "Dev Containers: Reopen in Container".
-Do not use it as the normal project Docker runtime.
-
-1. Open the repository in a dev container (VS Code: "Dev Containers: Reopen in Container").
-2. Install dependencies in the container:
-
-```powershell
-npm ci
-npm run install:all
-```
-
-3. Start frontend and backend from the workspace container:
-
-```powershell
-npm run dev:container
-```
-
-Exposed URLs from host:
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3000`
-- Swagger: `http://localhost:3000/api`
-- Postgres: `localhost:5432`
-- Adminer: `http://localhost:8080`
-
-These are the same host ports the root compose stack uses, so stop its `frontend` and `backend`
-containers before starting the dev container.
-
-Current UI note:
-
-- The app exposes `/login`, the `/privacy` policy page, the public student flow under `/t/*`, and a protected admin workspace under `/admin`.
-- `/admin` redirects to `/admin/tests`; there is no separate mock dashboard/overview page.
-- There is no public signup. Admins create accounts on `/admin/users` (`POST /admin/users`); the
-  first admin comes from the seed (`npm run prisma:seed`) locally, and from
-  `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` in the deploy image, whose entrypoint runs
-  the bootstrap script. The root compose stack does not pass those variables to the backend.
-- Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
-- The admin has a light, dark and system theme, switched in the header (the choice is kept in the
-  browser through `safeStorage`; "system" follows `prefers-color-scheme`). The `dark` class is set on
-  `<html>` only while the admin shell is mounted, so the public `/t/*` pages always stay light.
-
-## Auth Session Contract
-
-- `POST /auth/signin` returns `accessToken` and `user` (including `role`) in the JSON body. A
-  deactivated account is rejected with `403 Account is deactivated`.
-- The refresh token is set only as an `HttpOnly` cookie named `refreshToken`.
-- `POST /auth/refresh` reads the refresh cookie and returns a new `accessToken`; it does not return a refresh token in the response body.
-- Browser refresh handling lives in `client/src/shared/api/interceptors.ts`; generated API code and `client/src/shared/api/api.ts` must not read browser storage directly.
-
-## Prompt Studio (AI Provider Foundation)
-
-Prompt Studio is available at `"/admin/prompts"` and currently includes:
-
-- model catalog loaded from the configured AI provider (`all/free/paid` filter + search)
-- safe default to free models when available
-- prompt editor with line numbers
-- editable test variables (add/remove) with duplicate-key validation
-- prompt simulation area with test source selector, selected question preview, run history, metrics, and JSON view
-- response format switch (`text` / `json`)
-- strict structured JSON support for generation (`response_format: json_schema`) when schema is provided
-- OpenRouter only: provider parameter strictness (`provider.require_parameters`) and the response-healing plugin
-
-Required backend environment variables:
-
-- Local host development: copy `server/.env.example` to `server/.env`.
-- Root Docker Compose: copy `.env.example` to `.env` or export the variables in the shell.
-
-The backend calls any OpenAI-compatible API through the official `openai` SDK. Polza.ai is the
-default; OpenRouter and any other service are selected in the admin panel (`/admin/settings`:
-provider, base URL, API key, model; the key is stored encrypted) or, as the initial/fallback
-configuration, by the env variables below (see `AI_GUIDE.md`, "AI Provider Configuration").
-
-```env
-AI_API_KEY=
-# optional
-AI_PROVIDER=polza            # polza | openrouter | openai-compatible
-AI_BASE_URL=                 # required for openai-compatible, e.g. https://api.openai.com/v1
-AI_DEFAULT_MODEL="openai/gpt-4o-mini"
-AI_TIMEOUT_MS=120000
-AI_PROF_ORIENTATION_TIMEOUT_MS=90000
-AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
-OPENROUTER_HTTP_REFERER="http://localhost:5173"   # OpenRouter only
-OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
-```
-
-Security note:
-
-- Never expose the AI provider API key in frontend code.
-- If a real AI provider key is ever printed, committed, or shared through `docker compose config`, rotate it at the provider before reuse.
-- All AI provider requests must go through backend (`/admin/prompts/*`).
-
-## Tests Module (Draft/Publish Baseline)
-
-Tests workspace is available at `"/admin/tests"` and currently includes:
-
-- topic management with slug + description
-- topic deletion with confirmation (removes topic versions/questions cascade)
-- version model with one active draft and optional published snapshot
-- draft editor with question CRUD
-- question types: `OPEN_TEXT`, `SINGLE_CHOICE`, `MULTI_CHOICE`, `SLIDER`
-- publish flow: current draft -> published, then auto-create next draft copy
-- drag-and-drop reorder with backend validation and user-facing recovery messaging
-- AI-assisted test creation modal (generate questions -> preview -> transactional create)
-- built-in prof-orientation v3+ import for the Polus template
-  (`POST /admin/tests/methodologies/prof-orientation-v3-plus/import`)
-- analytics report page at `"/admin/analytics"` with filters and XLSX/PDF export
-
-Current UX baseline for question editing:
-
-- add/edit question via modal (avoids long inline page growth)
-- choice options are edited with structured rows (text + integer weight), no manual service code input
-- slider scale is edited with dedicated `min`, `max`, and `step` fields
-- slider bands are edited with structured rows (`min`, `max`, `label`, `weight`) and must stay inside the scale
-- slider range validation rejects invalid ranges such as `max <= min` or values outside the scale
-- optional JSON settings stay separate from core slider scale fields and are hidden under "Advanced settings"
-- test list cards in sidebar handle long titles/slugs with safe wrapping
-
-AI generation safety rules in tests workspace:
-
-- model picker shows only models that advertise structured output support (`response_format`; OpenRouter also `structured_outputs`)
-- generation requests use strict JSON schema (`responseSchema.strict=true`) to constrain allowed question types
-- requests do not use the web-search plugin (`web`) or `:online` model variants
-
-Domain constraints currently applied:
-
-- no branching configurator yet
-- no parallel drafts
-- weights are `Int`
-
-Built-in prof-orientation v3+ contract:
-
-- runtime uses the committed fixture under
-  `server/src/tests/prof-orientation-v3-plus/site-config.json`, not the external
-  source package
-- each import creates a new draft topic with a unique slug/title and
-  `scoringKind = PROF_ORIENTATION_V3_PLUS`
-- the imported draft contains 10 multi-choice methodology questions and 11 slider
-  questions
-- LLM enrichment uses the analysis prompt version selected on the test topic; the built-in
-  prompt is seeded with `deepseek/deepseek-v4-flash` only when no published built-in prompt
-  version exists yet
-- public multi-choice questions enforce `settings.maxChoices = 2`
-- `finishSession` saves deterministic algorithm analysis first, then runs optional
-  LLM enrichment under `summary.llm`
-- LLM enrichment may explain and expand result blocks, but must not change the
-  deterministic primary direction, scores, confidence, profile type, or
-  professions
-- prof-orientation AI provider calls use a longer timeout by default and retry only
-  timeout failures; see `docs/2026-05-19-prof-orientation-v3-plus.md`
-- every AI provider call additionally retries provider overload (HTTP 429/502/503/504) twice, after 2 s and 5 s;
-  other errors, including timeouts, are not retried there. A failed background analysis is written to the server log
-
-Analytics report contract:
-
-- summary endpoint: `GET /admin/tests/topics/:topicId/analytics/summary`
-- export endpoints: `GET /admin/tests/topics/:topicId/analytics/export.xlsx` and
-  `GET /admin/tests/topics/:topicId/analytics/export.pdf`
-- filters include scope, public link, link status, and date range
-- attempts list for one public link: `GET /admin/tests/public-links/:linkId/attempts` with
-  `page`, `limit`, `search`, `status` (`IN_PROGRESS|COMPLETED|EXPIRED|ABANDONED`), `sortBy`
-  (`startedAt|attemptNumber|studentName|finishedAt`) and `sortOrder`; each item carries
-  `durationSeconds` (null until finished) and `resultSummary` (leading direction and profile, or null)
-- attempts export for one public link: `GET /admin/tests/public-links/:linkId/attempts/export.xlsx`
-  takes the same `search`, `status`, `sortBy`, `sortOrder` as the list, ignores paging and returns
-  up to 5000 rows
-- XLSX/PDF exports are binary responses generated by the backend; the frontend downloads them from the analytics workspace
-
-## Public Links and Student Flow
-
-Admin routes:
-
-- `"/admin/public-links"`: create/manage public links for tests
-- `"/admin/public-links/organizations"`: education organizations used by public links
-- `"/admin/analytics"`: analytics workspace with the attempts table and the summary report
-- `"/admin/public-links/stats"`: legacy entry point; redirects to `/admin/analytics?tab=attempts`
-
-Admin capabilities baseline:
-
-- archive/restore lifecycle for public links (archive disables access without losing historical data)
-- public template selection for new public links:
-  - `STANDARD`: current public template and the default for old and new links
-  - `POLUS`: branded Polus public template
-- `STANDARD` public links can be customized with the branding constructor:
-  - background: default, solid color, or HTTPS image URL with overlay
-  - up to two HTTPS header logos with alt text and size
-  - primary button colors, card/surface colors, and accent color
-  - "Reset to standard" clears `publicBranding`
-  - the constructor is not shown for `POLUS` links
-- entry profile mode selection for new public links:
-  - `DEMOGRAPHIC`: demographic profile before the test, with attempt limit forced to `1`
-  - `EDUCATION`: current education-based profile before the test
-  - `EDUCATION_DEMOGRAPHIC`: education profile plus demographic questionnaire before the test
-- filters by test + public link in the analytics workspace
-- table actions for student-level details (analysis and submitted answers)
-- link selector copy uses business language (`тестов пройдено`)
-
-Admin settings:
-
-- `/admin/settings` shows the AI provider, its address, key status and a live connection check from backend-only configuration.
-- `/admin/settings` also manages the optional profession atlas URL.
-- When configured, public and admin attempt result views can show the profession atlas link for prof-orientation results.
-
-Public student routes:
-
-- `"/t/:code"`: registration/entry screen, branched by public link template and entry profile mode
-- `"/t/:code/session/:sessionToken"`: test run workspace, branched by public link template
-- `"/t/:code/result/:sessionToken"`: result and analysis screen, branched by public link template
-
-Public session/result URL security model:
-
-- `sessionToken` works as a bearer-style link token: anyone with the URL can open the
-  active session or final result while the session/link remains valid.
-- Do not log or share these URLs outside the student-facing flow.
-- Public result responses expose only student-safe analysis fields: status, provider mode,
-  generated timestamp, safe summary, and user-facing error text.
-- Raw provider output, prompts, scoring internals, and debug data remain admin/internal only.
-
-Entry profile modes:
-
-- `DEMOGRAPHIC`: collects gender, age, residence, and education level before starting the test
-- `EDUCATION`: collects the current education-based profile before starting the test
-- `EDUCATION_DEMOGRAPHIC`: collects student name, surname initial, patronymic initial, age, education organization, group/class, gender, residence, and education level in Polus hybrid entry
-
-Current public run UX:
-
-- the run screen uses a centered question card with compact progress (`current / total` + percent)
-- single-choice questions auto-advance after selection
-- multi-choice, slider, and open-text questions use in-card navigation controls
-- answers autosave after a short debounce; manual save and finish wait for queued/in-flight autosave before continuing
-- autosave shows human-readable student copy for saving, saved, retry, and error states, not raw API internals
-- question transitions are animated to reduce abrupt content jumps
-- open-text answers use a higher-contrast textarea for bright screens
-- slider questions show the current value with the matching label and avoid duplicate range numbers in helper copy
-- Polus prof-orientation processing uses the Professor Polus thinking animation
-  while LLM enrichment is pending
-
-UI/theming contract for public pages:
-
-- public pages must be wrapped with `PublicThemeLayout`
-- public theme tokens live in `client/src/features/tests/ui/public-theme.css` (`.theme-public` scope)
-- do not move public-theme tokens into global `client/src/app/index.css`
-- `STANDARD` must preserve the existing public components and remains the default unless a link explicitly stores `publicTemplate = POLUS`
-- `STANDARD` may apply `publicBranding` from the public link through `PublicThemeLayout`; empty branding keeps the default look
-- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; shared Polus result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`
-- Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus ignores the `STANDARD` branding config, and assets/fonts belong in the Polus public-test asset folder, not `client/public/prototypes`
-- user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
-- Detailed public branding/autosave/analytics/settings update: `docs/2026-05-27-public-test-branding-and-autosave.md`
-
-## Required Workflow for New Features
-
-Classify the change first (`AI_GUIDE.md`, "Phase 0: Feature Ownership Classification"). Most work
-extends an existing feature and skips the generator in step 3.
-
-1. Update DB schema (`server/prisma/schema.prisma`)
-2. Run:
-
-```powershell
-npm run prisma:generate
-npm run prisma:push
-```
-
-Then add the matching checked-in migration (`AI_GUIDE.md`, "Phase 1: Data Modeling");
-`verify:local` and `verify:template` fail without it.
-
-3. For a `new-feature` only, scaffold the backend resource:
-
-```powershell
-npm run gen:nest <name>
-```
-
-4. Implement real DTO/controller/service logic (replace scaffold placeholders)
-5. Regenerate frontend hooks:
-
-```powershell
-npm run gen:api
-```
-
-- Works without running backend: OpenAPI is generated to `server/openapi.json` first.
-
-6. Build UI on top of generated hooks
-
-## AI Agent Example (Correct Process)
-
-Illustrative example (not final template content): add `news` feature with editor UI.
-
-1. Add Prisma model in `server/prisma/schema.prisma`.
-2. Run:
-
-```powershell
-npm run prisma:generate
-npm run prisma:push
-```
-
-3. Scaffold and implement backend:
-
-```powershell
-npm run gen:nest news
-```
-
-Implement controller/service/DTO with existing patterns (`createZodDto`, Swagger decorators, user-scoped queries).
-
-4. Regenerate API hooks:
-
-```powershell
-npm run gen:api
-```
-
-5. Implement UI in `features` and `pages`, then wire the route in `client/src/app/App.tsx`.
-6. Update `template/features.manifest.json`.
-7. Run quality gate:
-
-```powershell
-npm run verify:template
-```
-
-8. If this was only a pipeline test, remove the temporary feature and return the manifest/routes to the current declared baseline.
+## Production
+
+Images `morro665065/ai-template-backend:prod` and `morro665065/ai-template-frontend:prod` (no
+`latest` tag). The frontend image serves the SPA through Nginx and proxies `/api/*`; Adminer is
+published on `127.0.0.1` only; sign-in is limited to 10 attempts per minute per IP. Install,
+update with a database copy first, rollback and backups:
+[`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md).
 
 ## Quality Gates
 
-Run before finalizing changes:
-
 ```powershell
-npm run verify:local
-npm run verify:template
+npm run verify:local      # daily loop, needs PostgreSQL
+npm run verify:template   # release gate, run before finalizing a branch
 ```
 
-For explicit step-by-step checks:
+Use `AGENTS.md` as the rule body for agents and `AI_GUIDE.md` as its long-form reference. Step-by-step
+checks, the new-feature pipeline and the PR checklist: [`docs/development.md`](docs/development.md).
 
-```powershell
-npm run lint
-npm run verify:prisma-migrations
-npm run test --prefix server
-npm run test:e2e --prefix server
-npm run build --prefix server
-npm run build --prefix client
-npm run test:run --prefix client
-npm run format:check
-npm run audit:all
-npm run verify:e2e:critical
-npm run verify:template
-```
+## Documentation
 
-`verify:local` is the default daily development loop.
-`verify:template` is the release-level full pipeline, including Prisma sync, API regeneration,
-architecture/smoke checks, server tests, client Vitest, formatting, dependency audit, and critical
-browser flows.
-
-`verify:template` also enforces architecture consistency via `template/features.manifest.json`.
-
-Prisma migration note:
-
-- If `server/prisma/schema.prisma` changed, the branch must include the matching checked-in migration under `server/prisma/migrations`. `AI_GUIDE.md` ("Phase 1: Data Modeling") has the command that generates it.
-- `npm run verify:prisma-migrations` is the focused local check for schema/migration drift.
-- Production releases use `prisma migrate deploy`; do not rely on `prisma db push` for production updates.
-
-Server smoke details:
-
-- `npm run verify:smoke:server` starts an isolated backend on `SMOKE_SERVER_PORT`/`PORT` when set, otherwise on a free local port
-- if the selected isolated port is already in use, the smoke check fails instead of validating a foreign process
-- set `SMOKE_SERVER_REUSE_EXISTING=1` only for explicit local reuse; then it targets `SMOKE_SERVER_PORT`, `PORT`, or `3000`
-- the smoke check stops only the process it started
-- the smoke check validates the Swagger document and required routes instead of relying on a fixed unrelated port
-
-## PR-Ready Checklist
-
-Use this before opening PR or finalizing a feature branch:
-
-1. Data model synced (`prisma:generate` + `prisma:push` passed locally).
-2. Prisma migrations aligned (`npm run verify:prisma-migrations` passed; schema changes have explicit migrations).
-3. Backend implemented (module/controller/service/DTOs, no scaffold placeholders left).
-4. Manifest updated (`template/features.manifest.json` matches actual files/routes).
-5. API mutator contract preserved (`npm run verify:api-mutator` passed).
-6. Frontend API regenerated (`npm run gen:api` passed).
-7. Route/navigation wired (`App.tsx` contains declared `features` and `publicRoutes`).
-8. Server tests green (`npm run test --prefix server` and `npm run test:e2e --prefix server` passed).
-9. Full template pipeline green (`npm run verify:template` passed).
-10. No bypasses (do not disable checks or hardcode obsolete smoke paths).
-
-## Architecture Guardrails
-
-- Source of truth for enabled features: `template/features.manifest.json`
-- Source of truth for public student routes: `template/features.manifest.json` (`publicRoutes`)
-- Source of truth for non-feature generated API dirs: `template/features.manifest.json` (`generatedApiDirs`)
-- Frontend layer rules source of truth: `template/fsd.rules.json`
-- Hard check command: `npm run verify:architecture`
-- If a feature is added/removed, update manifest and wiring in the same change.
-- `verify:architecture` is strict: it checks route/module consistency, required schemas/models, and fails on stale feature folders/generated API directories that are not declared in manifest.
-- Declared `publicRoutes` must be present in `client/src/app/App.tsx`.
-- Generated API directories that do not match feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
-
-Frontend strict FSD contract:
-
-- layer order: `app -> pages -> widgets -> features -> entities -> shared`
-- imports are allowed only down this chain
-- cross-slice imports should use public API (`index.ts`) for `widgets/features/entities`
-- page files must stay thin (route composition, no heavy domain logic)
-- `template/fsd.rules.json` is in `mode: "strict"`; transition bypass lists should stay empty
-
-## More Documentation
-
-- `AGENTS.md` (rules for agents) and `AI_GUIDE.md` (long-form reference)
-- [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md): deployment, server update and rollback, backups
+- [`docs/product-reference.md`](docs/product-reference.md): auth, Prompt Studio, tests, public links, backups
+- [`docs/development.md`](docs/development.md): local setup, feature workflow, gates, architecture guardrails
+- [`docs/deployment-dockerhub.md`](docs/deployment-dockerhub.md): deployment, update, rollback
 - [`docs/agent-tooling.md`](docs/agent-tooling.md): agent tools used on this project
 - [`docs/ux-glossary.md`](docs/ux-glossary.md): canonical Russian UI terms
 - [`RESTORE.md`](RESTORE.md): setting up a development machine from scratch
-
-## Notes
-
-- Keep auth always working while evolving business features.
-- Use `AGENTS.md` as the rule body for agents and `AI_GUIDE.md` as its long-form reference.
