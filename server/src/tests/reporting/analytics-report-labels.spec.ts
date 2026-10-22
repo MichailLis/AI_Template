@@ -16,6 +16,7 @@ const createSummaryPart = (
     linkStatus: 'ALL',
     dateFrom: null,
     dateTo: null,
+    timeZone: 'UTC',
   },
   confidence: {
     levels: [],
@@ -41,6 +42,7 @@ describe('analytics report labels', () => {
           linkStatus: 'ARCHIVED',
           dateFrom: '2026-05-01',
           dateTo: null,
+          timeZone: 'UTC',
         },
       }).filters,
     );
@@ -51,6 +53,7 @@ describe('analytics report labels', () => {
       { label: 'Ссылки в отчете', value: 'Архивные' },
       { label: 'Период с', value: '2026-05-01' },
       { label: 'Период по', value: 'не задан' },
+      { label: 'Часовой пояс', value: 'UTC' },
     ]);
   });
 

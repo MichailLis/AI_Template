@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { getBrowserTimeZone } from '@/shared/lib/date-format';
+
 import {
   ATTEMPTS_LIMIT,
   buildAnalyticsFileName,
@@ -54,7 +56,12 @@ describe('analytics report query parameters', () => {
         dateFrom: '',
         dateTo: '',
       }),
-    ).toEqual({ scope: 'PUBLIC_LINK', publicLinkId: 22, linkStatus: 'ALL' });
+    ).toEqual({
+      scope: 'PUBLIC_LINK',
+      publicLinkId: 22,
+      linkStatus: 'ALL',
+      timeZone: getBrowserTimeZone(),
+    });
   });
 
   it('keeps the link status filter for a whole-test report', () => {
@@ -66,7 +73,12 @@ describe('analytics report query parameters', () => {
         dateFrom: '2026-09-01',
         dateTo: '',
       }),
-    ).toEqual({ scope: 'TOPIC', linkStatus: 'ARCHIVED', dateFrom: '2026-09-01' });
+    ).toEqual({
+      scope: 'TOPIC',
+      linkStatus: 'ARCHIVED',
+      dateFrom: '2026-09-01',
+      timeZone: getBrowserTimeZone(),
+    });
   });
 });
 

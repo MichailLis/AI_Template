@@ -23,6 +23,8 @@ export const AdminTestAnalyticsQuerySchema = z
     linkStatus: z.enum(['ALL', 'ACTIVE', 'ARCHIVED']).default('ALL'),
     dateFrom: z.string().date().optional(),
     dateTo: z.string().date().optional(),
+    /** IANA-пояс браузера: по нему считаются границы дня и время в выгрузках. */
+    timeZone: z.string().max(64).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.scope === 'PUBLIC_LINK' && value.publicLinkId == null) {
@@ -58,6 +60,7 @@ export const AdminTestAnalyticsFiltersSectionSchema = z.object({
   linkStatus: z.enum(['ALL', 'ACTIVE', 'ARCHIVED']),
   dateFrom: z.string().date().nullable(),
   dateTo: z.string().date().nullable(),
+  timeZone: z.string().min(1),
 });
 
 export const AdminTestAnalyticsCoverageSectionSchema = z.object({

@@ -10,6 +10,10 @@
  */
 const LOCALE = 'ru-RU';
 
+/** IANA-пояс браузера: сервер считает по нему границы дня и время в выгрузках. */
+export const getBrowserTimeZone = (): string | undefined =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+
 const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, {
   day: '2-digit',
   month: '2-digit',

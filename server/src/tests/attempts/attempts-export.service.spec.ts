@@ -71,6 +71,15 @@ describe('TestsAttemptsExportService', () => {
     expect(row.getCell(19).value).toBe('ИИ готов');
   });
 
+  it('writes start and finish in the client time zone', async () => {
+    const sheet = await readSheet(await service.toExcel([buildRow()], 'ABC123', 'Europe/Moscow'));
+    const row = sheet.getRow(2);
+
+    // 03:57 UTC — это 06:57 в Москве; Excel показывает записанные часы как есть
+    expect((row.getCell(12).value as Date).toISOString()).toBe('2026-10-08T06:57:00.000Z');
+    expect((row.getCell(13).value as Date).toISOString()).toBe('2026-10-08T07:04:06.000Z');
+  });
+
   it('leaves the finish, time and result empty for an open attempt', async () => {
     const sheet = await readSheet(
       await service.toExcel(

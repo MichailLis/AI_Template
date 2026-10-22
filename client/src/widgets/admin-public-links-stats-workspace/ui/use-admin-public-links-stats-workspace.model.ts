@@ -1,3 +1,5 @@
+import { getBrowserTimeZone } from '@/shared/lib/date-format';
+
 import type {
   TestsAdminAnalyticsControllerGetSummaryLinkStatus,
   TestsAdminAnalyticsControllerGetSummaryParams,
@@ -108,6 +110,7 @@ export const buildAnalyticsParams = ({
   dateTo: string;
 }): TestsAdminAnalyticsControllerGetSummaryParams => ({
   scope,
+  timeZone: getBrowserTimeZone(),
   // Отчёт по одной ссылке не сужается по её статусу: архивная ссылка при «Активных» давала пустой отчёт.
   linkStatus: scope === 'PUBLIC_LINK' ? 'ALL' : linkStatus,
   ...(scope === 'PUBLIC_LINK' && publicLinkId ? { publicLinkId } : {}),

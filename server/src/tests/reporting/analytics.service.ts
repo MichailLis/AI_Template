@@ -16,6 +16,7 @@ import type {
   AdminTestAnalyticsSummaryDto,
 } from '../dto/tests-analytics.dto';
 import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
+import { getZonedDayEnd, getZonedDayStart, resolveTimeZone } from '../../common/time-zone';
 
 const PUBLIC_LINK_SELECT = {
   id: true,
@@ -104,22 +105,6 @@ type V3Summary = ReturnType<typeof getV3Summary>;
 type AttemptRecord = Prisma.TestStudentAttemptGetPayload<{ select: typeof ATTEMPT_SELECT }>;
 
 const UNSPECIFIED_LABEL = 'не указано';
-
-const getDateStartUtc = (value: string) => {
-  const date = new Date(value);
-
-  date.setUTCHours(0, 0, 0, 0);
-
-  return date;
-};
-
-const getDateEndUtc = (value: string) => {
-  const date = new Date(value);
-
-  date.setUTCHours(23, 59, 59, 999);
-
-  return date;
-};
 
 const getLinkStatusFilter = (linkStatus: 'ALL' | 'ACTIVE' | 'ARCHIVED') => {
   if (linkStatus === 'ACTIVE') {
@@ -238,12 +223,13 @@ export class TestsAnalyticsService {
     });
 
     const linkIds = links.map((link) => link.id);
+    const timeZone = resolveTimeZone(query.timeZone);
     const startedAtWhere: Prisma.DateTimeFilter = {};
     if (query.dateFrom) {
-      startedAtWhere.gte = getDateStartUtc(query.dateFrom);
+      startedAtWhere.gte = getZonedDayStart(query.dateFrom, timeZone);
     }
     if (query.dateTo) {
-      startedAtWhere.lte = getDateEndUtc(query.dateTo);
+      startedAtWhere.lte = getZonedDayEnd(query.dateTo, timeZone);
     }
     const attemptDateWhere: Prisma.TestStudentAttemptWhereInput = {
       publicLinkId: {
@@ -444,6 +430,7 @@ export class TestsAnalyticsService {
         linkStatus: query.linkStatus,
         dateFrom: query.dateFrom ?? null,
         dateTo: query.dateTo ?? null,
+        timeZone,
       },
       coverage,
       directions: v3Sections.directions,

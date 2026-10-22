@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import ExcelJS from 'exceljs';
 
+import { resolveTimeZone, toZonedWallClock } from '../../common/time-zone';
+
 import {
   getReportAttemptStatusLabel,
   getReportLlmStatusLabel,
@@ -97,7 +99,7 @@ const toInitials = (row: AttemptExportRow) =>
     ? `${row.studentLastInitial}.${row.studentMiddleInitial}.`
     : '';
 
-const toRowValues = (row: AttemptExportRow): Array<string | number | Date> => [
+const toRowValues = (row: AttemptExportRow, timeZone: string): Array<string | number | Date> => [
   row.attemptId,
   row.attemptNumber,
   getReportAttemptStatusLabel(row.status),
@@ -109,8 +111,8 @@ const toRowValues = (row: AttemptExportRow): Array<string | number | Date> => [
   row.studentAge ?? '',
   toText(row.studentResidence),
   row.studentEducationLevel ? getReportValueLabel(row.studentEducationLevel) : '',
-  new Date(row.startedAt),
-  row.finishedAt ? new Date(row.finishedAt) : '',
+  toZonedWallClock(new Date(row.startedAt), timeZone),
+  row.finishedAt ? toZonedWallClock(new Date(row.finishedAt), timeZone) : '',
   row.durationSeconds ?? '',
   formatExportDuration(row.durationSeconds),
   toText(row.resultSummary?.primaryDirectionLabel),
@@ -121,7 +123,8 @@ const toRowValues = (row: AttemptExportRow): Array<string | number | Date> => [
 
 @Injectable()
 export class TestsAttemptsExportService {
-  async toExcel(rows: AttemptExportRow[], title: string): Promise<Buffer> {
+  async toExcel(rows: AttemptExportRow[], title: string, timeZone?: string): Promise<Buffer> {
+    const zone = resolveTimeZone(timeZone);
     const workbook = new ExcelJS.Workbook();
 
     workbook.creator = 'AI Template';
@@ -145,7 +148,7 @@ export class TestsAttemptsExportService {
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
 
     for (const row of rows) {
-      const added = sheet.addRow(toRowValues(row));
+      const added = sheet.addRow(toRowValues(row, zone));
       added.getCell(START_COLUMN).numFmt = DATE_TIME_FORMAT;
       added.getCell(FINISH_COLUMN).numFmt = DATE_TIME_FORMAT;
     }

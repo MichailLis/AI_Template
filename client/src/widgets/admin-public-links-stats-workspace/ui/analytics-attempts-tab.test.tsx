@@ -106,6 +106,7 @@ describe('AnalyticsAttemptsTab', () => {
       status: 'COMPLETED',
       sortBy: 'startedAt',
       sortOrder: 'desc',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     expect(downloadMock).toHaveBeenCalledWith(blob, expect.stringMatching(/^attempts-ABC123-/));
   });

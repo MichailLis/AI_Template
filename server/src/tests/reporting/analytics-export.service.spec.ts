@@ -19,6 +19,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     linkStatus: 'ALL',
     dateFrom: '2026-05-01',
     dateTo: '2026-05-20',
+    timeZone: 'Europe/Moscow',
   },
   coverage: {
     publicLinks: 2,
@@ -227,6 +228,9 @@ describe('TestsAnalyticsExportService', () => {
 
     const attempts = readRows('Прохождения');
     expect(attempts).toContain('Пройдено');
+    // 10:00 UTC в Москве — 13:00, а не сырая строка с Z
+    expect(attempts).toContain('10.05.2026, 13:00');
+    expect(attempts).not.toContain('T10:00:00.000Z');
     expect(attempts).not.toMatch(/COMPLETED|Attempt ID/);
   });
 
