@@ -1,6 +1,7 @@
 import './theme';
 
 export { AiTestGeneratorModal } from './ui/ai-test-generator-modal';
+export { EducationOrganizationEditorSheet } from './ui/education-organization-editor-sheet';
 export { QuestionModal } from './ui/question-modal';
 export { PublicThemeLayout } from './ui/public-theme-layout';
 export { TestsCreateModal } from './ui/tests-create-modal';

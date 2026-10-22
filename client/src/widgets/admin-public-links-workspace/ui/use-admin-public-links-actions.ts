@@ -14,7 +14,6 @@ import {
   getShortLinkUrl,
   validateCreatePublicLinkInput,
 } from './admin-public-links-workspace.helpers';
-import { useEducationOrganizationActions } from './use-admin-public-links-organization-actions';
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
 import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
@@ -286,14 +285,12 @@ function useShortLinkActions() {
 }
 
 export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsParams) {
-  const organizationActions = useEducationOrganizationActions(params);
   const publicLinkCreateActions = usePublicLinkCreateActions(params);
   const publicLinkManagementActions = usePublicLinkManagementActions(params);
   const publicLinkVersionActions = usePublicLinkVersionActions(params);
   const shortLinkActions = useShortLinkActions();
 
   return {
-    ...organizationActions,
     ...publicLinkCreateActions,
     ...publicLinkManagementActions,
     ...publicLinkVersionActions,

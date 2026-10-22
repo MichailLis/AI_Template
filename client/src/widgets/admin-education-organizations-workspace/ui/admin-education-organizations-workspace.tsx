@@ -1,7 +1,7 @@
+import { EducationOrganizationEditorSheet } from '@/features/tests';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
-import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
 import { EducationOrganizationsNavigationCard } from './education-organizations-navigation-card';
 import { useAdminEducationOrganizationsWorkspace } from './use-admin-education-organizations-workspace';
