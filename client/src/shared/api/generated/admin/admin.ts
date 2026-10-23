@@ -2287,129 +2287,6 @@ export const useAdminBackupsControllerImportBackup = <
   return useMutation(getAdminBackupsControllerImportBackupMutationOptions(options), queryClient);
 };
 /**
- * @summary Get the state of a database restore (works during maintenance)
- */
-export const adminBackupsControllerGetOperation = (
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<AdminBackupOperationResponseDto>(
-    { url: `/admin/backups/operation`, method: 'GET', signal },
-    options,
-  );
-};
-
-export const getAdminBackupsControllerGetOperationQueryKey = () => {
-  return [`/admin/backups/operation`] as const;
-};
-
-export const getAdminBackupsControllerGetOperationQueryOptions = <
-  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-  TError = ErrorType<ErrorResponseDto>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getAdminBackupsControllerGetOperationQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>> = ({
-    signal,
-  }) => adminBackupsControllerGetOperation(requestOptions, signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type AdminBackupsControllerGetOperationQueryResult = NonNullable<
-  Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
->;
-export type AdminBackupsControllerGetOperationQueryError = ErrorType<ErrorResponseDto>;
-
-export function useAdminBackupsControllerGetOperation<
-  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-          TError,
-          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminBackupsControllerGetOperation<
-  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-          TError,
-          Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAdminBackupsControllerGetOperation<
-  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the state of a database restore (works during maintenance)
- */
-
-export function useAdminBackupsControllerGetOperation<
-  TData = Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>,
-  TError = ErrorType<ErrorResponseDto>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof adminBackupsControllerGetOperation>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getAdminBackupsControllerGetOperationQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-/**
  * @summary Bring back the database that was replaced by the last restore
  */
 export const adminBackupsControllerUndoRestore = (
@@ -2758,6 +2635,150 @@ export const useAdminBackupsControllerCreateDownloadLink = <
     queryClient,
   );
 };
+/**
+ * @summary Get the state of a database restore (works during maintenance)
+ */
+export const adminBackupOperationControllerGetOperation = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBackupOperationResponseDto>(
+    { url: `/admin/backups/operation`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminBackupOperationControllerGetOperationQueryKey = () => {
+  return [`/admin/backups/operation`] as const;
+};
+
+export const getAdminBackupOperationControllerGetOperationQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminBackupOperationControllerGetOperationQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>
+  > = ({ signal }) => adminBackupOperationControllerGetOperation(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminBackupOperationControllerGetOperationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>
+>;
+export type AdminBackupOperationControllerGetOperationQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminBackupOperationControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupOperationControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+          TError,
+          Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminBackupOperationControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the state of a database restore (works during maintenance)
+ */
+
+export function useAdminBackupOperationControllerGetOperation<
+  TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminBackupOperationControllerGetOperationQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 /**
  * @summary Download a database backup by a one-time link
  */

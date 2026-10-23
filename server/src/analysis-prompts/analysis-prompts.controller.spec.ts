@@ -41,8 +41,8 @@ describe('AnalysisPromptsController', () => {
     const response = { prompts: [] };
     serviceMock.listPrompts.mockResolvedValue(response);
 
-    await expect(controller.listPrompts(7)).resolves.toEqual(response);
-    expect(serviceMock.listPrompts).toHaveBeenCalledWith(7);
+    await expect(controller.listPrompts()).resolves.toEqual(response);
+    expect(serviceMock.listPrompts).toHaveBeenCalledWith();
   });
 
   it('createPrompt delegates to service', async () => {
@@ -94,8 +94,8 @@ describe('AnalysisPromptsController', () => {
     const response = { events: [] };
     serviceMock.getPromptHistory.mockResolvedValue(response);
 
-    await expect(controller.getPromptHistory(7, 9)).resolves.toEqual(response);
-    expect(serviceMock.getPromptHistory).toHaveBeenCalledWith(7, 9);
+    await expect(controller.getPromptHistory(9)).resolves.toEqual(response);
+    expect(serviceMock.getPromptHistory).toHaveBeenCalledWith(9);
   });
 
   it('simulatePrompt delegates to service', async () => {
@@ -109,24 +109,24 @@ describe('AnalysisPromptsController', () => {
     const response = { model: dto.model, output: '{}', syntheticAnswers: null, questionCount: 1 };
     serviceMock.simulatePrompt.mockResolvedValue(response);
 
-    await expect(controller.simulatePrompt(7, dto)).resolves.toEqual(response);
-    expect(serviceMock.simulatePrompt).toHaveBeenCalledWith(7, dto);
+    await expect(controller.simulatePrompt(dto)).resolves.toEqual(response);
+    expect(serviceMock.simulatePrompt).toHaveBeenCalledWith(dto);
   });
 
   it('listTestQuestions delegates to service', async () => {
     const response = { tests: [] };
     serviceMock.listTestQuestions.mockResolvedValue(response);
 
-    await expect(controller.listTestQuestions(7)).resolves.toEqual(response);
-    expect(serviceMock.listTestQuestions).toHaveBeenCalledWith(7);
+    await expect(controller.listTestQuestions()).resolves.toEqual(response);
+    expect(serviceMock.listTestQuestions).toHaveBeenCalledWith();
   });
 
   it('getPromptModels delegates to service', async () => {
     const response = { defaultModel: 'openai/gpt-oss-20b:free', models: [] };
     serviceMock.getPromptModels.mockResolvedValue(response);
 
-    await expect(controller.getPromptModels(7)).resolves.toEqual(response);
-    expect(serviceMock.getPromptModels).toHaveBeenCalledWith(7);
+    await expect(controller.getPromptModels()).resolves.toEqual(response);
+    expect(serviceMock.getPromptModels).toHaveBeenCalledWith();
   });
 
   it('generatePrompt delegates to service', async () => {
@@ -139,7 +139,7 @@ describe('AnalysisPromptsController', () => {
     const response = { model: dto.model, output: '{}' };
     serviceMock.generatePrompt.mockResolvedValue(response);
 
-    await expect(controller.generatePrompt(7, dto)).resolves.toEqual(response);
-    expect(serviceMock.generatePrompt).toHaveBeenCalledWith(7, dto);
+    await expect(controller.generatePrompt(dto)).resolves.toEqual(response);
+    expect(serviceMock.generatePrompt).toHaveBeenCalledWith(dto);
   });
 });

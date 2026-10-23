@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import {
   AI_PROVIDER_PRESETS,
@@ -139,17 +138,13 @@ export class AiProviderConfigService {
     };
   }
 
-  async getAiProviderSettings(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getAiProviderSettings() {
     const { settings, updatedAt } = await this.resolve();
 
     return this.toSettingsResponse(settings, updatedAt);
   }
 
   async updateAiProviderSettings(userId: number, input: UpdateAiProviderInput) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const baseUrl = input.baseUrl?.trim() || null;
     const defaultModel = input.defaultModel?.trim() || null;
     const apiKey = input.apiKey?.trim() || null;

@@ -4,7 +4,6 @@ import { ProfessionAtlasSettingsService } from '../../app-settings/profession-at
 import { PrismaService } from '../../prisma.service';
 import type { AdminPublicAttemptsListQueryDto } from '../dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from '../attempts/attempt.mapper';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { buildAttemptListOrderBy, buildAttemptListWhere } from './attempt-list-query';
 
@@ -19,13 +18,7 @@ export class TestsAdminAttemptService {
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
   ) {}
 
-  async listAttemptsForLink(
-    userId: number,
-    linkId: number,
-    query: AdminPublicAttemptsListQueryDto,
-  ) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listAttemptsForLink(linkId: number, query: AdminPublicAttemptsListQueryDto) {
     const link = await this.prisma.testPublicLink.findUnique({
       where: {
         id: linkId,
@@ -81,13 +74,7 @@ export class TestsAdminAttemptService {
     };
   }
 
-  async listAttemptsForExport(
-    userId: number,
-    linkId: number,
-    query: AdminPublicAttemptsListQueryDto,
-  ) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listAttemptsForExport(linkId: number, query: AdminPublicAttemptsListQueryDto) {
     const link = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, shortCode: true },
@@ -117,9 +104,7 @@ export class TestsAdminAttemptService {
     };
   }
 
-  async getAttemptDetail(userId: number, attemptId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getAttemptDetail(attemptId: number) {
     const attempt = await this.prisma.testStudentAttempt.findUnique({
       where: {
         id: attemptId,

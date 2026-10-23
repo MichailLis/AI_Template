@@ -109,8 +109,6 @@ export class BackupRestoreService implements OnApplicationBootstrap {
   }
 
   async startRestore(userId: number, backupId: string, confirmation: string) {
-    await ensureAdminAccess(this.prisma, userId);
-
     if (confirmation !== RESTORE_CONFIRMATION) {
       throw new BadRequestException(`Для подтверждения введите ${RESTORE_CONFIRMATION}`);
     }
@@ -130,8 +128,6 @@ export class BackupRestoreService implements OnApplicationBootstrap {
   }
 
   async startUndo(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const { previousDatabase } = await this.storage.readState();
 
     if (!previousDatabase) {

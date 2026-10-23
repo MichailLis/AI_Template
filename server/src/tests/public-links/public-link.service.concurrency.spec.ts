@@ -6,10 +6,6 @@ import {
   createPublicLinkServiceHarness,
 } from './public-link.service.spec-harness';
 
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
-
 describe('TestsPublicLinkService concurrency guards', () => {
   afterEach(() => jest.clearAllMocks());
 

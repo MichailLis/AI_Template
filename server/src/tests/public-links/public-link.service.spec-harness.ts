@@ -1,6 +1,5 @@
 import type { PrismaService } from '../../prisma.service';
 import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from './education-organization.service';
 import { TestsPublicLinkService } from './public-link.service';
 
@@ -10,7 +9,6 @@ import type { AuditService } from '../../audit/audit.service';
  * Общая обвязка спек TestsPublicLinkService: моки Prisma, аудита и настроек политики, собранный
  * сервис и фикстуры записей ссылки. Спеки разделены по темам (настройки ссылки, журнал изменений),
  * чтобы файл не рос за предел сопровождаемости. Модуль не является спекой и сам тестов не содержит.
- * jest.mock для ensureAdminAccess объявляется в каждой спеке, которая импортирует этот модуль.
  */
 
 type PublicLinkMutationInput = {
@@ -81,7 +79,6 @@ export const createPublicLinkServiceHarness = (): PublicLinkServiceHarness => {
     privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
     auditMock as unknown as AuditService,
   );
-  jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
 
   return { service, privacyPolicySettingsService, auditMock, prismaMock };
 };

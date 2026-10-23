@@ -32,7 +32,6 @@ import {
   createTopicWithDraft,
 } from '../topics/topic-version.utils';
 import { mapQuestion, validateDraftForPublish } from '../shared/domain.utils';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { ensureUniqueTopicSlug } from '../topics/topic-slug.utils';
 import { TestsQuestionService } from '../topics/question.service';
 import {
@@ -210,9 +209,7 @@ export class TestsService {
     return createdVersion.id;
   }
 
-  async listTopics(userId: number, archived?: boolean): Promise<TestsTopicListResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listTopics(archived?: boolean): Promise<TestsTopicListResponseDto> {
     const topics = await this.prisma.testTopic.findMany({
       where: archived
         ? {
@@ -345,12 +342,7 @@ export class TestsService {
     return countByTopicId;
   }
 
-  async archiveTopic(
-    userId: number,
-    topicId: number,
-  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async archiveTopic(topicId: number): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
     const existing = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true, archivedAt: true },
@@ -381,12 +373,7 @@ export class TestsService {
     };
   }
 
-  async restoreTopic(
-    userId: number,
-    topicId: number,
-  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async restoreTopic(topicId: number): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
     const existing = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true, archivedAt: true },
@@ -416,12 +403,7 @@ export class TestsService {
     };
   }
 
-  async createTopic(
-    userId: number,
-    dto: CreateTestsTopicDto,
-  ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async createTopic(dto: CreateTestsTopicDto): Promise<TestsTopicDetailResponseDto> {
     const baseSlug = dto.slug ?? dto.title;
     const slug = await ensureUniqueTopicSlug(this.prisma, baseSlug);
 
@@ -435,15 +417,10 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
-  async createTopicFromAi(
-    userId: number,
-    dto: CreateTestsTopicFromAiDto,
-  ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async createTopicFromAi(dto: CreateTestsTopicFromAiDto): Promise<TestsTopicDetailResponseDto> {
     const baseSlug = dto.slug ?? dto.title;
     const slug = await ensureUniqueTopicSlug(this.prisma, baseSlug);
     const questionPayloads = buildAiQuestionPayloads(dto.questions);
@@ -460,12 +437,10 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
-  async importProfOrientationV3Plus(userId: number): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async importProfOrientationV3Plus(): Promise<TestsTopicDetailResponseDto> {
     const slug = await ensureUniqueTopicSlug(this.prisma, PROF_ORIENTATION_V3_PLUS_SLUG);
     const questionPayloads = buildProfOrientationV3PlusQuestionPayloads();
 
@@ -485,12 +460,10 @@ export class TestsService {
       return createdTopic.topicId;
     });
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
-  async deleteTopic(userId: number, topicId: number): Promise<DeleteTestsTopicResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async deleteTopic(topicId: number): Promise<DeleteTestsTopicResponseDto> {
     const topic = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true },
@@ -526,20 +499,7 @@ export class TestsService {
     };
   }
 
-  async getTopicDraft(userId: number, topicId: number): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
-    return this.buildTopicDetailResponse(topicId);
-  }
-
-  /**
-   * The same response, without the access check. Every mutation below already ran
-   * ensureAdminAccess — a database read of the caller's role — before touching anything, so
-   * returning through getTopicDraft made each of them pay for that lookup twice.
-   *
-   * Not public: the check belongs on the way in, and this bypasses it.
-   */
-  private async buildTopicDetailResponse(topicId: number): Promise<TestsTopicDetailResponseDto> {
+  async getTopicDraft(topicId: number): Promise<TestsTopicDetailResponseDto> {
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
 
@@ -568,12 +528,9 @@ export class TestsService {
   }
 
   async updateTopicDraft(
-    userId: number,
     topicId: number,
     dto: UpdateTestsTopicDraftDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const topic = await this.getTopicSnapshot(topicId);
 
     if (dto.analysisPromptVersionId !== undefined && dto.analysisPromptVersionId !== null) {
@@ -610,65 +567,48 @@ export class TestsService {
       data: updateData,
     });
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
   async createQuestion(
-    userId: number,
     topicId: number,
     dto: UpsertTestsQuestionDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.createQuestion(topic.activeDraftVersion, dto);
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
   async updateQuestion(
-    userId: number,
     topicId: number,
     questionId: number,
     dto: UpsertTestsQuestionDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.updateQuestion(topic.activeDraftVersion, questionId, dto);
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
-  async deleteQuestion(
-    userId: number,
-    topicId: number,
-    questionId: number,
-  ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async deleteQuestion(topicId: number, questionId: number): Promise<TestsTopicDetailResponseDto> {
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.deleteQuestion(topic.activeDraftVersion, questionId);
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
   async reorderQuestions(
-    userId: number,
     topicId: number,
     dto: ReorderTestsQuestionsDto,
   ): Promise<TestsTopicDetailResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const topic = await this.getTopicSnapshot(topicId);
     await this.testsQuestionService.reorderQuestions(topic.activeDraftVersion, dto);
 
-    return this.buildTopicDetailResponse(topicId);
+    return this.getTopicDraft(topicId);
   }
 
-  async publishTopic(userId: number, topicId: number): Promise<PublishTestsTopicResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async publishTopic(topicId: number): Promise<PublishTestsTopicResponseDto> {
     const topic = await this.getTopicSnapshot(topicId);
     const draft = topic.activeDraftVersion;
 

@@ -8,7 +8,6 @@ import type { Prisma } from '@prisma/client';
 
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import { PrismaService } from '../prisma.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { runSerializableTransaction } from '../common/prisma-transaction.utils';
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
@@ -338,9 +337,7 @@ export class AnalysisPromptsService {
     ].join('\n');
   }
 
-  async listPrompts(userId: number): Promise<AnalysisPromptListResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listPrompts(): Promise<AnalysisPromptListResponseDto> {
     const prompts = await this.prisma.analysisPrompt.findMany({
       where: { archivedAt: null },
       include: analysisPromptInclude,
@@ -365,25 +362,19 @@ export class AnalysisPromptsService {
     };
   }
 
-  async listTestQuestions(userId: number): Promise<PromptTestQuestionsResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listTestQuestions(): Promise<PromptTestQuestionsResponseDto> {
     return {
       tests: await this.testsPromptSimulationReadService.listPromptSimulationTests(),
     };
   }
 
-  async getPromptModels(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getPromptModels() {
     const connection = await this.aiProviderConfig.getConnection();
 
     return this.aiProviderClient.fetchModels(connection);
   }
 
-  async generatePrompt(userId: number, dto: GeneratePromptDto) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async generatePrompt(dto: GeneratePromptDto) {
     const connection = await this.aiProviderConfig.getConnection();
 
     return this.aiProviderClient.generatePrompt(connection, dto);
@@ -393,8 +384,6 @@ export class AnalysisPromptsService {
     userId: number,
     dto: CreateAnalysisPromptDto,
   ): Promise<AnalysisPromptResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const prompt = await this.prisma.$transaction(async (tx) => {
       const created = await tx.analysisPrompt.create({
         data: {
@@ -440,8 +429,6 @@ export class AnalysisPromptsService {
     promptId: number,
     dto: UpdateAnalysisPromptVersionDto,
   ): Promise<AnalysisPromptResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existingPrompt = await this.getEditablePrompt(promptId);
     const latestVersion = existingPrompt.versions[0];
 
@@ -495,9 +482,7 @@ export class AnalysisPromptsService {
   }
 
   /** История доступна и у заархивированного промпта: архивация — тоже событие его жизни. */
-  async getPromptHistory(userId: number, promptId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getPromptHistory(promptId: number) {
     const prompt = await this.prisma.analysisPrompt.findUnique({
       where: { id: promptId },
       select: { id: true },
@@ -511,8 +496,6 @@ export class AnalysisPromptsService {
   }
 
   async deletePrompt(userId: number, promptId: number): Promise<AnalysisPromptResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     await this.getEditablePrompt(promptId);
 
     const prompt = await runSerializableTransaction(this.prisma, async (tx) => {
@@ -567,8 +550,6 @@ export class AnalysisPromptsService {
     userId: number,
     versionId: number,
   ): Promise<AnalysisPromptVersionResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existingVersion = await this.prisma.analysisPromptVersion.findUnique({
       where: { id: versionId },
       select: { id: true, promptId: true },
@@ -638,12 +619,7 @@ export class AnalysisPromptsService {
     };
   }
 
-  async simulatePrompt(
-    userId: number,
-    dto: PromptSimulationRequestDto,
-  ): Promise<PromptSimulationResponseDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async simulatePrompt(dto: PromptSimulationRequestDto): Promise<PromptSimulationResponseDto> {
     const connection = await this.aiProviderConfig.getConnection();
     const questionPayloads =
       await this.testsPromptSimulationReadService.getPromptSimulationQuestionPayloads(

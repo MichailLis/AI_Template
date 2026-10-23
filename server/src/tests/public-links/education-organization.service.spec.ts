@@ -1,13 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
 import { createEducationOrganizationRecordFixture } from '../session/spec-fixtures';
-
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 type PrismaMock = {
   educationOrganization: {
@@ -43,7 +38,6 @@ describe('TestsEducationOrganizationService', () => {
     };
 
     service = new TestsEducationOrganizationService(prismaMock as unknown as PrismaService);
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -84,11 +78,12 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue([]);
 
     const result = await (
-      service.listEducationOrganizations as (
-        userId: number,
-        query: { page: number; limit: number; needsPersonalData: boolean },
-      ) => Promise<{ total: number; totalPages: number; organizations: Array<{ id: number }> }>
-    )(7, { page: 1, limit: 1, needsPersonalData: true });
+      service.listEducationOrganizations as (query: {
+        page: number;
+        limit: number;
+        needsPersonalData: boolean;
+      }) => Promise<{ total: number; totalPages: number; organizations: Array<{ id: number }> }>
+    )({ page: 1, limit: 1, needsPersonalData: true });
 
     expect(result.total).toBe(2);
     expect(result.totalPages).toBe(2);
@@ -132,13 +127,11 @@ describe('TestsEducationOrganizationService', () => {
     ]);
 
     const result = await (
-      service.listEducationOrganizations as (
-        userId: number,
-        query: { page: number; limit: number },
-      ) => Promise<unknown>
-    )(7, { page: 3, limit: 10 });
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
+      service.listEducationOrganizations as (query: {
+        page: number;
+        limit: number;
+      }) => Promise<unknown>
+    )({ page: 3, limit: 10 });
     expect(prismaMock.educationOrganization.count).toHaveBeenCalledWith();
     expect(prismaMock.educationOrganization.findMany).toHaveBeenCalledWith({
       orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
@@ -225,7 +218,7 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.educationOrganization.create.mockResolvedValue(createdOrganization);
     prismaMock.testPublicLink.findMany.mockResolvedValue([]);
 
-    await service.createEducationOrganization(7, {
+    await service.createEducationOrganization({
       name: '  Лицей 42  ',
       fullName: '  Муниципальный лицей № 42  ',
       shortName: '  Лицей № 42  ',
@@ -289,11 +282,10 @@ describe('TestsEducationOrganizationService', () => {
 
     await (
       service.updateEducationOrganization as (
-        userId: number,
         organizationId: number,
         dto: Record<string, unknown>,
       ) => Promise<unknown>
-    )(7, 31, {
+    )(31, {
       fullName: '  Новое полное имя  ',
       privacyPolicyUrl: '   ',
     });
@@ -319,12 +311,9 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.educationOrganization.findFirst.mockResolvedValue({ id: 31 });
 
     await expect(
-      (
-        service.createEducationOrganization as (
-          userId: number,
-          dto: { name: string },
-        ) => Promise<unknown>
-      )(7, { name: 'лицей 42' }),
+      (service.createEducationOrganization as (dto: { name: string }) => Promise<unknown>)({
+        name: 'лицей 42',
+      }),
     ).rejects.toThrow(BadRequestException);
 
     expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
@@ -338,12 +327,9 @@ describe('TestsEducationOrganizationService', () => {
     });
 
     await expect(
-      (
-        service.createEducationOrganization as (
-          userId: number,
-          dto: { name: string },
-        ) => Promise<unknown>
-      )(7, { name: 'Лицей 42' }),
+      (service.createEducationOrganization as (dto: { name: string }) => Promise<unknown>)({
+        name: 'Лицей 42',
+      }),
     ).rejects.toThrow('Учебное заведение с таким названием уже существует');
   });
 });

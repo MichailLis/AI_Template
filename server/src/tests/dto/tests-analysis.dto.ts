@@ -1,4 +1,4 @@
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../common/zod-dto';
 
 import { TestAnalysisResultSchema } from '../../common/analysis/test-analysis-result.contract';
 

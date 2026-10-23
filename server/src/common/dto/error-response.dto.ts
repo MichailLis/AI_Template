@@ -1,4 +1,4 @@
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../zod-dto';
 import { z } from 'zod';
 
 export const ErrorResponseSchema = z.object({

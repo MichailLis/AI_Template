@@ -7,7 +7,6 @@ import type {
   AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
 } from '../dto/tests-links.dto';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 
 const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
   'Учебное заведение с таким названием уже существует';
@@ -204,12 +203,7 @@ export class TestsEducationOrganizationService {
     return organization.id;
   }
 
-  async listEducationOrganizations(
-    userId: number,
-    query: AdminEducationOrganizationsListQueryDto = {},
-  ) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listEducationOrganizations(query: AdminEducationOrganizationsListQueryDto = {}) {
     if (query.needsPersonalData) {
       return this.listOrganizationsNeedingPersonalData(query);
     }
@@ -285,9 +279,7 @@ export class TestsEducationOrganizationService {
     };
   }
 
-  async createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async createEducationOrganization(dto: AdminCreateEducationOrganizationDto) {
     const name = dto.name.trim();
 
     const existing = await this.prisma.educationOrganization.findFirst({
@@ -339,12 +331,9 @@ export class TestsEducationOrganizationService {
   }
 
   async updateEducationOrganization(
-    userId: number,
     organizationId: number,
     dto: AdminUpdateEducationOrganizationDto,
   ) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.educationOrganization.findUnique({
       where: { id: organizationId },
       select: {

@@ -11,8 +11,10 @@ Backups of the whole PostgreSQL database, managed from the admin panel.
 
 Required behavior:
 
-1. Every backup operation checks admin access on the server (`ensureAdminAccess`). The download
-   route is the only one without `AtGuard`: it takes a one-time token valid for 60 seconds, issued by
+1. Every backup operation checks admin access on the server: `AdminGuard` on the controller. Two routes
+   stay outside it. `GET /admin/backups/operation` has only `AtGuard`, because it must answer during
+   the database swap, when the role cannot be read; `getStatus` checks the role itself when the
+   database is available. The download route has no `AtGuard`: it takes a one-time token valid for 60 seconds, issued by
    `POST /admin/backups/:id/download-link`, and checks admin access again for the token's owner.
 2. `pg_dump`/`pg_restore` run without a shell through `PgToolsRunner`. Connection settings go through
    `PG*` env vars parsed from `DATABASE_URL` (libpq rejects Prisma's `?schema=public`); the password

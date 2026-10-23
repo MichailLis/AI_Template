@@ -20,8 +20,8 @@ import {
 } from '@nestjs/swagger';
 import { type Response } from 'express';
 
-import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
+import { AdminGuard } from '../../common/authz/admin.guard';
 import { ApiErrorResponses } from '../../common/decorators/api-error-responses.decorator';
 import {
   AdminTestAnalyticsQueryDto,
@@ -81,7 +81,7 @@ function buildAnalyticsExportDisposition(
 @ApiTags('tests')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/tests')
 export class TestsAdminAnalyticsController {
   constructor(
@@ -94,11 +94,10 @@ export class TestsAdminAnalyticsController {
   @ApiAnalyticsQuery()
   @ApiResponse({ status: HttpStatus.OK, type: AdminTestAnalyticsSummaryDto })
   getSummary(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Query() query: AdminTestAnalyticsQueryDto,
   ): Promise<AdminTestAnalyticsSummaryDto> {
-    return this.analyticsService.getSummary(userId, topicId, query);
+    return this.analyticsService.getSummary(topicId, query);
   }
 
   @Get('topics/:topicId/analytics/export.xlsx')
@@ -107,12 +106,11 @@ export class TestsAdminAnalyticsController {
   @ApiProduces(XLSX_CONTENT_TYPE)
   @ApiResponse(apiBinaryResponse(XLSX_CONTENT_TYPE, 'Excel analytics report'))
   async exportXlsx(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Query() query: AdminTestAnalyticsQueryDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const summary = await this.analyticsService.getSummary(userId, topicId, query);
+    const summary = await this.analyticsService.getSummary(topicId, query);
     const disposition = buildAnalyticsExportDisposition(summary, topicId, 'xlsx');
     const file = new StreamableFile(await this.exportService.toExcel(summary), {
       type: XLSX_CONTENT_TYPE,
@@ -131,12 +129,11 @@ export class TestsAdminAnalyticsController {
   @ApiProduces(PDF_CONTENT_TYPE)
   @ApiResponse(apiBinaryResponse(PDF_CONTENT_TYPE, 'PDF analytics report'))
   async exportPdf(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Query() query: AdminTestAnalyticsQueryDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const summary = await this.analyticsService.getSummary(userId, topicId, query);
+    const summary = await this.analyticsService.getSummary(topicId, query);
     const disposition = buildAnalyticsExportDisposition(summary, topicId, 'pdf');
     const file = new StreamableFile(await this.exportService.toPdf(summary), {
       type: PDF_CONTENT_TYPE,

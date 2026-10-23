@@ -117,9 +117,7 @@ export class BackupsService implements OnApplicationBootstrap {
     }
   }
 
-  async getOverview(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getOverview() {
     const [availability, backups, settings] = await Promise.all([
       this.getAvailability(),
       this.storage.list(),
@@ -137,8 +135,6 @@ export class BackupsService implements OnApplicationBootstrap {
   }
 
   async createBackup(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const backup = await this.startBackup('MANUAL', userId);
     const [item] = await this.toResponseItems([backup]);
 
@@ -218,8 +214,6 @@ export class BackupsService implements OnApplicationBootstrap {
   }
 
   async deleteBackup(userId: number, id: string) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const backup = await this.findBackup(id);
 
     if (backup.status === 'RUNNING') {
@@ -233,8 +227,6 @@ export class BackupsService implements OnApplicationBootstrap {
   }
 
   async createDownloadLink(userId: number, id: string) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const backup = await this.findBackup(id);
 
     if (backup.status !== 'READY' || !(await this.storage.dumpExists(id))) {

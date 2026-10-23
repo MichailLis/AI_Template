@@ -28,6 +28,7 @@ import type { Request, Response } from 'express';
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { AdminGuard } from '../common/authz/admin.guard';
 import { BackupImportService } from '../backups/backup-import.service';
 import { BackupRestoreService } from '../backups/backup-restore.service';
 import { BackupSettingsService } from '../backups/backup-settings.service';
@@ -54,7 +55,7 @@ const DUMP_CONTENT_TYPE = 'application/octet-stream';
 @ApiTags('admin')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/backups')
 export class AdminBackupsController {
   constructor(
@@ -67,8 +68,8 @@ export class AdminBackupsController {
   @Get()
   @ApiOperation({ summary: 'List database backups and check whether backups are available' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminBackupsOverviewResponseDto })
-  getOverview(@GetCurrentUserId() userId: number) {
-    return this.backupsService.getOverview(userId);
+  getOverview() {
+    return this.backupsService.getOverview();
   }
 
   @Post()
@@ -112,13 +113,6 @@ export class AdminBackupsController {
     );
   }
 
-  @Get('operation')
-  @ApiOperation({ summary: 'Get the state of a database restore (works during maintenance)' })
-  @ApiResponse({ status: HttpStatus.OK, type: AdminBackupOperationResponseDto })
-  getOperation(@GetCurrentUserId() userId: number) {
-    return this.backupRestoreService.getStatus(userId);
-  }
-
   @Post('restore/undo')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Bring back the database that was replaced by the last restore' })
@@ -152,6 +146,26 @@ export class AdminBackupsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminBackupDownloadLinkResponseDto })
   createDownloadLink(@GetCurrentUserId() userId: number, @Param('id') id: string) {
     return this.backupsService.createDownloadLink(userId, id);
+  }
+}
+
+/**
+ * Статус восстановления опрашивают и во время подмены базы, когда роль проверить негде, поэтому
+ * маршрут без `AdminGuard`: права проверяет сам `getStatus`, когда база доступна.
+ */
+@ApiTags('admin')
+@ApiBearerAuth()
+@ApiErrorResponses()
+@UseGuards(AtGuard)
+@Controller('admin/backups/operation')
+export class AdminBackupOperationController {
+  constructor(private readonly backupRestoreService: BackupRestoreService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get the state of a database restore (works during maintenance)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminBackupOperationResponseDto })
+  getOperation(@GetCurrentUserId() userId: number) {
+    return this.backupRestoreService.getStatus(userId);
   }
 }
 

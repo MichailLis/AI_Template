@@ -1,4 +1,4 @@
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../common/zod-dto';
 import { z } from 'zod';
 
 import { AI_PROVIDER_IDS } from '../../ai-provider/ai-provider.config';

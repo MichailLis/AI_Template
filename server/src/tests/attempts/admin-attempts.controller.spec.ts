@@ -33,8 +33,8 @@ describe('TestsAdminAttemptsController', () => {
     const query = { page: 2, limit: 10 };
     serviceMock.listAttemptsForLink.mockResolvedValue(response);
 
-    await expect(controller.listPublicLinkAttempts(7, 13, query)).resolves.toEqual(response);
-    expect(serviceMock.listAttemptsForLink).toHaveBeenCalledWith(7, 13, query);
+    await expect(controller.listPublicLinkAttempts(13, query)).resolves.toEqual(response);
+    expect(serviceMock.listAttemptsForLink).toHaveBeenCalledWith(13, query);
   });
 
   it('exportPublicLinkAttempts passes the table filters to the service and returns the file', async () => {
@@ -49,11 +49,11 @@ describe('TestsAdminAttemptsController', () => {
     serviceMock.listAttemptsForExport.mockResolvedValue({ shortCode: 'ABC123', attempts: [] });
     exportMock.toExcel.mockResolvedValue(Buffer.from('xlsx'));
 
-    const file = await controller.exportPublicLinkAttempts(7, 13, query, {
+    const file = await controller.exportPublicLinkAttempts(13, query, {
       setHeader,
-    } as unknown as Parameters<typeof controller.exportPublicLinkAttempts>[3]);
+    } as unknown as Parameters<typeof controller.exportPublicLinkAttempts>[2]);
 
-    expect(serviceMock.listAttemptsForExport).toHaveBeenCalledWith(7, 13, query);
+    expect(serviceMock.listAttemptsForExport).toHaveBeenCalledWith(13, query);
     expect(exportMock.toExcel).toHaveBeenCalledWith([], 'ABC123', 'Asia/Novosibirsk');
     expect(setHeader).toHaveBeenCalledWith(
       'Content-Disposition',
@@ -66,7 +66,7 @@ describe('TestsAdminAttemptsController', () => {
     const response = { attemptId: 33 };
     serviceMock.getAttemptDetail.mockResolvedValue(response);
 
-    await expect(controller.getAttemptDetail(7, 33)).resolves.toEqual(response);
-    expect(serviceMock.getAttemptDetail).toHaveBeenCalledWith(7, 33);
+    await expect(controller.getAttemptDetail(33)).resolves.toEqual(response);
+    expect(serviceMock.getAttemptDetail).toHaveBeenCalledWith(33);
   });
 });
