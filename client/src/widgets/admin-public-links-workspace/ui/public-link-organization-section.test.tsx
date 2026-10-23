@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicLinkOrganizationSection } from './public-link-organization-section';
@@ -10,20 +11,8 @@ const baseProps = {
   ],
   newEducationOrganizationId: null,
   onEducationOrganizationSelect: vi.fn(),
-  newEducationOrganizationName: '',
-  onEducationOrganizationNameChange: vi.fn(),
-  groupValidationMode: 'NONE' as const,
-  onGroupValidationModeChange: vi.fn(),
-  groupValidationPattern: '',
-  onGroupValidationPatternChange: vi.fn(),
-  groupValidationExample: '',
-  onGroupValidationExampleChange: vi.fn(),
-  groupValidationHint: '',
-  onGroupValidationHintChange: vi.fn(),
   onCreateEducationOrganization: vi.fn(),
-  onUpdateEducationOrganization: vi.fn(),
-  isCreatingEducationOrganization: false,
-  isUpdatingEducationOrganization: false,
+  onEditEducationOrganization: vi.fn(),
   newPersonalDataProcessingMode: 'PUBLIC' as const,
   onPersonalDataProcessingModeChange: vi.fn(),
 };
@@ -44,15 +33,39 @@ describe('PublicLinkOrganizationSection', () => {
     expect(screen.getByText(/оператор и ссылки на документы фиксируются/i)).toBeInTheDocument();
   });
 
-  it('explains PUBLIC profile locking and inline quick-create limitations', () => {
+  it('explains PUBLIC profile locking', () => {
     render(<PublicLinkOrganizationSection {...baseProps} />);
 
     expect(
       screen.getByText(/выбор заведения для анкеты не меняет оператора персональных данных/i),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/после быстрого добавления заполните реквизиты в разделе/i),
-    ).toBeInTheDocument();
+  });
+
+  it('opens the organization editor and allows editing only a selected organization', async () => {
+    const onCreateEducationOrganization = vi.fn();
+    const onEditEducationOrganization = vi.fn();
+    const { rerender } = render(
+      <PublicLinkOrganizationSection
+        {...baseProps}
+        onCreateEducationOrganization={onCreateEducationOrganization}
+        onEditEducationOrganization={onEditEducationOrganization}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Изменить заведение' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Новое заведение' }));
+    expect(onCreateEducationOrganization).toHaveBeenCalledOnce();
+
+    rerender(
+      <PublicLinkOrganizationSection
+        {...baseProps}
+        newEducationOrganizationId={1}
+        onCreateEducationOrganization={onCreateEducationOrganization}
+        onEditEducationOrganization={onEditEducationOrganization}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Изменить заведение' }));
+    expect(onEditEducationOrganization).toHaveBeenCalledOnce();
   });
 
   it('filters out disabled organizations from the selection list', () => {

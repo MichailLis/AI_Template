@@ -1,5 +1,3 @@
-import type { GroupValidationMode } from '@/shared/lib/group-validation';
-
 export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 export type PublicLinkTemplate = 'STANDARD' | 'POLUS';
 export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
@@ -27,20 +25,8 @@ export interface PublicLinkCreateCardProps {
   onEducationOrganizationSelect: (organizationId: number | null) => void;
   newPersonalDataProcessingMode: PersonalDataProcessingMode;
   onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
-  newEducationOrganizationName: string;
-  onEducationOrganizationNameChange: (value: string) => void;
-  groupValidationMode: GroupValidationMode;
-  onGroupValidationModeChange: (value: GroupValidationMode) => void;
-  groupValidationPattern: string;
-  onGroupValidationPatternChange: (value: string) => void;
-  groupValidationExample: string;
-  onGroupValidationExampleChange: (value: string) => void;
-  groupValidationHint: string;
-  onGroupValidationHintChange: (value: string) => void;
   onCreateEducationOrganization: () => void;
-  onUpdateEducationOrganization: () => void;
-  isCreatingEducationOrganization: boolean;
-  isUpdatingEducationOrganization: boolean;
+  onEditEducationOrganization: () => void;
   newPublicShortCode: string;
   onShortCodeChange: (value: string) => void;
   newPublicTemplate: PublicLinkTemplate;
@@ -76,20 +62,8 @@ export interface PublicLinkOrganizationSectionProps {
   onEducationOrganizationSelect: (organizationId: number | null) => void;
   newPersonalDataProcessingMode: PersonalDataProcessingMode;
   onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
-  newEducationOrganizationName: string;
-  onEducationOrganizationNameChange: (value: string) => void;
-  groupValidationMode: GroupValidationMode;
-  onGroupValidationModeChange: (value: GroupValidationMode) => void;
-  groupValidationPattern: string;
-  onGroupValidationPatternChange: (value: string) => void;
-  groupValidationExample: string;
-  onGroupValidationExampleChange: (value: string) => void;
-  groupValidationHint: string;
-  onGroupValidationHintChange: (value: string) => void;
   onCreateEducationOrganization: () => void;
-  onUpdateEducationOrganization: () => void;
-  isCreatingEducationOrganization: boolean;
-  isUpdatingEducationOrganization: boolean;
+  onEditEducationOrganization: () => void;
 }
 
 export interface PublicLinkAccessSettingsSectionProps {

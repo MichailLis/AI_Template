@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 import {
+  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
+  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
   useTestsAdminPublicLinksControllerListArchivedPublicLinks,
   useTestsAdminPublicLinksControllerListPublicLinks,
   useTestsControllerGetTopicDraft,
@@ -15,6 +18,11 @@ import {
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import { useAdminPublicLinksFormState } from './use-admin-public-links-form-state';
 
+import type {
+  AdminCreateEducationOrganizationDto,
+  AdminUpdateEducationOrganizationDto,
+} from '@/shared/api/model';
+
 interface UseAdminPublicLinksWorkspaceParams {
   onPublicLinkCreated?: () => void;
 }
@@ -27,6 +35,10 @@ export function useAdminPublicLinksWorkspace({
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
   const listEducationOrganizationsQuery =
     useTestsAdminEducationOrganizationsControllerListEducationOrganizations();
+  const createEducationOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
+  const updateEducationOrganizationMutation =
+    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
   const formState = useAdminPublicLinksFormState();
 
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
@@ -64,15 +76,24 @@ export function useAdminPublicLinksWorkspace({
     [formState.selectedPublicLinkId, visiblePublicLinks],
   );
 
-  const setNewEducationOrganizationId = (value: number | null) => {
-    formState.applyEducationOrganizationSelection(value, educationOrganizations);
-  };
-
   const refetchPublicLinks = () => {
     void Promise.all([listPublicLinksQuery.refetch(), listArchivedPublicLinksQuery.refetch()]);
   };
-  const refetchEducationOrganizations = () => {
-    void listEducationOrganizationsQuery.refetch();
+
+  // Errors propagate: EducationOrganizationEditorSheet maps them onto its fields.
+  const createEducationOrganization = async (payload: AdminCreateEducationOrganizationDto) => {
+    const organization = await createEducationOrganizationMutation.mutateAsync({ data: payload });
+    toast.success('Учебное заведение добавлено');
+    await listEducationOrganizationsQuery.refetch();
+    formState.setNewEducationOrganizationId(organization.id);
+  };
+  const updateEducationOrganization = async (
+    organizationId: number,
+    payload: AdminUpdateEducationOrganizationDto,
+  ) => {
+    await updateEducationOrganizationMutation.mutateAsync({ organizationId, data: payload });
+    toast.success('Настройки учебного заведения сохранены');
+    await listEducationOrganizationsQuery.refetch();
   };
 
   const actions = useAdminPublicLinksActions({
@@ -81,11 +102,6 @@ export function useAdminPublicLinksWorkspace({
     newEducationOrganizationId: formState.newEducationOrganizationId,
     educationOrganizations,
     newPersonalDataProcessingMode: formState.newPersonalDataProcessingMode,
-    newEducationOrganizationName: formState.newEducationOrganizationName,
-    groupValidationMode: formState.groupValidationMode,
-    groupValidationPattern: formState.groupValidationPattern,
-    groupValidationExample: formState.groupValidationExample,
-    groupValidationHint: formState.groupValidationHint,
     newPublicTemplate: formState.newPublicTemplate,
     newPublicEntryProfileMode: formState.newPublicEntryProfileMode,
     newPublicMaxAttempts: formState.newPublicMaxAttempts,
@@ -102,14 +118,7 @@ export function useAdminPublicLinksWorkspace({
     setPendingMovePublicLink: formState.setPendingMovePublicLink,
     setNewPublicShortCode: formState.setNewPublicShortCode,
     setNewPersonalDataProcessingMode: formState.setNewPersonalDataProcessingMode,
-    setNewEducationOrganizationId,
-    setNewEducationOrganizationName: formState.setNewEducationOrganizationName,
-    setGroupValidationMode: formState.setGroupValidationMode,
-    setGroupValidationPattern: formState.setGroupValidationPattern,
-    setGroupValidationExample: formState.setGroupValidationExample,
-    setGroupValidationHint: formState.setGroupValidationHint,
     refetchPublicLinks,
-    refetchEducationOrganizations,
     onPublicLinkCreated,
   });
 
@@ -125,6 +134,7 @@ export function useAdminPublicLinksWorkspace({
     refetchPublicLinks,
     ...formState,
     ...actions,
-    setNewEducationOrganizationId,
+    createEducationOrganization,
+    updateEducationOrganization,
   };
 }

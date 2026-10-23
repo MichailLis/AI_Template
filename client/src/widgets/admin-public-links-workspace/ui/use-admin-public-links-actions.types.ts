@@ -6,7 +6,6 @@ import type {
   EducationOrganizationOption,
 } from './public-link-create-card.types';
 import type { PublicLinkListItem } from './public-links-list-card.helpers';
-import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 export interface UseAdminPublicLinksActionsParams {
   publishedVersionId: number | undefined;
@@ -14,11 +13,6 @@ export interface UseAdminPublicLinksActionsParams {
   newEducationOrganizationId: number | null;
   educationOrganizations: EducationOrganizationOption[];
   newPersonalDataProcessingMode: PersonalDataProcessingMode;
-  newEducationOrganizationName: string;
-  groupValidationMode: GroupValidationMode;
-  groupValidationPattern: string;
-  groupValidationExample: string;
-  groupValidationHint: string;
   newPublicTemplate: PublicLinkTemplate;
   newPublicEntryProfileMode: PublicLinkEntryProfileMode;
   newPublicMaxAttempts: string;
@@ -35,13 +29,6 @@ export interface UseAdminPublicLinksActionsParams {
   setPendingMovePublicLink: (link: PublicLinkListItem | null) => void;
   setNewPublicShortCode: (value: string) => void;
   setNewPersonalDataProcessingMode: (value: PersonalDataProcessingMode) => void;
-  setNewEducationOrganizationId: (value: number | null) => void;
-  setNewEducationOrganizationName: (value: string) => void;
-  setGroupValidationMode: (value: GroupValidationMode) => void;
-  setGroupValidationPattern: (value: string) => void;
-  setGroupValidationExample: (value: string) => void;
-  setGroupValidationHint: (value: string) => void;
   refetchPublicLinks: () => void;
-  refetchEducationOrganizations: () => void;
   onPublicLinkCreated?: () => void;
 }

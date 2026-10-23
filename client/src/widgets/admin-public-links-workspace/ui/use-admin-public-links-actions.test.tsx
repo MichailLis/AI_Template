@@ -21,14 +21,6 @@ vi.mock('@/features/tests', () => ({
 }));
 
 vi.mock('@/shared/api/generated/tests/tests', () => ({
-  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization: () => ({
-    mutate: vi.fn(),
-    isPending: false,
-  }),
-  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization: () => ({
-    mutate: vi.fn(),
-    isPending: false,
-  }),
   useTestsAdminPublicLinksControllerCreatePublicLink: () => ({
     mutate: createPublicLinkMutate,
     isPending: false,
@@ -64,11 +56,6 @@ const createParams = (
     newEducationOrganizationId: 4,
     educationOrganizations: [{ id: 4, name: 'Лицей 4', isActive: true, personalDataReady: true }],
     newPersonalDataProcessingMode: 'PUBLIC',
-    newEducationOrganizationName: '',
-    groupValidationMode: 'NONE',
-    groupValidationPattern: '',
-    groupValidationExample: '',
-    groupValidationHint: '',
     newPublicTemplate: 'POLUS',
     newPublicEntryProfileMode: 'EDUCATION',
     newPublicMaxAttempts: '3',
@@ -83,14 +70,7 @@ const createParams = (
     setPendingDeletePublicLinkId: vi.fn(),
     setNewPublicShortCode: vi.fn(),
     setNewPersonalDataProcessingMode: vi.fn(),
-    setNewEducationOrganizationId: vi.fn(),
-    setNewEducationOrganizationName: vi.fn(),
-    setGroupValidationMode: vi.fn(),
-    setGroupValidationPattern: vi.fn(),
-    setGroupValidationExample: vi.fn(),
-    setGroupValidationHint: vi.fn(),
     refetchPublicLinks: vi.fn(),
-    refetchEducationOrganizations: vi.fn(),
     ...overrides,
   }) as UseAdminPublicLinksActionsParams;
 

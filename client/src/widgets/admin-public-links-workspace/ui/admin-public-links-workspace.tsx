@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { EducationOrganizationEditorSheet } from '@/features/tests';
 import { parseApiError } from '@/shared/lib/api-error';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
@@ -27,20 +28,6 @@ const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
   onEducationOrganizationSelect: state.setNewEducationOrganizationId,
   newPersonalDataProcessingMode: state.newPersonalDataProcessingMode,
   onPersonalDataProcessingModeChange: state.setNewPersonalDataProcessingMode,
-  newEducationOrganizationName: state.newEducationOrganizationName,
-  onEducationOrganizationNameChange: state.setNewEducationOrganizationName,
-  groupValidationMode: state.groupValidationMode,
-  onGroupValidationModeChange: state.setGroupValidationMode,
-  groupValidationPattern: state.groupValidationPattern,
-  onGroupValidationPatternChange: state.setGroupValidationPattern,
-  groupValidationExample: state.groupValidationExample,
-  onGroupValidationExampleChange: state.setGroupValidationExample,
-  groupValidationHint: state.groupValidationHint,
-  onGroupValidationHintChange: state.setGroupValidationHint,
-  onCreateEducationOrganization: state.handleCreateEducationOrganization,
-  onUpdateEducationOrganization: state.handleUpdateEducationOrganization,
-  isCreatingEducationOrganization: state.createEducationOrganizationMutation.isPending,
-  isUpdatingEducationOrganization: state.updateEducationOrganizationMutation.isPending,
   newPublicShortCode: state.newPublicShortCode,
   onShortCodeChange: state.setNewPublicShortCode,
   newPublicTemplate: state.newPublicTemplate,
@@ -103,10 +90,20 @@ export function AdminPublicLinksWorkspace() {
   const [brandingBuilderLink, setBrandingBuilderLink] = useState<PublicLinkListItem | null>(null);
   const [qrShortCode, setQrShortCode] = useState<string | null>(null);
   const [historyLink, setHistoryLink] = useState<PublicLinkListItem | null>(null);
+  const [organizationEditorMode, setOrganizationEditorMode] = useState<'create' | 'edit' | null>(
+    null,
+  );
   const workspaceState = useAdminPublicLinksWorkspace({
     onPublicLinkCreated: () => setIsCreateDialogOpen(false),
   });
-  const createCardProps = buildCreateCardProps(workspaceState);
+  const createCardProps = {
+    ...buildCreateCardProps(workspaceState),
+    onCreateEducationOrganization: () => setOrganizationEditorMode('create'),
+    onEditEducationOrganization: () => setOrganizationEditorMode('edit'),
+  };
+  const editedOrganization = workspaceState.educationOrganizations.find(
+    (organization) => organization.id === workspaceState.newEducationOrganizationId,
+  );
   const listCardProps = buildListCardProps(
     workspaceState,
     setBrandingBuilderLink,
@@ -142,6 +139,27 @@ export function AdminPublicLinksWorkspace() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
       />
+
+      {organizationEditorMode === 'create' ? (
+        <EducationOrganizationEditorSheet
+          open
+          mode="create"
+          onClose={() => setOrganizationEditorMode(null)}
+          onSubmit={workspaceState.createEducationOrganization}
+        />
+      ) : null}
+
+      {organizationEditorMode === 'edit' && editedOrganization ? (
+        <EducationOrganizationEditorSheet
+          open
+          mode="edit"
+          organization={editedOrganization}
+          onClose={() => setOrganizationEditorMode(null)}
+          onSubmit={(payload) =>
+            workspaceState.updateEducationOrganization(editedOrganization.id, payload)
+          }
+        />
+      ) : null}
 
       <PublicLinkBrandingBuilder
         open={Boolean(brandingBuilderLink)}

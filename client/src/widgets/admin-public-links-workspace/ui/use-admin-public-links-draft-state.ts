@@ -12,10 +12,7 @@ const DEFAULT_CONSENT_TEXT =
 /** Fields of the public link the operator is currently drafting. */
 export function useAdminPublicLinksDraftState() {
   const [newPublicShortCode, setNewPublicShortCode] = useState('');
-  const [newEducationOrganizationId, setNewEducationOrganizationIdState] = useState<number | null>(
-    null,
-  );
-  const [newEducationOrganizationName, setNewEducationOrganizationName] = useState('');
+  const [newEducationOrganizationId, setNewEducationOrganizationId] = useState<number | null>(null);
   const [newPersonalDataProcessingMode, setNewPersonalDataProcessingMode] =
     useState<PersonalDataProcessingMode>('PUBLIC');
   const [newPublicEntryProfileMode, setNewPublicEntryProfileMode] =
@@ -36,9 +33,7 @@ export function useAdminPublicLinksDraftState() {
     newPublicShortCode,
     setNewPublicShortCode,
     newEducationOrganizationId,
-    setNewEducationOrganizationIdState,
-    newEducationOrganizationName,
-    setNewEducationOrganizationName,
+    setNewEducationOrganizationId,
     newPersonalDataProcessingMode,
     setNewPersonalDataProcessingMode,
     newPublicEntryProfileMode,
