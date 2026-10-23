@@ -205,7 +205,13 @@ export const PublicSessionSaveAnswerItemSchema = z.object({
 
 export const PublicSessionSaveAnswersRequestSchema = z.object({
   // A test has far fewer questions; the cap keeps one unauthenticated request from holding a long transaction.
-  answers: z.array(PublicSessionSaveAnswerItemSchema).min(1).max(200),
+  answers: z
+    .array(PublicSessionSaveAnswerItemSchema)
+    .min(1)
+    .max(200)
+    .refine((items) => new Set(items.map((item) => item.questionId)).size === items.length, {
+      message: 'Duplicate questionId in answers',
+    }),
 });
 
 export const PublicSessionSaveAnswersResponseSchema = z.object({
