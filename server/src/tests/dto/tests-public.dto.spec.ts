@@ -12,13 +12,22 @@ import {
 
 describe('tests public DTO schemas', () => {
   it('rejects an answers batch larger than any test can need', () => {
+    const batch = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ questionId: i + 1, answerPayload: 'x' }));
+
+    expect(PublicSessionSaveAnswersRequestSchema.safeParse({ answers: batch(200) }).success).toBe(
+      true,
+    );
+    expect(PublicSessionSaveAnswersRequestSchema.safeParse({ answers: batch(201) }).success).toBe(
+      false,
+    );
+  });
+
+  it('rejects an answers batch that repeats a questionId', () => {
     const answer = { questionId: 1, answerPayload: 'x' };
 
     expect(
-      PublicSessionSaveAnswersRequestSchema.safeParse({ answers: Array(200).fill(answer) }).success,
-    ).toBe(true);
-    expect(
-      PublicSessionSaveAnswersRequestSchema.safeParse({ answers: Array(201).fill(answer) }).success,
+      PublicSessionSaveAnswersRequestSchema.safeParse({ answers: [answer, answer] }).success,
     ).toBe(false);
   });
 
