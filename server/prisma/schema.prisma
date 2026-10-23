@@ -349,7 +349,6 @@ model TestStudentAttempt {
   analysis                      TestStudentAnalysis?
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
-  @@index([publicLinkId, studentKeyHash])
   @@index([publicLinkId, startedAt])
   @@index([status, startedAt])
   @@index([topicVersionId])
@@ -371,7 +370,6 @@ model TestStudentAnswer {
   question TestQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
-  @@index([attemptId])
   @@map("test_student_answers")
 }
 
