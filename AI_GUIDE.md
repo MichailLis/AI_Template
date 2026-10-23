@@ -324,6 +324,8 @@ Verification gates:
 1. Do not mirror query data into form state via `setState` inside `useEffect`.
 2. Prefer derived/effective values (`queryValue ?? localFormValue`) at render/submit boundaries.
 3. If metadata must be fixed (for example link-bound organization), lock the input and submit the effective value.
+4. A form is one `useForm<Values>` (react-hook-form), not a `useState` per field. Pass the `form` object to its sections instead of value/setter prop pairs. Example: the public-link create dialog in `widgets/admin-public-links-workspace`.
+5. After a mutation, refresh lists with `queryClient.invalidateQueries({ queryKey: get…QueryKey() })` in `onSuccess`, not with `refetch*` callbacks passed down through params.
 
 ### Phase 3: Frontend Integration
 
