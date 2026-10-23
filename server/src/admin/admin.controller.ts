@@ -16,6 +16,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { AdminService } from './admin.service';
 import { AuditHistoryResponseDto } from '../audit/dto/audit-history.dto';
 import { AtGuard } from '../auth/guards';
+import { AdminGuard } from '../common/authz/admin.guard';
 import { GetCurrentUserId } from '../auth/decorators';
 import { AdminOverviewResponseDto } from './dto/admin-overview-response.dto';
 import { AdminUsersResponseDto } from './dto/admin-users-response.dto';
@@ -32,7 +33,7 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 @ApiTags('admin')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

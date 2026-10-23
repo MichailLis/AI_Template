@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { AdminGuard } from '../common/authz/admin.guard';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
@@ -22,7 +23,7 @@ import { ApiErrorResponses } from '../common/decorators/api-error-responses.deco
 @ApiTags('admin')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/settings')
 export class AdminSettingsController {
   constructor(
@@ -40,8 +41,8 @@ export class AdminSettingsController {
   @Get('ai-provider')
   @ApiOperation({ summary: 'Get AI provider settings with a live connection check' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminAiProviderSettingsResponseDto })
-  async getAiProviderSettings(@GetCurrentUserId() userId: number) {
-    const settings = await this.aiProviderConfig.getAiProviderSettings(userId);
+  async getAiProviderSettings() {
+    const settings = await this.aiProviderConfig.getAiProviderSettings();
 
     const health: AiProviderHealth = settings.aiProvider.isConfigured
       ? await this.aiProviderClient.checkHealth(await this.aiProviderConfig.getConnection())
@@ -64,14 +65,14 @@ export class AdminSettingsController {
   ) {
     await this.aiProviderConfig.updateAiProviderSettings(userId, dto);
 
-    return this.getAiProviderSettings(userId);
+    return this.getAiProviderSettings();
   }
 
   @Get('profession-atlas')
   @ApiOperation({ summary: 'Get profession atlas settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminProfessionAtlasSettingsResponseDto })
-  async getProfessionAtlasSettings(@GetCurrentUserId() userId: number) {
-    const settings = await this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
+  async getProfessionAtlasSettings() {
+    const settings = await this.professionAtlasSettingsService.getProfessionAtlasSettings();
     const coverage = await this.profOrientationAtlasService.buildCoverageReport();
 
     return {
@@ -95,8 +96,8 @@ export class AdminSettingsController {
   @Get('privacy-policy')
   @ApiOperation({ summary: 'Get privacy policy settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPrivacyPolicySettingsResponseDto })
-  getPrivacyPolicySettings(@GetCurrentUserId() userId: number) {
-    return this.privacyPolicySettingsService.getAdminPrivacyPolicy(userId);
+  getPrivacyPolicySettings() {
+    return this.privacyPolicySettingsService.getAdminPrivacyPolicy();
   }
 
   @Patch('privacy-policy')
@@ -109,9 +110,7 @@ export class AdminSettingsController {
   @Get('profession-atlas/coverage')
   @ApiOperation({ summary: 'Check profession atlas coverage for prof-orientation professions' })
   @ApiResponse({ status: HttpStatus.OK, type: ProfessionAtlasCoverageResponseDto })
-  async getProfessionAtlasCoverage(@GetCurrentUserId() userId: number) {
-    await this.professionAtlasSettingsService.getProfessionAtlasSettings(userId);
-
+  getProfessionAtlasCoverage() {
     return this.profOrientationAtlasService.buildCoverageReport();
   }
 }

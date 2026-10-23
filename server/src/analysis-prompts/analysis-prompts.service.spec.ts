@@ -2,7 +2,6 @@ import { ConflictException, NotFoundException, ServiceUnavailableException } fro
 
 import type { PrismaService } from '../prisma.service';
 import { AnalysisPromptsService } from './analysis-prompts.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { TestAnalysisResultJsonSchema } from '../common/analysis/test-analysis-result.contract';
 import type { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
 import type { AiProviderClientService } from '../ai-provider/ai-provider.client';
@@ -27,10 +26,6 @@ type TestsPromptSimulationReadServiceMock = {
     TestsPromptSimulationReadService['getPromptSimulationQuestionPayloads']
   >;
 };
-
-jest.mock('../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 describe('AnalysisPromptsService', () => {
   let service: AnalysisPromptsService;
@@ -156,7 +151,6 @@ describe('AnalysisPromptsService', () => {
       testsPromptSimulationReadServiceMock as unknown as TestsPromptSimulationReadService,
       auditMock as unknown as AuditService,
     );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -179,7 +173,7 @@ describe('AnalysisPromptsService', () => {
       { analysisPromptVersionId: 43, topicId: 2 },
     ]);
 
-    const result = await service.listPrompts(3);
+    const result = await service.listPrompts();
 
     expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith({
       where: {
@@ -201,7 +195,7 @@ describe('AnalysisPromptsService', () => {
   it('listPrompts does not query test usage when there are no prompts', async () => {
     prismaMock.analysisPrompt.findMany.mockResolvedValue([]);
 
-    await expect(service.listPrompts(3)).resolves.toEqual({ prompts: [] });
+    await expect(service.listPrompts()).resolves.toEqual({ prompts: [] });
 
     expect(prismaMock.testTopicVersion.findMany).not.toHaveBeenCalled();
     expect(prismaMock.testTopic.findMany).not.toHaveBeenCalled();
@@ -237,7 +231,7 @@ describe('AnalysisPromptsService', () => {
       },
     ]);
 
-    const result = await service.listPrompts(3);
+    const result = await service.listPrompts();
 
     expect(result.prompts[0]?.activeTests).toEqual([
       {
@@ -258,9 +252,7 @@ describe('AnalysisPromptsService', () => {
   it('listPrompts returns prompts with version metadata', async () => {
     prismaMock.analysisPrompt.findMany.mockResolvedValue([promptRecord]);
 
-    const result = await service.listPrompts(3);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    const result = await service.listPrompts();
     expect(result.prompts[0]?.versions[0]).toMatchObject({
       id: 42,
       promptId: 7,
@@ -273,9 +265,7 @@ describe('AnalysisPromptsService', () => {
     const response = { defaultModel: 'openai/gpt-oss-20b:free', models: [] };
     aiProviderClientMock.fetchModels.mockResolvedValue(response);
 
-    await expect(service.getPromptModels(3)).resolves.toBe(response);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    await expect(service.getPromptModels()).resolves.toBe(response);
     expect(aiProviderConfigMock.getConnection).toHaveBeenCalled();
     expect(aiProviderClientMock.fetchModels).toHaveBeenCalledWith({ apiKey: 'test-key' });
   });
@@ -290,9 +280,7 @@ describe('AnalysisPromptsService', () => {
     const response = { model: dto.model, output: '{}' };
     aiProviderClientMock.generatePrompt.mockResolvedValue(response);
 
-    await expect(service.generatePrompt(3, dto)).resolves.toBe(response);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    await expect(service.generatePrompt(dto)).resolves.toBe(response);
     expect(aiProviderConfigMock.getConnection).toHaveBeenCalled();
     expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith({ apiKey: 'test-key' }, dto);
   });
@@ -699,14 +687,14 @@ describe('AnalysisPromptsService', () => {
       });
       auditMock.listForEntity.mockResolvedValue(events);
 
-      await expect(service.getPromptHistory(3, 7)).resolves.toEqual({ events });
+      await expect(service.getPromptHistory(7)).resolves.toEqual({ events });
       expect(auditMock.listForEntity).toHaveBeenCalledWith('ANALYSIS_PROMPT', 7);
     });
 
     it('getPromptHistory reports a missing prompt as not found', async () => {
       prismaMock.analysisPrompt.findUnique.mockResolvedValue(null);
 
-      await expect(service.getPromptHistory(3, 404)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getPromptHistory(404)).rejects.toBeInstanceOf(NotFoundException);
     });
   });
   it('publishVersion marks an existing draft as published', async () => {
@@ -804,7 +792,7 @@ describe('AnalysisPromptsService', () => {
         output: JSON.stringify({ skillsLevel: { title: 'ok' } }),
       });
 
-    const result = await service.simulatePrompt(3, {
+    const result = await service.simulatePrompt({
       prompt: 'Analyze selected answers',
       model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.2,
@@ -858,7 +846,7 @@ describe('AnalysisPromptsService', () => {
         output: JSON.stringify({ skillsLevel: { title: 'ok' } }),
       });
 
-    await service.simulatePrompt(3, {
+    await service.simulatePrompt({
       prompt: 'Analyze selected answers',
       model: 'openai/gpt-4.1',
       temperature: 0.2,
@@ -881,7 +869,7 @@ describe('AnalysisPromptsService', () => {
     );
 
     await expect(
-      service.simulatePrompt(3, {
+      service.simulatePrompt({
         prompt: 'Analyze selected answers',
         model: 'google/gemini-2.0-flash-exp:free',
         temperature: 0.2,
@@ -937,7 +925,7 @@ describe('AnalysisPromptsService', () => {
       },
     ]);
 
-    const result = await service.listTestQuestions(3);
+    const result = await service.listTestQuestions();
 
     expect(testsPromptSimulationReadServiceMock.listPromptSimulationTests).toHaveBeenCalled();
     expect(result.tests).toEqual([

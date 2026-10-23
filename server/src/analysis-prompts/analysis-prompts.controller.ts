@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 
 import { GetCurrentUserId } from '../auth/decorators';
 import { AtGuard } from '../auth/guards';
+import { AdminGuard } from '../common/authz/admin.guard';
 import { AnalysisPromptsService } from './analysis-prompts.service';
 import { AdminPromptModelsResponseDto } from './dto/admin-prompt-models-response.dto';
 import { AdminPromptResponseDto } from './dto/admin-prompt-response.dto';
@@ -34,7 +35,7 @@ import { AuditHistoryResponseDto } from '../audit/dto/audit-history.dto';
 @ApiTags('admin')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/prompts')
 export class AnalysisPromptsController {
   constructor(private readonly analysisPromptsService: AnalysisPromptsService) {}
@@ -42,29 +43,29 @@ export class AnalysisPromptsController {
   @Get()
   @ApiOperation({ summary: 'List analysis prompts and versions' })
   @ApiResponse({ status: HttpStatus.OK, type: AnalysisPromptListResponseDto })
-  listPrompts(@GetCurrentUserId() userId: number) {
-    return this.analysisPromptsService.listPrompts(userId);
+  listPrompts() {
+    return this.analysisPromptsService.listPrompts();
   }
 
   @Get('test-questions')
   @ApiOperation({ summary: 'List test questions for prompt simulation' })
   @ApiResponse({ status: HttpStatus.OK, type: PromptTestQuestionsResponseDto })
-  listTestQuestions(@GetCurrentUserId() userId: number) {
-    return this.analysisPromptsService.listTestQuestions(userId);
+  listTestQuestions() {
+    return this.analysisPromptsService.listTestQuestions();
   }
 
   @Get('models')
   @ApiOperation({ summary: 'Get available AI provider models' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptModelsResponseDto })
-  getPromptModels(@GetCurrentUserId() userId: number) {
-    return this.analysisPromptsService.getPromptModels(userId);
+  getPromptModels() {
+    return this.analysisPromptsService.getPromptModels();
   }
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate response from prompt via the AI provider' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
-  generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
-    return this.analysisPromptsService.generatePrompt(userId, dto);
+  generatePrompt(@Body() dto: GeneratePromptDto) {
+    return this.analysisPromptsService.generatePrompt(dto);
   }
 
   @Post()
@@ -101,11 +102,8 @@ export class AnalysisPromptsController {
   @ApiOperation({ summary: 'List recorded changes of an analysis prompt' })
   @ApiParam({ name: 'promptId', type: Number })
   @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
-  getPromptHistory(
-    @GetCurrentUserId() userId: number,
-    @Param('promptId', ParseIntPipe) promptId: number,
-  ) {
-    return this.analysisPromptsService.getPromptHistory(userId, promptId);
+  getPromptHistory(@Param('promptId', ParseIntPipe) promptId: number) {
+    return this.analysisPromptsService.getPromptHistory(promptId);
   }
 
   @Post('versions/:versionId/publish')
@@ -122,7 +120,7 @@ export class AnalysisPromptsController {
   @Post('simulate')
   @ApiOperation({ summary: 'Simulate analysis prompt with selected test questions' })
   @ApiResponse({ status: HttpStatus.CREATED, type: PromptSimulationResponseDto })
-  simulatePrompt(@GetCurrentUserId() userId: number, @Body() dto: PromptSimulationRequestDto) {
-    return this.analysisPromptsService.simulatePrompt(userId, dto);
+  simulatePrompt(@Body() dto: PromptSimulationRequestDto) {
+    return this.analysisPromptsService.simulatePrompt(dto);
   }
 }

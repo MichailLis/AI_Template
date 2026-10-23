@@ -1,13 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import type { PrismaService } from '../prisma.service';
 import { PrivacyPolicySettingsService } from './privacy-policy-settings.service';
 import type { AuditService } from '../audit/audit.service';
-
-jest.mock('../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 describe('PrivacyPolicySettingsService', () => {
   let service: PrivacyPolicySettingsService;
@@ -45,7 +40,6 @@ describe('PrivacyPolicySettingsService', () => {
       prismaMock as unknown as PrismaService,
       auditMock as unknown as AuditService,
     );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -187,9 +181,7 @@ describe('PrivacyPolicySettingsService', () => {
   it('checks admin access before returning admin policy settings', async () => {
     prismaMock.appSetting.findUnique.mockResolvedValue(null);
 
-    await service.getAdminPrivacyPolicy(3);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
+    await service.getAdminPrivacyPolicy();
   });
 
   it('returns the default platform operator name for legacy stored policy settings', async () => {
@@ -203,7 +195,7 @@ describe('PrivacyPolicySettingsService', () => {
       updatedAt: new Date('2026-07-10T12:00:00.000Z'),
     });
 
-    await expect(service.getAdminPrivacyPolicy(3)).resolves.toMatchObject({
+    await expect(service.getAdminPrivacyPolicy()).resolves.toMatchObject({
       privacyPolicy: {
         operatorFullName: 'АНО «Центр развития компьютерного спорта и цифровых технологий»',
       },
@@ -237,8 +229,6 @@ describe('PrivacyPolicySettingsService', () => {
         updatedAt: '2026-07-10T12:00:00.000Z',
       },
     });
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
     expect(prismaMock.appSetting.upsert).toHaveBeenCalledWith({
       where: {
         key: 'privacy.policy',

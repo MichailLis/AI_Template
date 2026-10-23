@@ -3,12 +3,7 @@ import type { ConfigService } from '@nestjs/config';
 
 import type { AuditService } from '../audit/audit.service';
 import type { PrismaService } from '../prisma.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { AiProviderConfigService } from './ai-provider-config.service';
-
-jest.mock('../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 type AuditEvent = {
   entityType: string;
@@ -53,7 +48,6 @@ describe('AiProviderConfigService', () => {
   beforeEach(() => {
     rows = new Map();
     auditMock = { record: jest.fn<Promise<void>, [AuditEvent]>().mockResolvedValue(undefined) };
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -120,7 +114,7 @@ describe('AiProviderConfigService', () => {
 
   it('reports masked settings from env', async () => {
     await expect(
-      createService({ AI_API_KEY: 'pza-v1-env-secret' }).getAiProviderSettings(3),
+      createService({ AI_API_KEY: 'pza-v1-env-secret' }).getAiProviderSettings(),
     ).resolves.toEqual({
       aiProvider: {
         provider: 'polza',
@@ -133,7 +127,6 @@ describe('AiProviderConfigService', () => {
         updatedAt: null,
       },
     });
-    expect(ensureAdminAccess).toHaveBeenCalledWith(expect.anything(), 3);
   });
 
   describe('settings saved in the admin panel', () => {
@@ -156,7 +149,7 @@ describe('AiProviderConfigService', () => {
         apiKey: 'pza-super-secret-key',
         defaultModel: 'openai/gpt-4o-mini',
       });
-      await expect(service.getAiProviderSettings(3)).resolves.toMatchObject({
+      await expect(service.getAiProviderSettings()).resolves.toMatchObject({
         aiProvider: { source: 'DB', maskedValue: 'pza-supe...-key' },
       });
     });

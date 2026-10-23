@@ -11,7 +11,6 @@ import { Transform, type Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import { AuditService } from '../audit/audit.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { BackupStorage } from './backup-storage';
 import { BackupsService, createBackupId } from './backups.service';
@@ -65,8 +64,6 @@ export class BackupImportService {
     declaredLength: number | undefined,
     originalName: string | undefined,
   ) {
-    await ensureAdminAccess(this.prisma, userId);
-
     if (this.maintenance.isActive || this.isImporting) {
       throw new ConflictException('Дождитесь окончания текущей операции', 'OPERATION_IN_PROGRESS');
     }

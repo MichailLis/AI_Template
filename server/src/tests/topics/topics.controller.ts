@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
+import { AdminGuard } from '../../common/authz/admin.guard';
 import {
   CreateTestsTopicFromAiDto,
   CreateTestsTopicDto,
@@ -35,7 +35,7 @@ import { ApiErrorResponses } from '../../common/decorators/api-error-responses.d
 @ApiTags('tests')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/tests')
 export class TestsController {
   constructor(private readonly testsService: TestsService) {}
@@ -45,30 +45,24 @@ export class TestsController {
     summary: 'List test topics with draft and published snapshots',
   })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicListResponseDto })
-  listTopics(@GetCurrentUserId() userId: number, @Query() query: TestsTopicListQueryDto) {
-    return this.testsService.listTopics(userId, query.archived);
+  listTopics(@Query() query: TestsTopicListQueryDto) {
+    return this.testsService.listTopics(query.archived);
   }
 
   @Post(':topicId/archive')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archive test topic' })
   @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
-  archiveTopic(
-    @GetCurrentUserId() userId: number,
-    @Param('topicId', ParseIntPipe) topicId: number,
-  ) {
-    return this.testsService.archiveTopic(userId, topicId);
+  archiveTopic(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.archiveTopic(topicId);
   }
 
   @Post(':topicId/restore')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Restore archived test topic' })
   @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
-  restoreTopic(
-    @GetCurrentUserId() userId: number,
-    @Param('topicId', ParseIntPipe) topicId: number,
-  ) {
-    return this.testsService.restoreTopic(userId, topicId);
+  restoreTopic(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.restoreTopic(topicId);
   }
 
   @Post()
@@ -77,8 +71,8 @@ export class TestsController {
     status: HttpStatus.CREATED,
     type: TestsTopicDetailResponseDto,
   })
-  createTopic(@GetCurrentUserId() userId: number, @Body() dto: CreateTestsTopicDto) {
-    return this.testsService.createTopic(userId, dto);
+  createTopic(@Body() dto: CreateTestsTopicDto) {
+    return this.testsService.createTopic(dto);
   }
 
   @Post('ai/create')
@@ -89,8 +83,8 @@ export class TestsController {
     status: HttpStatus.CREATED,
     type: TestsTopicDetailResponseDto,
   })
-  createTopicFromAi(@GetCurrentUserId() userId: number, @Body() dto: CreateTestsTopicFromAiDto) {
-    return this.testsService.createTopicFromAi(userId, dto);
+  createTopicFromAi(@Body() dto: CreateTestsTopicFromAiDto) {
+    return this.testsService.createTopicFromAi(dto);
   }
 
   @Post('methodologies/prof-orientation-v3-plus/import')
@@ -101,8 +95,8 @@ export class TestsController {
     status: HttpStatus.CREATED,
     type: TestsTopicDetailResponseDto,
   })
-  importProfOrientationV3Plus(@GetCurrentUserId() userId: number) {
-    return this.testsService.importProfOrientationV3Plus(userId);
+  importProfOrientationV3Plus() {
+    return this.testsService.importProfOrientationV3Plus();
   }
 
   @Delete(':topicId')
@@ -110,29 +104,25 @@ export class TestsController {
     summary: 'Delete test topic with all versions and questions',
   })
   @ApiResponse({ status: HttpStatus.OK, type: DeleteTestsTopicResponseDto })
-  deleteTopic(@GetCurrentUserId() userId: number, @Param('topicId', ParseIntPipe) topicId: number) {
-    return this.testsService.deleteTopic(userId, topicId);
+  deleteTopic(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.deleteTopic(topicId);
   }
 
   @Get(':topicId/draft')
   @ApiOperation({ summary: 'Get active draft topic detail' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
-  getTopicDraft(
-    @GetCurrentUserId() userId: number,
-    @Param('topicId', ParseIntPipe) topicId: number,
-  ) {
-    return this.testsService.getTopicDraft(userId, topicId);
+  getTopicDraft(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.getTopicDraft(topicId);
   }
 
   @Patch(':topicId/draft')
   @ApiOperation({ summary: 'Update active draft topic metadata' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
   updateTopicDraft(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Body() dto: UpdateTestsTopicDraftDto,
   ) {
-    return this.testsService.updateTopicDraft(userId, topicId, dto);
+    return this.testsService.updateTopicDraft(topicId, dto);
   }
 
   @Post(':topicId/draft/questions')
@@ -142,45 +132,41 @@ export class TestsController {
     type: TestsTopicDetailResponseDto,
   })
   createQuestion(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Body() dto: UpsertTestsQuestionDto,
   ) {
-    return this.testsService.createQuestion(userId, topicId, dto);
+    return this.testsService.createQuestion(topicId, dto);
   }
 
   @Patch(':topicId/draft/questions/reorder')
   @ApiOperation({ summary: 'Reorder questions in active draft' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
   reorderQuestions(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Body() dto: ReorderTestsQuestionsDto,
   ) {
-    return this.testsService.reorderQuestions(userId, topicId, dto);
+    return this.testsService.reorderQuestions(topicId, dto);
   }
 
   @Patch(':topicId/draft/questions/:questionId')
   @ApiOperation({ summary: 'Update draft question' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
   updateQuestion(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @Body() dto: UpsertTestsQuestionDto,
   ) {
-    return this.testsService.updateQuestion(userId, topicId, questionId, dto);
+    return this.testsService.updateQuestion(topicId, questionId, dto);
   }
 
   @Delete(':topicId/draft/questions/:questionId')
   @ApiOperation({ summary: 'Delete draft question' })
   @ApiResponse({ status: HttpStatus.OK, type: TestsTopicDetailResponseDto })
   deleteQuestion(
-    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
   ) {
-    return this.testsService.deleteQuestion(userId, topicId, questionId);
+    return this.testsService.deleteQuestion(topicId, questionId);
   }
 
   @Post(':topicId/publish')
@@ -189,10 +175,7 @@ export class TestsController {
     summary: 'Publish active draft and create next draft version',
   })
   @ApiResponse({ status: HttpStatus.OK, type: PublishTestsTopicResponseDto })
-  publishTopic(
-    @GetCurrentUserId() userId: number,
-    @Param('topicId', ParseIntPipe) topicId: number,
-  ) {
-    return this.testsService.publishTopic(userId, topicId);
+  publishTopic(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.publishTopic(topicId);
   }
 }

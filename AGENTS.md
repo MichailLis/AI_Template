@@ -62,6 +62,11 @@ entrypoints — business logic belongs in `widgets/*` and `features/*`. Enforced
    read `llmStatus` (or `summary.llm.status`) instead. Enforced by
    `npm run verify:paired-rules` through the `getProfOrientationLlmStatus` pair.
 
+8. Admin controllers carry `@UseGuards(AtGuard, AdminGuard)`; their services do not check the role.
+   A new admin controller needs the guard, and `AdminGuard` reads the role from the database on
+   every request. Only `GET /admin/backups/operation` stays without it (it must answer during a
+   database swap).
+
 Invariants 2–6 are checked by `npm run verify:invariants`. Use `import type` for type-only
 imports; ESLint enforces it.
 

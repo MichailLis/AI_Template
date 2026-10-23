@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
+import { AdminGuard } from '../../common/authz/admin.guard';
 import {
   AdminCreatePublicLinkDto,
   AdminDeletePublicLinkResponseDto,
@@ -28,7 +29,7 @@ import { ApiErrorResponses } from '../../common/decorators/api-error-responses.d
 @ApiTags('tests')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/tests')
 export class TestsAdminPublicLinksController {
   constructor(private readonly testsPublicLinkService: TestsPublicLinkService) {}
@@ -43,15 +44,15 @@ export class TestsAdminPublicLinksController {
   @Get('public-links')
   @ApiOperation({ summary: 'List short public links for tests' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
-  listPublicLinks(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listPublicLinks(userId);
+  listPublicLinks() {
+    return this.testsPublicLinkService.listPublicLinks();
   }
 
   @Get('public-links/archived')
   @ApiOperation({ summary: 'List archived public links for tests' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicLinksListResponseDto })
-  listArchivedPublicLinks(@GetCurrentUserId() userId: number) {
-    return this.testsPublicLinkService.listArchivedPublicLinks(userId);
+  listArchivedPublicLinks() {
+    return this.testsPublicLinkService.listArchivedPublicLinks();
   }
 
   @Patch('public-links/:linkId')
@@ -108,10 +109,7 @@ export class TestsAdminPublicLinksController {
   @Get('public-links/:linkId/history')
   @ApiOperation({ summary: 'List recorded changes of a public link' })
   @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
-  getPublicLinkHistory(
-    @GetCurrentUserId() userId: number,
-    @Param('linkId', ParseIntPipe) linkId: number,
-  ) {
-    return this.testsPublicLinkService.getPublicLinkHistory(userId, linkId);
+  getPublicLinkHistory(@Param('linkId', ParseIntPipe) linkId: number) {
+    return this.testsPublicLinkService.getPublicLinkHistory(linkId);
   }
 }

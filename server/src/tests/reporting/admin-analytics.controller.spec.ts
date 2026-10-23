@@ -99,10 +99,10 @@ describe('TestsAdminAnalyticsController', () => {
     const summary = createSummary();
     analyticsServiceMock.getSummary.mockResolvedValue(summary);
 
-    const result = await controller.getSummary(7, 11, query);
+    const result = await controller.getSummary(11, query);
 
     expect(result).toEqual(summary);
-    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(7, 11, query);
+    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(11, query);
   });
 
   it('keeps query DTO metadata for validation and coercion', () => {
@@ -113,7 +113,7 @@ describe('TestsAdminAnalyticsController', () => {
         methodName,
       ) as Type<unknown>[];
 
-      expect(paramTypes[2]).toBe(AdminTestAnalyticsQueryDto);
+      expect(paramTypes[1]).toBe(AdminTestAnalyticsQueryDto);
     };
 
     assertQueryMetatype('getSummary');
@@ -131,9 +131,9 @@ describe('TestsAdminAnalyticsController', () => {
     analyticsServiceMock.getSummary.mockResolvedValue(summary);
     exportServiceMock.toExcel.mockResolvedValue(buffer);
 
-    const result = await controller.exportXlsx(7, 22, query, responseMock);
+    const result = await controller.exportXlsx(22, query, responseMock);
 
-    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(7, 22, query);
+    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(22, query);
     expect(exportServiceMock.toExcel).toHaveBeenCalledWith(summary);
     expect(setHeaderMock).toHaveBeenCalledWith(
       'Content-Type',
@@ -161,9 +161,9 @@ describe('TestsAdminAnalyticsController', () => {
     analyticsServiceMock.getSummary.mockResolvedValue(summary);
     exportServiceMock.toPdf.mockResolvedValue(buffer);
 
-    const result = await controller.exportPdf(7, 33, query, responseMock);
+    const result = await controller.exportPdf(33, query, responseMock);
 
-    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(7, 33, query);
+    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(33, query);
     expect(exportServiceMock.toPdf).toHaveBeenCalledWith(summary);
     expect(setHeaderMock).toHaveBeenCalledWith('Content-Type', 'application/pdf');
     expect(setHeaderMock).toHaveBeenCalledWith(

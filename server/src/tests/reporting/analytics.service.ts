@@ -15,7 +15,6 @@ import type {
   AdminTestAnalyticsQueryDto,
   AdminTestAnalyticsSummaryDto,
 } from '../dto/tests-analytics.dto';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { getZonedDayEnd, getZonedDayStart, resolveTimeZone } from '../../common/time-zone';
 
 const PUBLIC_LINK_SELECT = {
@@ -164,12 +163,9 @@ export class TestsAnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary(
-    userId: number,
     topicId: number,
     query: AdminTestAnalyticsQueryDto,
   ): Promise<AdminTestAnalyticsSummaryDto> {
-    await ensureAdminAccess(this.prisma, userId);
-
     const topic = await this.prisma.testTopic.findUnique({
       where: {
         id: topicId,

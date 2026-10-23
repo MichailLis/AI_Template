@@ -18,7 +18,6 @@ import type {
   AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from '../dto/tests-public.dto';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { runSerializableTransaction } from '../../common/prisma-transaction.utils';
 import { parseDateOrNull, toOptionalIsoString } from '../shared/date.utils';
 import { createShortCodeCandidate } from '../shared/domain.utils';
@@ -283,7 +282,6 @@ export class TestsPublicLinkService {
   }
 
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkInput) {
-    await ensureAdminAccess(this.prisma, userId);
     await this.ensurePublishedVersion(dto.publishedVersionId);
     const personalDataProcessingMode: PersonalDataProcessingMode =
       dto.personalDataProcessingMode ?? DEFAULT_PERSONAL_DATA_PROCESSING_MODE;
@@ -353,9 +351,7 @@ export class TestsPublicLinkService {
   }
 
   /** История доступна и у архивной ссылки: архивация — тоже событие ее жизни. */
-  async getPublicLinkHistory(userId: number, linkId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getPublicLinkHistory(linkId: number) {
     const link = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true },
@@ -368,9 +364,7 @@ export class TestsPublicLinkService {
     return { events: await this.auditService.listForEntity('PUBLIC_LINK', linkId) };
   }
 
-  async listPublicLinks(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listPublicLinks() {
     const links = await this.prisma.testPublicLink.findMany({
       where: {
         archivedAt: null,
@@ -386,9 +380,7 @@ export class TestsPublicLinkService {
     };
   }
 
-  async listArchivedPublicLinks(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async listArchivedPublicLinks() {
     const links = await this.prisma.testPublicLink.findMany({
       where: {
         archivedAt: {
@@ -407,8 +399,6 @@ export class TestsPublicLinkService {
   }
 
   async updatePublicLink(userId: number, linkId: number, dto: AdminUpdatePublicLinkDto) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: PUBLIC_LINK_UPDATE_SELECT,
@@ -520,8 +510,6 @@ export class TestsPublicLinkService {
   }
 
   async regeneratePublicLinkShortCode(userId: number, linkId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, archivedAt: true, shortCode: true },
@@ -564,8 +552,6 @@ export class TestsPublicLinkService {
   }
 
   async deletePublicLink(userId: number, linkId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, topicVersionId: true, archivedAt: true },
@@ -607,8 +593,6 @@ export class TestsPublicLinkService {
   }
 
   async restorePublicLink(userId: number, linkId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, topicVersionId: true, archivedAt: true },
@@ -676,8 +660,6 @@ export class TestsPublicLinkService {
    * действие. Начатые прохождения доводятся по своей версии: вопросы берутся из версии попытки.
    */
   async moveToActivePublishedVersion(userId: number, linkId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const existing = await this.prisma.testPublicLink.findUnique({
       where: { id: linkId },
       select: { id: true, archivedAt: true },
@@ -785,23 +767,15 @@ export class TestsPublicLinkService {
     };
   }
 
-  listEducationOrganizations(userId: number, query: AdminEducationOrganizationsListQueryDto = {}) {
-    return this.educationOrganizationService.listEducationOrganizations(userId, query);
+  listEducationOrganizations(query: AdminEducationOrganizationsListQueryDto = {}) {
+    return this.educationOrganizationService.listEducationOrganizations(query);
   }
 
-  createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
-    return this.educationOrganizationService.createEducationOrganization(userId, dto);
+  createEducationOrganization(dto: AdminCreateEducationOrganizationDto) {
+    return this.educationOrganizationService.createEducationOrganization(dto);
   }
 
-  updateEducationOrganization(
-    userId: number,
-    organizationId: number,
-    dto: AdminUpdateEducationOrganizationDto,
-  ) {
-    return this.educationOrganizationService.updateEducationOrganization(
-      userId,
-      organizationId,
-      dto,
-    );
+  updateEducationOrganization(organizationId: number, dto: AdminUpdateEducationOrganizationDto) {
+    return this.educationOrganizationService.updateEducationOrganization(organizationId, dto);
   }
 }

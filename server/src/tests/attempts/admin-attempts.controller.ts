@@ -12,8 +12,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { type Response } from 'express';
 
-import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
+import { AdminGuard } from '../../common/authz/admin.guard';
 import {
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListQueryDto,
@@ -28,7 +28,7 @@ const XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreads
 @ApiTags('tests')
 @ApiBearerAuth()
 @ApiErrorResponses()
-@UseGuards(AtGuard)
+@UseGuards(AtGuard, AdminGuard)
 @Controller('admin/tests')
 export class TestsAdminAttemptsController {
   constructor(
@@ -40,11 +40,10 @@ export class TestsAdminAttemptsController {
   @ApiOperation({ summary: 'List student attempts by public link' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptsListResponseDto })
   listPublicLinkAttempts(
-    @GetCurrentUserId() userId: number,
     @Param('linkId', ParseIntPipe) linkId: number,
     @Query() query: AdminPublicAttemptsListQueryDto,
   ) {
-    return this.testsAdminAttemptService.listAttemptsForLink(userId, linkId, query);
+    return this.testsAdminAttemptService.listAttemptsForLink(linkId, query);
   }
 
   @Get('public-links/:linkId/attempts/export.xlsx')
@@ -56,13 +55,11 @@ export class TestsAdminAttemptsController {
     content: { [XLSX_CONTENT_TYPE]: { schema: { type: 'string', format: 'binary' } } },
   })
   async exportPublicLinkAttempts(
-    @GetCurrentUserId() userId: number,
     @Param('linkId', ParseIntPipe) linkId: number,
     @Query() query: AdminPublicAttemptsListQueryDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { shortCode, attempts } = await this.testsAdminAttemptService.listAttemptsForExport(
-      userId,
       linkId,
       query,
     );
@@ -84,10 +81,7 @@ export class TestsAdminAttemptsController {
   @Get('attempts/:attemptId')
   @ApiOperation({ summary: 'Get student attempt details with answers and analysis' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptDetailResponseDto })
-  getAttemptDetail(
-    @GetCurrentUserId() userId: number,
-    @Param('attemptId', ParseIntPipe) attemptId: number,
-  ) {
-    return this.testsAdminAttemptService.getAttemptDetail(userId, attemptId);
+  getAttemptDetail(@Param('attemptId', ParseIntPipe) attemptId: number) {
+    return this.testsAdminAttemptService.getAttemptDetail(attemptId);
   }
 }

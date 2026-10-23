@@ -1,13 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import type { PrismaService } from '../prisma.service';
 import { ProfessionAtlasSettingsService } from './profession-atlas-settings.service';
 import type { AuditService } from '../audit/audit.service';
-
-jest.mock('../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 describe('ProfessionAtlasSettingsService', () => {
   let service: ProfessionAtlasSettingsService;
@@ -36,7 +31,6 @@ describe('ProfessionAtlasSettingsService', () => {
       prismaMock as unknown as PrismaService,
       auditMock as unknown as AuditService,
     );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -146,7 +140,7 @@ describe('ProfessionAtlasSettingsService', () => {
       return Promise.resolve(null);
     });
 
-    await expect(service.getProfessionAtlasSettings(3)).resolves.toEqual({
+    await expect(service.getProfessionAtlasSettings()).resolves.toEqual({
       professionAtlas: {
         url: 'https://atlas.example',
         publicUrl: 'https://atlas.example',
@@ -154,7 +148,6 @@ describe('ProfessionAtlasSettingsService', () => {
         updatedAt: '2026-05-12T11:00:00.000Z',
       },
     });
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 3);
   });
 
   it('saves trimmed profession atlas public and API URLs', async () => {

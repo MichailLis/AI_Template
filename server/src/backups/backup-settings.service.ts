@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 
 import { AuditService } from '../audit/audit.service';
 import { collectAuditChanges } from '../audit/audit-changes';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import { BackupStorage } from './backup-storage';
 import { BackupSettingsSchema, type BackupSettings } from './backups.types';
@@ -77,8 +76,6 @@ export class BackupSettingsService {
   }
 
   async updateSettings(userId: number, input: unknown) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const parsed = BackupSettingsSchema.safeParse(input);
 
     if (!parsed.success) {

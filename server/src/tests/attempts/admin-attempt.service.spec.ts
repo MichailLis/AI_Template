@@ -91,7 +91,7 @@ describe('TestsAdminAttemptService', () => {
       },
     ]);
 
-    const response = await service.listAttemptsForLink(7, 13, { page: 3, limit: 10 });
+    const response = await service.listAttemptsForLink(13, { page: 3, limit: 10 });
     expect(prismaMock.testStudentAttempt.count).toHaveBeenCalledWith({
       where: { publicLinkId: 13 },
     });
@@ -169,7 +169,7 @@ describe('TestsAdminAttemptService', () => {
       },
     ]);
 
-    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+    const response = await service.listAttemptsForLink(13, { page: 1, limit: 10 });
     expect(response.attempts[0].analysisStatus).toBe('READY');
     expect(response.attempts[0].llmStatus).toBe('failed');
   });
@@ -208,7 +208,7 @@ describe('TestsAdminAttemptService', () => {
       'https://atlas.example/professions',
     );
 
-    const response = await service.getAttemptDetail(7, 202);
+    const response = await service.getAttemptDetail(202);
     expect(response).toMatchObject({
       attemptId: 202,
       professionAtlasUrl: 'https://atlas.example/professions',
@@ -252,7 +252,7 @@ describe('TestsAdminAttemptService', () => {
       },
     ]);
 
-    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+    const response = await service.listAttemptsForLink(13, { page: 1, limit: 10 });
     expect(response.attempts[0]).toMatchObject({
       attemptId: 303,
       entryProfileMode: 'EDUCATION_DEMOGRAPHIC',
@@ -294,7 +294,7 @@ describe('TestsAdminAttemptService', () => {
       },
     ]);
 
-    const response = await service.listAttemptsForLink(7, 13, { page: 1, limit: 10 });
+    const response = await service.listAttemptsForLink(13, { page: 1, limit: 10 });
     expect(response.attempts[0]?.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
   });
 
@@ -330,7 +330,7 @@ describe('TestsAdminAttemptService', () => {
       analysis: null,
     });
 
-    const response = await service.getAttemptDetail(7, 505);
+    const response = await service.getAttemptDetail(505);
     expect(response.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
   });
 });

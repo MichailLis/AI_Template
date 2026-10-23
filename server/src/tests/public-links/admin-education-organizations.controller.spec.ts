@@ -34,8 +34,8 @@ describe('TestsAdminEducationOrganizationsController', () => {
     const query = { page: 2, limit: 10 };
     serviceMock.listEducationOrganizations.mockResolvedValue(response);
 
-    await expect(controller.listEducationOrganizations(7, query)).resolves.toEqual(response);
-    expect(serviceMock.listEducationOrganizations).toHaveBeenCalledWith(7, query);
+    await expect(controller.listEducationOrganizations(query)).resolves.toEqual(response);
+    expect(serviceMock.listEducationOrganizations).toHaveBeenCalledWith(query);
   });
 
   it('createEducationOrganization delegates to service', async () => {
@@ -46,8 +46,8 @@ describe('TestsAdminEducationOrganizationsController', () => {
 
     serviceMock.createEducationOrganization.mockResolvedValue(response);
 
-    await expect(controller.createEducationOrganization(7, dto)).resolves.toEqual(response);
-    expect(serviceMock.createEducationOrganization).toHaveBeenCalledWith(7, dto);
+    await expect(controller.createEducationOrganization(dto)).resolves.toEqual(response);
+    expect(serviceMock.createEducationOrganization).toHaveBeenCalledWith(dto);
   });
 
   it('updateEducationOrganization delegates to service', async () => {
@@ -59,7 +59,7 @@ describe('TestsAdminEducationOrganizationsController', () => {
 
     serviceMock.updateEducationOrganization.mockResolvedValue(response);
 
-    await expect(controller.updateEducationOrganization(7, 3, dto)).resolves.toEqual(response);
-    expect(serviceMock.updateEducationOrganization).toHaveBeenCalledWith(7, 3, dto);
+    await expect(controller.updateEducationOrganization(3, dto)).resolves.toEqual(response);
+    expect(serviceMock.updateEducationOrganization).toHaveBeenCalledWith(3, dto);
   });
 });

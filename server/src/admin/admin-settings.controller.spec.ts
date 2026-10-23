@@ -80,7 +80,7 @@ describe('AdminSettingsController', () => {
       errorMessage: 'User not found.',
     });
 
-    await expect(controller.getAiProviderSettings(3)).resolves.toEqual({
+    await expect(controller.getAiProviderSettings()).resolves.toEqual({
       aiProvider: {
         provider: 'polza',
         label: 'Polza.ai',
@@ -97,7 +97,7 @@ describe('AdminSettingsController', () => {
         },
       },
     });
-    expect(aiProviderConfig.getAiProviderSettings).toHaveBeenCalledWith(3);
+    expect(aiProviderConfig.getAiProviderSettings).toHaveBeenCalledWith();
     expect(aiProviderClient.checkHealth).toHaveBeenCalledWith(connection);
   });
 
@@ -111,7 +111,7 @@ describe('AdminSettingsController', () => {
       },
     });
 
-    const result = await controller.getAiProviderSettings(3);
+    const result = await controller.getAiProviderSettings();
 
     expect(result.aiProvider.health.status).toBe('not_configured');
     expect(aiProviderClient.checkHealth).not.toHaveBeenCalled();
@@ -137,7 +137,7 @@ describe('AdminSettingsController', () => {
       items: [],
     });
 
-    await expect(controller.getProfessionAtlasSettings(3)).resolves.toEqual({
+    await expect(controller.getProfessionAtlasSettings()).resolves.toEqual({
       professionAtlas: {
         url: 'https://atlas.example',
         publicUrl: 'https://atlas.example',
@@ -154,7 +154,7 @@ describe('AdminSettingsController', () => {
         },
       },
     });
-    expect(professionAtlasSettingsService.getProfessionAtlasSettings).toHaveBeenCalledWith(3);
+    expect(professionAtlasSettingsService.getProfessionAtlasSettings).toHaveBeenCalledWith();
     expect(profOrientationAtlasService.buildCoverageReport).toHaveBeenCalledWith();
   });
 
@@ -190,7 +190,7 @@ describe('AdminSettingsController', () => {
       },
     });
 
-    await expect(controller.getPrivacyPolicySettings(3)).resolves.toEqual({
+    await expect(controller.getPrivacyPolicySettings()).resolves.toEqual({
       privacyPolicy: {
         version: '2026-07-09',
         publishedAt: '2026-07-09T00:00:00.000Z',
@@ -199,7 +199,7 @@ describe('AdminSettingsController', () => {
         updatedAt: null,
       },
     });
-    expect(privacyPolicySettingsService.getAdminPrivacyPolicy).toHaveBeenCalledWith(3);
+    expect(privacyPolicySettingsService.getAdminPrivacyPolicy).toHaveBeenCalledWith();
   });
 
   it('updates privacy policy settings', async () => {
@@ -237,11 +237,10 @@ describe('AdminSettingsController', () => {
       items: [],
     });
 
-    await expect(controller.getProfessionAtlasCoverage(3)).resolves.toMatchObject({
+    await expect(controller.getProfessionAtlasCoverage()).resolves.toMatchObject({
       status: 'partial',
       missing: ['Инженер данных'],
       duplicates: ['Промышленный дизайнер'],
     });
-    expect(professionAtlasSettingsService.getProfessionAtlasSettings).toHaveBeenCalledWith(3);
   });
 });
