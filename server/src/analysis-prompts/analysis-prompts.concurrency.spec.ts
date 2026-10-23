@@ -1,11 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { AnalysisPromptsService } from './analysis-prompts.service';
-
-jest.mock('../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 describe('AnalysisPromptsService concurrency guards', () => {
   it('does not archive a prompt that another transaction already archived', async () => {
@@ -39,7 +34,6 @@ describe('AnalysisPromptsService concurrency guards', () => {
       {} as never,
       audit as never,
     );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
 
     await expect(service.deletePrompt(3, 7)).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.analysisPrompt.update).not.toHaveBeenCalled();

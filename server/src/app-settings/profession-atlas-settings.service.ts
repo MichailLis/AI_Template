@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 
 /** Идентификатор настройки в журнале изменений. */
@@ -80,9 +79,7 @@ export class ProfessionAtlasSettingsService {
     };
   }
 
-  async getProfessionAtlasSettings(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getProfessionAtlasSettings() {
     return this.toSettingsResponse(await this.getStoredProfessionAtlasUrl());
   }
 
@@ -95,8 +92,6 @@ export class ProfessionAtlasSettingsService {
           apiUrl: string;
         },
   ) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const normalizedPublicUrl = typeof input === 'string' ? input.trim() : input.publicUrl.trim();
     const normalizedApiUrl = typeof input === 'string' ? '' : input.apiUrl.trim();
 

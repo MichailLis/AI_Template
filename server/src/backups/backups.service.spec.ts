@@ -69,7 +69,7 @@ describe('BackupsService', () => {
 
   const waitForIdle = async () => {
     for (let attempt = 0; attempt < 100; attempt += 1) {
-      if (!(await service.getOverview(ADMIN_ID)).isBusy) {
+      if (!(await service.getOverview()).isBusy) {
         return;
       }
 
@@ -163,7 +163,7 @@ describe('BackupsService', () => {
     expect(backup).toMatchObject({ status: 'RUNNING', trigger: 'MANUAL' });
     await waitForIdle();
 
-    const overview = await service.getOverview(ADMIN_ID);
+    const overview = await service.getOverview();
     const [ready] = overview.backups;
 
     expect(ready).toMatchObject({
@@ -215,7 +215,7 @@ describe('BackupsService', () => {
     const { backup } = await service.createBackup(ADMIN_ID);
     await waitForIdle();
 
-    const [failed] = (await service.getOverview(ADMIN_ID)).backups;
+    const [failed] = (await service.getOverview()).backups;
 
     expect(failed).toMatchObject({ status: 'FAILED', errorMessage: 'connection refused' });
     expect(await readdir(directory)).toEqual([`${backup.id}.json`]);
@@ -254,7 +254,7 @@ describe('BackupsService', () => {
   it('reports backups as unavailable when pg_dump is missing', async () => {
     runner.run.mockRejectedValue(new PgToolMissingError('pg_dump'));
 
-    const overview = await service.getOverview(ADMIN_ID);
+    const overview = await service.getOverview();
 
     expect(overview.availability).toMatchObject({
       available: false,
@@ -267,7 +267,7 @@ describe('BackupsService', () => {
   it('refuses a pg_dump older than the server', async () => {
     runner.run.mockResolvedValue('pg_dump (PostgreSQL) 15.8');
 
-    const { availability } = await service.getOverview(ADMIN_ID);
+    const { availability } = await service.getOverview();
 
     expect(availability.available).toBe(false);
     expect(availability.reason).toContain('pg_dump 15 старее сервера PostgreSQL 16');
@@ -295,7 +295,7 @@ describe('BackupsService', () => {
     const { backup } = await service.createBackup(ADMIN_ID);
     await waitForIdle();
 
-    const ids = (await service.getOverview(ADMIN_ID)).backups.map((item) => item.id);
+    const ids = (await service.getOverview()).backups.map((item) => item.id);
 
     expect(ids).toEqual([backup.id, 'backup-20261010T000000Z-bbbbbb']);
   });
@@ -314,7 +314,7 @@ describe('BackupsService', () => {
     await service.createBackup(ADMIN_ID);
     await waitForIdle();
 
-    expect((await service.getOverview(ADMIN_ID)).backups.map((item) => item.id)).toContain(
+    expect((await service.getOverview()).backups.map((item) => item.id)).toContain(
       'backup-20260101T000000Z-aaaaaa',
     );
   });
@@ -325,7 +325,7 @@ describe('BackupsService', () => {
 
     await service.onApplicationBootstrap();
 
-    const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+    const [backup] = (await service.getOverview()).backups;
 
     expect(backup).toMatchObject({
       status: 'FAILED',
@@ -378,26 +378,12 @@ describe('BackupsService', () => {
     },
   );
 
-  it('requires an admin for every operation', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 2, role: 'USER', deactivatedAt: null });
-
-    await expect(service.getOverview(2)).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(service.createBackup(2)).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(service.deleteBackup(2, 'backup-20261011T100000Z-abcdef')).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
-    await expect(
-      service.createDownloadLink(2, 'backup-20261011T100000Z-abcdef'),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-    expect(runner.run).not.toHaveBeenCalled();
-  });
-
   describe('settings', () => {
     it('falls back to env defaults until an admin saves settings', async () => {
       env.BACKUP_RETENTION_DAYS = '7';
       createService();
 
-      expect((await service.getOverview(ADMIN_ID)).settings).toEqual({
+      expect((await service.getOverview()).settings).toEqual({
         scheduleEnabled: true,
         scheduleHourUtc: 3,
         retentionDays: 7,
@@ -413,7 +399,7 @@ describe('BackupsService', () => {
         maxCount: 30,
       });
 
-      const overview = await service.getOverview(ADMIN_ID);
+      const overview = await service.getOverview();
 
       expect(overview.settings).toMatchObject({ scheduleEnabled: false, scheduleHourUtc: 22 });
       expect(overview.nextScheduledAt).toBeNull();
@@ -457,9 +443,7 @@ describe('BackupsService', () => {
       const { backup } = await service.createBackup(ADMIN_ID);
       await waitForIdle();
 
-      expect((await service.getOverview(ADMIN_ID)).backups.map((item) => item.id)).toEqual([
-        backup.id,
-      ]);
+      expect((await service.getOverview()).backups.map((item) => item.id)).toEqual([backup.id]);
     });
   });
 
@@ -470,7 +454,7 @@ describe('BackupsService', () => {
       expect(await scheduler.runIfDue(at('2026-10-11T02:50:00Z'))).toBe(true);
       await waitForIdle();
 
-      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+      const [backup] = (await service.getOverview()).backups;
 
       expect(backup).toMatchObject({ trigger: 'SCHEDULED', status: 'READY', createdBy: null });
       expect(audit.record).toHaveBeenCalledWith(
@@ -517,7 +501,7 @@ describe('BackupsService', () => {
 
       expect(await scheduler.runIfDue()).toBe(false);
 
-      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+      const [backup] = (await service.getOverview()).backups;
 
       expect(backup).toMatchObject({
         trigger: 'SCHEDULED',
@@ -529,7 +513,7 @@ describe('BackupsService', () => {
       );
       // Слот занят неудачной попыткой: до следующего дня повтора нет.
       expect(await scheduler.runIfDue()).toBe(false);
-      expect((await service.getOverview(ADMIN_ID)).backups).toHaveLength(1);
+      expect((await service.getOverview()).backups).toHaveLength(1);
     });
 
     it('records a scheduled backup skipped for lack of disk space', async () => {
@@ -537,7 +521,7 @@ describe('BackupsService', () => {
 
       expect(await scheduler.runIfDue()).toBe(false);
 
-      const [backup] = (await service.getOverview(ADMIN_ID)).backups;
+      const [backup] = (await service.getOverview()).backups;
 
       expect(backup.status).toBe('FAILED');
       expect(backup.errorMessage).toContain('Недостаточно места на диске');
@@ -563,7 +547,7 @@ describe('BackupsService', () => {
     const { backup } = await service.createBackup(ADMIN_ID);
     await waitForIdle();
 
-    expect((await service.getOverview(ADMIN_ID)).backups.map((item) => item.id)).toEqual([
+    expect((await service.getOverview()).backups.map((item) => item.id)).toEqual([
       backup.id,
       'backup-20260101T000000Z-aaaaaa',
     ]);
@@ -573,7 +557,7 @@ describe('BackupsService', () => {
     await seedBackup({ id: 'backup-20261011T100000Z-aaaaaa', sizeBytes: 1000 });
     jest.spyOn(storage, 'freeBytes').mockResolvedValue(2500);
 
-    const { storage: usage } = await service.getOverview(ADMIN_ID);
+    const { storage: usage } = await service.getOverview();
 
     expect(usage).toEqual({
       freeBytes: 2500,
@@ -586,6 +570,6 @@ describe('BackupsService', () => {
   it('does not warn with plenty of space', async () => {
     jest.spyOn(storage, 'freeBytes').mockResolvedValue(10 * 1024 * 1024);
 
-    expect((await service.getOverview(ADMIN_ID)).storage.lowSpace).toBe(false);
+    expect((await service.getOverview()).storage.lowSpace).toBe(false);
   });
 });

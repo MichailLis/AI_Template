@@ -7,10 +7,6 @@ import {
   type PublicLinkServiceHarness,
 } from '../public-links/public-link.service.spec-harness';
 
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
-
 /**
  * Находка аудита FLOW-06: у ссылок был только автор создания, а кто и когда отключил ссылку,
  * поменял согласие или перевыпустил код, не было видно.
@@ -247,13 +243,13 @@ describe('TestsPublicLinkService audit trail', () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 100 });
     auditMock.listForEntity.mockResolvedValue(events);
 
-    await expect(service.getPublicLinkHistory(7, 100)).resolves.toEqual({ events });
+    await expect(service.getPublicLinkHistory(100)).resolves.toEqual({ events });
     expect(auditMock.listForEntity).toHaveBeenCalledWith('PUBLIC_LINK', 100);
   });
 
   it('getPublicLinkHistory reports a missing link as not found', async () => {
     prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
 
-    await expect(service.getPublicLinkHistory(7, 404)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getPublicLinkHistory(404)).rejects.toBeInstanceOf(NotFoundException);
   });
 });

@@ -6,7 +6,11 @@ import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-set
 import { AiProviderModule } from '../ai-provider/ai-provider.module';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 import { BackupsModule } from '../backups/backups.module';
-import { AdminBackupDownloadController, AdminBackupsController } from './admin-backups.controller';
+import {
+  AdminBackupDownloadController,
+  AdminBackupOperationController,
+  AdminBackupsController,
+} from './admin-backups.controller';
 import { AdminSettingsController } from './admin-settings.controller';
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
@@ -17,6 +21,7 @@ import { AdminController } from './admin.controller';
     AdminController,
     AdminSettingsController,
     AdminBackupsController,
+    AdminBackupOperationController,
     AdminBackupDownloadController,
   ],
   providers: [

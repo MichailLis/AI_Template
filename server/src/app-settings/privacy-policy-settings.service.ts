@@ -3,7 +3,6 @@ import { z } from 'zod';
 
 import { collectAuditChanges } from '../audit/audit-changes';
 import { AuditService } from '../audit/audit.service';
-import { ensureAdminAccess } from '../common/authz/admin-access.utils';
 import { PrismaService } from '../prisma.service';
 import {
   DEFAULT_PRIVACY_POLICY_CONTENT,
@@ -125,15 +124,11 @@ export class PrivacyPolicySettingsService {
     return this.toPublicResponse(await this.getEffectivePolicy());
   }
 
-  async getAdminPrivacyPolicy(userId: number) {
-    await ensureAdminAccess(this.prisma, userId);
-
+  async getAdminPrivacyPolicy() {
     return this.toAdminResponse(await this.getEffectivePolicy());
   }
 
   async updatePrivacyPolicy(userId: number, input: unknown) {
-    await ensureAdminAccess(this.prisma, userId);
-
     const payload = this.normalizePayload(input);
     const value = JSON.stringify(payload);
     const previousPolicy = await this.getEffectivePolicy();

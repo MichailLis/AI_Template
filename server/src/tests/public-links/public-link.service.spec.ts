@@ -1,7 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import {
   createExistingPublicLinkUpdateFixture,
   createPublicLinkRecordFixture,
@@ -17,10 +16,6 @@ import type {
   AdminUpdatePublicLinkDto,
 } from '../dto/tests-links.dto';
 import type { PublicBrandingConfig } from '../dto/tests-public.dto';
-
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 /** Журнал изменений ссылок проверяется отдельно, в public-link.service.audit.spec.ts. */
 describe('TestsPublicLinkService', () => {
@@ -51,7 +46,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.createEducationOrganization(7, dto)).rejects.toThrow(BadRequestException);
+    await expect(service.createEducationOrganization(dto)).rejects.toThrow(BadRequestException);
     expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
   });
 
@@ -74,7 +69,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: 'hint',
     };
 
-    const result = await service.createEducationOrganization(11, dto);
+    const result = await service.createEducationOrganization(dto);
 
     expect(prismaMock.educationOrganization.create).toHaveBeenCalledWith({
       data: {
@@ -109,9 +104,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.updateEducationOrganization(5, 404, dto)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.updateEducationOrganization(404, dto)).rejects.toThrow(NotFoundException);
   });
 
   it('updateEducationOrganization trims and persists provided validation config', async () => {
@@ -141,7 +134,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: '  Укажите формат ИС-21  ',
     };
 
-    await service.updateEducationOrganization(9, 3, dto);
+    await service.updateEducationOrganization(3, dto);
 
     expect(prismaMock.educationOrganization.update).toHaveBeenCalledWith({
       where: { id: 3 },
@@ -255,7 +248,7 @@ describe('TestsPublicLinkService', () => {
       }),
     ]);
 
-    const result = await service.listPublicLinks(7);
+    const result = await service.listPublicLinks();
 
     expect(result.links[0]).toMatchObject({
       publishedVersionId: 50,
@@ -278,7 +271,7 @@ describe('TestsPublicLinkService', () => {
       }),
     ]);
 
-    const result = await service.listPublicLinks(7);
+    const result = await service.listPublicLinks();
 
     expect(result.links[0]).toMatchObject({
       activePublishedVersionId: null,
@@ -305,8 +298,6 @@ describe('TestsPublicLinkService', () => {
     );
 
     const result = await service.moveToActivePublishedVersion(7, 100);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testPublicLink.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 100 }, data: { topicVersionId: 51 } }),
     );

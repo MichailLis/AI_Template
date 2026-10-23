@@ -62,16 +62,16 @@ describe('TestsAdminPublicLinksController', () => {
     const response = { links: [] };
     serviceMock.listPublicLinks.mockResolvedValue(response);
 
-    await expect(controller.listPublicLinks(7)).resolves.toEqual(response);
-    expect(serviceMock.listPublicLinks).toHaveBeenCalledWith(7);
+    await expect(controller.listPublicLinks()).resolves.toEqual(response);
+    expect(serviceMock.listPublicLinks).toHaveBeenCalledWith();
   });
 
   it('listArchivedPublicLinks delegates to service', async () => {
     const response = { links: [] };
     serviceMock.listArchivedPublicLinks.mockResolvedValue(response);
 
-    await expect(controller.listArchivedPublicLinks(7)).resolves.toEqual(response);
-    expect(serviceMock.listArchivedPublicLinks).toHaveBeenCalledWith(7);
+    await expect(controller.listArchivedPublicLinks()).resolves.toEqual(response);
+    expect(serviceMock.listArchivedPublicLinks).toHaveBeenCalledWith();
   });
 
   it('updatePublicLink delegates to service', async () => {
@@ -123,7 +123,7 @@ describe('TestsAdminPublicLinksController', () => {
     const response = { events: [] };
     serviceMock.getPublicLinkHistory.mockResolvedValue(response);
 
-    await expect(controller.getPublicLinkHistory(7, 5)).resolves.toEqual(response);
-    expect(serviceMock.getPublicLinkHistory).toHaveBeenCalledWith(7, 5);
+    await expect(controller.getPublicLinkHistory(5)).resolves.toEqual(response);
+    expect(serviceMock.getPublicLinkHistory).toHaveBeenCalledWith(5);
   });
 });

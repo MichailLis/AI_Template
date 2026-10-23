@@ -1,13 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import { TestsAnalyticsService } from '../reporting/analytics.service';
 import { PROF_ORIENTATION_DIRECTIONS } from '../prof-orientation-v3-plus/types';
-
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn(),
-}));
 
 const createDirectionSummary = (directionId: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) => ({
   id: directionId,
@@ -142,39 +137,21 @@ describe('TestsAnalyticsService', () => {
     };
 
     service = new TestsAnalyticsService(prismaMock as unknown as PrismaService);
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('checks admin access before loading analytics data', async () => {
-    const error = new ForbiddenException('Admin area only');
-    jest.mocked(ensureAdminAccess).mockRejectedValue(error);
-
-    await expect(
-      service.getSummary(7, 1, {
-        scope: 'TOPIC',
-        linkStatus: 'ALL',
-      }),
-    ).rejects.toBe(error);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
-    expect(prismaMock.testTopic.findUnique).not.toHaveBeenCalled();
-  });
-
   it('throws NotFoundException when topic does not exist', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(null);
 
     await expect(
-      service.getSummary(7, 1, {
+      service.getSummary(1, {
         scope: 'TOPIC',
         linkStatus: 'ALL',
       }),
     ).rejects.toBeInstanceOf(NotFoundException);
-
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
   });
 
@@ -200,14 +177,13 @@ describe('TestsAnalyticsService', () => {
       },
     ]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ACTIVE',
     });
 
     expect(result.publicLinks).toHaveLength(2);
     expect(result.publicLinks.map((link) => link.publicLinkId)).toEqual([11, 22]);
-    expect(ensureAdminAccess).toHaveBeenCalledWith(prismaMock, 7);
     expect(prismaMock.testPublicLink.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
@@ -237,7 +213,7 @@ describe('TestsAnalyticsService', () => {
       prismaMock.testPublicLink.findMany.mockResolvedValue(links);
       prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-      const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+      const result = await service.getSummary(1, { scope: 'TOPIC', linkStatus: 'ALL' });
 
       expect(result.topic.scoringKind).toBe(scoringKind);
     },
@@ -251,7 +227,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue(publicLinksActive);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    const result = await service.getSummary(7, 1, { scope: 'TOPIC', linkStatus: 'ALL' });
+    const result = await service.getSummary(1, { scope: 'TOPIC', linkStatus: 'ALL' });
 
     expect(result.topic.scoringKind).toBe('DEFAULT');
   });
@@ -262,7 +238,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue(publicLinksWithOneArchived);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
     });
@@ -287,7 +263,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[1]]);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ARCHIVED',
     });
@@ -311,7 +287,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
     prismaMock.testPublicLink.findMany.mockResolvedValue([]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
     });
@@ -373,7 +349,7 @@ describe('TestsAnalyticsService', () => {
       },
     ]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'PUBLIC_LINK',
       publicLinkId: 22,
       linkStatus: 'ALL',
@@ -454,7 +430,7 @@ describe('TestsAnalyticsService', () => {
       },
     ]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
     });
@@ -525,7 +501,7 @@ describe('TestsAnalyticsService', () => {
       },
     ]);
 
-    const result = await service.getSummary(7, 1, {
+    const result = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
     });
@@ -548,7 +524,7 @@ describe('TestsAnalyticsService', () => {
     });
 
     await expect(
-      service.getSummary(7, 1, {
+      service.getSummary(1, {
         scope: 'PUBLIC_LINK',
         publicLinkId: 22,
         linkStatus: 'ALL',
@@ -562,7 +538,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    await service.getSummary(7, 1, {
+    await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
       dateFrom: '2026-05-10',
@@ -588,7 +564,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    const summary = await service.getSummary(7, 1, {
+    const summary = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
       dateFrom: '2026-10-12',
@@ -617,7 +593,7 @@ describe('TestsAnalyticsService', () => {
     prismaMock.testPublicLink.findMany.mockResolvedValue([publicLinks[0]]);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
 
-    const summary = await service.getSummary(7, 1, {
+    const summary = await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
       dateFrom: '2026-10-12',
@@ -649,7 +625,7 @@ describe('TestsAnalyticsService', () => {
       },
     ]);
 
-    await service.getSummary(7, 1, {
+    await service.getSummary(1, {
       scope: 'TOPIC',
       linkStatus: 'ALL',
     });

@@ -1,13 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
-import { ensureAdminAccess } from '../../common/authz/admin-access.utils';
 import type { TestsQuestionService } from '../topics/question.service';
 import { TestsService } from '../topics/topics.service';
-
-jest.mock('../../common/authz/admin-access.utils', () => ({
-  ensureAdminAccess: jest.fn().mockResolvedValue(undefined),
-}));
 
 const publishedPromptVersion = {
   id: 42,
@@ -184,7 +179,6 @@ describe('TestsService analysis prompt attachment', () => {
       prismaMock as unknown as PrismaService,
       {} as unknown as TestsQuestionService,
     );
-    jest.mocked(ensureAdminAccess).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -218,7 +212,7 @@ describe('TestsService analysis prompt attachment', () => {
       { topicId: 1, status: 'DRAFT', _count: { publicLinks: 1, studentAttempts: 0 } },
     ]);
 
-    const result = await service.listTopics(5);
+    const result = await service.listTopics();
 
     expect(prismaMock.testTopicVersion.findMany).toHaveBeenCalledWith({
       where: {
@@ -242,7 +236,7 @@ describe('TestsService analysis prompt attachment', () => {
   it('does not query public links when no topic matches the list filter', async () => {
     prismaMock.testTopic.findMany.mockResolvedValue([]);
 
-    const result = await service.listTopics(5);
+    const result = await service.listTopics();
 
     expect(result.topics).toEqual([]);
     expect(prismaMock.testPublicLink.findMany).not.toHaveBeenCalled();
@@ -288,7 +282,7 @@ describe('TestsService analysis prompt attachment', () => {
       { topicId: 2, _count: { studentAttempts: 1, publicLinks: 0 } },
     ]);
 
-    const result = await service.listTopics(5);
+    const result = await service.listTopics();
 
     expect(
       result.topics.map((topic) => [
@@ -341,7 +335,7 @@ describe('TestsService analysis prompt attachment', () => {
       { topicId: 3, status: 'DRAFT', _count: { studentAttempts: 0, publicLinks: 0 } },
     ]);
 
-    const result = await service.listTopics(5);
+    const result = await service.listTopics();
 
     expect(
       result.topics.map((topic) => [
@@ -380,7 +374,7 @@ describe('TestsService analysis prompt attachment', () => {
     ]);
     prismaMock.testTopicVersion.findMany.mockResolvedValue([]);
 
-    const result = await service.listTopics(5);
+    const result = await service.listTopics();
 
     expect(result.topics.map((topic) => [topic.slug, topic.scoringKind])).toEqual([
       ['prof-orientation-v3-plus', 'PROF_ORIENTATION_V3_PLUS'],
@@ -391,7 +385,7 @@ describe('TestsService analysis prompt attachment', () => {
   it('getTopicDraft returns selected analysis prompt version summary', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
-    const result = await service.getTopicDraft(5, 1);
+    const result = await service.getTopicDraft(1);
 
     expect(result.draft.analysisPromptVersion).toEqual({
       id: 42,
@@ -407,7 +401,7 @@ describe('TestsService analysis prompt attachment', () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     prismaMock.analysisPromptVersion.findFirst.mockResolvedValue(publishedPromptVersion);
 
-    await service.updateTopicDraft(5, 1, {
+    await service.updateTopicDraft(1, {
       analysisPromptVersionId: 42,
     });
 
@@ -429,23 +423,12 @@ describe('TestsService analysis prompt attachment', () => {
     });
   });
 
-  // updateTopicDraft used to return through getTopicDraft, which runs the check again. The check
-  // is a prisma.user.findUnique, so every topic and question mutation paid for two.
-  it('updateTopicDraft checks admin access once, not once per response build', async () => {
-    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
-    prismaMock.testTopicVersion.update.mockResolvedValue({});
-
-    await service.updateTopicDraft(5, 1, { title: 'Career skills' });
-
-    expect(jest.mocked(ensureAdminAccess)).toHaveBeenCalledTimes(1);
-  });
-
   it('updateTopicDraft rejects missing or unpublished prompt versions', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     prismaMock.analysisPromptVersion.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.updateTopicDraft(5, 1, {
+      service.updateTopicDraft(1, {
         analysisPromptVersionId: 404,
       }),
     ).rejects.toThrow(BadRequestException);
@@ -455,7 +438,7 @@ describe('TestsService analysis prompt attachment', () => {
     prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1 });
     prismaMock.testTopicVersion.count.mockResolvedValue(1);
 
-    await expect(service.deleteTopic(5, 1)).rejects.toThrow(BadRequestException);
+    await expect(service.deleteTopic(1)).rejects.toThrow(BadRequestException);
 
     expect(prismaMock.testTopicVersion.count).toHaveBeenCalledWith({
       where: {
@@ -475,7 +458,7 @@ describe('TestsService analysis prompt attachment', () => {
     prismaMock.testTopicVersion.count.mockResolvedValue(0);
     prismaMock.testTopic.delete.mockResolvedValue({});
 
-    await expect(service.deleteTopic(5, 1)).resolves.toEqual({ topicId: 1 });
+    await expect(service.deleteTopic(1)).resolves.toEqual({ topicId: 1 });
 
     expect(prismaMock.testTopic.delete).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -491,7 +474,7 @@ describe('TestsService analysis prompt attachment', () => {
     });
     txMock.testQuestion.create.mockResolvedValue({ id: 1000 });
 
-    await service.publishTopic(5, 1);
+    await service.publishTopic(1);
 
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
       data: {
@@ -527,7 +510,7 @@ describe('TestsService analysis prompt attachment', () => {
       },
     });
 
-    await expect(service.publishTopic(5, 1)).rejects.toThrow(BadRequestException);
+    await expect(service.publishTopic(1)).rejects.toThrow(BadRequestException);
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
@@ -546,7 +529,7 @@ describe('TestsService analysis prompt attachment', () => {
     );
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
-    const result = await service.importProfOrientationV3Plus(5);
+    const result = await service.importProfOrientationV3Plus();
 
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -588,7 +571,7 @@ describe('TestsService analysis prompt attachment', () => {
     );
     prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
 
-    await service.importProfOrientationV3Plus(5);
+    await service.importProfOrientationV3Plus();
 
     expect(txMock.analysisPromptVersion.create).not.toHaveBeenCalled();
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
