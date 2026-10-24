@@ -156,6 +156,13 @@ export class AiProviderConfigService {
     const encryptedApiKey = apiKey ? encryptSecret(apiKey, this.getEncryptionSecret()) : null;
     // Неверный env не должен мешать исправить настройки отсюда.
     const before = await this.resolve().catch(() => null);
+    const nextBaseUrl =
+      baseUrl?.replace(/\/+$/, '') || AI_PROVIDER_PRESETS[input.provider].defaultBaseUrl;
+
+    // Сохранённый ключ не должен молча уехать на другой адрес.
+    if (before && before.settings.baseUrl !== nextBaseUrl && !apiKey && !input.clearApiKey) {
+      throw new BadRequestException('API key is required when the base URL changes');
+    }
 
     await this.prisma.$transaction(async (tx) => {
       const save = (key: string, value: string | null) =>

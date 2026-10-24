@@ -45,6 +45,8 @@ export interface IntegrationHealthOptions {
    * данные уже есть (упал только повторный запрос), показывается последний известный результат.
    */
   isError?: boolean;
+  /** Покрытие атласа грузится отдельным запросом и приходит позже настроек. */
+  isChecking?: boolean;
 }
 
 const withCheckTime = (label: string, checkedAt: string) =>
@@ -80,13 +82,13 @@ export const getAiProviderHealthBadge = (
 };
 
 /**
- * Состояние атласа берётся из проверки покрытия, которая уже приходит вместе с настройками. По
+ * Состояние атласа берётся из проверки покрытия, которую воркспейс догружает отдельным запросом. По
  * решению Q6 атлас необязателен и только обогащает результат, поэтому даже полная недоступность —
  * предупреждение, а не авария.
  */
 export const getProfessionAtlasHealthBadge = (
   professionAtlas: ProfessionAtlasSettings | undefined,
-  { isError = false }: IntegrationHealthOptions = {},
+  { isError = false, isChecking = false }: IntegrationHealthOptions = {},
 ): IntegrationHealthBadge => {
   if (!professionAtlas) {
     return isError
@@ -105,7 +107,9 @@ export const getProfessionAtlasHealthBadge = (
   const { coverage } = professionAtlas;
 
   if (!coverage) {
-    return { label: 'Атлас не проверен', tone: 'neutral' };
+    return isChecking
+      ? { label: 'Атлас: проверяем связь', tone: 'neutral' }
+      : { label: 'Атлас не проверен', tone: 'neutral' };
   }
 
   if (coverage.status === 'ready') {
