@@ -110,6 +110,9 @@ model User {
   role               Role      @default(USER)
   /// Set by an admin to switch the account off; signin, refresh and admin access reject it.
   deactivatedAt      DateTime?
+  /// Set when sessions are revoked, the password is reset or the account is deactivated;
+  /// AdminGuard rejects access tokens issued before it.
+  sessionsRevokedAt  DateTime?
   lastLoginAt        DateTime?
 
   createdAt DateTime @default(now())

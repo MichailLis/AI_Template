@@ -417,6 +417,31 @@ describe('Admin (e2e)', () => {
       .expect(403);
   });
 
+  it.each([
+    ['sessions/revoke', {}],
+    ['password', {}],
+  ])('POST /admin/users/:id/%s should cut off the admin access token', async (action, body) => {
+    const adminToken = await signin(adminEmail);
+    const email = `${managedEmailPrefix}-token-${action.replace('/', '-')}@example.com`;
+    const target = await createE2eUser(prisma, { email, password, role: 'ADMIN' });
+    const targetToken = await signin(email);
+
+    // iat has one-second resolution and a token from the revocation second is accepted.
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    await request(app.getHttpServer())
+      .post(`/admin/users/${target.id}/${action}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(body)
+      .expect(200);
+
+    const response = await request(app.getHttpServer())
+      .get('/admin/users')
+      .set('Authorization', `Bearer ${targetToken}`)
+      .expect(401);
+
+    expect(response.body).toMatchObject({ success: false, error: { message: 'Session expired' } });
+  });
+
   it('tests module should reject non-admin token', async () => {
     const viewerToken = await signin(viewerEmail);
 

@@ -10,7 +10,11 @@ describe('planExistingUserUpdates', () => {
   it('revokes refresh sessions together with a password reset', () => {
     expect(
       planExistingUserUpdates({ name: 'Admin' }, { name: 'Admin', hashedPassword: 'hash' }),
-    ).toEqual({ password: 'hash', hashedRefreshToken: null });
+    ).toMatchObject({
+      password: 'hash',
+      hashedRefreshToken: null,
+      sessionsRevokedAt: expect.any(Date) as Date,
+    });
   });
 
   it('fills a missing name only', () => {

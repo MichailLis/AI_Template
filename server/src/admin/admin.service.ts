@@ -337,7 +337,7 @@ export class AdminService {
     const updatedUser = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id: targetUserId },
-        data: { password: hashedPassword, hashedRefreshToken: null },
+        data: { password: hashedPassword, hashedRefreshToken: null, sessionsRevokedAt: new Date() },
         select: ADMIN_USER_SELECT,
       });
 
@@ -374,7 +374,11 @@ export class AdminService {
         where: { id: targetUserId },
         data:
           dto.status === 'DEACTIVATED'
-            ? { deactivatedAt: existingUser.deactivatedAt ?? new Date(), hashedRefreshToken: null }
+            ? {
+                deactivatedAt: existingUser.deactivatedAt ?? new Date(),
+                hashedRefreshToken: null,
+                sessionsRevokedAt: new Date(),
+              }
             : { deactivatedAt: null },
         select: ADMIN_USER_SELECT,
       });
@@ -411,7 +415,7 @@ export class AdminService {
     const updatedUser = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id: targetUserId },
-        data: { hashedRefreshToken: null },
+        data: { hashedRefreshToken: null, sessionsRevokedAt: new Date() },
         select: ADMIN_USER_SELECT,
       });
 

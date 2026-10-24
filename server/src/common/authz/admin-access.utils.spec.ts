@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
 import { assertAdminUser, ensureAdminAccess } from './admin-access.utils';
@@ -23,7 +23,7 @@ describe('ensureAdminAccess', () => {
 
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
       where: { id: 7 },
-      select: { id: true, role: true, deactivatedAt: true },
+      select: { id: true, role: true, deactivatedAt: true, sessionsRevokedAt: true },
     });
   });
 
@@ -45,6 +45,37 @@ describe('ensureAdminAccess', () => {
     await expect(
       ensureAdminAccess(prismaMock as unknown as PrismaService, 7),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it.each([
+    ['issued before the revocation', 1_000, 401],
+    ['issued in the revocation second', 2_000, 200],
+    ['issued after the revocation', 2_001, 200],
+  ])('token %s (iat %i)', async (_label, iat, status) => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 7,
+      role: 'ADMIN',
+      deactivatedAt: null,
+      sessionsRevokedAt: new Date(2_000_500),
+    });
+
+    const result = ensureAdminAccess(prismaMock as unknown as PrismaService, 7, iat);
+
+    if (status === 401) await expect(result).rejects.toBeInstanceOf(UnauthorizedException);
+    else await expect(result).resolves.toBeUndefined();
+  });
+
+  it('ignores sessionsRevokedAt when there is no token', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 7,
+      role: 'ADMIN',
+      deactivatedAt: null,
+      sessionsRevokedAt: new Date(),
+    });
+
+    await expect(
+      ensureAdminAccess(prismaMock as unknown as PrismaService, 7),
+    ).resolves.toBeUndefined();
   });
 
   it('rejects missing users', async () => {

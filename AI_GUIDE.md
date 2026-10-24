@@ -386,6 +386,12 @@ not there.
    allowed" in restricted browser contexts.
 7. Runtime API discovery must validate required API routes before accepting a discovered origin
    (prevents binding to unrelated local Swagger instances).
+8. **Revoking an admin's access token.** Session revoke, password reset, deactivation and
+   `bootstrap-admin` with a password reset set `User.sessionsRevokedAt`. `AdminGuard` rejects (401)
+   an access token whose `iat` is earlier than `floor(sessionsRevokedAt / 1000)`; `iat` is whole
+   seconds, so a token from the revocation second still passes. Non-admin routes check only the
+   global session epoch (`session-epoch.ts`), so a revoked non-admin keeps a valid access token
+   for up to 15 minutes; only the refresh token stops working at once.
 
 ## Local Verification Entry Points
 
