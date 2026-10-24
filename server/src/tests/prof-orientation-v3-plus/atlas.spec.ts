@@ -112,6 +112,26 @@ describe('ProfOrientationAtlasService', () => {
     });
     expect(report.duplicates).toContain('Инженер по 3D-печати');
   });
+  it('searches coverage in bounded parallel batches and keeps the order of professions', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    atlasClient.findProfessions.mockImplementation(
+      async (_apiUrl: string, params: { q?: string }) => {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        inFlight -= 1;
+        return params.q ? [{ title: params.q, slug: 'slug' }] : [];
+      },
+    );
+    const report = await createService().buildCoverageReport();
+    expect(maxInFlight).toBeGreaterThan(1);
+    expect(maxInFlight).toBeLessThan(report.total);
+    expect(report.items.map((item) => item.title)).toEqual(
+      report.items.map((item) => item.matches[0]?.title),
+    );
+    expect(report.status).toBe('ready');
+  });
   it('builds an atlas block from matched professions and recommendations', async () => {
     const primaryProfession = createProfession('Инженер-конструктор', 'engineer-designer');
     const secondaryProfession = createProfession('Инженер по 3D-печати', '3d-print-engineer');

@@ -84,3 +84,9 @@ jobs:
 
       - name: Verify template release gate
         run: npm run verify:template
+
+      # verify:template regenerates the API client; a diff here means a DTO or dependency change
+      # was committed without `npm run gen:api`. Checked in CI only: Linux checkouts are LF, so
+      # the diff has no line-ending noise.
+      - name: Generated API client is committed
+        run: git diff --exit-code --stat -- client/src/shared/api

@@ -35,3 +35,10 @@ export interface QuestionFormState {
 
 export type TestTopicListItem = TestsTopicListResponseDtoTopicsItem;
 export type TestDraftQuestion = TestsTopicDetailResponseDtoDraftQuestionsItem;
+
+/** Поля формы «Создать тест». */
+export interface CreateTestValues {
+  title: string;
+  slug: string;
+  description: string;
+}

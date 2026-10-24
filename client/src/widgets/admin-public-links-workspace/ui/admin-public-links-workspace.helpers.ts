@@ -1,4 +1,20 @@
+import type { CreatePublicLinkValues } from './public-link-create-card.types';
+
 export type PublicLinksTab = 'active' | 'archived';
+
+export const CREATE_PUBLIC_LINK_DEFAULTS: CreatePublicLinkValues = {
+  shortCode: '',
+  educationOrganizationId: null,
+  personalDataProcessingMode: 'PUBLIC',
+  publicTemplate: 'STANDARD',
+  entryProfileMode: 'DEMOGRAPHIC',
+  maxAttempts: '3',
+  timeLimit: '30',
+  allowResume: true,
+  consentVersion: 'v1',
+  consentText:
+    'Я даю согласие на обработку персональных данных для прохождения тестирования и формирования аналитики.',
+};
 
 interface TopicOption {
   id: number;
