@@ -1,4 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
@@ -10,12 +17,14 @@ interface HttpErrorResponse {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let code = 'INTERNAL_ERROR';
     let details: unknown[] = [];
@@ -54,6 +63,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = `Unique constraint failed on field: ${target}`;
         code = 'DB_UNIQUE_CONSTRAINT';
       }
+    }
+
+    // body-parser / http-errors: a 4xx with a `type` (entity.too.large, entity.parse.failed, ...)
+    const parserError = exception as { status?: unknown; type?: unknown } | null;
+    if (
+      !(exception instanceof HttpException) &&
+      typeof parserError?.type === 'string' &&
+      typeof parserError.status === 'number' &&
+      parserError.status >= 400 &&
+      parserError.status < 500
+    ) {
+      status = parserError.status;
+      code = parserError.type;
+      message = status === 413 ? 'Request body is too large' : 'Malformed request body';
+    }
+
+    if (status >= 500) {
+      // route template, not request.url: the URL carries session and backup tokens
+      this.logger.error(
+        `${request.method} ${(request.route as { path?: string } | undefined)?.path ?? 'unmatched route'} -> ${status}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
     }
 
     response.status(status).json({

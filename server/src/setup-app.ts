@@ -1,8 +1,10 @@
 import type { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { setupSwagger } from './swagger';
 
+const JSON_BODY_LIMIT = '1mb';
 const LOCAL_NODE_ENVS = new Set(['', 'development', 'test']);
 const CORS_ALLOWED_ORIGINS_ENV = 'CORS_ALLOWED_ORIGINS';
 const LOCAL_DEV_PLACEHOLDER_VALUES = new Set([
@@ -103,6 +105,8 @@ export const validateRuntimeConfig = () => {
 export const setupApp = (app: INestApplication) => {
   validateRuntimeConfig();
 
+  // Express default is 100kb; the settings prompt alone may be 160 000 chars (up to ~960kb escaped).
+  (app as NestExpressApplication).useBodyParser('json', { limit: JSON_BODY_LIMIT });
   app.useGlobalFilters(new AllExceptionsFilter());
   const swaggerDocument = setupSwagger(app);
   app.enableCors({
