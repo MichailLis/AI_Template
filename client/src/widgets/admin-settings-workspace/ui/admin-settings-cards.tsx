@@ -79,12 +79,15 @@ export function AiProviderSettingsCard({
 interface ProfessionAtlasSettingsCardProps {
   apiUrl: string;
   canSubmit: boolean;
+  isCoverageError: boolean;
+  isCoverageLoading: boolean;
   isError: boolean;
   isLoading: boolean;
   isSaving: boolean;
   professionAtlas: ProfessionAtlasSettings | undefined;
   publicUrl: string;
   onApiUrlChange: (value: string) => void;
+  onCoverageRetry: () => void;
   onPublicUrlChange: (value: string) => void;
   onRetry: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -93,12 +96,15 @@ interface ProfessionAtlasSettingsCardProps {
 export function ProfessionAtlasSettingsCard({
   apiUrl,
   canSubmit,
+  isCoverageError,
+  isCoverageLoading,
   isError,
   isLoading,
   isSaving,
   professionAtlas,
   publicUrl,
   onApiUrlChange,
+  onCoverageRetry,
   onPublicUrlChange,
   onRetry,
   onSubmit,
@@ -131,7 +137,12 @@ export function ProfessionAtlasSettingsCard({
 
         {professionAtlas ? <ProfessionAtlasStatusPanel professionAtlas={professionAtlas} /> : null}
         {professionAtlas ? (
-          <ProfessionAtlasCoveragePanel coverage={professionAtlas.coverage} />
+          <ProfessionAtlasCoveragePanel
+            coverage={professionAtlas.coverage}
+            isError={isCoverageError}
+            isLoading={isCoverageLoading}
+            onRetry={onCoverageRetry}
+          />
         ) : null}
 
         <ProfessionAtlasForm

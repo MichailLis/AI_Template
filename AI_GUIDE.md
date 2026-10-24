@@ -81,6 +81,11 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
   `JWT_REFRESH_SECRET` makes the saved key unreadable: it is then treated as unset (the env key
   applies) and must be entered again. Changes are written to the audit journal without the key.
   Without saved settings the env variables below are used, which suits first deployment.
+- The env key (`AI_API_KEY`) is only used with the env or preset address. If a base URL typed in
+  the admin panel differs from both the preset address and `AI_BASE_URL`, the env key is not sent
+  there and the key source becomes «Не задан» until a key is saved. For the same reason
+  `PATCH /admin/settings/ai-provider` answers 400 when the address changes without a new key
+  (unless `clearApiKey` is sent), and the form requires a key as soon as the address changes.
 - Switching provider by env: set `AI_PROVIDER`, `AI_API_KEY` and, for any
   other service, `AI_BASE_URL`. Model ids saved in prompt versions are provider-specific; when a
   saved id is missing from the new catalog, analysis falls back to the catalog default model.
@@ -324,6 +329,8 @@ Verification gates:
 1. Do not mirror query data into form state via `setState` inside `useEffect`.
 2. Prefer derived/effective values (`queryValue ?? localFormValue`) at render/submit boundaries.
 3. If metadata must be fixed (for example link-bound organization), lock the input and submit the effective value.
+4. A form is one `useForm<Values>` (react-hook-form), not a `useState` per field. Pass the `form` object to its sections instead of value/setter prop pairs. Example: the public-link create dialog in `widgets/admin-public-links-workspace`.
+5. After a mutation, refresh lists with `queryClient.invalidateQueries({ queryKey: get…QueryKey() })` in `onSuccess`, not with `refetch*` callbacks passed down through params.
 
 ### Phase 3: Frontend Integration
 
@@ -428,6 +435,7 @@ state through `gen:api`, which regenerates the client as well. Run `npm run veri
 on its own after changing a controller or DTO to see the architecture result without paying
 for the full loop.
 `npm run verify:invariants` runs `scripts/verify-invariants.mjs` to check non-obvious architecture invariants (handler Swagger completeness, no `z.date()` in DTOs, storage discipline, unified error shape, public DTO safety, no React Query state mirroring).
+The global `AllExceptionsFilter` logs every 5xx with its stack and the route template (`request.route.path`), never `request.url`, because the URL carries session and backup tokens. Body-parser errors (`entity.too.large`, malformed JSON) keep their own 4xx status in the same error shape; the JSON body limit is `1mb`, set in `setupApp` (the Express default of 100kb is below the 160 000-character settings policy).
 `npm run verify:paired-rules` runs `scripts/verify-paired-rules.mjs` to ensure paired implementations and constants across client and server remain synchronized against `template/paired-rules.json` and `template/paired-rules.vectors.json`.
 `npm run verify:stack` runs `scripts/verify-stack.mjs` to compare the three `package.json` files with `template/stack.json`, which declares the allowed major of each stack package (NestJS, Prisma, React, Vite, Tailwind, Orval, Zustand, TanStack Query). A major bump or the removal of a stack library fails until the declaration is changed in the same, separately approved, change.
 `npm run verify:ai-guide` also checks `template/agent-rules.json`: every rule listed there must still be present in `AGENTS.md`, the rule body every agent loads, and `CLAUDE.md` must import it. The two files together must stay inside the always-loaded size budget. Rewording a rule out of those files turns the gate red; to retire a rule, change the registry on purpose.

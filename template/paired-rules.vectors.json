@@ -157,7 +157,89 @@
           "pattern": "^ИС-\\d+$"
         },
         "expected": false
+      },
+      {
+        "description": "Stored catastrophic pattern is not executed and falls back to true",
+        "input": {
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+          "pattern": "^(a+)+$"
+        },
+        "expected": true
       }
+    ],
+    "isSafeGroupPattern": [
+      {
+        "description": "Anchored class pattern",
+        "input": "^ИС-\\d+$",
+        "expected": true
+      },
+      {
+        "description": "Group with alternation and no repeat",
+        "input": "^(ИС|БИ)-\\d{2}$",
+        "expected": true
+      },
+      {
+        "description": "Optional group around a repeat is not a repeated group",
+        "input": "^(\\d+-)?[А-Я]+$",
+        "expected": true
+      },
+      {
+        "description": "Exact repeat of a group with bounded inner repeat",
+        "input": "^(\\d{2}){2}$",
+        "expected": true
+      },
+      {
+        "description": "Nested quantifiers",
+        "input": "^(a+)+$",
+        "expected": false
+      },
+      {
+        "description": "Nested quantifiers through an inner group",
+        "input": "^((\\d+)-?)*$",
+        "expected": false
+      },
+      {
+        "description": "Repeated group with open-ended bound around a star",
+        "input": "^(a*){2,}$",
+        "expected": false
+      },
+      {
+        "description": "Quantifier inside a character class is not a repeat",
+        "input": "^([+*]x)+$",
+        "expected": true
+      },
+      {
+        "description": "Escaped parenthesis is not a group",
+        "input": "^\\(\\d+\\)+$",
+        "expected": true
+      },
+      {
+        "description": "Pattern longer than 300 characters",
+        "input": "^aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa$",
+        "expected": false
+      }
+    ],
+    "isValidInn": [
+      { "description": "Legal entity INN, 10 digits", "input": "7707083893", "expected": true },
+      { "description": "Individual INN, 12 digits", "input": "500100732259", "expected": true },
+      { "description": "Nine digits", "input": "770708389", "expected": false },
+      { "description": "Eleven digits", "input": "77070838931", "expected": false },
+      { "description": "Letters among digits", "input": "77070838a3", "expected": false },
+      { "description": "Spaces inside", "input": "7707 083893", "expected": false },
+      { "description": "Empty string", "input": "", "expected": false }
+    ],
+    "isValidOgrn": [
+      { "description": "Legal entity OGRN, 13 digits", "input": "1027700132195", "expected": true },
+      {
+        "description": "Individual entrepreneur OGRNIP, 15 digits",
+        "input": "304500116000157",
+        "expected": true
+      },
+      { "description": "Twelve digits", "input": "102770013219", "expected": false },
+      { "description": "Fourteen digits", "input": "10277001321950", "expected": false },
+      { "description": "Letters among digits", "input": "10277001321a5", "expected": false },
+      { "description": "Dashes inside", "input": "1-02-77-00-13219", "expected": false },
+      { "description": "Empty string", "input": "", "expected": false }
     ],
     "normalizeProfessionTitle": [
       {

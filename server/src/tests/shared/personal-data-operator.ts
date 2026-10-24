@@ -1,8 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import type { PersonalDataProcessingMode } from '@prisma/client';
+import type { PersonalDataProcessingMode, Prisma } from '@prisma/client';
 
 import { DEFAULT_PLATFORM_OPERATOR_FULL_NAME } from '../../app-settings/privacy-policy.constants';
-import type { PrismaService } from '../../prisma.service';
 
 export const PUBLIC_OPERATOR_FULL_NAME = DEFAULT_PLATFORM_OPERATOR_FULL_NAME;
 export const PUBLIC_PRIVACY_POLICY_URL = '/privacy';
@@ -19,8 +18,16 @@ export type ResolvedPersonalDataOperator = {
   logoUrl: string | null;
 };
 
+export const toOperatorSnapshotData = (operator: ResolvedPersonalDataOperator) => ({
+  personalDataProcessingMode: operator.processingMode,
+  operatorFullNameSnapshot: operator.operatorFullNameSnapshot,
+  operatorShortNameSnapshot: operator.operatorShortNameSnapshot,
+  operatorPrivacyPolicyUrlSnapshot: operator.operatorPrivacyPolicyUrlSnapshot,
+  operatorConsentDocumentUrlSnapshot: operator.operatorConsentDocumentUrlSnapshot,
+});
+
 export const resolvePersonalDataOperator = async (
-  prisma: PrismaService,
+  prisma: Pick<Prisma.TransactionClient, 'educationOrganization'>,
   processingMode: PersonalDataProcessingMode,
   educationOrganizationId?: number | null,
   platformOperatorFullName = PUBLIC_OPERATOR_FULL_NAME,

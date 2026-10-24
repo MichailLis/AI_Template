@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractApiValidationIssues, getApiErrorMessage, parseApiError } from './api-error';
+import {
+  extractApiValidationIssues,
+  getApiErrorMessage,
+  getApiErrorStatus,
+  parseApiError,
+} from './api-error';
+
+describe('getApiErrorStatus', () => {
+  it('reads the HTTP status and returns null when there is none', () => {
+    expect(getApiErrorStatus({ response: { status: 404 } })).toBe(404);
+    expect(getApiErrorStatus(new Error('network'))).toBeNull();
+    expect(getApiErrorStatus({ response: {} })).toBeNull();
+  });
+});
 
 describe('getApiErrorMessage', () => {
   it('reads nested server error messages', () => {
@@ -86,9 +99,7 @@ describe('parseApiError', () => {
   });
 
   it('returns the backend unavailable message for request-only errors', () => {
-    expect(parseApiError({ request: {} })).toBe(
-      'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.',
-    );
+    expect(parseApiError({ request: {} })).toBe('Сервер недоступен. Попробуйте позже.');
   });
 });
 

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
@@ -14,8 +14,11 @@ type PrismaMock = {
     update: jest.Mock;
   };
   testPublicLink: {
+    count: jest.Mock;
     findMany: jest.Mock;
+    updateMany: jest.Mock;
   };
+  $transaction: jest.Mock;
 };
 
 describe('TestsEducationOrganizationService', () => {
@@ -33,8 +36,13 @@ describe('TestsEducationOrganizationService', () => {
         update: jest.fn(),
       },
       testPublicLink: {
+        count: jest.fn().mockResolvedValue(0),
         findMany: jest.fn(),
+        updateMany: jest.fn(),
       },
+      $transaction: jest.fn((callback: (tx: PrismaMock) => Promise<unknown>) =>
+        callback(prismaMock),
+      ),
     };
 
     service = new TestsEducationOrganizationService(prismaMock as unknown as PrismaService);
@@ -305,6 +313,175 @@ describe('TestsEducationOrganizationService', () => {
     });
     expect(data).not.toHaveProperty('shortName');
     expect(data).not.toHaveProperty('consentDocumentUrl');
+  });
+
+  describe('format checks', () => {
+    const update = (organizationId: number, dto: Record<string, unknown>) =>
+      (
+        service.updateEducationOrganization as (
+          organizationId: number,
+          dto: Record<string, unknown>,
+        ) => Promise<unknown>
+      )(organizationId, dto);
+
+    it('rejects a group example that does not match the pattern on create', async () => {
+      prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createEducationOrganization({
+          name: 'Лицей 42',
+          groupValidationMode: 'STRICT',
+          groupValidationPattern: '^\\d{1,2}[А-Я]$',
+          groupValidationExample: '9 А',
+        }),
+      ).rejects.toThrow('Пример не подходит под шаблон формата группы/класса');
+      expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
+    });
+
+    it('checks the example against the stored pattern when only the example changes', async () => {
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(
+        createEducationOrganizationRecordFixture({
+          id: 31,
+          groupValidationMode: 'STRICT',
+          groupValidationPattern: '^\\d{1,2}[А-Я]$',
+          groupValidationExample: '9А',
+        }),
+      );
+
+      await expect(update(31, { groupValidationExample: '9 А' })).rejects.toThrow(
+        'Пример не подходит под шаблон формата группы/класса',
+      );
+    });
+
+    it('does not let a stored mismatching example block an unrelated edit', async () => {
+      const existing = createEducationOrganizationRecordFixture({
+        id: 31,
+        groupValidationMode: 'STRICT',
+        groupValidationPattern: '^\\d{1,2}[А-Я]$',
+        groupValidationExample: '9 А',
+      });
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue(existing);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await expect(update(31, { phone: '+7 900 000-00-00' })).resolves.toBeDefined();
+    });
+
+    it.each([
+      [{ inn: '12345' }, 'ИНН должен состоять из 10 или 12 цифр'],
+      [{ ogrn: '123456789012' }, 'ОГРН должен состоять из 13 цифр (для ИП — из 15)'],
+    ])('rejects malformed requisites %p on create', async (requisites, message) => {
+      prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createEducationOrganization({ name: 'Лицей 42', ...requisites }),
+      ).rejects.toThrow(message);
+    });
+
+    it('checks requisites only when the update changes them', async () => {
+      const existing = createEducationOrganizationRecordFixture({ id: 31, inn: '12345' });
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue(existing);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await expect(update(31, { inn: '12345', phone: '+7 900' })).resolves.toBeDefined();
+      await expect(update(31, { inn: '123456' })).rejects.toThrow(
+        'ИНН должен состоять из 10 или 12 цифр',
+      );
+    });
+  });
+
+  describe('operator snapshot of on-behalf links', () => {
+    const complete = {
+      id: 31,
+      fullName: 'Старое полное имя',
+      shortName: 'Старое краткое имя',
+      privacyPolicyUrl: 'https://example.edu/old-privacy',
+    };
+    const update = (dto: Record<string, unknown>) =>
+      (
+        service.updateEducationOrganization as (
+          organizationId: number,
+          dto: Record<string, unknown>,
+        ) => Promise<unknown>
+      )(31, dto);
+
+    it('recomputes the snapshot of non-archived on-behalf links in the same transaction', async () => {
+      const existing = createEducationOrganizationRecordFixture(complete);
+      const updated = createEducationOrganizationRecordFixture({
+        ...complete,
+        privacyPolicyUrl: 'https://example.edu/new-privacy',
+        consentDocumentUrl: 'https://example.edu/consent',
+      });
+      prismaMock.educationOrganization.findUnique
+        .mockResolvedValueOnce(existing)
+        .mockResolvedValueOnce(updated);
+      prismaMock.educationOrganization.update.mockResolvedValue(updated);
+      prismaMock.testPublicLink.count.mockResolvedValue(2);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await update({
+        privacyPolicyUrl: 'https://example.edu/new-privacy',
+        consentDocumentUrl: 'https://example.edu/consent',
+      });
+
+      expect(prismaMock.testPublicLink.updateMany).toHaveBeenCalledWith({
+        where: {
+          educationOrganizationId: 31,
+          personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+          archivedAt: null,
+        },
+        data: {
+          personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+          operatorFullNameSnapshot: 'Старое полное имя',
+          operatorShortNameSnapshot: 'Старое краткое имя',
+          operatorPrivacyPolicyUrlSnapshot: 'https://example.edu/new-privacy',
+          operatorConsentDocumentUrlSnapshot: 'https://example.edu/consent',
+        },
+      });
+    });
+
+    it('rejects an edit that leaves the operator incomplete while links exist', async () => {
+      const existing = createEducationOrganizationRecordFixture(complete);
+      prismaMock.educationOrganization.findUnique
+        .mockResolvedValueOnce(existing)
+        .mockResolvedValueOnce({ ...existing, privacyPolicyUrl: null });
+      prismaMock.educationOrganization.update.mockResolvedValue({
+        ...existing,
+        privacyPolicyUrl: null,
+      });
+      prismaMock.testPublicLink.count.mockResolvedValue(1);
+
+      await expect(update({ privacyPolicyUrl: null })).rejects.toThrow(ConflictException);
+      expect(prismaMock.testPublicLink.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('allows leaving the operator incomplete when no link depends on it', async () => {
+      const existing = createEducationOrganizationRecordFixture(complete);
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue({
+        ...existing,
+        privacyPolicyUrl: null,
+      });
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await expect(update({ privacyPolicyUrl: null })).resolves.toBeDefined();
+      expect(prismaMock.testPublicLink.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('leaves links alone when the edit does not touch operator fields or deactivates the organization', async () => {
+      const existing = createEducationOrganizationRecordFixture(complete);
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue(existing);
+      prismaMock.testPublicLink.count.mockResolvedValue(3);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await update({ phone: '+7 900 000-00-00' });
+      prismaMock.educationOrganization.update.mockResolvedValue({ ...existing, isActive: false });
+      await update({ fullName: 'Другое имя', isActive: false });
+
+      expect(prismaMock.testPublicLink.updateMany).not.toHaveBeenCalled();
+    });
   });
 
   it('rejects education organization duplicates regardless of name case', async () => {

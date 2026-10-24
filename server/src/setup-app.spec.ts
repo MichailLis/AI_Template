@@ -104,10 +104,11 @@ describe('setupApp runtime configuration', () => {
 
   it('configures credentialed CORS with the resolved origin allowlist during bootstrap', () => {
     process.env.NODE_ENV = 'development';
-    const { app, enableCors, useGlobalFilters } = createAppMock();
+    const { app, enableCors, useBodyParser, useGlobalFilters } = createAppMock();
 
     const swaggerDocument = setupApp(app);
 
+    expect(useBodyParser).toHaveBeenCalledWith('json', { limit: '1mb' });
     expect(useGlobalFilters).toHaveBeenCalledTimes(1);
     expect(setupSwagger).toHaveBeenCalledWith(app);
     expect(enableCors).toHaveBeenCalledWith({
@@ -133,10 +134,12 @@ describe('setupApp runtime configuration', () => {
 const createAppMock = () => {
   const enableCors = jest.fn();
   const useGlobalFilters = jest.fn();
+  const useBodyParser = jest.fn();
   const app = {
     enableCors,
+    useBodyParser,
     useGlobalFilters,
   } as unknown as INestApplication;
 
-  return { app, enableCors, useGlobalFilters };
+  return { app, enableCors, useBodyParser, useGlobalFilters };
 };

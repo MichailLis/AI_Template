@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 
 import type { PublicSessionStartRequestDto } from '../dto/tests-public.dto';
 import type { TestsPublicLinkService } from '../public-links/public-link.service';
+import { isSafeGroupPattern } from '../shared/group-pattern';
 
 /**
  * Entry-profile rules for a public session: which fields a link's mode requires, how a group or
@@ -28,6 +29,11 @@ export type DemographicProfile = {
 };
 
 export const matchesGroupPattern = (groupOrClass: string, pattern: string) => {
+  // Уже сохранённый опасный шаблон не выполняем: как и сломанный, он не блокирует ученика.
+  if (!isSafeGroupPattern(pattern)) {
+    return true;
+  }
+
   try {
     return new RegExp(pattern, 'u').test(groupOrClass);
   } catch {

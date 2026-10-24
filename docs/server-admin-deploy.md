@@ -142,6 +142,10 @@ curl -f http://localhost/api/api-json
 - Adminer доступен только с самого сервера (`127.0.0.1:8081`). С вашего компьютера откройте SSH-туннель:
   `ssh -L 8081:127.0.0.1:8081 user@SERVER_IP`, затем `http://localhost:8081`.
 
+Логи контейнеров ротируются (`json-file`, `10m` × 5 файлов на сервис), а токены сессий и результатов
+учеников (`/sessions/<токен>`, `/session/<токен>`, `/result/<токен>`) в access log nginx
+(`docker compose logs frontend`) заменяются на `***`.
+
 Вход в приложение:
 
 - email: значение `BOOTSTRAP_ADMIN_EMAIL`

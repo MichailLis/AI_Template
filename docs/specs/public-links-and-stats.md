@@ -32,7 +32,7 @@ Behavior baseline:
    expired. The list header counts all attempts, unfinished ones included.
    The toolbar also has an `Выгрузить XLSX` button: it downloads the list with the same search,
    status and sorting as the table, without paging, from
-   `GET /admin/tests/public-links/:linkId/attempts/export.xlsx` (admin only, at most 5000 rows).
+   `GET /admin/tests/public-links/:linkId/attempts/export.xlsx` (admin only, at most 5000 rows; a cut-off is marked by a note row under the table).
    The file has one row per attempt: student profile, status, start, finish, duration, leading
    direction, profile, analysis and AI status. Student-entered text is written as is: the XLSX
    writer stores `=1+1` as a string, not a formula, so nothing needs escaping.

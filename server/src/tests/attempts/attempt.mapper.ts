@@ -14,6 +14,31 @@ import { getV3Summary } from '../reporting/analytics-summary';
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
 
+// Only the settings keys the public client reads; the rest (directionMap, weights) is scoring internals.
+const PUBLIC_QUESTION_SETTINGS_KEYS = [
+  'maxChoices',
+  'min',
+  'max',
+  'step',
+  'sliderKind',
+  'methodologySliderId',
+] as const;
+
+const pickPublicQuestionSettings = (settings: Prisma.JsonValue | undefined) => {
+  if (typeof settings !== 'object' || settings === null || Array.isArray(settings)) {
+    return null;
+  }
+
+  const picked = Object.fromEntries(
+    PUBLIC_QUESTION_SETTINGS_KEYS.filter((key) => key in settings).map((key) => [
+      key,
+      settings[key],
+    ]),
+  );
+
+  return Object.keys(picked).length > 0 ? picked : null;
+};
+
 const mapPublicQuestion = (
   question: AttemptWithSessionData['topicVersion']['questions'][number],
 ) => {
@@ -24,7 +49,7 @@ const mapPublicQuestion = (
     description: question.description,
     required: question.required,
     order: question.order,
-    settings: question.settings ?? null,
+    settings: pickPublicQuestionSettings(question.settings),
     options: question.options.map((option) => ({
       id: option.id,
       label: option.label,

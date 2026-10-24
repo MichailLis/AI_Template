@@ -1,6 +1,6 @@
 import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import type { PrismaService } from '../../prisma.service';
-import { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
+import { ATTEMPTS_EXPORT_LIMIT, TestsAdminAttemptService } from '../attempts/admin-attempt.service';
 import type { TestsAnalysisService } from '../analysis/analysis.service';
 
 type PrismaMock = {
@@ -332,5 +332,57 @@ describe('TestsAdminAttemptService', () => {
 
     const response = await service.getAttemptDetail(505);
     expect(response.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
+  });
+
+  describe('listAttemptsForExport', () => {
+    const exportQuery = { page: 1, limit: 10 };
+    const buildAttempts = (count: number) =>
+      Array.from({ length: count }, (_, id) => ({
+        id,
+        status: 'COMPLETED',
+        attemptNumber: 1,
+        studentName: null,
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: null,
+        groupOrClass: null,
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
+        startedAt: new Date('2026-01-01T10:00:00.000Z'),
+        finishedAt: null,
+        expiresAt: null,
+        analysis: null,
+      }));
+
+    beforeEach(() => {
+      prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13, shortCode: 'ABC123' });
+    });
+
+    it('reads one row past the limit to learn whether the export was cut', async () => {
+      prismaMock.testStudentAttempt.findMany.mockResolvedValue(
+        buildAttempts(ATTEMPTS_EXPORT_LIMIT + 1),
+      );
+
+      const response = await service.listAttemptsForExport(13, exportQuery);
+
+      expect(prismaMock.testStudentAttempt.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: ATTEMPTS_EXPORT_LIMIT + 1 }),
+      );
+      expect(response.truncated).toBe(true);
+      expect(response.attempts).toHaveLength(ATTEMPTS_EXPORT_LIMIT);
+    });
+
+    it('is not truncated when everything fits', async () => {
+      prismaMock.testStudentAttempt.findMany.mockResolvedValue(
+        buildAttempts(ATTEMPTS_EXPORT_LIMIT),
+      );
+
+      const response = await service.listAttemptsForExport(13, exportQuery);
+
+      expect(response.truncated).toBe(false);
+      expect(response.attempts).toHaveLength(ATTEMPTS_EXPORT_LIMIT);
+    });
   });
 });
