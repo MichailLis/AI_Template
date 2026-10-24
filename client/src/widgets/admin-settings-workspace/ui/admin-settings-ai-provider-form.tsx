@@ -60,7 +60,13 @@ export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings 
 
   const selected = PROVIDER_OPTIONS.find((option) => option.value === provider);
   const isBaseUrlRequired = provider === 'openai-compatible';
-  const canSubmit = !mutation.isPending && (!isBaseUrlRequired || baseUrl.trim().length > 0);
+  const nextBaseUrl =
+    baseUrl.trim().replace(/\/+$/, '') || (isBaseUrlRequired ? '' : selected?.baseUrlHint);
+  // Сервер не отдаёт сохранённый ключ новому адресу: при смене адреса нужен новый ключ.
+  const isKeyRequired =
+    nextBaseUrl !== (aiProvider.baseUrl ?? '') && !apiKey.trim() && !clearApiKey;
+  const canSubmit =
+    !mutation.isPending && !isKeyRequired && (!isBaseUrlRequired || baseUrl.trim().length > 0);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,8 +133,9 @@ export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings 
           spellCheck={false}
         />
         <p className={adminClassNames.form.fieldHint}>
-          Хранится в базе в зашифрованном виде и не показывается после сохранения. Пустое поле
-          оставляет текущий ключ.
+          {isKeyRequired
+            ? 'Адрес изменён: введите ключ для нового адреса, прежний ключ к нему не подходит.'
+            : 'Хранится в базе в зашифрованном виде и не показывается после сохранения. Пустое поле оставляет текущий ключ.'}
         </p>
         {aiProvider.source === 'DB' ? (
           <label className="flex items-center gap-2 text-sm">
