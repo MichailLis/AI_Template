@@ -250,6 +250,20 @@ describe('BackupRestoreService', () => {
     );
   });
 
+  it('starts only one restore on a double click', async () => {
+    const results = await Promise.allSettled([
+      service.startRestore(ADMIN_ID, BACKUP_ID, 'RESTORE'),
+      service.startRestore(ADMIN_ID, BACKUP_ID, 'RESTORE'),
+    ]);
+
+    expect(results.map((result) => result.status).sort()).toEqual(['fulfilled', 'rejected']);
+    expect(results.find((result) => result.status === 'rejected')).toMatchObject({
+      reason: expect.any(ConflictException) as ConflictException,
+    });
+    expect((await waitForOperation()).status).toBe('SUCCEEDED');
+    expect(backups.startBackup).toHaveBeenCalledTimes(1);
+  });
+
   it('undoes the last restore by swapping the previous database back', async () => {
     await storage.writeState({
       sessionEpochMs: 1,
@@ -334,5 +348,6 @@ describe('BackupRestoreService', () => {
       'Недостаточно места для восстановления',
     );
     expect(backups.startBackup).not.toHaveBeenCalled();
+    expect((await service.getStatus(ADMIN_ID)).operation?.status).not.toBe('RUNNING');
   });
 });

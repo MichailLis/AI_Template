@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import type { Prisma, TestQuestionType } from '@prisma/client';
 
 import type { CreateTestsTopicFromAiDto } from '../dto/tests.dto';
@@ -35,6 +35,22 @@ export interface PersistQuestionPayload {
   sliderBands: QuestionSliderBandPayload[];
   order?: number;
 }
+
+/**
+ * Locks the draft row until the transaction ends and checks it is still a draft. Publishing takes
+ * the same row lock, so an edit either commits before the publish reads the draft or gets 409:
+ * it never lands in a version that is already published (#135).
+ */
+export const lockDraftVersion = async (tx: TransactionClient, versionId: number) => {
+  const { count } = await tx.testTopicVersion.updateMany({
+    where: { id: versionId, status: 'DRAFT' },
+    data: { updatedAt: new Date() },
+  });
+
+  if (count === 0) {
+    throw new ConflictException('Черновик уже опубликован или изменен, обновите страницу');
+  }
+};
 
 export const createQuestionChildren = async (
   tx: TransactionClient,

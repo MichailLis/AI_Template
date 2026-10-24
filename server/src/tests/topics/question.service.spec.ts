@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
 import { TestsQuestionService } from '../topics/question.service';
@@ -20,6 +20,9 @@ describe('TestsQuestionService', () => {
     testQuestion: {
       update: jest.Mock<Promise<unknown>, [QuestionOrderUpdateArgs]>;
     };
+    testTopicVersion: {
+      updateMany: jest.Mock;
+    };
   };
 
   beforeEach(() => {
@@ -29,6 +32,9 @@ describe('TestsQuestionService', () => {
     txMock = {
       testQuestion: {
         update: updateQuestionMock,
+      },
+      testTopicVersion: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
     };
     transactionMock = jest.fn((callback: (tx: typeof txMock) => unknown) => callback(txMock));
@@ -75,6 +81,23 @@ describe('TestsQuestionService', () => {
         data: { order: 2 },
       },
     ]);
+  });
+
+  it('reorderQuestions answers 409 and writes nothing once the draft is published', async () => {
+    txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.reorderQuestions(
+        { id: 10, questions: [{ id: 100, order: 1 }] },
+        { questionIds: [100] },
+      ),
+    ).rejects.toThrow(ConflictException);
+
+    expect(txMock.testTopicVersion.updateMany).toHaveBeenCalledWith({
+      where: { id: 10, status: 'DRAFT' },
+      data: { updatedAt: expect.any(Date) as Date },
+    });
+    expect(updateQuestionMock).not.toHaveBeenCalled();
   });
 
   it('reorderQuestions rejects duplicate question ids before opening a transaction', async () => {

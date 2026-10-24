@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import type { ReorderTestsQuestionsDto, UpsertTestsQuestionDto } from '../dto/tests.dto';
 import { prepareQuestionPayload, toPrismaSettingsInput } from '../shared/domain.utils';
-import { createQuestionChildren } from '../topics/topic-version.utils';
+import { createQuestionChildren, lockDraftVersion } from '../topics/topic-version.utils';
 
 interface DraftQuestionRef {
   id: number;
@@ -28,6 +28,7 @@ export class TestsQuestionService {
         : 1;
 
     await this.prisma.$transaction(async (tx) => {
+      await lockDraftVersion(tx, draft.id);
       const createdQuestion = await tx.testQuestion.create({
         data: {
           versionId: draft.id,
@@ -56,6 +57,7 @@ export class TestsQuestionService {
     const payload = prepareQuestionPayload(dto);
 
     await this.prisma.$transaction(async (tx) => {
+      await lockDraftVersion(tx, draft.id);
       await tx.testQuestion.update({
         where: { id: questionId },
         data: {
@@ -88,6 +90,7 @@ export class TestsQuestionService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      await lockDraftVersion(tx, draft.id);
       await tx.testQuestion.delete({
         where: {
           id: questionId,
@@ -134,6 +137,7 @@ export class TestsQuestionService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      await lockDraftVersion(tx, draft.id);
       for (const [index, questionId] of dto.questionIds.entries()) {
         await tx.testQuestion.update({
           where: { id: questionId },

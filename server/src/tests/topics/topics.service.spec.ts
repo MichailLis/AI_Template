@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
 import type { TestsQuestionService } from '../topics/question.service';
@@ -101,6 +101,7 @@ describe('TestsService analysis prompt attachment', () => {
   let txMock: {
     testTopic: {
       create: jest.Mock;
+      findUnique: jest.Mock;
       update: jest.Mock;
     };
     analysisPrompt: {
@@ -114,6 +115,7 @@ describe('TestsService analysis prompt attachment', () => {
     testTopicVersion: {
       create: jest.Mock;
       update: jest.Mock;
+      updateMany: jest.Mock;
     };
     testQuestion: {
       create: jest.Mock;
@@ -130,6 +132,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock = {
       testTopic: {
         create: jest.fn(),
+        findUnique: jest.fn(),
         update: jest.fn(),
       },
       analysisPrompt: {
@@ -143,6 +146,7 @@ describe('TestsService analysis prompt attachment', () => {
       testTopicVersion: {
         create: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       testQuestion: {
         create: jest.fn(),
@@ -413,14 +417,24 @@ describe('TestsService analysis prompt attachment', () => {
       },
       select: { id: true },
     });
-    expect(prismaMock.testTopicVersion.update).toHaveBeenCalledWith({
-      where: { id: 10 },
-      data: {
-        title: 'Career skills',
-        description: null,
-        analysisPromptVersionId: 42,
-      },
+    expect(txMock.testTopicVersion.updateMany).toHaveBeenCalledWith({
+      where: { id: 10, status: 'DRAFT' },
+      data: { updatedAt: expect.any(Date) as Date },
     });
+    expect(txMock.testTopicVersion.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { analysisPromptVersionId: 42 },
+    });
+  });
+
+  it('updateTopicDraft answers 409 when the draft was published meanwhile', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+    txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(service.updateTopicDraft(1, { title: 'Late edit' })).rejects.toThrow(
+      ConflictException,
+    );
+    expect(txMock.testTopicVersion.update).not.toHaveBeenCalled();
   });
 
   it('updateTopicDraft rejects missing or unpublished prompt versions', async () => {
@@ -466,7 +480,7 @@ describe('TestsService analysis prompt attachment', () => {
   });
 
   it('publishTopic carries selected prompt version into the next draft', async () => {
-    prismaMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+    txMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     txMock.testTopicVersion.update.mockResolvedValue({});
     txMock.testTopicVersion.create.mockResolvedValue({
       id: 11,
@@ -496,7 +510,7 @@ describe('TestsService analysis prompt attachment', () => {
   /** ait-rcw.30: публикация черновика с удаленным промптом анализа проходила молча. */
   it('publishTopic refuses a draft attached to a deleted analysis prompt', async () => {
     const snapshot = createTopicSnapshot();
-    prismaMock.testTopic.findUnique.mockResolvedValue({
+    txMock.testTopic.findUnique.mockResolvedValue({
       ...snapshot,
       activeDraftVersion: {
         ...snapshot.activeDraftVersion,
@@ -511,7 +525,15 @@ describe('TestsService analysis prompt attachment', () => {
     });
 
     await expect(service.publishTopic(1)).rejects.toThrow(BadRequestException);
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
+  });
+
+  it('publishTopic answers 409 to a second publish of the same draft', async () => {
+    txMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
+    txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(service.publishTopic(1)).rejects.toThrow(ConflictException);
+    expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
   });
 
   it('importProfOrientationV3Plus creates a full Polus draft with scoring config', async () => {
