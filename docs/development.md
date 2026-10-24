@@ -47,6 +47,11 @@ Exposed URLs from host:
 - Postgres: `localhost:5432`
 - Adminer: `http://localhost:8080`
 
+All ports are published on `127.0.0.1` only (Docker bypasses the host firewall, and Postgres and
+Adminer have default dev credentials). The frontend and backend are therefore not reachable from
+another device on the LAN, e.g. a phone: for that, temporarily change the `ports` mapping of the
+service in `docker-compose.yml` to `'5173:5173'` / `'3000:3000'`, and revert it afterwards.
+
 These are the same host ports the root compose stack uses, so stop its `frontend` and `backend`
 containers before starting the dev container.
 
