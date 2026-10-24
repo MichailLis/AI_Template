@@ -1,5 +1,6 @@
+import { isSafeGroupPattern, type GroupValidationMode } from '@/shared/lib/group-validation';
+
 import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
-import type { GroupValidationMode } from '@/shared/lib/group-validation';
 
 interface GroupValidationWarningParams {
   groupValue: string;
@@ -28,6 +29,10 @@ export const initialDemographicFormState: DemographicFormState = {
 export const normalizeInitial = (value: string) => value.trim().slice(0, 1).toUpperCase();
 
 export const matchesGroupPattern = (value: string, pattern: string) => {
+  if (!isSafeGroupPattern(pattern)) {
+    return true;
+  }
+
   try {
     return new RegExp(pattern, 'u').test(value);
   } catch {

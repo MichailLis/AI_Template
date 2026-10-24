@@ -202,6 +202,27 @@ Entry profile modes:
 - `EDUCATION`: collects the current education-based profile before starting the test
 - `EDUCATION_DEMOGRAPHIC`: collects student name, surname initial, patronymic initial, age, education organization, group/class, gender, residence, and education level in Polus hybrid entry
 
+Education organizations (`/admin/public-links/organizations`):
+
+- the group/class pattern (`groupValidationPattern`) is an admin-written RegExp that runs on the
+  server and in the student's browser, so it is checked on save: it must compile, be at most
+  300 characters and contain no nested unbounded repeats such as `(a+)+` (`isSafeGroupPattern`,
+  server authoritative, paired with a client copy). A stored dangerous pattern is not executed:
+  `matchesGroupPattern` treats it like a broken one and lets the value through. Known limit:
+  overlapping alternations such as `(a|aa)+` are not detected.
+- the example (`groupValidationExample`) must match the pattern. The server checks it only when an
+  edit touches the pattern or the example, so a stored mismatch does not block unrelated edits.
+- INN (10 or 12 digits) and OGRN (13 digits, 15 for individual entrepreneurs) are format-checked
+  without checksums. The server checks only values an edit changes; the admin form checks what it
+  shows, so a stored malformed value is flagged in the form until fixed or cleared.
+- a link in `ON_BEHALF_OF_EDUCATION_ORGANIZATION` mode stores a snapshot of the operator
+  (`operator*Snapshot`) and students see that snapshot. Editing the full or short name, the policy
+  or the consent document URL (or reactivating the organization) recomputes the snapshot of all
+  non-archived on-behalf links of the organization in the same transaction. If the edit would leave
+  the operator incomplete (no name or policy URL) while such links exist, the server answers 409.
+  Attempts keep their own snapshot: it records what the student agreed to. `PUBLIC` links follow the
+  platform operator from the privacy-policy settings instead.
+
 Current public run UX:
 
 - the run screen uses a centered question card with compact progress (`current / total` + percent)

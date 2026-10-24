@@ -36,6 +36,20 @@ describe('tests-links dto group validation schemas', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects catastrophic regex patterns on create and update', () => {
+    const create = AdminCreateEducationOrganizationSchema.safeParse({
+      name: 'Колледж 3',
+      groupValidationMode: 'STRICT',
+      groupValidationPattern: '^(a+)+$',
+    });
+    const update = AdminUpdateEducationOrganizationSchema.safeParse({
+      groupValidationPattern: '^(\\d+-?)*$',
+    });
+
+    expect(create.success).toBe(false);
+    expect(update.success).toBe(false);
+  });
+
   it('accepts create payload with valid regex for non-NONE modes', () => {
     const result = AdminCreateEducationOrganizationSchema.safeParse({
       name: 'Колледж 2',

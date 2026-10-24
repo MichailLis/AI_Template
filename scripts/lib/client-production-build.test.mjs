@@ -76,6 +76,6 @@ describe('client Docker compiler boundary', () => {
     const vectorTests = tests.filter((file) =>
       readFileSync(file, 'utf8').includes('template/paired-rules.vectors.json'),
     );
-    assert.equal(vectorTests.length, 4, 'all four shared-vector consumers stay covered');
+    assert.equal(vectorTests.length, 6, 'all six shared-vector consumers stay covered');
   });
 });

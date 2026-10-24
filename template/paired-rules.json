@@ -30,6 +30,60 @@
       "reason": "Проверка соответствия группы/класса регулярному выражению организации. Сервер авторитетно валидирует запуск сессии; клиент отображает предупреждение в форме."
     },
     {
+      "name": "isSafeGroupPattern",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/shared/lib/group-validation.ts",
+        "testFile": "client/src/shared/lib/group-validation.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/shared/group-pattern.ts",
+        "testFile": "server/src/tests/shared/group-pattern.spec.ts"
+      },
+      "reason": "Признак того, что шаблон группы/класса не содержит вложенных повторов, способных подвесить проверку (ReDoS). Сервер авторитетно отклоняет такой шаблон при сохранении; клиент повторяет проверку в форме администратора и не выполняет уже сохранённый опасный шаблон в браузере ученика."
+    },
+    {
+      "name": "isValidInn",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/shared/lib/organization-requisites.ts",
+        "testFile": "client/src/shared/lib/organization-requisites.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/shared/organization-requisites.ts",
+        "testFile": "server/src/tests/shared/organization-requisites.spec.ts"
+      },
+      "reason": "Формат ИНН учебного заведения (10 или 12 цифр). Сервер авторитетно отклоняет изменённое значение; клиентская форма повторяет проверку, чтобы показать ошибку до отправки."
+    },
+    {
+      "name": "isValidOgrn",
+      "type": "behaviour",
+      "authority": "server",
+      "client": {
+        "file": "client/src/shared/lib/organization-requisites.ts",
+        "testFile": "client/src/shared/lib/organization-requisites.test.ts"
+      },
+      "server": {
+        "file": "server/src/tests/shared/organization-requisites.ts",
+        "testFile": "server/src/tests/shared/organization-requisites.spec.ts"
+      },
+      "reason": "Формат ОГРН учебного заведения (13 цифр, для ИП 15). Сервер авторитетно отклоняет изменённое значение; клиентская форма повторяет проверку, чтобы показать ошибку до отправки."
+    },
+    {
+      "name": "MAX_GROUP_PATTERN_LENGTH",
+      "type": "constant",
+      "authority": "server",
+      "client": {
+        "file": "client/src/shared/lib/group-validation.ts"
+      },
+      "server": {
+        "file": "server/src/tests/shared/group-pattern.ts"
+      },
+      "reason": "Предельная длина шаблона группы/класса (300 символов). Сервер авторитетен при сохранении, клиентская форма показывает ошибку заранее."
+    },
+    {
       "name": "MAX_SKILLS_COUNT",
       "type": "constant",
       "authority": "server",

@@ -29,6 +29,7 @@ import {
   PUBLIC_OPERATOR_FULL_NAME,
   PUBLIC_PRIVACY_POLICY_URL,
   resolvePersonalDataOperator,
+  toOperatorSnapshotData,
   type ResolvedPersonalDataOperator,
 } from '../shared/personal-data-operator';
 import {
@@ -44,14 +45,6 @@ const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
 const DEFAULT_PERSONAL_DATA_PROCESSING_MODE = 'PUBLIC';
 type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 type PublicTemplate = 'STANDARD' | 'POLUS';
-
-const toOperatorSnapshotData = (operator: ResolvedPersonalDataOperator) => ({
-  personalDataProcessingMode: operator.processingMode,
-  operatorFullNameSnapshot: operator.operatorFullNameSnapshot,
-  operatorShortNameSnapshot: operator.operatorShortNameSnapshot,
-  operatorPrivacyPolicyUrlSnapshot: operator.operatorPrivacyPolicyUrlSnapshot,
-  operatorConsentDocumentUrlSnapshot: operator.operatorConsentDocumentUrlSnapshot,
-});
 
 const toPublicPersonalData = (link: PublicLinkWithTopicVersion) => {
   const isPublicProcessing = link.personalDataProcessingMode === 'PUBLIC';
