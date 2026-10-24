@@ -1,4 +1,5 @@
 import { PlusCircle } from 'lucide-react';
+import { useWatch } from 'react-hook-form';
 
 import {
   adminBadgeClassNames,
@@ -18,31 +19,26 @@ import {
 
 import { TestsTopicBaseFields } from './tests-topic-base-fields';
 
+import type { CreateTestValues } from '../model/types';
+import type { UseFormReturn } from 'react-hook-form';
+
 interface TestsCreateModalProps {
   open: boolean;
   isCreating: boolean;
-  newTestTitle: string;
-  newTestSlug: string;
-  newTestDescription: string;
+  form: UseFormReturn<CreateTestValues>;
   onOpenChange: (nextOpen: boolean) => void;
-  onNewTestTitleChange: (value: string) => void;
-  onNewTestSlugChange: (value: string) => void;
-  onNewTestDescriptionChange: (value: string) => void;
   onCreateTest: () => void;
 }
 
 export function TestsCreateModal({
   open,
   isCreating,
-  newTestTitle,
-  newTestSlug,
-  newTestDescription,
+  form,
   onOpenChange,
-  onNewTestTitleChange,
-  onNewTestSlugChange,
-  onNewTestDescriptionChange,
   onCreateTest,
 }: TestsCreateModalProps) {
+  const title = useWatch({ control: form.control, name: 'title' });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={adminClassNames.dialog.content}>
@@ -68,16 +64,7 @@ export function TestsCreateModal({
         </DialogHeader>
 
         <div className={`my-4 flex flex-col gap-4 ${adminClassNames.panel.compactSection}`}>
-          <TestsTopicBaseFields
-            title={newTestTitle}
-            slug={newTestSlug}
-            description={newTestDescription}
-            disabled={isCreating}
-            titleLabel="Название теста *"
-            onTitleChange={onNewTestTitleChange}
-            onSlugChange={onNewTestSlugChange}
-            onDescriptionChange={onNewTestDescriptionChange}
-          />
+          <TestsTopicBaseFields form={form} disabled={isCreating} titleLabel="Название теста *" />
         </div>
 
         <DialogFooter>
@@ -89,11 +76,7 @@ export function TestsCreateModal({
           >
             Отмена
           </Button>
-          <Button
-            type="button"
-            onClick={onCreateTest}
-            disabled={isCreating || !newTestTitle.trim()}
-          >
+          <Button type="button" onClick={onCreateTest} disabled={isCreating || !title.trim()}>
             {isCreating ? 'Создание...' : 'Создать тест'}
           </Button>
         </DialogFooter>

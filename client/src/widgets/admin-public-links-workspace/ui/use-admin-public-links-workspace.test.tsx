@@ -1,7 +1,10 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace';
+
+import type { ReactNode } from 'react';
 
 const { createOrganization, refetchOrganizations, idleMutation, emptyQuery } = vi.hoisted(() => ({
   createOrganization: vi.fn(),
@@ -38,14 +41,19 @@ describe('useAdminPublicLinksWorkspace', () => {
   it('selects the organization created from the editor sheet in the link form', async () => {
     createOrganization.mockResolvedValue({ id: 42 });
     refetchOrganizations.mockResolvedValue(undefined);
-    const { result } = renderHook(() => useAdminPublicLinksWorkspace());
+    const queryClient = new QueryClient();
+    const { result } = renderHook(() => useAdminPublicLinksWorkspace(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      ),
+    });
 
-    expect(result.current.newEducationOrganizationId).toBeNull();
+    expect(result.current.createForm.getValues('educationOrganizationId')).toBeNull();
 
     await act(() => result.current.createEducationOrganization({ name: 'Лицей 42' }));
 
     expect(createOrganization).toHaveBeenCalledWith({ data: { name: 'Лицей 42' } });
     expect(refetchOrganizations).toHaveBeenCalled();
-    expect(result.current.newEducationOrganizationId).toBe(42);
+    expect(result.current.createForm.getValues('educationOrganizationId')).toBe(42);
   });
 });

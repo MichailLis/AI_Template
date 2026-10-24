@@ -42,14 +42,9 @@ export function AdminTestsWorkspaceModals({
       <TestsCreateModal
         open={isListRoute && isCreateModalOpen}
         isCreating={workspace.createTopicMutation.isPending}
-        newTestTitle={workspace.newTestTitle}
-        newTestSlug={workspace.newTestSlug}
-        newTestDescription={workspace.newTestDescription}
+        form={workspace.createForm}
         onOpenChange={setIsCreateModalOpen}
-        onNewTestTitleChange={workspace.setNewTestTitle}
-        onNewTestSlugChange={workspace.setNewTestSlug}
-        onNewTestDescriptionChange={workspace.setNewTestDescription}
-        onCreateTest={workspace.handleCreateTest}
+        onCreateTest={() => void workspace.handleCreateTest()}
       />
 
       <AiTestGeneratorModal

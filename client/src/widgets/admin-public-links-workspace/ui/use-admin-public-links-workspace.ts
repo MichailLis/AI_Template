@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import {
@@ -12,12 +13,14 @@ import {
 } from '@/shared/api/generated/tests/tests';
 
 import {
+  CREATE_PUBLIC_LINK_DEFAULTS,
   resolveEffectivePublicLinkId,
   resolveEffectiveTopicId,
 } from './admin-public-links-workspace.helpers';
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
-import { useAdminPublicLinksFormState } from './use-admin-public-links-form-state';
+import { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
 
+import type { CreatePublicLinkValues } from './public-link-create-card.types';
 import type {
   AdminCreateEducationOrganizationDto,
   AdminUpdateEducationOrganizationDto,
@@ -39,7 +42,10 @@ export function useAdminPublicLinksWorkspace({
     useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
   const updateEducationOrganizationMutation =
     useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
-  const formState = useAdminPublicLinksFormState();
+  const createForm = useForm<CreatePublicLinkValues>({
+    defaultValues: CREATE_PUBLIC_LINK_DEFAULTS,
+  });
+  const selection = useAdminPublicLinksSelectionState();
 
   const topics = useMemo(() => topicsQuery.data?.topics ?? [], [topicsQuery.data?.topics]);
   const educationOrganizations = useMemo(
@@ -47,8 +53,8 @@ export function useAdminPublicLinksWorkspace({
     [listEducationOrganizationsQuery.data?.organizations],
   );
   const effectiveSelectedTopicId = useMemo(
-    () => resolveEffectiveTopicId(formState.selectedTopicId, topics),
-    [formState.selectedTopicId, topics],
+    () => resolveEffectiveTopicId(selection.selectedTopicId, topics),
+    [selection.selectedTopicId, topics],
   );
 
   const detailQuery = useTestsControllerGetTopicDraft(effectiveSelectedTopicId, {
@@ -66,14 +72,14 @@ export function useAdminPublicLinksWorkspace({
     [listArchivedPublicLinksQuery.data?.links],
   );
   const visiblePublicLinks = useMemo(
-    () => (formState.publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
-    [activePublicLinks, archivedPublicLinks, formState.publicLinksTab],
+    () => (selection.publicLinksTab === 'active' ? activePublicLinks : archivedPublicLinks),
+    [activePublicLinks, archivedPublicLinks, selection.publicLinksTab],
   );
   const currentPublicLinksQuery =
-    formState.publicLinksTab === 'active' ? listPublicLinksQuery : listArchivedPublicLinksQuery;
+    selection.publicLinksTab === 'active' ? listPublicLinksQuery : listArchivedPublicLinksQuery;
   const effectivePublicLinkId = useMemo(
-    () => resolveEffectivePublicLinkId(formState.selectedPublicLinkId, visiblePublicLinks),
-    [formState.selectedPublicLinkId, visiblePublicLinks],
+    () => resolveEffectivePublicLinkId(selection.selectedPublicLinkId, visiblePublicLinks),
+    [selection.selectedPublicLinkId, visiblePublicLinks],
   );
 
   const refetchPublicLinks = () => {
@@ -85,7 +91,7 @@ export function useAdminPublicLinksWorkspace({
     const organization = await createEducationOrganizationMutation.mutateAsync({ data: payload });
     toast.success('Учебное заведение добавлено');
     await listEducationOrganizationsQuery.refetch();
-    formState.setNewEducationOrganizationId(organization.id);
+    createForm.setValue('educationOrganizationId', organization.id);
   };
   const updateEducationOrganization = async (
     organizationId: number,
@@ -97,32 +103,15 @@ export function useAdminPublicLinksWorkspace({
   };
 
   const actions = useAdminPublicLinksActions({
+    form: createForm,
+    selection,
     publishedVersionId: detailQuery.data?.published?.id,
-    newPublicShortCode: formState.newPublicShortCode,
-    newEducationOrganizationId: formState.newEducationOrganizationId,
     educationOrganizations,
-    newPersonalDataProcessingMode: formState.newPersonalDataProcessingMode,
-    newPublicTemplate: formState.newPublicTemplate,
-    newPublicEntryProfileMode: formState.newPublicEntryProfileMode,
-    newPublicMaxAttempts: formState.newPublicMaxAttempts,
-    newPublicTimeLimit: formState.newPublicTimeLimit,
-    newPublicAllowResume: formState.newPublicAllowResume,
-    newPublicConsentVersion: formState.newPublicConsentVersion,
-    newPublicConsentText: formState.newPublicConsentText,
-    pendingDeletePublicLinkId: formState.pendingDeletePublicLinkId,
-    selectedPublicLinkId: formState.selectedPublicLinkId,
-    setPublicLinksTab: formState.setPublicLinksTab,
-    setSelectedPublicLinkId: formState.setSelectedPublicLinkId,
-    setPendingDeletePublicLinkId: formState.setPendingDeletePublicLinkId,
-    pendingMovePublicLink: formState.pendingMovePublicLink,
-    setPendingMovePublicLink: formState.setPendingMovePublicLink,
-    setNewPublicShortCode: formState.setNewPublicShortCode,
-    setNewPersonalDataProcessingMode: formState.setNewPersonalDataProcessingMode,
-    refetchPublicLinks,
     onPublicLinkCreated,
   });
 
   return {
+    createForm,
     topics,
     educationOrganizations,
     effectiveSelectedTopicId,
@@ -132,7 +121,7 @@ export function useAdminPublicLinksWorkspace({
     publicLinksError: currentPublicLinksQuery.isError,
     effectivePublicLinkId,
     refetchPublicLinks,
-    ...formState,
+    ...selection,
     ...actions,
     createEducationOrganization,
     updateEducationOrganization,
