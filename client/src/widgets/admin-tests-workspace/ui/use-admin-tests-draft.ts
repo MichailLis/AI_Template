@@ -1,26 +1,20 @@
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 import { hasDraftEdits, useDraftAutosave } from '@/features/tests';
-import { useTestsControllerGetTopicDraft } from '@/shared/api/generated/tests/tests';
+import {
+  getTestsControllerGetTopicDraftQueryKey,
+  getTestsControllerListTopicsQueryKey,
+  getTestsControllerPublishTopicMutationKey,
+  useTestsControllerGetTopicDraft,
+} from '@/shared/api/generated/tests/tests';
 import { parseApiError } from '@/shared/lib/api-error';
 
-interface RefetchableQuery {
-  refetch: () => unknown;
-}
-
-interface UseAdminTestsDraftParams {
-  effectiveSelectedTopicId: number | null;
-  activeTopicsQuery: RefetchableQuery;
-  archivedTopicsQuery: RefetchableQuery;
-  publishIsPending: boolean;
-}
-
-export function useAdminTestsDraft({
-  effectiveSelectedTopicId,
-  activeTopicsQuery,
-  archivedTopicsQuery,
-  publishIsPending,
-}: UseAdminTestsDraftParams) {
+export function useAdminTestsDraft(effectiveSelectedTopicId: number | null) {
+  const queryClient = useQueryClient();
+  // Автосохранение ждет публикацию, которую запускает хук действий, созданный позже этого.
+  const publishIsPending =
+    useIsMutating({ mutationKey: getTestsControllerPublishTopicMutationKey() }) > 0;
   const [draftEdits, setDraftEdits] = useState<
     Record<number, { title: string; description: string; analysisPromptVersionId: number | null }>
   >({});
@@ -68,13 +62,13 @@ export function useAdminTestsDraft({
     : false;
   const canPublish = Boolean(detail && !isDraftDirty && detail.draft.questions.length > 0);
 
-  const refetchTestsData = useCallback(() => {
-    void Promise.all([
-      activeTopicsQuery.refetch(),
-      archivedTopicsQuery.refetch(),
-      detailQuery.refetch(),
-    ]);
-  }, [activeTopicsQuery, archivedTopicsQuery, detailQuery]);
+  /** Списки тестов (активные и архив — один префикс ключа) и черновик выбранного теста. */
+  const invalidateTestsData = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: getTestsControllerListTopicsQueryKey() });
+    void queryClient.invalidateQueries({
+      queryKey: getTestsControllerGetTopicDraftQueryKey(effectiveSelectedTopicId ?? 0),
+    });
+  }, [effectiveSelectedTopicId, queryClient]);
 
   const draftAutosave = useDraftAutosave({
     topicId: effectiveSelectedTopicId,
@@ -83,7 +77,7 @@ export function useAdminTestsDraft({
     isDraftDirty,
     publishIsPending,
     clearDraftEdits,
-    onAfterSave: refetchTestsData,
+    onAfterSave: invalidateTestsData,
   });
 
   const discardCurrentDraftEditsAndResetAutosave = useCallback(() => {
@@ -131,7 +125,7 @@ export function useAdminTestsDraft({
     canPublish,
     draftAutosave,
     clearDraftEdits,
-    refetchTestsData,
+    invalidateTestsData,
     updateCurrentDraftEdits,
     discardCurrentDraftEditsAndResetAutosave,
   };

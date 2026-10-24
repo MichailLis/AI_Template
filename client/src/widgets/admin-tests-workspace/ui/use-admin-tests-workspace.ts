@@ -1,64 +1,33 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { useQuestionEditor } from '@/features/tests';
-import {
-  useTestsControllerArchiveTopic,
-  useTestsControllerCreateTopic,
-  useTestsControllerCreateTopicFromAi,
-  useTestsControllerDeleteTopic,
-  useTestsControllerImportProfOrientationV3Plus,
-  useTestsControllerPublishTopic,
-  useTestsControllerReorderQuestions,
-  useTestsControllerRestoreTopic,
-} from '@/shared/api/generated/tests/tests';
 
-import { createHandleToggleTopicActive } from './admin-tests-archive-action-creators';
+import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
+import { useAdminTestsActions } from './use-admin-tests-actions';
 import { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
 import { useAdminTestsDraft } from './use-admin-tests-draft';
 import { useAdminTestsTopics } from './use-admin-tests-topics';
-import { useAdminTestsWorkspaceActions } from './use-admin-tests-workspace-actions';
+
+import type { CreateTestValues } from '@/features/tests';
 
 export type { ListMode } from './use-admin-tests-topics';
 
+const CREATE_TEST_DEFAULTS: CreateTestValues = { title: '', slug: '', description: '' };
+
 export function useAdminTestsWorkspace() {
   const topicsState = useAdminTestsTopics();
-  const { activeTopicsQuery, archivedTopicsQuery, effectiveSelectedTopicId } = topicsState;
-
-  const createTopicMutation = useTestsControllerCreateTopic();
-  const createTopicFromAiMutation = useTestsControllerCreateTopicFromAi();
-  const importProfOrientationV3PlusMutation = useTestsControllerImportProfOrientationV3Plus();
-  const deleteTopicMutation = useTestsControllerDeleteTopic();
-  const archiveTopicMutation = useTestsControllerArchiveTopic();
-  const restoreTopicMutation = useTestsControllerRestoreTopic();
-  const reorderQuestionsMutation = useTestsControllerReorderQuestions();
-  const publishMutation = useTestsControllerPublishTopic();
-
-  const mutations = {
-    createTopicMutation,
-    createTopicFromAiMutation,
-    importProfOrientationV3PlusMutation,
-    deleteTopicMutation,
-    archiveTopicMutation,
-    restoreTopicMutation,
-    reorderQuestionsMutation,
-    publishMutation,
-  };
-
-  const draftState = useAdminTestsDraft({
-    effectiveSelectedTopicId,
-    activeTopicsQuery,
-    archivedTopicsQuery,
-    publishIsPending: publishMutation.isPending,
-  });
-  const { discardCurrentDraftEditsAndResetAutosave, isDraftDirty, refetchTestsData } = draftState;
+  const draftState = useAdminTestsDraft(topicsState.effectiveSelectedTopicId);
+  const { discardCurrentDraftEditsAndResetAutosave, isDraftDirty } = draftState;
 
   const questionEditor = useQuestionEditor({
-    topicId: effectiveSelectedTopicId,
-    onDataChanged: refetchTestsData,
+    topicId: topicsState.effectiveSelectedTopicId,
+    onDataChanged: draftState.invalidateTestsData,
   });
 
   const dialogState = useAdminTestsDialogState();
   const { setIsNavigationConfirmOpen, setPendingNavigationPath } = dialogState;
+  const createForm = useForm<CreateTestValues>({ defaultValues: CREATE_TEST_DEFAULTS });
 
   const handleAttemptNavigation = useCallback(
     (targetPath: string) => {
@@ -88,41 +57,24 @@ export function useAdminTestsWorkspace() {
     setPendingNavigationPath(null);
   }, [setIsNavigationConfirmOpen, setPendingNavigationPath]);
 
-  const handleToggleTopicActive = useMemo(
-    () =>
-      createHandleToggleTopicActive({
-        selectedTopic: topicsState.selectedTopic,
-        setPendingArchiveTopic: dialogState.setPendingArchiveTopic,
-        setPendingRestoreTopic: dialogState.setPendingRestoreTopic,
-      }),
-    [
-      dialogState.setPendingArchiveTopic,
-      dialogState.setPendingRestoreTopic,
-      topicsState.selectedTopic,
-    ],
-  );
-
-  const actions = useAdminTestsWorkspaceActions({
-    ...dialogState,
-    ...mutations,
-    ...draftState,
-    ...topicsState,
+  const actions = useAdminTestsActions({
+    topics: topicsState,
+    draft: draftState,
+    dialogs: dialogState,
     questionEditor,
-    refetchDetailOnly: () => {
-      void draftState.detailQuery.refetch();
-    },
+    createForm,
   });
 
   return {
     ...topicsState,
     ...draftState,
     ...dialogState,
-    ...mutations,
+    createForm,
     questionEditor,
     ...actions,
+    autosaveHint: buildAutosaveHint(draftState.draftAutosave),
     handleAttemptNavigation,
     handleConfirmNavigationLeave,
     handleConfirmNavigationStay,
-    handleToggleTopicActive,
   };
 }

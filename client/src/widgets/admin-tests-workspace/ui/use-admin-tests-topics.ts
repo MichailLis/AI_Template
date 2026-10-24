@@ -84,10 +84,6 @@ export function useAdminTestsTopics() {
     );
   }, [activeTopics, archivedTopics, effectiveSelectedTopicId]);
 
-  const refetchTopicsOnly = useCallback(() => {
-    void Promise.all([activeTopicsQuery.refetch(), archivedTopicsQuery.refetch()]);
-  }, [activeTopicsQuery, archivedTopicsQuery]);
-
   return {
     activeTopicsQuery,
     archivedTopicsQuery,
@@ -101,6 +97,5 @@ export function useAdminTestsTopics() {
     setListMode,
     isSelectedTopicArchived,
     selectedTopic,
-    refetchTopicsOnly,
   };
 }
