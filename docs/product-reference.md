@@ -181,7 +181,7 @@ Admin capabilities baseline:
 Admin settings:
 
 - `/admin/settings` shows the AI provider, its address, key status and a live connection check from backend-only configuration.
-- `/admin/settings` also manages the optional profession atlas URL.
+- `/admin/settings` also manages the optional profession atlas URL. The page opens without waiting for the atlas: its coverage report (`GET /admin/settings/profession-atlas/coverage`, professions searched in batches of 4) loads as a separate request and fills in the header badge and the coverage panel.
 - When configured, public and admin attempt result views can show the profession atlas link for prof-orientation results.
 
 Public student routes:

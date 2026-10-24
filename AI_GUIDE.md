@@ -81,6 +81,11 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
   `JWT_REFRESH_SECRET` makes the saved key unreadable: it is then treated as unset (the env key
   applies) and must be entered again. Changes are written to the audit journal without the key.
   Without saved settings the env variables below are used, which suits first deployment.
+- The env key (`AI_API_KEY`) is only used with the env or preset address. If a base URL typed in
+  the admin panel differs from both the preset address and `AI_BASE_URL`, the env key is not sent
+  there and the key source becomes «Не задан» until a key is saved. For the same reason
+  `PATCH /admin/settings/ai-provider` answers 400 when the address changes without a new key
+  (unless `clearApiKey` is sent), and the form requires a key as soon as the address changes.
 - Switching provider by env: set `AI_PROVIDER`, `AI_API_KEY` and, for any
   other service, `AI_BASE_URL`. Model ids saved in prompt versions are provider-specific; when a
   saved id is missing from the new catalog, analysis falls back to the catalog default model.
@@ -324,6 +329,8 @@ Verification gates:
 1. Do not mirror query data into form state via `setState` inside `useEffect`.
 2. Prefer derived/effective values (`queryValue ?? localFormValue`) at render/submit boundaries.
 3. If metadata must be fixed (for example link-bound organization), lock the input and submit the effective value.
+4. A form is one `useForm<Values>` (react-hook-form), not a `useState` per field. Pass the `form` object to its sections instead of value/setter prop pairs. Example: the public-link create dialog in `widgets/admin-public-links-workspace`.
+5. After a mutation, refresh lists with `queryClient.invalidateQueries({ queryKey: get…QueryKey() })` in `onSuccess`, not with `refetch*` callbacks passed down through params.
 
 ### Phase 3: Frontend Integration
 

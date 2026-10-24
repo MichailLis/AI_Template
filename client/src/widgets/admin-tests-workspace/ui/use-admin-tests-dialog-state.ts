@@ -3,9 +3,6 @@ import { useState } from 'react';
 import type { TestTopicListItem } from '@/features/tests';
 
 export function useAdminTestsDialogState() {
-  const [newTestTitle, setNewTestTitle] = useState('');
-  const [newTestSlug, setNewTestSlug] = useState('');
-  const [newTestDescription, setNewTestDescription] = useState('');
   const [testSearch, setTestSearch] = useState('');
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
@@ -23,12 +20,6 @@ export function useAdminTestsDialogState() {
   const [pendingRestoreTopic, setPendingRestoreTopic] = useState<TestTopicListItem | null>(null);
 
   return {
-    newTestTitle,
-    setNewTestTitle,
-    newTestSlug,
-    setNewTestSlug,
-    newTestDescription,
-    setNewTestDescription,
     testSearch,
     setTestSearch,
     isAiGeneratorOpen,

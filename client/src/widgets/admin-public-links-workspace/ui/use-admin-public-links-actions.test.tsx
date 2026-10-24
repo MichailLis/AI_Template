@@ -1,9 +1,17 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
+import { useForm } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 
+import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 
-import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
+import type {
+  CreatePublicLinkValues,
+  EducationOrganizationOption,
+} from './public-link-create-card.types';
+import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import type { ReactNode } from 'react';
 
 const createPublicLinkMutate = vi.fn();
 const updatePublicLinkMutate = vi.fn();
@@ -16,11 +24,9 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/features/tests', () => ({
-  parseApiError: () => 'Ошибка API',
-}));
-
 vi.mock('@/shared/api/generated/tests/tests', () => ({
+  getTestsAdminPublicLinksControllerListPublicLinksQueryKey: () => ['public-links'],
+  getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey: () => ['archived-links'],
   useTestsAdminPublicLinksControllerCreatePublicLink: () => ({
     mutate: createPublicLinkMutate,
     isPending: false,
@@ -47,41 +53,75 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
   }),
 }));
 
-const createParams = (
-  overrides: Partial<UseAdminPublicLinksActionsParams> = {},
-): UseAdminPublicLinksActionsParams =>
-  ({
-    publishedVersionId: 10,
-    newPublicShortCode: 'POLUS2026',
-    newEducationOrganizationId: 4,
-    educationOrganizations: [{ id: 4, name: 'Лицей 4', isActive: true, personalDataReady: true }],
-    newPersonalDataProcessingMode: 'PUBLIC',
-    newPublicTemplate: 'POLUS',
-    newPublicEntryProfileMode: 'EDUCATION',
-    newPublicMaxAttempts: '3',
-    newPublicTimeLimit: '30',
-    newPublicAllowResume: true,
-    newPublicConsentVersion: 'v1',
-    newPublicConsentText: 'Согласие',
-    pendingDeletePublicLinkId: null,
-    selectedPublicLinkId: null,
-    setPublicLinksTab: vi.fn(),
-    setSelectedPublicLinkId: vi.fn(),
-    setPendingDeletePublicLinkId: vi.fn(),
-    setNewPublicShortCode: vi.fn(),
-    setNewPersonalDataProcessingMode: vi.fn(),
-    refetchPublicLinks: vi.fn(),
-    ...overrides,
-  }) as UseAdminPublicLinksActionsParams;
+const readyOrganization: EducationOrganizationOption = {
+  id: 4,
+  name: 'Лицей 4',
+  isActive: true,
+  personalDataReady: true,
+};
+
+const createSelection = (pendingMovePublicLink: PublicLinkListItem | null = null) => ({
+  selectedTopicId: null,
+  setSelectedTopicId: vi.fn(),
+  selectedPublicLinkId: null,
+  setSelectedPublicLinkId: vi.fn(),
+  pendingDeletePublicLinkId: null,
+  setPendingDeletePublicLinkId: vi.fn(),
+  pendingMovePublicLink,
+  setPendingMovePublicLink: vi.fn(),
+  publicLinksTab: 'active' as const,
+  setPublicLinksTab: vi.fn(),
+  publicLinksSearch: '',
+  setPublicLinksSearch: vi.fn(),
+});
+
+const renderActions = ({
+  values = {},
+  educationOrganizations = [readyOrganization],
+  selection = createSelection(),
+}: {
+  values?: Partial<CreatePublicLinkValues>;
+  educationOrganizations?: EducationOrganizationOption[];
+  selection?: ReturnType<typeof createSelection>;
+} = {}) => {
+  const queryClient = new QueryClient();
+  const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  const { result } = renderHook(
+    () => {
+      const form = useForm<CreatePublicLinkValues>({
+        defaultValues: { ...CREATE_PUBLIC_LINK_DEFAULTS, ...values },
+      });
+      return {
+        form,
+        actions: useAdminPublicLinksActions({
+          form,
+          selection,
+          publishedVersionId: 10,
+          educationOrganizations,
+        }),
+      };
+    },
+    { wrapper },
+  );
+  return { result, invalidateQueries, selection };
+};
+
+const createValues: Partial<CreatePublicLinkValues> = {
+  shortCode: 'POLUS2026',
+  educationOrganizationId: 4,
+  publicTemplate: 'POLUS',
+  entryProfileMode: 'EDUCATION',
+};
 
 describe('useAdminPublicLinksActions', () => {
-  it('submits the selected public template when creating a link', () => {
-    createPublicLinkMutate.mockClear();
-    const { result } = renderHook(() => useAdminPublicLinksActions(createParams()));
+  it('submits the selected public template when creating a link', async () => {
+    createPublicLinkMutate.mockReset();
+    const { result } = renderActions({ values: createValues });
 
-    act(() => {
-      result.current.handleCreatePublicLink();
-    });
+    await act(() => result.current.actions.handleCreatePublicLink());
 
     expect(createPublicLinkMutate).toHaveBeenCalledWith(
       {
@@ -89,38 +129,64 @@ describe('useAdminPublicLinksActions', () => {
           publicTemplate: 'POLUS',
           personalDataProcessingMode: 'PUBLIC',
           educationOrganizationId: 4,
+          shortCode: 'POLUS2026',
+          maxAttemptsPerStudent: 3,
         }),
       },
       expect.any(Object),
     );
   });
 
-  it('blocks an incomplete organization selected as the personal-data operator', () => {
-    createPublicLinkMutate.mockClear();
-    const { result } = renderHook(() =>
-      useAdminPublicLinksActions(
-        createParams({
-          newPersonalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
-          educationOrganizations: [
-            { id: 4, name: 'Лицей 4', isActive: true, personalDataReady: false },
-          ],
-        }),
-      ),
+  it('resets only the short code and operator after a link is created', async () => {
+    createPublicLinkMutate.mockReset();
+    createPublicLinkMutate.mockImplementation(
+      (_variables: unknown, options: { onSuccess: (link: { id: number }) => void }) =>
+        options.onSuccess({ id: 77 }),
     );
-
+    const { result, invalidateQueries, selection } = renderActions();
+    // Как оператор в диалоге: значения меняются поверх значений по умолчанию.
     act(() => {
-      result.current.handleCreatePublicLink();
+      const { setValue } = result.current.form;
+      setValue('shortCode', 'POLUS2026');
+      setValue('personalDataProcessingMode', 'ON_BEHALF_OF_EDUCATION_ORGANIZATION');
+      setValue('publicTemplate', 'POLUS');
+      setValue('educationOrganizationId', 4);
     });
+
+    await act(() => result.current.actions.handleCreatePublicLink());
+
+    expect(result.current.form.getValues()).toMatchObject({
+      shortCode: '',
+      personalDataProcessingMode: 'PUBLIC',
+      publicTemplate: 'POLUS',
+      educationOrganizationId: 4,
+    });
+    expect(selection.setSelectedPublicLinkId).toHaveBeenCalledWith(77);
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['public-links'] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['archived-links'] });
+  });
+
+  it('blocks an incomplete organization selected as the personal-data operator', async () => {
+    createPublicLinkMutate.mockReset();
+    const { result } = renderActions({
+      values: {
+        ...createValues,
+        personalDataProcessingMode: 'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+      },
+      educationOrganizations: [{ ...readyOrganization, personalDataReady: false }],
+    });
+
+    await act(() => result.current.actions.handleCreatePublicLink());
 
     expect(createPublicLinkMutate).not.toHaveBeenCalled();
   });
 
   it('submits public branding updates for the constructor', () => {
     updatePublicLinkMutate.mockClear();
-    const { result } = renderHook(() => useAdminPublicLinksActions(createParams()));
+    const { result } = renderActions();
 
     act(() => {
-      result.current.handleUpdatePublicLinkBranding(42, {
+      result.current.actions.handleUpdatePublicLinkBranding(42, {
         version: 1,
         buttons: { primaryColor: '#0066cc' },
       });
@@ -142,40 +208,30 @@ describe('useAdminPublicLinksActions', () => {
 
   /** Находка аудита UX-04: действие перевода ссылки на опубликованную версию теста. */
   it('moves the confirmed link to the published version and closes the confirmation', () => {
-    const setPendingMovePublicLink = vi.fn();
-    const refetchPublicLinks = vi.fn();
     moveToActiveVersionMutate.mockReset();
     moveToActiveVersionMutate.mockImplementation(
       (_variables: unknown, options: { onSuccess: (link: { id: number }) => void }) =>
         options.onSuccess({ id: 61 }),
     );
-    const { result } = renderHook(() =>
-      useAdminPublicLinksActions(
-        createParams({
-          pendingMovePublicLink: {
-            id: 61,
-          } as UseAdminPublicLinksActionsParams['pendingMovePublicLink'],
-          setPendingMovePublicLink,
-          refetchPublicLinks,
-        }),
-      ),
-    );
+    const { result, invalidateQueries, selection } = renderActions({
+      selection: createSelection({ id: 61 } as PublicLinkListItem),
+    });
 
     act(() => {
-      result.current.handleMovePublicLinkToActiveVersion();
+      result.current.actions.handleMovePublicLinkToActiveVersion();
     });
 
     expect(moveToActiveVersionMutate).toHaveBeenCalledWith({ linkId: 61 }, expect.any(Object));
-    expect(setPendingMovePublicLink).toHaveBeenCalledWith(null);
-    expect(refetchPublicLinks).toHaveBeenCalled();
+    expect(selection.setPendingMovePublicLink).toHaveBeenCalledWith(null);
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['public-links'] });
   });
 
   it('does nothing when no link is waiting for the move', () => {
     moveToActiveVersionMutate.mockReset();
-    const { result } = renderHook(() => useAdminPublicLinksActions(createParams()));
+    const { result } = renderActions();
 
     act(() => {
-      result.current.handleMovePublicLinkToActiveVersion();
+      result.current.actions.handleMovePublicLinkToActiveVersion();
     });
 
     expect(moveToActiveVersionMutate).not.toHaveBeenCalled();

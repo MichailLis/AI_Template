@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useWatch } from 'react-hook-form';
 
 import { EducationOrganizationEditorSheet } from '@/features/tests';
 import { parseApiError } from '@/shared/lib/api-error';
@@ -20,31 +21,12 @@ import type { PublicLinkListItem } from './public-links-list-card.helpers';
 type AdminPublicLinksWorkspaceState = ReturnType<typeof useAdminPublicLinksWorkspace>;
 
 const buildCreateCardProps = (state: AdminPublicLinksWorkspaceState) => ({
+  form: state.createForm,
   topics: state.topics,
   educationOrganizations: state.educationOrganizations,
   effectiveSelectedTopicId: state.effectiveSelectedTopicId,
   onSelectTopic: state.setSelectedTopicId,
-  newEducationOrganizationId: state.newEducationOrganizationId,
-  onEducationOrganizationSelect: state.setNewEducationOrganizationId,
-  newPersonalDataProcessingMode: state.newPersonalDataProcessingMode,
-  onPersonalDataProcessingModeChange: state.setNewPersonalDataProcessingMode,
-  newPublicShortCode: state.newPublicShortCode,
-  onShortCodeChange: state.setNewPublicShortCode,
-  newPublicTemplate: state.newPublicTemplate,
-  onPublicTemplateChange: state.setNewPublicTemplate,
-  newPublicEntryProfileMode: state.newPublicEntryProfileMode,
-  onEntryProfileModeChange: state.setNewPublicEntryProfileMode,
-  newPublicMaxAttempts: state.newPublicMaxAttempts,
-  onMaxAttemptsChange: state.setNewPublicMaxAttempts,
-  newPublicTimeLimit: state.newPublicTimeLimit,
-  onTimeLimitChange: state.setNewPublicTimeLimit,
-  newPublicConsentVersion: state.newPublicConsentVersion,
-  onConsentVersionChange: state.setNewPublicConsentVersion,
-  newPublicConsentText: state.newPublicConsentText,
-  onConsentTextChange: state.setNewPublicConsentText,
-  newPublicAllowResume: state.newPublicAllowResume,
-  onAllowResumeChange: state.setNewPublicAllowResume,
-  onCreatePublicLink: state.handleCreatePublicLink,
+  onCreatePublicLink: () => void state.handleCreatePublicLink(),
   isCreatingPublicLink: state.createPublicLinkMutation.isPending,
   createError: state.createPublicLinkMutation.isError
     ? parseApiError(state.createPublicLinkMutation.error)
@@ -101,8 +83,12 @@ export function AdminPublicLinksWorkspace() {
     onCreateEducationOrganization: () => setOrganizationEditorMode('create'),
     onEditEducationOrganization: () => setOrganizationEditorMode('edit'),
   };
+  const selectedOrganizationId = useWatch({
+    control: workspaceState.createForm.control,
+    name: 'educationOrganizationId',
+  });
   const editedOrganization = workspaceState.educationOrganizations.find(
-    (organization) => organization.id === workspaceState.newEducationOrganizationId,
+    (organization) => organization.id === selectedOrganizationId,
   );
   const listCardProps = buildListCardProps(
     workspaceState,

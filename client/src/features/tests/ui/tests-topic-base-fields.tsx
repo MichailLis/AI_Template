@@ -2,26 +2,19 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
+import type { CreateTestValues } from '../model/types';
+import type { UseFormReturn } from 'react-hook-form';
+
 interface TestsTopicBaseFieldsProps {
-  title: string;
-  slug: string;
-  description: string;
+  form: UseFormReturn<CreateTestValues>;
   disabled?: boolean;
   titleLabel?: string;
-  onTitleChange: (value: string) => void;
-  onSlugChange: (value: string) => void;
-  onDescriptionChange: (value: string) => void;
 }
 
 export function TestsTopicBaseFields({
-  title,
-  slug,
-  description,
+  form,
   disabled = false,
   titleLabel = 'Название теста',
-  onTitleChange,
-  onSlugChange,
-  onDescriptionChange,
 }: TestsTopicBaseFieldsProps) {
   return (
     <>
@@ -29,10 +22,9 @@ export function TestsTopicBaseFields({
         <Label htmlFor="new-topic-title">{titleLabel}</Label>
         <Input
           id="new-topic-title"
-          value={title}
-          onChange={(event) => onTitleChange(event.target.value)}
           placeholder="Карьерная ориентация"
           disabled={disabled}
+          {...form.register('title')}
         />
       </div>
 
@@ -40,10 +32,9 @@ export function TestsTopicBaseFields({
         <Label htmlFor="new-topic-slug">Slug (служебный, необязательно)</Label>
         <Input
           id="new-topic-slug"
-          value={slug}
-          onChange={(event) => onSlugChange(event.target.value)}
           placeholder="career-orientation"
           disabled={disabled}
+          {...form.register('slug')}
         />
       </div>
 
@@ -51,11 +42,10 @@ export function TestsTopicBaseFields({
         <Label htmlFor="new-topic-description">Описание (необязательно)</Label>
         <Textarea
           id="new-topic-description"
-          value={description}
-          onChange={(event) => onDescriptionChange(event.target.value)}
           rows={3}
           placeholder="Краткое описание для студентов..."
           disabled={disabled}
+          {...form.register('description')}
         />
       </div>
     </>

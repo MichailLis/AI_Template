@@ -127,15 +127,6 @@ describe('AdminSettingsController', () => {
         updatedAt: '2026-05-12T10:00:00.000Z',
       },
     });
-    profOrientationAtlasService.buildCoverageReport.mockResolvedValue({
-      status: 'ready',
-      checkedAt: '2026-05-12T12:00:00.000Z',
-      total: 12,
-      found: 12,
-      missing: [],
-      duplicates: [],
-      items: [],
-    });
 
     await expect(controller.getProfessionAtlasSettings()).resolves.toEqual({
       professionAtlas: {
@@ -143,19 +134,11 @@ describe('AdminSettingsController', () => {
         publicUrl: 'https://atlas.example',
         apiUrl: 'https://atlas.example/api-backend',
         updatedAt: '2026-05-12T10:00:00.000Z',
-        coverage: {
-          status: 'ready',
-          checkedAt: '2026-05-12T12:00:00.000Z',
-          total: 12,
-          found: 12,
-          missing: [],
-          duplicates: [],
-          items: [],
-        },
       },
     });
     expect(professionAtlasSettingsService.getProfessionAtlasSettings).toHaveBeenCalledWith();
-    expect(profOrientationAtlasService.buildCoverageReport).toHaveBeenCalledWith();
+    // Покрытие обходит Атлас десятки раз: настройки его не строят.
+    expect(profOrientationAtlasService.buildCoverageReport).not.toHaveBeenCalled();
   });
 
   it('updates profession atlas URL', async () => {

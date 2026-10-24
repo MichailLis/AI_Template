@@ -1,15 +1,37 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AdminSettingsWorkspace } from './admin-settings-workspace';
 
 const updatePrivacyPolicy = vi.fn();
 const updateAiProvider = vi.fn();
 
+const loadedCoverage = {
+  status: 'unavailable',
+  checkedAt: '2026-09-12T20:05:00.000Z',
+  total: 12,
+  found: 0,
+  missing: [],
+  duplicates: [],
+  items: [],
+  errorMessage: 'fetch failed',
+};
+// Покрытие приходит отдельным запросом: по умолчанию уже загружено, тест переключает на загрузку.
+const coverageQuery = vi.hoisted(() => ({
+  data: undefined as unknown,
+  isError: false,
+  isLoading: false,
+}));
+
 vi.mock('@/shared/api/generated/admin/admin', () => ({
   getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey: () => ['privacy-policy'],
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey: () => ['profession-atlas'],
+  getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey: () => ['profession-atlas-coverage'],
+  useAdminSettingsControllerGetProfessionAtlasCoverage: () => ({
+    ...coverageQuery,
+    refetch: vi.fn(),
+  }),
   getAdminSettingsControllerGetAiProviderSettingsQueryKey: () => ['ai-provider'],
   useAdminSettingsControllerUpdateAiProviderSettings: () => ({
     mutate: updateAiProvider,
@@ -38,16 +60,6 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
     data: {
       professionAtlas: {
         apiUrl: 'https://atlas.example/api-backend',
-        coverage: {
-          status: 'unavailable',
-          checkedAt: '2026-09-12T20:05:00.000Z',
-          total: 12,
-          found: 0,
-          missing: [],
-          duplicates: [],
-          items: [],
-          errorMessage: 'fetch failed',
-        },
         publicUrl: 'https://atlas.example',
         updatedAt: null,
         url: 'https://atlas.example',
@@ -98,6 +110,11 @@ const renderWorkspace = () => {
  * настроек, пока ниже на той же странице атлас был «Недоступен · fetch failed».
  */
 describe('AdminSettingsWorkspace integration health header', () => {
+  beforeEach(() => {
+    coverageQuery.data = loadedCoverage;
+    coverageQuery.isLoading = false;
+  });
+
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -110,6 +127,20 @@ describe('AdminSettingsWorkspace integration health header', () => {
     expect(screen.getByText(/^Атлас недоступен · /)).toBeInTheDocument();
     expect(screen.queryByText('OpenRouter готов')).not.toBeInTheDocument();
     expect(screen.queryByText('Атлас подключен')).not.toBeInTheDocument();
+  });
+
+  /** Находка аудита #147: настройки открываются сразу, покрытие атласа догружается отдельно. */
+  it('shows the settings while the atlas coverage is still loading', () => {
+    coverageQuery.data = undefined;
+    coverageQuery.isLoading = true;
+    renderWorkspace();
+
+    expect(screen.getByText('Атлас: проверяем связь')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Атлас профессий' }));
+
+    expect(screen.getByText('https://atlas.example/api-backend')).toBeInTheDocument();
+    expect(screen.getByText(/Проверяем покрытие профессий/)).toBeInTheDocument();
   });
 });
 

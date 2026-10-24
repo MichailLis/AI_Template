@@ -83,7 +83,8 @@ export const isAiProviderId = (value: string): value is AiProviderId =>
 /**
  * Значения, сохранённые в админке. Если задан `provider`, БД главная для провайдера, адреса и
  * модели: переменные `AI_PROVIDER`, `AI_BASE_URL`, `AI_DEFAULT_MODEL` тогда игнорируются, чтобы
- * адрес из env не прилипал к другому провайдеру. Ключ берётся из БД, а при его отсутствии из env.
+ * адрес из env не прилипал к другому провайдеру. Ключ берётся из БД, а при его отсутствии из env,
+ * но только если адрес в БД не задан или совпадает с адресом пресета либо `AI_BASE_URL`.
  */
 export interface StoredAiProviderSettings {
   provider: AiProviderId | null;
@@ -127,14 +128,25 @@ export const resolveAiProviderSettings = (
   const preset = AI_PROVIDER_PRESETS[provider];
   const legacy = (name: string) =>
     !useStored && provider === 'openrouter' ? readString(config, `OPENROUTER_${name}`) : null;
-  const envApiKey = readString(config, 'AI_API_KEY') ?? legacy('API_KEY');
+  const trimSlashes = (url: string | null | undefined) => url?.replace(/\/+$/, '') || null;
+  const configuredBaseUrl = trimSlashes(
+    useStored ? stored?.baseUrl : readString(config, 'AI_BASE_URL'),
+  );
+  // Ключ из env принадлежит адресу из env или пресета: на адрес, вписанный в админке, он не уходит.
+  const isEnvKeyTrusted =
+    !useStored ||
+    !configuredBaseUrl ||
+    configuredBaseUrl === preset.defaultBaseUrl ||
+    configuredBaseUrl === trimSlashes(readString(config, 'AI_BASE_URL'));
+  const envApiKey = isEnvKeyTrusted
+    ? (readString(config, 'AI_API_KEY') ?? legacy('API_KEY'))
+    : null;
   const apiKey = stored?.apiKey ?? envApiKey;
-  const configuredBaseUrl = useStored ? stored?.baseUrl : readString(config, 'AI_BASE_URL');
 
   return {
     provider,
     label: preset.label,
-    baseUrl: configuredBaseUrl?.replace(/\/+$/, '') || preset.defaultBaseUrl,
+    baseUrl: configuredBaseUrl || preset.defaultBaseUrl,
     apiKey,
     apiKeySource: stored?.apiKey ? 'DB' : envApiKey ? 'ENV' : 'NONE',
     defaultModel: useStored
