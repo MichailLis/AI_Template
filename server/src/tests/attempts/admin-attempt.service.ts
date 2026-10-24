@@ -91,16 +91,19 @@ export class TestsAdminAttemptService {
         analysis: { select: { providerMode: true, status: true, summary: true } },
       },
       orderBy: buildAttemptListOrderBy(query),
-      take: ATTEMPTS_EXPORT_LIMIT,
+      take: ATTEMPTS_EXPORT_LIMIT + 1,
     });
 
     return {
       shortCode: link.shortCode,
-      attempts: attempts.map((attempt) =>
-        mapAttemptListItem(attempt, (currentAttempt) =>
-          this.analysisService.toAttemptStatus(currentAttempt),
+      truncated: attempts.length > ATTEMPTS_EXPORT_LIMIT,
+      attempts: attempts
+        .slice(0, ATTEMPTS_EXPORT_LIMIT)
+        .map((attempt) =>
+          mapAttemptListItem(attempt, (currentAttempt) =>
+            this.analysisService.toAttemptStatus(currentAttempt),
+          ),
         ),
-      ),
     };
   }
 

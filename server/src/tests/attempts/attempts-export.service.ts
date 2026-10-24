@@ -9,6 +9,7 @@ import {
   getReportLlmStatusLabel,
   getReportValueLabel,
 } from '../reporting/analytics-report-labels';
+import { ATTEMPTS_EXPORT_LIMIT } from './admin-attempt.service';
 
 export interface AttemptExportRow {
   attemptId: number;
@@ -123,7 +124,12 @@ const toRowValues = (row: AttemptExportRow, timeZone: string): Array<string | nu
 
 @Injectable()
 export class TestsAttemptsExportService {
-  async toExcel(rows: AttemptExportRow[], title: string, timeZone?: string): Promise<Buffer> {
+  async toExcel(
+    rows: AttemptExportRow[],
+    title: string,
+    timeZone?: string,
+    truncated = false,
+  ): Promise<Buffer> {
     const zone = resolveTimeZone(timeZone);
     const workbook = new ExcelJS.Workbook();
 
@@ -151,6 +157,14 @@ export class TestsAttemptsExportService {
       const added = sheet.addRow(toRowValues(row, zone));
       added.getCell(START_COLUMN).numFmt = DATE_TIME_FORMAT;
       added.getCell(FINISH_COLUMN).numFmt = DATE_TIME_FORMAT;
+    }
+
+    // After the data rows and a blank one, so the header autofilter and the table stay intact.
+    if (truncated) {
+      sheet.addRow([]);
+      sheet.addRow([
+        `Выгружены первые ${ATTEMPTS_EXPORT_LIMIT} прохождений. Сузьте фильтр, чтобы выгрузить остальные.`,
+      ]).font = { bold: true };
     }
 
     sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: COLUMNS.length } };

@@ -2,8 +2,7 @@ import { isRecord } from './type-guards';
 
 const DEFAULT_API_ERROR_MESSAGE = 'Не удалось выполнить запрос';
 const SESSION_EXPIRED_MESSAGE = 'Сессия истекла или доступ запрещен. Войдите заново.';
-const SERVER_UNAVAILABLE_MESSAGE =
-  'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.';
+const SERVER_UNAVAILABLE_MESSAGE = 'Сервер недоступен. Попробуйте позже.';
 
 interface ApiErrorMessageOptions {
   fallbackMessage?: string;

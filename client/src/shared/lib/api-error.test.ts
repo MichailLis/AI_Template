@@ -99,9 +99,7 @@ describe('parseApiError', () => {
   });
 
   it('returns the backend unavailable message for request-only errors', () => {
-    expect(parseApiError({ request: {} })).toBe(
-      'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.',
-    );
+    expect(parseApiError({ request: {} })).toBe('Сервер недоступен. Попробуйте позже.');
   });
 });
 

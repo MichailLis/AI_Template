@@ -46,7 +46,11 @@ describe('TestsAdminAttemptsController', () => {
       timeZone: 'Asia/Novosibirsk',
     };
     const setHeader = jest.fn();
-    serviceMock.listAttemptsForExport.mockResolvedValue({ shortCode: 'ABC123', attempts: [] });
+    serviceMock.listAttemptsForExport.mockResolvedValue({
+      shortCode: 'ABC123',
+      truncated: true,
+      attempts: [],
+    });
     exportMock.toExcel.mockResolvedValue(Buffer.from('xlsx'));
 
     const file = await controller.exportPublicLinkAttempts(13, query, {
@@ -54,7 +58,7 @@ describe('TestsAdminAttemptsController', () => {
     } as unknown as Parameters<typeof controller.exportPublicLinkAttempts>[2]);
 
     expect(serviceMock.listAttemptsForExport).toHaveBeenCalledWith(13, query);
-    expect(exportMock.toExcel).toHaveBeenCalledWith([], 'ABC123', 'Asia/Novosibirsk');
+    expect(exportMock.toExcel).toHaveBeenCalledWith([], 'ABC123', 'Asia/Novosibirsk', true);
     expect(setHeader).toHaveBeenCalledWith(
       'Content-Disposition',
       expect.stringMatching(/^attachment; filename="attempts-ABC123-\d{4}-\d{2}-\d{2}\.xlsx"$/),

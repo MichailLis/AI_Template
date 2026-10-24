@@ -59,10 +59,8 @@ export class TestsAdminAttemptsController {
     @Query() query: AdminPublicAttemptsListQueryDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { shortCode, attempts } = await this.testsAdminAttemptService.listAttemptsForExport(
-      linkId,
-      query,
-    );
+    const { shortCode, attempts, truncated } =
+      await this.testsAdminAttemptService.listAttemptsForExport(linkId, query);
     const dateStr = new Date().toISOString().slice(0, 10);
     const disposition = `attachment; filename="attempts-${shortCode}-${dateStr}.xlsx"`;
 
@@ -70,7 +68,7 @@ export class TestsAdminAttemptsController {
     res.setHeader('Content-Disposition', disposition);
 
     return new StreamableFile(
-      await this.attemptsExportService.toExcel(attempts, shortCode, query.timeZone),
+      await this.attemptsExportService.toExcel(attempts, shortCode, query.timeZone, truncated),
       {
         type: XLSX_CONTENT_TYPE,
         disposition,
