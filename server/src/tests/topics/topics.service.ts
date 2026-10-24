@@ -30,6 +30,7 @@ import {
   cloneQuestionsToVersion,
   createQuestionsInVersion,
   createTopicWithDraft,
+  lockDraftVersion,
 } from '../topics/topic-version.utils';
 import { mapQuestion, validateDraftForPublish } from '../shared/domain.utils';
 import { ensureUniqueTopicSlug } from '../topics/topic-slug.utils';
@@ -88,8 +89,8 @@ export class TestsService {
       : null;
   }
 
-  private async getTopicSnapshot(topicId: number) {
-    const topic = await this.prisma.testTopic.findUnique({
+  private async getTopicSnapshot(topicId: number, client: Prisma.TransactionClient = this.prisma) {
+    const topic = await client.testTopic.findUnique({
       where: { id: topicId },
       include: {
         activeDraftVersion: {
@@ -548,23 +549,17 @@ export class TestsService {
       }
     }
 
-    const updateData: {
-      title: string;
-      description: string | null;
-      analysisPromptVersionId?: number | null;
-    } = {
-      title: dto.title ?? topic.activeDraftVersion.title,
-      description:
-        dto.description !== undefined ? dto.description : topic.activeDraftVersion.description,
-    };
-
-    if (dto.analysisPromptVersionId !== undefined) {
-      updateData.analysisPromptVersionId = dto.analysisPromptVersionId;
-    }
-
-    await this.prisma.testTopicVersion.update({
-      where: { id: topic.activeDraftVersion.id },
-      data: updateData,
+    await this.prisma.$transaction(async (tx) => {
+      await lockDraftVersion(tx, topic.activeDraftVersion.id);
+      // Prisma skips undefined fields, so only what the request sent is written.
+      await tx.testTopicVersion.update({
+        where: { id: topic.activeDraftVersion.id },
+        data: {
+          title: dto.title,
+          description: dto.description,
+          analysisPromptVersionId: dto.analysisPromptVersionId,
+        },
+      });
     });
 
     return this.getTopicDraft(topicId);
@@ -609,12 +604,16 @@ export class TestsService {
   }
 
   async publishTopic(topicId: number): Promise<PublishTestsTopicResponseDto> {
-    const topic = await this.getTopicSnapshot(topicId);
-    const draft = topic.activeDraftVersion;
-
-    validateDraftForPublish(draft);
-
     return this.prisma.$transaction(async (tx) => {
+      const { activeDraftVersion } = await this.getTopicSnapshot(topicId, tx);
+      // A second publish of the same draft gets 409 here instead of a unique-constraint error.
+      await lockDraftVersion(tx, activeDraftVersion.id);
+      // Re-read under the lock: an edit that committed first is published and cloned with it.
+      const topic = await this.getTopicSnapshot(topicId, tx);
+      const draft = topic.activeDraftVersion;
+
+      validateDraftForPublish(draft);
+
       if (topic.activePublishedVersionId && topic.activePublishedVersionId !== draft.id) {
         await tx.testTopicVersion.update({
           where: { id: topic.activePublishedVersionId },

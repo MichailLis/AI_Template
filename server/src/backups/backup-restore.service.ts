@@ -120,8 +120,17 @@ export class BackupRestoreService implements OnApplicationBootstrap {
     }
 
     this.assertIdle();
-    await this.assertEnoughSpaceForRestore(backup);
+    // Take the lock before the first await, or a double click passes assertIdle twice (#135).
+    const previousOperation = this.operation;
     this.operation = this.createOperation('RESTORE', backup);
+
+    try {
+      await this.assertEnoughSpaceForRestore(backup);
+    } catch (error) {
+      this.operation = previousOperation;
+      throw error;
+    }
+
     void this.runExclusive(() => this.restore(userId, backup));
 
     return { operation: this.operation };
