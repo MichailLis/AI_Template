@@ -1,48 +1,43 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useForm } from 'react-hook-form';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
 import { PublicLinkCreateDialog } from './public-link-create-card';
 
-import type { PublicLinkCreateCardProps } from './public-link-create-card.types';
+import type {
+  CreatePublicLinkValues,
+  PublicLinkCreateCardProps,
+} from './public-link-create-card.types';
 
-const buildProps = (
-  overrides: Partial<PublicLinkCreateCardProps> = {},
-): PublicLinkCreateCardProps => ({
-  topics: [{ id: 1, draftTitle: 'Профориентационный тест', publishedVersionNumber: 1 }],
-  educationOrganizations: [],
-  effectiveSelectedTopicId: 1,
-  onSelectTopic: vi.fn(),
-  newEducationOrganizationId: null,
-  onEducationOrganizationSelect: vi.fn(),
-  newPersonalDataProcessingMode: 'PUBLIC',
-  onPersonalDataProcessingModeChange: vi.fn(),
-  onCreateEducationOrganization: vi.fn(),
-  onEditEducationOrganization: vi.fn(),
-  newPublicShortCode: '',
-  onShortCodeChange: vi.fn(),
-  newPublicTemplate: 'STANDARD',
-  onPublicTemplateChange: vi.fn(),
-  newPublicEntryProfileMode: 'EDUCATION',
-  onEntryProfileModeChange: vi.fn(),
-  newPublicMaxAttempts: '1',
-  onMaxAttemptsChange: vi.fn(),
-  newPublicTimeLimit: '30',
-  onTimeLimitChange: vi.fn(),
-  newPublicConsentVersion: '',
-  onConsentVersionChange: vi.fn(),
-  newPublicConsentText: '',
-  onConsentTextChange: vi.fn(),
-  newPublicAllowResume: true,
-  onAllowResumeChange: vi.fn(),
-  onCreatePublicLink: vi.fn(),
-  isCreatingPublicLink: false,
-  hasPublishedVersion: true,
-  ...overrides,
-});
+const createForm = () =>
+  renderHook(() => useForm<CreatePublicLinkValues>({ defaultValues: CREATE_PUBLIC_LINK_DEFAULTS }))
+    .result.current;
 
-const renderDialog = (overrides: Partial<PublicLinkCreateCardProps> = {}) =>
-  render(<PublicLinkCreateDialog open onOpenChange={vi.fn()} {...buildProps(overrides)} />);
+type DialogOverrides = Partial<Omit<PublicLinkCreateCardProps, 'form'>>;
+
+const renderDialog = (overrides: DialogOverrides = {}) => {
+  const form = createForm();
+  render(
+    <PublicLinkCreateDialog
+      open
+      onOpenChange={vi.fn()}
+      form={form}
+      topics={[{ id: 1, draftTitle: 'Профориентационный тест', publishedVersionNumber: 1 }]}
+      educationOrganizations={[]}
+      effectiveSelectedTopicId={1}
+      onSelectTopic={vi.fn()}
+      onCreateEducationOrganization={vi.fn()}
+      onEditEducationOrganization={vi.fn()}
+      onCreatePublicLink={vi.fn()}
+      isCreatingPublicLink={false}
+      hasPublishedVersion
+      {...overrides}
+    />,
+  );
+  return form;
+};
 
 describe('PublicLinkCreateDialog', () => {
   afterEach(cleanup);
@@ -70,6 +65,26 @@ describe('PublicLinkCreateDialog', () => {
 
     await user.click(screen.getByRole('button', { name: 'Назад' }));
     expect(screen.getByText('Шаг 2 из 3 · Учебное заведение')).toBeInTheDocument();
+  });
+
+  it('keeps typed values when the operator steps back and forth', async () => {
+    const user = userEvent.setup();
+    const form = renderDialog();
+
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    await user.click(screen.getByLabelText('От имени учебного заведения'));
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    await user.type(screen.getByLabelText('Короткий код (опционально)'), 'keep');
+    await user.click(screen.getByRole('button', { name: 'Назад' }));
+
+    expect(screen.getByLabelText('От имени учебного заведения')).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+
+    expect(screen.getByLabelText('Короткий код (опционально)')).toHaveValue('KEEP');
+    expect(form.getValues('personalDataProcessingMode')).toBe(
+      'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
+    );
   });
 
   it('keeps a failed creation visible on the last step of the wizard', async () => {
