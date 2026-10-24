@@ -15,6 +15,7 @@ import {
 } from './tests-public.dto';
 import { QueryBooleanSchema } from './tests.dto';
 import { ANALYSIS_RESULT_KINDS } from '../analysis/analysis-result-kind';
+import { isSafeGroupPattern } from '../shared/group-pattern';
 
 const GroupOrClassValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
 
@@ -33,14 +34,20 @@ const HttpUrlSchema = z
     message: 'URL must use http or https',
   });
 
-const isRegexPatternValid = (pattern: string) => {
+const GROUP_PATTERN_INVALID_MESSAGE = 'Некорректное регулярное выражение формата группы/класса';
+const GROUP_PATTERN_UNSAFE_MESSAGE =
+  'Шаблон группы/класса слишком сложный: уберите вложенные повторы вроде (a+)+ и сократите его до 300 символов';
+
+/** Текст ошибки шаблона группы/класса или null, если шаблон допустим. */
+const getGroupPatternIssue = (pattern: string) => {
   try {
     // `u` stabilizes behavior for Cyrillic/Unicode group names.
     new RegExp(pattern, 'u');
-    return true;
   } catch {
-    return false;
+    return GROUP_PATTERN_INVALID_MESSAGE;
   }
+
+  return isSafeGroupPattern(pattern) ? null : GROUP_PATTERN_UNSAFE_MESSAGE;
 };
 
 export const AdminCreatePublicLinkSchema = z
@@ -189,11 +196,13 @@ export const AdminCreateEducationOrganizationSchema = z
       });
     }
 
-    if (pattern && !isRegexPatternValid(pattern)) {
+    const patternIssue = pattern ? getGroupPatternIssue(pattern) : null;
+
+    if (patternIssue) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['groupValidationPattern'],
-        message: 'Некорректное регулярное выражение формата группы/класса',
+        message: patternIssue,
       });
     }
   });
@@ -220,11 +229,13 @@ export const AdminUpdateEducationOrganizationSchema = z
   .superRefine((value, ctx) => {
     const pattern = value.groupValidationPattern?.trim();
 
-    if (pattern && !isRegexPatternValid(pattern)) {
+    const patternIssue = pattern ? getGroupPatternIssue(pattern) : null;
+
+    if (patternIssue) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['groupValidationPattern'],
-        message: 'Некорректное регулярное выражение формата группы/класса',
+        message: patternIssue,
       });
     }
   });

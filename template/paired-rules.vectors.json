@@ -157,6 +157,66 @@
           "pattern": "^ИС-\\d+$"
         },
         "expected": false
+      },
+      {
+        "description": "Stored catastrophic pattern is not executed and falls back to true",
+        "input": {
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!",
+          "pattern": "^(a+)+$"
+        },
+        "expected": true
+      }
+    ],
+    "isSafeGroupPattern": [
+      {
+        "description": "Anchored class pattern",
+        "input": "^ИС-\\d+$",
+        "expected": true
+      },
+      {
+        "description": "Group with alternation and no repeat",
+        "input": "^(ИС|БИ)-\\d{2}$",
+        "expected": true
+      },
+      {
+        "description": "Optional group around a repeat is not a repeated group",
+        "input": "^(\\d+-)?[А-Я]+$",
+        "expected": true
+      },
+      {
+        "description": "Exact repeat of a group with bounded inner repeat",
+        "input": "^(\\d{2}){2}$",
+        "expected": true
+      },
+      {
+        "description": "Nested quantifiers",
+        "input": "^(a+)+$",
+        "expected": false
+      },
+      {
+        "description": "Nested quantifiers through an inner group",
+        "input": "^((\\d+)-?)*$",
+        "expected": false
+      },
+      {
+        "description": "Repeated group with open-ended bound around a star",
+        "input": "^(a*){2,}$",
+        "expected": false
+      },
+      {
+        "description": "Quantifier inside a character class is not a repeat",
+        "input": "^([+*]x)+$",
+        "expected": true
+      },
+      {
+        "description": "Escaped parenthesis is not a group",
+        "input": "^\\(\\d+\\)+$",
+        "expected": true
+      },
+      {
+        "description": "Pattern longer than 300 characters",
+        "input": "^aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa$",
+        "expected": false
       }
     ],
     "normalizeProfessionTitle": [

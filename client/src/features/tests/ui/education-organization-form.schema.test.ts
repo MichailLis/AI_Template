@@ -71,6 +71,19 @@ describe('educationOrganizationFormSchema', () => {
       expect(result.error.issues[0]?.path).toEqual(['groupValidationPattern']);
     }
   });
+
+  it('rejects a catastrophic RegExp', () => {
+    const result = educationOrganizationFormSchema.safeParse({
+      ...validValues(),
+      groupValidationMode: 'STRICT',
+      groupValidationPattern: '^(a+)+$',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual(['groupValidationPattern']);
+    }
+  });
 });
 
 describe('getPersonalDataFieldsCompletion', () => {

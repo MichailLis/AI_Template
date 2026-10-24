@@ -5,6 +5,7 @@ import type {
   AdminEducationOrganizationsListResponseDtoOrganizationsItem,
   AdminUpdateEducationOrganizationDto,
 } from '@/shared/api/model';
+import { isSafeGroupPattern, MAX_GROUP_PATTERN_LENGTH } from '@/shared/lib/group-validation';
 
 export type OrganizationEditorMode = 'create' | 'edit';
 
@@ -103,7 +104,7 @@ export const educationOrganizationFormSchema = z
       return;
     }
 
-    if (pattern.length > 300) {
+    if (pattern.length > MAX_GROUP_PATTERN_LENGTH) {
       context.addIssue({
         code: 'custom',
         path: ['groupValidationPattern'],
@@ -113,6 +114,15 @@ export const educationOrganizationFormSchema = z
 
     try {
       new RegExp(pattern, 'u');
+
+      if (pattern.length <= MAX_GROUP_PATTERN_LENGTH && !isSafeGroupPattern(pattern)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['groupValidationPattern'],
+          message:
+            'Шаблон группы/класса слишком сложный: уберите вложенные повторы вроде (a+)+',
+        });
+      }
     } catch {
       context.addIssue({
         code: 'custom',
