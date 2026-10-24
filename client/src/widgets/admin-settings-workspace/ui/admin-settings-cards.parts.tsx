@@ -163,9 +163,27 @@ const coverageItemBadgeClassNames: Record<
 
 export function ProfessionAtlasCoveragePanel({
   coverage,
+  isError,
+  isLoading,
+  onRetry,
 }: {
   coverage: ProfessionAtlasCoverage | null | undefined;
+  isError: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
 }) {
+  if (isLoading) {
+    return (
+      <div className={adminClassNames.panel.loading}>Проверяем покрытие профессий в Атласе...</div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SettingsLoadError message="Не удалось проверить покрытие профессий." onRetry={onRetry} />
+    );
+  }
+
   if (!coverage) {
     return null;
   }

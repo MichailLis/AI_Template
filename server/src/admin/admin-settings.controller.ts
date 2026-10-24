@@ -68,19 +68,12 @@ export class AdminSettingsController {
     return this.getAiProviderSettings();
   }
 
+  /** Без покрытия: оно ходит в Атлас десятки раз и грузится отдельным `profession-atlas/coverage`. */
   @Get('profession-atlas')
   @ApiOperation({ summary: 'Get profession atlas settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminProfessionAtlasSettingsResponseDto })
-  async getProfessionAtlasSettings() {
-    const settings = await this.professionAtlasSettingsService.getProfessionAtlasSettings();
-    const coverage = await this.profOrientationAtlasService.buildCoverageReport();
-
-    return {
-      professionAtlas: {
-        ...settings.professionAtlas,
-        coverage,
-      },
-    };
+  getProfessionAtlasSettings() {
+    return this.professionAtlasSettingsService.getProfessionAtlasSettings();
   }
 
   @Patch('profession-atlas')
