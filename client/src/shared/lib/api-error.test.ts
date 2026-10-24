@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractApiValidationIssues, getApiErrorMessage, parseApiError } from './api-error';
+import {
+  extractApiValidationIssues,
+  getApiErrorMessage,
+  getApiErrorStatus,
+  parseApiError,
+} from './api-error';
+
+describe('getApiErrorStatus', () => {
+  it('reads the HTTP status and returns null when there is none', () => {
+    expect(getApiErrorStatus({ response: { status: 404 } })).toBe(404);
+    expect(getApiErrorStatus(new Error('network'))).toBeNull();
+    expect(getApiErrorStatus({ response: {} })).toBeNull();
+  });
+});
 
 describe('getApiErrorMessage', () => {
   it('reads nested server error messages', () => {

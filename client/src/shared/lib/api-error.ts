@@ -135,7 +135,7 @@ const formatValidationDetails = (issues: ApiValidationIssue[]) =>
     .map(({ path, message }) => `${VALIDATION_FIELD_LABELS[path] ?? path}: ${message}`)
     .join('. ');
 
-const extractNestedApiError = (error: unknown) => {
+export const extractNestedApiError = (error: unknown) => {
   if (!isRecord(error) || !('response' in error) || !isRecord(error.response)) {
     return null;
   }
@@ -147,6 +147,11 @@ const extractNestedApiError = (error: unknown) => {
 
   return response.data.error;
 };
+
+export const getApiErrorStatus = (error: unknown) =>
+  isRecord(error) && isRecord(error.response) && typeof error.response.status === 'number'
+    ? error.response.status
+    : null;
 
 export const extractApiValidationIssues = (error: unknown): ApiValidationIssue[] => {
   const nestedError = extractNestedApiError(error);

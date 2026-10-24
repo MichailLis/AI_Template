@@ -7,6 +7,7 @@ import {
   useTestsPublicControllerGetSession,
   useTestsPublicControllerSaveAnswers,
 } from '@/shared/api/generated/tests-public/tests-public';
+import { extractNestedApiError, getApiErrorStatus } from '@/shared/lib/api-error';
 
 import {
   buildSessionAnswers,
@@ -50,18 +51,14 @@ const countAnsweredQuestions = (
   }, 0) ?? 0;
 
 const isSessionExpiredError = (error: unknown): boolean => {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-  const maybeAxiosError = error as {
-    response?: {
-      data?: {
-        message?: string;
-      };
-    };
-  };
-  const message = maybeAxiosError.response?.data?.message;
+  const message = extractNestedApiError(error)?.message;
   return typeof message === 'string' && message.toLowerCase().includes('expired');
+};
+
+// A 4xx (deleted session, bad token) will not heal on retry; a dropped connection or a 5xx may.
+const shouldRetrySessionQuery = (failureCount: number, error: unknown) => {
+  const status = getApiErrorStatus(error);
+  return failureCount < 2 && (status === null || status >= 500);
 };
 
 const resolveCurrentAnswer = (
@@ -96,7 +93,7 @@ export function usePublicTestRunWorkspace() {
   const sessionQuery = useTestsPublicControllerGetSession(sessionToken ?? '', {
     query: {
       enabled: Boolean(sessionToken),
-      retry: false,
+      retry: shouldRetrySessionQuery,
       refetchInterval: 5000,
     },
   });
@@ -175,7 +172,7 @@ export function usePublicTestRunWorkspace() {
       }
 
       const response = await finishMutation.mutateAsync({ sessionToken });
-      navigate(`/t/${code}/result/${response.sessionToken}`);
+      navigate(`/t/${session.shortCode || code}/result/${response.sessionToken}`);
     } catch (error) {
       if (isSessionExpiredError(error)) void sessionQuery.refetch();
       toast.error('Не удалось завершить тест');

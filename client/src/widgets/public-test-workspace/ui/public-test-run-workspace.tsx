@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
+import { getApiErrorStatus } from '@/shared/lib/api-error';
+
 import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
 import { PublicTestRunExpiredScreen } from './public-test-run-expired-screen';
@@ -55,7 +57,9 @@ export function PublicTestRunWorkspace() {
     return <PublicTestRunStateScreen message="Загружаем сессию теста..." />;
   }
 
-  if (sessionQuery.isError || !session) {
+  // One failed poll must not wipe the screen of a student who is answering: keep the loaded
+  // session unless the server says it is gone.
+  if (!session || getApiErrorStatus(sessionQuery.error) === 404) {
     return (
       <PublicTestRunStateScreen
         message="Сессия недоступна или уже завершена. Свяжитесь с администратором теста для получения новой ссылки."
@@ -64,13 +68,11 @@ export function PublicTestRunWorkspace() {
     );
   }
 
-  if (session.shortCode !== code) {
-    return (
-      <PublicTestRunStateScreen
-        message="Ссылка недействительна. Проверьте, что вы перешли по верной ссылке или запросите новую у администратора."
-        tone="danger"
-      />
-    );
+  // The server matches the code case-insensitively and the code can be reissued under an open
+  // attempt, so the URL follows the session's own code. The empty-code guard prevents a redirect loop.
+  const canonicalCode = session.shortCode || code;
+  if (canonicalCode !== code) {
+    return <Navigate to={`/t/${canonicalCode}/session/${sessionToken}`} replace />;
   }
 
   if (session.questions.length === 0) {

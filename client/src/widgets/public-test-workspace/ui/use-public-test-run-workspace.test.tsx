@@ -243,4 +243,39 @@ describe('usePublicTestRunWorkspace', () => {
       sessionToken: 'session-token',
     });
   });
+
+  it('opens the result under the session code, not the code typed in the address bar', async () => {
+    publicTestApiMocks.getSession.mockReturnValue({
+      data: { session: { ...createSession(), shortCode: 'CANON123' } },
+      isError: false,
+      isLoading: false,
+    });
+    const { result } = renderHook(() => usePublicTestRunWorkspace());
+
+    await act(async () => {
+      await result.current.handleFinish();
+    });
+
+    expect(publicTestApiMocks.navigate).toHaveBeenCalledWith('/t/CANON123/result/session-token');
+  });
+
+  it('refetches the session when the server reports it expired', async () => {
+    const refetch = vi.fn();
+    publicTestApiMocks.getSession.mockReturnValue({
+      data: { session: createSession() },
+      isError: false,
+      isLoading: false,
+      refetch,
+    });
+    publicTestApiMocks.finishSession.mockRejectedValueOnce({
+      response: { status: 400, data: { error: { message: 'Test session expired' } } },
+    });
+    const { result } = renderHook(() => usePublicTestRunWorkspace());
+
+    await act(async () => {
+      await result.current.handleFinish();
+    });
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
 });

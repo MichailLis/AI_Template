@@ -1,5 +1,5 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicTestRunWorkspace } from './public-test-run-workspace';
@@ -59,7 +59,7 @@ const mockWorkspace = (
   queryOverrides: Record<string, unknown> = {},
 ) => {
   const refetch = vi.fn().mockResolvedValue({});
-  publicRunMocks.useWorkspace.mockReturnValue({
+  const workspace = {
     code: 'DEMO2026',
     sessionToken: 'session-token',
     sessionQuery: { isLoading: false, isError: false, refetch, ...queryOverrides },
@@ -72,8 +72,9 @@ const mockWorkspace = (
     handleFinish: vi.fn(),
     autosaveStatus,
     autosaveError: null,
-  });
-  return { refetch };
+  };
+  publicRunMocks.useWorkspace.mockReturnValue(workspace);
+  return { refetch, workspace };
 };
 
 describe('PublicTestRunWorkspace', () => {
@@ -100,6 +101,71 @@ describe('PublicTestRunWorkspace', () => {
     expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
     expect(screen.queryByText('Есть изменения')).not.toBeInTheDocument();
     expect(screen.queryByText('Сохранено')).not.toBeInTheDocument();
+  });
+});
+
+describe('PublicTestRunWorkspace session code and poll errors', () => {
+  const LocationProbe = () => <output>{useLocation().pathname}</output>;
+  const renderAt = (path: string) =>
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route
+            path="/t/:code/session/:sessionToken"
+            element={
+              <>
+                <PublicTestRunWorkspace />
+                <LocationProbe />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('moves a lowercase or reissued code in the address bar to the session code', () => {
+    const { workspace } = mockWorkspace('STANDARD', 'idle');
+    // Like the real hook, read the code from the URL so the component re-renders after the redirect.
+    publicRunMocks.useWorkspace.mockImplementation(() => ({
+      ...workspace,
+      code: useParams().code,
+    }));
+
+    renderAt('/t/demo2026/session/session-token');
+
+    expect(screen.getByText('/t/DEMO2026/session/session-token')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
+  });
+
+  it('does not redirect when the session carries no code', () => {
+    mockWorkspace('STANDARD', 'idle', { shortCode: '' });
+
+    renderAt('/t/DEMO2026/session/session-token');
+
+    expect(screen.getByText('/t/DEMO2026/session/session-token')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
+  });
+
+  it('keeps the questions on screen when a background poll fails', () => {
+    mockWorkspace('STANDARD', 'idle', {}, { isError: true, error: { response: { status: 500 } } });
+
+    renderWorkspace();
+
+    expect(screen.getByRole('heading', { name: 'Question 1' })).toBeInTheDocument();
+  });
+
+  it('shows the unavailable screen when the server says the session is gone', () => {
+    mockWorkspace('STANDARD', 'idle', {}, { isError: true, error: { response: { status: 404 } } });
+
+    renderWorkspace();
+
+    expect(screen.getByText(/Сессия недоступна или уже завершена/)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Question 1' })).not.toBeInTheDocument();
   });
 });
 
