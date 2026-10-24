@@ -154,17 +154,17 @@ describe('AiProviderConfigService', () => {
       });
     });
 
-    it('lets the saved provider and base URL override env, keeping the env key as fallback', async () => {
+    it('lets the saved provider override env, keeping the env key for the env base URL', async () => {
       const service = createService({
         ...secret,
         AI_PROVIDER: 'openrouter',
-        AI_BASE_URL: 'https://old.example.com/v1',
+        AI_BASE_URL: 'https://llm.example.com/v1',
         AI_API_KEY: 'env-key',
       });
 
       await service.updateAiProviderSettings(3, {
         provider: 'openai-compatible',
-        baseUrl: 'https://llm.example.com/v1',
+        baseUrl: 'https://llm.example.com/v1/',
         defaultModel: null,
       });
 
@@ -173,6 +173,51 @@ describe('AiProviderConfigService', () => {
         baseUrl: 'https://llm.example.com/v1',
         apiKey: 'env-key',
         supportsOpenRouterExtensions: false,
+      });
+    });
+
+    it('does not send the env key to a base URL typed in the admin panel', async () => {
+      const service = createService({
+        ...secret,
+        AI_BASE_URL: 'https://llm.example.com/v1',
+        AI_API_KEY: 'env-key',
+      });
+
+      await service.updateAiProviderSettings(3, {
+        provider: 'openai-compatible',
+        baseUrl: 'https://other.example.com/v1',
+        defaultModel: null,
+        clearApiKey: true,
+      });
+
+      await expect(service.getConnection()).rejects.toThrow(ServiceUnavailableException);
+      await expect(service.getAiProviderSettings()).resolves.toMatchObject({
+        aiProvider: { source: 'NONE', isConfigured: false },
+      });
+    });
+
+    it('requires a new key when the base URL changes and keeps it otherwise', async () => {
+      const service = createService(secret);
+      const base = { provider: 'openai-compatible' as const, defaultModel: null };
+
+      await service.updateAiProviderSettings(3, {
+        ...base,
+        baseUrl: 'https://a.example.com/v1',
+        apiKey: 'db-key-123456',
+      });
+      await expect(
+        service.updateAiProviderSettings(3, { ...base, baseUrl: 'https://b.example.com/v1' }),
+      ).rejects.toThrow(BadRequestException);
+      await service.updateAiProviderSettings(3, { ...base, baseUrl: 'https://a.example.com/v1/' });
+      await service.updateAiProviderSettings(3, {
+        ...base,
+        baseUrl: 'https://b.example.com/v1',
+        apiKey: 'db-key-654321',
+      });
+
+      await expect(service.getConnection()).resolves.toMatchObject({
+        baseUrl: 'https://b.example.com/v1',
+        apiKey: 'db-key-654321',
       });
     });
 

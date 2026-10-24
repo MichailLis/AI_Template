@@ -4,8 +4,10 @@ import { toast } from 'sonner';
 
 import {
   getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey,
+  getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey,
   getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey,
   useAdminSettingsControllerGetPrivacyPolicySettings,
+  useAdminSettingsControllerGetProfessionAtlasCoverage,
   useAdminSettingsControllerGetProfessionAtlasSettings,
   useAdminSettingsControllerGetAiProviderSettings,
   useAdminSettingsControllerUpdatePrivacyPolicy,
@@ -137,6 +139,8 @@ export function AdminSettingsWorkspace() {
 
   const settingsQuery = useAdminSettingsControllerGetAiProviderSettings();
   const professionAtlasQuery = useAdminSettingsControllerGetProfessionAtlasSettings();
+  // Покрытие обходит Атлас десятки раз, поэтому не задерживает настройки: догружается отдельно.
+  const coverageQuery = useAdminSettingsControllerGetProfessionAtlasCoverage();
   const updateProfessionAtlasUrlMutation = useAdminSettingsControllerUpdateProfessionAtlasUrl({
     mutation: {
       onError: (error) => {
@@ -144,16 +148,25 @@ export function AdminSettingsWorkspace() {
       },
       onSuccess: async () => {
         setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' });
-        await queryClient.invalidateQueries({
-          queryKey: getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey(),
-        });
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey(),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey(),
+          }),
+        ]);
         toast.success('Настройки Атласа профессий сохранены');
       },
     },
   });
 
   const aiProvider = settingsQuery.data?.aiProvider;
-  const professionAtlas = professionAtlasQuery.data?.professionAtlas;
+  const professionAtlasSettings = professionAtlasQuery.data?.professionAtlas;
+  const professionAtlas = professionAtlasSettings && {
+    ...professionAtlasSettings,
+    coverage: coverageQuery.data,
+  };
   const professionAtlasPublicUrl = professionAtlasForm.isDirty
     ? professionAtlasForm.publicUrl
     : (professionAtlas?.publicUrl ?? professionAtlas?.url ?? DEFAULT_ATLAS_PUBLIC_URL);
@@ -188,6 +201,7 @@ export function AdminSettingsWorkspace() {
         aiProviderBadge={getAiProviderHealthBadge(aiProvider, { isError: settingsQuery.isError })}
         professionAtlasBadge={getProfessionAtlasHealthBadge(professionAtlas, {
           isError: professionAtlasQuery.isError,
+          isChecking: coverageQuery.isLoading,
         })}
       />
 
@@ -222,10 +236,15 @@ export function AdminSettingsWorkspace() {
               Boolean(normalizedProfessionAtlasPublicUrl && normalizedProfessionAtlasApiUrl) &&
               !updateProfessionAtlasUrlMutation.isPending
             }
+            isCoverageError={coverageQuery.isError}
+            isCoverageLoading={coverageQuery.isLoading}
             isError={professionAtlasQuery.isError}
             isLoading={professionAtlasQuery.isLoading}
             isSaving={updateProfessionAtlasUrlMutation.isPending}
             professionAtlas={professionAtlas}
+            onCoverageRetry={() => {
+              void coverageQuery.refetch();
+            }}
             onRetry={() => {
               void professionAtlasQuery.refetch();
             }}

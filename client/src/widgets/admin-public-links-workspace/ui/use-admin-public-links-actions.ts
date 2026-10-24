@@ -1,6 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
+  getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey,
+  getTestsAdminPublicLinksControllerListPublicLinksQueryKey,
   useTestsAdminPublicLinksControllerCreatePublicLink,
   useTestsAdminPublicLinksControllerDeletePublicLink,
   useTestsAdminPublicLinksControllerMoveToActivePublishedVersion,
@@ -16,41 +19,74 @@ import {
 } from './admin-public-links-workspace.helpers';
 
 import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
-import type { UseAdminPublicLinksActionsParams } from './use-admin-public-links-actions.types';
+import type {
+  CreatePublicLinkForm,
+  CreatePublicLinkValues,
+  EducationOrganizationOption,
+} from './public-link-create-card.types';
+import type { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
 import type { PublicBrandingConfig } from '@/features/tests';
 
-function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
-  const {
-    publishedVersionId,
-    newPublicShortCode,
-    newEducationOrganizationId,
-    educationOrganizations,
-    newPersonalDataProcessingMode,
-    newPublicTemplate,
-    newPublicEntryProfileMode,
-    newPublicMaxAttempts,
-    newPublicTimeLimit,
-    newPublicAllowResume,
-    newPublicConsentVersion,
-    newPublicConsentText,
-    setPublicLinksTab,
-    setSelectedPublicLinkId,
-    setNewPublicShortCode,
-    setNewPersonalDataProcessingMode,
-    refetchPublicLinks,
-    onPublicLinkCreated,
-  } = params;
+type PublicLinksSelection = ReturnType<typeof useAdminPublicLinksSelectionState>;
 
+interface UseAdminPublicLinksActionsParams {
+  form: CreatePublicLinkForm;
+  selection: PublicLinksSelection;
+  publishedVersionId: number | undefined;
+  educationOrganizations: EducationOrganizationOption[];
+  onPublicLinkCreated?: () => void;
+}
+
+const showError = (error: unknown) => {
+  toast.error(parseApiError(error));
+};
+
+const handleCopyShortLink = async (shortCode: string) => {
+  try {
+    await navigator.clipboard.writeText(getShortLinkUrl(shortCode));
+    toast.success('Короткая ссылка скопирована');
+  } catch {
+    toast.error('Не удалось скопировать ссылку');
+  }
+};
+
+const handleOpenShortLink = (shortCode: string) => {
+  window.open(getShortLinkUrl(shortCode), '_blank', 'noopener,noreferrer');
+};
+
+/** Both lists change together: archiving and restoring move a link from one to the other. */
+function useInvalidatePublicLinks() {
+  const queryClient = useQueryClient();
+
+  return () => {
+    void queryClient.invalidateQueries({
+      queryKey: getTestsAdminPublicLinksControllerListPublicLinksQueryKey(),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey(),
+    });
+  };
+}
+
+function useCreatePublicLinkAction({
+  form,
+  selection,
+  publishedVersionId,
+  educationOrganizations,
+  onPublicLinkCreated,
+}: UseAdminPublicLinksActionsParams) {
   const createPublicLinkMutation = useTestsAdminPublicLinksControllerCreatePublicLink();
+  const invalidatePublicLinks = useInvalidatePublicLinks();
 
-  const handleCreatePublicLink = () => {
+  const createPublicLink = (values: CreatePublicLinkValues) => {
+    const isDemographic = values.entryProfileMode === 'DEMOGRAPHIC';
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
-      educationOrganizationId: newEducationOrganizationId,
+      educationOrganizationId: values.educationOrganizationId,
       educationOrganizations,
-      personalDataProcessingMode: newPersonalDataProcessingMode,
-      maxAttemptsRaw: newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts,
-      timeLimitRaw: newPublicTimeLimit,
+      personalDataProcessingMode: values.personalDataProcessingMode,
+      maxAttemptsRaw: isDemographic ? '1' : values.maxAttempts,
+      timeLimitRaw: values.timeLimit,
     });
 
     if (!validation.ok) {
@@ -63,73 +99,90 @@ function usePublicLinkCreateActions(params: UseAdminPublicLinksActionsParams) {
         data: {
           publishedVersionId: validation.publishedVersionId,
           educationOrganizationId: validation.educationOrganizationId,
-          personalDataProcessingMode: newPersonalDataProcessingMode,
-          shortCode: newPublicShortCode.trim() || undefined,
-          publicTemplate: newPublicTemplate,
-          entryProfileMode: newPublicEntryProfileMode,
-          maxAttemptsPerStudent:
-            newPublicEntryProfileMode === 'DEMOGRAPHIC' ? 1 : validation.maxAttemptsPerStudent,
+          personalDataProcessingMode: values.personalDataProcessingMode,
+          shortCode: values.shortCode.trim() || undefined,
+          publicTemplate: values.publicTemplate,
+          entryProfileMode: values.entryProfileMode,
+          maxAttemptsPerStudent: isDemographic ? 1 : validation.maxAttemptsPerStudent,
           timeLimitMinutes: validation.timeLimitMinutes,
-          allowResume: newPublicAllowResume,
-          consentVersion: newPublicConsentVersion.trim() || 'v1',
-          consentText: newPublicConsentText.trim(),
+          allowResume: values.allowResume,
+          consentVersion: values.consentVersion.trim() || 'v1',
+          consentText: values.consentText.trim(),
         },
       },
       {
         onSuccess: (link) => {
           toast.success('Публичная ссылка создана');
-          setPublicLinksTab('active');
-          setSelectedPublicLinkId(link.id);
-          setNewPublicShortCode('');
-          setNewPersonalDataProcessingMode('PUBLIC');
-          refetchPublicLinks();
+          selection.setPublicLinksTab('active');
+          selection.setSelectedPublicLinkId(link.id);
+          form.setValue('shortCode', '');
+          form.setValue('personalDataProcessingMode', 'PUBLIC');
+          invalidatePublicLinks();
           onPublicLinkCreated?.();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
 
   return {
     createPublicLinkMutation,
-    handleCreatePublicLink,
+    handleCreatePublicLink: form.handleSubmit(createPublicLink),
   };
 }
 
-function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams) {
-  const {
-    pendingDeletePublicLinkId,
-    selectedPublicLinkId,
-    setPublicLinksTab,
-    setSelectedPublicLinkId,
-    setPendingDeletePublicLinkId,
-    refetchPublicLinks,
-  } = params;
+/**
+ * Перевод ссылки на опубликованную версию теста. Ссылка сама за новой версией не следует
+ * (решение ait-rcw.2), поэтому это явное действие с подтверждением.
+ */
+function useMovePublicLinkAction(selection: PublicLinksSelection) {
+  const moveToActivePublishedVersionMutation =
+    useTestsAdminPublicLinksControllerMoveToActivePublishedVersion();
+  const invalidatePublicLinks = useInvalidatePublicLinks();
 
+  const handleMovePublicLinkToActiveVersion = () => {
+    const link = selection.pendingMovePublicLink;
+    if (!link) {
+      return;
+    }
+
+    moveToActivePublishedVersionMutation.mutate(
+      { linkId: link.id },
+      {
+        onSuccess: () => {
+          toast.success('Ссылка переведена на опубликованную версию теста');
+          selection.setPendingMovePublicLink(null);
+          invalidatePublicLinks();
+        },
+        onError: showError,
+      },
+    );
+  };
+
+  return { moveToActivePublishedVersionMutation, handleMovePublicLinkToActiveVersion };
+}
+
+/** Mutations of the public-links workspace; each one refreshes both link lists on success. */
+export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsParams) {
+  const { selection } = params;
+  const createActions = useCreatePublicLinkAction(params);
+  const moveActions = useMovePublicLinkAction(selection);
   const updatePublicLinkMutation = useTestsAdminPublicLinksControllerUpdatePublicLink();
   const regeneratePublicLinkShortCodeMutation =
     useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode();
   const deletePublicLinkMutation = useTestsAdminPublicLinksControllerDeletePublicLink();
   const restorePublicLinkMutation = useTestsAdminPublicLinksControllerRestorePublicLink();
+  const invalidatePublicLinks = useInvalidatePublicLinks();
 
   const handleTogglePublicLink = (linkId: number, nextActive: boolean) => {
     updatePublicLinkMutation.mutate(
-      {
-        linkId,
-        data: {
-          isActive: nextActive,
-        },
-      },
+      { linkId, data: { isActive: nextActive } },
       {
         onSuccess: () => {
           toast.success(nextActive ? 'Ссылка активирована' : 'Ссылка деактивирована');
-          refetchPublicLinks();
+          invalidatePublicLinks();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
@@ -140,11 +193,9 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
       {
         onSuccess: () => {
           toast.success(publicBranding ? 'Брендинг сохранен' : 'Брендинг сброшен');
-          refetchPublicLinks();
+          invalidatePublicLinks();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
@@ -155,39 +206,32 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
       {
         onSuccess: (link) => {
           toast.success('Короткий код обновлен');
-          setSelectedPublicLinkId(link.id);
-          refetchPublicLinks();
+          selection.setSelectedPublicLinkId(link.id);
+          invalidatePublicLinks();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
 
   const handleDeletePublicLink = () => {
-    if (!pendingDeletePublicLinkId) {
+    const deletingId = selection.pendingDeletePublicLinkId;
+    if (!deletingId) {
       return;
     }
-
-    const deletingId = pendingDeletePublicLinkId;
 
     deletePublicLinkMutation.mutate(
       { linkId: deletingId },
       {
         onSuccess: () => {
           toast.success('Ссылка архивирована и скрыта из списка');
-          setPendingDeletePublicLinkId(null);
-
-          if (selectedPublicLinkId === deletingId) {
-            setSelectedPublicLinkId(null);
+          selection.setPendingDeletePublicLinkId(null);
+          if (selection.selectedPublicLinkId === deletingId) {
+            selection.setSelectedPublicLinkId(null);
           }
-
-          refetchPublicLinks();
+          invalidatePublicLinks();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
@@ -198,102 +242,34 @@ function usePublicLinkManagementActions(params: UseAdminPublicLinksActionsParams
       {
         onSuccess: (link) => {
           toast.success('Ссылка восстановлена');
-          setPublicLinksTab('active');
-          setSelectedPublicLinkId(link.id);
-          refetchPublicLinks();
+          selection.setPublicLinksTab('active');
+          selection.setSelectedPublicLinkId(link.id);
+          invalidatePublicLinks();
         },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
+        onError: showError,
       },
     );
   };
 
   const handleSwitchPublicLinksTab = (tab: PublicLinksTab) => {
-    setPublicLinksTab(tab);
-    setSelectedPublicLinkId(null);
+    selection.setPublicLinksTab(tab);
+    selection.setSelectedPublicLinkId(null);
   };
 
   return {
+    ...createActions,
+    ...moveActions,
     updatePublicLinkMutation,
     regeneratePublicLinkShortCodeMutation,
     deletePublicLinkMutation,
     restorePublicLinkMutation,
     handleTogglePublicLink,
+    handleUpdatePublicLinkBranding,
     handleRegeneratePublicLinkShortCode,
     handleDeletePublicLink,
     handleRestorePublicLink,
     handleSwitchPublicLinksTab,
-    handleUpdatePublicLinkBranding,
-  };
-}
-
-/**
- * Перевод ссылки на опубликованную версию теста. Ссылка сама за новой версией не следует
- * (решение ait-rcw.2), поэтому это явное действие с подтверждением.
- */
-function usePublicLinkVersionActions(params: UseAdminPublicLinksActionsParams) {
-  const { pendingMovePublicLink, setPendingMovePublicLink, refetchPublicLinks } = params;
-
-  const moveToActivePublishedVersionMutation =
-    useTestsAdminPublicLinksControllerMoveToActivePublishedVersion();
-
-  const handleMovePublicLinkToActiveVersion = () => {
-    if (!pendingMovePublicLink) {
-      return;
-    }
-
-    moveToActivePublishedVersionMutation.mutate(
-      { linkId: pendingMovePublicLink.id },
-      {
-        onSuccess: () => {
-          toast.success('Ссылка переведена на опубликованную версию теста');
-          setPendingMovePublicLink(null);
-          refetchPublicLinks();
-        },
-        onError: (error) => {
-          toast.error(parseApiError(error));
-        },
-      },
-    );
-  };
-
-  return {
-    moveToActivePublishedVersionMutation,
-    handleMovePublicLinkToActiveVersion,
-  };
-}
-
-function useShortLinkActions() {
-  const handleCopyShortLink = async (shortCode: string) => {
-    try {
-      await navigator.clipboard.writeText(getShortLinkUrl(shortCode));
-      toast.success('Короткая ссылка скопирована');
-    } catch {
-      toast.error('Не удалось скопировать ссылку');
-    }
-  };
-
-  const handleOpenShortLink = (shortCode: string) => {
-    window.open(getShortLinkUrl(shortCode), '_blank', 'noopener,noreferrer');
-  };
-
-  return {
     handleCopyShortLink,
     handleOpenShortLink,
-  };
-}
-
-export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsParams) {
-  const publicLinkCreateActions = usePublicLinkCreateActions(params);
-  const publicLinkManagementActions = usePublicLinkManagementActions(params);
-  const publicLinkVersionActions = usePublicLinkVersionActions(params);
-  const shortLinkActions = useShortLinkActions();
-
-  return {
-    ...publicLinkCreateActions,
-    ...publicLinkManagementActions,
-    ...publicLinkVersionActions,
-    ...shortLinkActions,
   };
 }

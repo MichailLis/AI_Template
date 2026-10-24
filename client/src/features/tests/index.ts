@@ -11,7 +11,6 @@ export { PublicTestStudentAnalysisView } from './ui/public-test-student-analysis
 export { TestAnalysisResultView } from './ui/test-analysis-result-view';
 export { TestEditor } from './ui/test-editor';
 export { TestQuestionsOnlyView } from './ui/test-questions-only-view';
-export { TestsSidebar } from './ui/tests-sidebar';
 
 export { useAiTestGeneration } from './model/use-ai-test-generation';
 export { useDraftAutosave } from './model/use-draft-autosave';
@@ -35,4 +34,4 @@ export type {
   ResolvedPublicBrandingTheme,
 } from './public-branding';
 export type { ProfOrientationSummary } from './ui/polus/prof-orientation-summary';
-export type { TestTopicListItem } from './model/types';
+export type { CreateTestValues, TestTopicListItem } from './model/types';

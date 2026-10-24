@@ -1,3 +1,5 @@
+import { useWatch } from 'react-hook-form';
+
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
@@ -7,20 +9,11 @@ import { Textarea } from '@/shared/ui/textarea';
 
 import type { PublicLinkAccessSettingsSectionProps } from './public-link-create-card.types';
 
-type AccessSettingsProps = PublicLinkAccessSettingsSectionProps;
-
-function PublicTemplateField({
-  newPublicTemplate,
-  onPublicTemplateChange,
-}: Pick<AccessSettingsProps, 'newPublicTemplate' | 'onPublicTemplateChange'>) {
+function PublicTemplateField({ form }: PublicLinkAccessSettingsSectionProps) {
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
       <Label htmlFor="public-template">Шаблон публичного теста</Label>
-      <AdminSelectField
-        id="public-template"
-        value={newPublicTemplate}
-        onChange={(event) => onPublicTemplateChange(event.target.value as typeof newPublicTemplate)}
-      >
+      <AdminSelectField id="public-template" {...form.register('publicTemplate')}>
         <option value="STANDARD">Стандартный</option>
         <option value="POLUS">Polus</option>
       </AdminSelectField>
@@ -31,20 +24,11 @@ function PublicTemplateField({
   );
 }
 
-function EntryProfileModeField({
-  newPublicEntryProfileMode,
-  onEntryProfileModeChange,
-}: Pick<AccessSettingsProps, 'newPublicEntryProfileMode' | 'onEntryProfileModeChange'>) {
+function EntryProfileModeField({ form }: PublicLinkAccessSettingsSectionProps) {
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
       <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
-      <AdminSelectField
-        id="public-entry-profile-mode"
-        value={newPublicEntryProfileMode}
-        onChange={(event) =>
-          onEntryProfileModeChange(event.target.value as typeof newPublicEntryProfileMode)
-        }
-      >
+      <AdminSelectField id="public-entry-profile-mode" {...form.register('entryProfileMode')}>
         <option value="DEMOGRAPHIC">Демографическая анкета</option>
         <option value="EDUCATION">Анкета по учебным данным</option>
         <option value="EDUCATION_DEMOGRAPHIC">Учебные данные + демографическая анкета</option>
@@ -56,59 +40,29 @@ function EntryProfileModeField({
   );
 }
 
-function AttemptLimitFields({
-  newPublicEntryProfileMode,
-  newPublicMaxAttempts,
-  onMaxAttemptsChange,
-  newPublicTimeLimit,
-  onTimeLimitChange,
-}: Pick<
-  AccessSettingsProps,
-  | 'newPublicEntryProfileMode'
-  | 'newPublicMaxAttempts'
-  | 'onMaxAttemptsChange'
-  | 'newPublicTimeLimit'
-  | 'onTimeLimitChange'
->) {
+function AttemptLimitFields({ form }: PublicLinkAccessSettingsSectionProps) {
+  const entryProfileMode = useWatch({ control: form.control, name: 'entryProfileMode' });
+
   return (
     <>
       <div className="flex flex-col gap-2">
         <Label htmlFor="public-max-attempts">Лимит попыток</Label>
-        <Input
-          id="public-max-attempts"
-          type="number"
-          min={1}
-          value={newPublicEntryProfileMode === 'DEMOGRAPHIC' ? '1' : newPublicMaxAttempts}
-          onChange={(event) => onMaxAttemptsChange(event.target.value)}
-          disabled={newPublicEntryProfileMode === 'DEMOGRAPHIC'}
-        />
+        {/* Демографическая анкета всегда дает одну попытку; введенный лимит вернется при смене анкеты. */}
+        {entryProfileMode === 'DEMOGRAPHIC' ? (
+          <Input id="public-max-attempts" type="number" value="1" disabled readOnly />
+        ) : (
+          <Input id="public-max-attempts" type="number" min={1} {...form.register('maxAttempts')} />
+        )}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="public-time-limit">Лимит времени</Label>
-        <Input
-          id="public-time-limit"
-          type="number"
-          min={1}
-          value={newPublicTimeLimit}
-          onChange={(event) => onTimeLimitChange(event.target.value)}
-        />
+        <Input id="public-time-limit" type="number" min={1} {...form.register('timeLimit')} />
       </div>
     </>
   );
 }
 
-function ConsentDetails({
-  newPublicConsentVersion,
-  onConsentVersionChange,
-  newPublicConsentText,
-  onConsentTextChange,
-}: Pick<
-  AccessSettingsProps,
-  | 'newPublicConsentVersion'
-  | 'onConsentVersionChange'
-  | 'newPublicConsentText'
-  | 'onConsentTextChange'
->) {
+function ConsentDetails({ form }: PublicLinkAccessSettingsSectionProps) {
   return (
     <details className={adminClassNames.panel.compactCard}>
       <summary className={`cursor-pointer text-sm font-medium ${adminClassNames.text.heading}`}>
@@ -117,19 +71,14 @@ function ConsentDetails({
       <div className="mt-3 grid gap-3">
         <div className="flex flex-col gap-2">
           <Label htmlFor="public-consent-version">Версия согласия</Label>
-          <Input
-            id="public-consent-version"
-            value={newPublicConsentVersion}
-            onChange={(event) => onConsentVersionChange(event.target.value)}
-          />
+          <Input id="public-consent-version" {...form.register('consentVersion')} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="public-consent-text">Текст согласия</Label>
           <Textarea
             id="public-consent-text"
-            value={newPublicConsentText}
-            onChange={(event) => onConsentTextChange(event.target.value)}
             className="min-h-20"
+            {...form.register('consentText')}
           />
         </div>
       </div>
@@ -137,24 +86,9 @@ function ConsentDetails({
   );
 }
 
-export function PublicLinkAccessSettingsSection({
-  newPublicShortCode,
-  onShortCodeChange,
-  newPublicTemplate,
-  onPublicTemplateChange,
-  newPublicEntryProfileMode,
-  onEntryProfileModeChange,
-  newPublicMaxAttempts,
-  onMaxAttemptsChange,
-  newPublicTimeLimit,
-  onTimeLimitChange,
-  newPublicConsentVersion,
-  onConsentVersionChange,
-  newPublicConsentText,
-  onConsentTextChange,
-  newPublicAllowResume,
-  onAllowResumeChange,
-}: PublicLinkAccessSettingsSectionProps) {
+export function PublicLinkAccessSettingsSection({ form }: PublicLinkAccessSettingsSectionProps) {
+  const shortCodeField = form.register('shortCode');
+
   return (
     <div className={adminClassNames.panel.compactSection}>
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -173,44 +107,26 @@ export function PublicLinkAccessSettingsSection({
           <Label htmlFor="public-short-code">Короткий код (опционально)</Label>
           <Input
             id="public-short-code"
-            value={newPublicShortCode}
-            onChange={(event) => onShortCodeChange(event.target.value.toUpperCase())}
             placeholder="Например: TEST2026"
+            {...shortCodeField}
+            onChange={(event) => {
+              event.target.value = event.target.value.toUpperCase();
+              void shortCodeField.onChange(event);
+            }}
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <PublicTemplateField
-            newPublicTemplate={newPublicTemplate}
-            onPublicTemplateChange={onPublicTemplateChange}
-          />
-          <EntryProfileModeField
-            newPublicEntryProfileMode={newPublicEntryProfileMode}
-            onEntryProfileModeChange={onEntryProfileModeChange}
-          />
-          <AttemptLimitFields
-            newPublicEntryProfileMode={newPublicEntryProfileMode}
-            newPublicMaxAttempts={newPublicMaxAttempts}
-            onMaxAttemptsChange={onMaxAttemptsChange}
-            newPublicTimeLimit={newPublicTimeLimit}
-            onTimeLimitChange={onTimeLimitChange}
-          />
+          <PublicTemplateField form={form} />
+          <EntryProfileModeField form={form} />
+          <AttemptLimitFields form={form} />
         </div>
 
         <label className={adminClassNames.form.checkboxLabel}>
-          <input
-            type="checkbox"
-            checked={newPublicAllowResume}
-            onChange={(event) => onAllowResumeChange(event.target.checked)}
-          />
+          <input type="checkbox" {...form.register('allowResume')} />
           Разрешить студенту вернуться к незавершенной попытке
         </label>
 
-        <ConsentDetails
-          newPublicConsentVersion={newPublicConsentVersion}
-          onConsentVersionChange={onConsentVersionChange}
-          newPublicConsentText={newPublicConsentText}
-          onConsentTextChange={onConsentTextChange}
-        />
+        <ConsentDetails form={form} />
       </div>
     </div>
   );

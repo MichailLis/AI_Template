@@ -1,3 +1,5 @@
+import type { UseFormReturn } from 'react-hook-form';
+
 export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 export type PublicLinkTemplate = 'STANDARD' | 'POLUS';
 export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
@@ -16,33 +18,30 @@ export interface EducationOrganizationOption {
   personalDataReady: boolean;
 }
 
+/** Поля создаваемой ссылки. Числа остаются строками до validateCreatePublicLinkInput. */
+export interface CreatePublicLinkValues {
+  shortCode: string;
+  educationOrganizationId: number | null;
+  personalDataProcessingMode: PersonalDataProcessingMode;
+  publicTemplate: PublicLinkTemplate;
+  entryProfileMode: PublicLinkEntryProfileMode;
+  maxAttempts: string;
+  timeLimit: string;
+  allowResume: boolean;
+  consentVersion: string;
+  consentText: string;
+}
+
+export type CreatePublicLinkForm = UseFormReturn<CreatePublicLinkValues>;
+
 export interface PublicLinkCreateCardProps {
+  form: CreatePublicLinkForm;
   topics: TopicOption[];
   educationOrganizations: EducationOrganizationOption[];
   effectiveSelectedTopicId: number;
   onSelectTopic: (topicId: number) => void;
-  newEducationOrganizationId: number | null;
-  onEducationOrganizationSelect: (organizationId: number | null) => void;
-  newPersonalDataProcessingMode: PersonalDataProcessingMode;
-  onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
   onCreateEducationOrganization: () => void;
   onEditEducationOrganization: () => void;
-  newPublicShortCode: string;
-  onShortCodeChange: (value: string) => void;
-  newPublicTemplate: PublicLinkTemplate;
-  onPublicTemplateChange: (value: PublicLinkTemplate) => void;
-  newPublicEntryProfileMode: PublicLinkEntryProfileMode;
-  onEntryProfileModeChange: (value: PublicLinkEntryProfileMode) => void;
-  newPublicMaxAttempts: string;
-  onMaxAttemptsChange: (value: string) => void;
-  newPublicTimeLimit: string;
-  onTimeLimitChange: (value: string) => void;
-  newPublicConsentVersion: string;
-  onConsentVersionChange: (value: string) => void;
-  newPublicConsentText: string;
-  onConsentTextChange: (value: string) => void;
-  newPublicAllowResume: boolean;
-  onAllowResumeChange: (checked: boolean) => void;
   onCreatePublicLink: () => void;
   isCreatingPublicLink: boolean;
   hasPublishedVersion: boolean;
@@ -57,30 +56,12 @@ export interface PublicLinkTopicSectionProps {
 }
 
 export interface PublicLinkOrganizationSectionProps {
+  form: CreatePublicLinkForm;
   educationOrganizations: EducationOrganizationOption[];
-  newEducationOrganizationId: number | null;
-  onEducationOrganizationSelect: (organizationId: number | null) => void;
-  newPersonalDataProcessingMode: PersonalDataProcessingMode;
-  onPersonalDataProcessingModeChange: (value: PersonalDataProcessingMode) => void;
   onCreateEducationOrganization: () => void;
   onEditEducationOrganization: () => void;
 }
 
 export interface PublicLinkAccessSettingsSectionProps {
-  newPublicShortCode: string;
-  onShortCodeChange: (value: string) => void;
-  newPublicTemplate: PublicLinkTemplate;
-  onPublicTemplateChange: (value: PublicLinkTemplate) => void;
-  newPublicEntryProfileMode: PublicLinkEntryProfileMode;
-  onEntryProfileModeChange: (value: PublicLinkEntryProfileMode) => void;
-  newPublicMaxAttempts: string;
-  onMaxAttemptsChange: (value: string) => void;
-  newPublicTimeLimit: string;
-  onTimeLimitChange: (value: string) => void;
-  newPublicConsentVersion: string;
-  onConsentVersionChange: (value: string) => void;
-  newPublicConsentText: string;
-  onConsentTextChange: (value: string) => void;
-  newPublicAllowResume: boolean;
-  onAllowResumeChange: (checked: boolean) => void;
+  form: CreatePublicLinkForm;
 }

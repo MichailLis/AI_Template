@@ -73,6 +73,33 @@ describe('AiProviderForm', () => {
     });
   });
 
+  it('requires a new key once the base URL changes', () => {
+    renderForm({ source: 'DB' });
+
+    fireEvent.change(screen.getByLabelText('Адрес API (base URL)'), {
+      target: { value: 'https://other.example.com/v1' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Сохранить настройки' })).toBeDisabled();
+    expect(screen.getByText(/Адрес изменён: введите ключ/)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Ключ API'), { target: { value: 'new-key' } });
+
+    expect(screen.getByRole('button', { name: 'Сохранить настройки' })).toBeEnabled();
+  });
+
+  it('does not treat a trailing slash or an empty field as a changed base URL', () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText('Адрес API (base URL)'), {
+      target: { value: 'https://polza.ai/api/v1/' },
+    });
+    expect(screen.getByRole('button', { name: 'Сохранить настройки' })).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText('Адрес API (base URL)'), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Сохранить настройки' })).toBeEnabled();
+  });
+
   it('blocks saving a generic provider without a base URL', () => {
     renderForm({ provider: 'openai-compatible', baseUrl: null });
 

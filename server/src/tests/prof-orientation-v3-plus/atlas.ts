@@ -18,6 +18,8 @@ import {
 import type { AtlasProfessionDetail } from '../../app-settings/profession-atlas-client.service';
 import type { ProfessionAtlasCoverageItem, ProfessionAtlasCoverageReport } from './atlas.logic';
 import type { ProfOrientationAtlasRecommendations, ProfOrientationSummary } from './types';
+const COVERAGE_SEARCH_CONCURRENCY = 4;
+
 const findExactProfessionMatches = async (
   atlasClient: ProfessionAtlasClientService,
   apiUrl: string,
@@ -68,21 +70,30 @@ export class ProfOrientationAtlasService {
     try {
       const items: ProfessionAtlasCoverageItem[] = [];
       await this.atlasClient.findProfessions(apiUrl, { pageSize: 1 });
-      for (const profession of getProfOrientationV3PlusProfessions()) {
-        const matches = await findExactProfessionMatches(
-          this.atlasClient,
-          apiUrl,
-          profession.title,
+      const professions = getProfOrientationV3PlusProfessions();
+      // Пачками, а не все сразу: у Атласа есть лимиты на частоту запросов.
+      for (let start = 0; start < professions.length; start += COVERAGE_SEARCH_CONCURRENCY) {
+        const batch = professions.slice(start, start + COVERAGE_SEARCH_CONCURRENCY);
+        const batchItems = await Promise.all(
+          batch.map(async (profession): Promise<ProfessionAtlasCoverageItem> => {
+            const matches = await findExactProfessionMatches(
+              this.atlasClient,
+              apiUrl,
+              profession.title,
+            );
+            return {
+              title: profession.title,
+              status:
+                matches.length === 0 ? 'missing' : matches.length === 1 ? 'found' : 'duplicate',
+              matches: matches.map((match) => ({
+                title: match.title,
+                slug: match.slug,
+                url: buildPublicUrl(publicUrl, `professions/${match.slug}`),
+              })),
+            };
+          }),
         );
-        items.push({
-          title: profession.title,
-          status: matches.length === 0 ? 'missing' : matches.length === 1 ? 'found' : 'duplicate',
-          matches: matches.map((match) => ({
-            title: match.title,
-            slug: match.slug,
-            url: buildPublicUrl(publicUrl, `professions/${match.slug}`),
-          })),
-        });
+        items.push(...batchItems);
       }
       const missing = items.filter((item) => item.status === 'missing').map((item) => item.title);
       const duplicates = items
