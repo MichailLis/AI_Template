@@ -219,6 +219,28 @@
         "expected": false
       }
     ],
+    "isValidInn": [
+      { "description": "Legal entity INN, 10 digits", "input": "7707083893", "expected": true },
+      { "description": "Individual INN, 12 digits", "input": "500100732259", "expected": true },
+      { "description": "Nine digits", "input": "770708389", "expected": false },
+      { "description": "Eleven digits", "input": "77070838931", "expected": false },
+      { "description": "Letters among digits", "input": "77070838a3", "expected": false },
+      { "description": "Spaces inside", "input": "7707 083893", "expected": false },
+      { "description": "Empty string", "input": "", "expected": false }
+    ],
+    "isValidOgrn": [
+      { "description": "Legal entity OGRN, 13 digits", "input": "1027700132195", "expected": true },
+      {
+        "description": "Individual entrepreneur OGRNIP, 15 digits",
+        "input": "304500116000157",
+        "expected": true
+      },
+      { "description": "Twelve digits", "input": "102770013219", "expected": false },
+      { "description": "Fourteen digits", "input": "10277001321950", "expected": false },
+      { "description": "Letters among digits", "input": "10277001321a5", "expected": false },
+      { "description": "Dashes inside", "input": "1-02-77-00-13219", "expected": false },
+      { "description": "Empty string", "input": "", "expected": false }
+    ],
     "normalizeProfessionTitle": [
       {
         "description": "Standard multi-word profession title without special characters",

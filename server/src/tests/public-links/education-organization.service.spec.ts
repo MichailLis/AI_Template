@@ -307,6 +307,82 @@ describe('TestsEducationOrganizationService', () => {
     expect(data).not.toHaveProperty('consentDocumentUrl');
   });
 
+  describe('format checks', () => {
+    const update = (organizationId: number, dto: Record<string, unknown>) =>
+      (
+        service.updateEducationOrganization as (
+          organizationId: number,
+          dto: Record<string, unknown>,
+        ) => Promise<unknown>
+      )(organizationId, dto);
+
+    it('rejects a group example that does not match the pattern on create', async () => {
+      prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createEducationOrganization({
+          name: 'Лицей 42',
+          groupValidationMode: 'STRICT',
+          groupValidationPattern: '^\\d{1,2}[А-Я]$',
+          groupValidationExample: '9 А',
+        }),
+      ).rejects.toThrow('Пример не подходит под шаблон формата группы/класса');
+      expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
+    });
+
+    it('checks the example against the stored pattern when only the example changes', async () => {
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(
+        createEducationOrganizationRecordFixture({
+          id: 31,
+          groupValidationMode: 'STRICT',
+          groupValidationPattern: '^\\d{1,2}[А-Я]$',
+          groupValidationExample: '9А',
+        }),
+      );
+
+      await expect(update(31, { groupValidationExample: '9 А' })).rejects.toThrow(
+        'Пример не подходит под шаблон формата группы/класса',
+      );
+    });
+
+    it('does not let a stored mismatching example block an unrelated edit', async () => {
+      const existing = createEducationOrganizationRecordFixture({
+        id: 31,
+        groupValidationMode: 'STRICT',
+        groupValidationPattern: '^\\d{1,2}[А-Я]$',
+        groupValidationExample: '9 А',
+      });
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue(existing);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await expect(update(31, { phone: '+7 900 000-00-00' })).resolves.toBeDefined();
+    });
+
+    it.each([
+      [{ inn: '12345' }, 'ИНН должен состоять из 10 или 12 цифр'],
+      [{ ogrn: '123456789012' }, 'ОГРН должен состоять из 13 цифр (для ИП — из 15)'],
+    ])('rejects malformed requisites %p on create', async (requisites, message) => {
+      prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createEducationOrganization({ name: 'Лицей 42', ...requisites }),
+      ).rejects.toThrow(message);
+    });
+
+    it('checks requisites only when the update changes them', async () => {
+      const existing = createEducationOrganizationRecordFixture({ id: 31, inn: '12345' });
+      prismaMock.educationOrganization.findUnique.mockResolvedValue(existing);
+      prismaMock.educationOrganization.update.mockResolvedValue(existing);
+      prismaMock.testPublicLink.findMany.mockResolvedValue([]);
+
+      await expect(update(31, { inn: '12345', phone: '+7 900' })).resolves.toBeDefined();
+      await expect(update(31, { inn: '123456' })).rejects.toThrow(
+        'ИНН должен состоять из 10 или 12 цифр',
+      );
+    });
+  });
+
   it('rejects education organization duplicates regardless of name case', async () => {
     prismaMock.educationOrganization.findFirst.mockResolvedValue({ id: 31 });
 

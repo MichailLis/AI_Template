@@ -7,6 +7,8 @@ import type {
   AdminEducationOrganizationsListQueryDto,
   AdminUpdateEducationOrganizationDto,
 } from '../dto/tests-links.dto';
+import { matchesGroupPattern } from '../session/session-profile';
+import { isValidInn, isValidOgrn } from '../shared/organization-requisites';
 
 const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
   'Учебное заведение с таким названием уже существует';
@@ -15,6 +17,26 @@ const isPrismaUniqueConstraintError = (error: unknown) =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 
 const normalizeNullableString = (value?: string | null) => value?.trim() || null;
+
+/**
+ * Формат ИНН/ОГРН проверяется только у значений, которые правка меняет: уже сохранённое
+ * некорректное значение не должно ломать остальные правки заведения.
+ */
+const assertRequisitesFormat = (
+  dto: { inn?: string | null; ogrn?: string | null },
+  existing?: { inn: string | null; ogrn: string | null },
+) => {
+  const inn = normalizeNullableString(dto.inn);
+  const ogrn = normalizeNullableString(dto.ogrn);
+
+  if (inn && inn !== existing?.inn && !isValidInn(inn)) {
+    throw new BadRequestException('ИНН должен состоять из 10 или 12 цифр');
+  }
+
+  if (ogrn && ogrn !== existing?.ogrn && !isValidOgrn(ogrn)) {
+    throw new BadRequestException('ОГРН должен состоять из 13 цифр (для ИП — из 15)');
+  }
+};
 
 const isPersonalDataReady = (organization: {
   isActive: boolean;
@@ -38,12 +60,19 @@ const EDUCATION_ORGANIZATIONS_ORDER: Prisma.EducationOrganizationOrderByWithRela
 export class TestsEducationOrganizationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private normalizeGroupValidationConfig(value: {
-    groupValidationMode?: GroupOrClassValidationMode;
-    groupValidationPattern?: string | null;
-    groupValidationExample?: string | null;
-    groupValidationHint?: string | null;
-  }) {
+  /**
+   * `checkExample` выключен, когда правка не трогает ни шаблон, ни пример: уже сохранённый
+   * несовпадающий пример не должен блокировать правку телефона или названия.
+   */
+  private normalizeGroupValidationConfig(
+    value: {
+      groupValidationMode?: GroupOrClassValidationMode;
+      groupValidationPattern?: string | null;
+      groupValidationExample?: string | null;
+      groupValidationHint?: string | null;
+    },
+    checkExample = true,
+  ) {
     const mode = value.groupValidationMode ?? 'NONE';
     const pattern = value.groupValidationPattern?.trim() || null;
     const example = value.groupValidationExample?.trim() || null;
@@ -60,6 +89,10 @@ export class TestsEducationOrganizationService {
 
     if (!pattern) {
       throw new BadRequestException('Укажите шаблон формата группы/класса для выбранного режима');
+    }
+
+    if (checkExample && example && !matchesGroupPattern(example, pattern)) {
+      throw new BadRequestException('Пример не подходит под шаблон формата группы/класса');
     }
 
     return {
@@ -296,6 +329,8 @@ export class TestsEducationOrganizationService {
       throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
     }
 
+    assertRequisitesFormat(dto);
+
     const validationConfig = this.normalizeGroupValidationConfig({
       groupValidationMode: dto.groupValidationMode,
       groupValidationPattern: dto.groupValidationPattern,
@@ -382,21 +417,26 @@ export class TestsEducationOrganizationService {
       }
     }
 
-    const validationConfig = this.normalizeGroupValidationConfig({
-      groupValidationMode: dto.groupValidationMode ?? existing.groupValidationMode,
-      groupValidationPattern:
-        dto.groupValidationPattern !== undefined
-          ? dto.groupValidationPattern
-          : existing.groupValidationPattern,
-      groupValidationExample:
-        dto.groupValidationExample !== undefined
-          ? dto.groupValidationExample
-          : existing.groupValidationExample,
-      groupValidationHint:
-        dto.groupValidationHint !== undefined
-          ? dto.groupValidationHint
-          : existing.groupValidationHint,
-    });
+    assertRequisitesFormat(dto, existing);
+
+    const validationConfig = this.normalizeGroupValidationConfig(
+      {
+        groupValidationMode: dto.groupValidationMode ?? existing.groupValidationMode,
+        groupValidationPattern:
+          dto.groupValidationPattern !== undefined
+            ? dto.groupValidationPattern
+            : existing.groupValidationPattern,
+        groupValidationExample:
+          dto.groupValidationExample !== undefined
+            ? dto.groupValidationExample
+            : existing.groupValidationExample,
+        groupValidationHint:
+          dto.groupValidationHint !== undefined
+            ? dto.groupValidationHint
+            : existing.groupValidationHint,
+      },
+      dto.groupValidationPattern !== undefined || dto.groupValidationExample !== undefined,
+    );
 
     const updated = await this.updateEducationOrganizationRecord(organizationId, {
       ...(dto.name !== undefined ? { name: nextName } : {}),

@@ -85,6 +85,8 @@ function OrganizationTextField({
   );
 }
 
+const OPERATOR_FIELD_DESCRIPTION = 'Нужно для обработки ПДн от имени заведения.';
+
 const sectionClassName = 'space-y-4 border-b border-admin-border pb-6 last:border-b-0 last:pb-0';
 const legendClassName = 'mb-4 text-sm font-semibold text-admin-foreground';
 
@@ -173,6 +175,7 @@ function OperatorSection({ form, disabled }: FormSectionProps) {
           placeholder="Например: Муниципальное автономное общеобразовательное учреждение «Лицей № 42»"
           autoComplete="organization"
           className="sm:col-span-2"
+          description={OPERATOR_FIELD_DESCRIPTION}
           disabled={disabled}
         />
         <OrganizationTextField
@@ -181,6 +184,7 @@ function OperatorSection({ form, disabled }: FormSectionProps) {
           label="Сокращённое наименование"
           placeholder="Например: МАОУ «Лицей № 42»"
           autoComplete="organization"
+          description={OPERATOR_FIELD_DESCRIPTION}
           disabled={disabled}
         />
       </div>
@@ -199,6 +203,7 @@ function DocumentsSection({ form, disabled }: FormSectionProps) {
           label="Политика обработки ПДн"
           placeholder="https://school.example/privacy"
           type="url"
+          description={OPERATOR_FIELD_DESCRIPTION}
           disabled={disabled}
         />
         <OrganizationTextField

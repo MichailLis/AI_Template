@@ -6,6 +6,7 @@ import type {
   AdminUpdateEducationOrganizationDto,
 } from '@/shared/api/model';
 import { isSafeGroupPattern, MAX_GROUP_PATTERN_LENGTH } from '@/shared/lib/group-validation';
+import { isValidInn, isValidOgrn } from '@/shared/lib/organization-requisites';
 
 export type OrganizationEditorMode = 'create' | 'edit';
 
@@ -37,6 +38,13 @@ const optionalTrimmedString = (field: string, max: number) =>
   z.string().superRefine((value, context) => {
     if (value.trim()) {
       addTrimmedLengthIssues(value, context, { field, max });
+    }
+  });
+
+const optionalRequisite = (isValid: (value: string) => boolean, message: string) =>
+  z.string().superRefine((value, context) => {
+    if (value.trim() && !isValid(value.trim())) {
+      context.addIssue({ code: 'custom', message });
     }
   });
 
@@ -76,8 +84,8 @@ export const educationOrganizationFormSchema = z
     isActive: z.boolean(),
     fullName: optionalTrimmedString('Полное наименование', 500),
     shortName: optionalTrimmedString('Сокращённое наименование', 300),
-    inn: optionalTrimmedString('ИНН', 20),
-    ogrn: optionalTrimmedString('ОГРН', 20),
+    inn: optionalRequisite(isValidInn, 'ИНН должен состоять из 10 или 12 цифр'),
+    ogrn: optionalRequisite(isValidOgrn, 'ОГРН должен состоять из 13 цифр (для ИП — из 15)'),
     legalAddress: optionalTrimmedString('Юридический адрес', 500),
     email: optionalTrimmedString('Email', 320),
     phone: optionalTrimmedString('Телефон', 50),
@@ -95,6 +103,7 @@ export const educationOrganizationFormSchema = z
     }
 
     const pattern = values.groupValidationPattern.trim();
+    const example = values.groupValidationExample.trim();
     if (!pattern) {
       context.addIssue({
         code: 'custom',
@@ -113,14 +122,19 @@ export const educationOrganizationFormSchema = z
     }
 
     try {
-      new RegExp(pattern, 'u');
+      const regex = new RegExp(pattern, 'u');
 
       if (pattern.length <= MAX_GROUP_PATTERN_LENGTH && !isSafeGroupPattern(pattern)) {
         context.addIssue({
           code: 'custom',
           path: ['groupValidationPattern'],
-          message:
-            'Шаблон группы/класса слишком сложный: уберите вложенные повторы вроде (a+)+',
+          message: 'Шаблон группы/класса слишком сложный: уберите вложенные повторы вроде (a+)+',
+        });
+      } else if (example && !regex.test(example)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['groupValidationExample'],
+          message: 'Пример не подходит под шаблон',
         });
       }
     } catch {

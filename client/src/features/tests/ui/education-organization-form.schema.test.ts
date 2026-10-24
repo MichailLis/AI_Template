@@ -72,6 +72,53 @@ describe('educationOrganizationFormSchema', () => {
     }
   });
 
+  it('rejects an example that does not match the pattern', () => {
+    const base = {
+      ...validValues(),
+      groupValidationMode: 'STRICT' as const,
+      groupValidationPattern: '^\\d{1,2}[А-Я]$',
+    };
+
+    const mismatch = educationOrganizationFormSchema.safeParse({
+      ...base,
+      groupValidationExample: '9 А',
+    });
+    const match = educationOrganizationFormSchema.safeParse({
+      ...base,
+      groupValidationExample: '9А',
+    });
+
+    expect(match.success).toBe(true);
+    expect(mismatch.success).toBe(false);
+    if (!mismatch.success) {
+      expect(mismatch.error.issues[0]?.path).toEqual(['groupValidationExample']);
+    }
+  });
+
+  it.each([
+    ['inn', '12345'],
+    ['inn', '12345678901'],
+    ['ogrn', '123456789012'],
+    ['ogrn', '12345678901a3'],
+  ])('rejects a malformed %s: %s', (field, value) => {
+    const result = educationOrganizationFormSchema.safeParse({ ...validValues(), [field]: value });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual([field]);
+    }
+  });
+
+  it('accepts well-formed INN and OGRN and leaves them optional', () => {
+    expect(
+      educationOrganizationFormSchema.safeParse({
+        ...validValues(),
+        inn: '7707083893',
+        ogrn: '1027700132195',
+      }).success,
+    ).toBe(true);
+  });
+
   it('rejects a catastrophic RegExp', () => {
     const result = educationOrganizationFormSchema.safeParse({
       ...validValues(),
