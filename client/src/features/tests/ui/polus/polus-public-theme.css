@@ -1825,10 +1825,11 @@
   filter: brightness(1.08) saturate(1.08) drop-shadow(0 18px 20px rgba(5, 8, 49, 0.18));
 }
 
-.theme-public--polus .polus-processing-professor img[data-animated='true'] {
+/* The clip is encoded on white (H.264 has no alpha); multiply lets the card background show through. */
+.theme-public--polus .polus-processing-professor video {
   width: min(184px, 30vw);
-  animation: none;
-  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.22));
+  height: auto;
+  mix-blend-mode: multiply;
 }
 
 .theme-public--polus .polus-processing-progress {

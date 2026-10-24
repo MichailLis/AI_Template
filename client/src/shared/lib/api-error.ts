@@ -2,8 +2,7 @@ import { isRecord } from './type-guards';
 
 const DEFAULT_API_ERROR_MESSAGE = 'Не удалось выполнить запрос';
 const SESSION_EXPIRED_MESSAGE = 'Сессия истекла или доступ запрещен. Войдите заново.';
-const SERVER_UNAVAILABLE_MESSAGE =
-  'Сервер недоступен. Проверьте, что backend запущен на localhost:3000.';
+const SERVER_UNAVAILABLE_MESSAGE = 'Сервер недоступен. Попробуйте позже.';
 
 interface ApiErrorMessageOptions {
   fallbackMessage?: string;
@@ -135,7 +134,7 @@ const formatValidationDetails = (issues: ApiValidationIssue[]) =>
     .map(({ path, message }) => `${VALIDATION_FIELD_LABELS[path] ?? path}: ${message}`)
     .join('. ');
 
-const extractNestedApiError = (error: unknown) => {
+export const extractNestedApiError = (error: unknown) => {
   if (!isRecord(error) || !('response' in error) || !isRecord(error.response)) {
     return null;
   }
@@ -147,6 +146,11 @@ const extractNestedApiError = (error: unknown) => {
 
   return response.data.error;
 };
+
+export const getApiErrorStatus = (error: unknown) =>
+  isRecord(error) && isRecord(error.response) && typeof error.response.status === 'number'
+    ? error.response.status
+    : null;
 
 export const extractApiValidationIssues = (error: unknown): ApiValidationIssue[] => {
   const nestedError = extractNestedApiError(error);

@@ -14,6 +14,8 @@ const longWaitThresholdMs = 35_000;
 
 type ProcessingStepState = 'done' | 'current' | 'waiting';
 
+const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 interface PublicTestAnalysisProcessingScreenProps {
   startedAt: string | null;
   branding?: PublicBrandingConfig;
@@ -134,11 +136,20 @@ function PolusProcessingScreen({
                   <span className="polus-result-speech-dot" />
                 </div>
               ) : null}
-              <img
-                src={isReadyPhase ? polusAssets.professor : polusAssets.professorThinking}
-                alt=""
-                data-animated={isReadyPhase ? undefined : 'true'}
-              />
+              {isReadyPhase ? (
+                <img src={polusAssets.professor} alt="" />
+              ) : (
+                // Without autoplay the video shows its poster, which is the still for reduced motion.
+                <video
+                  src={polusAssets.professorThinking}
+                  poster={polusAssets.professor}
+                  autoPlay={!prefersReducedMotion()}
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                />
+              )}
             </div>
           </div>
 

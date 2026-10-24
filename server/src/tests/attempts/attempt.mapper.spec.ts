@@ -1,4 +1,4 @@
-import { mapAttemptListItem } from './attempt.mapper';
+import { mapAttemptListItem, mapSessionState } from './attempt.mapper';
 import {
   PROF_ORIENTATION_DIRECTIONS,
   PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
@@ -25,6 +25,49 @@ const createAttempt = (analysis: unknown) =>
   }) as unknown as Parameters<typeof mapAttemptListItem>[0];
 
 const toAttemptStatus = () => 'COMPLETED';
+
+const mapSettings = (settings: unknown) =>
+  mapSessionState(
+    {
+      resumeToken: 'token',
+      attemptNumber: 1,
+      startedAt: new Date('2026-09-11T10:00:00.000Z'),
+      expiresAt: null,
+      finishedAt: null,
+      publicLink: {
+        shortCode: 'abc123',
+        publicTemplate: 'DEFAULT',
+        publicBranding: null,
+        timeLimitMinutes: null,
+      },
+      topicVersion: { questions: [{ options: [], sliderBands: [], settings }] },
+      answers: [],
+    } as unknown as Parameters<typeof mapSessionState>[0],
+    toAttemptStatus,
+  ).questions[0].settings;
+
+describe('mapSessionState question settings', () => {
+  it('hands the student only the settings keys the public client reads', () => {
+    expect(
+      mapSettings({
+        maxChoices: 2,
+        sliderKind: 'interest',
+        methodologySliderId: 'S1',
+        directionMap: { engineering: 1 },
+        weights: { engineering: 2 },
+      }),
+    ).toEqual({ maxChoices: 2, sliderKind: 'interest', methodologySliderId: 'S1' });
+  });
+
+  it.each([
+    ['null', null],
+    ['a non-object', 'text'],
+    ['an array', [1]],
+    ['only scoring keys', { directionMap: { engineering: 1 } }],
+  ])('returns null for settings that are %s', (_label, settings) => {
+    expect(mapSettings(settings)).toBeNull();
+  });
+});
 
 describe('mapAttemptListItem analysis result kind', () => {
   it('marks a stub analysis as a stub instead of a ready result', () => {

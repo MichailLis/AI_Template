@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 
+import { ATTEMPTS_EXPORT_LIMIT } from './admin-attempt.service';
 import {
   formatExportDuration,
   TestsAttemptsExportService,
@@ -103,6 +104,18 @@ describe('TestsAttemptsExportService', () => {
     expect(row.getCell(14).value ?? '').toBe('');
     expect(row.getCell(16).value ?? '').toBe('');
     expect(row.getCell(18).value).toBe('Нет анализа');
+  });
+
+  it('adds the cut-off note below the table only when the export was truncated', async () => {
+    const note = `Выгружены первые ${ATTEMPTS_EXPORT_LIMIT} прохождений. Сузьте фильтр, чтобы выгрузить остальные.`;
+    const full = await readSheet(await service.toExcel([buildRow()], 'ABC123'));
+    const cut = await readSheet(await service.toExcel([buildRow()], 'ABC123', undefined, true));
+
+    expect(full.rowCount).toBe(2);
+    expect(cut.rowCount).toBe(4);
+    expect(cut.getRow(2).getCell(1).value).toBe(361);
+    expect(cut.getRow(4).getCell(1).value).toBe(note);
+    expect(cut.getRow(4).font?.bold).toBe(true);
   });
 
   it('keeps a formula-like student name as plain text', async () => {

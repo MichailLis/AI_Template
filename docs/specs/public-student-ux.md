@@ -15,6 +15,10 @@ Security model:
   generated timestamp, safe summary blocks, and user-facing error text.
 - Raw provider output, prompts, scoring internals, and debug-only fields belong only in
   admin/internal DTOs protected by admin guards.
+- The session state hands the student only the question `settings` keys the public client reads
+  (`PUBLIC_QUESTION_SETTINGS_KEYS` in `attempt.mapper.ts`: `maxChoices`, `min`, `max`, `step`,
+  `sliderKind`, `methodologySliderId`); `directionMap` and weights never leave the server. A new key
+  the public client starts reading must be added to that list.
 
 UI/theming rules:
 
@@ -47,6 +51,15 @@ UI/theming rules:
 13. A student who comes back into a session (or presses "Назад") on a `SINGLE_CHOICE` question that
     already has a saved answer must still get an explicit "next" action: picking the same option again
     cannot advance, so the auto-advance on choice applies only to unanswered questions.
+14. The server matches the link code case-insensitively and a code can be reissued under an open
+    attempt, so the run screen redirects (replace) to `/t/<session.shortCode>/session/…` when the URL
+    code differs, and finish opens the result under the session's code. An empty `shortCode` never
+    redirects. A failed background poll keeps the loaded session on screen; the "session unavailable"
+    screen shows only without data or on a 404.
+15. The Polus waiting screen plays `professor-polus-thinking.mp4` (H.264, no audio) as a muted inline
+    loop with `professor-polus.png` as poster; with `prefers-reduced-motion` it does not autoplay and
+    stays on the poster. H.264 has no alpha, so the clip is encoded on white and the CSS uses
+    `mix-blend-mode: multiply` to let the card background show.
 
 ---
 

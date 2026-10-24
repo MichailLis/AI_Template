@@ -246,7 +246,7 @@
     width: min(138px, 42vw);
   }
 
-  .theme-public--polus .polus-processing-professor img[data-animated='true'] {
+  .theme-public--polus .polus-processing-professor video {
     width: min(158px, 48vw);
   }
 }
