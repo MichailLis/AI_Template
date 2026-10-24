@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { GroupOrClassValidationMode, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma.service';
@@ -9,6 +14,20 @@ import type {
 } from '../dto/tests-links.dto';
 import { matchesGroupPattern } from '../session/session-profile';
 import { isValidInn, isValidOgrn } from '../shared/organization-requisites';
+import {
+  resolvePersonalDataOperator,
+  toOperatorSnapshotData,
+} from '../shared/personal-data-operator';
+
+const PERSONAL_DATA_ON_BEHALF_MODE = 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
+
+/** Поля заведения, из которых собирается снимок оператора ПДн у ссылки. */
+const OPERATOR_SNAPSHOT_FIELDS = [
+  'fullName',
+  'shortName',
+  'privacyPolicyUrl',
+  'consentDocumentUrl',
+] as const;
 
 const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
   'Учебное заведение с таким названием уже существует';
@@ -438,7 +457,15 @@ export class TestsEducationOrganizationService {
       dto.groupValidationPattern !== undefined || dto.groupValidationExample !== undefined,
     );
 
-    const updated = await this.updateEducationOrganizationRecord(organizationId, {
+    const operatorChanged =
+      OPERATOR_SNAPSHOT_FIELDS.some(
+        (field) =>
+          dto[field] !== undefined &&
+          normalizeNullableString(dto[field]) !== normalizeNullableString(existing[field]),
+      ) ||
+      (dto.isActive === true && !existing.isActive);
+
+    const updated = await this.updateEducationOrganizationRecord(organizationId, operatorChanged, {
       ...(dto.name !== undefined ? { name: nextName } : {}),
       ...(dto.fullName !== undefined ? { fullName: normalizeNullableString(dto.fullName) } : {}),
       ...(dto.shortName !== undefined ? { shortName: normalizeNullableString(dto.shortName) } : {}),
@@ -472,6 +499,38 @@ export class TestsEducationOrganizationService {
     );
   }
 
+  private async refreshLinkOperatorSnapshots(tx: Prisma.TransactionClient, organizationId: number) {
+    const where = {
+      educationOrganizationId: organizationId,
+      personalDataProcessingMode: PERSONAL_DATA_ON_BEHALF_MODE,
+      archivedAt: null,
+    } satisfies Prisma.TestPublicLinkWhereInput;
+
+    if ((await tx.testPublicLink.count({ where })) === 0) {
+      return;
+    }
+
+    let operator;
+
+    try {
+      operator = await resolvePersonalDataOperator(
+        tx,
+        PERSONAL_DATA_ON_BEHALF_MODE,
+        organizationId,
+      );
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new ConflictException(
+          `У заведения есть действующие ссылки обработки ПДн от его имени, поэтому реквизиты нельзя оставить неполными. ${error.message}`,
+        );
+      }
+
+      throw error;
+    }
+
+    await tx.testPublicLink.updateMany({ where, data: toOperatorSnapshotData(operator) });
+  }
+
   private async createEducationOrganizationRecord(data: Prisma.EducationOrganizationCreateInput) {
     try {
       return await this.prisma.educationOrganization.create({ data });
@@ -484,14 +543,29 @@ export class TestsEducationOrganizationService {
     }
   }
 
+  /**
+   * Ссылки «по поручению» хранят снимок реквизитов заведения, и ученик видит именно его. Поэтому
+   * правка реквизитов в одной транзакции с сохранением заведения пересчитывает снимок у всех
+   * неархивных ссылок; если после правки реквизитов не хватает, а ссылки есть, правка отклоняется.
+   * Попытки не трогаем: их снимок — запись того, на что ученик согласился.
+   */
   private async updateEducationOrganizationRecord(
     organizationId: number,
+    refreshLinkSnapshots: boolean,
     data: Prisma.EducationOrganizationUpdateInput,
   ) {
     try {
-      return await this.prisma.educationOrganization.update({
-        where: { id: organizationId },
-        data,
+      return await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.educationOrganization.update({
+          where: { id: organizationId },
+          data,
+        });
+
+        if (refreshLinkSnapshots && updated.isActive) {
+          await this.refreshLinkOperatorSnapshots(tx, organizationId);
+        }
+
+        return updated;
       });
     } catch (error) {
       if (isPrismaUniqueConstraintError(error)) {
