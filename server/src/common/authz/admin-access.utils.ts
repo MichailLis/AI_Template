@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { Role } from '@prisma/client';
 
 import type { PrismaService } from '../../prisma.service';
@@ -20,11 +20,28 @@ export const assertAdminUser = <TUser extends AdminAccessUser>(
   return user;
 };
 
-export const ensureAdminAccess = async (prisma: PrismaService, userId: number) => {
+/**
+ * `tokenIat` (seconds) is the access token's issue time. A token issued before the last session
+ * revocation is rejected; iat is whole seconds, so the boundary rounds down and a token issued in
+ * the same second as the revocation still passes (as in `AccessTokenStrategy`).
+ */
+export const ensureAdminAccess = async (
+  prisma: PrismaService,
+  userId: number,
+  tokenIat?: number,
+) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true, deactivatedAt: true },
+    select: { id: true, role: true, deactivatedAt: true, sessionsRevokedAt: true },
   });
 
-  assertAdminUser(user);
+  const admin = assertAdminUser(user);
+
+  if (
+    tokenIat !== undefined &&
+    admin.sessionsRevokedAt &&
+    tokenIat < Math.floor(admin.sessionsRevokedAt.getTime() / 1000)
+  ) {
+    throw new UnauthorizedException('Session expired');
+  }
 };

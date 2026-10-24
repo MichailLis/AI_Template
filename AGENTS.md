@@ -64,8 +64,10 @@ entrypoints — business logic belongs in `widgets/*` and `features/*`. Enforced
 
 8. Admin controllers carry `@UseGuards(AtGuard, AdminGuard)`; their services do not check the role.
    A new admin controller needs the guard, and `AdminGuard` reads the role from the database on
-   every request. Only `GET /admin/backups/operation` stays without it (it must answer during a
-   database swap).
+   every request, and rejects access tokens issued before the user's `sessionsRevokedAt` (set on
+   session revoke, password reset and deactivation). Only `GET /admin/backups/operation` stays
+   without it (it must answer during a database swap). Non-admin routes check only the global
+   session epoch, so a revoked non-admin keeps a valid access token until it expires (15 min).
 
 Invariants 2–6 are checked by `npm run verify:invariants`. Use `import type` for type-only
 imports; ESLint enforces it.

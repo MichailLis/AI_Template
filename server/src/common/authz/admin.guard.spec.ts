@@ -1,4 +1,4 @@
-import { ForbiddenException, type ExecutionContext } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 
 import { AdminBackupsController } from '../../admin/admin-backups.controller';
 import { AdminSettingsController } from '../../admin/admin-settings.controller';
@@ -25,6 +25,20 @@ describe('AdminGuard', () => {
 
     await expect(guard.canActivate(contextFor({ sub: 7 }))).resolves.toBe(true);
     expect(findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 7 } }));
+  });
+
+  it('passes the token iat to the revocation check', async () => {
+    findUnique.mockResolvedValue({
+      id: 7,
+      role: 'ADMIN',
+      deactivatedAt: null,
+      sessionsRevokedAt: new Date(10_000_000),
+    });
+
+    await expect(guard.canActivate(contextFor({ sub: 7, iat: 9_999 }))).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    await expect(guard.canActivate(contextFor({ sub: 7, iat: 10_000 }))).resolves.toBe(true);
   });
 
   it.each([

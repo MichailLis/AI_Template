@@ -22,10 +22,16 @@ export const planExistingUserUpdates = (
   existing: { name: string | null },
   options: { name: string; hashedPassword: string | null },
 ) => {
-  const updates: { password?: string; hashedRefreshToken?: null; name?: string } = {};
+  const updates: {
+    password?: string;
+    hashedRefreshToken?: null;
+    sessionsRevokedAt?: Date;
+    name?: string;
+  } = {};
   if (options.hashedPassword) {
     updates.password = options.hashedPassword;
     updates.hashedRefreshToken = null;
+    updates.sessionsRevokedAt = new Date();
   }
   if (!existing.name && options.name) updates.name = options.name;
   return updates;

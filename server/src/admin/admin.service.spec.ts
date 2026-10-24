@@ -142,7 +142,11 @@ describe('AdminService user management', () => {
     expect(prismaMock.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: TARGET_ID },
-        data: { password: 'hashed-password', hashedRefreshToken: null },
+        data: {
+          password: 'hashed-password',
+          hashedRefreshToken: null,
+          sessionsRevokedAt: expect.any(Date) as Date,
+        },
       }),
     );
   });
@@ -161,7 +165,11 @@ describe('AdminService user management', () => {
 
     expect(prismaMock.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { deactivatedAt: targetDeactivatedAt, hashedRefreshToken: null },
+        data: {
+          deactivatedAt: targetDeactivatedAt,
+          hashedRefreshToken: null,
+          sessionsRevokedAt: expect.any(Date) as Date,
+        },
       }),
     );
   });
@@ -185,7 +193,7 @@ describe('AdminService user management', () => {
     expect(prismaMock.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: TARGET_ID },
-        data: { hashedRefreshToken: null },
+        data: { hashedRefreshToken: null, sessionsRevokedAt: expect.any(Date) as Date },
       }),
     );
   });
