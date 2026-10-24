@@ -5,6 +5,7 @@ import type {
   AdminEducationOrganizationsListResponseDtoOrganizationsItem,
   AdminUpdateEducationOrganizationDto,
 } from '@/shared/api/model';
+
 import { isSafeGroupPattern, MAX_GROUP_PATTERN_LENGTH } from '@/shared/lib/group-validation';
 import { isValidInn, isValidOgrn } from '@/shared/lib/organization-requisites';
 

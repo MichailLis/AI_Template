@@ -17,6 +17,7 @@ import { isValidInn, isValidOgrn } from '../shared/organization-requisites';
 import {
   resolvePersonalDataOperator,
   toOperatorSnapshotData,
+  type ResolvedPersonalDataOperator,
 } from '../shared/personal-data-operator';
 
 const PERSONAL_DATA_ON_BEHALF_MODE = 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
@@ -510,7 +511,7 @@ export class TestsEducationOrganizationService {
       return;
     }
 
-    let operator;
+    let operator: ResolvedPersonalDataOperator;
 
     try {
       operator = await resolvePersonalDataOperator(

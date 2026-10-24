@@ -12,32 +12,25 @@ export const isSafeGroupPattern = (pattern: string) => {
   const unboundedRepeat = /^(?:[+*]|\{\d+,\})/;
   const groupRepeat = /^(?:[+*]|\{\d+,\d*\})/;
 
+  // Экранированные символы и классы символов не содержат групп и повторов.
+  const source = pattern.replace(/\\./g, '_').replace(/\[[^\]]*\]/g, '_');
   // Для каждой открытой группы: есть ли внутри неограниченный повтор.
   const groups: boolean[] = [];
-  let inClass = false;
 
-  for (let index = 0; index < pattern.length; index += 1) {
-    const char = pattern[index];
-
-    if (char === '\\') {
-      index += 1;
-    } else if (inClass) {
-      inClass = char !== ']';
-    } else if (char === '[') {
-      inClass = true;
-    } else if (char === '(') {
+  for (let index = 0; index < source.length; index += 1) {
+    if (source[index] === '(') {
       groups.push(false);
-    } else if (char === ')') {
+    } else if (source[index] === ')') {
       const hasInnerRepeat = groups.pop() ?? false;
 
-      if (hasInnerRepeat && groupRepeat.test(pattern.slice(index + 1))) {
+      if (hasInnerRepeat && groupRepeat.test(source.slice(index + 1))) {
         return false;
       }
 
       if (hasInnerRepeat && groups.length > 0) {
         groups[groups.length - 1] = true;
       }
-    } else if (groups.length > 0 && unboundedRepeat.test(pattern.slice(index))) {
+    } else if (groups.length > 0 && unboundedRepeat.test(source.slice(index))) {
       groups[groups.length - 1] = true;
     }
   }

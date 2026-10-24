@@ -1,5 +1,13 @@
 import { useWatch } from 'react-hook-form';
 
+import {
+  type EducationOrganizationFormValues,
+  type OrganizationEditorMode,
+} from './education-organization-form.schema';
+import { EducationOrganizationPersonalDataFieldsCompletion } from './education-organization-personal-data-fields-completion';
+
+import type { UseFormReturn } from 'react-hook-form';
+
 import { GROUP_VALIDATION_MODE_OPTIONS } from '@/shared/lib/group-validation';
 import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -14,13 +22,7 @@ import {
 } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
 
-import {
-  type EducationOrganizationFormValues,
-  type OrganizationEditorMode,
-} from './education-organization-form.schema';
-import { EducationOrganizationPersonalDataFieldsCompletion } from './education-organization-personal-data-fields-completion';
 
-import type { UseFormReturn } from 'react-hook-form';
 
 type TextFieldName = Exclude<
   keyof EducationOrganizationFormValues,
