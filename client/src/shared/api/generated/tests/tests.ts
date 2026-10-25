@@ -468,6 +468,142 @@ export const useTestsControllerRestoreTopic = <
   return useMutation(getTestsControllerRestoreTopicMutationOptions(options), queryClient);
 };
 /**
+ * @summary List recorded changes of a test topic
+ */
+export const testsControllerGetTopicHistory = (
+  topicId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AuditHistoryResponseDto>(
+    { url: `/admin/tests/${topicId}/history`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getTestsControllerGetTopicHistoryQueryKey = (topicId: number) => {
+  return [`/admin/tests/${topicId}/history`] as const;
+};
+
+export const getTestsControllerGetTopicHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getTestsControllerGetTopicHistoryQueryKey(topicId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>> = ({
+    signal,
+  }) => testsControllerGetTopicHistory(topicId, requestOptions, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: topicId !== null && topicId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TestsControllerGetTopicHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof testsControllerGetTopicHistory>>
+>;
+export type TestsControllerGetTopicHistoryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useTestsControllerGetTopicHistory<
+  TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerGetTopicHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsControllerGetTopicHistory<
+  TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+          TError,
+          Awaited<ReturnType<typeof testsControllerGetTopicHistory>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsControllerGetTopicHistory<
+  TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recorded changes of a test topic
+ */
+
+export function useTestsControllerGetTopicHistory<
+  TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  topicId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof testsControllerGetTopicHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTestsControllerGetTopicHistoryQueryOptions(topicId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
  * @summary Create test topic with generated questions in one transaction
  */
 export const testsControllerCreateTopicFromAi = (
@@ -2850,6 +2986,235 @@ export const useTestsAdminEducationOrganizationsControllerUpdateEducationOrganiz
     queryClient,
   );
 };
+/**
+ * @summary List recorded changes of an educational organization
+ */
+export const testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory = (
+  organizationId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AuditHistoryResponseDto>(
+    {
+      url: `/admin/tests/education-organizations/${organizationId}/history`,
+      method: 'GET',
+      signal,
+    },
+    options,
+  );
+};
+
+export const getTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryKey =
+  (organizationId: number) => {
+    return [`/admin/tests/education-organizations/${organizationId}/history`] as const;
+  };
+
+export const getTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryOptions =
+  <
+    TData = Awaited<
+      ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+    >,
+    TError = ErrorType<ErrorResponseDto>,
+  >(
+    organizationId: number,
+    options?: {
+      query?: Partial<
+        UseQueryOptions<
+          Awaited<
+            ReturnType<
+              typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+            >
+          >,
+          TError,
+          TData
+        >
+      >;
+      request?: SecondParameter<typeof customInstance>;
+    },
+  ) => {
+    const { query: queryOptions, request: requestOptions } = options ?? {};
+
+    const queryKey =
+      queryOptions?.queryKey ??
+      getTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryKey(
+        organizationId,
+      );
+
+    const queryFn: QueryFunction<
+      Awaited<
+        ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+      >
+    > = ({ signal }) =>
+      testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory(
+        organizationId,
+        requestOptions,
+        signal,
+      );
+
+    return {
+      queryKey,
+      queryFn,
+      enabled: organizationId !== null && organizationId !== undefined,
+      ...queryOptions,
+    } as UseQueryOptions<
+      Awaited<
+        ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+      >,
+      TError,
+      TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+  };
+
+export type TestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryResult =
+  NonNullable<
+    Awaited<
+      ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+    >
+  >;
+export type TestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
+  TData = Awaited<
+    ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+  >,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  organizationId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+            >
+          >
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
+  TData = Awaited<
+    ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+  >,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  organizationId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+            >
+          >
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
+  TData = Awaited<
+    ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+  >,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  organizationId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recorded changes of an educational organization
+ */
+
+export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
+  TData = Awaited<
+    ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
+  >,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  organizationId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions =
+    getTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryOptions(
+      organizationId,
+      options,
+    );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 /**
  * @summary List student attempts by public link
  */

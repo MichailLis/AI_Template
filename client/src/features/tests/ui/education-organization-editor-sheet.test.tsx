@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EducationOrganizationEditorSheet } from './education-organization-editor-sheet';
 
+vi.mock('./education-organization-history', () => ({
+  EducationOrganizationHistory: () => null,
+}));
+
 import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from '@/shared/api/model';
 
 const organization: AdminEducationOrganizationsListResponseDtoOrganizationsItem = {

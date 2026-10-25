@@ -260,7 +260,10 @@ Current ownership map:
   utilities through another feature module; expose integration services from the integration owner.
 - `audit` is the change journal, also an integration module. `admin`, `analysis-prompts`, `tests`
   and `app-settings` write events through `AuditService`; each feature serves the history of its
-  own entities from its own route.
+  own entities from its own route. In `tests` the journal covers public links, education
+  organizations (`EDUCATION_ORGANIZATION`, requisites that land in student consent) and topics
+  (`TEST_TOPIC`: publish, archive, restore, delete), and every export of student data
+  (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor.
 - Integration-only backend modules (`ai-provider`, `audit`) are declared in
   `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent

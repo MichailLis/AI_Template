@@ -20,6 +20,8 @@ import {
 } from '@nestjs/swagger';
 import { type Response } from 'express';
 
+import { AuditService } from '../../audit/audit.service';
+import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
 import { AdminGuard } from '../../common/authz/admin.guard';
 import { ApiErrorResponses } from '../../common/decorators/api-error-responses.decorator';
@@ -87,7 +89,18 @@ export class TestsAdminAnalyticsController {
   constructor(
     private readonly analyticsService: TestsAnalyticsService,
     private readonly exportService: TestsAnalyticsExportService,
+    private readonly auditService: AuditService,
   ) {}
+
+  private recordExport(userId: number, topicId: number, format: 'xlsx' | 'pdf') {
+    return this.auditService.record({
+      entityType: 'TEST_TOPIC',
+      entityId: topicId,
+      action: 'ANALYTICS_EXPORTED',
+      actorUserId: userId,
+      changes: [{ field: 'format', before: null, after: format }],
+    });
+  }
 
   @Get('topics/:topicId/analytics/summary')
   @ApiOperation({ summary: 'Get analytics summary for topic' })
@@ -106,6 +119,7 @@ export class TestsAdminAnalyticsController {
   @ApiProduces(XLSX_CONTENT_TYPE)
   @ApiResponse(apiBinaryResponse(XLSX_CONTENT_TYPE, 'Excel analytics report'))
   async exportXlsx(
+    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Query() query: AdminTestAnalyticsQueryDto,
     @Res({ passthrough: true }) res: Response,
@@ -119,6 +133,7 @@ export class TestsAdminAnalyticsController {
 
     res.setHeader('Content-Type', XLSX_CONTENT_TYPE);
     res.setHeader('Content-Disposition', disposition);
+    await this.recordExport(userId, topicId, 'xlsx');
 
     return file;
   }
@@ -129,6 +144,7 @@ export class TestsAdminAnalyticsController {
   @ApiProduces(PDF_CONTENT_TYPE)
   @ApiResponse(apiBinaryResponse(PDF_CONTENT_TYPE, 'PDF analytics report'))
   async exportPdf(
+    @GetCurrentUserId() userId: number,
     @Param('topicId', ParseIntPipe) topicId: number,
     @Query() query: AdminTestAnalyticsQueryDto,
     @Res({ passthrough: true }) res: Response,
@@ -142,6 +158,7 @@ export class TestsAdminAnalyticsController {
 
     res.setHeader('Content-Type', PDF_CONTENT_TYPE);
     res.setHeader('Content-Disposition', disposition);
+    await this.recordExport(userId, topicId, 'pdf');
 
     return file;
   }

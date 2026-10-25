@@ -297,6 +297,14 @@ const setupApiMocks = async (context, unhandledApiRequests) => {
       return;
     }
 
+    if (
+      method === 'GET' &&
+      /^\/admin\/tests\/education-organizations\/\d+\/history$/.test(apiPath)
+    ) {
+      await fulfillJson(route, { events: [] });
+      return;
+    }
+
     if (method === 'POST' && apiPath === '/admin/tests/education-organizations') {
       const payload = request.postDataJSON();
       const now = new Date().toISOString();

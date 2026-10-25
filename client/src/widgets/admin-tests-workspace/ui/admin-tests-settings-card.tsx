@@ -1,6 +1,8 @@
 import { ArrowLeft, Settings2 } from 'lucide-react';
 
+import { useTestsControllerGetTopicHistory } from '@/shared/api/generated/tests/tests';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
+import { AuditHistoryList } from '@/shared/ui/audit-history-list';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -20,7 +22,26 @@ import {
   type PublishedVersion,
 } from './admin-tests-publication-settings-section';
 
+/** История теста: публикации, архив, восстановление и выгрузки аналитики. */
+function AdminTestsHistorySection({ topicId }: { topicId: number }) {
+  const historyQuery = useTestsControllerGetTopicHistory(topicId);
+
+  return (
+    <div className={adminClassNames.panel.compactSection}>
+      <p className={`mb-2 text-sm font-medium ${adminClassNames.text.heading}`}>
+        История изменений
+      </p>
+      <AuditHistoryList
+        events={historyQuery.data?.events}
+        isLoading={historyQuery.isLoading}
+        isError={historyQuery.isError}
+      />
+    </div>
+  );
+}
+
 interface AdminTestsSettingsCardProps {
+  topicId: number;
   published: PublishedVersion | null;
   draftAnalysisPromptVersion: AnalysisPromptVersionSummary | null;
   draftForm: AdminTestsDraftForm;
@@ -42,6 +63,7 @@ interface AdminTestsSettingsCardProps {
 }
 
 export function AdminTestsSettingsCard({
+  topicId,
   published,
   draftAnalysisPromptVersion,
   draftForm,
@@ -133,6 +155,7 @@ export function AdminTestsSettingsCard({
           isRestoringTopic={isRestoringTopic}
           onToggleTopicActive={onToggleTopicActive}
         />
+        <AdminTestsHistorySection topicId={topicId} />
       </CardContent>
     </Card>
   );

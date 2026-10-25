@@ -98,6 +98,8 @@ enum AuditEntityType {
   APP_SETTING
   PUBLIC_LINK
   DATABASE_BACKUP
+  EDUCATION_ORGANIZATION
+  TEST_TOPIC
 }
 
 model User {

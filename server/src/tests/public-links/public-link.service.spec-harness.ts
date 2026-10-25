@@ -62,15 +62,16 @@ export const createPublicLinkServiceHarness = (): PublicLinkServiceHarness => {
     },
   };
 
-  const educationOrganizationService = new TestsEducationOrganizationService(
-    prismaMock as unknown as PrismaService,
-  );
-  const privacyPolicySettingsService = {
-    getPlatformOperatorFullName: jest.fn().mockResolvedValue('ООО «Новый оператор»'),
-  };
   const auditMock = {
     record: jest.fn().mockResolvedValue(undefined),
     listForEntity: jest.fn().mockResolvedValue([]),
+  };
+  const educationOrganizationService = new TestsEducationOrganizationService(
+    prismaMock as unknown as PrismaService,
+    auditMock as unknown as AuditService,
+  );
+  const privacyPolicySettingsService = {
+    getPlatformOperatorFullName: jest.fn().mockResolvedValue('ООО «Новый оператор»'),
   };
 
   const service = new TestsPublicLinkService(
