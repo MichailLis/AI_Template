@@ -716,7 +716,7 @@ export class TestsService {
           action: 'TOPIC_PUBLISHED',
           actorUserId: userId,
           changes: [
-            { field: 'publishedVersion', before: null, after: String(draft.versionNumber) },
+            { field: 'publishedVersionNumber', before: null, after: String(draft.versionNumber) },
           ],
         },
         tx,

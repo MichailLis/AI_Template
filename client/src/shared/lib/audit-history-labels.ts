@@ -72,6 +72,21 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   consentVersion: 'Версия согласия',
   consentText: 'Текст согласия',
   publicBranding: 'Оформление страницы',
+  fullName: 'Полное название',
+  shortName: 'Краткое название',
+  inn: 'ИНН',
+  ogrn: 'ОГРН',
+  legalAddress: 'Юридический адрес',
+  phone: 'Телефон',
+  privacyPolicyUrl: 'Политика обработки данных',
+  consentDocumentUrl: 'Документ согласия',
+  logoUrl: 'Логотип',
+  groupValidationMode: 'Проверка класса',
+  groupValidationPattern: 'Шаблон класса',
+  groupValidationExample: 'Пример класса',
+  groupValidationHint: 'Подсказка по классу',
+  rows: 'Строк в выгрузке',
+  format: 'Формат выгрузки',
 };
 
 const VALUE_LABELS: Record<string, Record<string, string>> = {
