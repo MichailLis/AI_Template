@@ -1,6 +1,9 @@
 import { toast } from 'sonner';
 
+import { getApiErrorMessage } from '@/shared/lib/api-error';
+
 import { normalizeInitial, resolveGroupValidationWarning } from './public-test-entry.helpers';
+import { getPublicTestRefusal } from './public-test-refusal';
 
 import type {
   DemographicFormState,
@@ -56,6 +59,8 @@ interface CreatePublicTestEntryStartHandlerParams {
   educationFormState: StudentFormState;
   demographicFormState: DemographicFormState;
   linkData: LinkAccessSnapshot | undefined;
+  /** Время открытия ссылки: им объясняется отказ «ещё не открыта». */
+  startsAt?: string | null;
   startSession: (payload: {
     code: string;
     data: StartSessionRequestData;
@@ -208,6 +213,7 @@ export const createPublicTestEntryStartHandler = ({
   educationFormState,
   demographicFormState,
   linkData,
+  startsAt,
   startSession,
   navigate,
 }: CreatePublicTestEntryStartHandlerParams) => {
@@ -240,8 +246,19 @@ export const createPublicTestEntryStartHandler = ({
       });
 
       navigate(`/t/${code}/session/${response.session.sessionToken}`);
-    } catch {
-      toast.error('Не удалось начать тест. Проверьте корректность данных и попробуйте снова.');
+    } catch (error) {
+      const refusal = getPublicTestRefusal(
+        error,
+        {
+          title: 'Не удалось начать тест',
+          description: getApiErrorMessage(error, {
+            fallbackMessage: 'Проверьте корректность данных и попробуйте снова.',
+            requestMessage: 'Сервер недоступен. Попробуйте позже.',
+          }),
+        },
+        startsAt,
+      );
+      toast.error(refusal.title, { description: refusal.description });
     }
   };
 };

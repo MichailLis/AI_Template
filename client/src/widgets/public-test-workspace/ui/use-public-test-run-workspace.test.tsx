@@ -268,7 +268,10 @@ describe('usePublicTestRunWorkspace', () => {
       refetch,
     });
     publicTestApiMocks.finishSession.mockRejectedValueOnce({
-      response: { status: 400, data: { error: { message: 'Test session expired' } } },
+      response: {
+        status: 400,
+        data: { error: { code: 'SESSION_EXPIRED', message: 'Test session expired' } },
+      },
     });
     const { result } = renderHook(() => usePublicTestRunWorkspace());
 

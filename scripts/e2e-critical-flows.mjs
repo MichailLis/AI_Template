@@ -87,6 +87,7 @@ const mockLinkAccess = {
   questionCount: 1,
   maxAttemptsPerStudent: 3,
   timeLimitMinutes: null,
+  resultKind: 'BASIC',
   allowResume: true,
   startsAt: null,
   endsAt: null,

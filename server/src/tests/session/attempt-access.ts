@@ -14,7 +14,7 @@ export const getSessionAttemptByTokenOrThrow = async (
   });
 
   if (!attempt) {
-    throw new NotFoundException('Test session not found');
+    throw new NotFoundException('Test session not found', 'SESSION_NOT_FOUND');
   }
 
   ensurePublicLinkAccessible(attempt.publicLink, attempt.topicVersion);

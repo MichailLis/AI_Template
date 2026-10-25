@@ -60,6 +60,27 @@ UI/theming rules:
     loop with `professor-polus.png` as poster; with `prefers-reduced-motion` it does not autoplay and
     stays on the poster. H.264 has no alpha, so the clip is encoded on white and the CSS uses
     `mix-blend-mode: multiply` to let the card background show.
+16. Public `/t/*` errors carry a machine `error.code` as the second exception argument
+    (`new BadRequestException('Test session expired', 'SESSION_EXPIRED')`), and the client branches on
+    the code, not on the English message (`getApiErrorCode`). The codes: `LINK_NOT_FOUND`,
+    `LINK_DISABLED`, `LINK_NOT_STARTED`, `LINK_EXPIRED`, `ATTEMPTS_LIMIT_REACHED`,
+    `GROUP_FORMAT_INVALID`, `SESSION_NOT_FOUND`, `SESSION_NOT_ACTIVE`, `SESSION_EXPIRED`,
+    `SESSION_IN_PROGRESS`. A new public refusal gets a code and a line in `public-test-refusal.ts`;
+    an unknown code falls back to `getApiErrorMessage`. The global filter and the admin contour are
+    unchanged (admin errors keep the status text as `code`).
+17. The entry page shows the reason a link is closed (`public-test-refusal.ts`): "not open yet" (with
+    the opening time when the link was already loaded), "term is over", "link disabled", "not found";
+    the start button reports "attempts used up" and the organization's group-format hint instead of a
+    generic "check your data". The server does not put `startsAt` into the error, so a link that
+    failed to load shows no time.
+18. The overview block promises only what the server will record. `PublicLinkAccessResponse.resultKind`
+    (`ALGORITHM_AI` | `ALGORITHM` | `AI` | `BASIC`) comes from `getPlannedAnalysisKind`, the same
+    function the attempt finish uses. The "Система профориентации" badge and the analysis/
+    recommendation lines show only for the prof-orientation kinds; `BASIC` says the organizer gets
+    the answers. There is no estimated duration (only the link's time limit), and the attempts limit
+    is hidden in `DEMOGRAPHIC` mode, where every start creates a new attempt.
+19. Public theme `--primary`/`--accent` keep white button text and the privacy-policy link at 4.5:1 or
+    better (WCAG AA); do not lighten them without re-checking with axe.
 
 ---
 

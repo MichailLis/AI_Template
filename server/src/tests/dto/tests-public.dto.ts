@@ -1,6 +1,7 @@
 import { createZodDto } from '../../common/zod-dto';
 import { z } from 'zod';
 
+import { PLANNED_ANALYSIS_KINDS } from '../analysis/analysis-result-kind';
 import { TestAnalysisSummarySchema } from './tests-analysis.dto';
 import { JsonObjectSchema, TestQuestionTypeSchema } from './tests.dto';
 
@@ -164,6 +165,7 @@ export const PublicLinkAccessResponseSchema = z.object({
   questionCount: z.number().int().min(0),
   maxAttemptsPerStudent: z.number().int().min(1),
   timeLimitMinutes: z.number().int().min(1).nullable(),
+  resultKind: z.enum(PLANNED_ANALYSIS_KINDS),
   allowResume: z.boolean(),
   startsAt: z.string().nullable(),
   endsAt: z.string().nullable(),

@@ -164,6 +164,7 @@ describe('tests public DTO schemas', () => {
       questionCount: 10,
       maxAttemptsPerStudent: 1,
       timeLimitMinutes: 30,
+      resultKind: 'BASIC',
       allowResume: true,
       startsAt: null,
       endsAt: null,

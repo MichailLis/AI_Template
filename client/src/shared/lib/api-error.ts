@@ -147,6 +147,12 @@ export const extractNestedApiError = (error: unknown) => {
   return response.data.error;
 };
 
+/** Машинный код ошибки сервера (error.code): по нему клиент ветвится, текст сообщения — только для показа. */
+export const getApiErrorCode = (error: unknown) => {
+  const code = extractNestedApiError(error)?.code;
+  return typeof code === 'string' ? code : null;
+};
+
 export const getApiErrorStatus = (error: unknown) =>
   isRecord(error) && isRecord(error.response) && typeof error.response.status === 'number'
     ? error.response.status

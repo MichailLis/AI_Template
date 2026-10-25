@@ -1,4 +1,4 @@
-import { getAnalysisResultKind } from './analysis-result-kind';
+import { getAnalysisResultKind, getPlannedAnalysisKind } from './analysis-result-kind';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from '../prof-orientation-v3-plus/types';
 
 const profOrientationSummary = (llmStatus?: string) => ({
@@ -107,5 +107,16 @@ describe('getAnalysisResultKind', () => {
     expect(getAnalysisResultKind({ providerMode: 'LLM', status: 'FAILED', summary: null })).toBe(
       'FAILED',
     );
+  });
+});
+
+describe('getPlannedAnalysisKind', () => {
+  it.each([
+    ['PROF_ORIENTATION_V3_PLUS', 5, 'ALGORITHM_AI'],
+    ['PROF_ORIENTATION_V3_PLUS', null, 'ALGORITHM'],
+    ['STANDARD', 5, 'AI'],
+    ['STANDARD', null, 'BASIC'],
+  ])('%s with prompt %s plans %s', (scoringKind, analysisPromptVersionId, expected) => {
+    expect(getPlannedAnalysisKind({ scoringKind, analysisPromptVersionId })).toBe(expected);
   });
 });

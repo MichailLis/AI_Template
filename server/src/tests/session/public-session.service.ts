@@ -21,6 +21,7 @@ import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { shouldRefreshProfOrientationAtlasSummary } from '../prof-orientation-v3-plus/atlas.logic';
 import { isProfOrientationV3PlusSummary } from '../prof-orientation-v3-plus/scoring';
 import { TestsAnalysisService } from '../analysis/analysis.service';
+import { getPlannedAnalysisKind } from '../analysis/analysis-result-kind';
 import {
   validatePublicAnswerPayload,
   validatePublicAttemptAnswersForFinish,
@@ -329,8 +330,9 @@ export class TestsPublicSessionService {
       });
 
       const promptVersionId = attempt.topicVersion.analysisPromptVersionId;
+      const plannedKind = getPlannedAnalysisKind(attempt.topicVersion);
       const isProfOrientationScoring =
-        attempt.topicVersion.scoringKind === 'PROF_ORIENTATION_V3_PLUS';
+        plannedKind === 'ALGORITHM' || plannedKind === 'ALGORITHM_AI';
       const analysis = isProfOrientationScoring
         ? await this.analysisService.upsertProfOrientationV3PlusAnalysis(tx, {
             attempt,
@@ -409,7 +411,7 @@ export class TestsPublicSessionService {
     const status = this.analysisService.toAttemptStatus(attempt);
 
     if (status === 'IN_PROGRESS') {
-      throw new BadRequestException('Test session is still in progress');
+      throw new BadRequestException('Test session is still in progress', 'SESSION_IN_PROGRESS');
     }
 
     const analysis = await this.refreshStaleProfOrientationAtlasAnalysis(attempt.analysis);

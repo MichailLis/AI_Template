@@ -7,7 +7,7 @@ import {
   useTestsPublicControllerGetSession,
   useTestsPublicControllerSaveAnswers,
 } from '@/shared/api/generated/tests-public/tests-public';
-import { extractNestedApiError, getApiErrorStatus } from '@/shared/lib/api-error';
+import { getApiErrorCode, getApiErrorStatus } from '@/shared/lib/api-error';
 
 import {
   buildSessionAnswers,
@@ -51,8 +51,8 @@ const countAnsweredQuestions = (
   }, 0) ?? 0;
 
 const isSessionExpiredError = (error: unknown): boolean => {
-  const message = extractNestedApiError(error)?.message;
-  return typeof message === 'string' && message.toLowerCase().includes('expired');
+  const code = getApiErrorCode(error);
+  return code === 'SESSION_EXPIRED' || code === 'LINK_EXPIRED';
 };
 
 // A 4xx (deleted session, bad token) will not heal on retry; a dropped connection or a 5xx may.
