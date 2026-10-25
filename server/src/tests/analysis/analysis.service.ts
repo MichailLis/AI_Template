@@ -1,4 +1,9 @@
-import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   Prisma,
@@ -105,6 +110,8 @@ const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
 } as const;
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
+const PENDING_RECOVERY_INTERVAL_MS = 10 * 60 * 1000;
+const DEFAULT_LLM_CONCURRENCY = 3;
 
 const PUBLIC_ANALYSIS_ERROR_MESSAGE = 'Analysis failed';
 
@@ -131,8 +138,13 @@ const stripInternalAnalysisFields = <T>(summary: T): T => {
 };
 
 @Injectable()
-export class TestsAnalysisService implements OnApplicationBootstrap {
+export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(TestsAnalysisService.name);
+  /** Попытки, чей анализ ждёт слота или идёт: повторная постановка (в т.ч. из восстановления) пропускается. */
+  private readonly activeAttemptIds = new Set<number>();
+  private readonly slotWaiters: Array<() => void> = [];
+  private busySlots = 0;
+  private recoveryTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -420,15 +432,61 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
   }
 
   enqueueAttemptAnalysis(attemptId: number) {
-    void this.runAttemptAnalysis(attemptId).catch((error: unknown) =>
-      this.logger.error(`Analysis of attempt ${attemptId} failed`, error),
-    );
+    if (this.activeAttemptIds.has(attemptId)) {
+      return;
+    }
+
+    this.activeAttemptIds.add(attemptId);
+    void this.runWithinLimit(attemptId)
+      .catch((error: unknown) =>
+        this.logger.error(`Analysis of attempt ${attemptId} failed`, error),
+      )
+      .finally(() => this.activeAttemptIds.delete(attemptId));
+  }
+
+  /** Лимит одновременных анализов из `ANALYSIS_LLM_CONCURRENCY`; остальные ждут своей очереди. */
+  private async runWithinLimit(attemptId: number) {
+    const parsed = Number(this.config.get<string>('ANALYSIS_LLM_CONCURRENCY'));
+    const limit = Number.isInteger(parsed) && parsed >= 1 ? parsed : DEFAULT_LLM_CONCURRENCY;
+
+    if (this.busySlots < limit) {
+      this.busySlots += 1;
+    } else {
+      await new Promise<void>((resolve) => this.slotWaiters.push(resolve));
+    }
+
+    try {
+      await this.runAttemptAnalysis(attemptId);
+    } finally {
+      // The slot goes straight to the next waiter, so busySlots stays unchanged.
+      const next = this.slotWaiters.shift();
+      if (next) {
+        next();
+      } else {
+        this.busySlots -= 1;
+      }
+    }
   }
 
   onApplicationBootstrap() {
-    void this.recoverStalePendingLlmAnalyses().catch((error: unknown) =>
-      this.logger.error('Recovery of pending analyses failed', error),
-    );
+    const recover = () =>
+      void this.recoverStalePendingLlmAnalyses().catch((error: unknown) =>
+        this.logger.error('Recovery of pending analyses failed', error),
+      );
+
+    recover();
+
+    if (process.env.SKIP_DB_CONNECT !== 'true') {
+      this.recoveryTimer = setInterval(recover, PENDING_RECOVERY_INTERVAL_MS);
+      this.recoveryTimer.unref();
+    }
+  }
+
+  onModuleDestroy() {
+    if (this.recoveryTimer) {
+      clearInterval(this.recoveryTimer);
+      this.recoveryTimer = null;
+    }
   }
 
   async recoverStalePendingLlmAnalyses(now = new Date()) {
@@ -438,6 +496,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap {
         updatedAt: {
           lt: staleBefore,
         },
+        attemptId: { notIn: [...this.activeAttemptIds] },
         attempt: {
           status: 'COMPLETED',
           topicVersion: {

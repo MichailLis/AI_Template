@@ -64,6 +64,7 @@ AI_DEFAULT_MODEL="openai/gpt-4o-mini"
 AI_TIMEOUT_MS=120000
 AI_PROF_ORIENTATION_TIMEOUT_MS=90000
 AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
+ANALYSIS_LLM_CONCURRENCY=3   # student analyses calling the LLM at once; the rest queue
 OPENROUTER_HTTP_REFERER="http://localhost:5173"   # OpenRouter only
 OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
 ```

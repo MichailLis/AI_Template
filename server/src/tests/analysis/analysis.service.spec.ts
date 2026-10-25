@@ -302,6 +302,7 @@ describe('TestsAnalysisService', () => {
         updatedAt: {
           lt: new Date('2026-05-12T11:50:00.000Z'),
         },
+        attemptId: { notIn: [] },
         attempt: {
           status: 'COMPLETED',
           topicVersion: {
@@ -346,6 +347,51 @@ describe('TestsAnalysisService', () => {
     expect(recoverySpy).toHaveBeenCalledTimes(1);
 
     recoverySpy.mockRestore();
+    service.onModuleDestroy();
+  });
+
+  it('repeats pending recovery on a timer until the module is destroyed', () => {
+    jest.useFakeTimers();
+    const recoverySpy = jest.spyOn(service, 'recoverStalePendingLlmAnalyses').mockResolvedValue(0);
+
+    service.onApplicationBootstrap();
+    jest.advanceTimersByTime(10 * 60 * 1000);
+    expect(recoverySpy).toHaveBeenCalledTimes(2);
+
+    service.onModuleDestroy();
+    jest.advanceTimersByTime(10 * 60 * 1000);
+    expect(recoverySpy).toHaveBeenCalledTimes(2);
+
+    recoverySpy.mockRestore();
+  });
+
+  it('runs at most ANALYSIS_LLM_CONCURRENCY analyses at once and skips attempts already queued', async () => {
+    configMock.get.mockImplementation((key: string) =>
+      key === 'ANALYSIS_LLM_CONCURRENCY' ? '2' : undefined,
+    );
+    const releases: Array<() => void> = [];
+    let running = 0;
+    let maxRunning = 0;
+    const runSpy = jest.spyOn(service, 'runAttemptAnalysis').mockImplementation(async () => {
+      running += 1;
+      maxRunning = Math.max(maxRunning, running);
+      await new Promise<void>((resolve) => releases.push(resolve));
+      running -= 1;
+    });
+
+    [1, 2, 3, 4, 3].forEach((id) => service.enqueueAttemptAnalysis(id));
+    await Promise.resolve();
+    expect(runSpy).toHaveBeenCalledTimes(2);
+
+    while (releases.length > 0 || running > 0) {
+      releases.shift()?.();
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    expect(runSpy.mock.calls.map(([id]) => id)).toEqual([1, 2, 3, 4]);
+    expect(maxRunning).toBe(2);
+
+    runSpy.mockRestore();
   });
 
   it('recovers stale ALGORITHM_LLM analyses with pending LLM status and ignores the rest', async () => {

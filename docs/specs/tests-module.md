@@ -91,7 +91,10 @@ Built-in prof-orientation v3+ baseline:
    or the `llmStatus` derived from it, is the completion signal for the LLM phase.
    An enrichment left `pending` past the staleness window is re-queued by
    `recoverStalePendingLlmAnalyses`, which must therefore match `ALGORITHM_LLM`
-   records that are already `READY`, not only `PENDING` ones.
+   records that are already `READY`, not only `PENDING` ones. Recovery runs at startup and then
+   every 10 minutes. `enqueueAttemptAnalysis` keeps an in-process set of attempts that are
+   waiting or running and ignores a repeated enqueue, and at most `ANALYSIS_LLM_CONCURRENCY`
+   (default 3) analyses run at once, the rest wait in memory.
 8. Prof-orientation AI provider calls may use
    `AI_PROF_ORIENTATION_TIMEOUT_MS` and
    `AI_PROF_ORIENTATION_TIMEOUT_RETRIES` (legacy `OPENROUTER_*` names are read as
