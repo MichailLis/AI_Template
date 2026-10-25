@@ -244,4 +244,40 @@ describe('setupInterceptors', () => {
       });
     }
   });
+
+  it('keeps the session when refresh fails on the network or with 5xx', async () => {
+    const onAuthRefreshFailed = vi.fn();
+    configureInterceptorsRuntime({ onAuthRefreshFailed });
+    const api = createApiWithUnauthorizedAdapter();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+    safeStorage.setItem('accessToken', 'access');
+
+    await expect(api.get('/protected')).rejects.toThrow('Refresh failed');
+
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(safeStorage.getItem('accessToken')).toBe('access');
+    expect(onAuthRefreshFailed).not.toHaveBeenCalled();
+  });
+
+  it('under the refresh lock takes the token another tab stored instead of refreshing again', async () => {
+    const request = vi.fn(async (_name: string, callback: () => Promise<unknown>) => {
+      safeStorage.setItem('accessToken', 'other-tab-access');
+      return callback();
+    });
+    vi.stubGlobal('navigator', { locks: { request } });
+    const adapter = vi.fn<AxiosAdapter>(async (config) => {
+      if (!config.headers.Authorization?.toString().includes('other-tab-access')) {
+        throw createUnauthorizedError(config);
+      }
+      return { config, data: { ok: true }, headers: {}, status: 200, statusText: 'OK' };
+    });
+    const api = axios.create({ baseURL: 'http://api.test', adapter });
+    setupInterceptors(api);
+    safeStorage.setItem('accessToken', 'expired-access');
+
+    await expect(api.get('/protected')).resolves.toEqual({ ok: true });
+
+    expect(request).toHaveBeenCalledWith('auth-refresh', expect.any(Function));
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
