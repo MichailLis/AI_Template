@@ -12,5 +12,5 @@ export type PublicSessionSaveAnswersRequestDtoAnswersItem = {
    * @maximum 9007199254740991
    */
   questionId: number;
-  answerPayload: string | string[] | number;
+  answerPayload: string | string[] | number | null;
 };

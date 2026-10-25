@@ -50,8 +50,8 @@ export function usePublicTestRunAutosave({
       return [];
     }
 
-    return buildSessionAnswers(session.questions, effectiveAnswers);
-  }, [effectiveAnswers, session]);
+    return buildSessionAnswers(session.questions, effectiveAnswers, serverAnswerMap);
+  }, [effectiveAnswers, serverAnswerMap, session]);
 
   const clearAutosaveTimer = useCallback(() => {
     if (autosaveTimerRef.current) {

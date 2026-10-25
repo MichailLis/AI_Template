@@ -233,6 +233,7 @@ Current public run UX:
 - single-choice questions auto-advance after selection
 - multi-choice, slider, and open-text questions use in-card navigation controls
 - answers autosave after a short debounce; manual save and finish wait for queued/in-flight autosave before continuing
+- a cleared answer is erased on the server too (`answerPayload: null`), so it does not come back after a reload
 - autosave shows human-readable student copy for saving, saved, retry, and error states, not raw API internals
 - question transitions are animated to reduce abrupt content jumps
 - open-text answers use a higher-contrast textarea for bright screens

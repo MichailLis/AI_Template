@@ -235,12 +235,22 @@ export class TestsPublicSessionService {
 
       return {
         questionId: answer.questionId,
-        answerPayload: validatePublicAnswerPayload(question, answer.answerPayload),
+        answerPayload:
+          answer.answerPayload === null
+            ? null
+            : validatePublicAnswerPayload(question, answer.answerPayload),
       };
     });
 
     const answers = await this.prisma.$transaction(async (tx) => {
       for (const answer of validatedAnswers) {
+        if (answer.answerPayload === null) {
+          await tx.testStudentAnswer.deleteMany({
+            where: { attemptId: attempt.id, questionId: answer.questionId },
+          });
+          continue;
+        }
+
         const question = questionMap.get(answer.questionId)!;
         const answerPayload = toPrismaRequiredJsonInput(answer.answerPayload);
 

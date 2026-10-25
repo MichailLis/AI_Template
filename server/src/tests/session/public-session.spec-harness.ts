@@ -32,6 +32,7 @@ export type StudentAnswerUpsertArgs = {
 export type TransactionMocks = {
   testStudentAnswer: {
     count: jest.Mock;
+    deleteMany: jest.Mock;
     findMany: jest.Mock;
     upsert: jest.Mock<unknown, [StudentAnswerUpsertArgs]>;
   };
@@ -88,6 +89,7 @@ export const createPublicSessionHarness = (): PublicSessionHarness => {
   const txMock: TransactionMocks = {
     testStudentAnswer: {
       count: jest.fn(),
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
       upsert: jest.fn<unknown, [StudentAnswerUpsertArgs]>(),
     },
