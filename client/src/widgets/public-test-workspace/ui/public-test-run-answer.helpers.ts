@@ -36,18 +36,24 @@ export const getEffectiveQuestionAnswer = (
   return mergedAnswers[question.id];
 };
 
+// A question the server holds an answer for but the draft has emptied goes out as null (erase).
 export const buildSessionAnswers = (
   questions: PublicTestQuestion[],
   mergedAnswers: PublicTestAnswerDraft,
+  serverAnswerMap: PublicTestAnswerDraft = {},
 ) =>
-  questions.reduce<Array<{ questionId: number; answerPayload: PublicTestAnswerPayload }>>(
+  questions.reduce<Array<{ questionId: number; answerPayload: PublicTestAnswerPayload | null }>>(
     (answers, question) => {
       const answerPayload = getEffectiveQuestionAnswer(question, mergedAnswers);
 
-      if (
-        !hasMeaningfulQuestionAnswer(question.type, answerPayload) ||
-        !isPublicTestAnswerPayload(answerPayload)
-      ) {
+      if (!hasMeaningfulQuestionAnswer(question.type, answerPayload)) {
+        if (hasMeaningfulQuestionAnswer(question.type, serverAnswerMap[question.id])) {
+          answers.push({ questionId: question.id, answerPayload: null });
+        }
+        return answers;
+      }
+
+      if (!isPublicTestAnswerPayload(answerPayload)) {
         return answers;
       }
 

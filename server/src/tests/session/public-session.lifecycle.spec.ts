@@ -156,6 +156,38 @@ describe('TestsPublicSessionService lifecycle', () => {
     expect(result.answers[0]?.answerPayload).toBe('trimmed');
   });
 
+  it('saveAnswers deletes the stored answer when the payload is null', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: null,
+      finishedAt: null,
+      topicVersion: {
+        questions: [
+          {
+            id: 100,
+            type: 'OPEN_TEXT',
+            title: 'Text question',
+            required: false,
+            settings: null,
+            options: [],
+          },
+        ],
+      },
+    } as never);
+    txMock.testStudentAnswer.findMany.mockResolvedValue([]);
+
+    const result = await service.saveAnswers('session-token', {
+      answers: [{ questionId: 100, answerPayload: null }],
+    });
+
+    expect(txMock.testStudentAnswer.deleteMany).toHaveBeenCalledWith({
+      where: { attemptId: 5, questionId: 100 },
+    });
+    expect(txMock.testStudentAnswer.upsert).not.toHaveBeenCalled();
+    expect(result.answers).toEqual([]);
+  });
+
   it('saveAnswers rejects payloads that do not match the question type', async () => {
     jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
       id: 5,

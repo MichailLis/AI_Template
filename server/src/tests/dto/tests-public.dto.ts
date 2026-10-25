@@ -200,7 +200,8 @@ export const PublicSessionGetResponseSchema = z.object({
 
 export const PublicSessionSaveAnswerItemSchema = z.object({
   questionId: z.number().int().min(1),
-  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]),
+  // null erases the saved answer; the API has no other way to take one back.
+  answerPayload: z.union([z.string(), z.array(z.string()), z.number()]).nullable(),
 });
 
 export const PublicSessionSaveAnswersRequestSchema = z.object({
