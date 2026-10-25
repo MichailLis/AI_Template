@@ -110,12 +110,25 @@ describe('setupApp runtime configuration', () => {
 
     expect(useBodyParser).toHaveBeenCalledWith('json', { limit: '1mb' });
     expect(useGlobalFilters).toHaveBeenCalledTimes(1);
-    expect(setupSwagger).toHaveBeenCalledWith(app);
+    expect(setupSwagger).toHaveBeenCalledWith(app, { publish: true });
     expect(enableCors).toHaveBeenCalledWith({
       credentials: true,
       origin: LOCAL_CORS_ALLOWED_ORIGINS,
     });
     expect(swaggerDocument).toEqual({ mocked: 'swagger-document' });
+  });
+
+  it('builds the OpenAPI document but does not publish Swagger in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.CORS_ALLOWED_ORIGINS = 'https://app.example.com';
+    process.env.DATABASE_URL =
+      'postgresql://app_user:strong_password@postgres:5432/app_db?schema=public';
+    process.env.JWT_ACCESS_SECRET = 'real-access-secret';
+    process.env.JWT_REFRESH_SECRET = 'real-refresh-secret';
+    const { app } = createAppMock();
+
+    expect(setupApp(app)).toEqual({ mocked: 'swagger-document' });
+    expect(setupSwagger).toHaveBeenCalledWith(app, { publish: false });
   });
 
   it('runs runtime validation before configuring bootstrap concerns', () => {

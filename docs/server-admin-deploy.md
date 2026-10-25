@@ -132,7 +132,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 
 ```bash
 curl -f http://localhost/health
-curl -f http://localhost/api/api-json
+curl -f http://localhost/api/health
 ```
 
 Открыть в браузере:

@@ -4,7 +4,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { MaintenanceState } from './maintenance-state';
 
 /** Маршруты, которые работают и во время восстановления: статус операции и проверка здоровья. */
-const ALLOWED_PATHS = ['/admin/backups/operation', '/api-json'];
+const ALLOWED_PATHS = ['/admin/backups/operation', '/health'];
 
 @Injectable()
 export class MaintenanceMiddleware implements NestMiddleware {
