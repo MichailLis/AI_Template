@@ -198,6 +198,16 @@ if (frontend) {
   }
 }
 
+for (const [label, source] of [
+  ['docker-compose.yml', composeSource],
+  ['docker-compose.deploy.yml', deployComposeSource],
+  ['server/Dockerfile', serverDockerfile],
+]) {
+  if (!source.includes('127.0.0.1:3000/health')) {
+    fail(`${label} backend healthcheck must probe /health: /api-json is off in production`);
+  }
+}
+
 for (const [label, dockerfile] of [
   ['server/Dockerfile', serverDockerfile],
   ['client/Dockerfile', clientDockerfile],

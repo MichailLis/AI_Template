@@ -31,7 +31,7 @@ Required behavior:
    successful copy from the last 20 hours or by any scheduled attempt since the slot; a scheduled
    copy that cannot start (no space, no `pg_dump`) is recorded as a `FAILED` entry with the reason.
 7. Restore: safety copy of the current database (`PRE_RESTORE`) → maintenance mode (every route
-   except `/admin/backups/operation` and `/api-json` answers 503) → `pg_restore` into
+   except `/admin/backups/operation` and `/health` answers 503) → `pg_restore` into
    `<db>_restore` → checks there (schema not newer than the app, an older one is brought forward
    with `prisma migrate deploy`; at least one active admin; refresh tokens cleared) → swap by
    `ALTER DATABASE ... RENAME`. The replaced database stays as `<db>_before_<time>` until the next
