@@ -58,6 +58,7 @@ export function AdminTestsWorkspaceContent({
   if (isSettingsRoute && workspace.effectiveSelectedTopicId !== null) {
     return (
       <AdminTestsSettingsCard
+        topicId={workspace.effectiveSelectedTopicId}
         published={workspace.detail?.published ?? null}
         draftAnalysisPromptVersion={workspace.draft?.analysisPromptVersion ?? null}
         draftForm={workspace.draftForm}

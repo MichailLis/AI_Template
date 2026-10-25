@@ -29,6 +29,14 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   PUBLIC_LINK_ARCHIVED: 'Ссылка архивирована',
   PUBLIC_LINK_RESTORED: 'Ссылка восстановлена',
   PUBLIC_LINK_MOVED_TO_ACTIVE_VERSION: 'Ссылка переведена на новую версию теста',
+  EDUCATION_ORGANIZATION_CREATED: 'Заведение создано',
+  EDUCATION_ORGANIZATION_UPDATED: 'Изменены данные заведения',
+  TOPIC_PUBLISHED: 'Опубликована версия теста',
+  TOPIC_ARCHIVED: 'Тест архивирован',
+  TOPIC_RESTORED: 'Тест восстановлен',
+  TOPIC_DELETED: 'Тест удален',
+  ATTEMPTS_EXPORTED: 'Выгружены прохождения в Excel',
+  ANALYTICS_EXPORTED: 'Выгружена аналитика',
 };
 
 const AUDIT_FIELD_LABELS: Record<string, string> = {
@@ -49,6 +57,7 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   publicUrl: 'Адрес атласа профессий',
   apiUrl: 'Адрес API атласа профессий',
   shortCode: 'Код ссылки',
+  archivedAt: 'Архивирован',
   topicVersionNumber: 'Версия теста',
   isActive: 'Ссылка активна',
   startsAt: 'Начало доступа',
@@ -78,7 +87,7 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-const DATE_FIELDS = new Set(['publishedAt', 'startsAt', 'endsAt']);
+const DATE_FIELDS = new Set(['archivedAt', 'publishedAt', 'startsAt', 'endsAt']);
 const VERSION_FIELDS = new Set(['versionNumber', 'topicVersionNumber', 'publishedVersionNumber']);
 
 const formatAuditValue = (field: string, value: string | null) => {

@@ -1,5 +1,6 @@
 import { TestsAdminAttemptsController } from '../attempts/admin-attempts.controller';
 import type { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
+import type { AuditService } from '../../audit/audit.service';
 
 describe('TestsAdminAttemptsController', () => {
   let controller: TestsAdminAttemptsController;
@@ -9,6 +10,7 @@ describe('TestsAdminAttemptsController', () => {
     getAttemptDetail: jest.Mock;
   };
   let exportMock: { toExcel: jest.Mock };
+  let auditMock: { record: jest.Mock };
 
   beforeEach(() => {
     serviceMock = {
@@ -17,10 +19,12 @@ describe('TestsAdminAttemptsController', () => {
       getAttemptDetail: jest.fn(),
     };
     exportMock = { toExcel: jest.fn() };
+    auditMock = { record: jest.fn().mockResolvedValue(undefined) };
 
     controller = new TestsAdminAttemptsController(
       serviceMock as unknown as TestsAdminAttemptService,
       exportMock,
+      auditMock as unknown as AuditService,
     );
   });
 
@@ -53,9 +57,9 @@ describe('TestsAdminAttemptsController', () => {
     });
     exportMock.toExcel.mockResolvedValue(Buffer.from('xlsx'));
 
-    const file = await controller.exportPublicLinkAttempts(13, query, {
+    const file = await controller.exportPublicLinkAttempts(5, 13, query, {
       setHeader,
-    } as unknown as Parameters<typeof controller.exportPublicLinkAttempts>[2]);
+    } as unknown as Parameters<typeof controller.exportPublicLinkAttempts>[3]);
 
     expect(serviceMock.listAttemptsForExport).toHaveBeenCalledWith(13, query);
     expect(exportMock.toExcel).toHaveBeenCalledWith([], 'ABC123', 'Asia/Novosibirsk', true);
@@ -64,6 +68,13 @@ describe('TestsAdminAttemptsController', () => {
       expect.stringMatching(/^attachment; filename="attempts-ABC123-\d{4}-\d{2}-\d{2}\.xlsx"$/),
     );
     expect(file).toBeDefined();
+    expect(auditMock.record).toHaveBeenCalledWith({
+      entityType: 'PUBLIC_LINK',
+      entityId: 13,
+      action: 'ATTEMPTS_EXPORTED',
+      actorUserId: 5,
+      changes: [{ field: 'rows', before: null, after: '0' }],
+    });
   });
 
   it('getAttemptDetail delegates to service', async () => {

@@ -27,6 +27,7 @@ import {
   type EducationOrganizationFormValues,
   type OrganizationEditorMode,
 } from './education-organization-form.schema';
+import { EducationOrganizationHistory } from './education-organization-history';
 
 import type {
   AdminCreateEducationOrganizationDto,
@@ -90,6 +91,7 @@ const getInitialValues = (
 interface EditorSheetFormProps {
   form: UseFormReturn<EducationOrganizationFormValues>;
   mode: OrganizationEditorMode;
+  organizationId?: number;
   organizationName?: string;
   activeLinksCount?: number;
   isSubmitting: boolean;
@@ -100,6 +102,7 @@ interface EditorSheetFormProps {
 function EditorSheetForm({
   form,
   mode,
+  organizationId,
   organizationName,
   activeLinksCount,
   isSubmitting,
@@ -133,6 +136,9 @@ function EditorSheetForm({
             disabled={isSubmitting}
             activeLinksCount={activeLinksCount}
           />
+          {mode === 'edit' && organizationId !== undefined ? (
+            <EducationOrganizationHistory organizationId={organizationId} />
+          ) : null}
         </SheetBody>
 
         <SheetFooter className="flex flex-col-reverse gap-2 sm:flex-row">
@@ -254,6 +260,7 @@ export function EducationOrganizationEditorSheet(props: EducationOrganizationEdi
           <EditorSheetForm
             form={form}
             mode={mode}
+            organizationId={props.organization?.id}
             organizationName={props.organization?.name}
             activeLinksCount={props.organization?.activeLinksCount}
             isSubmitting={isSubmitting}

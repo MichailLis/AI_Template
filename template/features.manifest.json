@@ -498,6 +498,16 @@
           "protected": true
         },
         {
+          "path": "/admin/tests/{topicId}/history",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/education-organizations/{organizationId}/history",
+          "methods": ["get"],
+          "protected": true
+        },
+        {
           "path": "/admin/tests/education-organizations",
           "methods": ["get", "post"],
           "protected": true

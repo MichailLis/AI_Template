@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import type { GroupOrClassValidationMode, Prisma } from '@prisma/client';
 
+import { collectAuditChanges } from '../../audit/audit-changes';
+import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
@@ -28,6 +30,26 @@ const OPERATOR_SNAPSHOT_FIELDS = [
   'shortName',
   'privacyPolicyUrl',
   'consentDocumentUrl',
+] as const;
+
+/** Реквизиты оператора ПДн и правила формата класса: всё это попадает в снимки у ссылок и попыток. */
+const ORGANIZATION_AUDIT_FIELDS = [
+  'name',
+  'fullName',
+  'shortName',
+  'inn',
+  'ogrn',
+  'legalAddress',
+  'email',
+  'phone',
+  'privacyPolicyUrl',
+  'consentDocumentUrl',
+  'logoUrl',
+  'isActive',
+  'groupValidationMode',
+  'groupValidationPattern',
+  'groupValidationExample',
+  'groupValidationHint',
 ] as const;
 
 const EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE =
@@ -78,7 +100,26 @@ const EDUCATION_ORGANIZATIONS_ORDER: Prisma.EducationOrganizationOrderByWithRela
 
 @Injectable()
 export class TestsEducationOrganizationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
+
+  /** История заведения: кто и когда менял реквизиты, которые попадают в согласие ученика. */
+  async getEducationOrganizationHistory(organizationId: number) {
+    const organization = await this.prisma.educationOrganization.findUnique({
+      where: { id: organizationId },
+      select: { id: true },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Учебное заведение не найдено');
+    }
+
+    return {
+      events: await this.auditService.listForEntity('EDUCATION_ORGANIZATION', organizationId),
+    };
+  }
 
   /**
    * `checkExample` выключен, когда правка не трогает ни шаблон, ни пример: уже сохранённый
@@ -332,7 +373,7 @@ export class TestsEducationOrganizationService {
     };
   }
 
-  async createEducationOrganization(dto: AdminCreateEducationOrganizationDto) {
+  async createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
     const name = dto.name.trim();
 
     const existing = await this.prisma.educationOrganization.findFirst({
@@ -358,7 +399,7 @@ export class TestsEducationOrganizationService {
       groupValidationHint: dto.groupValidationHint,
     });
 
-    const created = await this.createEducationOrganizationRecord({
+    const created = await this.createEducationOrganizationRecord(userId, {
       name,
       fullName: normalizeNullableString(dto.fullName),
       shortName: normalizeNullableString(dto.shortName),
@@ -386,6 +427,7 @@ export class TestsEducationOrganizationService {
   }
 
   async updateEducationOrganization(
+    userId: number,
     organizationId: number,
     dto: AdminUpdateEducationOrganizationDto,
   ) {
@@ -466,27 +508,34 @@ export class TestsEducationOrganizationService {
       ) ||
       (dto.isActive === true && !existing.isActive);
 
-    const updated = await this.updateEducationOrganizationRecord(organizationId, operatorChanged, {
-      ...(dto.name !== undefined ? { name: nextName } : {}),
-      ...(dto.fullName !== undefined ? { fullName: normalizeNullableString(dto.fullName) } : {}),
-      ...(dto.shortName !== undefined ? { shortName: normalizeNullableString(dto.shortName) } : {}),
-      ...(dto.inn !== undefined ? { inn: normalizeNullableString(dto.inn) } : {}),
-      ...(dto.ogrn !== undefined ? { ogrn: normalizeNullableString(dto.ogrn) } : {}),
-      ...(dto.legalAddress !== undefined
-        ? { legalAddress: normalizeNullableString(dto.legalAddress) }
-        : {}),
-      ...(dto.email !== undefined ? { email: normalizeNullableString(dto.email) } : {}),
-      ...(dto.phone !== undefined ? { phone: normalizeNullableString(dto.phone) } : {}),
-      ...(dto.privacyPolicyUrl !== undefined
-        ? { privacyPolicyUrl: normalizeNullableString(dto.privacyPolicyUrl) }
-        : {}),
-      ...(dto.consentDocumentUrl !== undefined
-        ? { consentDocumentUrl: normalizeNullableString(dto.consentDocumentUrl) }
-        : {}),
-      ...(dto.logoUrl !== undefined ? { logoUrl: normalizeNullableString(dto.logoUrl) } : {}),
-      ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-      ...validationConfig,
-    });
+    const updated = await this.updateEducationOrganizationRecord(
+      userId,
+      existing,
+      operatorChanged,
+      {
+        ...(dto.name !== undefined ? { name: nextName } : {}),
+        ...(dto.fullName !== undefined ? { fullName: normalizeNullableString(dto.fullName) } : {}),
+        ...(dto.shortName !== undefined
+          ? { shortName: normalizeNullableString(dto.shortName) }
+          : {}),
+        ...(dto.inn !== undefined ? { inn: normalizeNullableString(dto.inn) } : {}),
+        ...(dto.ogrn !== undefined ? { ogrn: normalizeNullableString(dto.ogrn) } : {}),
+        ...(dto.legalAddress !== undefined
+          ? { legalAddress: normalizeNullableString(dto.legalAddress) }
+          : {}),
+        ...(dto.email !== undefined ? { email: normalizeNullableString(dto.email) } : {}),
+        ...(dto.phone !== undefined ? { phone: normalizeNullableString(dto.phone) } : {}),
+        ...(dto.privacyPolicyUrl !== undefined
+          ? { privacyPolicyUrl: normalizeNullableString(dto.privacyPolicyUrl) }
+          : {}),
+        ...(dto.consentDocumentUrl !== undefined
+          ? { consentDocumentUrl: normalizeNullableString(dto.consentDocumentUrl) }
+          : {}),
+        ...(dto.logoUrl !== undefined ? { logoUrl: normalizeNullableString(dto.logoUrl) } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...validationConfig,
+      },
+    );
 
     const statsByOrganizationId = await this.getOrganizationStatsByIds([updated.id]);
 
@@ -532,9 +581,27 @@ export class TestsEducationOrganizationService {
     await tx.testPublicLink.updateMany({ where, data: toOperatorSnapshotData(operator) });
   }
 
-  private async createEducationOrganizationRecord(data: Prisma.EducationOrganizationCreateInput) {
+  private async createEducationOrganizationRecord(
+    userId: number,
+    data: Prisma.EducationOrganizationCreateInput,
+  ) {
     try {
-      return await this.prisma.educationOrganization.create({ data });
+      return await this.prisma.$transaction(async (tx) => {
+        const created = await tx.educationOrganization.create({ data });
+
+        await this.auditService.record(
+          {
+            entityType: 'EDUCATION_ORGANIZATION',
+            entityId: created.id,
+            action: 'EDUCATION_ORGANIZATION_CREATED',
+            actorUserId: userId,
+            changes: collectAuditChanges({}, created, { fields: ORGANIZATION_AUDIT_FIELDS }),
+          },
+          tx,
+        );
+
+        return created;
+      });
     } catch (error) {
       if (isPrismaUniqueConstraintError(error)) {
         throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
@@ -551,16 +618,35 @@ export class TestsEducationOrganizationService {
    * Попытки не трогаем: их снимок — запись того, на что ученик согласился.
    */
   private async updateEducationOrganizationRecord(
-    organizationId: number,
+    userId: number,
+    existing: Record<string, unknown> & { id: number },
     refreshLinkSnapshots: boolean,
     data: Prisma.EducationOrganizationUpdateInput,
   ) {
+    const organizationId = existing.id;
+
     try {
       return await this.prisma.$transaction(async (tx) => {
         const updated = await tx.educationOrganization.update({
           where: { id: organizationId },
           data,
         });
+        const changes = collectAuditChanges(existing, updated, {
+          fields: ORGANIZATION_AUDIT_FIELDS,
+        });
+
+        if (changes.length > 0) {
+          await this.auditService.record(
+            {
+              entityType: 'EDUCATION_ORGANIZATION',
+              entityId: organizationId,
+              action: 'EDUCATION_ORGANIZATION_UPDATED',
+              actorUserId: userId,
+              changes,
+            },
+            tx,
+          );
+        }
 
         if (refreshLinkSnapshots && updated.isActive) {
           await this.refreshLinkOperatorSnapshots(tx, organizationId);

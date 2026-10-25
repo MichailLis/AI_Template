@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
+import type { AuditService } from '../../audit/audit.service';
 import type { PrismaService } from '../../prisma.service';
 import type { TestsQuestionService } from '../topics/question.service';
 import { TestsService } from '../topics/topics.service';
@@ -78,6 +79,7 @@ const createListedVersion = (overrides: Record<string, unknown> = {}) => ({
 
 describe('TestsService analysis prompt attachment', () => {
   let service: TestsService;
+  const auditMock = { record: jest.fn().mockResolvedValue(undefined) };
   let prismaMock: {
     $transaction: jest.Mock;
     analysisPromptVersion: {
@@ -101,6 +103,7 @@ describe('TestsService analysis prompt attachment', () => {
   let txMock: {
     testTopic: {
       create: jest.Mock;
+      delete: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
     };
@@ -132,6 +135,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock = {
       testTopic: {
         create: jest.fn(),
+        delete: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
       },
@@ -182,6 +186,7 @@ describe('TestsService analysis prompt attachment', () => {
     service = new TestsService(
       prismaMock as unknown as PrismaService,
       {} as unknown as TestsQuestionService,
+      auditMock as unknown as AuditService,
     );
   });
 
@@ -452,7 +457,7 @@ describe('TestsService analysis prompt attachment', () => {
     prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1 });
     prismaMock.testTopicVersion.count.mockResolvedValue(1);
 
-    await expect(service.deleteTopic(1)).rejects.toThrow(BadRequestException);
+    await expect(service.deleteTopic(5, 1)).rejects.toThrow(BadRequestException);
 
     expect(prismaMock.testTopicVersion.count).toHaveBeenCalledWith({
       where: {
@@ -464,19 +469,42 @@ describe('TestsService analysis prompt attachment', () => {
         ],
       },
     });
-    expect(prismaMock.testTopic.delete).not.toHaveBeenCalled();
+    expect(txMock.testTopic.delete).not.toHaveBeenCalled();
+    expect(auditMock.record).not.toHaveBeenCalled();
   });
 
   it('deleteTopic hard-deletes draft-only unused topics', async () => {
     prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1 });
     prismaMock.testTopicVersion.count.mockResolvedValue(0);
-    prismaMock.testTopic.delete.mockResolvedValue({});
+    txMock.testTopic.delete.mockResolvedValue({});
 
-    await expect(service.deleteTopic(1)).resolves.toEqual({ topicId: 1 });
+    await expect(service.deleteTopic(5, 1)).resolves.toEqual({ topicId: 1 });
 
-    expect(prismaMock.testTopic.delete).toHaveBeenCalledWith({
+    expect(txMock.testTopic.delete).toHaveBeenCalledWith({
       where: { id: 1 },
     });
+    expect(auditMock.record).toHaveBeenCalledWith(
+      { entityType: 'TEST_TOPIC', entityId: 1, action: 'TOPIC_DELETED', actorUserId: 5 },
+      txMock,
+    );
+  });
+
+  it('archiveTopic and restoreTopic record who did it', async () => {
+    prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1, archivedAt: null });
+    txMock.testTopic.update.mockResolvedValue({ archivedAt: new Date('2026-10-25T00:00:00.000Z') });
+    await service.archiveTopic(5, 1);
+
+    prismaMock.testTopic.findUnique.mockResolvedValue({ id: 1, archivedAt: new Date() });
+    await service.restoreTopic(6, 1);
+
+    expect(auditMock.record).toHaveBeenCalledWith(
+      { entityType: 'TEST_TOPIC', entityId: 1, action: 'TOPIC_ARCHIVED', actorUserId: 5 },
+      txMock,
+    );
+    expect(auditMock.record).toHaveBeenCalledWith(
+      { entityType: 'TEST_TOPIC', entityId: 1, action: 'TOPIC_RESTORED', actorUserId: 6 },
+      txMock,
+    );
   });
 
   it('publishTopic carries selected prompt version into the next draft', async () => {
@@ -488,8 +516,12 @@ describe('TestsService analysis prompt attachment', () => {
     });
     txMock.testQuestion.create.mockResolvedValue({ id: 1000 });
 
-    await service.publishTopic(1);
+    await service.publishTopic(5, 1);
 
+    expect(auditMock.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'TOPIC_PUBLISHED', entityId: 1, actorUserId: 5 }),
+      txMock,
+    );
     expect(txMock.testTopicVersion.create).toHaveBeenCalledWith({
       data: {
         topicId: 1,
@@ -524,7 +556,7 @@ describe('TestsService analysis prompt attachment', () => {
       },
     });
 
-    await expect(service.publishTopic(1)).rejects.toThrow(BadRequestException);
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(BadRequestException);
     expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
   });
 
@@ -532,7 +564,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
 
-    await expect(service.publishTopic(1)).rejects.toThrow(ConflictException);
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(ConflictException);
     expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
   });
 

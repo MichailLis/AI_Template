@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { AuditHistoryResponseDto } from '../../audit/dto/audit-history.dto';
+import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
 import { AdminGuard } from '../../common/authz/admin.guard';
 import {
@@ -42,17 +44,28 @@ export class TestsAdminEducationOrganizationsController {
   @Post('education-organizations')
   @ApiOperation({ summary: 'Create educational organization for link binding' })
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminEducationOrganizationDto })
-  createEducationOrganization(@Body() dto: AdminCreateEducationOrganizationDto) {
-    return this.testsPublicLinkService.createEducationOrganization(dto);
+  createEducationOrganization(
+    @GetCurrentUserId() userId: number,
+    @Body() dto: AdminCreateEducationOrganizationDto,
+  ) {
+    return this.testsPublicLinkService.createEducationOrganization(userId, dto);
   }
 
   @Patch('education-organizations/:organizationId')
   @ApiOperation({ summary: 'Update educational organization validation settings' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationDto })
   updateEducationOrganization(
+    @GetCurrentUserId() userId: number,
     @Param('organizationId', ParseIntPipe) organizationId: number,
     @Body() dto: AdminUpdateEducationOrganizationDto,
   ) {
-    return this.testsPublicLinkService.updateEducationOrganization(organizationId, dto);
+    return this.testsPublicLinkService.updateEducationOrganization(userId, organizationId, dto);
+  }
+
+  @Get('education-organizations/:organizationId/history')
+  @ApiOperation({ summary: 'List recorded changes of an educational organization' })
+  @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
+  getEducationOrganizationHistory(@Param('organizationId', ParseIntPipe) organizationId: number) {
+    return this.testsPublicLinkService.getEducationOrganizationHistory(organizationId);
   }
 }

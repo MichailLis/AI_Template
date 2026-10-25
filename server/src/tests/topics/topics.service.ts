@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma.service';
 import type {
   CreateTestsTopicFromAiDto,
@@ -63,7 +64,22 @@ export class TestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly testsQuestionService: TestsQuestionService,
+    private readonly auditService: AuditService,
   ) {}
+
+  /** История теста: публикации, архив, восстановление и удаление. */
+  async getTopicHistory(topicId: number) {
+    const topic = await this.prisma.testTopic.findUnique({
+      where: { id: topicId },
+      select: { id: true },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Test topic not found');
+    }
+
+    return { events: await this.auditService.listForEntity('TEST_TOPIC', topicId) };
+  }
 
   private toAnalysisPromptVersionSummary(
     version: {
@@ -343,7 +359,10 @@ export class TestsService {
     return countByTopicId;
   }
 
-  async archiveTopic(topicId: number): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
+  async archiveTopic(
+    userId: number,
+    topicId: number,
+  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
     const existing = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true, archivedAt: true },
@@ -360,12 +379,25 @@ export class TestsService {
       };
     }
 
-    const archived = await this.prisma.testTopic.update({
-      where: { id: topicId },
-      data: {
-        archivedAt: new Date(),
-      },
-      select: { archivedAt: true },
+    const archived = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.testTopic.update({
+        where: { id: topicId },
+        data: {
+          archivedAt: new Date(),
+        },
+        select: { archivedAt: true },
+      });
+      await this.auditService.record(
+        {
+          entityType: 'TEST_TOPIC',
+          entityId: topicId,
+          action: 'TOPIC_ARCHIVED',
+          actorUserId: userId,
+        },
+        tx,
+      );
+
+      return updated;
     });
 
     return {
@@ -374,7 +406,10 @@ export class TestsService {
     };
   }
 
-  async restoreTopic(topicId: number): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
+  async restoreTopic(
+    userId: number,
+    topicId: number,
+  ): Promise<UpdateTestsTopicArchiveStatusResponseDto> {
     const existing = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true, archivedAt: true },
@@ -391,11 +426,22 @@ export class TestsService {
       };
     }
 
-    await this.prisma.testTopic.update({
-      where: { id: topicId },
-      data: {
-        archivedAt: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.testTopic.update({
+        where: { id: topicId },
+        data: {
+          archivedAt: null,
+        },
+      });
+      await this.auditService.record(
+        {
+          entityType: 'TEST_TOPIC',
+          entityId: topicId,
+          action: 'TOPIC_RESTORED',
+          actorUserId: userId,
+        },
+        tx,
+      );
     });
 
     return {
@@ -464,7 +510,7 @@ export class TestsService {
     return this.getTopicDraft(topicId);
   }
 
-  async deleteTopic(topicId: number): Promise<DeleteTestsTopicResponseDto> {
+  async deleteTopic(userId: number, topicId: number): Promise<DeleteTestsTopicResponseDto> {
     const topic = await this.prisma.testTopic.findUnique({
       where: { id: topicId },
       select: { id: true },
@@ -491,8 +537,19 @@ export class TestsService {
       );
     }
 
-    await this.prisma.testTopic.delete({
-      where: { id: topicId },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.testTopic.delete({
+        where: { id: topicId },
+      });
+      await this.auditService.record(
+        {
+          entityType: 'TEST_TOPIC',
+          entityId: topicId,
+          action: 'TOPIC_DELETED',
+          actorUserId: userId,
+        },
+        tx,
+      );
     });
 
     return {
@@ -603,7 +660,7 @@ export class TestsService {
     return this.getTopicDraft(topicId);
   }
 
-  async publishTopic(topicId: number): Promise<PublishTestsTopicResponseDto> {
+  async publishTopic(userId: number, topicId: number): Promise<PublishTestsTopicResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       const { activeDraftVersion } = await this.getTopicSnapshot(topicId, tx);
       // A second publish of the same draft gets 409 here instead of a unique-constraint error.
@@ -651,6 +708,19 @@ export class TestsService {
           activeDraftVersionId: newDraftVersion.id,
         },
       });
+
+      await this.auditService.record(
+        {
+          entityType: 'TEST_TOPIC',
+          entityId: topic.id,
+          action: 'TOPIC_PUBLISHED',
+          actorUserId: userId,
+          changes: [
+            { field: 'publishedVersion', before: null, after: String(draft.versionNumber) },
+          ],
+        },
+        tx,
+      );
 
       return {
         topicId: topic.id,

@@ -3,6 +3,7 @@ import { StreamableFile, type Type } from '@nestjs/common';
 import { TestsAdminAnalyticsController } from '../reporting/admin-analytics.controller';
 import type { TestsAnalyticsExportService } from '../reporting/analytics-export.service';
 import type { TestsAnalyticsService } from '../reporting/analytics.service';
+import type { AuditService } from '../../audit/audit.service';
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
 import { AdminTestAnalyticsQueryDto } from '../dto/tests-analytics.dto';
 import { type Response } from 'express';
@@ -17,6 +18,7 @@ describe('TestsAdminAnalyticsController', () => {
     toPdf: jest.Mock;
   };
 
+  const auditMock = { record: jest.fn().mockResolvedValue(undefined) };
   const setHeaderMock = jest.fn();
   const responseMock = {
     setHeader: setHeaderMock,
@@ -84,6 +86,7 @@ describe('TestsAdminAnalyticsController', () => {
     controller = new TestsAdminAnalyticsController(
       analyticsServiceMock as unknown as TestsAnalyticsService,
       exportServiceMock as unknown as TestsAnalyticsExportService,
+      auditMock as unknown as AuditService,
     );
   });
 
@@ -106,17 +109,20 @@ describe('TestsAdminAnalyticsController', () => {
   });
 
   it('keeps query DTO metadata for validation and coercion', () => {
-    const assertQueryMetatype = (methodName: keyof TestsAdminAnalyticsController) => {
+    const assertQueryMetatype = (
+      methodName: keyof TestsAdminAnalyticsController,
+      queryIndex = 2,
+    ) => {
       const paramTypes = Reflect.getMetadata(
         'design:paramtypes',
         TestsAdminAnalyticsController.prototype,
         methodName,
       ) as Type<unknown>[];
 
-      expect(paramTypes[1]).toBe(AdminTestAnalyticsQueryDto);
+      expect(paramTypes[queryIndex]).toBe(AdminTestAnalyticsQueryDto);
     };
 
-    assertQueryMetatype('getSummary');
+    assertQueryMetatype('getSummary', 1);
     assertQueryMetatype('exportXlsx');
     assertQueryMetatype('exportPdf');
   });
@@ -131,7 +137,7 @@ describe('TestsAdminAnalyticsController', () => {
     analyticsServiceMock.getSummary.mockResolvedValue(summary);
     exportServiceMock.toExcel.mockResolvedValue(buffer);
 
-    const result = await controller.exportXlsx(22, query, responseMock);
+    const result = await controller.exportXlsx(5, 22, query, responseMock);
 
     expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(22, query);
     expect(exportServiceMock.toExcel).toHaveBeenCalledWith(summary);
@@ -143,6 +149,13 @@ describe('TestsAdminAnalyticsController', () => {
       'Content-Disposition',
       'attachment; filename="test-analytics-22-topic-2026-05-01.xlsx"; filename*=UTF-8\'\'Test-Topic-topic-2026-05-01.xlsx',
     );
+    expect(auditMock.record).toHaveBeenCalledWith({
+      entityType: 'TEST_TOPIC',
+      entityId: 22,
+      action: 'ANALYTICS_EXPORTED',
+      actorUserId: 5,
+      changes: [{ field: 'format', before: null, after: 'xlsx' }],
+    });
     expect(result).toBeInstanceOf(StreamableFile);
     expect(result.getHeaders()).toMatchObject({
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -161,7 +174,7 @@ describe('TestsAdminAnalyticsController', () => {
     analyticsServiceMock.getSummary.mockResolvedValue(summary);
     exportServiceMock.toPdf.mockResolvedValue(buffer);
 
-    const result = await controller.exportPdf(33, query, responseMock);
+    const result = await controller.exportPdf(5, 33, query, responseMock);
 
     expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(33, query);
     expect(exportServiceMock.toPdf).toHaveBeenCalledWith(summary);

@@ -41,6 +41,11 @@ const organization = vi.hoisted(() => ({
 })) satisfies AdminEducationOrganizationsListResponseDtoOrganizationsItem;
 
 vi.mock('@/shared/api/generated/tests/tests', () => ({
+  useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory: () => ({
+    data: { events: [] },
+    isLoading: false,
+    isError: false,
+  }),
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations: (params: unknown) => {
     apiMocks.listParams(params);
     return {

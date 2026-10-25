@@ -46,7 +46,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.createEducationOrganization(dto)).rejects.toThrow(BadRequestException);
+    await expect(service.createEducationOrganization(1, dto)).rejects.toThrow(BadRequestException);
     expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
   });
 
@@ -69,7 +69,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: 'hint',
     };
 
-    const result = await service.createEducationOrganization(dto);
+    const result = await service.createEducationOrganization(1, dto);
 
     expect(prismaMock.educationOrganization.create).toHaveBeenCalledWith({
       data: {
@@ -104,7 +104,9 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.updateEducationOrganization(404, dto)).rejects.toThrow(NotFoundException);
+    await expect(service.updateEducationOrganization(1, 404, dto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('updateEducationOrganization trims and persists provided validation config', async () => {
@@ -134,7 +136,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: '  Укажите формат ИС-21  ',
     };
 
-    await service.updateEducationOrganization(3, dto);
+    await service.updateEducationOrganization(1, 3, dto);
 
     expect(prismaMock.educationOrganization.update).toHaveBeenCalledWith({
       where: { id: 3 },

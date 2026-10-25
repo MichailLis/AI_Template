@@ -46,8 +46,8 @@ describe('TestsAdminEducationOrganizationsController', () => {
 
     serviceMock.createEducationOrganization.mockResolvedValue(response);
 
-    await expect(controller.createEducationOrganization(dto)).resolves.toEqual(response);
-    expect(serviceMock.createEducationOrganization).toHaveBeenCalledWith(dto);
+    await expect(controller.createEducationOrganization(5, dto)).resolves.toEqual(response);
+    expect(serviceMock.createEducationOrganization).toHaveBeenCalledWith(5, dto);
   });
 
   it('updateEducationOrganization delegates to service', async () => {
@@ -59,7 +59,7 @@ describe('TestsAdminEducationOrganizationsController', () => {
 
     serviceMock.updateEducationOrganization.mockResolvedValue(response);
 
-    await expect(controller.updateEducationOrganization(3, dto)).resolves.toEqual(response);
-    expect(serviceMock.updateEducationOrganization).toHaveBeenCalledWith(3, dto);
+    await expect(controller.updateEducationOrganization(5, 3, dto)).resolves.toEqual(response);
+    expect(serviceMock.updateEducationOrganization).toHaveBeenCalledWith(5, 3, dto);
   });
 });

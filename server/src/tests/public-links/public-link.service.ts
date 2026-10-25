@@ -764,11 +764,23 @@ export class TestsPublicLinkService {
     return this.educationOrganizationService.listEducationOrganizations(query);
   }
 
-  createEducationOrganization(dto: AdminCreateEducationOrganizationDto) {
-    return this.educationOrganizationService.createEducationOrganization(dto);
+  createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
+    return this.educationOrganizationService.createEducationOrganization(userId, dto);
   }
 
-  updateEducationOrganization(organizationId: number, dto: AdminUpdateEducationOrganizationDto) {
-    return this.educationOrganizationService.updateEducationOrganization(organizationId, dto);
+  updateEducationOrganization(
+    userId: number,
+    organizationId: number,
+    dto: AdminUpdateEducationOrganizationDto,
+  ) {
+    return this.educationOrganizationService.updateEducationOrganization(
+      userId,
+      organizationId,
+      dto,
+    );
+  }
+
+  getEducationOrganizationHistory(organizationId: number) {
+    return this.educationOrganizationService.getEducationOrganizationHistory(organizationId);
   }
 }

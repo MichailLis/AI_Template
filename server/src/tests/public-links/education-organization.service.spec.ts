@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
+import type { AuditService } from '../../audit/audit.service';
 import type { PrismaService } from '../../prisma.service';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
 import { createEducationOrganizationRecordFixture } from '../session/spec-fixtures';
@@ -45,7 +46,10 @@ describe('TestsEducationOrganizationService', () => {
       ),
     };
 
-    service = new TestsEducationOrganizationService(prismaMock as unknown as PrismaService);
+    service = new TestsEducationOrganizationService(
+      prismaMock as unknown as PrismaService,
+      { record: jest.fn(), listForEntity: jest.fn() } as unknown as AuditService,
+    );
   });
 
   afterEach(() => {
@@ -226,7 +230,7 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.educationOrganization.create.mockResolvedValue(createdOrganization);
     prismaMock.testPublicLink.findMany.mockResolvedValue([]);
 
-    await service.createEducationOrganization({
+    await service.createEducationOrganization(1, {
       name: '  Лицей 42  ',
       fullName: '  Муниципальный лицей № 42  ',
       shortName: '  Лицей № 42  ',
@@ -290,10 +294,11 @@ describe('TestsEducationOrganizationService', () => {
 
     await (
       service.updateEducationOrganization as (
+        userId: number,
         organizationId: number,
         dto: Record<string, unknown>,
       ) => Promise<unknown>
-    )(31, {
+    )(1, 31, {
       fullName: '  Новое полное имя  ',
       privacyPolicyUrl: '   ',
     });
@@ -319,16 +324,17 @@ describe('TestsEducationOrganizationService', () => {
     const update = (organizationId: number, dto: Record<string, unknown>) =>
       (
         service.updateEducationOrganization as (
+          userId: number,
           organizationId: number,
           dto: Record<string, unknown>,
         ) => Promise<unknown>
-      )(organizationId, dto);
+      )(1, organizationId, dto);
 
     it('rejects a group example that does not match the pattern on create', async () => {
       prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.createEducationOrganization({
+        service.createEducationOrganization(1, {
           name: 'Лицей 42',
           groupValidationMode: 'STRICT',
           groupValidationPattern: '^\\d{1,2}[А-Я]$',
@@ -374,7 +380,7 @@ describe('TestsEducationOrganizationService', () => {
       prismaMock.educationOrganization.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.createEducationOrganization({ name: 'Лицей 42', ...requisites }),
+        service.createEducationOrganization(1, { name: 'Лицей 42', ...requisites }),
       ).rejects.toThrow(message);
     });
 
@@ -401,10 +407,11 @@ describe('TestsEducationOrganizationService', () => {
     const update = (dto: Record<string, unknown>) =>
       (
         service.updateEducationOrganization as (
+          userId: number,
           organizationId: number,
           dto: Record<string, unknown>,
         ) => Promise<unknown>
-      )(31, dto);
+      )(1, 31, dto);
 
     it('recomputes the snapshot of non-archived on-behalf links in the same transaction', async () => {
       const existing = createEducationOrganizationRecordFixture(complete);
@@ -488,7 +495,12 @@ describe('TestsEducationOrganizationService', () => {
     prismaMock.educationOrganization.findFirst.mockResolvedValue({ id: 31 });
 
     await expect(
-      (service.createEducationOrganization as (dto: { name: string }) => Promise<unknown>)({
+      (
+        service.createEducationOrganization as (
+          userId: number,
+          dto: { name: string },
+        ) => Promise<unknown>
+      )(1, {
         name: 'лицей 42',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -504,7 +516,12 @@ describe('TestsEducationOrganizationService', () => {
     });
 
     await expect(
-      (service.createEducationOrganization as (dto: { name: string }) => Promise<unknown>)({
+      (
+        service.createEducationOrganization as (
+          userId: number,
+          dto: { name: string },
+        ) => Promise<unknown>
+      )(1, {
         name: 'Лицей 42',
       }),
     ).rejects.toThrow('Учебное заведение с таким названием уже существует');

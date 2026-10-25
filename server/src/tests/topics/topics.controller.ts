@@ -14,6 +14,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { AuditHistoryResponseDto } from '../../audit/dto/audit-history.dto';
+import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
 import { AdminGuard } from '../../common/authz/admin.guard';
 import {
@@ -53,16 +55,29 @@ export class TestsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archive test topic' })
   @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
-  archiveTopic(@Param('topicId', ParseIntPipe) topicId: number) {
-    return this.testsService.archiveTopic(topicId);
+  archiveTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.archiveTopic(userId, topicId);
   }
 
   @Post(':topicId/restore')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Restore archived test topic' })
   @ApiResponse({ status: HttpStatus.OK, type: UpdateTestsTopicArchiveStatusResponseDto })
-  restoreTopic(@Param('topicId', ParseIntPipe) topicId: number) {
-    return this.testsService.restoreTopic(topicId);
+  restoreTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.restoreTopic(userId, topicId);
+  }
+
+  @Get(':topicId/history')
+  @ApiOperation({ summary: 'List recorded changes of a test topic' })
+  @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
+  getTopicHistory(@Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.getTopicHistory(topicId);
   }
 
   @Post()
@@ -104,8 +119,8 @@ export class TestsController {
     summary: 'Delete test topic with all versions and questions',
   })
   @ApiResponse({ status: HttpStatus.OK, type: DeleteTestsTopicResponseDto })
-  deleteTopic(@Param('topicId', ParseIntPipe) topicId: number) {
-    return this.testsService.deleteTopic(topicId);
+  deleteTopic(@GetCurrentUserId() userId: number, @Param('topicId', ParseIntPipe) topicId: number) {
+    return this.testsService.deleteTopic(userId, topicId);
   }
 
   @Get(':topicId/draft')
@@ -175,7 +190,10 @@ export class TestsController {
     summary: 'Publish active draft and create next draft version',
   })
   @ApiResponse({ status: HttpStatus.OK, type: PublishTestsTopicResponseDto })
-  publishTopic(@Param('topicId', ParseIntPipe) topicId: number) {
-    return this.testsService.publishTopic(topicId);
+  publishTopic(
+    @GetCurrentUserId() userId: number,
+    @Param('topicId', ParseIntPipe) topicId: number,
+  ) {
+    return this.testsService.publishTopic(userId, topicId);
   }
 }
