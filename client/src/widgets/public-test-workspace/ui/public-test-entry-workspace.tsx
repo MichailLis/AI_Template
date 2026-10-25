@@ -12,6 +12,7 @@ import { PublicTestDemographicProfileCard } from './public-test-demographic-prof
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
 import { resolveGroupValidationWarning } from './public-test-entry.helpers';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
+import { getPublicTestRefusal } from './public-test-refusal';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
 import { usePublicTestEntryState } from './use-public-test-entry-state';
@@ -86,6 +87,8 @@ function StandardPublicTestEntry({
           questionCount={link.questionCount}
           maxAttemptsPerStudent={link.maxAttemptsPerStudent}
           timeLimitMinutes={link.timeLimitMinutes}
+          resultKind={link.resultKind}
+          showAttempts={entryProfileMode !== 'DEMOGRAPHIC'}
         />
 
         {entryProfileMode === 'DEMOGRAPHIC' ? (
@@ -152,10 +155,15 @@ export function PublicTestEntryWorkspace() {
   }
 
   if (linkQuery.isError || !linkQuery.data) {
+    const refusal = getPublicTestRefusal(linkQuery.error, {
+      title: 'Ссылка недоступна',
+      description: 'Проверьте корректность ссылки или обратитесь к администратору теста.',
+    });
+
     return (
       <PublicEntryStateCard
-        title="Ссылка недоступна"
-        description="Проверьте корректность ссылки или обратитесь к администратору теста."
+        title={refusal.title}
+        description={refusal.description}
         accentClassName="bg-linear-to-r/srgb from-red-500 via-red-400 to-red-500"
       />
     );
@@ -187,6 +195,7 @@ export function PublicTestEntryWorkspace() {
             groupValidationHint: link.groupValidationHint,
           }
         : undefined,
+    startsAt: link.startsAt,
     startSession: startMutation.mutateAsync,
     navigate,
   });

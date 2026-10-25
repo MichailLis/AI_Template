@@ -65,6 +65,21 @@ describe('TestsPublicSessionService start', () => {
     expect(updateManyMock).not.toHaveBeenCalled();
   });
 
+  it('startSessionByCode rejects with ATTEMPTS_LIMIT_REACHED when the limit is used up', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({ maxAttemptsPerStudent: 1 }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([
+      { id: 1, attemptNumber: 1, status: 'COMPLETED', resumeToken: 'done', expiresAt: null },
+    ]);
+
+    await expect(
+      service.startSessionByCode('ABC123', createPublicSessionStartDto()),
+    ).rejects.toMatchObject({ response: { error: 'ATTEMPTS_LIMIT_REACHED' } });
+    expect(createAttemptMock).not.toHaveBeenCalled();
+  });
+
   it('startSessionByCode uses organization from link and creates new attempt', async () => {
     getAccessiblePublicLinkByCodeMock.mockResolvedValue(
       createAccessibleLinkFixture({

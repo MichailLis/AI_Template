@@ -69,24 +69,28 @@ describe('getSessionAttemptByTokenOrThrow', () => {
       publicLink: { archivedAt: new Date('2026-05-12T11:00:00.000Z') },
       exception: NotFoundException,
       message: 'Public test link not found',
+      code: 'LINK_NOT_FOUND',
     },
     {
       label: 'disabled',
       publicLink: { isActive: false },
       exception: BadRequestException,
       message: 'Public test link is disabled',
+      code: 'LINK_DISABLED',
     },
     {
       label: 'not active yet',
       publicLink: { startsAt: new Date('2026-05-12T12:01:00.000Z') },
       exception: BadRequestException,
       message: 'Public test link is not active yet',
+      code: 'LINK_NOT_STARTED',
     },
     {
       label: 'expired',
       publicLink: { endsAt: new Date('2026-05-12T11:59:00.000Z') },
       exception: BadRequestException,
       message: 'Public test link has expired',
+      code: 'LINK_EXPIRED',
     },
     {
       label: 'disabled by education organization',
@@ -96,6 +100,7 @@ describe('getSessionAttemptByTokenOrThrow', () => {
       },
       exception: BadRequestException,
       message: 'Public test link is disabled because its education organization is disabled',
+      code: 'LINK_DISABLED',
     },
   ])('rejects an existing session token when its public link is $label', async (testCase) => {
     jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
@@ -111,6 +116,9 @@ describe('getSessionAttemptByTokenOrThrow', () => {
 
     await expect(result).rejects.toBeInstanceOf(testCase.exception);
     await expect(result).rejects.toMatchObject({ message: testCase.message });
+    await expect(result).rejects.toMatchObject({
+      response: { error: testCase.code },
+    });
     expect(findUniqueMock).toHaveBeenCalledWith({
       where: { resumeToken: 'session-token' },
       include: attemptWithSessionInclude,

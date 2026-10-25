@@ -53,6 +53,7 @@ export const validateGroupOrClassForLink = (groupOrClass: string, link: Accessib
     throw new BadRequestException(
       link.educationOrganization?.groupValidationHint ||
         'Формат поля "Группа / класс" не соответствует требованиям учебного заведения',
+      'GROUP_FORMAT_INVALID',
     );
   }
 };

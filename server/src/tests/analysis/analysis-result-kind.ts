@@ -69,6 +69,27 @@ export const getAnalysisResultKind = (
 };
 
 /**
+ * Какой результат получит ученик по настройкам версии теста — до прохождения. Тот же выбор делает
+ * завершение попытки, поэтому обещание на странице входа не расходится с тем, что будет записано.
+ */
+export const PLANNED_ANALYSIS_KINDS = ['ALGORITHM_AI', 'ALGORITHM', 'AI', 'BASIC'] as const;
+
+export type PlannedAnalysisKind = (typeof PLANNED_ANALYSIS_KINDS)[number];
+
+export const getPlannedAnalysisKind = (topicVersion: {
+  scoringKind: string;
+  analysisPromptVersionId: number | null;
+}): PlannedAnalysisKind => {
+  const hasAi = topicVersion.analysisPromptVersionId !== null;
+
+  if (topicVersion.scoringKind === 'PROF_ORIENTATION_V3_PLUS') {
+    return hasAi ? 'ALGORITHM_AI' : 'ALGORITHM';
+  }
+
+  return hasAi ? 'AI' : 'BASIC';
+};
+
+/**
  * Содержательный результат — тот, который админ вправе считать готовым анализом. Заглушка,
  * ожидание и отказ сюда не входят: именно их подсчёт как готовых и создавал ложные 100%.
  */

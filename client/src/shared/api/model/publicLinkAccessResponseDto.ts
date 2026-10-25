@@ -10,6 +10,7 @@ import type { PublicLinkAccessResponseDtoGroupValidationMode } from './publicLin
 import type { PublicLinkAccessResponseDtoPersonalData } from './publicLinkAccessResponseDtoPersonalData';
 import type { PublicLinkAccessResponseDtoPublicBranding } from './publicLinkAccessResponseDtoPublicBranding';
 import type { PublicLinkAccessResponseDtoPublicTemplate } from './publicLinkAccessResponseDtoPublicTemplate';
+import type { PublicLinkAccessResponseDtoResultKind } from './publicLinkAccessResponseDtoResultKind';
 
 export interface PublicLinkAccessResponseDto {
   shortCode: string;
@@ -45,6 +46,7 @@ export interface PublicLinkAccessResponseDto {
    * @nullable
    */
   timeLimitMinutes: number | null;
+  resultKind: PublicLinkAccessResponseDtoResultKind;
   allowResume: boolean;
   /** @nullable */
   startsAt: string | null;
