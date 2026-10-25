@@ -8,6 +8,7 @@ import { AdminModule } from './admin/admin.module';
 import { TestsModule } from './tests/tests.module';
 import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.module';
 import { AuditService } from './audit/audit.service';
+import { HealthController } from './health.controller';
 import { PrivacyPolicyController } from './privacy-policy.controller';
 import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-settings.service';
 
@@ -22,7 +23,7 @@ import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-sett
     AnalysisPromptsModule,
     TestsModule,
   ],
-  controllers: [PrivacyPolicyController],
+  controllers: [HealthController, PrivacyPolicyController],
   providers: [
     PrivacyPolicySettingsService,
     // AppModule imports only feature modules (verify:architecture), so the audit trail that

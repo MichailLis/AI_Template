@@ -57,6 +57,21 @@ describe('public test run answer helpers', () => {
     ]);
   });
 
+  it('sends null for a question the server holds an answer for but the draft has emptied', () => {
+    const questions = [
+      makeQuestion(1, 'OPEN_TEXT'),
+      makeQuestion(2, 'MULTI_CHOICE'),
+      makeQuestion(3, 'OPEN_TEXT'),
+    ];
+
+    expect(
+      buildSessionAnswers(questions, { 1: '  ', 2: [], 3: '' }, { 1: 'old', 2: ['a'] }),
+    ).toEqual([
+      { questionId: 1, answerPayload: null },
+      { questionId: 2, answerPayload: null },
+    ]);
+  });
+
   it('replaces saved draft values with canonical answer payloads returned by the server', () => {
     expect(
       reconcileAnswerDraftAfterSave(

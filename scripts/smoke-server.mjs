@@ -208,6 +208,12 @@ try {
     throw new Error(`Missing required API operations: ${missingOperations.join(', ')}`);
   }
 
+  // Container healthchecks probe /health: Swagger is not published in production.
+  const healthResponse = await fetch(`http://${smokeHost}:${port}/health`);
+  if (!healthResponse.ok) {
+    throw new Error(`GET /health answered ${healthResponse.status}`);
+  }
+
   console.log('Server smoke check passed.');
 } catch (error) {
   console.error('Server smoke check failed.');

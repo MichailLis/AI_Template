@@ -17,8 +17,10 @@ export const createSwaggerDocument = (app: INestApplication) => {
   return cleanupOpenApiDoc(document);
 };
 
-export const setupSwagger = (app: INestApplication) => {
+export const setupSwagger = (app: INestApplication, { publish }: { publish: boolean }) => {
   const document = createSwaggerDocument(app);
-  SwaggerModule.setup('api', app, document);
+  if (publish) {
+    SwaggerModule.setup('api', app, document);
+  }
   return document;
 };

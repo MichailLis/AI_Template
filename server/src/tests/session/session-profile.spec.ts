@@ -78,6 +78,15 @@ describe('public session entry profile rules', () => {
       expect(() => validateGroupOrClassForLink('IS-21', link)).toThrow(
         'Two digits then one capital letter',
       );
+      expect((): void => validateGroupOrClassForLink('IS-21', link)).toThrow(
+        expect.objectContaining({
+          response: {
+            message: 'Two digits then one capital letter',
+            error: 'GROUP_FORMAT_INVALID',
+            statusCode: 400,
+          },
+        }) as Error,
+      );
     });
 
     // The pattern is administrator-supplied, so it can be malformed. Accepting the group is the

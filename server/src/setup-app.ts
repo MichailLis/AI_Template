@@ -108,7 +108,8 @@ export const setupApp = (app: INestApplication) => {
   // Express default is 100kb; the settings prompt alone may be 160 000 chars (up to ~960kb escaped).
   (app as NestExpressApplication).useBodyParser('json', { limit: JSON_BODY_LIMIT });
   app.useGlobalFilters(new AllExceptionsFilter());
-  const swaggerDocument = setupSwagger(app);
+  // Swagger UI and /api-json map every admin endpoint, so they stay local; gen:api still gets the document.
+  const swaggerDocument = setupSwagger(app, { publish: isLocalRuntime() });
   app.enableCors({
     credentials: true,
     origin: resolveCorsAllowedOrigins(),

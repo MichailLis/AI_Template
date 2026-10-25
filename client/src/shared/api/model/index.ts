@@ -245,6 +245,7 @@ export * from './publicLinkAccessResponseDtoPublicBrandingHeaderLogosItemSize';
 export * from './publicLinkAccessResponseDtoPublicBrandingSurfaces';
 export * from './publicLinkAccessResponseDtoPublicBrandingVersion';
 export * from './publicLinkAccessResponseDtoPublicTemplate';
+export * from './publicLinkAccessResponseDtoResultKind';
 export * from './publicPrivacyPolicyResponseDto';
 export * from './publicPrivacyPolicyResponseDtoPrivacyPolicy';
 export * from './publicSessionFinishResponseDto';

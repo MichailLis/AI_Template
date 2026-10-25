@@ -145,7 +145,10 @@ export class TestsPublicAttemptAllocationService {
     }
 
     if (previousAttempts.length >= link.maxAttemptsPerStudent) {
-      throw new BadRequestException('Attempts limit reached for this test link');
+      throw new BadRequestException(
+        'Attempts limit reached for this test link',
+        'ATTEMPTS_LIMIT_REACHED',
+      );
     }
 
     const nextAttemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;

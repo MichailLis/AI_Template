@@ -1660,7 +1660,8 @@
 
 .theme-public--polus .polus-atlas-profession-source {
   background: var(--polus-blue-soft);
-  color: var(--polus-magenta);
+  /* Чистый magenta на blue-soft давал 3.66:1; затемнённый держит ≥ 4.5:1. */
+  color: color-mix(in srgb, var(--polus-magenta) 80%, black);
 }
 
 .theme-public--polus .polus-atlas-profession-code {

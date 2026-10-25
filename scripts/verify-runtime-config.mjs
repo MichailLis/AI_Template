@@ -49,6 +49,7 @@ const runtimeEnvNames = [
   'AI_TIMEOUT_MS',
   'AI_PROF_ORIENTATION_TIMEOUT_MS',
   'AI_PROF_ORIENTATION_TIMEOUT_RETRIES',
+  'ANALYSIS_LLM_CONCURRENCY',
   'OPENROUTER_HTTP_REFERER',
   'OPENROUTER_APP_NAME',
 ];
@@ -195,6 +196,16 @@ if (frontend) {
 
   if (backendDependency?.condition !== 'service_healthy') {
     fail('frontend must depend on backend with condition service_healthy');
+  }
+}
+
+for (const [label, source] of [
+  ['docker-compose.yml', composeSource],
+  ['docker-compose.deploy.yml', deployComposeSource],
+  ['server/Dockerfile', serverDockerfile],
+]) {
+  if (!source.includes('127.0.0.1:3000/health')) {
+    fail(`${label} backend healthcheck must probe /health: /api-json is off in production`);
   }
 }
 

@@ -58,6 +58,7 @@ services:
       AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-120000}
       AI_PROF_ORIENTATION_TIMEOUT_MS: ${AI_PROF_ORIENTATION_TIMEOUT_MS:-90000}
       AI_PROF_ORIENTATION_TIMEOUT_RETRIES: ${AI_PROF_ORIENTATION_TIMEOUT_RETRIES:-2}
+      ANALYSIS_LLM_CONCURRENCY: ${ANALYSIS_LLM_CONCURRENCY:-3}
       OPENROUTER_HTTP_REFERER: ${OPENROUTER_HTTP_REFERER:-}
       OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-AI Template Admin}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
@@ -74,7 +75,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'node -e "fetch(''http://127.0.0.1:3000/api-json'').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+          'node -e "fetch(''http://127.0.0.1:3000/health'').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
         ]
       interval: 10s
       timeout: 5s

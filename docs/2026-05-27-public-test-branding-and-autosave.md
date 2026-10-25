@@ -40,6 +40,7 @@ Behavior:
 - Autosave runs for both `STANDARD` and `POLUS` run UIs.
 - Student-facing copy should stay human-readable and avoid raw API states.
 - On save failure, the UI keeps an actionable error state instead of silently discarding answers.
+- Erasing an answer (clearing text, unticking the last multi-choice option) sends `answerPayload: null` for that question, and the server deletes the stored answer. Only questions the server already holds an answer for are sent as `null` (`buildSessionAnswers`, third argument).
 
 Relevant frontend files:
 

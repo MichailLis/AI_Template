@@ -88,6 +88,7 @@ AI_DEFAULT_MODEL=
 AI_TIMEOUT_MS=120000
 AI_PROF_ORIENTATION_TIMEOUT_MS=90000
 AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
+ANALYSIS_LLM_CONCURRENCY=3
 OPENROUTER_HTTP_REFERER=https://your-domain.example
 OPENROUTER_APP_NAME=AI Template Admin
 ```
@@ -151,7 +152,10 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 - Приложение: `http://localhost:8080`
 - Логин: `http://localhost:8080/login`
 - Adminer: `http://localhost:8081` (порт привязан к `127.0.0.1`; на удалённом сервере открывайте его через SSH-туннель `ssh -L 8081:127.0.0.1:8081 user@SERVER_IP`)
-- OpenAPI JSON через Nginx: `http://localhost:8080/api/api-json`
+- Проверка backend через Nginx: `http://localhost:8080/api/health` (ответ `{"status":"ok"}`)
+
+Swagger UI и `/api-json` при `NODE_ENV=production` не публикуются: они раскрывают карту всех
+admin-эндпоинтов. Схему API смотрите в локальном дев-стеке (`http://localhost:3000/api`).
 
 Для входа в приложение используйте:
 
@@ -170,20 +174,26 @@ Adminer использует не app-логин, а данные PostgreSQL:
 (плюс запас в 5 запросов), дальше ответ `429`. Если перед nginx стоит ещё один прокси, nginx видит
 только его адрес и лимит общий для всех: передавайте реальный IP (`real_ip_header`).
 
+nginx отдаёт security-заголовки из `client/nginx/security-headers.conf`: `X-Content-Type-Options`,
+`Referrer-Policy: strict-origin-when-cross-origin` и `Content-Security-Policy`, которая разрешает
+скрипты, запросы и встраивание в iframe только с этого же домена. Если `VITE_API_URL` указывает на
+другой домен, добавьте его в `connect-src` и пересоберите образ frontend, иначе браузер заблокирует
+запросы к API.
+
 ## 6. Проверка через curl
 
 Linux/macOS:
 
 ```bash
 curl -f http://localhost:8080/health
-curl -f http://localhost:8080/api/api-json
+curl -f http://localhost:8080/api/health
 ```
 
 Windows PowerShell:
 
 ```powershell
 curl.exe -f http://localhost:8080/health
-curl.exe -f http://localhost:8080/api/api-json
+curl.exe -f http://localhost:8080/api/health
 ```
 
 Проверка логина через API:
@@ -244,6 +254,7 @@ AI_DEFAULT_MODEL=
 AI_TIMEOUT_MS=120000
 AI_PROF_ORIENTATION_TIMEOUT_MS=90000
 AI_PROF_ORIENTATION_TIMEOUT_RETRIES=2
+ANALYSIS_LLM_CONCURRENCY=3
 OPENROUTER_HTTP_REFERER=http://127.0.0.1:18080
 OPENROUTER_APP_NAME=AI Template Admin
 ```

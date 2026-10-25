@@ -22,6 +22,7 @@ Moved out of the README: how the admin panel, auth, Prompt Studio, tests and the
 - The refresh token is set only as an `HttpOnly` cookie named `refreshToken`.
 - `POST /auth/refresh` reads the refresh cookie and returns a new `accessToken`; it does not return a refresh token in the response body.
 - Browser refresh handling lives in `client/src/shared/api/interceptors.ts`; generated API code and `client/src/shared/api/api.ts` must not read browser storage directly.
+- The client logs out only when refresh answers `401`/`403`; a network error or `5xx` is retried (3 attempts) and the session is kept. Refresh runs under `navigator.locks` (`auth-refresh`): a tab that waited for the lock takes the access token another tab already stored instead of refreshing again, so rotation does not evict a second tab.
 
 ## Prompt Studio (AI Provider Foundation)
 
@@ -233,6 +234,7 @@ Current public run UX:
 - single-choice questions auto-advance after selection
 - multi-choice, slider, and open-text questions use in-card navigation controls
 - answers autosave after a short debounce; manual save and finish wait for queued/in-flight autosave before continuing
+- a cleared answer is erased on the server too (`answerPayload: null`), so it does not come back after a reload
 - autosave shows human-readable student copy for saving, saved, retry, and error states, not raw API internals
 - question transitions are animated to reduce abrupt content jumps
 - open-text answers use a higher-contrast textarea for bright screens

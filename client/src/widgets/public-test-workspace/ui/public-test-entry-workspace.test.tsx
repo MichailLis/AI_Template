@@ -33,6 +33,7 @@ const baseLink = {
   questionCount: 18,
   maxAttemptsPerStudent: 1,
   timeLimitMinutes: 15,
+  resultKind: 'ALGORITHM_AI',
   allowResume: true,
   startsAt: null,
   endsAt: null,
@@ -51,6 +52,7 @@ const baseLink = {
 const mockLinkAccess = (
   publicTemplate: 'STANDARD' | 'POLUS',
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC' = 'DEMOGRAPHIC',
+  overrides: Partial<typeof baseLink> = {},
 ) => {
   vi.mocked(useTestsPublicControllerGetLinkAccess).mockReturnValue({
     isLoading: false,
@@ -59,6 +61,7 @@ const mockLinkAccess = (
       ...baseLink,
       publicTemplate,
       entryProfileMode,
+      ...overrides,
     },
   } as never);
   vi.mocked(useTestsPublicControllerStartSession).mockReturnValue({
@@ -80,6 +83,34 @@ describe('PublicTestEntryWorkspace', () => {
     expect(screen.getByRole('heading', { name: 'Инженерный маршрут' })).toBeInTheDocument();
     expect(screen.getByText('ООО «Оператор тестирования»')).toBeInTheDocument();
     expect(screen.queryByText(/Профессор Полюс/i)).not.toBeInTheDocument();
+  });
+
+  it('promises only what the result kind delivers', () => {
+    mockLinkAccess('STANDARD', 'EDUCATION', { resultKind: 'BASIC' });
+
+    render(<PublicTestEntryWorkspace />);
+
+    expect(screen.getByText('Онлайн-тестирование')).toBeInTheDocument();
+    expect(screen.getByText('Ваши ответы получит организатор теста.')).toBeInTheDocument();
+    expect(screen.queryByText(/подробный анализ/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/15-20/)).not.toBeInTheDocument();
+    expect(screen.getByText('Попыток')).toBeInTheDocument();
+    cleanup();
+
+    mockLinkAccess('STANDARD', 'EDUCATION', { resultKind: 'ALGORITHM_AI' });
+    render(<PublicTestEntryWorkspace />);
+
+    expect(screen.getByText('Система профориентации')).toBeInTheDocument();
+    expect(screen.getByText(/подробный анализ/i)).toBeInTheDocument();
+  });
+
+  it('hides the attempts limit in the DEMOGRAPHIC mode where it does not apply', () => {
+    mockLinkAccess('STANDARD', 'DEMOGRAPHIC');
+
+    render(<PublicTestEntryWorkspace />);
+
+    expect(screen.queryByText('Попыток')).not.toBeInTheDocument();
+    expect(screen.getByText('15 мин')).toBeInTheDocument();
   });
 
   // The hybrid profile mode reaches the standard template through a different branch than the

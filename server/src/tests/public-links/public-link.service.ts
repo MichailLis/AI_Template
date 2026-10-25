@@ -24,6 +24,7 @@ import { createShortCodeCandidate } from '../shared/domain.utils';
 import { TestsEducationOrganizationService } from '../public-links/education-organization.service';
 import { toPrismaPublicBranding, toPublicBrandingResponse } from '../shared/public-branding.utils';
 import { mapAdminPublicLink } from '../public-links/public-link.mapper';
+import { getPlannedAnalysisKind } from '../analysis/analysis-result-kind';
 import { ensurePublicLinkAccessible } from '../public-links/public-link-access';
 import {
   PUBLIC_OPERATOR_FULL_NAME,
@@ -725,7 +726,7 @@ export class TestsPublicLinkService {
     });
 
     if (!link) {
-      throw new NotFoundException('Public test link not found');
+      throw new NotFoundException('Public test link not found', 'LINK_NOT_FOUND');
     }
 
     ensurePublicLinkAccessible(link, link.topicVersion);
@@ -751,6 +752,7 @@ export class TestsPublicLinkService {
       questionCount: link.topicVersion._count.questions,
       maxAttemptsPerStudent: link.maxAttemptsPerStudent,
       timeLimitMinutes: link.timeLimitMinutes,
+      resultKind: getPlannedAnalysisKind(link.topicVersion),
       allowResume: link.allowResume,
       startsAt: toOptionalIsoString(link.startsAt),
       endsAt: toOptionalIsoString(link.endsAt),
