@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { ProfessionAtlasClientService } from '../../app-settings/profession-atlas-client.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../../prisma.service';
+import { mergeAnalysisSummaryKey } from '../analysis/analysis-summary.store';
 import { getProfOrientationV3PlusProfessions } from './fixture';
 import {
   PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
@@ -202,6 +202,7 @@ export class ProfOrientationAtlasService {
       ].filter((term): term is string => Boolean(term));
       const atlas: ProfOrientationAtlasRecommendations = {
         version: PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
+        checkedAt: new Date().toISOString(),
         status:
           details.length === 0
             ? 'unavailable'
@@ -232,6 +233,7 @@ export class ProfOrientationAtlasService {
           publicUrl,
           apiUrl,
           errorMessage: formatAtlasErrorMessage(error),
+          checkedAt: new Date().toISOString(),
           unmatchedProfessions: selected.map((item) => item.profession.title),
           duplicateProfessions: [],
           professions: [],
@@ -244,13 +246,11 @@ export class ProfOrientationAtlasService {
   }
   async saveEnrichedAnalysis(analysisId: number, summary: ProfOrientationSummary) {
     const enrichedSummary = await this.enrichSummary(summary);
-    await this.prisma.testStudentAnalysis.update({
-      where: { id: analysisId },
-      data: {
-        summary: enrichedSummary as unknown as Prisma.InputJsonValue,
-        rawText: JSON.stringify(enrichedSummary),
-      },
-    });
+    const { atlas } = enrichedSummary;
+    // «Не настроен» не пишем: иначе каждый GET /result перезаписывал бы строку тем же отказом.
+    if (atlas?.publicUrl && atlas.apiUrl) {
+      await mergeAnalysisSummaryKey(this.prisma, analysisId, 'atlas', atlas);
+    }
     return enrichedSummary;
   }
 }

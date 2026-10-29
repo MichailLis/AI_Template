@@ -39,6 +39,7 @@ import {
   mapAnswerToPromptPayload,
   mapQuestionToPromptPayload,
 } from '../analysis/prompt-payload.utils';
+import { mergeAnalysisSummaryKey } from '../analysis/analysis-summary.store';
 
 interface StubAnalysisInput {
   attemptId: number;
@@ -66,6 +67,7 @@ interface AnalysisPromptVersionRecord {
 interface ProfOrientationAttemptAnalysisRecord {
   id: number;
   analysis: {
+    id: number;
     summary: unknown;
   } | null;
   topicVersion: {
@@ -637,9 +639,10 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     attempt: ProfOrientationAttemptAnalysisRecord,
     promptVersion: AnalysisPromptVersionRecord,
   ) {
+    const analysisId = attempt.analysis?.id;
     const currentSummary = attempt.analysis?.summary;
 
-    if (!isProfOrientationV3PlusSummary(currentSummary)) {
+    if (!analysisId || !isProfOrientationV3PlusSummary(currentSummary)) {
       return;
     }
 
@@ -668,49 +671,37 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         },
       );
       const parsedOutput = parseProfOrientationV3PlusEnrichment(JSON.parse(response.output));
-      const summary = {
-        ...currentSummary,
-        llm: {
-          status: 'ready' as const,
-          model: response.model,
-          analysis: parsedOutput,
-        },
-      };
 
-      await this.prisma.testStudentAnalysis.update({
-        where: { attemptId: attempt.id },
-        data: {
+      await mergeAnalysisSummaryKey(
+        this.prisma,
+        analysisId,
+        'llm',
+        { status: 'ready', model: response.model, analysis: parsedOutput },
+        {
           promptVersionId: promptVersion.id,
           providerMode: 'ALGORITHM_LLM',
           status: 'READY',
-          summary: summary as unknown as Prisma.InputJsonValue,
           rawText: response.output,
           errorMessage: null,
           generatedAt: new Date(),
         },
-      });
+      );
     } catch (error) {
       const errorMessage = this.toErrorMessage(error);
-      const summary = {
-        ...currentSummary,
-        llm: {
-          status: 'failed' as const,
-          model: promptVersion.model,
-          errorMessage,
-        },
-      };
 
-      await this.prisma.testStudentAnalysis.update({
-        where: { attemptId: attempt.id },
-        data: {
+      await mergeAnalysisSummaryKey(
+        this.prisma,
+        analysisId,
+        'llm',
+        { status: 'failed', model: promptVersion.model, errorMessage },
+        {
           promptVersionId: promptVersion.id,
           providerMode: 'ALGORITHM_LLM',
           status: 'READY',
-          summary: summary as unknown as Prisma.InputJsonValue,
           errorMessage,
           generatedAt: new Date(),
         },
-      });
+      );
     }
   }
 

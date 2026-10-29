@@ -96,7 +96,6 @@ export class TestsPublicSessionService {
     return {
       ...analysis,
       summary: summary as unknown as typeof analysis.summary,
-      rawText: JSON.stringify(summary),
     };
   }
 
@@ -398,7 +397,6 @@ export class TestsPublicSessionService {
       analysis = {
         ...analysis,
         summary: enrichedSummary as unknown as typeof analysis.summary,
-        rawText: JSON.stringify(enrichedSummary),
       };
     }
 
