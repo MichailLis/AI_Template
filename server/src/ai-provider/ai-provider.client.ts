@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
@@ -190,6 +192,12 @@ export type AiProviderHealth = {
 
 export const AI_PROVIDER_HEALTH_CHECK_TIMEOUT_MS = 5_000;
 export const AI_PROVIDER_HEALTH_CHECK_CACHE_TTL_MS = 30_000;
+export const AI_PROVIDER_MODELS_CACHE_TTL_MS = 5 * 60_000;
+
+export interface AiModelCatalog {
+  defaultModel: string;
+  models: ReturnType<typeof parsePromptModels>;
+}
 
 /**
  * Клиент OpenAI-совместимого API на официальном OpenAI SDK. Провайдер выбирается настройками
@@ -200,6 +208,7 @@ export const AI_PROVIDER_HEALTH_CHECK_CACHE_TTL_MS = 30_000;
 @Injectable()
 export class AiProviderClientService {
   private healthCache = new Map<string, { result: AiProviderHealth; cachedAt: number }>();
+  private modelsCache = new Map<string, { catalog: AiModelCatalog; cachedAt: number }>();
 
   constructor(private readonly config: ConfigService) {}
 
@@ -217,8 +226,32 @@ export class AiProviderClientService {
     return resolveAiTimeoutMs(this.config, timeoutMs);
   }
 
-  async fetchModels(connection: AiProviderConnection, options?: { timeoutMs?: number }) {
-    const client = this.createClient(connection, options?.timeoutMs ?? this.resolveTimeoutMs());
+  /**
+   * Каталог моделей кэшируется на 5 минут: он нужен каждому анализу и списку в админке. Ключ кэша —
+   * адрес и хэш ключа, поэтому смена любого из них сразу даёт свежий каталог. `fresh` пропускает чтение.
+   */
+  async fetchModels(
+    connection: AiProviderConnection,
+    options?: { timeoutMs?: number; fresh?: boolean },
+  ): Promise<AiModelCatalog> {
+    const keyHash = createHash('sha256').update(connection.apiKey).digest('hex');
+    const cacheKey = `${connection.baseUrl}\n${keyHash}`;
+    const cached = this.modelsCache.get(cacheKey);
+    if (
+      !options?.fresh &&
+      cached &&
+      Date.now() - cached.cachedAt < AI_PROVIDER_MODELS_CACHE_TTL_MS
+    ) {
+      return cached.catalog;
+    }
+
+    const catalog = await this.loadModels(connection, options?.timeoutMs);
+    this.modelsCache.set(cacheKey, { catalog, cachedAt: Date.now() });
+    return catalog;
+  }
+
+  private async loadModels(connection: AiProviderConnection, timeoutMs?: number) {
+    const client = this.createClient(connection, timeoutMs ?? this.resolveTimeoutMs());
 
     try {
       const page = await client.models.list(
@@ -256,7 +289,10 @@ export class AiProviderClientService {
     }
 
     try {
-      await this.fetchModels(connection, { timeoutMs: AI_PROVIDER_HEALTH_CHECK_TIMEOUT_MS });
+      await this.fetchModels(connection, {
+        timeoutMs: AI_PROVIDER_HEALTH_CHECK_TIMEOUT_MS,
+        fresh: true,
+      });
 
       const result: AiProviderHealth = { status: 'ok', checkedAt: new Date().toISOString() };
       this.healthCache.set(cacheKey, { result, cachedAt: now });
