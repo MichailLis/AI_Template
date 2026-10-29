@@ -1,4 +1,6 @@
 import {
+  PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
+  PROF_ORIENTATION_ATLAS_RETRY_PAUSE_MS,
   normalizeProfessionTitle,
   selectProfOrientationAtlasProfessions,
   shouldRefreshProfOrientationAtlasSummary,
@@ -100,6 +102,58 @@ describe('prof-orientation atlas logic', () => {
         events: [],
         institutions: [],
       },
+    } as unknown as ProfOrientationSummary;
+    expect(shouldRefreshProfOrientationAtlasSummary(summary)).toBe(true);
+  });
+  describe('after an Atlas failure', () => {
+    const now = new Date('2026-10-30T12:00:00.000Z');
+    const failedSummary = (checkedAt?: string) =>
+      ({
+        resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
+        profile: { type: 'broad_interest' },
+        primaryDirection: { professions: [{ code: '201524', title: 'Инженер-конструктор' }] },
+        secondaryDirection: null,
+        topDirections: [],
+        atlas: {
+          version: PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION,
+          status: 'unavailable',
+          publicUrl: 'https://atlas.example',
+          apiUrl: 'https://atlas.example/api-backend',
+          errorMessage: 'Сервис Атласа не отвечает',
+          checkedAt,
+          unmatchedProfessions: ['Инженер-конструктор'],
+          duplicateProfessions: [],
+          professions: [],
+          enterprises: [],
+          events: [],
+          institutions: [],
+        },
+      }) as unknown as ProfOrientationSummary;
+
+    it('waits for the retry pause', () => {
+      const checkedAt = new Date(now.getTime() - PROF_ORIENTATION_ATLAS_RETRY_PAUSE_MS + 1000);
+      expect(
+        shouldRefreshProfOrientationAtlasSummary(failedSummary(checkedAt.toISOString()), now),
+      ).toBe(false);
+    });
+
+    it('retries once the pause has passed', () => {
+      const checkedAt = new Date(now.getTime() - PROF_ORIENTATION_ATLAS_RETRY_PAUSE_MS);
+      expect(
+        shouldRefreshProfOrientationAtlasSummary(failedSummary(checkedAt.toISOString()), now),
+      ).toBe(true);
+    });
+
+    it('retries a failure saved before checkedAt existed', () => {
+      expect(shouldRefreshProfOrientationAtlasSummary(failedSummary(), now)).toBe(true);
+    });
+  });
+  it('asks for Atlas when the summary has none (not configured is never saved)', () => {
+    const summary = {
+      resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
+      primaryDirection: null,
+      secondaryDirection: null,
+      topDirections: [],
     } as unknown as ProfOrientationSummary;
     expect(shouldRefreshProfOrientationAtlasSummary(summary)).toBe(true);
   });

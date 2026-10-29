@@ -95,12 +95,24 @@ export const selectProfOrientationAtlasProfessions = (
   }
   return selected.slice(0, 2);
 };
-export const shouldRefreshProfOrientationAtlasSummary = (summary: ProfOrientationSummary) => {
+export const PROF_ORIENTATION_ATLAS_RETRY_PAUSE_MS = 5 * 60 * 1000;
+export const shouldRefreshProfOrientationAtlasSummary = (
+  summary: ProfOrientationSummary,
+  now = new Date(),
+) => {
+  // Атлас без настроек в базу не пишется, так что его нет; запросить снова дёшево — без сети.
   if (!summary.atlas) {
-    return false;
+    return true;
   }
   if (summary.atlas.version !== PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION) {
     return true;
+  }
+  if (summary.atlas.errorMessage) {
+    const checkedAtMs = Date.parse(summary.atlas.checkedAt ?? '');
+    return (
+      Number.isNaN(checkedAtMs) ||
+      now.getTime() - checkedAtMs >= PROF_ORIENTATION_ATLAS_RETRY_PAUSE_MS
+    );
   }
   const selectedTitles = new Set(
     selectProfOrientationAtlasProfessions(summary).map((item) =>

@@ -15,7 +15,13 @@ describe('ProfOrientationAtlasService', () => {
     findEvents: jest.fn(),
     findInstitutions: jest.fn(),
   };
-  const prisma = {
+  const prisma: {
+    $transaction: jest.Mock;
+    $queryRaw: jest.Mock;
+    testStudentAnalysis: { update: jest.Mock };
+  } = {
+    $transaction: jest.fn((run: (tx: unknown) => unknown) => run(prisma)),
+    $queryRaw: jest.fn(),
     testStudentAnalysis: {
       update: jest.fn(),
     },
@@ -372,5 +378,29 @@ describe('ProfOrientationAtlasService', () => {
       events: [],
       institutions: [],
     });
+    expect(Date.parse(summary.atlas?.checkedAt ?? '')).not.toBeNaN();
+  });
+  it('saveEnrichedAnalysis does not write when Atlas is not configured', async () => {
+    settingsService.getProfessionAtlasConnection.mockResolvedValue({
+      publicUrl: null,
+      apiUrl: null,
+    });
+    const summary = await createService().saveEnrichedAnalysis(77, createSummary());
+    expect(summary.atlas).toMatchObject({ errorMessage: 'Atlas URL is not configured' });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.testStudentAnalysis.update).not.toHaveBeenCalled();
+  });
+  it('saveEnrichedAnalysis writes only atlas over the locked row, keeping llm and rawText', async () => {
+    atlasClient.findProfessions.mockRejectedValue(new Error('Atlas is down'));
+    const lockedLlm = { status: 'ready', analysis: { text: 'AI-текст' } };
+    prisma.$queryRaw.mockResolvedValue([{ summary: { ...createSummary(), llm: lockedLlm } }]);
+    await createService().saveEnrichedAnalysis(77, createSummary());
+    const [args] = prisma.testStudentAnalysis.update.mock.calls[0] as [
+      { where: unknown; data: { summary: { llm: unknown; atlas: unknown } } },
+    ];
+    expect(args.where).toEqual({ id: 77 });
+    expect(Object.keys(args.data)).toEqual(['summary']);
+    expect(args.data.summary.llm).toEqual(lockedLlm);
+    expect(args.data.summary.atlas).toMatchObject({ status: 'unavailable' });
   });
 });

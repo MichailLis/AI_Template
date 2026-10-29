@@ -70,6 +70,8 @@ export interface ProfOrientationAtlasRecommendations {
   publicUrl: string | null;
   apiUrl: string | null;
   errorMessage?: string;
+  /** Когда Атлас опрашивали; после сбоя повтор не раньше паузы от этого времени. */
+  checkedAt?: string;
   unmatchedProfessions: string[];
   duplicateProfessions: string[];
   professions: ProfOrientationAtlasProfessionCard[];

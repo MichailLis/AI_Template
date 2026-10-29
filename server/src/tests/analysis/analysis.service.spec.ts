@@ -37,9 +37,7 @@ type AnalysisUpdateArgs = {
     summary?: unknown;
     errorMessage?: string | null;
   };
-  where: {
-    attemptId: number;
-  };
+  where: { attemptId?: number; id?: number };
 };
 
 type AiProviderClientMock = {
@@ -108,6 +106,8 @@ const validProfOrientationEnrichment = {
 describe('TestsAnalysisService', () => {
   let service: TestsAnalysisService;
   let prismaMock: {
+    $transaction: jest.Mock;
+    $queryRaw: jest.Mock;
     testStudentAttempt: {
       findUnique: jest.Mock;
     };
@@ -131,6 +131,8 @@ describe('TestsAnalysisService', () => {
 
   beforeEach(() => {
     prismaMock = {
+      $transaction: jest.fn((run: (tx: unknown) => unknown) => run(prismaMock)),
+      $queryRaw: jest.fn().mockResolvedValue([]),
       testStudentAttempt: {
         findUnique: jest.fn(),
       },
@@ -722,6 +724,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       analysis: {
+        id: 77,
         summary: algorithmSummary,
       },
       topicVersion: {
@@ -740,6 +743,11 @@ describe('TestsAnalysisService', () => {
       model: 'google/gemini-2.0-flash-exp:free',
       output: JSON.stringify(validProfOrientationEnrichment),
     });
+    // Пока шёл LLM, GET /result обновил атлас: запись LLM не должна вернуть старый.
+    const freshAtlas = { status: 'ready', professions: [{ title: 'ATLAS-FRESH' }] };
+    prismaMock.$queryRaw.mockResolvedValue([
+      { summary: { ...algorithmSummary, atlas: freshAtlas } },
+    ]);
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
@@ -749,11 +757,13 @@ describe('TestsAnalysisService', () => {
     >;
     const updateArgs = updateMock.mock.calls[0]?.[0];
 
+    expect(updateArgs?.where).toEqual({ id: 77 });
     expect(updateArgs?.data).toMatchObject({
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
       summary: {
         resultKind: 'prof_orientation_v3_plus',
+        atlas: freshAtlas,
         primaryDirection: { id: 'A1', name: '3D-моделирование' },
         confidence: { level: 'high' },
         profile: { type: 'single_profile' },
@@ -801,6 +811,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       analysis: {
+        id: 77,
         summary: algorithmSummary,
       },
       topicVersion: {
@@ -822,6 +833,7 @@ describe('TestsAnalysisService', () => {
         model: 'google/gemini-2.0-flash-exp:free',
         output: JSON.stringify(validProfOrientationEnrichment),
       });
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ summary: algorithmSummary }]);
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
@@ -863,6 +875,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       analysis: {
+        id: 77,
         summary: algorithmSummary,
       },
       topicVersion: {
@@ -880,6 +893,7 @@ describe('TestsAnalysisService', () => {
     jest
       .mocked(aiProviderClientMock.generatePrompt)
       .mockRejectedValue(new Error('AI provider returned an empty response'));
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ summary: algorithmSummary }]);
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);

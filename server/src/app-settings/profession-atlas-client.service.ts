@@ -268,7 +268,16 @@ export class ProfessionAtlasClientService {
         throw new BadGatewayException(`Atlas API request failed with ${response.status}`);
       }
 
-      return (await response.json()) as unknown;
+      const body = await response.text();
+
+      try {
+        return JSON.parse(body) as unknown;
+      } catch {
+        // Неверный адрес API попадает на сайт Атласа, и тот отвечает 200 со своей HTML-страницей.
+        throw new BadGatewayException(
+          'Атлас вернул страницу вместо данных: проверьте адрес API в настройках',
+        );
+      }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new BadGatewayException('Atlas API request timeout');
