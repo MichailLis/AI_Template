@@ -40,7 +40,7 @@
     "prisma:seed": "npm run prisma:seed --prefix server",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "audit:all": "npm audit && npm --prefix client audit && npm --prefix server audit",
+    "audit:all": "npm audit && npm --prefix client audit && node scripts/audit-server.mjs",
     "audit:prod": "npm audit --omit=dev && npm --prefix client audit --omit=dev && npm --prefix server audit --omit=dev",
     "audit:explain": "node scripts/audit-explain.mjs",
     "doctor:agent-tooling": "node scripts/doctor-agent-tooling.mjs",
