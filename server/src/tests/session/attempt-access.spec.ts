@@ -1,7 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import type { PrismaService } from '../../prisma.service';
-import { getSessionAttemptByTokenOrThrow } from '../session/attempt-access';
+import {
+  getResultAttemptByTokenOrThrow,
+  getSessionAttemptByTokenOrThrow,
+} from '../session/attempt-access';
 import { attemptWithSessionInclude } from '../attempts/attempt.query';
 
 const createAttemptFixture = (
@@ -148,5 +151,58 @@ describe('getSessionAttemptByTokenOrThrow', () => {
     await expect(result).rejects.toMatchObject({
       message: 'Public test link is disabled because its test is archived',
     });
+  });
+});
+
+describe('getResultAttemptByTokenOrThrow', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  const createPrismaMock = (attempt: unknown) =>
+    ({
+      testStudentAttempt: { findUnique: jest.fn().mockResolvedValue(attempt) },
+    }) as unknown as PrismaService;
+
+  it.each([
+    { label: 'disabled', publicLink: { isActive: false }, topicVersion: {} },
+    {
+      label: 'expired',
+      publicLink: { endsAt: new Date('2026-05-12T11:59:00.000Z') },
+      topicVersion: {},
+    },
+    {
+      label: 'disabled by education organization',
+      publicLink: { educationOrganization: { isActive: false } },
+      topicVersion: {},
+    },
+    {
+      label: 'attached to an archived test',
+      publicLink: {},
+      topicVersion: { topic: { archivedAt: new Date('2026-05-12T11:00:00.000Z') } },
+    },
+  ])('returns the attempt when its public link is $label', async (testCase) => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-12T12:00:00.000Z'));
+
+    const attempt = createAttemptFixture(testCase.publicLink, testCase.topicVersion);
+
+    await expect(
+      getResultAttemptByTokenOrThrow(createPrismaMock(attempt), 'session-token'),
+    ).resolves.toBe(attempt);
+  });
+
+  it('rejects the attempt when its public link was deleted', async () => {
+    const attempt = createAttemptFixture({ archivedAt: new Date('2026-05-12T11:00:00.000Z') });
+    const result = getResultAttemptByTokenOrThrow(createPrismaMock(attempt), 'session-token');
+
+    await expect(result).rejects.toBeInstanceOf(NotFoundException);
+    await expect(result).rejects.toMatchObject({ response: { error: 'LINK_NOT_FOUND' } });
+  });
+
+  it('rejects an unknown session token', async () => {
+    const result = getResultAttemptByTokenOrThrow(createPrismaMock(null), 'session-token');
+
+    await expect(result).rejects.toMatchObject({ response: { error: 'SESSION_NOT_FOUND' } });
   });
 });
