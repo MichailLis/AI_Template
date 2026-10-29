@@ -8,6 +8,15 @@ import * as argon2 from 'argon2';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
+// Lets an unknown email spend the same argon2 time as a known one (see signin).
+let dummyHashPromise: Promise<string> | undefined;
+// A failed hash is dropped so the next call retries instead of failing every unknown email.
+const getDummyHash = () =>
+  (dummyHashPromise ??= argon2.hash(randomUUID()).catch((error: unknown) => {
+    dummyHashPromise = undefined;
+    throw error;
+  }));
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -22,7 +31,10 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user) throw new ForbiddenException('Access Denied');
+    if (!user) {
+      await argon2.verify(await getDummyHash(), dto.password).catch(() => false);
+      throw new ForbiddenException('Access Denied');
+    }
 
     const passwordMatches = await argon2.verify(user.password, dto.password);
     if (!passwordMatches) throw new ForbiddenException('Access Denied');
