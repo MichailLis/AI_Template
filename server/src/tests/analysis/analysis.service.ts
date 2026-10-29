@@ -20,6 +20,7 @@ import { readFirstEnv, type AiProviderConnection } from '../../ai-provider/ai-pr
 import {
   AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE,
   AiProviderClientService,
+  type AiModelCatalog,
   type AiPromptRequest,
 } from '../../ai-provider/ai-provider.client';
 import { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
@@ -115,17 +116,37 @@ const DEFAULT_LLM_CONCURRENCY = 3;
 
 const PUBLIC_ANALYSIS_ERROR_MESSAGE = 'Analysis failed';
 
-/** Removes `llm.errorMessage`, `atlas.errorMessage` and `atlas.apiUrl`: admin-only diagnostics. */
+/**
+ * Что из алгоритмического результата уходит в промпт: без атласа и прежнего llm-блока, без баллов
+ * и версии методики, без `primaryDirection`/`secondaryDirection` (это `topDirections[0]` и `[1]`).
+ */
+const ENRICHMENT_PROMPT_OMITTED_FIELDS = new Set([
+  'atlas',
+  'llm',
+  'scores',
+  'resultKind',
+  'scoringVersion',
+  'primaryDirection',
+  'secondaryDirection',
+]);
+
+export const toEnrichmentPromptSummary = (summary: object) =>
+  Object.fromEntries(
+    Object.entries(summary).filter(([key]) => !ENRICHMENT_PROMPT_OMITTED_FIELDS.has(key)),
+  );
+
+/** Removes `llm.errorMessage`, `llm.model`, `atlas.errorMessage` and `atlas.apiUrl`: admin-only diagnostics. */
 const stripInternalAnalysisFields = <T>(summary: T): T => {
   if (typeof summary !== 'object' || summary === null) {
     return summary;
   }
 
   const result = { ...summary } as Record<string, unknown>;
-  for (const [key, hidden] of [
-    ['llm', ['errorMessage']],
+  const hiddenFields: Array<[string, string[]]> = [
+    ['llm', ['errorMessage', 'model']],
     ['atlas', ['errorMessage', 'apiUrl']],
-  ] as const) {
+  ];
+  for (const [key, hidden] of hiddenFields) {
     const section = result[key];
     if (typeof section === 'object' && section !== null) {
       const copy = { ...section } as Record<string, unknown>;
@@ -179,7 +200,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
 
   private buildProfOrientationEnrichmentPrompt(input: {
     prompt: string;
-    algorithmSummary: unknown;
+    algorithmSummary: object;
     questions: unknown[];
     answers: unknown[];
   }) {
@@ -187,26 +208,19 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       input.prompt.trim(),
       '',
       'Алгоритмический результат профориентационного теста:',
-      JSON.stringify(input.algorithmSummary, null, 2),
+      JSON.stringify(toEnrichmentPromptSummary(input.algorithmSummary)),
       '',
       'Исходные вопросы и ответы участника:',
-      JSON.stringify(
-        {
-          questions: input.questions,
-          answers: input.answers,
-        },
-        null,
-        2,
-      ),
+      JSON.stringify({ questions: input.questions, answers: input.answers }),
       '',
       'Сформируй только дополнительное текстовое пояснение в JSON по методической схеме профориентации v3+.',
       'Не меняй рассчитанные алгоритмом направление, уверенность, баллы, профиль и профессии.',
       'professorSummary — 2-3 предложения для блока "Профессор Полюс говорит": простым языком объясни карточку результата, ближайший смысл для школьника и одну понятную практическую пробу; это должна быть законченная фраза 240-420 символов, не заголовок и не знак препинания. Не копируй дословно resultCard.meaning или profile.meaning, переформулируй их как живое ИИ-пояснение.',
       'summary — человекочитаемое пояснение карточки результата для блока "Как читать результат": без нового вывода, без пересчета профиля и без внутренних деталей методики.',
-      'Пиши для школьника и педагога простым языком: не используй технические ключи JSON и внутренние коды вроде single_profile, mixed_profile, broad_interest, low_definition, primaryDirection, topDirections, A1, gap, consistencyIndex, readinessTop, selectedCounts или sliderValues.',
+      'Пиши для школьника и педагога простым языком: не используй технические ключи JSON и внутренние коды вроде single_profile, mixed_profile, broad_interest, low_definition, topDirections, A1, gap, consistencyIndex, readinessTop, selectedCounts или sliderValues.',
       'не раскрывай внутреннюю механику подсчета: не называй веса, формулы, балльные отрывы, значения слайдеров, номера вопросов и служебные признаки.',
-      'Опирайся на profile.type, profile, topDirections, primaryDirection.resultCard, confidence, flags, selectedCounts и sliderValues.',
-      'Ветвление по profile.type обязательно: single_profile объясняй через primaryDirection.resultCard; mixed_profile — через profile.title, две topDirections и общий miniProject; broad_interest/low_definition — без жесткой рекомендации, как практические пробы нескольких направлений.',
+      'Опирайся на profile.type, profile, topDirections (первое — главное направление, второе — дополнительное), их resultCard, confidence, flags, selectedCounts и sliderValues.',
+      'Ветвление по profile.type обязательно: single_profile объясняй через resultCard первого направления из topDirections; mixed_profile — через profile.title, две topDirections и общий miniProject; broad_interest/low_definition — без жесткой рекомендации, как практические пробы нескольких направлений.',
       'methodSignals нужны как внутренние опорные наблюдения; пиши их без кодов, чисел шкал, формул и служебных терминов.',
       'firstSteps должны быть основаны на resultCard.tryActions, profile.miniProject или практических пробах из методики.',
       'learningPlan должен быть основан на resultCard.learn и близких topDirections.',
@@ -282,7 +296,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         );
 
         this.logger.log(
-          `Prof-orientation enrichment attempt ${attemptId} succeeded on try ${attempt + 1} in ${Date.now() - startedAt} ms (provider: ${response.provider ?? 'unknown'}, usage: ${JSON.stringify(response.usage ?? null)})`,
+          `Prof-orientation enrichment attempt ${attemptId} succeeded on try ${attempt + 1} in ${Date.now() - startedAt} ms (model: ${response.model}, provider: ${response.provider ?? 'unknown'}, usage: ${JSON.stringify(response.usage ?? null)})`,
         );
 
         return response;
@@ -306,18 +320,21 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     }
   }
 
+  /** Модель из версии промпта; подмены на другую нет. Недоступной у провайдера модели — понятная ошибка. */
   private async resolveStructuredModel(connection: AiProviderConnection, savedModel: string) {
+    let catalog: AiModelCatalog;
     try {
-      const catalog = await this.aiProviderClient.fetchModels(connection);
-
-      if (catalog.models.some((model) => model.id === savedModel)) {
-        return savedModel;
-      }
-
-      return catalog.defaultModel || savedModel;
+      catalog = await this.aiProviderClient.fetchModels(connection);
     } catch {
+      // Каталог недоступен: не блокируем анализ, провайдер сам ответит на неизвестную модель.
       return savedModel;
     }
+
+    if (!catalog.models.some((model) => model.id === savedModel)) {
+      throw new Error(`Модель «${savedModel}» недоступна у провайдера: выберите другую в промпте`);
+    }
+
+    return savedModel;
   }
 
   upsertStubAnalysis(
@@ -655,6 +672,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         ...currentSummary,
         llm: {
           status: 'ready' as const,
+          model: response.model,
           analysis: parsedOutput,
         },
       };
@@ -677,6 +695,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         ...currentSummary,
         llm: {
           status: 'failed' as const,
+          model: promptVersion.model,
           errorMessage,
         },
       };

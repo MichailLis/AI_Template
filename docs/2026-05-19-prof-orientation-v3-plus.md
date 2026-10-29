@@ -64,6 +64,21 @@ already computed result in plain language, especially the "Professor Polus says"
 summary, and to avoid exposing internal formulas, JSON keys, raw confidence
 metrics, or method diagnostics to the student.
 
+The prompt carries the algorithmic summary and the questions with answers as
+compact JSON. The summary is trimmed before it is sent: `atlas`, the previous
+`llm` block, `scores`, `resultKind`, `scoringVersion`, `primaryDirection` and
+`secondaryDirection` are left out (the last two are `topDirections[0]` and
+`[1]`). See `toEnrichmentPromptSummary` in `analysis.service.ts`.
+
+The model is the one saved in the prompt version, never a substitute. If the
+provider's model catalog loads and does not list it, enrichment fails with
+`llm.status = failed` and a reason naming the model (the record stays `READY`).
+If the catalog cannot be loaded, the saved model is sent as is. The model the
+provider actually answered with is logged and stored in `summary.llm.model`
+(admin only; the public `/t/*` DTO does not expose it). The catalog is cached
+for 5 minutes per base URL and key hash; "Проверка связи" always fetches it
+fresh.
+
 The built-in methodology prompt model is `openai/gpt-oss-120b`. If an older
 published methodology prompt exists on another model, the importer creates a new
 published prompt version and attaches new imports to that version.
