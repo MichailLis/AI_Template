@@ -120,6 +120,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       status: 'IN_PROGRESS',
       expiresAt: null,
       finishedAt: null,
+      answers: [],
       topicVersion: {
         questions: [
           {
@@ -162,6 +163,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       status: 'IN_PROGRESS',
       expiresAt: null,
       finishedAt: null,
+      answers: [{ questionId: 100, answerPayload: 'old' }],
       topicVersion: {
         questions: [
           {
@@ -186,6 +188,51 @@ describe('TestsPublicSessionService lifecycle', () => {
     });
     expect(txMock.testStudentAnswer.upsert).not.toHaveBeenCalled();
     expect(result.answers).toEqual([]);
+  });
+
+  it('saveAnswers writes only the answers that differ from the stored ones', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      expiresAt: null,
+      finishedAt: null,
+      answers: [
+        { questionId: 100, answerPayload: 'same' },
+        { questionId: 101, answerPayload: ['a', 'b'] },
+        { questionId: 102, answerPayload: 'old' },
+      ],
+      topicVersion: {
+        questions: [
+          { id: 100, type: 'OPEN_TEXT', title: 'T', required: false, settings: null, options: [] },
+          {
+            id: 101,
+            type: 'MULTI_CHOICE',
+            title: 'M',
+            required: false,
+            settings: null,
+            options: [{ value: 'a' }, { value: 'b' }],
+          },
+          { id: 102, type: 'OPEN_TEXT', title: 'T2', required: false, settings: null, options: [] },
+          { id: 103, type: 'OPEN_TEXT', title: 'T3', required: false, settings: null, options: [] },
+        ],
+      },
+    } as never);
+    txMock.testStudentAnswer.findMany.mockResolvedValue([]);
+
+    await service.saveAnswers('session-token', {
+      answers: [
+        { questionId: 100, answerPayload: 'same' },
+        { questionId: 101, answerPayload: ['b', 'a'] },
+        { questionId: 102, answerPayload: 'new' },
+        { questionId: 103, answerPayload: null },
+      ],
+    });
+
+    const writtenPayloads = txMock.testStudentAnswer.upsert.mock.calls.map(
+      ([args]) => args.create.answerPayload,
+    );
+    expect(writtenPayloads).toEqual([['b', 'a'], 'new']);
+    expect(txMock.testStudentAnswer.deleteMany).not.toHaveBeenCalled();
   });
 
   it('saveAnswers rejects payloads that do not match the question type', async () => {

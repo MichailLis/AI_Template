@@ -217,7 +217,7 @@ export function PublicLinksAttemptDetailDialog({
                       {answer.questionTitle}
                     </p>
                     <p className={`mt-1 text-xs ${adminClassNames.text.muted}`}>
-                      #{answer.questionId} • {getQuestionTypeLabel(answer.questionType)} •{' '}
+                      #{answer.questionId} • {getQuestionTypeLabel(answer.questionType)} • изменён{' '}
                       {formatDateTime(answer.updatedAt)}
                     </p>
                     {/* Сырой ответ нужен только при разборе проблемы, поэтому он свернут. */}
