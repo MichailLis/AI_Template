@@ -1,12 +1,16 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { getSessionAttemptByTokenOrThrow } from '../session/attempt-access';
+import {
+  getResultAttemptByTokenOrThrow,
+  getSessionAttemptByTokenOrThrow,
+} from '../session/attempt-access';
 
 import { createPublicSessionHarness } from '../session/public-session.spec-harness';
 
 import type { PublicSessionHarness } from '../session/public-session.spec-harness';
 
 jest.mock('../session/attempt-access', () => ({
+  getResultAttemptByTokenOrThrow: jest.fn(),
   getSessionAttemptByTokenOrThrow: jest.fn(),
 }));
 
@@ -541,7 +545,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       generatedAt: new Date('2026-06-15T22:55:29.098Z'),
     };
 
-    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+    jest.mocked(getResultAttemptByTokenOrThrow).mockResolvedValue({
       id: 7,
       status: 'COMPLETED',
       expiresAt: null,

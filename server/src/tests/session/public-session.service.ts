@@ -7,7 +7,10 @@ import type {
   PublicSessionStartRequestDto,
 } from '../dto/tests-public.dto';
 import { mapSessionState } from '../attempts/attempt.mapper';
-import { getSessionAttemptByTokenOrThrow } from '../session/attempt-access';
+import {
+  getResultAttemptByTokenOrThrow,
+  getSessionAttemptByTokenOrThrow,
+} from '../session/attempt-access';
 import { ensureAttemptCanAcceptAnswers } from '../session/attempt.guards';
 import { toOptionalIsoString } from '../shared/date.utils';
 import {
@@ -427,7 +430,7 @@ export class TestsPublicSessionService {
   }
 
   async getSessionResult(sessionToken: string) {
-    const attempt = await getSessionAttemptByTokenOrThrow(this.prisma, sessionToken);
+    const attempt = await getResultAttemptByTokenOrThrow(this.prisma, sessionToken);
     const status = this.analysisService.toAttemptStatus(attempt);
 
     if (status === 'IN_PROGRESS') {
