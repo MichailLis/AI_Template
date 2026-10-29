@@ -8,6 +8,7 @@ import { ProtectedRoute } from '@/features/auth';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/interceptors';
 import { discoverAndConfigureApiBaseUrl } from '@/shared/api/runtime-api-base-url';
+import { RouteErrorBoundary } from '@/shared/ui/route-error-boundary';
 
 const AdminAnalyticsPage = lazy(() => import('@/pages/admin/admin-analytics-page'));
 const AdminPage = lazy(() => import('@/pages/admin/admin-page'));
@@ -50,6 +51,46 @@ function RouteLoadingScreen() {
   );
 }
 
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/t/:code" element={<PublicTestEntryPage />} />
+      <Route path="/t/:code/session/:sessionToken" element={<PublicTestRunPage />} />
+      <Route path="/t/:code/result/:sessionToken" element={<PublicTestResultPage />} />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminPage />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/admin/tests" replace />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+        <Route path="/admin/prompts" element={<AdminPromptsPage />} />
+        <Route path="/admin/settings" element={<AdminSettingsPage />} />
+        <Route path="/admin/tests" element={<AdminTestsPage />} />
+        <Route path="/admin/tests/:topicId" element={<AdminTestsPage />} />
+        <Route path="/admin/tests/:topicId/settings" element={<AdminTestsPage />} />
+        <Route path="/admin/public-links" element={<AdminPublicLinksPage />} />
+        <Route
+          path="/admin/public-links/organizations"
+          element={<AdminPublicLinksOrganizationsPage />}
+        />
+        <Route
+          path="/admin/public-links/stats"
+          element={<Navigate to="/admin/analytics?tab=attempts" replace />}
+        />
+      </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   const [apiReady, setApiReady] = useState(Boolean(import.meta.env.VITE_API_URL));
 
@@ -86,45 +127,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Suspense fallback={<RouteLoadingScreen />}>
-          <main>
-            <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/t/:code" element={<PublicTestEntryPage />} />
-              <Route path="/t/:code/session/:sessionToken" element={<PublicTestRunPage />} />
-              <Route path="/t/:code/result/:sessionToken" element={<PublicTestResultPage />} />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <AdminPage />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Navigate to="/admin/tests" replace />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-                <Route path="/admin/prompts" element={<AdminPromptsPage />} />
-                <Route path="/admin/settings" element={<AdminSettingsPage />} />
-                <Route path="/admin/tests" element={<AdminTestsPage />} />
-                <Route path="/admin/tests/:topicId" element={<AdminTestsPage />} />
-                <Route path="/admin/tests/:topicId/settings" element={<AdminTestsPage />} />
-                <Route path="/admin/public-links" element={<AdminPublicLinksPage />} />
-                <Route
-                  path="/admin/public-links/organizations"
-                  element={<AdminPublicLinksOrganizationsPage />}
-                />
-                <Route
-                  path="/admin/public-links/stats"
-                  element={<Navigate to="/admin/analytics?tab=attempts" replace />}
-                />
-              </Route>
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </main>
-        </Suspense>
+        <RouteErrorBoundary>
+          <Suspense fallback={<RouteLoadingScreen />}>
+            <main>
+              <AppRoutes />
+            </main>
+          </Suspense>
+        </RouteErrorBoundary>
         <Toaster position="top-right" richColors />
       </Router>
     </QueryClientProvider>
