@@ -35,6 +35,7 @@ type AnalysisUpdateArgs = {
     providerMode: string;
     status: string;
     summary?: unknown;
+    errorMessage?: string | null;
   };
   where: {
     attemptId: number;
@@ -264,13 +265,17 @@ describe('TestsAnalysisService', () => {
     expect(result).not.toHaveProperty('rawText');
   });
 
-  it('toPublicAnalysisResponse hides provider errors and the atlas address from students', () => {
+  it('toPublicAnalysisResponse hides provider errors, the model and the atlas address from students', () => {
     const result = service.toPublicAnalysisResponse({
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
       summary: {
         profile: 'keep',
-        llm: { status: 'failed', errorMessage: 'upstream https://secret.internal timed out' },
+        llm: {
+          status: 'failed',
+          model: 'openai/gpt-oss-120b',
+          errorMessage: 'upstream https://secret.internal timed out',
+        },
         atlas: {
           status: 'failed',
           apiUrl: 'http://atlas.internal/api',
@@ -657,7 +662,7 @@ describe('TestsAnalysisService', () => {
     });
   });
 
-  it('runAttemptAnalysis uses default structured model when saved prompt model is unavailable', async () => {
+  it('runAttemptAnalysis fails instead of substituting a model when the saved one is unavailable', async () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
@@ -690,28 +695,29 @@ describe('TestsAnalysisService', () => {
         },
       ],
     });
-    aiProviderClientMock.generatePrompt.mockResolvedValue({
-      model: 'google/gemini-2.0-flash-exp:free',
-      output: JSON.stringify(validAnalysisResult),
-    });
     prismaMock.testStudentAnalysis.update.mockResolvedValue({});
 
     await service.runAttemptAnalysis(5);
-    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith(
-      testConnection,
-      expect.objectContaining({
-        model: 'google/gemini-2.0-flash-exp:free',
-      }),
-    );
+
+    expect(aiProviderClientMock.generatePrompt).not.toHaveBeenCalled();
+    const updateMock = prismaMock.testStudentAnalysis.update as jest.MockedFunction<
+      (args: AnalysisUpdateArgs) => Promise<unknown>
+    >;
+    const data = updateMock.mock.calls[0]?.[0].data;
+    expect(data?.status).toBe('FAILED');
+    expect(data?.errorMessage).toContain('baidu/qianfan-ocr-fast:free');
   });
 
   it('runAttemptAnalysis enriches prof-orientation summary without changing algorithm fields', async () => {
     const algorithmSummary = {
       resultKind: 'prof_orientation_v3_plus',
+      scores: { A1: 9 },
+      topDirections: [{ id: 'A1', name: '3D-моделирование' }],
       primaryDirection: { id: 'A1', name: '3D-моделирование' },
       confidence: { level: 'high' },
       profile: { type: 'single_profile' },
       llm: { status: 'pending' },
+      atlas: { status: 'ready', professions: [{ title: 'ATLAS-MARKER' }] },
     };
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
@@ -753,6 +759,7 @@ describe('TestsAnalysisService', () => {
         profile: { type: 'single_profile' },
         llm: {
           status: 'ready',
+          model: 'google/gemini-2.0-flash-exp:free',
           analysis: validProfOrientationEnrichment,
         },
       },
@@ -777,6 +784,10 @@ describe('TestsAnalysisService', () => {
     expect(promptOptions?.prompt).toContain('не раскрывай внутреннюю механику подсчета');
     expect(promptOptions?.prompt).toContain('profile.type');
     expect(promptOptions?.prompt).toContain('не используй технические ключи');
+    expect(promptOptions?.prompt).not.toContain('ATLAS-MARKER');
+    expect(promptOptions?.prompt).not.toContain('"scores"');
+    expect(promptOptions?.prompt).not.toContain('"primaryDirection"');
+    expect(promptOptions?.prompt).toContain('"topDirections":[{"id":"A1"');
   });
 
   it('runAttemptAnalysis retries prof-orientation enrichment once after AI provider timeout', async () => {

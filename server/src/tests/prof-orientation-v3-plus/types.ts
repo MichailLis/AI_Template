@@ -104,6 +104,8 @@ export interface ProfOrientationSummary {
   flags: ProfOrientationFlag[];
   llm: {
     status: 'not_requested' | 'pending' | 'ready' | 'failed';
+    /** Фактическая модель ответа (ready) или модель из промпта (failed). */
+    model?: string;
     analysis?: unknown;
     errorMessage?: string;
   };

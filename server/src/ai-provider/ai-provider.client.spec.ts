@@ -100,7 +100,10 @@ describe('ai provider client', () => {
 
     const health = await client.checkHealth(polzaConnection);
 
-    expect(fetchModelsSpy).toHaveBeenCalledWith(polzaConnection, { timeoutMs: 5000 });
+    expect(fetchModelsSpy).toHaveBeenCalledWith(polzaConnection, {
+      timeoutMs: 5000,
+      fresh: true,
+    });
     expect(health.status).toBe('ok');
     expect(health.errorMessage).toBeUndefined();
     expect(Number.isNaN(Date.parse(health.checkedAt))).toBe(false);
@@ -346,5 +349,34 @@ describe('ai provider client', () => {
       'openai/gpt-4o',
       'openai/gpt-4o-mini',
     ]);
+  });
+
+  it('serves the model catalog from cache per address and key, and refetches on fresh or key change', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
+          object: 'list',
+          data: [
+            {
+              id: 'openai/gpt-4o',
+              name: 'GPT-4o',
+              type: 'chat',
+              top_provider: { supported_parameters: ['response_format'], pricing: {} },
+            },
+          ],
+        }),
+      ),
+    );
+    const client = createClient(undefined);
+
+    await client.fetchModels(polzaConnection);
+    await client.fetchModels(polzaConnection);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await client.fetchModels({ ...polzaConnection, apiKey: 'another-key' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await client.fetchModels(polzaConnection, { fresh: true });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
