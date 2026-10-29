@@ -1,9 +1,11 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usePublicTestRunWorkspace } from './use-public-test-run-workspace';
 
 import type { PublicTestSession } from './public-test-run.types';
+import type { ReactNode } from 'react';
 
 const publicTestApiMocks = vi.hoisted(() => ({
   finishSession: vi.fn(),
@@ -25,6 +27,7 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
+  getTestsPublicControllerGetSessionQueryKey: (sessionToken: string) => ['session', sessionToken],
   testsPublicControllerSaveAnswers: (sessionToken: string, data: unknown) =>
     publicTestApiMocks.saveAnswers({ data, sessionToken }),
   useTestsPublicControllerFinishSession: () => ({
@@ -38,6 +41,13 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
     mutateAsync: publicTestApiMocks.saveAnswers,
   }),
 }));
+
+const renderWorkspace = () =>
+  renderHook(() => usePublicTestRunWorkspace(), {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
+    ),
+  });
 
 const createSession = (): PublicTestSession => ({
   sessionToken: 'session-token',
@@ -106,7 +116,7 @@ describe('usePublicTestRunWorkspace', () => {
   });
 
   it('autosaves a changed answer draft after the debounce interval', async () => {
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     act(() => {
       result.current.setQuestionAnswer(1, 'hello');
@@ -130,7 +140,7 @@ describe('usePublicTestRunWorkspace', () => {
   });
 
   it('sends only the latest answer when the draft changes during the debounce interval', async () => {
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     act(() => {
       result.current.setQuestionAnswer(1, 'hel');
@@ -163,7 +173,7 @@ describe('usePublicTestRunWorkspace', () => {
 
   it('keeps the local draft available when autosave fails', async () => {
     publicTestApiMocks.saveAnswers.mockRejectedValueOnce(new Error('network'));
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     act(() => {
       result.current.setQuestionAnswer(1, 'hello');
@@ -199,7 +209,7 @@ describe('usePublicTestRunWorkspace', () => {
         ],
       });
 
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     act(() => {
       result.current.setQuestionAnswer(1, 'stale');
@@ -250,7 +260,7 @@ describe('usePublicTestRunWorkspace', () => {
       isError: false,
       isLoading: false,
     });
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     await act(async () => {
       await result.current.handleFinish();
@@ -273,7 +283,7 @@ describe('usePublicTestRunWorkspace', () => {
         data: { error: { code: 'SESSION_EXPIRED', message: 'Test session expired' } },
       },
     });
-    const { result } = renderHook(() => usePublicTestRunWorkspace());
+    const { result } = renderWorkspace();
 
     await act(async () => {
       await result.current.handleFinish();

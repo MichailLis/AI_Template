@@ -14,6 +14,7 @@ type SessionAnswersPayload = ReturnType<typeof buildSessionAnswers>;
 export type SavedPublicAnswerPayload = Array<{
   questionId: number;
   answerPayload: string | string[] | number;
+  updatedAt: string;
 }>;
 
 interface UsePublicTestRunAutosaveParams {
@@ -22,7 +23,7 @@ interface UsePublicTestRunAutosaveParams {
   answerDraft: PublicTestAnswerDraft;
   effectiveAnswers: PublicTestAnswerDraft;
   serverAnswerMap: PublicTestAnswerDraft;
-  onSavedAnswers: (answers: SavedPublicAnswerPayload) => void;
+  onSavedAnswers: (answers: SavedPublicAnswerPayload, sentAnswers: PublicTestAnswerDraft) => void;
 }
 
 const AUTOSAVE_DEBOUNCE_MS = 900;
@@ -46,11 +47,7 @@ export function usePublicTestRunAutosave({
 
   const hasAnswerDraft = Object.keys(answerDraft).length > 0;
   const autosaveAnswers = useMemo(() => {
-    if (!session) {
-      return [];
-    }
-
-    return buildSessionAnswers(session.questions, effectiveAnswers, serverAnswerMap);
+    return session ? buildSessionAnswers(session.questions, effectiveAnswers, serverAnswerMap) : [];
   }, [effectiveAnswers, serverAnswerMap, session]);
 
   const clearAutosaveTimer = useCallback(() => {
@@ -91,6 +88,8 @@ export function usePublicTestRunAutosave({
     }
 
     if (!hasAnswerDraft || autosaveAnswers.length === 0) {
+      // Иначе тот же ответ, выбранный снова после правки из другой вкладки, не уйдёт на сервер.
+      lastAutosavedAnswersSignatureRef.current = null;
       clearAutosaveTimer();
       return;
     }
@@ -123,7 +122,7 @@ export function usePublicTestRunAutosave({
           }
 
           markAnswersSaved(autosaveAnswers);
-          onSavedAnswers(response.answers);
+          onSavedAnswers(response.answers, effectiveAnswers);
         })
         .catch(() => {
           if (!isActive || autosaveRunIdRef.current !== autosaveRunId) {
@@ -148,6 +147,7 @@ export function usePublicTestRunAutosave({
   }, [
     autosaveAnswers,
     clearAutosaveTimer,
+    effectiveAnswers,
     hasAnswerDraft,
     markAnswersSaved,
     onSavedAnswers,

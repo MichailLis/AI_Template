@@ -41,6 +41,7 @@ Behavior:
 - Student-facing copy should stay human-readable and avoid raw API states.
 - On save failure, the UI keeps an actionable error state instead of silently discarding answers.
 - Erasing an answer (clearing text, unticking the last multi-choice option) sends `answerPayload: null` for that question, and the server deletes the stored answer. Only questions the server already holds an answer for are sent as `null` (`buildSessionAnswers`, third argument).
+- Only answers that differ from the server copy are sent, and `saveAnswers` writes only answers that differ from the stored ones (`isDeepStrictEqual`; the order of a multi-choice selection counts as a change). A second tab of the same attempt therefore cannot roll back an answer the first tab changed, and `updatedAt` of an answer means "last changed", not "last saved". After a save the draft drops the saved entries and the session query takes the server's answers, so the draft holds only unsaved edits.
 
 Relevant frontend files:
 

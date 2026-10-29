@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { isDeepStrictEqual } from 'node:util';
 
 import { PrismaService } from '../../prisma.service';
 import type {
@@ -243,8 +244,17 @@ export class TestsPublicSessionService {
       };
     });
 
+    // Пишем только изменённое: автосохранение шлёт все ответы, а чужие правки из другой вкладки
+    // не должны перезаписываться теми же значениями. Порядок в мультивыборе считается изменением.
+    const storedPayloads = new Map(attempt.answers.map((a) => [a.questionId, a.answerPayload]));
+    const changedAnswers = validatedAnswers.filter((answer) =>
+      answer.answerPayload === null
+        ? storedPayloads.has(answer.questionId)
+        : !isDeepStrictEqual(storedPayloads.get(answer.questionId), answer.answerPayload),
+    );
+
     const answers = await this.prisma.$transaction(async (tx) => {
-      for (const answer of validatedAnswers) {
+      for (const answer of changedAnswers) {
         if (answer.answerPayload === null) {
           await tx.testStudentAnswer.deleteMany({
             where: { attemptId: attempt.id, questionId: answer.questionId },

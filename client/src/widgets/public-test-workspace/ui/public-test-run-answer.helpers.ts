@@ -36,6 +36,12 @@ export const getEffectiveQuestionAnswer = (
   return mergedAnswers[question.id];
 };
 
+const isSameAnswer = (left: unknown, right: unknown) =>
+  Array.isArray(left) && Array.isArray(right)
+    ? left.length === right.length && left.every((item, index) => item === right[index])
+    : left === right;
+
+// Only answers that differ from the server's copy go out, so a stale tab cannot overwrite them.
 // A question the server holds an answer for but the draft has emptied goes out as null (erase).
 export const buildSessionAnswers = (
   questions: PublicTestQuestion[],
@@ -53,7 +59,10 @@ export const buildSessionAnswers = (
         return answers;
       }
 
-      if (!isPublicTestAnswerPayload(answerPayload)) {
+      if (
+        !isPublicTestAnswerPayload(answerPayload) ||
+        isSameAnswer(answerPayload, serverAnswerMap[question.id])
+      ) {
         return answers;
       }
 
@@ -66,19 +75,14 @@ export const buildSessionAnswers = (
     [],
   );
 
-export const reconcileAnswerDraftAfterSave = (
+// Черновик хранит только несохранённые правки: сохранённое берётся с сервера, иначе вторая
+// вкладка держала бы старый ответ в черновике и откатывала правки первой.
+export const dropSavedDraftEntries = (
   answerDraft: PublicTestAnswerDraft,
-  savedAnswers: Array<{ questionId: number; answerPayload: PublicTestAnswerPayload }>,
-) => {
-  if (savedAnswers.length === 0) {
-    return answerDraft;
-  }
-
-  return savedAnswers.reduce<PublicTestAnswerDraft>(
-    (nextDraft, answer) => ({
-      ...nextDraft,
-      [answer.questionId]: answer.answerPayload,
-    }),
-    { ...answerDraft },
+  sentAnswers: PublicTestAnswerDraft,
+) =>
+  Object.fromEntries(
+    Object.entries(answerDraft).filter(
+      ([questionId, value]) => !isSameAnswer(value, sentAnswers[Number(questionId)]),
+    ),
   );
-};

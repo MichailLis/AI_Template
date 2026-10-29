@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildSessionAnswers,
+  dropSavedDraftEntries,
   hasMeaningfulQuestionAnswer,
-  reconcileAnswerDraftAfterSave,
 } from './public-test-run-answer.helpers';
 
 import type { PublicTestQuestion } from './public-test-run.types';
@@ -72,29 +72,28 @@ describe('public test run answer helpers', () => {
     ]);
   });
 
-  it('replaces saved draft values with canonical answer payloads returned by the server', () => {
+  it('sends only answers that differ from the server copy, so a stale tab cannot roll them back', () => {
+    const questions = [
+      makeQuestion(1, 'SINGLE_CHOICE'),
+      makeQuestion(2, 'MULTI_CHOICE'),
+      makeQuestion(3, 'SLIDER'),
+    ];
+
     expect(
-      reconcileAnswerDraftAfterSave(
-        {
-          1: '  local draft  ',
-          2: ['a'],
-          3: 'unsaved draft',
-        },
-        [
-          {
-            questionId: 1,
-            answerPayload: 'local draft',
-          },
-          {
-            questionId: 2,
-            answerPayload: ['a', 'b'],
-          },
-        ],
+      buildSessionAnswers(
+        questions,
+        { 1: 'a', 2: ['x', 'y'], 3: 5 },
+        { 1: 'a', 2: ['y', 'x'], 3: 5 },
       ),
-    ).toEqual({
-      1: 'local draft',
-      2: ['a', 'b'],
-      3: 'unsaved draft',
-    });
+    ).toEqual([{ questionId: 2, answerPayload: ['x', 'y'] }]);
+  });
+
+  it('drops only the draft entries that were not edited after they were sent', () => {
+    expect(
+      dropSavedDraftEntries(
+        { 1: 'sent', 2: ['a'], 3: 'typed meanwhile' },
+        { 1: 'sent', 2: ['a'], 3: 'old' },
+      ),
+    ).toEqual({ 3: 'typed meanwhile' });
   });
 });

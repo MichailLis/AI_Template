@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import {
+  getTestsPublicControllerGetSessionQueryKey,
   useTestsPublicControllerFinishSession,
   useTestsPublicControllerGetSession,
   useTestsPublicControllerSaveAnswers,
@@ -11,9 +13,9 @@ import { getApiErrorCode, getApiErrorStatus } from '@/shared/lib/api-error';
 
 import {
   buildSessionAnswers,
+  dropSavedDraftEntries,
   getEffectiveQuestionAnswer,
   hasMeaningfulQuestionAnswer,
-  reconcileAnswerDraftAfterSave,
 } from './public-test-run-answer.helpers';
 import {
   usePublicTestRunAutosave,
@@ -110,9 +112,21 @@ export function usePublicTestRunWorkspace() {
     () => mergeAnswerDrafts(serverAnswerMap, answerDraft),
     [answerDraft, serverAnswerMap],
   );
-  const handleSavedAnswers = useCallback((savedAnswers: SavedPublicAnswerPayload) => {
-    setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, savedAnswers));
-  }, []);
+  const queryClient = useQueryClient();
+  const handleSavedAnswers = useCallback(
+    (savedAnswers: SavedPublicAnswerPayload, sentAnswers: PublicTestAnswerDraft) => {
+      // Ответы сервера из ответа на сохранение сразу становятся «серверными», черновик чистится.
+      queryClient.setQueryData<{ session: PublicTestSession }>(
+        getTestsPublicControllerGetSessionQueryKey(sessionToken ?? ''),
+        (previous) =>
+          previous
+            ? { ...previous, session: { ...previous.session, answers: savedAnswers } }
+            : previous,
+      );
+      setAnswerDraft((prev) => dropSavedDraftEntries(prev, sentAnswers));
+    },
+    [queryClient, sessionToken],
+  );
   const autosave = usePublicTestRunAutosave({
     sessionToken,
     session,
@@ -148,7 +162,7 @@ export function usePublicTestRunWorkspace() {
         sessionToken,
         data: { answers },
       });
-      setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, response.answers));
+      handleSavedAnswers(response.answers, effectiveAnswers);
       autosave.markAnswersSaved(answers);
       toast.success('Ответы сохранены');
     } catch (error) {
@@ -174,7 +188,7 @@ export function usePublicTestRunWorkspace() {
           sessionToken,
           data: { answers },
         });
-        setAnswerDraft((prev) => reconcileAnswerDraftAfterSave(prev, saveResponse.answers));
+        handleSavedAnswers(saveResponse.answers, effectiveAnswers);
         autosave.markAnswersSaved(answers);
       }
 
