@@ -85,13 +85,37 @@ describe('PublicTestResultWorkspace', () => {
     );
   });
 
-  it('renders the Polus result template when the session uses POLUS', () => {
+  it('does not invent a Polus profile when there is no analysis result', () => {
     mockSessionResult({ publicTemplate: 'POLUS' });
 
-    render(<PublicTestResultWorkspace />);
+    const { container } = render(<PublicTestResultWorkspace />);
 
-    expect(screen.getByText(/Профессор Полюс говорит/i)).toBeInTheDocument();
-    expect(screen.getByText(/Персональная карта развития/i)).toBeInTheDocument();
+    const view = within(container);
+
+    expect(view.getByRole('heading', { name: 'Ответы сохранены' })).toBeInTheDocument();
+    expect(view.getByText(/результат для этого теста не предусмотрен/i)).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/БПЛА|исследователь решений|Профессор Полюс говорит/);
+    expect(view.queryByRole('button', { name: /скачать результат/i })).not.toBeInTheDocument();
+  });
+
+  it('tells the student the analysis failed instead of showing a made-up Polus profile', () => {
+    mockSessionResult({
+      publicTemplate: 'POLUS',
+      analysis: {
+        providerMode: 'LLM',
+        status: 'FAILED',
+        summary: null,
+        errorMessage: 'provider error',
+        generatedAt: null,
+      },
+    });
+
+    const { container } = render(<PublicTestResultWorkspace />);
+
+    expect(within(container).getByRole('alert')).toHaveTextContent(
+      'Не удалось сформировать анализ',
+    );
+    expect(container.textContent).not.toContain('БПЛА');
   });
 
   it('renders prof-orientation Polus summary when algorithm result is available', () => {

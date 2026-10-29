@@ -241,6 +241,13 @@ Current public run UX:
 - slider questions show the current value with the matching label and avoid duplicate range numbers in helper copy
 - Polus prof-orientation processing uses the Professor Polus thinking animation
   while LLM enrichment is pending
+- the Polus result never shows invented content: without a prof-orientation summary or a parsable
+  analysis the student sees "Ответы сохранены" (no result planned) or, when `analysis.status` is
+  `FAILED`, "Не удалось сформировать анализ"; the 10 s processing screen stays
+- after a deploy the hashed chunks of the old build disappear: `vite:preloadError` reloads the page
+  once per minute (`shared/lib/stale-chunk-reload.ts`, timestamp in `safeStorage`, so no reload
+  loop), and `RouteErrorBoundary` (`shared/ui/route-error-boundary.tsx`) shows a "refresh the
+  page" screen instead of a blank one if rendering still fails
 
 UI/theming contract for public pages:
 
