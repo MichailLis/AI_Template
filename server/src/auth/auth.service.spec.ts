@@ -78,6 +78,7 @@ describe('AuthService', () => {
 
     jest.mocked(argon2.hash).mockReset();
     jest.mocked(argon2.verify).mockReset();
+    jest.mocked(argon2.hash).mockResolvedValue('dummy-hash');
   });
 
   afterEach(() => {
@@ -91,8 +92,20 @@ describe('AuthService', () => {
     };
 
     prismaMock.user.findUnique.mockResolvedValue(null);
+    jest.mocked(argon2.verify).mockResolvedValue(false);
 
     await expect(service.signin(dto)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('signin should spend one password check on an unknown email, as for a known one', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    jest.mocked(argon2.verify).mockResolvedValue(false);
+
+    await expect(
+      service.signin({ email: 'missing@example.com', password: 'Password123' }),
+    ).rejects.toThrow('Access Denied');
+    expect(argon2.verify).toHaveBeenCalledTimes(1);
+    expect(argon2.verify).toHaveBeenCalledWith('dummy-hash', 'Password123');
   });
 
   it('signin should throw ForbiddenException when password is invalid', async () => {
