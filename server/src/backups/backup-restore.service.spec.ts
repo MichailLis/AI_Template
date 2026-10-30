@@ -170,10 +170,7 @@ describe('BackupRestoreService', () => {
       expect.arrayContaining(['--no-owner', '--no-acl', '--dbname=app_restore']),
       expect.anything(),
     );
-    expect(databases.query).toHaveBeenCalledWith(
-      'app_restore',
-      'UPDATE users SET "hashedRefreshToken" = NULL',
-    );
+    expect(databases.query).toHaveBeenCalledWith('app_restore', 'DELETE FROM auth_sessions');
     expect(databases.dropDatabase).toHaveBeenCalledWith('app_before_20261001t000000');
     expect(databases.swapDatabases).toHaveBeenCalledWith(
       'app',

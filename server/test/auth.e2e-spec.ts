@@ -265,4 +265,59 @@ describe('Auth (e2e)', () => {
       path: '/auth/refresh',
     });
   });
+
+  it('POST /auth/signin should set a session cookie unless the device is remembered (#176)', async () => {
+    const setCookie = async (rememberDevice?: boolean) => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({ email: refreshEmail, password: testPassword, rememberDevice })
+        .expect(200);
+      const header = response.headers['set-cookie'] as unknown as string[];
+      return header.find((cookie) => cookie.startsWith(`${refreshCookieName}=`))!;
+    };
+
+    const sessionCookie = await setCookie();
+    expect(sessionCookie).not.toMatch(/Max-Age|Expires/);
+
+    const rememberedCookie = await setCookie(true);
+    expect(rememberedCookie).toContain(`Max-Age=${7 * 24 * 60 * 60}`);
+  });
+
+  it('a second device signs in without ending the first, and logout ends only its own (#123)', async () => {
+    const first = await signinRefreshUser();
+    const second = await signinRefreshUser();
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .set('Authorization', `Bearer ${first.accessToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', first.refreshCookie)
+      .expect(403);
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', second.refreshCookie)
+      .expect(200);
+  });
+
+  it('POST /auth/refresh should end a session idle for more than 8 hours (#176)', async () => {
+    const { refreshCookie } = await signinRefreshUser();
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: refreshEmail } });
+    const session = await prisma.authSession.findFirstOrThrow({
+      where: { userId: user.id },
+      orderBy: { id: 'desc' },
+    });
+    await prisma.authSession.update({
+      where: { id: session.id },
+      data: { lastUsedAt: new Date(Date.now() - 9 * 60 * 60 * 1000) },
+    });
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .set('Cookie', refreshCookie)
+      .expect(403);
+    await expect(prisma.authSession.findUnique({ where: { id: session.id } })).resolves.toBeNull();
+  });
 });

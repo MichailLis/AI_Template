@@ -26,7 +26,7 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
   async signin(@Body() dto: SigninDto, @Res({ passthrough: true }) response: Response) {
     const authResult = await this.authService.signin(dto);
-    setRefreshTokenCookie(response, authResult.refreshToken);
+    setRefreshTokenCookie(response, authResult.refreshToken, authResult.refreshCookieMaxAgeMs);
 
     return {
       accessToken: authResult.accessToken,
@@ -40,8 +40,12 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User successfully logged out' })
-  async logout(@GetCurrentUserId() userId: number, @Res({ passthrough: true }) response: Response) {
-    await this.authService.logout(userId);
+  async logout(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('sid') sessionId: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.authService.logout(userId, sessionId);
     clearRefreshTokenCookie(response);
   }
 
@@ -53,11 +57,12 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, type: RefreshResponseDto })
   async refreshTokens(
     @GetCurrentUserId() userId: number,
+    @GetCurrentUser('sid') sessionId: unknown,
     @GetCurrentUser('refreshToken') refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const tokens = await this.authService.refreshTokens(userId, refreshToken);
-    setRefreshTokenCookie(response, tokens.refreshToken);
+    const tokens = await this.authService.refreshTokens(userId, sessionId, refreshToken);
+    setRefreshTokenCookie(response, tokens.refreshToken, tokens.refreshCookieMaxAgeMs);
 
     return {
       accessToken: tokens.accessToken,

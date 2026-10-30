@@ -332,7 +332,7 @@ export class BackupRestoreService implements OnApplicationBootstrap {
       );
     }
 
-    await this.databases.query(database, 'UPDATE users SET "hashedRefreshToken" = NULL');
+    await this.databases.query(database, 'DELETE FROM auth_sessions');
   }
 
   private async readLastMigration(database: string): Promise<string | null> {

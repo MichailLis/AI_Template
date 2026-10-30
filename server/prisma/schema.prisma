@@ -103,27 +103,45 @@ enum AuditEntityType {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
-  email              String    @unique @db.Citext
-  name               String?
-  password           String
-  hashedRefreshToken String?
-  role               Role      @default(USER)
+  email             String    @unique @db.Citext
+  name              String?
+  password          String
+  role              Role      @default(USER)
   /// Set by an admin to switch the account off; signin, refresh and admin access reject it.
-  deactivatedAt      DateTime?
+  deactivatedAt     DateTime?
   /// Set when sessions are revoked, the password is reset or the account is deactivated;
   /// AdminGuard rejects access tokens issued before it.
-  sessionsRevokedAt  DateTime?
-  lastLoginAt        DateTime?
+  sessionsRevokedAt DateTime?
+  lastLoginAt       DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   createdPublicTestLinks TestPublicLink[] @relation("PublicLinkCreatedBy")
   auditEvents            AuditEvent[]     @relation("AuditEventActor")
+  authSessions           AuthSession[]
 
   @@map("users")
+}
+
+/// Сессия входа: одна строка на устройство, поэтому вход с ноутбука не выбивает рабочий компьютер
+/// (#123). Refresh-токен ротируется внутри строки. Сессия заканчивается через 8 ч без refresh
+/// или через 7 дней после входа (#176); сроки проверяет AuthService.
+model AuthSession {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  hashedRefreshToken String
+  /// «Это мой компьютер»: refresh-cookie переживает закрытие браузера. Без флажка она сессионная.
+  rememberDevice     Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  lastUsedAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_sessions")
 }
 
 /// Журнал изменений ролей, доступов, промптов, настроек и публичных ссылок: кто, что, когда,

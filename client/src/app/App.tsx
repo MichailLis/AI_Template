@@ -3,7 +3,11 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import { ProtectedRoute, useAuthStore } from '@/entities/session';
+import {
+  dropAccessTokenOnNewBrowserSession,
+  ProtectedRoute,
+  useAuthStore,
+} from '@/entities/session';
 import api, { configureApiBaseUrl } from '@/shared/api/api';
 import { configureInterceptorsRuntime, setupInterceptors } from '@/shared/api/interceptors';
 import { discoverAndConfigureApiBaseUrl } from '@/shared/api/runtime-api-base-url';
@@ -32,6 +36,7 @@ configureInterceptorsRuntime({
   },
 });
 setupInterceptors(api);
+dropAccessTokenOnNewBrowserSession();
 
 const queryClient = new QueryClient({
   defaultOptions: {

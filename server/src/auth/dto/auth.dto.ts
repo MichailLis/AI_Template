@@ -17,6 +17,8 @@ export const UserNameSchema = z.string().min(2, 'Name is too short');
 export const SigninSchema = z.object({
   email: EmailSchema,
   password: z.string(),
+  /** «Это мой компьютер»: refresh-cookie переживает закрытие браузера (#176). */
+  rememberDevice: z.boolean().optional(),
 });
 
 export class SigninDto extends createZodDto(SigninSchema) {}

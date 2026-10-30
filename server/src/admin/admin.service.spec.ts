@@ -144,7 +144,7 @@ describe('AdminService user management', () => {
         where: { id: TARGET_ID },
         data: {
           password: 'hashed-password',
-          hashedRefreshToken: null,
+          authSessions: { deleteMany: {} },
           sessionsRevokedAt: expect.any(Date) as Date,
         },
       }),
@@ -167,7 +167,7 @@ describe('AdminService user management', () => {
       expect.objectContaining({
         data: {
           deactivatedAt: targetDeactivatedAt,
-          hashedRefreshToken: null,
+          authSessions: { deleteMany: {} },
           sessionsRevokedAt: expect.any(Date) as Date,
         },
       }),
@@ -193,7 +193,7 @@ describe('AdminService user management', () => {
     expect(prismaMock.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: TARGET_ID },
-        data: { hashedRefreshToken: null, sessionsRevokedAt: expect.any(Date) as Date },
+        data: { authSessions: { deleteMany: {} }, sessionsRevokedAt: expect.any(Date) as Date },
       }),
     );
   });

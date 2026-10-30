@@ -84,6 +84,7 @@ export const LoginForm = () => {
     defaultValues: {
       email: '',
       password: '',
+      rememberDevice: false,
     },
   });
 
@@ -92,7 +93,7 @@ export const LoginForm = () => {
       { data: values },
       {
         onSuccess: (data) => {
-          setAuth(data.user, data.accessToken);
+          setAuth(data.user, data.accessToken, values.rememberDevice);
 
           // Приветствуем только тех, кого пустят дальше: пользователь без роли администратора
           // попадает на экран «Доступ пока не выдан», и «С возвращением!» над ним звучит как ошибка.
@@ -154,6 +155,16 @@ export const LoginForm = () => {
             </FormItem>
           )}
         />
+        <div className="grid gap-1">
+          <label className={adminClassNames.form.checkboxLabel}>
+            <input type="checkbox" {...form.register('rememberDevice')} />
+            Это мой компьютер
+          </label>
+          <p className={adminClassNames.form.fieldHint}>
+            Без отметки вход закончится, когда вы закроете браузер. Не отмечайте на общем
+            компьютере.
+          </p>
+        </div>
         {form.formState.errors.root ? (
           <p role="alert" className={adminClassNames.panel.dangerInline}>
             {form.formState.errors.root.message}

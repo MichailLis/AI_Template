@@ -3,7 +3,6 @@ import type { Response, CookieOptions } from 'express';
 export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
 
 const REFRESH_TOKEN_COOKIE_PATH = '/auth/refresh';
-const REFRESH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getRefreshTokenCookieBaseOptions = (): CookieOptions => ({
   httpOnly: true,
@@ -12,10 +11,15 @@ const getRefreshTokenCookieBaseOptions = (): CookieOptions => ({
   secure: process.env.NODE_ENV === 'production',
 });
 
-export const setRefreshTokenCookie = (response: Response, refreshToken: string) => {
+/** Without maxAge the cookie is a session cookie: it dies when the browser closes (#176). */
+export const setRefreshTokenCookie = (
+  response: Response,
+  refreshToken: string,
+  maxAgeMs: number | undefined,
+) => {
   response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
     ...getRefreshTokenCookieBaseOptions(),
-    maxAge: REFRESH_TOKEN_MAX_AGE_MS,
+    ...(maxAgeMs === undefined ? {} : { maxAge: maxAgeMs }),
   });
 };
 

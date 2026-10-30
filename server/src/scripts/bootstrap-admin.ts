@@ -24,13 +24,13 @@ export const planExistingUserUpdates = (
 ) => {
   const updates: {
     password?: string;
-    hashedRefreshToken?: null;
+    authSessions?: { deleteMany: Record<string, never> };
     sessionsRevokedAt?: Date;
     name?: string;
   } = {};
   if (options.hashedPassword) {
     updates.password = options.hashedPassword;
-    updates.hashedRefreshToken = null;
+    updates.authSessions = { deleteMany: {} };
     updates.sessionsRevokedAt = new Date();
   }
   if (!existing.name && options.name) updates.name = options.name;
