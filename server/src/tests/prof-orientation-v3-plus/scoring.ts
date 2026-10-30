@@ -241,7 +241,9 @@ const getConfidence = (input: {
     return 'broad' as const;
   }
 
-  if (input.gap < 6) {
+  // Методика даёт «средней» отрыв от 5, а «смешанной» — меньше 6; зону 5–6 она описывает как
+  // «средняя, но есть близкий конкурент», поэтому граница — 5 (#157).
+  if (input.gap < 5) {
     return 'mixed' as const;
   }
 
@@ -254,7 +256,7 @@ const getConfidence = (input: {
     return 'high' as const;
   }
 
-  return input.gap >= 5 ? ('medium' as const) : ('mixed' as const);
+  return 'medium' as const;
 };
 
 export const scoreProfOrientationV3Plus = ({
@@ -371,7 +373,7 @@ export const scoreProfOrientationV3Plus = ({
     }
   }
 
-  if (readinessTop < 4) {
+  if (readinessTop <= 3) {
     flags.push({
       code: 'readiness_conflict',
       label: 'Готовность к ведущему направлению пока низкая',

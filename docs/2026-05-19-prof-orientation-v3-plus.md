@@ -41,6 +41,11 @@ The limit is hard: the UI blocks a third choice and the server rejects an answer
 4+ overchosen questions) is therefore not implemented (#157). Scoring still divides a question's
 maximum between the selected options as a guard, so a question never gives more than its maximum.
 
+Thresholds follow the source methodology (#157). Its confidence scale overlaps ("medium" from a gap of
+5, "mixed" below 6) and describes the 5–6 zone as medium with a close competitor, so medium starts at
+a gap of 5. The `readiness_conflict` flag fires when readiness for the leading direction is 3 or lower;
+high confidence still needs readiness of at least 4, so readiness between 3 and 4 gives neither.
+
 ## Scoring Contract
 
 `finishSession` handles this methodology in two stages:

@@ -171,6 +171,47 @@ describe('scoreProfOrientationV3Plus', () => {
     expect(totalScore(true)).toBeCloseTo(totalScore(false), 0);
   });
 
+  it('gives medium confidence from a gap of 5, as the methodology says (#157)', () => {
+    const result = scoreProfOrientationV3Plus({
+      questions,
+      answers: buildAnswers({
+        selectedDirections: ['A1', 'A2'],
+        interest: { S_A1: 10, S_A2: 6, S_A3: 2, S_B1: 2, S_B2: 2, S_B3: 2 },
+      }),
+    });
+    expect(result.confidence.gap).toBeGreaterThanOrEqual(5);
+    expect(result.confidence.gap).toBeLessThan(6);
+    expect(result.confidence.level).toBe('medium');
+  });
+
+  it('flags readiness only at 3 or below, but still requires 4 for high confidence (#157)', () => {
+    const score = (digitalReadiness: number) =>
+      scoreProfOrientationV3Plus({
+        questions,
+        answers: buildAnswers({
+          selectedDirections: ['A1', 'A2'],
+          interest: { S_A1: 10, S_A2: 5, S_A3: 2, S_B1: 2, S_B2: 2, S_B3: 2 },
+          readiness: {
+            R_DIGITAL: digitalReadiness,
+            R_HANDS: 3,
+            R_CODE_MATH: 3,
+            R_PRECISION: 3,
+            R_REGULATIONS: 3,
+          },
+        }),
+      });
+    const hasReadinessFlag = (result: ReturnType<typeof score>) =>
+      result.flags.some((flag) => flag.code === 'readiness_conflict');
+
+    const between = score(4);
+    expect(between.confidence.readinessTop).toBeGreaterThan(3);
+    expect(between.confidence.readinessTop).toBeLessThan(4);
+    expect(hasReadinessFlag(between)).toBe(false);
+    expect(between.confidence.level).toBe('medium');
+
+    expect(hasReadinessFlag(score(3))).toBe(true);
+  });
+
   it('marks flat low interest as low definition even when choices point to a direction', () => {
     const result = scoreProfOrientationV3Plus({
       questions,
