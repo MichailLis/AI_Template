@@ -91,6 +91,17 @@ export const UpdateProfessionAtlasUrlSchema = z.object({
   apiUrl: z.string().trim().url().max(2048),
 });
 
+export const PublicRateLimitSchema = z.object({
+  perMinute: z.number().int().min(1).max(10000),
+  burst: z.number().int().min(1).max(10000),
+});
+
+export const AdminPublicRateLimitSettingsResponseSchema = z.object({
+  publicRateLimit: PublicRateLimitSchema.extend({
+    updatedAt: z.string().datetime().nullable(),
+  }),
+});
+
 export const UpdatePrivacyPolicySchema = z.object({
   version: z.string().trim().min(1).max(64),
   publishedAt: z.string().datetime(),
@@ -119,3 +130,9 @@ export class ProfessionAtlasCoverageResponseDto extends createZodDto(
 export class UpdateProfessionAtlasUrlDto extends createZodDto(UpdateProfessionAtlasUrlSchema) {}
 
 export class UpdatePrivacyPolicyDto extends createZodDto(UpdatePrivacyPolicySchema) {}
+
+export class AdminPublicRateLimitSettingsResponseDto extends createZodDto(
+  AdminPublicRateLimitSettingsResponseSchema,
+) {}
+
+export class UpdatePublicRateLimitDto extends createZodDto(PublicRateLimitSchema) {}
