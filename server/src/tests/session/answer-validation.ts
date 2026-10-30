@@ -34,7 +34,10 @@ export const getMaxChoices = (settings: unknown) => {
 
 const assertKnownOption = (question: PublicAnswerQuestion, value: string) => {
   if (!question.options.some((option) => option.value === value)) {
-    throw new BadRequestException(`${getQuestionLabel(question)} contains an unknown option`);
+    throw new BadRequestException(
+      `${getQuestionLabel(question)} contains an unknown option`,
+      'ANSWER_INVALID',
+    );
   }
 };
 
@@ -49,16 +52,25 @@ export const validatePublicAnswerPayload = (
 ) => {
   if (question.type === 'OPEN_TEXT') {
     if (typeof answerPayload !== 'string') {
-      throw new BadRequestException(`${getQuestionLabel(question)} expects a text answer`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} expects a text answer`,
+        'ANSWER_INVALID',
+      );
     }
 
     const normalizedText = answerPayload.trim();
     if (!normalizedText) {
-      throw new BadRequestException(`${getQuestionLabel(question)} requires a non-empty answer`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} requires a non-empty answer`,
+        'ANSWER_INVALID',
+      );
     }
 
     if (normalizedText.length > OPEN_TEXT_MAX_LENGTH) {
-      throw new BadRequestException(`${getQuestionLabel(question)} answer is too long`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} answer is too long`,
+        'ANSWER_INVALID',
+      );
     }
 
     return normalizedText;
@@ -66,7 +78,10 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'SINGLE_CHOICE') {
     if (typeof answerPayload !== 'string' || !answerPayload.trim()) {
-      throw new BadRequestException(`${getQuestionLabel(question)} expects a single option`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} expects a single option`,
+        'ANSWER_INVALID',
+      );
     }
 
     assertKnownOption(question, answerPayload);
@@ -75,18 +90,27 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'MULTI_CHOICE') {
     if (!Array.isArray(answerPayload) || answerPayload.length === 0) {
-      throw new BadRequestException(`${getQuestionLabel(question)} expects one or more options`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} expects one or more options`,
+        'ANSWER_INVALID',
+      );
     }
 
     const uniqueValues = new Set<string>();
     const selectedValues: string[] = [];
     for (const value of answerPayload as unknown[]) {
       if (typeof value !== 'string' || !value.trim()) {
-        throw new BadRequestException(`${getQuestionLabel(question)} expects string options`);
+        throw new BadRequestException(
+          `${getQuestionLabel(question)} expects string options`,
+          'ANSWER_INVALID',
+        );
       }
 
       if (uniqueValues.has(value)) {
-        throw new BadRequestException(`${getQuestionLabel(question)} contains duplicate options`);
+        throw new BadRequestException(
+          `${getQuestionLabel(question)} contains duplicate options`,
+          'ANSWER_INVALID',
+        );
       }
 
       assertKnownOption(question, value);
@@ -96,7 +120,10 @@ export const validatePublicAnswerPayload = (
 
     const maxChoices = getMaxChoices(question.settings);
     if (maxChoices !== null && selectedValues.length > maxChoices) {
-      throw new BadRequestException(`${getQuestionLabel(question)} has too many selected options`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} has too many selected options`,
+        'ANSWER_INVALID',
+      );
     }
 
     return selectedValues;
@@ -104,26 +131,41 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'SLIDER') {
     if (typeof answerPayload !== 'number' || !Number.isFinite(answerPayload)) {
-      throw new BadRequestException(`${getQuestionLabel(question)} expects a numeric answer`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} expects a numeric answer`,
+        'ANSWER_INVALID',
+      );
     }
 
     const settings = parseSliderSettings(question.settings);
     if (!settings) {
-      throw new BadRequestException(`${getQuestionLabel(question)} has invalid slider settings`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} has invalid slider settings`,
+        'ANSWER_INVALID',
+      );
     }
 
     if (answerPayload < settings.min || answerPayload > settings.max) {
-      throw new BadRequestException(`${getQuestionLabel(question)} is outside the allowed range`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} is outside the allowed range`,
+        'ANSWER_INVALID',
+      );
     }
 
     if (!isAlignedToStep(answerPayload, settings.min, settings.step)) {
-      throw new BadRequestException(`${getQuestionLabel(question)} does not match slider step`);
+      throw new BadRequestException(
+        `${getQuestionLabel(question)} does not match slider step`,
+        'ANSWER_INVALID',
+      );
     }
 
     return answerPayload;
   }
 
-  throw new BadRequestException(`${getQuestionLabel(question)} has unsupported question type`);
+  throw new BadRequestException(
+    `${getQuestionLabel(question)} has unsupported question type`,
+    'ANSWER_INVALID',
+  );
 };
 
 export const validatePublicAttemptAnswersForFinish = (
@@ -138,6 +180,7 @@ export const validatePublicAttemptAnswersForFinish = (
     if (!question) {
       throw new BadRequestException(
         `Question ${answer.questionId} does not belong to this session`,
+        'QUESTION_NOT_IN_SESSION',
       );
     }
 
@@ -150,6 +193,9 @@ export const validatePublicAttemptAnswersForFinish = (
   );
 
   if (missingRequiredQuestion) {
-    throw new BadRequestException(`${getQuestionLabel(missingRequiredQuestion)} is required`);
+    throw new BadRequestException(
+      `${getQuestionLabel(missingRequiredQuestion)} is required`,
+      'ANSWER_REQUIRED',
+    );
   }
 };

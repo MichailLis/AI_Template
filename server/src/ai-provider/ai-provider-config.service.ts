@@ -57,6 +57,7 @@ export class AiProviderConfigService {
     if (!secret) {
       throw new ServiceUnavailableException(
         'JWT_REFRESH_SECRET is required to store the AI provider key',
+        'AI_PROVIDER_KEY_STORAGE_UNAVAILABLE',
       );
     }
 
@@ -99,6 +100,7 @@ export class AiProviderConfigService {
     } catch (error) {
       throw new ServiceUnavailableException(
         error instanceof Error ? error.message : 'AI provider is misconfigured',
+        'AI_PROVIDER_MISCONFIGURED',
       );
     }
   }
@@ -110,11 +112,15 @@ export class AiProviderConfigService {
     if (!settings.baseUrl) {
       throw new ServiceUnavailableException(
         `AI base URL is required for provider ${settings.provider}`,
+        'AI_PROVIDER_BASE_URL_REQUIRED',
       );
     }
 
     if (!settings.apiKey) {
-      throw new ServiceUnavailableException('AI API key is not configured on server');
+      throw new ServiceUnavailableException(
+        'AI API key is not configured on server',
+        'AI_PROVIDER_NOT_CONFIGURED',
+      );
     }
 
     return { ...settings, baseUrl: settings.baseUrl, apiKey: settings.apiKey };
@@ -150,7 +156,10 @@ export class AiProviderConfigService {
     const apiKey = input.apiKey?.trim() || null;
 
     if (!AI_PROVIDER_PRESETS[input.provider].defaultBaseUrl && !baseUrl) {
-      throw new BadRequestException(`Base URL is required for provider ${input.provider}`);
+      throw new BadRequestException(
+        `Base URL is required for provider ${input.provider}`,
+        'AI_PROVIDER_BASE_URL_REQUIRED',
+      );
     }
 
     const encryptedApiKey = apiKey ? encryptSecret(apiKey, this.getEncryptionSecret()) : null;
@@ -161,7 +170,10 @@ export class AiProviderConfigService {
 
     // Сохранённый ключ не должен молча уехать на другой адрес.
     if (before && before.settings.baseUrl !== nextBaseUrl && !apiKey && !input.clearApiKey) {
-      throw new BadRequestException('API key is required when the base URL changes');
+      throw new BadRequestException(
+        'API key is required when the base URL changes',
+        'AI_PROVIDER_API_KEY_REQUIRED',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {

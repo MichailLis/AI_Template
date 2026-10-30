@@ -46,7 +46,10 @@ export const resolvePersonalDataOperator = async (
   }
 
   if (!educationOrganizationId) {
-    throw new BadRequestException('Выберите учебное заведение для режима обработки по поручению');
+    throw new BadRequestException(
+      'Выберите учебное заведение для режима обработки по поручению',
+      'OPERATOR_ORGANIZATION_REQUIRED',
+    );
   }
 
   const organization = await prisma.educationOrganization.findUnique({
@@ -63,11 +66,14 @@ export const resolvePersonalDataOperator = async (
   });
 
   if (!organization) {
-    throw new NotFoundException('Учебное заведение не найдено');
+    throw new NotFoundException('Учебное заведение не найдено', 'EDUCATION_ORGANIZATION_NOT_FOUND');
   }
 
   if (!organization.isActive) {
-    throw new BadRequestException('Выбранное учебное заведение неактивно');
+    throw new BadRequestException(
+      'Выбранное учебное заведение неактивно',
+      'EDUCATION_ORGANIZATION_INACTIVE',
+    );
   }
 
   const fullName = normalizeNullableString(organization.fullName);
@@ -75,15 +81,24 @@ export const resolvePersonalDataOperator = async (
   const privacyPolicyUrl = normalizeNullableString(organization.privacyPolicyUrl);
 
   if (!fullName) {
-    throw new BadRequestException('Укажите полное наименование учебного заведения');
+    throw new BadRequestException(
+      'Укажите полное наименование учебного заведения',
+      'OPERATOR_FULL_NAME_REQUIRED',
+    );
   }
 
   if (!shortName) {
-    throw new BadRequestException('Укажите краткое наименование учебного заведения');
+    throw new BadRequestException(
+      'Укажите краткое наименование учебного заведения',
+      'OPERATOR_SHORT_NAME_REQUIRED',
+    );
   }
 
   if (!privacyPolicyUrl) {
-    throw new BadRequestException('Укажите ссылку на Политику обработки ПДн учебного заведения');
+    throw new BadRequestException(
+      'Укажите ссылку на Политику обработки ПДн учебного заведения',
+      'OPERATOR_PRIVACY_POLICY_URL_REQUIRED',
+    );
   }
 
   return {

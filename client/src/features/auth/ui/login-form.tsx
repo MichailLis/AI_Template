@@ -17,6 +17,7 @@ interface AuthError {
   response?: {
     data?: {
       error?: {
+        code?: string;
         message: string;
       };
     };
@@ -25,10 +26,10 @@ interface AuthError {
 
 const DEFAULT_LOGIN_REDIRECT = '/admin';
 
+// По машинному коду сервера (#148): текст «Access Denied» сервер отдаёт и на другие отказы.
 const LOGIN_ERROR_MESSAGES: Record<string, string> = {
-  'Invalid credentials': 'Неверный email или пароль',
-  'Access Denied': 'Неверный email или пароль',
-  'Account is deactivated': 'Аккаунт отключён. Обратитесь к администратору.',
+  INVALID_CREDENTIALS: 'Неверный email или пароль',
+  ACCOUNT_DEACTIVATED: 'Аккаунт отключён. Обратитесь к администратору.',
 };
 
 const resolveLoginRedirect = (state: unknown, search = '') => {
@@ -103,10 +104,10 @@ export const LoginForm = () => {
         },
         onError: (error: unknown) => {
           const authError = error as AuthError;
-          const backendMessage = authError.response?.data?.error?.message;
+          const backendError = authError.response?.data?.error;
           const message =
-            (backendMessage ? LOGIN_ERROR_MESSAGES[backendMessage] : undefined) ??
-            backendMessage ??
+            (backendError?.code ? LOGIN_ERROR_MESSAGES[backendError.code] : undefined) ??
+            backendError?.message ??
             'Не удалось войти. Попробуйте еще раз.';
 
           /**

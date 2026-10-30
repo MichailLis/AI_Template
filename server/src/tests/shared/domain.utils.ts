@@ -36,7 +36,10 @@ export const toPrismaSettingsInput = (
   }
 
   if (!isInputJsonValue(value)) {
-    throw new BadRequestException('Question settings must be valid JSON');
+    throw new BadRequestException(
+      'Question settings must be valid JSON',
+      'QUESTION_SETTINGS_INVALID_JSON',
+    );
   }
 
   return value;
@@ -50,7 +53,7 @@ export const toPrismaRequiredJsonInput = (
   }
 
   if (!isInputJsonValue(value)) {
-    throw new BadRequestException('Value must be valid JSON');
+    throw new BadRequestException('Value must be valid JSON', 'VALUE_INVALID_JSON');
   }
 
   return value;
@@ -198,24 +201,34 @@ export const validateDraftForPublish = (draft: {
   if (attachedPrompt?.archivedAt) {
     throw new BadRequestException(
       `Промпт анализа «${attachedPrompt.title}» удален. Подключите другой промпт перед публикацией.`,
+      'DRAFT_PROMPT_ARCHIVED',
     );
   }
 
   if (draft.questions.length === 0) {
-    throw new BadRequestException('Draft must contain at least one question before publish');
+    throw new BadRequestException(
+      'Draft must contain at least one question before publish',
+      'DRAFT_HAS_NO_QUESTIONS',
+    );
   }
 
   const seenOrder = new Set<number>();
 
   for (const question of draft.questions) {
     if (seenOrder.has(question.order)) {
-      throw new BadRequestException('Questions order must be unique within draft');
+      throw new BadRequestException(
+        'Questions order must be unique within draft',
+        'QUESTION_ORDER_NOT_UNIQUE',
+      );
     }
     seenOrder.add(question.order);
 
     if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTI_CHOICE') {
       if (question.options.length < 2) {
-        throw new BadRequestException(`Question "${question.title}" requires at least two options`);
+        throw new BadRequestException(
+          `Question "${question.title}" requires at least two options`,
+          'QUESTION_OPTIONS_REQUIRED',
+        );
       }
     }
 
@@ -223,13 +236,17 @@ export const validateDraftForPublish = (draft: {
       const sliderSettings = parseSliderSettings(question.settings);
 
       if (!sliderSettings) {
-        throw new BadRequestException(`Slider question "${question.title}" has invalid settings`);
+        throw new BadRequestException(
+          `Slider question "${question.title}" has invalid settings`,
+          'SLIDER_SETTINGS_INVALID',
+        );
       }
 
       for (const band of question.sliderBands) {
         if (band.maxValue <= band.minValue) {
           throw new BadRequestException(
             `Slider question "${question.title}" has invalid score range`,
+            'SLIDER_SETTINGS_INVALID',
           );
         }
       }
@@ -241,6 +258,7 @@ export const validateDraftForPublish = (draft: {
           if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
             throw new BadRequestException(
               `Slider question "${question.title}" has overlapping score ranges: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+              'SLIDER_BANDS_OVERLAP',
             );
           }
         }
@@ -264,7 +282,10 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
     dto.type === 'SLIDER'
       ? (dto.sliderBands ?? []).map((band, index) => {
           if (band.maxValue <= band.minValue) {
-            throw new BadRequestException('Slider band maxValue must be greater than minValue');
+            throw new BadRequestException(
+              'Slider band maxValue must be greater than minValue',
+              'SLIDER_BAND_RANGE_INVALID',
+            );
           }
 
           return {
@@ -285,6 +306,7 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
         if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
           throw new BadRequestException(
             `Slider bands must not overlap: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
+            'SLIDER_BANDS_OVERLAP',
           );
         }
       }

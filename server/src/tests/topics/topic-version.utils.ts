@@ -48,7 +48,10 @@ export const lockDraftVersion = async (tx: TransactionClient, versionId: number)
   });
 
   if (count === 0) {
-    throw new ConflictException('Черновик уже опубликован или изменен, обновите страницу');
+    throw new ConflictException(
+      'Черновик уже опубликован или изменен, обновите страницу',
+      'DRAFT_CHANGED',
+    );
   }
 };
 
@@ -137,17 +140,26 @@ export const buildAiQuestionPayloads = (questions: CreateTestsTopicFromAiDto['qu
       (payload.type === 'SINGLE_CHOICE' || payload.type === 'MULTI_CHOICE') &&
       payload.options.length < 2
     ) {
-      throw new BadRequestException(`${questionLabel} requires at least two options`);
+      throw new BadRequestException(
+        `${questionLabel} requires at least two options`,
+        'QUESTION_OPTIONS_REQUIRED',
+      );
     }
 
     if (payload.type === 'SLIDER') {
       if (payload.sliderBands.length === 0) {
-        throw new BadRequestException(`${questionLabel} requires at least one slider band`);
+        throw new BadRequestException(
+          `${questionLabel} requires at least one slider band`,
+          'SLIDER_BANDS_REQUIRED',
+        );
       }
 
       const sliderSettings = parseSliderSettings(payload.settings);
       if (!sliderSettings) {
-        throw new BadRequestException(`${questionLabel} has invalid slider settings`);
+        throw new BadRequestException(
+          `${questionLabel} has invalid slider settings`,
+          'SLIDER_SETTINGS_INVALID',
+        );
       }
     }
 

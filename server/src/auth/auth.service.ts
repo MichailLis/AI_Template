@@ -33,14 +33,15 @@ export class AuthService {
 
     if (!user) {
       await argon2.verify(await getDummyHash(), dto.password).catch(() => false);
-      throw new ForbiddenException('Access Denied');
+      throw new ForbiddenException('Access Denied', 'INVALID_CREDENTIALS');
     }
 
     const passwordMatches = await argon2.verify(user.password, dto.password);
-    if (!passwordMatches) throw new ForbiddenException('Access Denied');
+    if (!passwordMatches) throw new ForbiddenException('Access Denied', 'INVALID_CREDENTIALS');
 
     // Checked after the password so the message does not reveal which emails have accounts.
-    if (user.deactivatedAt) throw new ForbiddenException('Account is deactivated');
+    if (user.deactivatedAt)
+      throw new ForbiddenException('Account is deactivated', 'ACCOUNT_DEACTIVATED');
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.prisma.user.update({
@@ -75,11 +76,11 @@ export class AuthService {
     });
 
     if (!user || !user.hashedRefreshToken || user.deactivatedAt) {
-      throw new ForbiddenException('Access Denied');
+      throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
     }
 
     const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken, refreshToken);
-    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
+    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
 
     const tokens = await this.getTokens(user.id, user.email);
     const hashedRefreshToken = await argon2.hash(tokens.refreshToken);
@@ -92,7 +93,7 @@ export class AuthService {
     });
 
     if (updateResult.count !== 1) {
-      throw new ForbiddenException('Access Denied');
+      throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
     }
 
     return tokens;

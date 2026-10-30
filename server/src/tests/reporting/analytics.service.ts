@@ -174,7 +174,7 @@ export class TestsAnalyticsService {
     });
 
     if (!topic) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     if (query.scope === 'PUBLIC_LINK') {
@@ -192,7 +192,7 @@ export class TestsAnalyticsService {
       });
 
       if (!checkedLink || checkedLink.topicVersion.topicId !== topicId) {
-        throw new NotFoundException('Public link not found');
+        throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
       }
     }
 

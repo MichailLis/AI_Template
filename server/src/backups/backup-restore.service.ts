@@ -110,7 +110,10 @@ export class BackupRestoreService implements OnApplicationBootstrap {
 
   async startRestore(userId: number, backupId: string, confirmation: string) {
     if (confirmation !== RESTORE_CONFIRMATION) {
-      throw new BadRequestException(`Для подтверждения введите ${RESTORE_CONFIRMATION}`);
+      throw new BadRequestException(
+        `Для подтверждения введите ${RESTORE_CONFIRMATION}`,
+        'RESTORE_CONFIRMATION_MISMATCH',
+      );
     }
 
     const backup = await this.backups.findBackup(backupId);

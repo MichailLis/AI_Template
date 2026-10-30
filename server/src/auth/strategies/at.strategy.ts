@@ -25,7 +25,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
     // iat в секундах, поэтому граница округляется вниз: вход в ту же секунду, что и восстановление,
     // не должен отклоняться.
     if (payload.iat !== undefined && payload.iat < Math.floor(getSessionEpochMs() / 1000)) {
-      throw new UnauthorizedException('Session expired');
+      throw new UnauthorizedException('Session expired', 'AUTH_SESSION_EXPIRED');
     }
 
     return payload;
