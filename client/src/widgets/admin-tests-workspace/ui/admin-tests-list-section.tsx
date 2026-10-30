@@ -1,4 +1,4 @@
-import { TestsListCard, TestsListHeader, type TestTopicListItem } from '@/features/tests';
+import { TestsListCard, TestsListHeader, type TestTopicListItem } from '@/features/test-editor';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 

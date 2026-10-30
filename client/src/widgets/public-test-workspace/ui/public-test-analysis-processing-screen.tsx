@@ -1,7 +1,7 @@
 import { BrainCircuit, Check, CheckCircle2, LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { polusAssets, type PublicBrandingConfig } from '@/features/tests';
+import { polusAssets, type PublicBrandingConfig } from '@/entities/public-test';
 
 import { PolusPublicLayout } from './polus/polus-public-layout';
 import { analysisProcessingSteps } from './public-test-analysis-processing-steps';

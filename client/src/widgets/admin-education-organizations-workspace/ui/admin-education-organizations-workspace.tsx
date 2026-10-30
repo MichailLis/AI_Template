@@ -1,4 +1,4 @@
-import { EducationOrganizationEditorSheet } from '@/features/tests';
+import { EducationOrganizationEditorSheet } from '@/features/education-organization-editor';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 

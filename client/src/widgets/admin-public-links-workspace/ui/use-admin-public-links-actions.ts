@@ -25,7 +25,7 @@ import type {
   EducationOrganizationOption,
 } from './public-link-create-card.types';
 import type { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
-import type { PublicBrandingConfig } from '@/features/tests';
+import type { PublicBrandingConfig } from '@/entities/public-test';
 
 type PublicLinksSelection = ReturnType<typeof useAdminPublicLinksSelectionState>;
 

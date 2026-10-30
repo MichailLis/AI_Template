@@ -1,4 +1,4 @@
-import { getMaxChoices, isChoiceLimitReached } from '@/features/tests';
+import { getMaxChoices, isChoiceLimitReached } from '@/entities/public-test';
 
 import { getChoiceOptionClass } from './public-question-card.utils';
 

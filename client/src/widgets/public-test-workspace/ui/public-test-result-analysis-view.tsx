@@ -10,10 +10,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { parseAnalysisResult } from '@/features/tests';
+import { parseAnalysisResult } from '@/entities/public-test';
 import { Badge } from '@/shared/ui/badge';
 
-import type { AnalysisPayload, AnalysisResult } from '@/features/tests';
+import type { AnalysisPayload, AnalysisResult } from '@/entities/public-test';
 import type { ReactNode } from 'react';
 
 const levelLabels = {

@@ -252,11 +252,11 @@ Current public run UX:
 UI/theming contract for public pages:
 
 - public pages must be wrapped with `PublicThemeLayout`
-- public theme tokens live in `client/src/features/tests/ui/public-theme.css` (`.theme-public` scope)
+- public theme tokens live in `client/src/entities/public-test/ui/public-theme.css` (`.theme-public` scope)
 - do not move public-theme tokens into global `client/src/app/index.css`
 - `STANDARD` must preserve the existing public components and remains the default unless a link explicitly stores `publicTemplate = POLUS`
 - `STANDARD` may apply `publicBranding` from the public link through `PublicThemeLayout`; empty branding keeps the default look
-- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; shared Polus result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`
+- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; shared Polus result rendering, styles, and assets live under `client/src/entities/public-test/ui/polus/*`
 - Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus ignores the `STANDARD` branding config, and assets/fonts belong in the Polus public-test asset folder, not `client/public/prototypes`
 - user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
 - Detailed public branding/autosave/analytics/settings update: `docs/2026-05-27-public-test-branding-and-autosave.md`

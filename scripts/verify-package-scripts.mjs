@@ -114,6 +114,9 @@ if (rootScripts['verify:invariants'] !== 'node scripts/verify-invariants.mjs') {
 if (rootScripts['verify:paired-rules'] !== 'node scripts/verify-paired-rules.mjs') {
   fail('root package must define verify:paired-rules script');
 }
+if (rootScripts['verify:public-bundle'] !== 'node scripts/verify-public-bundle.mjs') {
+  fail('root package must define verify:public-bundle script');
+}
 if (rootScripts['verify:gates'] !== 'node scripts/verify-gates.mjs') {
   fail('root package must define verify:gates script as "node scripts/verify-gates.mjs"');
 }
@@ -178,6 +181,7 @@ for (const scriptName of ['verify:local', 'verify:template']) {
   requireRootScriptSegment(scriptName, 'npm run verify:paired-rules');
   requireRootScriptSegment(scriptName, 'npm run typecheck');
   requireRootScriptSegment(scriptName, 'npm run verify:gates');
+  requireRootScriptSegment(scriptName, 'npm run verify:public-bundle');
 }
 
 for (const expectedSegment of [

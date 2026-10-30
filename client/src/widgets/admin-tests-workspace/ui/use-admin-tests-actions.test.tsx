@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useAdminTestsActions } from './use-admin-tests-actions';
 
 import type { AdminTestsActionsState } from './use-admin-tests-actions';
-import type { CreateTestValues, TestTopicListItem } from '@/features/tests';
+import type { CreateTestValues, TestTopicListItem } from '@/features/test-editor';
 import type { ReactNode } from 'react';
 
 type MutateOptions<TResult> = {

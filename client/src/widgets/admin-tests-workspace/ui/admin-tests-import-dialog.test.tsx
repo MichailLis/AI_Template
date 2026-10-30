@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminTestsImportDialog } from './admin-tests-import-dialog';
 import { findProfOrientationV3PlusCopies } from './admin-tests-import.helpers';
 
-import type { TestTopicListItem } from '@/features/tests';
+import type { TestTopicListItem } from '@/features/test-editor';
 
 const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListItem => ({
   id: 1,

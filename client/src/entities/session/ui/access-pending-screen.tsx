@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 
-import { useAuthStore } from '@/entities/session';
 import { useAuthControllerLogout } from '@/shared/api/generated/auth/auth';
 import { Button } from '@/shared/ui/button';
+
+import { useAuthStore } from '../model/store';
 
 /**
  * Экран для вошедшего пользователя без роли администратора. Роль USER пока не открывает ни одного

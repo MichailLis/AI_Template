@@ -6,7 +6,7 @@ import {
   SquareMousePointer,
 } from 'lucide-react';
 
-import { PublicThemeLayout } from '@/features/tests';
+import { PublicThemeLayout } from '@/entities/public-test';
 import { Button } from '@/shared/ui/button';
 
 import { ZoneButton } from './public-link-branding-builder-zone-button';

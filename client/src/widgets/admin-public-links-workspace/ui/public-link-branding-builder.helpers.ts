@@ -1,4 +1,4 @@
-import type { PublicBrandingConfig } from '@/features/tests';
+import type { PublicBrandingConfig } from '@/entities/public-test';
 
 export type DraftPublicBrandingConfig = NonNullable<PublicBrandingConfig>;
 

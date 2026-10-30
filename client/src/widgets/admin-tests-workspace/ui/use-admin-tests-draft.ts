@@ -1,7 +1,7 @@
 import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
-import { hasDraftEdits, useDraftAutosave } from '@/features/tests';
+import { hasDraftEdits, useDraftAutosave } from '@/features/test-editor';
 import {
   getTestsControllerGetTopicDraftQueryKey,
   getTestsControllerListTopicsQueryKey,

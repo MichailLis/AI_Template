@@ -22,6 +22,7 @@ export const VERIFY_LOCAL_ORDER = [
   'npm run test:run --prefix client',
   'npm run build --prefix server',
   'npm run build --prefix client',
+  'verify:public-bundle',
   'format:check',
 ];
 
@@ -34,7 +35,7 @@ export const VERIFY_LOCAL_ORDER = [
  * - server/src/** /*.controller.ts or dto.ts -> verify:contracts
  * - server/src/** -> verify:invariants, verify:maintainability, typecheck, lint, server tests
  * - client/src/shared/api/api.ts or interceptors.ts -> verify:api-mutator
- * - client/src/** -> verify:invariants, verify:maintainability, lint, client tests
+ * - client/src/** -> verify:invariants, verify:maintainability, lint, client tests, verify:public-bundle
  * - scripts/** -> test:scripts, verify:package-scripts, verify:invariants, verify:maintainability
  * - docker-compose.yml, server/Dockerfile, client/Dockerfile, client/vite.config.ts, server/package.json -> verify:runtime-config
  * - any package.json -> verify:package-scripts, verify:stack
@@ -90,6 +91,7 @@ export const getScriptsForFile = (filePath) => {
     scripts.add('verify:maintainability');
     scripts.add('lint');
     scripts.add('npm run test:run --prefix client');
+    scripts.add('verify:public-bundle');
   }
 
   if (norm.startsWith('scripts/')) {

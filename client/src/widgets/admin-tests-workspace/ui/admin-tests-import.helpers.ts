@@ -1,4 +1,4 @@
-import type { TestTopicListItem } from '@/features/tests';
+import type { TestTopicListItem } from '@/features/test-editor';
 
 export interface ProfOrientationV3PlusCopy {
   topic: TestTopicListItem;

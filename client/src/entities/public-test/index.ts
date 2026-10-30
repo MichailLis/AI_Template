@@ -1,22 +1,11 @@
+// Всё, что видит ученик на /t/*: тема, брендинг, POLUS, разбор и экраны результата.
+// Слайс не импортирует админский код — это проверяет npm run verify:public-bundle (#162).
 import './theme';
 
-export { AiTestGeneratorModal } from './ui/ai-test-generator-modal';
-export { EducationOrganizationEditorSheet } from './ui/education-organization-editor-sheet';
-export { QuestionModal } from './ui/question-modal';
 export { PublicThemeLayout } from './ui/public-theme-layout';
-export { TestsCreateModal } from './ui/tests-create-modal';
-export { TestsListCard } from './ui/tests-list-card';
-export { TestsListHeader } from './ui/tests-list-header';
 export { PublicTestStudentAnalysisView } from './ui/public-test-student-analysis-view';
 export { TestAnalysisResultView } from './ui/test-analysis-result-view';
-export { TestEditor } from './ui/test-editor';
-export { TestQuestionsOnlyView } from './ui/test-questions-only-view';
 
-export { useAiTestGeneration } from './model/use-ai-test-generation';
-export { useDraftAutosave } from './model/use-draft-autosave';
-export { useQuestionEditor } from './model/use-question-editor';
-
-export { hasDraftEdits } from './lib/tests-utils';
 export { getMaxChoices, isChoiceLimitReached } from './lib/public-question-choice-limit';
 export { parseAnalysisResult } from './lib/test-analysis-result-parser';
 export { getProfOrientationLlmStatus } from './ui/polus/prof-orientation-llm-data';
@@ -34,4 +23,3 @@ export type {
   ResolvedPublicBrandingTheme,
 } from './public-branding';
 export type { ProfOrientationSummary } from './ui/polus/prof-orientation-summary';
-export type { CreateTestValues, TestTopicListItem } from './model/types';

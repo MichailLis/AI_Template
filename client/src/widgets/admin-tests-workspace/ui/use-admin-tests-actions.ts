@@ -24,7 +24,7 @@ import {
 import type { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
 import type { useAdminTestsDraft } from './use-admin-tests-draft';
 import type { useAdminTestsTopics } from './use-admin-tests-topics';
-import type { CreateTestValues, useQuestionEditor } from '@/features/tests';
+import type { CreateTestValues, useQuestionEditor } from '@/features/test-editor';
 import type { CreateTestsTopicFromAiDto } from '@/shared/api/model';
 import type { UseFormReturn } from 'react-hook-form';
 

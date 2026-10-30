@@ -2,7 +2,7 @@ import { formatDateTime } from '@/shared/lib/date-format';
 import { getEntryProfileModeLabel, getPublicTemplateLabel } from '@/shared/lib/public-test-labels';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 
-import type { PublicBrandingConfig } from '@/features/tests';
+import type { PublicBrandingConfig } from '@/entities/public-test';
 
 export interface PublicLinkListItem {
   id: number;

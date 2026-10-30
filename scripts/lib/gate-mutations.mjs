@@ -332,6 +332,20 @@ export const GATE_MUTATIONS = [
     requiredFile: 'server/openapi.json',
     skipReason: 'server/openapi.json is missing (requires gen:openapi)',
   },
+  {
+    id: 'architecture-undeclared-feature-slice',
+    gate: 'verify-architecture.mjs',
+    script: 'scripts/verify-architecture.mjs',
+    npmScript: 'verify:architecture',
+    file: 'template/features.manifest.json',
+    description:
+      'Drop features/education-organization-editor from ownedRoots.frontend so the slice is undeclared',
+    action: 'replace',
+    search: '"client/src/features/education-organization-editor",',
+    replace: '"client/src/features/education-organization-editor-renamed",',
+    requiredFile: 'server/openapi.json',
+    skipReason: 'server/openapi.json is missing (requires gen:openapi)',
+  },
 
   // 8. verify-stack.mjs
   {
@@ -363,7 +377,7 @@ export const GATE_MUTATIONS = [
     gate: 'verify-paired-rules.mjs',
     script: 'scripts/verify-paired-rules.mjs',
     npmScript: 'verify:paired-rules',
-    file: 'client/src/features/tests/lib/test-analysis-result-parser.ts',
+    file: 'client/src/entities/public-test/lib/test-analysis-result-parser.ts',
     description: 'Change MAX_TRAITS_COUNT on client from 6 to 99 causing constant divergence',
     action: 'replace',
     search: 'const MAX_TRAITS_COUNT = 6;',
@@ -374,11 +388,37 @@ export const GATE_MUTATIONS = [
     gate: 'verify-paired-rules.mjs',
     script: 'scripts/verify-paired-rules.mjs',
     npmScript: 'verify:paired-rules',
-    file: 'client/src/features/tests/lib/public-question-choice-limit.ts',
+    file: 'client/src/entities/public-test/lib/public-question-choice-limit.ts',
     description:
       'Declare an unlisted top-level symbol getQuestionLabel matching existing server symbol',
     action: 'append',
     append: "\nexport const getQuestionLabel = () => 'undeclared';\n",
+  },
+
+  // 10. verify-public-bundle.mjs
+  {
+    id: 'public-bundle-admin-client-leak',
+    gate: 'verify-public-bundle.mjs',
+    script: 'scripts/verify-public-bundle.mjs',
+    npmScript: 'verify:public-bundle',
+    file: 'client/src/pages/t/public-test-run-page.tsx',
+    description: 'Pull the admin API client into the student run page',
+    action: 'append',
+    append:
+      "\nimport { adminControllerGetOverview } from '@/shared/api/generated/admin/admin';\n" +
+      'Object.assign(globalThis, { adminControllerGetOverview });\n',
+  },
+  {
+    id: 'public-bundle-admin-feature-leak',
+    gate: 'verify-public-bundle.mjs',
+    script: 'scripts/verify-public-bundle.mjs',
+    npmScript: 'verify:public-bundle',
+    file: 'client/src/entities/public-test/index.ts',
+    description: 'Re-export the admin test editor from the public slice',
+    action: 'append',
+    append:
+      "\nimport { TestEditor } from '@/features/test-editor';\n" +
+      'Object.assign(globalThis, { TestEditor });\n',
   },
 ];
 

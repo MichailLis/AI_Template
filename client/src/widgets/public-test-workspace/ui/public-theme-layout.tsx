@@ -1,1 +1,1 @@
-export { PublicThemeLayout } from '@/features/tests';
+export { PublicThemeLayout } from '@/entities/public-test';

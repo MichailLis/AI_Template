@@ -738,7 +738,14 @@ const verify = async () => {
   }
 
   const featureDirEntries = await readDirFromRoot('client/src/features', true);
-  const allowedFeatureDirs = new Set(['auth', ...features.map((feature) => feature.name)]);
+  // Как у виджетов: слайс фичи объявлен, если он назван как фича или указан в её ownedRoots.frontend.
+  const allowedFeatureDirs = new Set([
+    'auth',
+    ...features.map((feature) => feature.name),
+    ...collectFeatureFrontendOwnedRoots(features)
+      .map((ownedRoot) => /^client\/src\/features\/([^/]+)$/.exec(ownedRoot)?.[1])
+      .filter(Boolean),
+  ]);
 
   for (const entry of featureDirEntries) {
     if (!entry.isDirectory()) {

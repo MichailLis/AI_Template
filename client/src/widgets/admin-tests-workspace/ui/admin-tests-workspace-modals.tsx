@@ -1,4 +1,4 @@
-import { AiTestGeneratorModal, QuestionModal, TestsCreateModal } from '@/features/tests';
+import { AiTestGeneratorModal, QuestionModal, TestsCreateModal } from '@/features/test-editor';
 
 import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
 import { AdminTestsImportDialog } from './admin-tests-import-dialog';

@@ -1,4 +1,4 @@
-import { type TestTopicListItem } from '@/features/tests';
+import { type TestTopicListItem } from '@/features/test-editor';
 import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 

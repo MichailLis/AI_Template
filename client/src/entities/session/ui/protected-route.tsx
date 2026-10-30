@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 
-import { useAuthStore } from '@/entities/session';
+import { useAuthStore } from '../model/store';
 
 import { AccessPendingScreen } from './access-pending-screen';
 

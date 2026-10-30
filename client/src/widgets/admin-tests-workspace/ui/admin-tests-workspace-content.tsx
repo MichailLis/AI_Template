@@ -1,4 +1,4 @@
-import { TestQuestionsOnlyView } from '@/features/tests';
+import { TestQuestionsOnlyView } from '@/features/test-editor';
 
 import { AdminTestsListSection } from './admin-tests-list-section';
 import { AdminTestsSettingsCard } from './admin-tests-settings-card';

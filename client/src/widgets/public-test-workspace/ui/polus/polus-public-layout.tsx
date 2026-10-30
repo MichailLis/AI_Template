@@ -1,4 +1,4 @@
-import { polusAssets } from '@/features/tests';
+import { polusAssets } from '@/entities/public-test';
 import { cn } from '@/shared/lib/utils';
 
 import { PublicThemeLayout } from '../public-theme-layout';
