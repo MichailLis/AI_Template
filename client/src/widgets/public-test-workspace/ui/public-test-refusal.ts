@@ -27,6 +27,12 @@ const REFUSALS: Record<string, PublicTestRefusal> = {
     title: 'Попытки закончились',
     description: 'Вы уже использовали все попытки в этом тесте.',
   },
+  // Лимит start/finish по адресу (public-rate-limit.guard.ts): класс за одним NAT упёрся в настройку.
+  RATE_LIMITED: {
+    title: 'Слишком много запросов',
+    description:
+      'С вашей сети тест сейчас проходят очень многие. Подождите минуту и попробуйте снова.',
+  },
 };
 
 const formatOpensAt = (startsAt: string) =>

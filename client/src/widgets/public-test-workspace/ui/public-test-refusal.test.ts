@@ -15,6 +15,9 @@ describe('getPublicTestRefusal', () => {
     expect(getPublicTestRefusal(apiError('LINK_EXPIRED'), fallback).title).toBe(
       'Срок прохождения вышел',
     );
+    expect(getPublicTestRefusal(apiError('RATE_LIMITED'), fallback).title).toBe(
+      'Слишком много запросов',
+    );
   });
 
   it('shows the opening time when the link is not open yet and the time is known', () => {

@@ -4,6 +4,7 @@ import type { PrivacyPolicySettingsService } from '../app-settings/privacy-polic
 import type { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
 import type { AiProviderClientService } from '../ai-provider/ai-provider.client';
 import type { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
+import type { PublicRateLimitSettingsService } from '../app-settings/public-rate-limit-settings.service';
 
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
@@ -25,6 +26,10 @@ describe('AdminSettingsController', () => {
   let profOrientationAtlasService: {
     buildCoverageReport: jest.Mock;
   };
+  let publicRateLimitSettingsService: {
+    getSettings: jest.Mock;
+    updateSettings: jest.Mock;
+  };
 
   beforeEach(() => {
     aiProviderConfig = {
@@ -45,6 +50,10 @@ describe('AdminSettingsController', () => {
     profOrientationAtlasService = {
       buildCoverageReport: jest.fn(),
     };
+    publicRateLimitSettingsService = {
+      getSettings: jest.fn(),
+      updateSettings: jest.fn(),
+    };
 
     controller = new AdminSettingsController(
       aiProviderConfig as unknown as AiProviderConfigService,
@@ -52,6 +61,7 @@ describe('AdminSettingsController', () => {
       professionAtlasSettingsService as unknown as ProfessionAtlasSettingsService,
       privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
       profOrientationAtlasService as unknown as ProfOrientationAtlasService,
+      publicRateLimitSettingsService as unknown as PublicRateLimitSettingsService,
     );
   });
 
@@ -224,6 +234,19 @@ describe('AdminSettingsController', () => {
       status: 'partial',
       missing: ['Инженер данных'],
       duplicates: ['Промышленный дизайнер'],
+    });
+  });
+
+  it('updates the public rate limit on behalf of the admin', async () => {
+    const response = { publicRateLimit: { perMinute: 30, burst: 60, updatedAt: null } };
+    publicRateLimitSettingsService.updateSettings.mockResolvedValue(response);
+
+    await expect(controller.updatePublicRateLimit(7, { perMinute: 30, burst: 60 })).resolves.toBe(
+      response,
+    );
+    expect(publicRateLimitSettingsService.updateSettings).toHaveBeenCalledWith(7, {
+      perMinute: 30,
+      burst: 60,
     });
   });
 });

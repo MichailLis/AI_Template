@@ -6,6 +6,7 @@ import { AdminSettingsWorkspace } from './admin-settings-workspace';
 
 const updatePrivacyPolicy = vi.fn();
 const updateAiProvider = vi.fn();
+const updatePublicRateLimit = vi.fn();
 
 const loadedCoverage = {
   status: 'unavailable',
@@ -90,6 +91,17 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
   useAdminSettingsControllerUpdateProfessionAtlasUrl: () => ({
     isPending: false,
     mutate: vi.fn(),
+  }),
+  getAdminSettingsControllerGetPublicRateLimitSettingsQueryKey: () => ['public-rate-limit'],
+  useAdminSettingsControllerGetPublicRateLimitSettings: () => ({
+    data: { publicRateLimit: { perMinute: 60, burst: 120, updatedAt: null } },
+    isError: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  useAdminSettingsControllerUpdatePublicRateLimit: () => ({
+    isPending: false,
+    mutate: updatePublicRateLimit,
   }),
 }));
 
@@ -279,5 +291,29 @@ describe('AdminSettingsWorkspace privacy policy', () => {
 
     fireEvent.click(submitButton);
     expect(updatePrivacyPolicy).toHaveBeenCalled();
+  });
+});
+
+describe('AdminSettingsWorkspace public rate limit', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('saves the edited limit as numbers and blocks values the server would reject', () => {
+    renderWorkspace();
+
+    const perMinute = screen.getByLabelText('Запросов в минуту');
+    const save = screen.getByRole('button', { name: 'Сохранить лимит' });
+    expect(perMinute).toHaveValue(60);
+    expect(save).toBeDisabled();
+
+    fireEvent.change(perMinute, { target: { value: '0' } });
+    expect(save).toBeDisabled();
+
+    fireEvent.change(perMinute, { target: { value: '90' } });
+    fireEvent.click(save);
+
+    expect(updatePublicRateLimit).toHaveBeenCalledWith({ data: { perMinute: 90, burst: 120 } });
   });
 });

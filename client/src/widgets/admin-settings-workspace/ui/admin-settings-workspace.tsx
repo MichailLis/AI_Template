@@ -29,6 +29,7 @@ import {
   getProfessionAtlasHealthBadge,
 } from './admin-settings-cards.model';
 import { AdminSettingsHero } from './admin-settings-hero';
+import { PublicRateLimitSettingsCard } from './admin-settings-rate-limit';
 import { usePrivacyPolicyFormState } from './use-privacy-policy-form-state';
 
 import type { FormEvent } from 'react';
@@ -218,14 +219,17 @@ export function AdminSettingsWorkspace() {
         className={adminClassNames.layout.page}
       >
         {settingsTab === 'integrations' ? (
-          <AiProviderSettingsCard
-            isError={settingsQuery.isError}
-            isLoading={settingsQuery.isLoading}
-            aiProvider={aiProvider}
-            onRetry={() => {
-              void settingsQuery.refetch();
-            }}
-          />
+          <>
+            <AiProviderSettingsCard
+              isError={settingsQuery.isError}
+              isLoading={settingsQuery.isLoading}
+              aiProvider={aiProvider}
+              onRetry={() => {
+                void settingsQuery.refetch();
+              }}
+            />
+            <PublicRateLimitSettingsCard />
+          </>
         ) : null}
 
         {settingsTab === 'atlas' ? (
