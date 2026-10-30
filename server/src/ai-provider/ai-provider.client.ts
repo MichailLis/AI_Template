@@ -174,11 +174,14 @@ const extractCompletionOutput = (message: ChatCompletionMessage | undefined) => 
 
 const toProviderError = (error: unknown, label: string, timeoutMessage: string) => {
   if (error instanceof OpenAI.APIConnectionTimeoutError) {
-    return new BadGatewayException(timeoutMessage);
+    return new BadGatewayException(timeoutMessage, 'AI_PROVIDER_TIMEOUT');
   }
 
   if (error instanceof OpenAI.APIError) {
-    return new BadGatewayException(extractAiProviderErrorMessage(error, `${label} request failed`));
+    return new BadGatewayException(
+      extractAiProviderErrorMessage(error, `${label} request failed`),
+      'AI_PROVIDER_REQUEST_FAILED',
+    );
   }
 
   return error;
@@ -260,7 +263,10 @@ export class AiProviderClientService {
       const models = filterStructuredOutputPromptModels(parsePromptModels(page.data));
 
       if (models.length === 0) {
-        throw new BadGatewayException(`${connection.label} returned no structured output models`);
+        throw new BadGatewayException(
+          `${connection.label} returned no structured output models`,
+          'AI_PROVIDER_NO_STRUCTURED_MODELS',
+        );
       }
 
       return {
@@ -343,7 +349,10 @@ export class AiProviderClientService {
       const output = extractCompletionOutput(completion.choices?.[0]?.message);
 
       if (!output) {
-        throw new BadGatewayException(`${connection.label} returned an empty response`);
+        throw new BadGatewayException(
+          `${connection.label} returned an empty response`,
+          'AI_PROVIDER_EMPTY_RESPONSE',
+        );
       }
 
       const formattedOutput =

@@ -72,11 +72,14 @@ const assertRequisitesFormat = (
   const ogrn = normalizeNullableString(dto.ogrn);
 
   if (inn && inn !== existing?.inn && !isValidInn(inn)) {
-    throw new BadRequestException('ИНН должен состоять из 10 или 12 цифр');
+    throw new BadRequestException('ИНН должен состоять из 10 или 12 цифр', 'INN_INVALID');
   }
 
   if (ogrn && ogrn !== existing?.ogrn && !isValidOgrn(ogrn)) {
-    throw new BadRequestException('ОГРН должен состоять из 13 цифр (для ИП — из 15)');
+    throw new BadRequestException(
+      'ОГРН должен состоять из 13 цифр (для ИП — из 15)',
+      'OGRN_INVALID',
+    );
   }
 };
 
@@ -113,7 +116,10 @@ export class TestsEducationOrganizationService {
     });
 
     if (!organization) {
-      throw new NotFoundException('Учебное заведение не найдено');
+      throw new NotFoundException(
+        'Учебное заведение не найдено',
+        'EDUCATION_ORGANIZATION_NOT_FOUND',
+      );
     }
 
     return {
@@ -149,11 +155,17 @@ export class TestsEducationOrganizationService {
     }
 
     if (!pattern) {
-      throw new BadRequestException('Укажите шаблон формата группы/класса для выбранного режима');
+      throw new BadRequestException(
+        'Укажите шаблон формата группы/класса для выбранного режима',
+        'GROUP_PATTERN_REQUIRED',
+      );
     }
 
     if (checkExample && example && !matchesGroupPattern(example, pattern)) {
-      throw new BadRequestException('Пример не подходит под шаблон формата группы/класса');
+      throw new BadRequestException(
+        'Пример не подходит под шаблон формата группы/класса',
+        'GROUP_EXAMPLE_MISMATCH',
+      );
     }
 
     return {
@@ -291,7 +303,10 @@ export class TestsEducationOrganizationService {
     });
 
     if (!organization || !organization.isActive) {
-      throw new BadRequestException('Выбранное учебное заведение недоступно');
+      throw new BadRequestException(
+        'Выбранное учебное заведение недоступно',
+        'EDUCATION_ORGANIZATION_UNAVAILABLE',
+      );
     }
 
     return organization.id;
@@ -387,7 +402,10 @@ export class TestsEducationOrganizationService {
     });
 
     if (existing) {
-      throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+      throw new BadRequestException(
+        EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE,
+        'EDUCATION_ORGANIZATION_DUPLICATE',
+      );
     }
 
     assertRequisitesFormat(dto);
@@ -455,7 +473,10 @@ export class TestsEducationOrganizationService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Учебное заведение не найдено');
+      throw new NotFoundException(
+        'Учебное заведение не найдено',
+        'EDUCATION_ORGANIZATION_NOT_FOUND',
+      );
     }
 
     const nextName = dto.name?.trim() ?? existing.name;
@@ -475,7 +496,10 @@ export class TestsEducationOrganizationService {
       });
 
       if (duplicate) {
-        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+        throw new BadRequestException(
+          EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE,
+          'EDUCATION_ORGANIZATION_DUPLICATE',
+        );
       }
     }
 
@@ -572,6 +596,7 @@ export class TestsEducationOrganizationService {
       if (error instanceof BadRequestException) {
         throw new ConflictException(
           `У заведения есть действующие ссылки обработки ПДн от его имени, поэтому реквизиты нельзя оставить неполными. ${error.message}`,
+          'EDUCATION_ORGANIZATION_HAS_ACTIVE_LINKS',
         );
       }
 
@@ -604,7 +629,10 @@ export class TestsEducationOrganizationService {
       });
     } catch (error) {
       if (isPrismaUniqueConstraintError(error)) {
-        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+        throw new BadRequestException(
+          EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE,
+          'EDUCATION_ORGANIZATION_DUPLICATE',
+        );
       }
 
       throw error;
@@ -656,7 +684,10 @@ export class TestsEducationOrganizationService {
       });
     } catch (error) {
       if (isPrismaUniqueConstraintError(error)) {
-        throw new BadRequestException(EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE);
+        throw new BadRequestException(
+          EDUCATION_ORGANIZATION_DUPLICATE_MESSAGE,
+          'EDUCATION_ORGANIZATION_DUPLICATE',
+        );
       }
 
       throw error;

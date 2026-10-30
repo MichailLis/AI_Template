@@ -48,7 +48,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
     const refreshToken = extractRefreshTokenFromCookie(req);
 
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token is required');
+      throw new UnauthorizedException('Refresh token is required', 'REFRESH_TOKEN_REQUIRED');
     }
 
     return {

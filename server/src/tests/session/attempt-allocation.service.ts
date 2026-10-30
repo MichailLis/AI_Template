@@ -93,7 +93,10 @@ export class TestsPublicAttemptAllocationService {
       }
     }
 
-    throw new BadRequestException('Не удалось начать попытку. Попробуйте ещё раз.');
+    throw new BadRequestException(
+      'Не удалось начать попытку. Попробуйте ещё раз.',
+      'ATTEMPT_START_CONFLICT',
+    );
   }
 
   private async allocateAttempt(client: AttemptAllocationClient, input: AttemptAllocationInput) {

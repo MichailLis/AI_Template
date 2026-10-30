@@ -28,10 +28,36 @@ const VALIDATION_FIELD_LABELS: Record<string, string> = {
   consentDocumentUrl: 'Документ согласия',
   logoUrl: 'Логотип',
   groupValidationPattern: 'Шаблон группы/класса',
+  groupValidationExample: 'Пример группы/класса',
+  title: 'Название',
+  description: 'Описание',
+  shortCode: 'Короткий код',
+  maxAttemptsPerStudent: 'Попыток на ученика',
+  timeLimitMinutes: 'Лимит времени, мин',
+  startsAt: 'Открыть с',
+  endsAt: 'Закрыть в',
+  password: 'Пароль',
+  prompt: 'Текст промпта',
+  model: 'Модель',
+  temperature: 'Температура',
+  baseUrl: 'Адрес API провайдера',
+  apiKey: 'Ключ API',
+  publicUrl: 'Публичная страница Атласа',
+  apiUrl: 'Адрес API Атласа',
+  version: 'Версия',
+  content: 'Текст',
+  operatorFullName: 'Оператор персональных данных',
+  perMinute: 'Запросов в минуту',
+  burst: 'Всплеск подряд',
 };
 
 const normalizeValidationMessage = (message: string) => {
-  if (message === 'Invalid URL' || message === 'URL must use http or https') {
+  // «Неверный URL» — та же ошибка из русской локали zod на сервере.
+  if (
+    message === 'Invalid URL' ||
+    message === 'Неверный URL' ||
+    message === 'URL must use http or https'
+  ) {
     return 'укажите полный адрес, начинающийся с http:// или https://';
   }
 
@@ -39,70 +65,63 @@ const normalizeValidationMessage = (message: string) => {
 };
 
 /**
- * Прикладные ошибки сервер формулирует по-английски, и раньше они попадали в русский интерфейс как
- * есть: админ видел `Public link short code "MC5CKWDB" already exists`. Переводятся только те
- * сообщения, которые пользователь реально может получить и на которые может повлиять; остальное
- * по-прежнему показывается как пришло, чтобы не прятать неизвестную ошибку за общей фразой.
+ * Прикладные ошибки сервер отдаёт с машинным кодом (`error.code`, #148) и английским или русским
+ * текстом. Переводим по коду: раньше словарь держался за точный английский текст, и любая правка
+ * формулировки на сервере молча возвращала в интерфейс английский. Русские сообщения сервера и
+ * незнакомые коды показываются как пришли, чтобы не прятать новую ошибку за общей фразой.
  */
-const EXACT_MESSAGE_TRANSLATIONS: Record<string, string> = {
-  'Invalid credentials': 'Неверный email или пароль',
-  'Access Denied': 'Доступ запрещен',
-  'Admin area only': 'Раздел доступен только администраторам',
-  'Email already exists': 'Пользователь с таким email уже есть',
-  'User not found': 'Пользователь не найден',
-  'Account is deactivated': 'Аккаунт отключён. Обратитесь к администратору.',
-  'Admin cannot revoke own admin role': 'Нельзя снять права администратора с самого себя',
-  'Admin cannot deactivate own account': 'Нельзя отключить собственный аккаунт',
-  'Education organization with this name already exists':
-    'Учебное заведение с таким названием уже есть',
-  'Public link not found': 'Публичная ссылка не найдена. Возможно, ее уже удалили.',
-  'Published version not found': 'Опубликованная версия не найдена',
-  'Test topic not found': 'Тест не найден. Возможно, его уже удалили.',
-  'Topic has no active draft version': 'У теста нет версии в работе',
-  'Question not found in active draft': 'Вопрос не найден в версии в работе',
-  'Public link can be created only for published test version':
+const CODE_TRANSLATIONS: Record<string, string> = {
+  INVALID_CREDENTIALS: 'Неверный email или пароль',
+  ACCOUNT_DEACTIVATED: 'Аккаунт отключён. Обратитесь к администратору.',
+  REFRESH_DENIED: 'Доступ запрещен',
+  ADMIN_ONLY: 'Раздел доступен только администраторам',
+  EMAIL_ALREADY_EXISTS: 'Пользователь с таким email уже есть',
+  USER_NOT_FOUND: 'Пользователь не найден',
+  CANNOT_REVOKE_OWN_ADMIN_ROLE: 'Нельзя снять права администратора с самого себя',
+  CANNOT_DEACTIVATE_OWN_ACCOUNT: 'Нельзя отключить собственный аккаунт',
+  PUBLIC_LINK_NOT_FOUND: 'Публичная ссылка не найдена. Возможно, ее уже удалили.',
+  PUBLISHED_VERSION_NOT_FOUND: 'Опубликованная версия не найдена',
+  PUBLIC_LINK_REQUIRES_PUBLISHED_VERSION:
     'Публичную ссылку можно создать только для опубликованной версии теста',
-  'Unable to generate unique short code for public link':
-    'Не удалось подобрать свободный короткий код. Попробуйте еще раз.',
-  'Questions order must be unique within draft':
-    'Порядок вопросов внутри версии должен быть уникальным',
-  'Reorder payload contains duplicate question ids': 'В новом порядке вопросы повторяются',
-  'Some selected test questions were not found': 'Часть выбранных вопросов не найдена',
-  'Slider band maxValue must be greater than minValue':
-    'Верхняя граница диапазона должна быть больше нижней',
-  'Question settings must be valid JSON': 'Настройки вопроса должны быть корректным JSON',
-  'Value must be valid JSON': 'Значение должно быть корректным JSON',
-  'Profession atlas URLs must not be empty': 'Адреса Атласа профессий не могут быть пустыми',
-  'Privacy policy settings are invalid': 'Настройки политики персональных данных заполнены неверно',
-  'Invalid public link date format': 'Неверный формат даты публичной ссылки',
+  PUBLIC_LINK_DATE_INVALID: 'Неверный формат даты публичной ссылки',
+  PUBLIC_LINK_DATE_RANGE_INVALID: 'Дата закрытия ссылки должна быть позже даты открытия',
+  PUBLIC_LINK_PROMPT_ARCHIVED: 'Промпт анализа этой версии теста удалён. Подключите другой промпт.',
+  NO_PUBLISHED_VERSION_TO_MOVE:
+    'У теста нет опубликованной версии, на которую можно перевести ссылку',
+  SHORT_CODE_GENERATION_FAILED: 'Не удалось подобрать свободный короткий код. Попробуйте еще раз.',
+  TEST_TOPIC_NOT_FOUND: 'Тест не найден. Возможно, его уже удалили.',
+  TEST_TOPIC_IN_USE:
+    'Тест с опубликованными версиями, ссылками или прохождениями нельзя удалить насовсем',
+  NO_ACTIVE_DRAFT: 'У теста нет версии в работе',
+  QUESTION_NOT_FOUND: 'Вопрос не найден в версии в работе',
+  DRAFT_HAS_NO_QUESTIONS: 'В версии теста нет ни одного вопроса',
+  QUESTION_ORDER_NOT_UNIQUE: 'Порядок вопросов внутри версии должен быть уникальным',
+  REORDER_DUPLICATE_QUESTIONS: 'В новом порядке вопросы повторяются',
+  REORDER_INCOMPLETE: 'Новый порядок должен включать каждый вопрос версии ровно один раз',
+  TEST_QUESTIONS_NOT_FOUND: 'Часть выбранных вопросов не найдена',
+  SLIDER_BAND_RANGE_INVALID: 'Верхняя граница диапазона должна быть больше нижней',
+  QUESTION_SETTINGS_INVALID_JSON: 'Настройки вопроса должны быть корректным JSON',
+  VALUE_INVALID_JSON: 'Значение должно быть корректным JSON',
+  ANALYSIS_PROMPT_NOT_FOUND: 'Промпт не найден. Возможно, его уже удалили.',
+  ANALYSIS_PROMPT_VERSION_NOT_FOUND: 'Версия промпта не найдена',
+  ANALYSIS_PROMPT_VERSION_NOT_PUBLISHED:
+    'Подключить к тесту можно только опубликованную версию промпта',
+  ATTEMPT_NOT_FOUND: 'Прохождение не найдено',
+  AI_PROVIDER_NOT_CONFIGURED: 'Ключ API провайдера ИИ не настроен',
+  AI_PROVIDER_API_KEY_REQUIRED: 'После смены адреса провайдера введите ключ API заново',
+  ATLAS_URLS_REQUIRED: 'Адреса Атласа профессий не могут быть пустыми',
+  PRIVACY_POLICY_SETTINGS_INVALID: 'Настройки политики персональных данных заполнены неверно',
 };
 
-const PATTERN_MESSAGE_TRANSLATIONS: Array<{
-  pattern: RegExp;
-  translate: (match: string[]) => string;
-}> = [
-  {
-    pattern: /^Public link short code "(.+)" already exists$/,
-    translate: ([, shortCode]) => `Короткий код «${shortCode}» уже занят. Укажите другой.`,
-  },
-];
-
-const translateKnownMessage = (message: string) => {
-  const exact = EXACT_MESSAGE_TRANSLATIONS[message];
-
-  if (exact) {
-    return exact;
+const translateByCode = (code: unknown, message: string) => {
+  if (code === 'SHORT_CODE_TAKEN') {
+    const shortCode = /"(.+)"/.exec(message)?.[1];
+    return shortCode
+      ? `Короткий код «${shortCode}» уже занят. Укажите другой.`
+      : 'Этот короткий код уже занят. Укажите другой.';
   }
 
-  for (const { pattern, translate } of PATTERN_MESSAGE_TRANSLATIONS) {
-    const match = pattern.exec(message);
-
-    if (match) {
-      return translate(match);
-    }
-  }
-
-  return message;
+  return (typeof code === 'string' && CODE_TRANSLATIONS[code]) || message;
 };
 
 const extractValidationDetails = (error: Record<string, unknown>): ApiValidationIssue[] => {
@@ -173,12 +192,12 @@ const extractErrorMessage = (data: Record<string, unknown>) => {
     }
 
     if ('message' in nestedError) {
-      return translateKnownMessage(String(nestedError.message));
+      return translateByCode(nestedError.code, String(nestedError.message));
     }
   }
 
   if ('message' in data) {
-    return translateKnownMessage(String(data.message));
+    return String(data.message);
   }
 
   return null;
