@@ -93,7 +93,6 @@
       "additionalRoutes": ["/admin/users", "/admin/analytics", "/admin/settings"],
       "backendModule": "AdminModule",
       "prismaModel": "User",
-      "schema": "adminOverviewSchema",
       "ownership": {
         "kind": "admin-shell",
         "owns": ["admin shell", "users", "settings", "database backups UI and routes"],
@@ -261,7 +260,6 @@
       "route": "/admin/prompts",
       "backendModule": "AnalysisPromptsModule",
       "prismaModel": "AnalysisPrompt",
-      "schema": "adminPromptGenerateSchema",
       "ownership": {
         "kind": "product-feature",
         "owns": ["analysis prompt lifecycle", "prompt simulation", "prompt model catalog proxy"],
@@ -343,7 +341,6 @@
       ],
       "backendModule": "TestsModule",
       "prismaModel": "TestTopic",
-      "schema": "testsTopicCreateSchema",
       "ownership": {
         "kind": "product-feature",
         "owns": [

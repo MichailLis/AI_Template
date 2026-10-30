@@ -10,6 +10,10 @@ Moved out of the README: how the admin panel, auth, Prompt Studio, tests and the
   first admin comes from the seed (`npm run prisma:seed`) locally, and from
   `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` in the deploy image, whose entrypoint runs
   the bootstrap script. The root compose stack does not pass those variables to the backend.
+- Admin accounts are for the platform operator's staff only (owner decision, #177). An `ADMIN`
+  sees every education organization, link and attempt with student names, exports, prompts, users
+  and backups; nothing is scoped to an organization, and `USER` opens no section. Do not give school
+  staff an account: that would need a role scoped to one organization, which does not exist.
 - Admin UI copy for active business screens is currently Russian-localized for manual QA convenience.
 - The admin has a light, dark and system theme, switched in the header (the choice is kept in the
   browser through `safeStorage`; "system" follows `prefers-color-scheme`). The `dark` class is set on

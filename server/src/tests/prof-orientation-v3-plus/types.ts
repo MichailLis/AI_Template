@@ -35,7 +35,7 @@ export interface ProfOrientationDirectionSummary {
 }
 
 export interface ProfOrientationFlag {
-  code: 'overchoice' | 'interest_slider_conflict' | 'readiness_conflict';
+  code: 'interest_slider_conflict' | 'readiness_conflict';
   label: string;
   severity: 'info' | 'warning';
   directionId?: ProfOrientationDirectionId;

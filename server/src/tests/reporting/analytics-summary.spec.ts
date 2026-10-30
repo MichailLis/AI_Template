@@ -9,7 +9,6 @@ import {
 const FLAG_LABELS = {
   readiness_conflict: 'Готовность к ведущему направлению пока низкая',
   interest_slider_conflict: 'Выборы противоречат слайдеру интереса',
-  overchoice: 'Выбрано слишком много вариантов',
 };
 
 const createDirectionSummary = (directionId: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) => ({
@@ -34,7 +33,7 @@ const createSummary = (input: {
   secondaryDirection: (typeof PROF_ORIENTATION_DIRECTIONS)[number];
   profileType: 'single_profile' | 'mixed_profile';
   confidenceLevel: 'low' | 'medium' | 'high' | 'mixed' | 'broad';
-  flags?: Array<'readiness_conflict' | 'interest_slider_conflict' | 'overchoice'>;
+  flags?: Array<'readiness_conflict' | 'interest_slider_conflict'>;
   scores?: Partial<Record<(typeof PROF_ORIENTATION_DIRECTIONS)[number], number>>;
 }) => {
   const topDirections = [
