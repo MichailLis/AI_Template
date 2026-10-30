@@ -206,6 +206,11 @@
           "protected": true
         },
         {
+          "path": "/admin/settings/public-rate-limit",
+          "methods": ["get", "patch"],
+          "protected": true
+        },
+        {
           "path": "/admin/backups",
           "methods": ["get", "post"],
           "protected": true

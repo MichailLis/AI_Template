@@ -6,6 +6,7 @@ import { AtGuard } from '../auth/guards';
 import { AdminGuard } from '../common/authz/admin.guard';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
+import { PublicRateLimitSettingsService } from '../app-settings/public-rate-limit-settings.service';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 import { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
 import { AiProviderClientService, type AiProviderHealth } from '../ai-provider/ai-provider.client';
@@ -13,10 +14,12 @@ import {
   AdminAiProviderSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
+  AdminPublicRateLimitSettingsResponseDto,
   ProfessionAtlasCoverageResponseDto,
   UpdateAiProviderDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
+  UpdatePublicRateLimitDto,
 } from './dto/admin-settings.dto';
 import { ApiErrorResponses } from '../common/decorators/api-error-responses.decorator';
 
@@ -32,6 +35,7 @@ export class AdminSettingsController {
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
     private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
+    private readonly publicRateLimitSettingsService: PublicRateLimitSettingsService,
   ) {}
 
   /**
@@ -98,6 +102,20 @@ export class AdminSettingsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminPrivacyPolicySettingsResponseDto })
   updatePrivacyPolicy(@GetCurrentUserId() userId: number, @Body() dto: UpdatePrivacyPolicyDto) {
     return this.privacyPolicySettingsService.updatePrivacyPolicy(userId, dto);
+  }
+
+  @Get('public-rate-limit')
+  @ApiOperation({ summary: 'Get rate limit for public test start and finish' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicRateLimitSettingsResponseDto })
+  getPublicRateLimitSettings() {
+    return this.publicRateLimitSettingsService.getSettings();
+  }
+
+  @Patch('public-rate-limit')
+  @ApiOperation({ summary: 'Update rate limit for public test start and finish' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminPublicRateLimitSettingsResponseDto })
+  updatePublicRateLimit(@GetCurrentUserId() userId: number, @Body() dto: UpdatePublicRateLimitDto) {
+    return this.publicRateLimitSettingsService.updateSettings(userId, dto);
   }
 
   @Get('profession-atlas/coverage')

@@ -126,6 +126,8 @@ export * from './adminPublicLinksListResponseDtoLinksItemPublicBrandingHeaderLog
 export * from './adminPublicLinksListResponseDtoLinksItemPublicBrandingSurfaces';
 export * from './adminPublicLinksListResponseDtoLinksItemPublicBrandingVersion';
 export * from './adminPublicLinksListResponseDtoLinksItemPublicTemplate';
+export * from './adminPublicRateLimitSettingsResponseDto';
+export * from './adminPublicRateLimitSettingsResponseDtoPublicRateLimit';
 export * from './adminRestoreStartResponseDto';
 export * from './adminRestoreStartResponseDtoOperation';
 export * from './adminRestoreStartResponseDtoOperationKind';
@@ -364,6 +366,7 @@ export * from './updateAnalysisPromptVersionDto';
 export * from './updateBackupSettingsDto';
 export * from './updatePrivacyPolicyDto';
 export * from './updateProfessionAtlasUrlDto';
+export * from './updatePublicRateLimitDto';
 export * from './updateTestsTopicArchiveStatusResponseDto';
 export * from './updateTestsTopicDraftDto';
 export * from './updateUserDto';
