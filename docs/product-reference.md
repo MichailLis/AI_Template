@@ -20,6 +20,8 @@ Moved out of the README: how the admin panel, auth, Prompt Studio, tests and the
 - `POST /auth/signin` returns `accessToken` and `user` (including `role`) in the JSON body. A
   deactivated account is rejected with `403 Account is deactivated`.
 - The refresh token is set only as an `HttpOnly` cookie named `refreshToken`.
+- Every sign-in opens its own row in `auth_sessions`, so a second device does not end the first (#123); `POST /auth/logout` ends only the session of the device it is called from. Both tokens carry the session id as `sid`.
+- A session ends after 8 hours without a refresh or 7 days after sign-in, whichever comes first (#176). Without «Это мой компьютер» (`rememberDevice`) the refresh cookie is a session cookie and dies with the browser; with it the cookie lives until the 7-day limit. A tab opened in a new browser session drops the stored access token, so the first request refreshes or sends the user to `/login`.
 - `POST /auth/refresh` reads the refresh cookie and returns a new `accessToken`; it does not return a refresh token in the response body.
 - Browser refresh handling lives in `client/src/shared/api/interceptors.ts`; generated API code and `client/src/shared/api/api.ts` must not read browser storage directly.
 - The client logs out only when refresh answers `401`/`403`; a network error or `5xx` is retried (3 attempts) and the session is kept. Refresh runs under `navigator.locks` (`auth-refresh`): a tab that waited for the lock takes the access token another tab already stored instead of refreshing again, so rotation does not evict a second tab.

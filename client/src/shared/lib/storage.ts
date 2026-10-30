@@ -1,22 +1,28 @@
 /**
- * Безопасная обертка над localStorage с fallback в память.
+ * Безопасная обертка над localStorage или sessionStorage с fallback в память.
  * Решает проблему 'Access to storage is not allowed from this context'.
  */
 
 class SafeStorage implements Storage {
   private memoryStorage: Record<string, string> = {};
   private isAvailable: boolean;
+  private readonly kind: 'localStorage' | 'sessionStorage';
 
-  constructor() {
+  constructor(kind: 'localStorage' | 'sessionStorage') {
+    this.kind = kind;
     this.isAvailable = this.checkAvailability();
+  }
+
+  private get backend(): Storage {
+    return window[this.kind];
   }
 
   private checkAvailability(): boolean {
     if (typeof window === 'undefined') return false;
     try {
       const testKey = '__storage_test__';
-      window.localStorage.setItem(testKey, testKey);
-      window.localStorage.removeItem(testKey);
+      this.backend.setItem(testKey, testKey);
+      this.backend.removeItem(testKey);
       return true;
     } catch {
       return false;
@@ -24,12 +30,12 @@ class SafeStorage implements Storage {
   }
 
   get length(): number {
-    return this.isAvailable ? window.localStorage.length : Object.keys(this.memoryStorage).length;
+    return this.isAvailable ? this.backend.length : Object.keys(this.memoryStorage).length;
   }
 
   clear(): void {
     if (this.isAvailable) {
-      window.localStorage.clear();
+      this.backend.clear();
     } else {
       this.memoryStorage = {};
     }
@@ -38,7 +44,7 @@ class SafeStorage implements Storage {
   getItem(key: string): string | null {
     if (this.isAvailable) {
       try {
-        return window.localStorage.getItem(key);
+        return this.backend.getItem(key);
       } catch {
         return this.memoryStorage[key] || null;
       }
@@ -48,7 +54,7 @@ class SafeStorage implements Storage {
 
   key(index: number): string | null {
     if (this.isAvailable) {
-      return window.localStorage.key(index);
+      return this.backend.key(index);
     }
     return Object.keys(this.memoryStorage)[index] || null;
   }
@@ -56,7 +62,7 @@ class SafeStorage implements Storage {
   removeItem(key: string): void {
     if (this.isAvailable) {
       try {
-        window.localStorage.removeItem(key);
+        this.backend.removeItem(key);
       } catch {
         delete this.memoryStorage[key];
       }
@@ -68,7 +74,7 @@ class SafeStorage implements Storage {
   setItem(key: string, value: string): void {
     if (this.isAvailable) {
       try {
-        window.localStorage.setItem(key, value);
+        this.backend.setItem(key, value);
       } catch {
         this.memoryStorage[key] = String(value);
       }
@@ -78,4 +84,6 @@ class SafeStorage implements Storage {
   }
 }
 
-export const safeStorage = new SafeStorage();
+export const safeStorage = new SafeStorage('localStorage');
+/** Живёт, пока открыта вкладка: так клиент узнаёт, что браузер закрывали (#176). */
+export const safeSessionStorage = new SafeStorage('sessionStorage');

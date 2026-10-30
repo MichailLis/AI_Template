@@ -12,7 +12,7 @@ describe('planExistingUserUpdates', () => {
       planExistingUserUpdates({ name: 'Admin' }, { name: 'Admin', hashedPassword: 'hash' }),
     ).toMatchObject({
       password: 'hash',
-      hashedRefreshToken: null,
+      authSessions: { deleteMany: {} },
       sessionsRevokedAt: expect.any(Date) as Date,
     });
   });

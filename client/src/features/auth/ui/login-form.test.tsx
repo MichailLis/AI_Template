@@ -93,6 +93,32 @@ describe('LoginForm', () => {
       </MemoryRouter>,
     );
 
+  it('signs in without remembering the device unless the user ticks the box (#176)', async () => {
+    renderLoginRoute();
+
+    expect(screen.getByLabelText('Это мой компьютер')).not.toBeChecked();
+    await submitLogin();
+
+    expect(authApiMock.mutate).toHaveBeenCalledWith(
+      { data: expect.objectContaining({ rememberDevice: false }) as unknown },
+      expect.anything(),
+    );
+    expect(useAuthStore.getState().rememberDevice).toBe(false);
+  });
+
+  it('remembers the device when the box is ticked', async () => {
+    renderLoginRoute();
+
+    await userEvent.setup().click(screen.getByLabelText('Это мой компьютер'));
+    await submitLogin();
+
+    expect(authApiMock.mutate).toHaveBeenCalledWith(
+      { data: expect.objectContaining({ rememberDevice: true }) as unknown },
+      expect.anything(),
+    );
+    expect(useAuthStore.getState().rememberDevice).toBe(true);
+  });
+
   it('greets an admin after a successful login', async () => {
     renderLoginRoute();
 

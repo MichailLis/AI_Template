@@ -8,6 +8,19 @@ import * as argon2 from 'argon2';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
+/** #176: сессия заканчивается через 8 ч без refresh или через 7 дней после входа. */
+export const SESSION_IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000;
+export const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+const expiredSessionsWhere = (now: number) => ({
+  OR: [
+    { lastUsedAt: { lt: new Date(now - SESSION_IDLE_TIMEOUT_MS) } },
+    { createdAt: { lt: new Date(now - SESSION_MAX_AGE_MS) } },
+  ],
+});
+
+const refreshDenied = () => new ForbiddenException('Access Denied', 'REFRESH_DENIED');
+
 // Lets an unknown email spend the same argon2 time as a known one (see signin).
 let dummyHashPromise: Promise<string> | undefined;
 // A failed hash is dropped so the next call retries instead of failing every unknown email.
@@ -43,17 +56,28 @@ export class AuthService {
     if (user.deactivatedAt)
       throw new ForbiddenException('Account is deactivated', 'ACCOUNT_DEACTIVATED');
 
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        hashedRefreshToken: await argon2.hash(tokens.refreshToken),
-        lastLoginAt: new Date(),
-      },
+    const rememberDevice = dto.rememberDevice ?? false;
+    const tokens = await this.prisma.$transaction(async (tx) => {
+      // Истёкшие сессии пользователя убираются при входе, чтобы таблица не росла.
+      await tx.authSession.deleteMany({
+        where: { userId: user.id, ...expiredSessionsWhere(Date.now()) },
+      });
+      // Хэш пишется вторым шагом: refresh-токен несёт id сессии, которого до вставки ещё нет.
+      const session = await tx.authSession.create({
+        data: { userId: user.id, hashedRefreshToken: '', rememberDevice },
+      });
+      const sessionTokens = await this.getTokens(user.id, user.email, session.id);
+      await tx.authSession.update({
+        where: { id: session.id },
+        data: { hashedRefreshToken: await argon2.hash(sessionTokens.refreshToken) },
+      });
+      await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+      return sessionTokens;
     });
 
     return {
       ...tokens,
+      refreshCookieMaxAgeMs: rememberDevice ? SESSION_MAX_AGE_MS : undefined,
       user: {
         id: user.id,
         email: user.email,
@@ -63,54 +87,67 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number) {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { hashedRefreshToken: null },
-    });
+  /** Ends only this device's session; access tokens issued before #123 carry no session id. */
+  async logout(userId: number, sessionId: unknown) {
+    if (typeof sessionId !== 'number') return;
+    await this.prisma.authSession.deleteMany({ where: { id: sessionId, userId } });
   }
 
-  async refreshTokens(userId: number, refreshToken: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+  async refreshTokens(userId: number, sessionId: unknown, refreshToken: string) {
+    if (typeof sessionId !== 'number') throw refreshDenied();
+
+    const session = await this.prisma.authSession.findFirst({
+      where: { id: sessionId, userId },
+      include: { user: { select: { email: true, deactivatedAt: true } } },
     });
 
-    if (!user || !user.hashedRefreshToken || user.deactivatedAt) {
-      throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
+    if (!session || session.user.deactivatedAt) throw refreshDenied();
+
+    const now = Date.now();
+    if (
+      now - session.lastUsedAt.getTime() > SESSION_IDLE_TIMEOUT_MS ||
+      now - session.createdAt.getTime() > SESSION_MAX_AGE_MS
+    ) {
+      await this.prisma.authSession.deleteMany({ where: { id: session.id } });
+      throw refreshDenied();
     }
 
-    const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken, refreshToken);
-    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
+    const refreshTokenMatches = await argon2.verify(session.hashedRefreshToken, refreshToken);
+    if (!refreshTokenMatches) throw refreshDenied();
 
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(userId, session.user.email, session.id);
     const hashedRefreshToken = await argon2.hash(tokens.refreshToken);
-    const updateResult = await this.prisma.user.updateMany({
+    const updateResult = await this.prisma.authSession.updateMany({
       where: {
-        id: user.id,
-        hashedRefreshToken: user.hashedRefreshToken,
+        id: session.id,
+        hashedRefreshToken: session.hashedRefreshToken,
       },
-      data: { hashedRefreshToken },
+      data: { hashedRefreshToken, lastUsedAt: new Date(now) },
     });
 
-    if (updateResult.count !== 1) {
-      throw new ForbiddenException('Access Denied', 'REFRESH_DENIED');
-    }
+    if (updateResult.count !== 1) throw refreshDenied();
 
-    return tokens;
+    return {
+      ...tokens,
+      // Запомненное устройство держит cookie до абсолютного срока сессии, не продлевая его.
+      refreshCookieMaxAgeMs: session.rememberDevice
+        ? session.createdAt.getTime() + SESSION_MAX_AGE_MS - now
+        : undefined,
+    };
   }
 
   // Helpers
-  async getTokens(userId: number, email: string) {
+  async getTokens(userId: number, email: string, sessionId: number) {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, email },
+        { sub: userId, email, sid: sessionId },
         {
           secret: this.config.get<string>('JWT_ACCESS_SECRET'),
           expiresIn: '15m',
         },
       ),
       this.jwtService.signAsync(
-        { sub: userId, email, refreshNonce: randomUUID() },
+        { sub: userId, email, sid: sessionId, refreshNonce: randomUUID() },
         {
           secret: this.config.get<string>('JWT_REFRESH_SECRET'),
           expiresIn: '7d',

@@ -13,6 +13,7 @@ export const loginSchema = z.object({
   // Сообщения видит пользователь на русскоязычном экране входа, поэтому они на русском.
   email: z.string().email('Введите корректный email'),
   password: z.string().min(1, 'Введите пароль'),
+  rememberDevice: z.boolean(),
 });
 
 /**
