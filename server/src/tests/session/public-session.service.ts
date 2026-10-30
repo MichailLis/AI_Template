@@ -234,6 +234,7 @@ export class TestsPublicSessionService {
       if (!question) {
         throw new BadRequestException(
           `Question ${answer.questionId} does not belong to this session`,
+          'QUESTION_NOT_IN_SESSION',
         );
       }
 

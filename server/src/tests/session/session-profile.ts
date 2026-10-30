@@ -62,7 +62,7 @@ export const normalizeRequiredString = (value: string | undefined, message: stri
   const normalizedValue = value?.trim() ?? '';
 
   if (!normalizedValue) {
-    throw new BadRequestException(message);
+    throw new BadRequestException(message, 'PROFILE_INVALID');
   }
 
   return normalizedValue;
@@ -73,7 +73,10 @@ export const validateEntryProfileMode = (
   dto: PublicSessionStartRequestDto,
 ) => {
   if (dto.entryProfileMode && dto.entryProfileMode !== link.entryProfileMode) {
-    throw new BadRequestException('Анкета не соответствует настройкам ссылки');
+    throw new BadRequestException(
+      'Анкета не соответствует настройкам ссылки',
+      'PROFILE_MODE_MISMATCH',
+    );
   }
 };
 
@@ -81,7 +84,7 @@ export const resolveDemographicProfile = (
   dto: PublicSessionStartRequestDto,
 ): DemographicProfile => {
   if (!dto.gender) {
-    throw new BadRequestException('Укажите пол');
+    throw new BadRequestException('Укажите пол', 'PROFILE_INVALID');
   }
 
   const studentAge = dto.age;
@@ -92,13 +95,13 @@ export const resolveDemographicProfile = (
     studentAge < 1 ||
     studentAge > 120
   ) {
-    throw new BadRequestException('Укажите корректный возраст');
+    throw new BadRequestException('Укажите корректный возраст', 'PROFILE_INVALID');
   }
 
   const studentResidence = normalizeRequiredString(dto.residence, 'Укажите место жительства');
 
   if (!dto.educationLevel) {
-    throw new BadRequestException('Укажите уровень образования');
+    throw new BadRequestException('Укажите уровень образования', 'PROFILE_INVALID');
   }
 
   return {

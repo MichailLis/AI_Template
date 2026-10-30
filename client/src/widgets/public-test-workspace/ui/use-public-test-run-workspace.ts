@@ -11,6 +11,7 @@ import {
 } from '@/shared/api/generated/tests-public/tests-public';
 import { getApiErrorCode, getApiErrorStatus } from '@/shared/lib/api-error';
 
+import { getPublicTestRefusal } from './public-test-refusal';
 import {
   buildSessionAnswers,
   dropSavedDraftEntries,
@@ -71,6 +72,11 @@ const resolveCurrentAnswer = (
   Object.prototype.hasOwnProperty.call(answerDraft, questionId)
     ? answerDraft[questionId]
     : serverAnswerMap[questionId];
+
+const FINISH_FAILED = {
+  title: 'Не удалось завершить тест',
+  description: 'Попробуйте ещё раз через несколько секунд.',
+};
 
 const resolveFinishAnswers = (
   session: PublicTestSession | null,
@@ -196,7 +202,8 @@ export function usePublicTestRunWorkspace() {
       navigate(`/t/${session.shortCode || code}/result/${response.sessionToken}`);
     } catch (error) {
       if (isSessionExpiredError(error)) void sessionQuery.refetch();
-      toast.error('Не удалось завершить тест');
+      const refusal = getPublicTestRefusal(error, FINISH_FAILED);
+      toast.error(refusal.title, { description: refusal.description });
     }
   };
 

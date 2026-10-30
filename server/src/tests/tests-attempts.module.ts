@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-client.service';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
+import { PublicRateLimitSettingsService } from '../app-settings/public-rate-limit-settings.service';
 import { AuditModule } from '../audit/audit.module';
 import { AiProviderModule } from '../ai-provider/ai-provider.module';
 import { ProfOrientationAtlasService } from './prof-orientation-v3-plus/atlas';
@@ -18,6 +19,7 @@ import { TestsPublicController } from './session/public.controller';
 import { TestsPublicLinksModule } from './public-links/public-links.module';
 import { TestsPublicAttemptAllocationService } from './session/attempt-allocation.service';
 import { TestsPublicSessionService } from './session/public-session.service';
+import { PublicRateLimitBuckets, PublicRateLimitGuard } from './session/public-rate-limit.guard';
 
 @Module({
   imports: [AiProviderModule, TestsPublicLinksModule, AuditModule],
@@ -35,6 +37,9 @@ import { TestsPublicSessionService } from './session/public-session.service';
     ProfessionAtlasSettingsService,
     ProfessionAtlasClientService,
     ProfOrientationAtlasService,
+    PublicRateLimitSettingsService,
+    PublicRateLimitBuckets,
+    PublicRateLimitGuard,
   ],
   exports: [
     TestsAnalyticsService,

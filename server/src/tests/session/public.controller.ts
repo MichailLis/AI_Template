@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import {
@@ -14,6 +24,8 @@ import {
 import { TestsPublicLinkService } from '../public-links/public-link.service';
 import { TestsPublicSessionService } from '../session/public-session.service';
 import { ApiPublicErrorResponses } from '../../common/decorators/api-error-responses.decorator';
+import { ErrorResponseDto } from '../../common/dto/error-response.dto';
+import { PublicRateLimitGuard } from './public-rate-limit.guard';
 
 @ApiTags('tests-public')
 @ApiPublicErrorResponses()
@@ -32,8 +44,10 @@ export class TestsPublicController {
   }
 
   @Post('links/:code/start')
+  @UseGuards(PublicRateLimitGuard)
   @ApiOperation({ summary: 'Start or resume public test session' })
   @ApiResponse({ status: 201, type: PublicSessionStartResponseDto })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, type: ErrorResponseDto })
   startSession(@Param('code') code: string, @Body() dto: PublicSessionStartRequestDto) {
     return this.testsPublicSessionService.startSessionByCode(code, dto);
   }
@@ -57,8 +71,10 @@ export class TestsPublicController {
 
   @Post('sessions/:sessionToken/finish')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(PublicRateLimitGuard)
   @ApiOperation({ summary: 'Finish public test session and compute analysis' })
   @ApiResponse({ status: 200, type: PublicSessionFinishResponseDto })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, type: ErrorResponseDto })
   finishSession(@Param('sessionToken') sessionToken: string) {
     return this.testsPublicSessionService.finishSession(sessionToken);
   }

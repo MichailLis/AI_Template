@@ -69,7 +69,7 @@ export class AdminService {
     });
 
     if (!existingUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User not found', 'USER_NOT_FOUND');
     }
 
     return existingUser;
@@ -206,7 +206,10 @@ export class AdminService {
     await this.getCurrentAdminUser(adminId);
 
     if (adminId === targetUserId && dto.role !== 'ADMIN') {
-      throw new ForbiddenException('Admin cannot revoke own admin role');
+      throw new ForbiddenException(
+        'Admin cannot revoke own admin role',
+        'CANNOT_REVOKE_OWN_ADMIN_ROLE',
+      );
     }
 
     const existingUser = await this.assertUserExists(targetUserId);
@@ -280,7 +283,7 @@ export class AdminService {
       return { user: this.toAdminUserResponse(createdUser), generatedPassword };
     } catch (error: unknown) {
       if (isUniqueConstraintViolation(error)) {
-        throw new ConflictException('Email already exists');
+        throw new ConflictException('Email already exists', 'EMAIL_ALREADY_EXISTS');
       }
       throw error;
     }
@@ -321,7 +324,7 @@ export class AdminService {
       return this.toAdminUserResponse(updatedUser);
     } catch (error: unknown) {
       if (isUniqueConstraintViolation(error)) {
-        throw new ConflictException('Email already exists');
+        throw new ConflictException('Email already exists', 'EMAIL_ALREADY_EXISTS');
       }
       throw error;
     }
@@ -364,7 +367,10 @@ export class AdminService {
     // An admin reaching this line is active, so while they cannot switch themselves off there is
     // always at least one active admin left — no separate "last admin" check is needed.
     if (adminId === targetUserId && dto.status === 'DEACTIVATED') {
-      throw new ForbiddenException('Admin cannot deactivate own account');
+      throw new ForbiddenException(
+        'Admin cannot deactivate own account',
+        'CANNOT_DEACTIVATE_OWN_ACCOUNT',
+      );
     }
 
     const existingUser = await this.assertUserExists(targetUserId);

@@ -75,7 +75,7 @@ export class TestsService {
     });
 
     if (!topic) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     return { events: await this.auditService.listForEntity('TEST_TOPIC', topicId) };
@@ -159,13 +159,13 @@ export class TestsService {
     });
 
     if (!topic) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     const draft = topic.activeDraftVersion;
 
     if (!draft) {
-      throw new BadRequestException('Topic has no active draft version');
+      throw new BadRequestException('Topic has no active draft version', 'NO_ACTIVE_DRAFT');
     }
 
     return {
@@ -369,7 +369,7 @@ export class TestsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     if (existing.archivedAt) {
@@ -416,7 +416,7 @@ export class TestsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     if (!existing.archivedAt) {
@@ -517,7 +517,7 @@ export class TestsService {
     });
 
     if (!topic) {
-      throw new NotFoundException('Test topic not found');
+      throw new NotFoundException('Test topic not found', 'TEST_TOPIC_NOT_FOUND');
     }
 
     const protectedVersionsCount = await this.prisma.testTopicVersion.count({
@@ -534,6 +534,7 @@ export class TestsService {
     if (protectedVersionsCount > 0) {
       throw new BadRequestException(
         'Test topic with published versions, public links, or attempts cannot be hard-deleted',
+        'TEST_TOPIC_IN_USE',
       );
     }
 
@@ -602,7 +603,10 @@ export class TestsService {
       });
 
       if (!promptVersion) {
-        throw new BadRequestException('Analysis prompt version must be published');
+        throw new BadRequestException(
+          'Analysis prompt version must be published',
+          'ANALYSIS_PROMPT_VERSION_NOT_PUBLISHED',
+        );
       }
     }
 

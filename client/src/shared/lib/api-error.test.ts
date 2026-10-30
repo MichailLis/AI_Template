@@ -139,35 +139,48 @@ describe('extractApiValidationIssues', () => {
 });
 
 describe('переводы прикладных ошибок сервера', () => {
-  const apiError = (message: string) => ({
-    response: { data: { error: { code: 'HTTP_ERROR', message } } },
+  const apiError = (code: string, message: string) => ({
+    response: { data: { error: { code, message } } },
   });
 
   it('переводит занятый короткий код и сохраняет сам код', () => {
-    expect(parseApiError(apiError('Public link short code "MC5CKWDB" already exists'))).toBe(
-      'Короткий код «MC5CKWDB» уже занят. Укажите другой.',
-    );
+    expect(
+      parseApiError(
+        apiError('SHORT_CODE_TAKEN', 'Public link short code "MC5CKWDB" already exists'),
+      ),
+    ).toBe('Короткий код «MC5CKWDB» уже занят. Укажите другой.');
   });
 
-  it('переводит отказ входа', () => {
-    expect(parseApiError(apiError('Invalid credentials'))).toBe('Неверный email или пароль');
+  it('переводит отказ входа по коду, а не по тексту', () => {
+    expect(parseApiError(apiError('INVALID_CREDENTIALS', 'Access Denied'))).toBe(
+      'Неверный email или пароль',
+    );
   });
 
   it('переводит частые прикладные отказы админки', () => {
-    expect(parseApiError(apiError('Public link not found'))).toBe(
+    expect(parseApiError(apiError('PUBLIC_LINK_NOT_FOUND', 'Public link not found'))).toBe(
       'Публичная ссылка не найдена. Возможно, ее уже удалили.',
     );
-    expect(parseApiError(apiError('Topic has no active draft version'))).toBe(
+    expect(parseApiError(apiError('NO_ACTIVE_DRAFT', 'Topic has no active draft version'))).toBe(
       'У теста нет версии в работе',
     );
-    expect(parseApiError(apiError('Admin area only'))).toBe(
+    expect(parseApiError(apiError('ADMIN_ONLY', 'Admin area only'))).toBe(
       'Раздел доступен только администраторам',
     );
   });
 
-  it('оставляет незнакомое сообщение как есть, чтобы не скрыть новую ошибку', () => {
-    expect(parseApiError(apiError('Something entirely new happened'))).toBe(
+  it('не зависит от формулировки: правка текста на сервере не возвращает английский', () => {
+    expect(parseApiError(apiError('PUBLIC_LINK_NOT_FOUND', 'Link is gone'))).toBe(
+      'Публичная ссылка не найдена. Возможно, ее уже удалили.',
+    );
+  });
+
+  it('оставляет незнакомый код и русский текст сервера как есть', () => {
+    expect(parseApiError(apiError('SOMETHING_NEW', 'Something entirely new happened'))).toBe(
       'Something entirely new happened',
+    );
+    expect(parseApiError(apiError('INN_INVALID', 'ИНН должен состоять из 10 или 12 цифр'))).toBe(
+      'ИНН должен состоять из 10 или 12 цифр',
     );
   });
 });

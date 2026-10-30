@@ -254,7 +254,10 @@ export class BackupsService implements OnApplicationBootstrap {
     this.downloadLinks.delete(token);
 
     if (!link || link.expiresAt < Date.now()) {
-      throw new NotFoundException('Ссылка на скачивание устарела, запросите новую');
+      throw new NotFoundException(
+        'Ссылка на скачивание устарела, запросите новую',
+        'BACKUP_DOWNLOAD_LINK_EXPIRED',
+      );
     }
 
     await ensureAdminAccess(this.prisma, link.userId);
@@ -262,7 +265,7 @@ export class BackupsService implements OnApplicationBootstrap {
     const backup = await this.findBackup(link.backupId);
 
     if (backup.status !== 'READY' || !(await this.storage.dumpExists(backup.id))) {
-      throw new NotFoundException('Файл копии не найден');
+      throw new NotFoundException('Файл копии не найден', 'BACKUP_FILE_NOT_FOUND');
     }
 
     await this.recordAudit('BACKUP_DOWNLOADED', backup, link.userId);
@@ -517,7 +520,7 @@ export class BackupsService implements OnApplicationBootstrap {
     const backup = isBackupId(id) ? await this.storage.read(id) : null;
 
     if (!backup) {
-      throw new NotFoundException('Резервная копия не найдена');
+      throw new NotFoundException('Резервная копия не найдена', 'BACKUP_NOT_FOUND');
     }
 
     return backup;

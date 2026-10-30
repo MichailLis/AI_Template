@@ -104,11 +104,13 @@ describe('setupApp runtime configuration', () => {
 
   it('configures credentialed CORS with the resolved origin allowlist during bootstrap', () => {
     process.env.NODE_ENV = 'development';
-    const { app, enableCors, useBodyParser, useGlobalFilters } = createAppMock();
+    const { app, enableCors, set, useBodyParser, useGlobalFilters } = createAppMock();
 
     const swaggerDocument = setupApp(app);
 
     expect(useBodyParser).toHaveBeenCalledWith('json', { limit: '1mb' });
+    // Лимит start/finish (#124) считает адрес ученика, а не nginx.
+    expect(set).toHaveBeenCalledWith('trust proxy', 1);
     expect(useGlobalFilters).toHaveBeenCalledTimes(1);
     expect(setupSwagger).toHaveBeenCalledWith(app, { publish: true });
     expect(enableCors).toHaveBeenCalledWith({
@@ -148,11 +150,13 @@ const createAppMock = () => {
   const enableCors = jest.fn();
   const useGlobalFilters = jest.fn();
   const useBodyParser = jest.fn();
+  const set = jest.fn();
   const app = {
     enableCors,
+    set,
     useBodyParser,
     useGlobalFilters,
   } as unknown as INestApplication;
 
-  return { app, enableCors, useBodyParser, useGlobalFilters };
+  return { app, enableCors, set, useBodyParser, useGlobalFilters };
 };

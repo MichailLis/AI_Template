@@ -3,6 +3,7 @@ import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-c
 import { AuditModule } from '../audit/audit.module';
 import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
+import { PublicRateLimitSettingsService } from '../app-settings/public-rate-limit-settings.service';
 import { AiProviderModule } from '../ai-provider/ai-provider.module';
 import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/atlas';
 import { BackupsModule } from '../backups/backups.module';
@@ -28,6 +29,7 @@ import { AdminController } from './admin.controller';
     AdminService,
     ProfessionAtlasSettingsService,
     PrivacyPolicySettingsService,
+    PublicRateLimitSettingsService,
     ProfessionAtlasClientService,
     ProfOrientationAtlasService,
   ],

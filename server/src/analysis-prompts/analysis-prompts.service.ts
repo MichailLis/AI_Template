@@ -298,11 +298,14 @@ export class AnalysisPromptsService {
     });
 
     if (!prompt || prompt.archivedAt) {
-      throw new NotFoundException('Analysis prompt not found');
+      throw new NotFoundException('Analysis prompt not found', 'ANALYSIS_PROMPT_NOT_FOUND');
     }
 
     if (!prompt.versions[0]) {
-      throw new BadRequestException('Analysis prompt has no versions');
+      throw new BadRequestException(
+        'Analysis prompt has no versions',
+        'ANALYSIS_PROMPT_HAS_NO_VERSIONS',
+      );
     }
 
     return prompt;
@@ -489,7 +492,7 @@ export class AnalysisPromptsService {
     });
 
     if (!prompt) {
-      throw new NotFoundException('Analysis prompt not found');
+      throw new NotFoundException('Analysis prompt not found', 'ANALYSIS_PROMPT_NOT_FOUND');
     }
 
     return { events: await this.auditService.listForEntity('ANALYSIS_PROMPT', promptId) };
@@ -505,7 +508,7 @@ export class AnalysisPromptsService {
       });
 
       if (!currentPrompt) {
-        throw new NotFoundException('Analysis prompt not found');
+        throw new NotFoundException('Analysis prompt not found', 'ANALYSIS_PROMPT_NOT_FOUND');
       }
 
       const publishedTests = (
@@ -517,6 +520,7 @@ export class AnalysisPromptsService {
           `Analysis prompt is used by published tests: ${publishedTests
             .map((test) => test.slug)
             .join(', ')}`,
+          'ANALYSIS_PROMPT_IN_USE',
         );
       }
 
@@ -556,7 +560,10 @@ export class AnalysisPromptsService {
     });
 
     if (!existingVersion) {
-      throw new NotFoundException('Analysis prompt version not found');
+      throw new NotFoundException(
+        'Analysis prompt version not found',
+        'ANALYSIS_PROMPT_VERSION_NOT_FOUND',
+      );
     }
 
     /**
@@ -572,7 +579,7 @@ export class AnalysisPromptsService {
       });
 
       if (!prompt || prompt.archivedAt) {
-        throw new NotFoundException('Analysis prompt not found');
+        throw new NotFoundException('Analysis prompt not found', 'ANALYSIS_PROMPT_NOT_FOUND');
       }
 
       await tx.analysisPromptVersion.updateMany({

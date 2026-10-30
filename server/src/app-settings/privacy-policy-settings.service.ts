@@ -54,7 +54,10 @@ export class PrivacyPolicySettingsService {
     const parsed = PrivacyPolicyPayloadSchema.safeParse(input);
 
     if (!parsed.success) {
-      throw new BadRequestException('Privacy policy settings are invalid');
+      throw new BadRequestException(
+        'Privacy policy settings are invalid',
+        'PRIVACY_POLICY_SETTINGS_INVALID',
+      );
     }
 
     return {

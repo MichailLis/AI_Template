@@ -199,7 +199,7 @@ describe('LoginForm', () => {
   it('keeps the sign-in failure on the form, not only in a toast', async () => {
     authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
       options?.onError?.({
-        response: { data: { error: { code: 'HTTP_ERROR', message: 'Invalid credentials' } } },
+        response: { data: { error: { code: 'INVALID_CREDENTIALS', message: 'Access Denied' } } },
       });
     });
 
@@ -221,7 +221,9 @@ describe('LoginForm', () => {
   it('tells a deactivated user why they cannot sign in', async () => {
     authApiMock.mutate.mockImplementation((_payload: unknown, options?: SigninOptions) => {
       options?.onError?.({
-        response: { data: { error: { code: 'HTTP_ERROR', message: 'Account is deactivated' } } },
+        response: {
+          data: { error: { code: 'ACCOUNT_DEACTIVATED', message: 'Account is deactivated' } },
+        },
       });
     });
 

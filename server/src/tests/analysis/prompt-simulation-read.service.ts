@@ -91,7 +91,10 @@ export class TestsPromptSimulationReadService {
     });
 
     if (questions.length !== uniqueQuestionIds.length) {
-      throw new BadRequestException('Some selected test questions were not found');
+      throw new BadRequestException(
+        'Some selected test questions were not found',
+        'TEST_QUESTIONS_NOT_FOUND',
+      );
     }
 
     return questions.map(mapQuestionToPromptPayload);

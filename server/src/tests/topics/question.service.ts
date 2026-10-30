@@ -51,7 +51,7 @@ export class TestsQuestionService {
     const existingQuestion = draft.questions.find((question) => question.id === questionId);
 
     if (!existingQuestion) {
-      throw new NotFoundException('Question not found in active draft');
+      throw new NotFoundException('Question not found in active draft', 'QUESTION_NOT_FOUND');
     }
 
     const payload = prepareQuestionPayload(dto);
@@ -86,7 +86,7 @@ export class TestsQuestionService {
     const existingQuestion = draft.questions.find((question) => question.id === questionId);
 
     if (!existingQuestion) {
-      throw new NotFoundException('Question not found in active draft');
+      throw new NotFoundException('Question not found in active draft', 'QUESTION_NOT_FOUND');
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -114,25 +114,32 @@ export class TestsQuestionService {
 
   async reorderQuestions(draft: DraftRef, dto: ReorderTestsQuestionsDto) {
     if (draft.questions.length === 0) {
-      throw new BadRequestException('Draft has no questions to reorder');
+      throw new BadRequestException('Draft has no questions to reorder', 'DRAFT_HAS_NO_QUESTIONS');
     }
 
     if (dto.questionIds.length !== draft.questions.length) {
       throw new BadRequestException(
         'Reorder payload must include all draft question ids exactly once',
+        'REORDER_INCOMPLETE',
       );
     }
 
     const uniqueIds = new Set(dto.questionIds);
     if (uniqueIds.size !== dto.questionIds.length) {
-      throw new BadRequestException('Reorder payload contains duplicate question ids');
+      throw new BadRequestException(
+        'Reorder payload contains duplicate question ids',
+        'REORDER_DUPLICATE_QUESTIONS',
+      );
     }
 
     const draftQuestionIds = new Set(draft.questions.map((question) => question.id));
 
     for (const questionId of dto.questionIds) {
       if (!draftQuestionIds.has(questionId)) {
-        throw new BadRequestException(`Question ${questionId} does not belong to active draft`);
+        throw new BadRequestException(
+          `Question ${questionId} does not belong to active draft`,
+          'QUESTION_NOT_IN_DRAFT',
+        );
       }
     }
 

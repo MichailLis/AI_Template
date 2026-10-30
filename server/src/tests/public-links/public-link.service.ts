@@ -66,7 +66,7 @@ const toPublicPersonalData = (link: PublicLinkWithTopicVersion) => {
 
 const ensureValidPublicLinkDateValue = (value: Date | null) => {
   if (value && !Number.isFinite(value.getTime())) {
-    throw new BadRequestException('Invalid public link date format');
+    throw new BadRequestException('Invalid public link date format', 'PUBLIC_LINK_DATE_INVALID');
   }
 };
 
@@ -75,7 +75,10 @@ const ensureValidPublicLinkDateWindow = (startsAt: Date | null, endsAt: Date | n
   ensureValidPublicLinkDateValue(endsAt);
 
   if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
-    throw new BadRequestException('endsAt must be greater than startsAt');
+    throw new BadRequestException(
+      'endsAt must be greater than startsAt',
+      'PUBLIC_LINK_DATE_RANGE_INVALID',
+    );
   }
 };
 
@@ -215,11 +218,14 @@ export class TestsPublicLinkService {
     });
 
     if (!version) {
-      throw new NotFoundException('Published version not found');
+      throw new NotFoundException('Published version not found', 'PUBLISHED_VERSION_NOT_FOUND');
     }
 
     if (version.status !== 'PUBLISHED') {
-      throw new BadRequestException('Public link can be created only for published test version');
+      throw new BadRequestException(
+        'Public link can be created only for published test version',
+        'PUBLIC_LINK_REQUIRES_PUBLISHED_VERSION',
+      );
     }
 
     return version;
@@ -241,7 +247,10 @@ export class TestsPublicLinkService {
     });
 
     if (version?.analysisPromptVersion?.analysisPrompt.archivedAt) {
-      throw new ConflictException('Public link cannot use an archived analysis prompt');
+      throw new ConflictException(
+        'Public link cannot use an archived analysis prompt',
+        'PUBLIC_LINK_PROMPT_ARCHIVED',
+      );
     }
   }
 
@@ -254,7 +263,10 @@ export class TestsPublicLinkService {
       });
 
       if (existing) {
-        throw new BadRequestException(`Public link short code "${normalizedCode}" already exists`);
+        throw new BadRequestException(
+          `Public link short code "${normalizedCode}" already exists`,
+          'SHORT_CODE_TAKEN',
+        );
       }
 
       return normalizedCode;
@@ -272,7 +284,10 @@ export class TestsPublicLinkService {
       }
     }
 
-    throw new BadRequestException('Unable to generate unique short code for public link');
+    throw new BadRequestException(
+      'Unable to generate unique short code for public link',
+      'SHORT_CODE_GENERATION_FAILED',
+    );
   }
 
   async createPublicLink(userId: number, dto: AdminCreatePublicLinkInput) {
@@ -352,7 +367,7 @@ export class TestsPublicLinkService {
     });
 
     if (!link) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     return { events: await this.auditService.listForEntity('PUBLIC_LINK', linkId) };
@@ -399,11 +414,11 @@ export class TestsPublicLinkService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     if (existing.archivedAt) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     const personalDataProcessingMode =
@@ -446,7 +461,7 @@ export class TestsPublicLinkService {
       });
 
       if (!current || current.archivedAt) {
-        throw new NotFoundException('Public link not found');
+        throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
       }
 
       const entryProfileMode = dto.entryProfileMode ?? current.entryProfileMode;
@@ -510,11 +525,11 @@ export class TestsPublicLinkService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     if (existing.archivedAt) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     const shortCode = await this.ensureUniqueShortCode();
@@ -552,7 +567,7 @@ export class TestsPublicLinkService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     if (existing.archivedAt) {
@@ -593,7 +608,7 @@ export class TestsPublicLinkService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     if (!existing.archivedAt) {
@@ -603,7 +618,7 @@ export class TestsPublicLinkService {
       });
 
       if (!current) {
-        throw new NotFoundException('Public link not found');
+        throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
       }
 
       return mapAdminPublicLink(current);
@@ -616,7 +631,7 @@ export class TestsPublicLinkService {
       });
 
       if (!current) {
-        throw new NotFoundException('Public link not found');
+        throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
       }
 
       if (!current.archivedAt) {
@@ -660,7 +675,7 @@ export class TestsPublicLinkService {
     });
 
     if (!existing || existing.archivedAt) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     const moved = await runSerializableTransaction(this.prisma, async (tx) => {
@@ -679,13 +694,16 @@ export class TestsPublicLinkService {
       });
 
       if (!current || current.archivedAt) {
-        throw new NotFoundException('Public link not found');
+        throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
       }
 
       const currentActivePublishedVersionId = current.topicVersion.topic.activePublishedVersionId;
 
       if (!currentActivePublishedVersionId) {
-        throw new BadRequestException('Test has no published version to move the link to');
+        throw new BadRequestException(
+          'Test has no published version to move the link to',
+          'NO_PUBLISHED_VERSION_TO_MOVE',
+        );
       }
 
       await this.ensureVersionPromptIsActive(tx, currentActivePublishedVersionId);

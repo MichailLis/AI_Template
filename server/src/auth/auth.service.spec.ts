@@ -103,7 +103,10 @@ describe('AuthService', () => {
 
     await expect(
       service.signin({ email: 'missing@example.com', password: 'Password123' }),
-    ).rejects.toThrow('Access Denied');
+    ).rejects.toMatchObject({
+      message: 'Access Denied',
+      response: { error: 'INVALID_CREDENTIALS' },
+    });
     expect(argon2.verify).toHaveBeenCalledTimes(1);
     expect(argon2.verify).toHaveBeenCalledWith('dummy-hash', 'Password123');
   });
@@ -118,6 +121,10 @@ describe('AuthService', () => {
     jest.mocked(argon2.verify).mockResolvedValue(false);
 
     await expect(service.signin(dto)).rejects.toThrow(ForbiddenException);
+    // Форма входа различает отказы по коду (#148): неизвестный email и неверный пароль — одно и то же.
+    await expect(service.signin(dto)).rejects.toMatchObject({
+      response: { error: 'INVALID_CREDENTIALS' },
+    });
   });
 
   it('signin should look up users by normalized email and return user data', async () => {
@@ -168,7 +175,10 @@ describe('AuthService', () => {
 
     await expect(
       service.signin({ email: 'user@example.com', password: 'Password123' }),
-    ).rejects.toThrow('Account is deactivated');
+    ).rejects.toMatchObject({
+      message: 'Account is deactivated',
+      response: { error: 'ACCOUNT_DEACTIVATED' },
+    });
     expect(getTokensSpy).not.toHaveBeenCalled();
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });

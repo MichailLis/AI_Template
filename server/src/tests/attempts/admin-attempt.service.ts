@@ -29,7 +29,7 @@ export class TestsAdminAttemptService {
     });
 
     if (!link) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     const page = query.page ?? 1;
@@ -81,7 +81,7 @@ export class TestsAdminAttemptService {
     });
 
     if (!link) {
-      throw new NotFoundException('Public link not found');
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
     }
 
     const attempts = await this.prisma.testStudentAttempt.findMany({
@@ -130,7 +130,7 @@ export class TestsAdminAttemptService {
     });
 
     if (!attempt) {
-      throw new NotFoundException('Attempt not found');
+      throw new NotFoundException('Attempt not found', 'ATTEMPT_NOT_FOUND');
     }
 
     const professionAtlasUrl = await this.professionAtlasSettingsService.getProfessionAtlasUrl();

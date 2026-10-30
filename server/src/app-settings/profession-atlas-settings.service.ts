@@ -96,7 +96,10 @@ export class ProfessionAtlasSettingsService {
     const normalizedApiUrl = typeof input === 'string' ? '' : input.apiUrl.trim();
 
     if (!normalizedPublicUrl || !normalizedApiUrl) {
-      throw new BadRequestException('Profession atlas URLs must not be empty');
+      throw new BadRequestException(
+        'Profession atlas URLs must not be empty',
+        'ATLAS_URLS_REQUIRED',
+      );
     }
 
     const previousSetting = await this.getStoredProfessionAtlasUrl();

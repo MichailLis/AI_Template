@@ -36,6 +36,7 @@ import type {
   AdminProfessionAtlasSettingsResponseDto,
   AdminPromptModelsResponseDto,
   AdminPromptResponseDto,
+  AdminPublicRateLimitSettingsResponseDto,
   AdminRestoreStartResponseDto,
   AdminUserCredentialsResponseDto,
   AdminUserResponseDto,
@@ -59,6 +60,7 @@ import type {
   UpdateBackupSettingsDto,
   UpdatePrivacyPolicyDto,
   UpdateProfessionAtlasUrlDto,
+  UpdatePublicRateLimitDto,
   UpdateUserDto,
   UpdateUserRoleDto,
   UpdateUserStatusDto,
@@ -1745,6 +1747,247 @@ export const useAdminSettingsControllerUpdatePrivacyPolicy = <
 > => {
   return useMutation(
     getAdminSettingsControllerUpdatePrivacyPolicyMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Get rate limit for public test start and finish
+ */
+export const adminSettingsControllerGetPublicRateLimitSettings = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPublicRateLimitSettingsResponseDto>(
+    { url: `/admin/settings/public-rate-limit`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerGetPublicRateLimitSettingsQueryKey = () => {
+  return [`/admin/settings/public-rate-limit`] as const;
+};
+
+export const getAdminSettingsControllerGetPublicRateLimitSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminSettingsControllerGetPublicRateLimitSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>
+  > = ({ signal }) => adminSettingsControllerGetPublicRateLimitSettings(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminSettingsControllerGetPublicRateLimitSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>
+>;
+export type AdminSettingsControllerGetPublicRateLimitSettingsQueryError =
+  ErrorType<ErrorResponseDto>;
+
+export function useAdminSettingsControllerGetPublicRateLimitSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetPublicRateLimitSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetPublicRateLimitSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get rate limit for public test start and finish
+ */
+
+export function useAdminSettingsControllerGetPublicRateLimitSettings<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminSettingsControllerGetPublicRateLimitSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary Update rate limit for public test start and finish
+ */
+export const adminSettingsControllerUpdatePublicRateLimit = (
+  updatePublicRateLimitDto: UpdatePublicRateLimitDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminPublicRateLimitSettingsResponseDto>(
+    {
+      url: `/admin/settings/public-rate-limit`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: updatePublicRateLimitDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerUpdatePublicRateLimitMutationKey = () =>
+  ['adminSettingsControllerUpdatePublicRateLimit'] as const;
+
+export const getAdminSettingsControllerUpdatePublicRateLimitMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>,
+    TError,
+    AdminSettingsControllerUpdatePublicRateLimitMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>,
+  TError,
+  AdminSettingsControllerUpdatePublicRateLimitMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminSettingsControllerUpdatePublicRateLimitMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>,
+    AdminSettingsControllerUpdatePublicRateLimitMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminSettingsControllerUpdatePublicRateLimit(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerUpdatePublicRateLimitMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>
+>;
+export type AdminSettingsControllerUpdatePublicRateLimitMutationBody = UpdatePublicRateLimitDto;
+export type AdminSettingsControllerUpdatePublicRateLimitMutationError = ErrorType<ErrorResponseDto>;
+export type AdminSettingsControllerUpdatePublicRateLimitMutationVariables = {
+  data: UpdatePublicRateLimitDto;
+};
+
+/**
+ * @summary Update rate limit for public test start and finish
+ */
+export const useAdminSettingsControllerUpdatePublicRateLimit = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>,
+      TError,
+      AdminSettingsControllerUpdatePublicRateLimitMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerUpdatePublicRateLimit>>,
+  TError,
+  AdminSettingsControllerUpdatePublicRateLimitMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerUpdatePublicRateLimitMutationOptions(options),
     queryClient,
   );
 };

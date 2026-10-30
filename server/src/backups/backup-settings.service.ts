@@ -79,7 +79,10 @@ export class BackupSettingsService {
     const parsed = BackupSettingsSchema.safeParse(input);
 
     if (!parsed.success) {
-      throw new BadRequestException('Некорректные настройки резервного копирования');
+      throw new BadRequestException(
+        'Некорректные настройки резервного копирования',
+        'BACKUP_SETTINGS_INVALID',
+      );
     }
 
     const previous = await this.getSettings();

@@ -141,7 +141,7 @@ export class BackupImportService {
     await pipeline(body, limit, createWriteStream(path));
 
     if (received === 0) {
-      throw new BadRequestException('Файл пустой');
+      throw new BadRequestException('Файл пустой', 'BACKUP_FILE_EMPTY');
     }
   }
 
@@ -158,6 +158,7 @@ export class BackupImportService {
     if (header.toString('latin1') !== CUSTOM_DUMP_SIGNATURE) {
       throw new BadRequestException(
         'Это не резервная копия PostgreSQL: нужен файл .dump, созданный pg_dump в формате custom',
+        'BACKUP_FILE_INVALID',
       );
     }
 
@@ -167,13 +168,17 @@ export class BackupImportService {
         timeoutMs: LIST_TIMEOUT_MS,
       });
     } catch {
-      throw new BadRequestException('Файл поврежден: pg_restore не может прочитать его оглавление');
+      throw new BadRequestException(
+        'Файл поврежден: pg_restore не может прочитать его оглавление',
+        'BACKUP_FILE_CORRUPTED',
+      );
     }
   }
 
   private tooLarge() {
     return new PayloadTooLargeException(
       `Файл больше ${Math.round(this.maxBytes / 1024 / 1024)} МБ (BACKUP_MAX_UPLOAD_MB)`,
+      'BACKUP_FILE_TOO_LARGE',
     );
   }
 }

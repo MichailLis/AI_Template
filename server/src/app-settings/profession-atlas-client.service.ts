@@ -123,7 +123,10 @@ const toProfessionDetail = (value: unknown): AtlasProfessionDetail => {
   const item = toProfessionListItem(value);
 
   if (!item || !isRecord(value)) {
-    throw new BadGatewayException('Atlas returned an invalid profession payload');
+    throw new BadGatewayException(
+      'Atlas returned an invalid profession payload',
+      'ATLAS_INVALID_PAYLOAD',
+    );
   }
 
   return {
@@ -265,7 +268,10 @@ export class ProfessionAtlasClientService {
       });
 
       if (!response.ok) {
-        throw new BadGatewayException(`Atlas API request failed with ${response.status}`);
+        throw new BadGatewayException(
+          `Atlas API request failed with ${response.status}`,
+          'ATLAS_REQUEST_FAILED',
+        );
       }
 
       const body = await response.text();
@@ -276,11 +282,12 @@ export class ProfessionAtlasClientService {
         // Неверный адрес API попадает на сайт Атласа, и тот отвечает 200 со своей HTML-страницей.
         throw new BadGatewayException(
           'Атлас вернул страницу вместо данных: проверьте адрес API в настройках',
+          'ATLAS_NOT_JSON',
         );
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new BadGatewayException('Atlas API request timeout');
+        throw new BadGatewayException('Atlas API request timeout', 'ATLAS_TIMEOUT');
       }
 
       throw error;
