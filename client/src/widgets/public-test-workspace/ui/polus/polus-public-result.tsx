@@ -5,12 +5,12 @@ import {
   parseProfOrientationSummary,
   PolusResultHero,
   ProfOrientationResult,
-} from '@/features/tests';
+} from '@/entities/public-test';
 
 import { PolusAtlasCard } from './polus-atlas-card';
 import { PolusPublicLayout } from './polus-public-layout';
 
-import type { AnalysisResult, ProfOrientationSummary } from '@/features/tests';
+import type { AnalysisResult, ProfOrientationSummary } from '@/entities/public-test';
 import type { PublicSessionResultResponseDto } from '@/shared/api/model';
 
 interface PolusPublicResultProps {

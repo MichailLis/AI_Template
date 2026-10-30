@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWatch } from 'react-hook-form';
 
-import { EducationOrganizationEditorSheet } from '@/features/tests';
+import { EducationOrganizationEditorSheet } from '@/features/education-organization-editor';
 import { parseApiError } from '@/shared/lib/api-error';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';

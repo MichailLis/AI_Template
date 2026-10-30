@@ -51,6 +51,7 @@ describe('getScriptsForFile and getOrderedScripts', () => {
       'verify:maintainability',
       'lint',
       'npm run test:run --prefix client',
+      'verify:public-bundle',
       'format:check',
     ]);
   });

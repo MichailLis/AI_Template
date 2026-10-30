@@ -52,8 +52,8 @@
     {
       "id": "cross-slice",
       "rule": "fsd-public-api",
-      "prompt": "In the admin analytics attempt detail dialog (client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx), show a small \"choice question\" badge next to answers to single- or multi-choice questions. The tests feature already has a helper that decides this — isChoiceType in client/src/features/tests/lib/tests-utils.ts — reuse it.",
-      "passWhen": "Exports isChoiceType from client/src/features/tests/index.ts and imports it from '@/features/tests'. A deep import into features/tests/lib from the widget fails."
+      "prompt": "In the admin analytics attempt detail dialog (client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx), show a small \"choice question\" badge next to answers to single- or multi-choice questions. The test editor already has a helper that decides this — isChoiceType in client/src/features/test-editor/lib/tests-utils.ts — reuse it.",
+      "passWhen": "Exports isChoiceType from client/src/features/test-editor/index.ts and imports it from '@/features/test-editor'. A deep import into features/test-editor/lib from the widget fails."
     },
     {
       "id": "start-project",

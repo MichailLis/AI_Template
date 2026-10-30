@@ -18,8 +18,8 @@ Real locations worth knowing:
   the branded template) and `client/src/pages/t`.
 - Admin shell: `client/src/features/admin/ui/admin-shell.tsx`.
 - Design tokens: `client/src/shared/ui/admin-design-tokens.ts`.
-- Public theme: `client/src/features/tests/ui/public-theme.css` (scoped under `.theme-public`),
-  with the Polus variant alongside it in `client/src/features/tests/ui/polus/`.
+- Public theme: `client/src/entities/public-test/ui/public-theme.css` (scoped under `.theme-public`),
+  with the Polus variant alongside it in `client/src/entities/public-test/ui/polus/`.
   These tokens must not move into the global `client/src/app/index.css`.
 - Generated API client: `client/src/shared/api/generated/{admin,auth,tests,tests-public,privacy-policy}`.
 

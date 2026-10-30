@@ -359,7 +359,9 @@
       "ownedRoots": {
         "backend": ["server/src/tests"],
         "frontend": [
-          "client/src/features/tests",
+          "client/src/features/test-editor",
+          "client/src/features/education-organization-editor",
+          "client/src/entities/public-test",
           "client/src/widgets/admin-tests-workspace",
           "client/src/widgets/admin-public-links-workspace",
           "client/src/widgets/admin-public-links-stats-workspace",

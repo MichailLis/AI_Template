@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { TestTopicListItem } from '@/features/tests';
+import type { TestTopicListItem } from '@/features/test-editor';
 
 export function useAdminTestsDialogState() {
   const [testSearch, setTestSearch] = useState('');

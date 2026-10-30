@@ -23,7 +23,7 @@ Security model:
 UI/theming rules:
 
 1. All public pages must be wrapped by `PublicThemeLayout` (`client/src/widgets/public-test-workspace/ui/public-theme-layout.tsx`).
-2. Scoped theme tokens are defined in `client/src/features/tests/ui/public-theme.css` under `.theme-public`.
+2. Scoped theme tokens are defined in `client/src/entities/public-test/ui/public-theme.css` under `.theme-public`.
 3. Do not place public-theme tokens in global `client/src/app/index.css`.
 4. Do not leak technical statuses to students (for example `IN_PROGRESS` badge in the run header).
 5. Analysis status in result screen must be humanized (`готов`, `в обработке`, `ошибка`).
@@ -33,7 +33,7 @@ UI/theming rules:
 7. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
 8. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
    - `STANDARD` preserves the existing public components.
-   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/features/tests/ui/polus/*`.
+   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/entities/public-test/ui/polus/*`.
 9. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
 10. Entry page must branch by the link `entryProfileMode` without changing public routes:
     - `DEMOGRAPHIC` shows the demographic profile form.

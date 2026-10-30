@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
 
-import type { TestTopicListItem } from '@/features/tests';
+import type { TestTopicListItem } from '@/features/test-editor';
 
 const createTopic = (overrides: Partial<TestTopicListItem> = {}): TestTopicListItem => ({
   id: 1225,

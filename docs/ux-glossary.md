@@ -223,7 +223,7 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 
 - `client/src/widgets/admin-public-links-workspace/ui/public-link-branding-builder.tsx` - Admin constructor
 - `client/src/widgets/admin-public-links-workspace/ui/public-links-list-card.row.tsx` - Public link row action
-- `client/src/features/tests/public-branding.ts` - Branding-to-theme adapter
+- `client/src/entities/public-test/public-branding.ts` - Branding-to-theme adapter
 
 ### резервная копия (database backup)
 

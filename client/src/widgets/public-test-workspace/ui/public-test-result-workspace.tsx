@@ -2,7 +2,7 @@ import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { getProfOrientationLlmStatus, parseAnalysisResult } from '@/features/tests';
+import { getProfOrientationLlmStatus, parseAnalysisResult } from '@/entities/public-test';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
@@ -11,7 +11,7 @@ import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-proce
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
 import { PublicThemeLayout } from './public-theme-layout';
 
-import type { AnalysisResult } from '@/features/tests';
+import type { AnalysisResult } from '@/entities/public-test';
 import type { PublicSessionResultResponseDto } from '@/shared/api/model';
 import type { LucideIcon } from 'lucide-react';
 

@@ -1,4 +1,4 @@
-import { PublicTestStudentAnalysisView } from '@/features/tests';
+import { PublicTestStudentAnalysisView } from '@/entities/public-test';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { getQuestionTypeLabel } from '@/shared/lib/report-value-labels';

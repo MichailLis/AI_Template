@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { getMaxChoices, isChoiceLimitReached } from '@/features/tests';
+import { getMaxChoices, isChoiceLimitReached } from '@/entities/public-test';
 
 import { getPublicQuestionCardState, type AnswerOverride } from '../public-question-card-state';
 

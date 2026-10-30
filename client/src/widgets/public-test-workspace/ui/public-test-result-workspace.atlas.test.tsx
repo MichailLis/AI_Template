@@ -17,8 +17,8 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
   useTestsPublicControllerGetSessionResult: vi.fn(),
 }));
 
-vi.mock('@/features/tests', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('@/features/tests');
+vi.mock('@/entities/public-test', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@/entities/public-test');
 
   return {
     ...actual,

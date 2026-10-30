@@ -10,7 +10,7 @@ Serena provides symbolic navigation over the TypeScript Language Server (`find_s
 
 In a measured development session, Serena was invoked once against 341 grep calls. "Prefer Serena generally" does not reflect actual developer decisions. Serena is reached for on two specific triggers:
 
-1. **The name is not unique across the repo.** `getMaxChoices` exists in `client/src/features/tests/lib/` and in `server/src/tests/session/answer-validation.ts` as two different implementations of one rule. Grep returns 14 hits and cannot distinguish which tree owns which; `find_referencing_symbols` scoped to the server file returns the one real call site. Getting this wrong previously caused the client copy to drift from the server authority.
+1. **The name is not unique across the repo.** `getMaxChoices` exists in `client/src/entities/public-test/lib/` and in `server/src/tests/session/answer-validation.ts` as two different implementations of one rule. Grep returns 14 hits and cannot distinguish which tree owns which; `find_referencing_symbols` scoped to the server file returns the one real call site. Getting this wrong previously caused the client copy to drift from the server authority.
 2. **Moving or deleting an exported symbol.** Grep shows lines; Serena names the enclosing method, which reveals whether the move is safe.
 
 For a symbol whose name is unique, grep is correct and approximately four times cheaper. Roughly a quarter of the measured session's greps were identifier lookups; the rest were paths, flags, UI strings, and pipelines filtering command output, where Serena does not apply.
@@ -81,7 +81,7 @@ A Cypher query comparing 58 HTTP handlers against 115 Swagger decorators identif
 
 ### Duplicate Implementation Detection (`SIMILAR_TO`)
 
-Duplicate-implementation candidates via `SIMILAR_TO` (507 edges, 279 of them cross-file). It identified `getUniqueOptionValue` in `client/src/features/tests/lib/ai-generator-parse.ts` and `getUniqueValue` in `client/src/features/tests/lib/tests-utils.ts` at Jaccard 1.0 (byte-identical except parameter names). Filter on `same_file = "false"` and expect the top of the list to be Orval boilerplate (`withQueryKey` repeated across four generated files). Note that `getMaxChoices` client and server implementations share no `SIMILAR_TO` edge between them — it is a heuristic lead-generator, not an exhaustive audit.
+Duplicate-implementation candidates via `SIMILAR_TO` (507 edges, 279 of them cross-file). It identified `getUniqueOptionValue` in `client/src/features/test-editor/lib/ai-generator-parse.ts` and `getUniqueValue` in `client/src/features/test-editor/lib/tests-utils.ts` at Jaccard 1.0 (byte-identical except parameter names). Filter on `same_file = "false"` and expect the top of the list to be Orval boilerplate (`withQueryKey` repeated across four generated files). Note that `getMaxChoices` client and server implementations share no `SIMILAR_TO` edge between them — it is a heuristic lead-generator, not an exhaustive audit.
 
 ### Data Flow and Semantic Queries
 
@@ -91,7 +91,7 @@ Duplicate-implementation candidates via `SIMILAR_TO` (507 edges, 279 of them cro
 
 ### The `include_tests: true` Trap
 
-The indexer classifies paths containing `tests` as test code. In this repository, `tests` is core business logic. Out of 985 nodes flagged as test code, 736 are business code (`topics.service.ts`, `topics.controller.ts`, `analysis.service.ts`, `scoring.ts`, all of `client/src/features/tests/`, and 102 nodes of generated test APIs), comprising 11% of the graph.
+The indexer classifies paths containing `tests` as test code. In this repository, `tests` is core business logic. Out of 985 nodes flagged as test code, 736 are business code (`topics.service.ts`, `topics.controller.ts`, `analysis.service.ts`, `scoring.ts`, all of what was then `client/src/features/tests/`, and 102 nodes of generated test APIs), comprising 11% of the graph.
 Calling `trace_path` on `getMaxChoices` without `include_tests: true` returned 0 callers; with `include_tests: true`, it returned all 5 callers. Traces without this flag return incorrect negative results.
 
 ### Graph Schema Traps

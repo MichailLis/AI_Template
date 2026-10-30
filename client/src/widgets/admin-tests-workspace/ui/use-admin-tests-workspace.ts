@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { useQuestionEditor } from '@/features/tests';
+import { useQuestionEditor } from '@/features/test-editor';
 
 import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
 import { useAdminTestsActions } from './use-admin-tests-actions';
@@ -9,7 +9,7 @@ import { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
 import { useAdminTestsDraft } from './use-admin-tests-draft';
 import { useAdminTestsTopics } from './use-admin-tests-topics';
 
-import type { CreateTestValues } from '@/features/tests';
+import type { CreateTestValues } from '@/features/test-editor';
 
 export type { ListMode } from './use-admin-tests-topics';
 
