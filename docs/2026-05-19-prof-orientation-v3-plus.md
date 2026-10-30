@@ -36,6 +36,11 @@ The importer creates the methodology as a normal tests-module draft:
 The public Polus runner enforces `maxChoices` for multi-choice questions and uses
 a dedicated slider field for the methodology sliders.
 
+The limit is hard: the UI blocks a third choice and the server rejects an answer with more than
+`maxChoices` options. The source methodology's overchoice rule (a flag and "broad interest" after
+4+ overchosen questions) is therefore not implemented (#157). Scoring still divides a question's
+maximum between the selected options as a guard, so a question never gives more than its maximum.
+
 ## Scoring Contract
 
 `finishSession` handles this methodology in two stages:

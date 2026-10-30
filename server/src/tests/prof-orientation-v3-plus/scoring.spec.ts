@@ -156,24 +156,19 @@ describe('scoreProfOrientationV3Plus', () => {
     expect(result.confidence.level).toBe('high');
   });
 
-  it('caps overchoice scoring and marks wide selections as broad interest', () => {
-    const result = scoreProfOrientationV3Plus({
-      questions,
-      answers: buildAnswers({
-        selectedDirections: ['A1'],
-        overchoice: true,
-        interest: {
-          S_A1: 8,
-          S_A2: 8,
-          S_A3: 8,
-          S_B1: 8,
-          S_B2: 8,
-          S_B3: 8,
-        },
-      }),
-    });
-    expect(result.profile.type).toBe('broad_interest');
-    expect(result.flags.some((flag) => flag.code === 'overchoice')).toBe(true);
+  it('never lets a question give more than its maximum, even with too many options selected', () => {
+    const interest = { S_A1: 5, S_A2: 5, S_A3: 5, S_B1: 5, S_B2: 5, S_B3: 5 };
+    const totalScore = (overchoice: boolean) =>
+      Object.values(
+        scoreProfOrientationV3Plus({
+          questions,
+          answers: buildAnswers({ selectedDirections: ['A1', 'B1'], overchoice, interest }),
+        }).scores,
+      ).reduce((sum, score) => sum + score, 0);
+
+    // Сверхвыбор не пропускают интерфейс и сервер (#157); подсчёт его всё равно не награждает.
+    // Баллы направлений округляются до десятых, поэтому сумма сверяется с точностью до единицы.
+    expect(totalScore(true)).toBeCloseTo(totalScore(false), 0);
   });
 
   it('marks flat low interest as low definition even when choices point to a direction', () => {

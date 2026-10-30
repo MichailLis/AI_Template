@@ -277,7 +277,6 @@ export const scoreProfOrientationV3Plus = ({
       .filter((item): item is readonly [string, ScoringQuestion] => item[0] !== null),
   );
   const sliderValues: Record<string, number> = {};
-  let overchoiceQuestions = 0;
 
   for (const questionConfig of config.questions) {
     const question = questionByMethodologyId.get(questionConfig.id);
@@ -289,16 +288,14 @@ export const scoreProfOrientationV3Plus = ({
       continue;
     }
 
-    if (selectedValues.length > questionConfig.max_choices) {
-      overchoiceQuestions += 1;
-    }
-
     const directionMap = Object.fromEntries(
       questionConfig.answers.map((answer) => [answer.id, answer.direction]),
     ) as Record<string, ProfOrientationDirectionId>;
     const selectedDirections = selectedValues
       .map((value) => getDirectionFromAnswerValue(value, directionMap))
       .filter((direction): direction is ProfOrientationDirectionId => direction !== null);
+    // Больше max_choices вариантов не пропускают ни интерфейс, ни сервер (#157); деление
+    // остаётся страховкой, чтобы вопрос не дал больше своего максимума.
     const maxPoints = questionConfig.points_per_answer * questionConfig.max_choices;
     const pointsPerSelected =
       selectedValues.length <= questionConfig.max_choices
@@ -363,14 +360,6 @@ export const scoreProfOrientationV3Plus = ({
   const consistencyIndex = selectedCounts[topDirection] / config.questions.length;
   const flags: ProfOrientationFlag[] = [];
 
-  if (overchoiceQuestions >= 4) {
-    flags.push({
-      code: 'overchoice',
-      label: 'Выбрано слишком много вариантов в нескольких вопросах',
-      severity: 'warning',
-    });
-  }
-
   for (const direction of PROF_ORIENTATION_DIRECTIONS) {
     if (selectedCounts[direction] >= 3 && (sliderValues[`S_${direction}`] ?? 0) <= 3) {
       flags.push({
@@ -392,8 +381,7 @@ export const scoreProfOrientationV3Plus = ({
   }
 
   const isLow = interestMedian < 3 && interestMax < 6;
-  const isBroad =
-    overchoiceQuestions >= 4 || (interestAverage >= 5 && interestMax - interestMin <= 2);
+  const isBroad = interestAverage >= 5 && interestMax - interestMin <= 2;
   const hasStrongContradiction = flags.some(
     (flag) => flag.directionId === topDirection && flag.severity === 'warning',
   );
