@@ -172,6 +172,7 @@ export class TestsPublicSessionService {
     return this.startAllocatedSession({
       link,
       studentKeyHash,
+      browserResumeToken: dto.resumeToken,
       profile: {
         studentName,
         studentLastInitial,

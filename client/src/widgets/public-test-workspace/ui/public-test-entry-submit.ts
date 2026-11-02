@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import { getApiErrorMessage } from '@/shared/lib/api-error';
+import { safeStorage } from '@/shared/lib/storage';
 
 import { normalizeInitial, resolveGroupValidationWarning } from './public-test-entry.helpers';
 import { getPublicTestRefusal } from './public-test-refusal';
@@ -35,6 +36,7 @@ interface StartSessionRequestData {
   residence?: string;
   educationLevel?: StudentEducationLevel;
   consentAccepted: true;
+  resumeToken?: string;
 }
 
 type DemographicProfilePayload = Pick<
@@ -207,6 +209,9 @@ const buildEducationDemographicPayload = (
   };
 };
 
+// Вернуться к попытке можно только из браузера, где она начата (#134), поэтому токен живёт здесь.
+const getAttemptStorageKey = (code: string) => `public-test-attempt:${code}`;
+
 export const createPublicTestEntryStartHandler = ({
   code,
   entryProfileMode,
@@ -239,11 +244,20 @@ export const createPublicTestEntryStartHandler = ({
       return;
     }
 
+    // В режиме DEMOGRAPHIC ученика не узнать: каждый старт — новая попытка, возвращаться некуда.
+    const canResume = entryProfileMode !== 'DEMOGRAPHIC';
+    const attemptStorageKey = getAttemptStorageKey(code);
+    const resumeToken = canResume ? safeStorage.getItem(attemptStorageKey) : null;
+
     try {
       const response = await startSession({
         code,
-        data,
+        data: resumeToken ? { ...data, resumeToken } : data,
       });
+
+      if (canResume) {
+        safeStorage.setItem(attemptStorageKey, response.session.sessionToken);
+      }
 
       navigate(`/t/${code}/session/${response.session.sessionToken}`);
     } catch (error) {

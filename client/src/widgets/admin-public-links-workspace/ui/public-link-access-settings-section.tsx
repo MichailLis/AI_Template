@@ -123,7 +123,7 @@ export function PublicLinkAccessSettingsSection({ form }: PublicLinkAccessSettin
 
         <label className={adminClassNames.form.checkboxLabel}>
           <input type="checkbox" {...form.register('allowResume')} />
-          Разрешить студенту вернуться к незавершенной попытке
+          Разрешить студенту вернуться к незавершенной попытке (только из того же браузера)
         </label>
 
         <ConsentDetails form={form} />

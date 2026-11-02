@@ -34,6 +34,8 @@ export type AttemptProfileSnapshot = {
 export type AttemptAllocationInput = {
   link: AccessiblePublicLink;
   studentKeyHash: string;
+  /** Token this browser kept from its last start on the link: proof that the attempt is its own. */
+  browserResumeToken?: string;
   profile: AttemptProfileSnapshot;
 };
 
@@ -85,7 +87,9 @@ export class TestsPublicAttemptAllocationService {
   async allocate(input: AttemptAllocationInput): Promise<{ resumeToken: string }> {
     for (let attemptIndex = 0; attemptIndex < 2; attemptIndex += 1) {
       try {
-        return await this.prisma.$transaction((tx) => this.allocateAttempt(tx, input));
+        return await this.prisma.$transaction((tx) =>
+          this.allocateAttempt(tx, input, attemptIndex > 0),
+        );
       } catch (error) {
         if (!isAttemptNumberRaceError(error)) {
           throw error;
@@ -99,7 +103,11 @@ export class TestsPublicAttemptAllocationService {
     );
   }
 
-  private async allocateAttempt(client: AttemptAllocationClient, input: AttemptAllocationInput) {
+  private async allocateAttempt(
+    client: AttemptAllocationClient,
+    input: AttemptAllocationInput,
+    lostStartRace: boolean,
+  ) {
     const { link, profile, studentKeyHash } = input;
     const now = new Date();
 
@@ -135,19 +143,30 @@ export class TestsPublicAttemptAllocationService {
       },
     });
 
+    let usedAttempts = previousAttempts.length;
+
     if (link.allowResume && link.entryProfileMode !== 'DEMOGRAPHIC') {
-      const resumableAttempt = previousAttempts.find(
+      const openAttempts = previousAttempts.filter(
         (attempt) =>
           attempt.status === 'IN_PROGRESS' &&
           (!attempt.expiresAt || attempt.expiresAt.getTime() > now.getTime()),
       );
+      // Classmates know the whole profile, so it never opens an attempt on its own (#134). The
+      // attempt a lost race finds is the double submit's other request, not somebody else's.
+      const resumableAttempt = lostStartRace
+        ? openAttempts[0]
+        : openAttempts.find((attempt) => attempt.resumeToken === input.browserResumeToken);
 
       if (resumableAttempt) {
         return { resumeToken: resumableAttempt.resumeToken };
       }
+
+      // Nobody can hand a lost browser its attempt back, so an open one must not lock its student
+      // out: the limit counts only attempts that are over.
+      usedAttempts -= openAttempts.length;
     }
 
-    if (previousAttempts.length >= link.maxAttemptsPerStudent) {
+    if (usedAttempts >= link.maxAttemptsPerStudent) {
       throw new BadRequestException(
         'Attempts limit reached for this test link',
         'ATTEMPTS_LIMIT_REACHED',

@@ -1,5 +1,7 @@
 import { toast } from 'sonner';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { safeStorage } from '@/shared/lib/storage';
 
 import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
 
@@ -36,6 +38,54 @@ const validDemographicFormState: DemographicFormState = {
 };
 
 describe('createPublicTestEntryStartHandler', () => {
+  beforeEach(() => {
+    safeStorage.clear();
+  });
+
+  it('sends back the token this browser kept for the link and remembers the new one', async () => {
+    const startSession = vi.fn().mockResolvedValue({ session: { sessionToken: 'second-token' } });
+    safeStorage.setItem('public-test-attempt:ABCD1234', 'first-token');
+    safeStorage.setItem('public-test-attempt:OTHER123', 'other-link-token');
+
+    await createPublicTestEntryStartHandler({
+      code: 'ABCD1234',
+      entryProfileMode: 'EDUCATION',
+      educationFormState: validFormState,
+      demographicFormState: validDemographicFormState,
+      linkData: undefined,
+      startSession,
+      navigate: vi.fn(),
+    })(createSubmitEvent());
+
+    expect(startSession).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ resumeToken: 'first-token' }) }),
+    );
+    expect(safeStorage.getItem('public-test-attempt:ABCD1234')).toBe('second-token');
+    expect(safeStorage.getItem('public-test-attempt:OTHER123')).toBe('other-link-token');
+  });
+
+  it('keeps no token in demographic mode, where nobody can come back', async () => {
+    const startSession = vi.fn().mockResolvedValue({ session: { sessionToken: 'anon-token' } });
+    safeStorage.setItem('public-test-attempt:ABCD1234', 'stale-token');
+
+    await createPublicTestEntryStartHandler({
+      code: 'ABCD1234',
+      entryProfileMode: 'DEMOGRAPHIC',
+      educationFormState: validFormState,
+      demographicFormState: validDemographicFormState,
+      linkData: undefined,
+      startSession,
+      navigate: vi.fn(),
+    })(createSubmitEvent());
+
+    expect(startSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ resumeToken: expect.anything() }),
+      }),
+    );
+    expect(safeStorage.getItem('public-test-attempt:ABCD1234')).toBe('stale-token');
+  });
+
   it('submits normalized student data and navigates to the returned session', async () => {
     const startSession = vi.fn().mockResolvedValue({
       session: {

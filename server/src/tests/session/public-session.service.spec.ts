@@ -325,12 +325,62 @@ describe('TestsPublicSessionService start', () => {
       .spyOn(service, 'getSessionByToken')
       .mockResolvedValue(createPublicSessionStateResponse('resume-existing'));
 
-    const result = await service.startSessionByCode('ABC123', createPublicSessionStartDto());
+    const result = await service.startSessionByCode('ABC123', {
+      ...createPublicSessionStartDto(),
+      resumeToken: 'resume-existing',
+    });
 
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(txMock.testStudentAttempt.update).not.toHaveBeenCalled();
     expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-existing');
     expect(result.session.sessionToken).toBe('resume-existing');
+  });
+
+  it.each([
+    ['no token', undefined],
+    ['another token', 'somebody-elses-token'],
+  ])('startSessionByCode keeps an open attempt from %s', async (_name, resumeToken) => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({ allowResume: true, maxAttemptsPerStudent: 1 }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([
+      {
+        id: 1,
+        attemptNumber: 1,
+        status: 'IN_PROGRESS',
+        resumeToken: 'resume-existing',
+        expiresAt: null,
+      },
+    ]);
+    createAttemptMock.mockResolvedValue({ resumeToken: 'resume-new' });
+    const getSessionByTokenSpy = jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValue(createPublicSessionStateResponse('resume-new'));
+
+    await service.startSessionByCode('ABC123', { ...createPublicSessionStartDto(), resumeToken });
+
+    const [createArgs] = createAttemptMock.mock.calls[0] as [{ data: { attemptNumber: number } }];
+    expect(createArgs.data.attemptNumber).toBe(2);
+    expect(getSessionByTokenSpy).toHaveBeenCalledWith('resume-new');
+    expect(getSessionByTokenSpy).not.toHaveBeenCalledWith('resume-existing');
+  });
+
+  it('startSessionByCode counts only finished attempts against the limit', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({ allowResume: true, maxAttemptsPerStudent: 1 }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([
+      { id: 2, attemptNumber: 2, status: 'IN_PROGRESS', resumeToken: 'open', expiresAt: null },
+      { id: 1, attemptNumber: 1, status: 'COMPLETED', resumeToken: 'done', expiresAt: null },
+    ]);
+
+    await expect(
+      service.startSessionByCode('ABC123', createPublicSessionStartDto()),
+    ).rejects.toMatchObject({ response: { error: 'ATTEMPTS_LIMIT_REACHED' } });
+
+    expect(createAttemptMock).not.toHaveBeenCalled();
   });
 
   it('startSessionByCode retries allocation after an attempt number race', async () => {

@@ -81,6 +81,20 @@ UI/theming rules:
     is hidden in `DEMOGRAPHIC` mode, where every start creates a new attempt.
 19. Public theme `--primary`/`--accent` keep white button text and the privacy-policy link at 4.5:1 or
     better (WCAG AA); do not lighten them without re-checking with axe.
+20. An open attempt is resumed only from the browser that started it (owner decision, #134): the entry
+    page keeps the session token in `safeStorage` per link and sends it as `resumeToken`. The profile
+    alone opens nothing, because classmates know each other's name, initials and class. Without the
+    token the student gets a new attempt and the open one stays untouched, so answers do not carry
+    over. Nobody can hand an attempt back (school staff have no admin access, #177), so open attempts
+    do not count against `maxAttemptsPerStudent`; only attempts that are over do. The cost, accepted by
+    the owner: a timed test can be restarted with a fresh timer from another browser, and an old
+    browser can still finish its open attempt after the limit was reached. The one exception to the
+    token rule is a start that lost the attempt-number race: it joins the attempt its double-submitted
+    twin just created.
+21. A shared computer is one browser, and that risk is accepted (owner decision, #134): the next student
+    can type the previous student's profile, or open the session URL from the browser history, while
+    that attempt is open. Closing this needs the token out of the URL. A link's time limit shortens
+    the window.
 
 ---
 
