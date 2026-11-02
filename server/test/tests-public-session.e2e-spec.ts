@@ -387,6 +387,39 @@ describe('Tests public sessions (e2e)', () => {
     expect(tokenResponse.body.timestamp).toEqual(expect.any(String));
   });
 
+  it('gives an open attempt back only to the browser that started it', async () => {
+    const { shortCode } = await createPublishedTopicWithPublicLink('RESM', {
+      maxAttemptsPerStudent: 1,
+    });
+    const profile = {
+      studentName: 'Иван',
+      studentLastInitial: 'И',
+      studentMiddleInitial: 'О',
+      educationOrganization: 'Лицей 42',
+      groupOrClass: 'ИС-24',
+      consentAccepted: true,
+    };
+    const start = (resumeToken?: string) =>
+      request(app.getHttpServer())
+        .post(`/tests/public/links/${shortCode}/start`)
+        .send({ ...profile, resumeToken });
+
+    const firstStart = await start().expect(201);
+    const sessionToken = firstStart.body.session.sessionToken as string;
+
+    const sameBrowser = await start(sessionToken).expect(201);
+    expect(sameBrowser.body.session.sessionToken).toBe(sessionToken);
+
+    for (const otherBrowserToken of [undefined, 'not-this-attempts-token']) {
+      const otherBrowser = await start(otherBrowserToken).expect(201);
+      expect(otherBrowser.body.session.sessionToken).not.toBe(sessionToken);
+      expect(otherBrowser.body.session.answers).toEqual([]);
+    }
+
+    const stillResumable = await start(sessionToken).expect(201);
+    expect(stillResumable.body.session.sessionToken).toBe(sessionToken);
+  });
+
   it('reports an expired session on read without mutating attempt status', async () => {
     const { shortCode } = await createPublishedTopicWithPublicLink('EXPR', {
       timeLimitMinutes: 1,

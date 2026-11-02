@@ -190,7 +190,10 @@ export const PublicSessionStateSchema = z.object({
   serverTime: z.string(),
 });
 
-export const PublicSessionStartRequestSchema = PublicStudentProfileSchema;
+export const PublicSessionStartRequestSchema = PublicStudentProfileSchema.extend({
+  // Hands back the attempt started in this browser; a matching profile alone does not (#134).
+  resumeToken: z.string().min(1).max(128).optional(),
+});
 
 export const PublicSessionStartResponseSchema = z.object({
   session: PublicSessionStateSchema,
