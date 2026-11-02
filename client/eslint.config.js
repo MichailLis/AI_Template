@@ -1,14 +1,20 @@
+import { createRequire } from 'node:module';
+
 import js from '@eslint/js';
 import globals from 'globals';
 import reactPlugin from '@eslint-react/eslint-plugin';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-import importPlugin from 'eslint-plugin-import-x';
 import jsxA11y from 'eslint-plugin-jsx-a11y-x';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
 import unicorn from 'eslint-plugin-unicorn';
+
+// shortcut: the plugin's ESM build statically imports makeRe, which minimatch 11 removed; the CJS
+// build calls it only in no-internal-modules, unused here. Restore a plain import when import-x
+// supports minimatch 11.
+const importPlugin = createRequire(import.meta.url)('eslint-plugin-import-x');
 
 export default tseslint.config(
   { ignores: ['dist', 'src/shared/api/generated'] },
