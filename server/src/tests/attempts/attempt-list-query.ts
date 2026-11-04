@@ -28,8 +28,6 @@ const buildStatusWhere = (
       return {
         OR: [{ status: 'EXPIRED' }, { ...openAttempt, expiresAt: { lt: now } }],
       };
-    case 'ABANDONED':
-      return { status: 'ABANDONED' };
     case 'IN_PROGRESS':
       return {
         ...openAttempt,
