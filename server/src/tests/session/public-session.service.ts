@@ -23,7 +23,10 @@ import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { shouldRefreshProfOrientationAtlasSummary } from '../prof-orientation-v3-plus/atlas.logic';
-import { isProfOrientationV3PlusSummary } from '../prof-orientation-v3-plus/scoring';
+import {
+  getProfOrientationLlmStatus,
+  isProfOrientationV3PlusSummary,
+} from '../prof-orientation-v3-plus/scoring';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { getPlannedAnalysisKind } from '../analysis/analysis-result-kind';
 import {
@@ -86,6 +89,9 @@ export class TestsPublicSessionService {
     if (
       !analysis ||
       !isProfOrientationV3PlusSummary(analysis.summary) ||
+      // Пока идёт AI-анализ, атлас пишет его фоновая задача: второй писатель только удвоил бы
+      // запросы к Атласу.
+      getProfOrientationLlmStatus(analysis.summary) === 'pending' ||
       !shouldRefreshProfOrientationAtlasSummary(analysis.summary)
     ) {
       return analysis;
@@ -390,8 +396,11 @@ export class TestsPublicSessionService {
 
     let analysis = finishedAttempt.analysis;
 
+    // С LLM атлас получает фоновая задача анализа (до LLM): «Завершить» не ждёт Атлас. Без LLM
+    // задачи нет, а экран результата такой анализ не опрашивает, поэтому атлас остаётся здесь.
     if (
       finishedAttempt.isProfOrientationScoring &&
+      !finishedAttempt.shouldEnqueueAnalysis &&
       isProfOrientationV3PlusSummary(analysis.summary)
     ) {
       const enrichedSummary = await this.profOrientationAtlasService.saveEnrichedAnalysis(

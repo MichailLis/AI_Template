@@ -153,19 +153,33 @@ export class ProfOrientationAtlasService {
       }> = [];
       const unmatchedProfessions: string[] = [];
       const duplicateProfessions: string[] = [];
-      for (const item of selected) {
-        const matches = await findExactProfessionMatches(
-          this.atlasClient,
-          apiUrl,
-          item.profession.title,
-        );
-        if (matches.length === 1) {
+      // Две профессии ищем одновременно: сети хватает, а ждать их друг за другом — это
+      // вдвое дольше при каждом обогащении. Порядок результата — порядок `selected`.
+      const lookups = await Promise.all(
+        selected.map(async (item) => {
+          const matches = await findExactProfessionMatches(
+            this.atlasClient,
+            apiUrl,
+            item.profession.title,
+          );
+          return {
+            item,
+            matchCount: matches.length,
+            detail:
+              matches.length === 1
+                ? await this.atlasClient.getProfession(apiUrl, matches[0].slug)
+                : null,
+          };
+        }),
+      );
+      for (const { item, matchCount, detail } of lookups) {
+        if (detail) {
           matchedProfessions.push({
             source: item.source,
             requestedTitle: item.profession.title,
-            detail: await this.atlasClient.getProfession(apiUrl, matches[0].slug),
+            detail,
           });
-        } else if (matches.length > 1) {
+        } else if (matchCount > 1) {
           duplicateProfessions.push(item.profession.title);
         } else {
           unmatchedProfessions.push(item.profession.title);
