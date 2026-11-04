@@ -2,9 +2,18 @@ import { vi } from 'vitest';
 
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 
+import type {
+  PublicProfOrientationAtlas,
+  PublicProfOrientationDirection,
+  PublicProfOrientationEnrichment,
+  PublicProfOrientationSummary,
+  PublicProfOrientationSummaryLlmStatus,
+  PublicSessionResultResponseDto,
+} from '@/shared/api/model';
+
 export const getRecentFinishedAt = (elapsedMs: number) =>
   new Date(Date.now() - elapsedMs).toISOString();
-export const profOrientationPrimaryDirection = {
+export const profOrientationPrimaryDirection: PublicProfOrientationDirection = {
   id: 'A1',
   name: '3D-моделирование',
   score: 54.2,
@@ -18,7 +27,7 @@ export const profOrientationPrimaryDirection = {
   },
   professions: [{ code: '201524', title: 'Инженер-конструктор' }],
 };
-export const profOrientation3dPrintDirection = {
+export const profOrientation3dPrintDirection: PublicProfOrientationDirection = {
   id: 'A2',
   name: '3D-печать',
   score: 46.4,
@@ -37,14 +46,17 @@ export const profOrientation3dPrintDirection = {
 };
 
 export const getMinimalProfOrientationSummary = ({
-  atlas = undefined,
+  atlas = null,
   llm,
   meaning = profOrientationPrimaryDirection.resultCard.meaning,
 }: {
-  atlas?: Record<string, unknown>;
-  llm: Record<string, unknown>;
+  atlas?: PublicProfOrientationAtlas | null;
+  llm: {
+    status: PublicProfOrientationSummaryLlmStatus;
+    analysis?: PublicProfOrientationEnrichment;
+  };
   meaning?: string;
-}) => ({
+}): PublicProfOrientationSummary => ({
   resultKind: 'prof_orientation_v3_plus',
   primaryDirection: {
     ...profOrientationPrimaryDirection,
@@ -54,17 +66,17 @@ export const getMinimalProfOrientationSummary = ({
     },
   },
   topDirections: [],
-  confidence: { level: 'high', label: 'высокая' },
+  confidence: { label: 'высокая' },
   profile: {
     type: 'single_profile',
     title: '3D-моделирование',
     meaning: 'Алгоритмический профиль.',
+    miniProject: null,
   },
-  flags: [],
-  llm,
-  ...(atlas ? { atlas } : {}),
+  llm: { status: llm.status, analysis: llm.analysis ?? null },
+  atlas,
 });
-export const mockSessionResult = (overrides: Record<string, unknown>) => {
+export const mockSessionResult = (overrides: Partial<PublicSessionResultResponseDto>) => {
   vi.mocked(useTestsPublicControllerGetSessionResult).mockReturnValue({
     isLoading: false,
     isError: false,
@@ -77,7 +89,7 @@ export const mockSessionResult = (overrides: Record<string, unknown>) => {
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },

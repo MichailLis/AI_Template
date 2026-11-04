@@ -1,75 +1,27 @@
 import { isRecord } from '@/shared/lib/type-guards';
 
-import type { ProfOrientationLlmState } from './prof-orientation-llm-data';
+import type {
+  PublicAtlasProfession,
+  PublicAtlasRecommendation,
+  PublicProfOrientationAtlas,
+  PublicProfOrientationDirection,
+  PublicProfOrientationEnrichment,
+  PublicProfOrientationSummary,
+} from '@/shared/api/model';
 
-export interface ProfOrientationDirection {
-  id: string;
-  name: string;
-  score: number;
-  professions: Array<{
-    code: string;
-    title: string;
-  }>;
-  resultCard: {
-    headline: string;
-    meaning: string;
-    fitsIf: string[];
-    tryActions: string[];
-    learn: string[];
-    miniProject: string;
-  };
-}
+/** What the result screen draws: the public projection the server sends to a student. */
+export type ProfOrientationSummary = PublicProfOrientationSummary;
+export type ProfOrientationDirection = PublicProfOrientationDirection;
+export type ProfOrientationAtlasProfessionCard = PublicAtlasProfession;
+export type ProfOrientationAtlasRecommendation = PublicAtlasRecommendation;
+export type ProfOrientationAtlasRecommendations = PublicProfOrientationAtlas;
 
-export interface ProfOrientationAtlasProfessionCard {
-  source: 'primary' | 'secondary';
-  requestedTitle: string;
-  title: string;
-  slug: string;
-  url: string;
-  summary: string | null;
-  demandLevel: string | null;
-  industry: string | null;
-  municipality: string | null;
-  skills: string[];
-}
-
-export interface ProfOrientationAtlasRecommendation {
-  title: string;
-  slug: string;
-  url: string;
-  summary: string | null;
-  subtitle: string | null;
-}
-
-export interface ProfOrientationAtlasRecommendations {
-  status: 'ready' | 'partial' | 'unavailable';
-  publicUrl: string | null;
-  apiUrl: string | null;
-  errorMessage: string | null;
-  unmatchedProfessions: string[];
-  duplicateProfessions: string[];
-  professions: ProfOrientationAtlasProfessionCard[];
-  enterprises: ProfOrientationAtlasRecommendation[];
-  events: ProfOrientationAtlasRecommendation[];
-  institutions: ProfOrientationAtlasRecommendation[];
-}
-
-export interface ProfOrientationSummary {
-  resultKind: 'prof_orientation_v3_plus';
-  primaryDirection: ProfOrientationDirection | null;
-  topDirections: ProfOrientationDirection[];
-  confidence: {
-    label: string;
-  };
-  profile: {
-    type: string;
-    title: string;
-    meaning: string;
-    miniProject: string | null;
-  };
-  llm: ProfOrientationLlmState;
-  atlas: ProfOrientationAtlasRecommendations | null;
-}
+/*
+ * Everything below reads the admin response, whose `summary` is the full stored object
+ * (`unknown` in the API). The student's response is typed and is never parsed here: it goes
+ * straight to the screen. This parser picks from the admin object the same fields the student's
+ * projection carries, so the admin preview shows what the student sees.
+ */
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
@@ -169,6 +121,9 @@ const parseAtlasProfessionCard = (value: unknown): ProfOrientationAtlasProfessio
   };
 };
 
+const parseList = <T>(value: unknown, parseItem: (item: unknown) => T | null) =>
+  Array.isArray(value) ? value.map(parseItem).filter((item): item is T => item !== null) : [];
+
 const parseAtlasRecommendations = (value: unknown): ProfOrientationAtlasRecommendations | null => {
   if (
     !isRecord(value) ||
@@ -179,49 +134,39 @@ const parseAtlasRecommendations = (value: unknown): ProfOrientationAtlasRecommen
 
   return {
     status: value.status,
-    publicUrl: nullableString(value.publicUrl),
-    apiUrl: nullableString(value.apiUrl),
-    errorMessage: nullableString(value.errorMessage),
-    unmatchedProfessions: isStringArray(value.unmatchedProfessions)
-      ? value.unmatchedProfessions
-      : [],
-    duplicateProfessions: isStringArray(value.duplicateProfessions)
-      ? value.duplicateProfessions
-      : [],
-    professions: Array.isArray(value.professions)
-      ? value.professions
-          .map((item) => parseAtlasProfessionCard(item))
-          .filter((item): item is ProfOrientationAtlasProfessionCard => item !== null)
-      : [],
-    enterprises: Array.isArray(value.enterprises)
-      ? value.enterprises
-          .map((item) => parseAtlasRecommendation(item))
-          .filter((item): item is ProfOrientationAtlasRecommendation => item !== null)
-      : [],
-    events: Array.isArray(value.events)
-      ? value.events
-          .map((item) => parseAtlasRecommendation(item))
-          .filter((item): item is ProfOrientationAtlasRecommendation => item !== null)
-      : [],
-    institutions: Array.isArray(value.institutions)
-      ? value.institutions
-          .map((item) => parseAtlasRecommendation(item))
-          .filter((item): item is ProfOrientationAtlasRecommendation => item !== null)
-      : [],
+    professions: parseList(value.professions, parseAtlasProfessionCard),
+    enterprises: parseList(value.enterprises, parseAtlasRecommendation),
+    events: parseList(value.events, parseAtlasRecommendation),
+    institutions: parseList(value.institutions, parseAtlasRecommendation),
   };
 };
+
+const parseEnrichment = (value: unknown): PublicProfOrientationEnrichment | null => {
+  if (
+    !isRecord(value) ||
+    typeof value.summary !== 'string' ||
+    typeof value.nextMiniProject !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    professorSummary: nullableString(value.professorSummary),
+    summary: value.summary,
+    firstSteps: isStringArray(value.firstSteps) ? value.firstSteps : [],
+    learningPlan: isStringArray(value.learningPlan) ? value.learningPlan : [],
+    professionNotes: isStringArray(value.professionNotes) ? value.professionNotes : [],
+    nextMiniProject: value.nextMiniProject,
+  };
+};
+
+const LLM_STATUSES = ['not_requested', 'pending', 'ready', 'failed'] as const;
 
 export const parseProfOrientationSummary = (value: unknown): ProfOrientationSummary | null => {
   if (!isRecord(value) || value.resultKind !== 'prof_orientation_v3_plus') {
     return null;
   }
 
-  const primaryDirection = parseProfOrientationDirection(value.primaryDirection);
-  const topDirections = Array.isArray(value.topDirections)
-    ? value.topDirections
-        .map((direction) => parseProfOrientationDirection(direction))
-        .filter((direction): direction is ProfOrientationDirection => direction !== null)
-    : [];
   const confidence = isRecord(value.confidence) ? value.confidence : null;
   const profile = isRecord(value.profile) ? value.profile : null;
   const llm = isRecord(value.llm) ? value.llm : null;
@@ -240,21 +185,18 @@ export const parseProfOrientationSummary = (value: unknown): ProfOrientationSumm
 
   return {
     resultKind: 'prof_orientation_v3_plus',
-    primaryDirection,
-    topDirections,
-    confidence: {
-      label: confidence.label,
-    },
+    primaryDirection: parseProfOrientationDirection(value.primaryDirection),
+    topDirections: parseList(value.topDirections, parseProfOrientationDirection),
+    confidence: { label: confidence.label },
     profile: {
       type: profile.type,
       title: profile.title,
       meaning: profile.meaning,
-      miniProject: typeof profile.miniProject === 'string' ? profile.miniProject : null,
+      miniProject: nullableString(profile.miniProject),
     },
     llm: {
-      status: typeof llm?.status === 'string' ? llm.status : 'not_requested',
-      analysis: llm && 'analysis' in llm ? llm.analysis : null,
-      errorMessage: typeof llm?.errorMessage === 'string' ? llm.errorMessage : null,
+      status: LLM_STATUSES.find((status) => status === llm?.status) ?? 'not_requested',
+      analysis: parseEnrichment(llm?.analysis),
     },
     atlas: parseAtlasRecommendations(value.atlas),
   };

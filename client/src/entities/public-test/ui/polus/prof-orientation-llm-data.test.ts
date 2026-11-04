@@ -4,21 +4,23 @@ import pairedRulesVectors from '../../../../../../template/paired-rules.vectors.
 
 import {
   getProfOrientationLlmStatus,
-  parseProfOrientationMethodologyEnrichment,
+  sanitizeProfOrientationEnrichment,
 } from './prof-orientation-llm-data';
 
-const getValidEnrichment = (summary: string) => ({
+import type { PublicProfOrientationEnrichment } from '@/shared/api/model';
+
+const getValidEnrichment = (summary: string): PublicProfOrientationEnrichment => ({
+  professorSummary: null,
   summary,
-  confidenceComment: 'Методика уверенно показывает устойчивый интерес к инженерным задачам.',
-  methodSignals: ['Есть интерес к проектированию и техническим решениям.'],
+  professionNotes: [],
   firstSteps: ['Собрать небольшой прототип и обсудить результат с наставником.'],
   learningPlan: ['Разобрать основы проектирования и добавить практику каждую неделю.'],
   nextMiniProject: 'Собрать макет полезного технического устройства.',
 });
 
-describe('parseProfOrientationMethodologyEnrichment', () => {
+describe('sanitizeProfOrientationEnrichment', () => {
   it('removes closed repeated internal choice markers', () => {
-    const parsed = parseProfOrientationMethodologyEnrichment(
+    const parsed = sanitizeProfOrientationEnrichment(
       getValidEnrichment('Подходит инженерный маршрут (Q1_A1, Q2_A1, Q3_A1) сохранен'),
     );
     expect(parsed?.summary).toBe('Подходит инженерный маршрут сохранен');
@@ -30,7 +32,7 @@ describe('parseProfOrientationMethodologyEnrichment', () => {
       (_, index) => `Q${index + 1}_A1`,
     ).join(', ');
 
-    const parsed = parseProfOrientationMethodologyEnrichment(
+    const parsed = sanitizeProfOrientationEnrichment(
       getValidEnrichment(
         `Подходит инженерный маршрут (${longInternalChoiceNoise}, важный вывод сохранен`,
       ),
@@ -39,7 +41,7 @@ describe('parseProfOrientationMethodologyEnrichment', () => {
   });
 
   it('keeps regular words that start with the readable choice token', () => {
-    const parsed = parseProfOrientationMethodologyEnrichment(
+    const parsed = sanitizeProfOrientationEnrichment(
       getValidEnrichment('Важно учитывать (выбор, выборка профессий показывает контекст).'),
     );
     expect(parsed?.summary).toBe('Важно учитывать (выбор, выборка профессий показывает контекст).');

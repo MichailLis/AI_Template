@@ -38,7 +38,43 @@ const enrichment = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-type AnalysisSummary = { atlas?: unknown; llm?: { status?: string } };
+type AnalysisSummary = { atlas?: { apiUrl?: string }; llm?: { status?: string } };
+
+/** Every key at every depth, so a leaked field cannot hide inside a nested object. */
+const collectKeys = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.flatMap(collectKeys)
+    : typeof value === 'object' && value !== null
+      ? Object.entries(value).flatMap(([key, child]) => [key, ...collectKeys(child)])
+      : [];
+
+// What the record holds and a student must never receive (#160): scoring numbers, counters,
+// sliders, flags, Atlas and LLM diagnostics, and LLM text no screen renders.
+const INTERNAL_KEYS = [
+  'scores',
+  'selectedCounts',
+  'sliderValues',
+  'flags',
+  'scoringVersion',
+  'secondaryDirection',
+  'gap',
+  'readinessTop',
+  'consistencyIndex',
+  'unmatchedProfessions',
+  'duplicateProfessions',
+  'apiUrl',
+  'publicUrl',
+  'checkedAt',
+  'model',
+  'errorMessage',
+  'methodSignals',
+  'confidenceComment',
+  'cautions',
+];
+
+const expectOnlyPublicFields = (summary: unknown) => {
+  expect(collectKeys(summary).filter((key) => INTERNAL_KEYS.includes(key))).toEqual([]);
+};
 
 describe('Prof-orientation atlas in the background task (e2e)', () => {
   let app: INestApplication;
@@ -243,13 +279,16 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
     const finishMs = Date.now() - startedAt;
 
     expect(finishMs).toBeLessThan(ATLAS_DELAY_MS);
-    expect(finish.body.analysis.summary.atlas).toBeUndefined();
-    expect(finish.body.analysis.summary.llm.status).toBe('pending');
+    expect(finish.body.analysis.summary.atlas).toBeNull();
+    // The record is READY after the algorithm phase; only llm.status says the AI is not done.
+    expect(finish.body.analysis.status).toBe('READY');
+    expect(finish.body.analysis.summary.llm).toEqual({ status: 'pending', analysis: null });
 
     // The result screen polls here: no extra Atlas requests, nothing is written.
     const early = await request(app.getHttpServer())
       .get(`/tests/public/sessions/${sessionToken}/result`)
       .expect(200);
+    expect(early.body.analysis.status).toBe('READY');
     expect(early.body.analysis.summary.llm.status).toBe('pending');
 
     // The background task stores the atlas while the LLM is still pending.
@@ -274,6 +313,15 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
     expect(done.body.analysis.summary.llm.analysis.professorSummary).toBe(
       enrichment.professorSummary,
     );
+    expect(Object.keys(done.body.analysis.summary.llm.analysis).sort()).toEqual([
+      'firstSteps',
+      'learningPlan',
+      'nextMiniProject',
+      'professionNotes',
+      'professorSummary',
+      'summary',
+    ]);
+    expectOnlyPublicFields(done.body.analysis.summary);
     expect(done.body.analysis.summary.atlas.status).toBe('ready');
     expect(done.body.analysis.summary.atlas.professions).toHaveLength(2);
     expect((await readSummary(sessionToken)).analysis?.rawText).toBe(JSON.stringify(enrichment));
@@ -293,7 +341,7 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
     const finishMs = Date.now() - startedAt;
 
     expect(finishMs).toBeGreaterThanOrEqual(ATLAS_DELAY_MS - 100);
-    expect(finish.body.analysis.summary.llm.status).toBe('not_requested');
+    expect(finish.body.analysis.summary.llm).toEqual({ status: 'not_requested', analysis: null });
     expect(finish.body.analysis.summary.atlas.status).toBe('ready');
     expect(finish.body.analysis.summary.atlas.professions).toHaveLength(2);
 
@@ -301,6 +349,29 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
       .get(`/tests/public/sessions/${sessionToken}/result`)
       .expect(200);
     expect(result.body.analysis.summary.atlas.status).toBe('ready');
+
+    // The record keeps everything; the student's answer is a projection, not a trimmed copy.
+    const stored = (await readSummary(sessionToken)).summary as Record<string, unknown>;
+    expect(Object.keys(stored)).toEqual(
+      expect.arrayContaining([
+        'scores',
+        'selectedCounts',
+        'sliderValues',
+        'flags',
+        'scoringVersion',
+      ]),
+    );
+    expect((stored as AnalysisSummary).atlas?.apiUrl).toBe('https://atlas.example/api-backend');
+    for (const body of [finish.body, result.body]) {
+      expect(body.analysis).toMatchObject({ providerMode: 'ALGORITHM', status: 'READY' });
+      expect(body.analysis.summary.resultKind).toBe('prof_orientation_v3_plus');
+      expect(body.analysis.summary.confidence).toEqual({ label: expect.any(String) });
+      for (const direction of body.analysis.summary.topDirections) {
+        expect(direction.score).toEqual(expect.any(Number));
+      }
+      expect(body.analysis.summary.topDirections.length).toBeGreaterThan(0);
+      expectOnlyPublicFields(body.analysis.summary);
+    }
     expect(atlasCalls.findProfessions).toBe(2);
   });
 });

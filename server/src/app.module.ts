@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma.module';
 import { AdminModule } from './admin/admin.module';
@@ -32,6 +32,11 @@ import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-sett
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,
+    },
+    // Does nothing for a handler without @ZodSerializerDto, so controllers opt in one by one.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ZodSerializerInterceptor,
     },
   ],
 })

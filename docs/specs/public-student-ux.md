@@ -16,9 +16,13 @@ Security model:
 - Raw provider output, prompts, scoring internals, and debug-only fields belong only in
   admin/internal DTOs protected by admin guards.
 - The session state hands the student only the question `settings` keys the public client reads
-  (`PUBLIC_QUESTION_SETTINGS_KEYS` in `attempt.mapper.ts`: `maxChoices`, `min`, `max`, `step`,
-  `sliderKind`, `methodologySliderId`); `directionMap` and weights never leave the server. A new key
-  the public client starts reading must be added to that list.
+  (`PublicQuestionSettingsSchema` in `tests-public.dto.ts`: `maxChoices`, `min`, `max`, `step`,
+  `sliderKind`, `methodologySliderId`; `pickPublicQuestionSettings` in `attempt.mapper.ts` builds the
+  object from it); `directionMap` and weights never leave the server. A new key the public client
+  starts reading must be added to that schema.
+- `analysis.summary` of the result and finish responses is a union on `resultKind`
+  (`prof_orientation_v3_plus`, `ai_analysis`, `none`) built from an allow-list; the client switches on
+  it and does not parse the response (`tests-module.md`, section on public analysis responses).
 
 UI/theming rules:
 

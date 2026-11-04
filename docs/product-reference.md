@@ -204,7 +204,9 @@ Public session/result URL security model:
   active session or final result while the session/link remains valid.
 - Do not log or share these URLs outside the student-facing flow.
 - Public result responses expose only student-safe analysis fields: status, provider mode,
-  generated timestamp, safe summary, and user-facing error text.
+  generated timestamp, safe summary, and user-facing error text. The summary is an allow-listed
+  union on `resultKind` (`prof_orientation_v3_plus`, `ai_analysis`, `none`) and the response is
+  checked against its schema before it leaves the server.
 - Raw provider output, prompts, scoring internals, and debug data remain admin/internal only.
 
 Entry profile modes:
@@ -247,8 +249,7 @@ Current public run UX:
 - slider questions show the current value with the matching label and avoid duplicate range numbers in helper copy
 - Polus prof-orientation processing uses the Professor Polus thinking animation
   while LLM enrichment is pending
-- the Polus result never shows invented content: without a prof-orientation summary or a parsable
-  analysis the student sees "Ответы сохранены" (no result planned) or, when `analysis.status` is
+- the Polus result never shows invented content: with `summary.resultKind = 'none'` the student sees "Ответы сохранены" (no result planned) or, when `analysis.status` is
   `FAILED`, "Не удалось сформировать анализ"; the 10 s processing screen stays
 - after a deploy the hashed chunks of the old build disappear: `vite:preloadError` reloads the page
   once per minute (`shared/lib/stale-chunk-reload.ts`, timestamp in `safeStorage`, so no reload

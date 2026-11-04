@@ -5,16 +5,17 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { PublicAiAnalysisSummary } from './publicAiAnalysisSummary';
+import type { PublicNoAnalysisSummary } from './publicNoAnalysisSummary';
+import type { PublicProfOrientationSummary } from './publicProfOrientationSummary';
 import type { PublicSessionFinishResponseDtoAnalysisProviderMode } from './publicSessionFinishResponseDtoAnalysisProviderMode';
 import type { PublicSessionFinishResponseDtoAnalysisStatus } from './publicSessionFinishResponseDtoAnalysisStatus';
-import type { PublicSessionFinishResponseDtoAnalysisSummary } from './publicSessionFinishResponseDtoAnalysisSummary';
 
 export type PublicSessionFinishResponseDtoAnalysis = {
   providerMode: PublicSessionFinishResponseDtoAnalysisProviderMode;
   /** Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения) */
   status: PublicSessionFinishResponseDtoAnalysisStatus;
-  /** @nullable */
-  summary: PublicSessionFinishResponseDtoAnalysisSummary;
+  summary: PublicProfOrientationSummary | PublicAiAnalysisSummary | PublicNoAnalysisSummary;
   /** @nullable */
   errorMessage: string | null;
   /** @nullable */

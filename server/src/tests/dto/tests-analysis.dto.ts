@@ -7,7 +7,6 @@ export {
   TestAnalysisResultSchema,
   TestAnalysisSkillItemSchema,
   TestAnalysisSkillLevelSchema,
-  TestAnalysisSummarySchema,
 } from '../../common/analysis/test-analysis-result.contract';
 
 export class TestAnalysisResultDto extends createZodDto(TestAnalysisResultSchema) {}

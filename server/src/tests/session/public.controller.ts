@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ZodSerializerDto } from 'nestjs-zod';
 
 import {
   PublicLinkAccessResponseDto,
@@ -27,6 +28,8 @@ import { ApiPublicErrorResponses } from '../../common/decorators/api-error-respo
 import { ErrorResponseDto } from '../../common/dto/error-response.dto';
 import { PublicRateLimitGuard } from './public-rate-limit.guard';
 
+// Every response goes through its DTO schema (ZodSerializerDto): fields the schema does not declare
+// are dropped and a response that does not match it is a 500, not a leak (invariant 6, #167).
 @ApiTags('tests-public')
 @ApiPublicErrorResponses()
 @Controller('tests/public')
@@ -39,6 +42,7 @@ export class TestsPublicController {
   @Get('links/:code')
   @ApiOperation({ summary: 'Get public test link metadata' })
   @ApiResponse({ status: 200, type: PublicLinkAccessResponseDto })
+  @ZodSerializerDto(PublicLinkAccessResponseDto)
   getLinkAccess(@Param('code') code: string) {
     return this.testsPublicLinkService.getPublicLinkAccessByCode(code);
   }
@@ -47,6 +51,7 @@ export class TestsPublicController {
   @UseGuards(PublicRateLimitGuard)
   @ApiOperation({ summary: 'Start or resume public test session' })
   @ApiResponse({ status: 201, type: PublicSessionStartResponseDto })
+  @ZodSerializerDto(PublicSessionStartResponseDto)
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, type: ErrorResponseDto })
   startSession(@Param('code') code: string, @Body() dto: PublicSessionStartRequestDto) {
     return this.testsPublicSessionService.startSessionByCode(code, dto);
@@ -55,6 +60,7 @@ export class TestsPublicController {
   @Get('sessions/:sessionToken')
   @ApiOperation({ summary: 'Get public test session state by token' })
   @ApiResponse({ status: 200, type: PublicSessionGetResponseDto })
+  @ZodSerializerDto(PublicSessionGetResponseDto)
   getSession(@Param('sessionToken') sessionToken: string) {
     return this.testsPublicSessionService.getSessionByToken(sessionToken);
   }
@@ -62,6 +68,7 @@ export class TestsPublicController {
   @Put('sessions/:sessionToken/answers')
   @ApiOperation({ summary: 'Save public test session answers' })
   @ApiResponse({ status: 200, type: PublicSessionSaveAnswersResponseDto })
+  @ZodSerializerDto(PublicSessionSaveAnswersResponseDto)
   saveAnswers(
     @Param('sessionToken') sessionToken: string,
     @Body() dto: PublicSessionSaveAnswersRequestDto,
@@ -74,6 +81,7 @@ export class TestsPublicController {
   @UseGuards(PublicRateLimitGuard)
   @ApiOperation({ summary: 'Finish public test session and compute analysis' })
   @ApiResponse({ status: 200, type: PublicSessionFinishResponseDto })
+  @ZodSerializerDto(PublicSessionFinishResponseDto)
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, type: ErrorResponseDto })
   finishSession(@Param('sessionToken') sessionToken: string) {
     return this.testsPublicSessionService.finishSession(sessionToken);
@@ -82,6 +90,7 @@ export class TestsPublicController {
   @Get('sessions/:sessionToken/result')
   @ApiOperation({ summary: 'Get public test session analysis result' })
   @ApiResponse({ status: 200, type: PublicSessionResultResponseDto })
+  @ZodSerializerDto(PublicSessionResultResponseDto)
   getSessionResult(@Param('sessionToken') sessionToken: string) {
     return this.testsPublicSessionService.getSessionResult(sessionToken);
   }

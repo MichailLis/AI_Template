@@ -80,8 +80,19 @@ Built-in prof-orientation v3+ baseline:
    algorithmic phase only and is never a completion signal for the LLM phase:
    waiting on it returns immediately and proves nothing about the model call.
    Public analysis responses (`/t/*` result and finish) never carry raw error text: `errorMessage` is a fixed
-   `Analysis failed`, and `summary.llm.errorMessage`, `summary.atlas.errorMessage` and `summary.atlas.apiUrl` are removed.
-   The full values stay in the admin DTOs.
+   `Analysis failed`. Their `summary` is a projection onto an allow-list, not a copy with fields
+   removed (`toPublicAnalysisSummary`, `PublicAnalysisSummarySchema`): a union on `resultKind` of
+   `prof_orientation_v3_plus` (profile, leading directions with their scores, `confidence.label`,
+   `llm.status` with the text the screen renders, the Atlas cards), `ai_analysis` (the standard AI
+   analysis, normalised) and `none` (a stub, an analysis still running or failed, or a summary that
+   cannot be shown). Scores of all directions, counters, slider values, flags, confidence numbers,
+   model names and error text of the LLM or Atlas phases never reach a student. A field added to the
+   stored `summary` stays admin-only until it is added to a public schema on purpose. The full values
+   stay in the admin DTOs.
+   Every handler of `TestsPublicController` also runs its response through its DTO
+   (`@ZodSerializerDto`): keys the schema does not declare are cut, a response that does not match
+   it is a 500 whose log names the offending fields. `public.controller.spec.ts` keeps that decorator
+   and `@ApiResponse` pointing at the same DTO.
    `finishSession` moves an attempt `IN_PROGRESS` -> `COMPLETED` with a conditional update;
    a concurrent duplicate request loses that race, writes no second analysis, does not enqueue
    a second LLM run and returns the already completed result.

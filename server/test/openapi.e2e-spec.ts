@@ -97,6 +97,36 @@ describe('OpenAPI contract (e2e)', () => {
     });
   });
 
+  it('documents the public analysis summary as a closed union, not as an arbitrary object', () => {
+    const schemas = document.components?.schemas ?? {};
+    const resultSchema = schemas.PublicSessionResultResponseDto as {
+      properties: { analysis: { properties: { summary: Record<string, unknown> } } };
+    };
+    const summary = resultSchema.properties.analysis.properties.summary;
+    const variants = [
+      'PublicProfOrientationSummary',
+      'PublicAiAnalysisSummary',
+      'PublicNoAnalysisSummary',
+    ];
+
+    expect(summary.oneOf).toEqual(
+      variants.map((name) => ({ $ref: `#/components/schemas/${name}` })),
+    );
+    expect(summary.discriminator).toEqual({ propertyName: 'resultKind' });
+    // An arbitrary object is `additionalProperties: true` (or a schema); a closed one says `false`.
+    const opensKeys = /"additionalProperties":(?!false)/;
+    expect(summary).not.toHaveProperty('additionalProperties');
+    for (const name of [
+      ...variants,
+      'PublicSessionResultResponseDto',
+      'PublicSessionFinishResponseDto',
+      'PublicSessionGetResponseDto',
+      'PublicSessionStartResponseDto',
+    ]) {
+      expect(JSON.stringify(schemas[name])).not.toMatch(opensKeys);
+    }
+  });
+
   it('documents public test errors without protected-only statuses', () => {
     const getLinkOperation = document.paths?.['/tests/public/links/{code}']?.get;
 

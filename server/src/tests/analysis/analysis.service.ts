@@ -43,6 +43,11 @@ import {
   mapQuestionToPromptPayload,
 } from '../analysis/prompt-payload.utils';
 import { mergeAnalysisSummaryKey } from '../analysis/analysis-summary.store';
+import {
+  NO_PUBLIC_ANALYSIS_SUMMARY,
+  toPublicAnalysisSummary,
+} from '../analysis/public-analysis-summary';
+import type { PublicSessionAnalysisDto } from '../dto/tests-public.dto';
 
 interface StubAnalysisInput {
   attemptId: number;
@@ -139,29 +144,6 @@ export const toEnrichmentPromptSummary = (summary: object) =>
   Object.fromEntries(
     Object.entries(summary).filter(([key]) => !ENRICHMENT_PROMPT_OMITTED_FIELDS.has(key)),
   );
-
-/** Removes `llm.errorMessage`, `llm.model`, `atlas.errorMessage` and `atlas.apiUrl`: admin-only diagnostics. */
-const stripInternalAnalysisFields = <T>(summary: T): T => {
-  if (typeof summary !== 'object' || summary === null) {
-    return summary;
-  }
-
-  const result = { ...summary } as Record<string, unknown>;
-  const hiddenFields: Array<[string, string[]]> = [
-    ['llm', ['errorMessage', 'model']],
-    ['atlas', ['errorMessage', 'apiUrl']],
-  ];
-  for (const [key, hidden] of hiddenFields) {
-    const section = result[key];
-    if (typeof section === 'object' && section !== null) {
-      const copy = { ...section } as Record<string, unknown>;
-      hidden.forEach((field) => delete copy[field]);
-      result[key] = copy;
-    }
-  }
-
-  return result as T;
-};
 
 @Injectable()
 export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDestroy {
@@ -731,12 +713,12 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     }
   }
 
-  toPublicAnalysisResponse(analysis: TestStudentAnalysis | null) {
+  toPublicAnalysisResponse(analysis: TestStudentAnalysis | null): PublicSessionAnalysisDto {
     if (!analysis) {
       return {
-        providerMode: 'STUB' as const,
-        status: 'PENDING' as const,
-        summary: null,
+        providerMode: 'STUB',
+        status: 'PENDING',
+        summary: NO_PUBLIC_ANALYSIS_SUMMARY,
         errorMessage: null,
         generatedAt: null,
       };
@@ -745,7 +727,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     return {
       providerMode: analysis.providerMode,
       status: analysis.status,
-      summary: stripInternalAnalysisFields(analysis.summary),
+      summary: toPublicAnalysisSummary(analysis.summary),
       // Raw provider/parser text can name internal hosts or models; students get a fixed message.
       errorMessage: analysis.errorMessage ? PUBLIC_ANALYSIS_ERROR_MESSAGE : null,
       generatedAt: analysis.generatedAt ? analysis.generatedAt.toISOString() : null,

@@ -1,5 +1,7 @@
 import { BadRequestException, Logger } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
+import { ZodSerializationException } from 'nestjs-zod';
+import { z } from 'zod';
 
 import { AllExceptionsFilter } from './all-exceptions.filter';
 
@@ -86,6 +88,26 @@ describe('AllExceptionsFilter', () => {
     expect(statusMock).toHaveBeenCalledWith(500);
     expect(errorSpy).toHaveBeenCalledWith('GET /t/:token -> 500', error.stack);
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('secret-token');
+    errorSpy.mockRestore();
+  });
+
+  it('names the fields of a response that does not match its schema, without their values', () => {
+    const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const filter = new AllExceptionsFilter();
+    const { host, jsonMock, statusMock } = createHttpHost({ route: { path: '/t/:token' } });
+    const result = z
+      .object({ analysis: z.object({ summary: z.string() }) })
+      .safeParse({ analysis: { summary: 42 } });
+
+    filter.catch(new ZodSerializationException(result.error), host);
+
+    expect(statusMock).toHaveBeenCalledWith(500);
+    // the student gets a plain 500; the schema details stay in the log
+    expect(JSON.stringify(jsonMock.mock.calls[0]?.[0])).not.toContain('summary');
+    expect(errorSpy.mock.calls[0]?.[0]).toBe(
+      'GET /t/:token -> 500 (response does not match its schema: analysis.summary: invalid_type)',
+    );
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('42');
     errorSpy.mockRestore();
   });
 

@@ -103,7 +103,7 @@ describe('usePublicTestRunWorkspace', () => {
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: '2026-05-27T00:00:02.000Z',
       },

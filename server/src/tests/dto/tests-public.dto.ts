@@ -2,8 +2,13 @@ import { createZodDto } from '../../common/zod-dto';
 import { z } from 'zod';
 
 import { PLANNED_ANALYSIS_KINDS } from '../analysis/analysis-result-kind';
-import { TestAnalysisSummarySchema } from './tests-analysis.dto';
-import { JsonObjectSchema, TestQuestionTypeSchema } from './tests.dto';
+import { PublicAnalysisSummarySchema } from './tests-public-result.dto';
+import { TestQuestionTypeSchema } from './tests.dto';
+
+export {
+  PublicAnalysisLlmStatusSchema,
+  type PublicAnalysisLlmStatus,
+} from './tests-public-result.dto';
 
 export const PublicQuestionOptionSchema = z.object({
   id: z.number(),
@@ -109,6 +114,16 @@ export const PublicStudentProfileSchema = z.object({
   consentAccepted: z.literal(true),
 });
 
+// Only the settings keys the public client reads; the rest (directionMap, weights) is scoring internals.
+export const PublicQuestionSettingsSchema = z.object({
+  maxChoices: z.number().optional(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+  step: z.number().optional(),
+  sliderKind: z.enum(['interest', 'readiness']).optional(),
+  methodologySliderId: z.string().optional(),
+});
+
 export const PublicTestQuestionSchema = z.object({
   id: z.number(),
   type: TestQuestionTypeSchema,
@@ -116,7 +131,7 @@ export const PublicTestQuestionSchema = z.object({
   description: z.string().nullable(),
   required: z.boolean(),
   order: z.number(),
-  settings: JsonObjectSchema.nullable(),
+  settings: PublicQuestionSettingsSchema.nullable(),
   options: z.array(PublicQuestionOptionSchema),
   sliderBands: z.array(PublicQuestionSliderBandSchema),
 });
@@ -234,13 +249,6 @@ export const PublicSessionAnalysisStatusSchema = z
     'Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)',
   );
 
-export const PublicAnalysisLlmStatusSchema = z
-
-  .enum(['not_requested', 'pending', 'ready', 'failed'])
-
-  .describe('Статус асинхронного LLM-обогащения для двухфазного анализа');
-
-export type PublicAnalysisLlmStatus = z.infer<typeof PublicAnalysisLlmStatusSchema>;
 export const PublicSessionAnalysisProviderModeSchema = z.enum([
   'STUB',
   'LLM',
@@ -251,10 +259,12 @@ export const PublicSessionAnalysisProviderModeSchema = z.enum([
 export const PublicSessionAnalysisSchema = z.object({
   providerMode: PublicSessionAnalysisProviderModeSchema,
   status: PublicSessionAnalysisStatusSchema,
-  summary: TestAnalysisSummarySchema.nullable(),
+  summary: PublicAnalysisSummarySchema,
   errorMessage: z.string().nullable(),
   generatedAt: z.string().nullable(),
 });
+
+export type PublicSessionAnalysisDto = z.infer<typeof PublicSessionAnalysisSchema>;
 
 export const PublicSessionFinishResponseSchema = z.object({
   sessionToken: z.string(),

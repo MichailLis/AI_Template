@@ -6,7 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-/**
- * @nullable
- */
-export type PublicSessionFinishResponseDtoAnalysisSummary = { [key: string]: unknown } | null;
+export type PublicAiAnalysisSummaryPersonalityTraitsTraitsItem = {
+  name: string;
+  description: string;
+  careerImpact: string;
+};

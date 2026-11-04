@@ -327,6 +327,8 @@ Verification gates:
    - Always add `@ApiOperation(...)`
    - Always add `@ApiResponse({ type: ... })`
    - For endpoints used by generated frontend clients, do not use schema-only responses as a substitute for typed DTO response declarations.
+   - Handlers of the public `/t/*` API (`TestsPublicController`) also carry `@ZodSerializerDto(<the same DTO>)`: the response goes through its schema, keys the schema does not declare are cut and a response that breaks it is a 500, not a leak (invariant 6). `public.controller.spec.ts` checks that the two decorators name the same DTO. Other controllers can opt in the same way; the global `ZodSerializerInterceptor` ignores handlers without the decorator.
+   - What a student may see of a stored JSON value (an analysis `summary`, question `settings`) is an allow-list schema in `tests-public.dto.ts` / `tests-public-result.dto.ts` that the mapper fills through `safeParse`; do not copy the stored object and delete fields from it.
 
 ### React Query/Form Sync Rule
 
