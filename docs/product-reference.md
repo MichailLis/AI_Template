@@ -148,7 +148,7 @@ Analytics report contract:
   attempts sheet in that zone. Missing or unknown zone means UTC. The resolved zone is returned as
   `filters.timeZone` and listed in the report parameters
 - attempts list for one public link: `GET /admin/tests/public-links/:linkId/attempts` with
-  `page`, `limit`, `search`, `status` (`IN_PROGRESS|COMPLETED|EXPIRED|ABANDONED`), `sortBy`
+  `page`, `limit`, `search`, `status` (`IN_PROGRESS|COMPLETED|EXPIRED`), `sortBy`
   (`startedAt|attemptNumber|studentName|finishedAt`) and `sortOrder`; each item carries
   `durationSeconds` (null until finished) and `resultSummary` (leading direction and profile, or null)
 - attempts export for one public link: `GET /admin/tests/public-links/:linkId/attempts/export.xlsx`
