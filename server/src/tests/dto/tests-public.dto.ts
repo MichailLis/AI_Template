@@ -5,10 +5,7 @@ import { PLANNED_ANALYSIS_KINDS } from '../analysis/analysis-result-kind';
 import { PublicAnalysisSummarySchema } from './tests-public-result.dto';
 import { TestQuestionTypeSchema } from './tests.dto';
 
-export {
-  PublicAnalysisLlmStatusSchema,
-  type PublicAnalysisLlmStatus,
-} from './tests-public-result.dto';
+export { PublicAnalysisLlmStatusSchema } from './tests-public-result.dto';
 
 export const PublicQuestionOptionSchema = z.object({
   id: z.number(),

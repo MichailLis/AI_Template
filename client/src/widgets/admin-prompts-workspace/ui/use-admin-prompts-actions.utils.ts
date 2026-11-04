@@ -7,14 +7,6 @@ import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model'
 
 export const DEFAULT_TEMPERATURE = '0.7';
 
-export type PromptPayload = {
-  title: string;
-  description: string;
-  model: string;
-  temperature: number;
-  prompt: string;
-};
-
 export const getDefaultModel = (
   structuredOutputModels: AdminPromptModelsResponseDtoModelsItem[],
   defaultModel?: string,

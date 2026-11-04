@@ -117,9 +117,6 @@ export class CreateAnalysisPromptDto extends createZodDto(CreateAnalysisPromptSc
 export class UpdateAnalysisPromptVersionDto extends createZodDto(
   UpdateAnalysisPromptVersionSchema,
 ) {}
-export class PublishAnalysisPromptVersionDto extends createZodDto(
-  PublishAnalysisPromptVersionSchema,
-) {}
 export class PromptSimulationRequestDto extends createZodDto(PromptSimulationRequestSchema) {}
 export class PromptSimulationResponseDto extends createZodDto(PromptSimulationResponseSchema) {}
 export class PromptTestQuestionsResponseDto extends createZodDto(

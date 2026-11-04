@@ -23,8 +23,8 @@ import {
   AdminEducationOrganizationsListResponseDto,
   AdminUpdateEducationOrganizationDto,
 } from '../dto/tests-links.dto';
-import { TestsPublicLinkService } from '../public-links/public-link.service';
 import { ApiErrorResponses } from '../../common/decorators/api-error-responses.decorator';
+import { TestsEducationOrganizationService } from './education-organization.service';
 
 @ApiTags('tests')
 @ApiBearerAuth()
@@ -32,13 +32,13 @@ import { ApiErrorResponses } from '../../common/decorators/api-error-responses.d
 @UseGuards(AtGuard, AdminGuard)
 @Controller('admin/tests')
 export class TestsAdminEducationOrganizationsController {
-  constructor(private readonly testsPublicLinkService: TestsPublicLinkService) {}
+  constructor(private readonly educationOrganizationService: TestsEducationOrganizationService) {}
 
   @Get('education-organizations')
   @ApiOperation({ summary: 'List educational organizations for link binding' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminEducationOrganizationsListResponseDto })
   listEducationOrganizations(@Query() query: AdminEducationOrganizationsListQueryDto) {
-    return this.testsPublicLinkService.listEducationOrganizations(query);
+    return this.educationOrganizationService.listEducationOrganizations(query);
   }
 
   @Post('education-organizations')
@@ -48,7 +48,7 @@ export class TestsAdminEducationOrganizationsController {
     @GetCurrentUserId() userId: number,
     @Body() dto: AdminCreateEducationOrganizationDto,
   ) {
-    return this.testsPublicLinkService.createEducationOrganization(userId, dto);
+    return this.educationOrganizationService.createEducationOrganization(userId, dto);
   }
 
   @Patch('education-organizations/:organizationId')
@@ -59,13 +59,17 @@ export class TestsAdminEducationOrganizationsController {
     @Param('organizationId', ParseIntPipe) organizationId: number,
     @Body() dto: AdminUpdateEducationOrganizationDto,
   ) {
-    return this.testsPublicLinkService.updateEducationOrganization(userId, organizationId, dto);
+    return this.educationOrganizationService.updateEducationOrganization(
+      userId,
+      organizationId,
+      dto,
+    );
   }
 
   @Get('education-organizations/:organizationId/history')
   @ApiOperation({ summary: 'List recorded changes of an educational organization' })
   @ApiResponse({ status: HttpStatus.OK, type: AuditHistoryResponseDto })
   getEducationOrganizationHistory(@Param('organizationId', ParseIntPipe) organizationId: number) {
-    return this.testsPublicLinkService.getEducationOrganizationHistory(organizationId);
+    return this.educationOrganizationService.getEducationOrganizationHistory(organizationId);
   }
 }

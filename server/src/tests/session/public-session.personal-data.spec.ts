@@ -66,7 +66,6 @@ describe('TestsPublicSessionService personal-data snapshots', () => {
         getAccessiblePublicLinkByCode: getAccessiblePublicLinkByCodeMock,
       } as unknown as TestsPublicLinkService,
       {} as TestsAnalysisService,
-      privacyPolicySettingsServiceMock,
       {} as ProfessionAtlasSettingsService,
       {} as ProfOrientationAtlasService,
       new TestsPublicAttemptAllocationService(

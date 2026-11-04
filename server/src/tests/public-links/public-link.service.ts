@@ -10,13 +10,7 @@ import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-
 import { collectAuditChanges } from '../../audit/audit-changes';
 import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma.service';
-import type {
-  AdminCreateEducationOrganizationDto,
-  AdminCreatePublicLinkInput,
-  AdminEducationOrganizationsListQueryDto,
-  AdminUpdateEducationOrganizationDto,
-  AdminUpdatePublicLinkDto,
-} from '../dto/tests-links.dto';
+import type { AdminCreatePublicLinkInput, AdminUpdatePublicLinkDto } from '../dto/tests-links.dto';
 import type { PublicLinkAccessResponseDto } from '../dto/tests-public.dto';
 import { runSerializableTransaction } from '../../common/prisma-transaction.utils';
 import { parseDateOrNull, toOptionalIsoString } from '../shared/date.utils';
@@ -778,29 +772,5 @@ export class TestsPublicLinkService {
       consentText: link.consentTextSnapshot,
       personalData: toPublicPersonalData(link),
     };
-  }
-
-  listEducationOrganizations(query: AdminEducationOrganizationsListQueryDto = {}) {
-    return this.educationOrganizationService.listEducationOrganizations(query);
-  }
-
-  createEducationOrganization(userId: number, dto: AdminCreateEducationOrganizationDto) {
-    return this.educationOrganizationService.createEducationOrganization(userId, dto);
-  }
-
-  updateEducationOrganization(
-    userId: number,
-    organizationId: number,
-    dto: AdminUpdateEducationOrganizationDto,
-  ) {
-    return this.educationOrganizationService.updateEducationOrganization(
-      userId,
-      organizationId,
-      dto,
-    );
-  }
-
-  getEducationOrganizationHistory(organizationId: number) {
-    return this.educationOrganizationService.getEducationOrganizationHistory(organizationId);
   }
 }

@@ -37,8 +37,6 @@ export const PublicAnalysisLlmStatusSchema = z
   .enum(['not_requested', 'pending', 'ready', 'failed'])
   .describe('Статус асинхронного LLM-обогащения для двухфазного анализа');
 
-export type PublicAnalysisLlmStatus = z.infer<typeof PublicAnalysisLlmStatusSchema>;
-
 export const PublicProfOrientationEnrichmentSchema = z
   .object({
     professorSummary: z.string().nullable(),

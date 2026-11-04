@@ -96,8 +96,6 @@ export const adminBadgeClassNames = {
     'border-admin-info-border bg-admin-info-soft text-admin-info-foreground hover:bg-admin-info-soft',
 } as const;
 
-export type AdminBadgeTone = keyof typeof adminBadgeClassNames;
-
 export const adminClassNames = {
   shell: {
     root: 'admin-surface min-h-screen w-full bg-[linear-gradient(180deg,hsl(var(--admin-canvas))_0%,hsl(var(--admin-canvas-soft))_48%,hsl(var(--admin-canvas-warm))_100%)] text-admin-foreground',

@@ -1,7 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 
 import type { AuditService } from '../../audit/audit.service';
-import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
@@ -82,7 +81,6 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
-      {} as PrivacyPolicySettingsService,
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
@@ -136,7 +134,6 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
-      {} as PrivacyPolicySettingsService,
       {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
@@ -201,7 +198,6 @@ describe('TestsPublicSessionService read paths', () => {
       prismaMock,
       {} as TestsPublicLinkService,
       analysisService,
-      {} as PrivacyPolicySettingsService,
       // Read paths never change settings, so the audit trail is never written here.
       new ProfessionAtlasSettingsService(prismaMock, {} as AuditService),
       {
