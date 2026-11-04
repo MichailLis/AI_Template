@@ -27,7 +27,7 @@ interface AnalyticsAttemptsTabProps {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-type AttemptsStatusFilter = '' | 'COMPLETED' | 'IN_PROGRESS' | 'EXPIRED' | 'ABANDONED';
+type AttemptsStatusFilter = '' | 'COMPLETED' | 'IN_PROGRESS' | 'EXPIRED';
 type AttemptsSortBy = 'startedAt' | 'attemptNumber' | 'studentName';
 type AttemptsSortOrder = 'asc' | 'desc';
 
@@ -170,7 +170,6 @@ export function AnalyticsAttemptsTab({
               <option value="COMPLETED">Пройдено</option>
               <option value="IN_PROGRESS">В процессе</option>
               <option value="EXPIRED">Истекло</option>
-              <option value="ABANDONED">Брошено</option>
             </AdminSelectField>
             <Button
               type="button"
