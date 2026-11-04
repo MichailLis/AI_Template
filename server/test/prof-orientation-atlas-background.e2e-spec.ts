@@ -10,6 +10,7 @@ import { AppModule } from '../src/app.module';
 import { ProfessionAtlasClientService } from '../src/app-settings/profession-atlas-client.service';
 import { ProfessionAtlasSettingsService } from '../src/app-settings/profession-atlas-settings.service';
 import { PrismaService } from '../src/prisma.service';
+import { PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE } from '../src/tests/prof-orientation-v3-plus/fixture';
 import { setupApp } from '../src/setup-app';
 import { createE2eUser } from './helpers/create-e2e-user';
 
@@ -51,6 +52,8 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
   const password = 'Password123';
   const runId = randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase();
   const topicIds: number[] = [];
+  // The import creates the built-in prompt when it is missing; remove only what this suite created.
+  let promptExistedBefore = true;
 
   const aiClient = {
     fetchModels: jest.fn().mockRejectedValue(new Error('no catalog')),
@@ -199,6 +202,12 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
     setupApp(app);
     await app.init();
     prisma = app.get(PrismaService);
+    promptExistedBefore = Boolean(
+      await prisma.analysisPrompt.findFirst({
+        where: { title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE },
+        select: { id: true },
+      }),
+    );
     await createE2eUser(prisma, { email: adminEmail, password, name: 'Atlas BG', role: 'ADMIN' });
     const signin = await request(app.getHttpServer())
       .post('/auth/signin')
@@ -210,6 +219,11 @@ describe('Prof-orientation atlas in the background task (e2e)', () => {
   afterAll(async () => {
     await prisma.testPublicLink.deleteMany({ where: { shortCode: { startsWith: `A${runId}` } } });
     await prisma.testTopic.deleteMany({ where: { id: { in: topicIds } } });
+    if (!promptExistedBefore) {
+      await prisma.analysisPrompt.deleteMany({
+        where: { title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE },
+      });
+    }
     await prisma.user.deleteMany({ where: { email: adminEmail } });
     await app.close();
   });
