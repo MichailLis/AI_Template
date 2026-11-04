@@ -222,6 +222,40 @@ describe('ProfOrientationAtlasService', () => {
     });
     expect(summary.atlas?.institutions).toHaveLength(2);
   });
+  it('looks the selected professions up at once and keeps their order', async () => {
+    const titles: Record<string, string> = {
+      'engineer-designer': 'Инженер-конструктор',
+      '3d-print-engineer': 'Инженер по 3D-печати',
+    };
+    let inFlight = 0;
+    let maxInFlight = 0;
+    atlasClient.findProfessions.mockImplementation(
+      async (_apiUrl: string, params: { q?: string }) => {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        // Первая профессия отвечает позже второй: порядок карточек от этого зависеть не должен.
+        await new Promise((resolve) =>
+          setTimeout(resolve, params.q === 'Инженер-конструктор' ? 5 : 1),
+        );
+        inFlight -= 1;
+        const slug = params.q === 'Инженер-конструктор' ? 'engineer-designer' : '3d-print-engineer';
+        return [{ title: params.q, slug }];
+      },
+    );
+    atlasClient.getProfession.mockImplementation((_apiUrl: string, slug: string) =>
+      Promise.resolve(createProfession(titles[slug], slug)),
+    );
+    atlasClient.findEnterprises.mockResolvedValue([]);
+    atlasClient.findEvents.mockResolvedValue([]);
+
+    const summary = await createService().enrichSummary(createSummary());
+
+    expect(maxInFlight).toBe(2);
+    expect(summary.atlas?.professions.map((profession) => profession.requestedTitle)).toEqual([
+      'Инженер-конструктор',
+      'Инженер по 3D-печати',
+    ]);
+  });
   it('adds relevant institution search matches instead of only first direct programs', async () => {
     const primaryProfession = {
       ...createProfession('Инженер-конструктор', 'engineer-designer'),

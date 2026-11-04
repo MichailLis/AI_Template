@@ -76,6 +76,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
+      {} as ProfOrientationAtlasService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -129,6 +130,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
+      {} as ProfOrientationAtlasService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -193,6 +195,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
+      {} as ProfOrientationAtlasService,
     );
     const service = new TestsPublicSessionService(
       prismaMock,

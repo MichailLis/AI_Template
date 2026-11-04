@@ -25,6 +25,8 @@ import {
 } from '../../ai-provider/ai-provider.client';
 import { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import { PrismaService } from '../../prisma.service';
+import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import { shouldRefreshProfOrientationAtlasSummary } from '../prof-orientation-v3-plus/atlas.logic';
 import {
   ProfOrientationV3PlusEnrichmentJsonSchema,
   parseProfOrientationV3PlusEnrichment,
@@ -35,6 +37,7 @@ import {
   scoreProfOrientationV3Plus,
 } from '../prof-orientation-v3-plus/scoring';
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
+import type { ProfOrientationSummary } from '../prof-orientation-v3-plus/types';
 import {
   mapAnswerToPromptPayload,
   mapQuestionToPromptPayload,
@@ -174,6 +177,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     private readonly config: ConfigService,
     private readonly aiProviderConfig: AiProviderConfigService,
     private readonly aiProviderClient: AiProviderClientService,
+    private readonly profOrientationAtlas: ProfOrientationAtlasService,
   ) {}
 
   private buildAttemptAnalysisPrompt(input: {
@@ -635,6 +639,26 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     }
   }
 
+  /**
+   * Атлас идёт до LLM: экран результата опрашивает сервер, пока `llm.status` pending, поэтому к
+   * готовому AI-тексту атлас уже записан. Это же место и повторов: после перезапуска сервера
+   * задачу берёт восстановление, и свежий атлас второй раз не запрашивается. Сбой атласа не
+   * отменяет AI-анализ; `GET /result` повторит атлас после паузы, когда LLM уже не pending.
+   */
+  private async enrichProfOrientationAtlas(analysisId: number, summary: ProfOrientationSummary) {
+    if (!shouldRefreshProfOrientationAtlasSummary(summary)) {
+      return;
+    }
+
+    try {
+      await this.profOrientationAtlas.saveEnrichedAnalysis(analysisId, summary);
+    } catch (error) {
+      this.logger.warn(
+        `Atlas enrichment of analysis ${analysisId} failed: ${this.toErrorMessage(error)}`,
+      );
+    }
+  }
+
   private async runProfOrientationEnrichment(
     attempt: ProfOrientationAttemptAnalysisRecord,
     promptVersion: AnalysisPromptVersionRecord,
@@ -645,6 +669,8 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     if (!analysisId || !isProfOrientationV3PlusSummary(currentSummary)) {
       return;
     }
+
+    await this.enrichProfOrientationAtlas(analysisId, currentSummary);
 
     try {
       const connection = await this.aiProviderConfig.getConnection();

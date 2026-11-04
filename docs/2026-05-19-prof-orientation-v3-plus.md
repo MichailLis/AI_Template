@@ -67,6 +67,17 @@ If no prompt is attached, provider mode is `ALGORITHM`. If LLM enrichment is
 requested, provider mode is `ALGORITHM_LLM`; the deterministic result still
 remains readable if the enrichment fails.
 
+The Profession Atlas block lives under `summary.atlas`. With LLM enrichment the
+same background task fetches it right before the LLM call, so `finishSession`
+does not wait for the Atlas, and the result screen (which polls while
+`llm.status` is `pending`) gets the Atlas together with the AI text. Without
+LLM there is no background task and nothing polls the result, so
+`finishSession` fetches the Atlas synchronously. `GET /result` only retries the
+Atlas (after the failure pause or a version change) when `llm.status` is not
+`pending`. The Atlas and the LLM each write only their own key under a row lock
+(`mergeAnalysisSummaryKey`, `SELECT … FOR UPDATE`), so neither overwrites the
+other.
+
 ## LLM Enrichment
 
 The built-in prompt is methodology-specific. It asks the model to explain the

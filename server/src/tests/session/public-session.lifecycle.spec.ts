@@ -433,7 +433,7 @@ describe('TestsPublicSessionService lifecycle', () => {
     });
   });
 
-  it('finishSession stores ready prof-orientation algorithm analysis before LLM enrichment', async () => {
+  it('finishSession stores ready prof-orientation algorithm analysis and leaves the atlas to the background task', async () => {
     jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
       id: 5,
       status: 'IN_PROGRESS',
@@ -457,23 +457,12 @@ describe('TestsPublicSessionService lifecycle', () => {
       primaryDirection: { id: 'A1' },
       llm: { status: 'pending' },
     };
-    const enrichedSummary = {
-      ...scoredSummary,
-      atlas: {
-        status: 'ready',
-        professions: [],
-        enterprises: [],
-        events: [],
-        institutions: [],
-      },
-    };
     upsertProfOrientationAnalysisMock.mockResolvedValue({
       id: 77,
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
       summary: scoredSummary,
     });
-    saveEnrichedAnalysisMock.mockResolvedValue(enrichedSummary);
 
     const result = await service.finishSession('session-token');
 
@@ -483,17 +472,92 @@ describe('TestsPublicSessionService lifecycle', () => {
     });
     expect(upsertPendingLlmAnalysisMock).not.toHaveBeenCalled();
     expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
-    expect(saveEnrichedAnalysisMock).toHaveBeenCalledWith(77, scoredSummary);
+    // «Завершить» не ждёт Атлас: его получит фоновая задача анализа перед LLM.
+    expect(saveEnrichedAnalysisMock).not.toHaveBeenCalled();
     expect(enqueueAttemptAnalysisMock).toHaveBeenCalledWith(5);
     expect(result.analysis).toMatchObject({
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
-      summary: {
-        atlas: {
-          status: 'ready',
-        },
-      },
+      summary: scoredSummary,
     });
+  });
+
+  it('finishSession fetches the atlas right away when no LLM is requested', async () => {
+    jest.mocked(getSessionAttemptByTokenOrThrow).mockResolvedValue({
+      id: 5,
+      status: 'IN_PROGRESS',
+      finishedAt: null,
+      expiresAt: null,
+      analysis: null,
+      topicVersion: {
+        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
+        scoringConfig: { version: '3.0' },
+        analysisPromptVersionId: null,
+        questions: [{ id: 100 }],
+      },
+      answers: [],
+    } as never);
+    txMock.testStudentAttempt.update.mockResolvedValue({
+      id: 5,
+      finishedAt: new Date('2026-05-01T10:00:00.000Z'),
+    });
+    const scoredSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      primaryDirection: { id: 'A1' },
+      llm: { status: 'not_requested' },
+    };
+    const enrichedSummary = {
+      ...scoredSummary,
+      atlas: { status: 'ready', professions: [], enterprises: [], events: [], institutions: [] },
+    };
+    upsertProfOrientationAnalysisMock.mockResolvedValue({
+      id: 77,
+      providerMode: 'ALGORITHM',
+      status: 'READY',
+      summary: scoredSummary,
+    });
+    saveEnrichedAnalysisMock.mockResolvedValue(enrichedSummary);
+
+    const result = await service.finishSession('session-token');
+
+    // Фоновой задачи нет, а экран результата такой анализ не опрашивает: атлас остаётся в finish.
+    expect(saveEnrichedAnalysisMock).toHaveBeenCalledWith(77, scoredSummary);
+    expect(enqueueAttemptAnalysisMock).not.toHaveBeenCalled();
+    expect(result.analysis).toMatchObject({
+      providerMode: 'ALGORITHM',
+      summary: { atlas: { status: 'ready' } },
+    });
+  });
+
+  it('getSessionResult leaves the atlas to the background task while the llm is pending', async () => {
+    const pendingSummary = {
+      resultKind: 'prof_orientation_v3_plus',
+      profile: { type: 'single_profile' },
+      primaryDirection: { professions: [{ code: '201524', title: 'Инженер-конструктор' }] },
+      secondaryDirection: null,
+      topDirections: [],
+      llm: { status: 'pending' },
+    };
+    const analysis = {
+      id: 77,
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: pendingSummary,
+    };
+    jest.mocked(getResultAttemptByTokenOrThrow).mockResolvedValue({
+      id: 7,
+      status: 'COMPLETED',
+      expiresAt: null,
+      finishedAt: new Date('2026-06-15T22:55:29.093Z'),
+      publicLink: { publicTemplate: 'POLUS', publicBranding: null },
+      analysis,
+    } as never);
+    toAttemptStatusMock.mockReturnValue('COMPLETED');
+
+    const result = await service.getSessionResult('session-token');
+
+    expect(saveEnrichedAnalysisMock).not.toHaveBeenCalled();
+    expect(result.analysis).toMatchObject({ summary: pendingSummary });
   });
 
   it('getSessionResult refreshes stale prof-orientation atlas before returning analysis', async () => {
