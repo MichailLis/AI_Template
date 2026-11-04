@@ -439,7 +439,6 @@ model AnalysisPromptVersion {
   model         String
   temperature   Float                       @default(0.2)
   prompt        String
-  outputSchema  Json?
   publishedAt   DateTime?
   createdAt     DateTime                    @default(now())
   updatedAt     DateTime                    @updatedAt

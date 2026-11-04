@@ -337,7 +337,6 @@ describe('Tests Archive/Restore (e2e)', () => {
             model: 'google/gemini-2.0-flash-exp:free',
             temperature: 0.2,
             prompt: 'Test prompt {{answers}}',
-            outputSchema: {},
             publishedAt: new Date(),
           },
         },
