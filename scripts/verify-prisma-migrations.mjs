@@ -154,7 +154,7 @@ const createTemporaryShadowDatabase = async (databaseUrl) => {
   };
 };
 
-const runPrismaDiff = (shadowDatabaseUrl) => {
+const runPrismaDiff = (databaseUrl, shadowDatabaseUrl) => {
   const npxExecutable = process.platform === 'win32' ? process.execPath : 'npx';
   const npxArguments =
     process.platform === 'win32'
@@ -178,7 +178,8 @@ const runPrismaDiff = (shadowDatabaseUrl) => {
       encoding: 'utf8',
       env: {
         ...process.env,
-        DATABASE_URL: shadowDatabaseUrl,
+        // Prisma 7.10.1+ refuses P3025 when shadow == main URL. Main stays distinct; the diff only resets the shadow.
+        DATABASE_URL: databaseUrl,
         SHADOW_DATABASE_URL: shadowDatabaseUrl,
       },
     },
@@ -225,7 +226,7 @@ try {
     ? { shadowDatabaseUrl: explicitShadowDatabaseUrl, cleanup: async () => undefined }
     : await createTemporaryShadowDatabase(databaseUrl);
 
-  runPrismaDiff(temporaryShadowDatabase.shadowDatabaseUrl);
+  runPrismaDiff(databaseUrl, temporaryShadowDatabase.shadowDatabaseUrl);
 } catch (error) {
   verificationError = error;
 } finally {

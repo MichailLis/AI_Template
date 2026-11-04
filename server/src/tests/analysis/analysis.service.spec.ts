@@ -4,6 +4,7 @@ import { TestAnalysisResultJsonSchema } from '../../common/analysis/test-analysi
 import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
 import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import type { PrismaService } from '../../prisma.service';
+import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from '../prof-orientation-v3-plus/fixture';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
@@ -128,6 +129,7 @@ describe('TestsAnalysisService', () => {
     getConnection: jest.Mock;
   };
   let aiProviderClientMock: AiProviderClientMock;
+  let atlasMock: { saveEnrichedAnalysis: jest.Mock };
 
   beforeEach(() => {
     prismaMock = {
@@ -182,11 +184,14 @@ describe('TestsAnalysisService', () => {
       resolveTimeoutMs: jest.fn(() => 120_000),
     };
 
+    atlasMock = { saveEnrichedAnalysis: jest.fn().mockResolvedValue({}) };
+
     service = new TestsAnalysisService(
       prismaMock as unknown as PrismaService,
       configMock as unknown as ConfigService,
       aiProviderConfigMock as unknown as AiProviderConfigService,
       aiProviderClientMock as unknown as AiProviderClientService,
+      atlasMock as unknown as ProfOrientationAtlasService,
     );
   });
 
