@@ -156,6 +156,8 @@ browser flows.
 
 `verify:template` also enforces architecture consistency via `template/features.manifest.json`.
 
+Dependency updates: `.github/dependabot.yml` opens weekly grouped minor/patch PRs for the root, `client/` and `server/` npm manifests and for GitHub Actions; major versions are ignored and go through `template/stack.json` and `npm run verify:stack`. Security updates come from Dependabot only after the owner enables them in Settings -> Code security (not set in the repo).
+
 Prisma migration note:
 
 - If `server/prisma/schema.prisma` changed, the branch must include the matching checked-in migration under `server/prisma/migrations`. `AI_GUIDE.md` ("Phase 1: Data Modeling") has the command that generates it.
