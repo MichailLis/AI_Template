@@ -20,15 +20,11 @@ export type TestsAdminAttemptsControllerExportPublicLinkAttemptsParams = {
    * @maximum 50
    */
   limit?: number;
-  /**
-   * @maxLength 100
-   */
+  /** @maxLength 100 */
   search?: string;
   status?: TestsAdminAttemptsControllerExportPublicLinkAttemptsStatus;
   sortBy?: TestsAdminAttemptsControllerExportPublicLinkAttemptsSortBy;
   sortOrder?: TestsAdminAttemptsControllerExportPublicLinkAttemptsSortOrder;
-  /**
-   * @maxLength 64
-   */
+  /** @maxLength 64 */
   timeZone?: string;
 };
