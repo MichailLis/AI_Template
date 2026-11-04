@@ -47,8 +47,6 @@ const SETTINGS_TABS: Array<{ value: AdminSettingsTab; label: string }> = [
 
 const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
 const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
-const getApiErrorMessage = (error: unknown) =>
-  getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
 
 function PrivacyPolicySettingsWorkspaceCard() {
   const queryClient = useQueryClient();
@@ -59,7 +57,7 @@ function PrivacyPolicySettingsWorkspaceCard() {
   const updatePrivacyPolicyMutation = useAdminSettingsControllerUpdatePrivacyPolicy({
     mutation: {
       onError: (error) => {
-        toast.error(getApiErrorMessage(error));
+        toast.error(getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
       },
       onSuccess: async () => {
         form.resetForm();
@@ -145,7 +143,7 @@ export function AdminSettingsWorkspace() {
   const updateProfessionAtlasUrlMutation = useAdminSettingsControllerUpdateProfessionAtlasUrl({
     mutation: {
       onError: (error) => {
-        toast.error(getApiErrorMessage(error));
+        toast.error(getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
       },
       onSuccess: async () => {
         setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' });

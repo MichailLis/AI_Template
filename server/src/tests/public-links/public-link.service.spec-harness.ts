@@ -18,6 +18,7 @@ type PublicLinkMutationInput = {
 
 export interface PublicLinkServiceHarness {
   service: TestsPublicLinkService;
+  educationOrganizationService: TestsEducationOrganizationService;
   privacyPolicySettingsService: {
     getPlatformOperatorFullName: jest.Mock;
   };
@@ -81,7 +82,13 @@ export const createPublicLinkServiceHarness = (): PublicLinkServiceHarness => {
     auditMock as unknown as AuditService,
   );
 
-  return { service, privacyPolicySettingsService, auditMock, prismaMock };
+  return {
+    service,
+    educationOrganizationService,
+    privacyPolicySettingsService,
+    auditMock,
+    prismaMock,
+  };
 };
 
 export const createPublicLinkRecordFixture = (overrides: Record<string, unknown> = {}) => ({

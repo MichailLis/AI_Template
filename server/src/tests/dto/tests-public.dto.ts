@@ -240,7 +240,6 @@ export const PublicAnalysisLlmStatusSchema = z
 
   .describe('Статус асинхронного LLM-обогащения для двухфазного анализа');
 
-export type PublicAnalysisLlmStatus = z.infer<typeof PublicAnalysisLlmStatusSchema>;
 export const PublicSessionAnalysisProviderModeSchema = z.enum([
   'STUB',
   'LLM',

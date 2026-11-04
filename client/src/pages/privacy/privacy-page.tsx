@@ -1,14 +1,8 @@
 import { RefreshCcw } from 'lucide-react';
 
 import { usePrivacyPolicyControllerGetPrivacyPolicy } from '@/shared/api/generated/privacy-policy/privacy-policy';
+import { formatDate } from '@/shared/lib/date-format';
 import { Button } from '@/shared/ui/button';
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(value));
 
 const splitPolicyBlocks = (content: string) => {
   const blocks: string[] = [];
