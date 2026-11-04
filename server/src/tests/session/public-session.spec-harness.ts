@@ -142,7 +142,6 @@ export const createPublicSessionHarness = (): PublicSessionHarness => {
     prismaMock as unknown as PrismaService,
     publicLinkServiceMock as unknown as TestsPublicLinkService,
     analysisServiceMock as unknown as TestsAnalysisService,
-    privacyPolicySettingsServiceMock,
     {
       getProfessionAtlasUrl: getProfessionAtlasUrlMock,
     } as unknown as ProfessionAtlasSettingsService,

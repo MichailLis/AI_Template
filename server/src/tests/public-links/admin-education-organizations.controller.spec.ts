@@ -3,7 +3,7 @@ import {
   type AdminUpdateEducationOrganizationDto,
 } from '../dto/tests-links.dto';
 import { TestsAdminEducationOrganizationsController } from '../public-links/admin-education-organizations.controller';
-import type { TestsPublicLinkService } from '../public-links/public-link.service';
+import type { TestsEducationOrganizationService } from './education-organization.service';
 
 describe('TestsAdminEducationOrganizationsController', () => {
   let controller: TestsAdminEducationOrganizationsController;
@@ -21,7 +21,7 @@ describe('TestsAdminEducationOrganizationsController', () => {
     };
 
     controller = new TestsAdminEducationOrganizationsController(
-      serviceMock as unknown as TestsPublicLinkService,
+      serviceMock as unknown as TestsEducationOrganizationService,
     );
   });
 

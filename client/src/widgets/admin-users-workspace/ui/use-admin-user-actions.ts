@@ -9,8 +9,7 @@ import {
   useAdminControllerUpdateUserRole,
   useAdminControllerUpdateUserStatus,
 } from '@/shared/api/generated/admin/admin';
-
-import { getApiErrorMessage } from './admin-users-workspace.utils';
+import { getApiErrorMessage } from '@/shared/lib/api-error';
 
 import type { AdminUser, IssuedCredentials, UserRole } from './admin-users-workspace.types';
 import type { CreateUserDto, UpdateUserDto } from '@/shared/api/model';

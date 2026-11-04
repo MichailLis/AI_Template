@@ -25,10 +25,15 @@ describe('TestsPublicLinkService', () => {
     accents: { accentColor: '#00a889' },
   };
   let service: PublicLinkServiceHarness['service'];
+  let educationService: PublicLinkServiceHarness['educationOrganizationService'];
   let prismaMock: PublicLinkServiceHarness['prismaMock'];
 
   beforeEach(() => {
-    ({ service, prismaMock } = createPublicLinkServiceHarness());
+    ({
+      service,
+      educationOrganizationService: educationService,
+      prismaMock,
+    } = createPublicLinkServiceHarness());
   });
 
   afterEach(() => {
@@ -46,7 +51,9 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.createEducationOrganization(1, dto)).rejects.toThrow(BadRequestException);
+    await expect(educationService.createEducationOrganization(1, dto)).rejects.toThrow(
+      BadRequestException,
+    );
     expect(prismaMock.educationOrganization.create).not.toHaveBeenCalled();
   });
 
@@ -69,7 +76,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: 'hint',
     };
 
-    const result = await service.createEducationOrganization(1, dto);
+    const result = await educationService.createEducationOrganization(1, dto);
 
     expect(prismaMock.educationOrganization.create).toHaveBeenCalledWith({
       data: {
@@ -104,7 +111,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: null,
     };
 
-    await expect(service.updateEducationOrganization(1, 404, dto)).rejects.toThrow(
+    await expect(educationService.updateEducationOrganization(1, 404, dto)).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -136,7 +143,7 @@ describe('TestsPublicLinkService', () => {
       groupValidationHint: '  Укажите формат ИС-21  ',
     };
 
-    await service.updateEducationOrganization(1, 3, dto);
+    await educationService.updateEducationOrganization(1, 3, dto);
 
     expect(prismaMock.educationOrganization.update).toHaveBeenCalledWith({
       where: { id: 3 },

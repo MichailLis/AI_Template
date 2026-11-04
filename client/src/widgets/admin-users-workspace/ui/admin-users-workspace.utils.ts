@@ -1,4 +1,3 @@
-import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
 import { formatDateTime } from '@/shared/lib/date-format';
 
 interface UsersQueryParamsInput {
@@ -12,8 +11,6 @@ interface UsersQueryParamsInput {
 }
 
 export { formatDateTime };
-
-export const getApiErrorMessage = (error: unknown) => getSharedApiErrorMessage(error);
 
 export const buildUsersQueryParams = ({
   page,

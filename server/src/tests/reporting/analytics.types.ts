@@ -1,7 +1,6 @@
 import type {
   ProfOrientationDirectionId,
   ProfOrientationProfileType,
-  ProfOrientationSummary,
 } from '../prof-orientation-v3-plus/types';
 
 export type AnalyticsAttemptRecord = {
@@ -81,5 +80,3 @@ export type V3AnalyticsSections = {
   confidence: ConfidenceSection;
   flags: FlagCountItem[];
 };
-
-export type V3SummaryLike = ProfOrientationSummary;

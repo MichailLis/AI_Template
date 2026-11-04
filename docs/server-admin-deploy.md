@@ -178,8 +178,10 @@ successfully applied`), `sh scripts/db-counts.sh | diff counts-before.txt -`.
 - `pull` и `up -d` не удаляют PostgreSQL volume.
 - Данные удаляются только при `docker compose down -v`, ручном удалении volume или смене
   `POSTGRES_VOLUME_NAME` на пустой volume.
-- Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy`: только
-  добавляет таблицы и колонки из `server/prisma/migrations`.
+- Production backend при `RUN_DB_MIGRATIONS=true` выполняет `prisma migrate deploy` и применяет
+  все новые миграции из `server/prisma/migrations`. Они не только добавляют объекты: часть удаляет
+  колонки и индексы или меняет данные; что делает каждая, смотрите в её `migration.sql`. Копия базы
+  перед обновлением обязательна.
 - Если серверная база была создана через `prisma db push` и не содержит таблицу
   `_prisma_migrations`, релиз со schema change может остановиться с `P3005`.
 - Не считайте релиз безмиграционным по старой заметке: если менялся
