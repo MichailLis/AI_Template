@@ -15,6 +15,7 @@ import type {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from '../dto/tests.dto';
+import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
 import {
   buildProfOrientationV3PlusQuestionPayloads,
   PROF_ORIENTATION_V3_PLUS_CONFIG,
@@ -216,6 +217,7 @@ export class TestsService {
         model: PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
         temperature: 0.2,
         prompt: PROF_ORIENTATION_V3_PLUS_PROMPT,
+        outputSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
         publishedAt: new Date(),
       },
       select: { id: true },
