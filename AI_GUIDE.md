@@ -396,6 +396,13 @@ not there.
    seconds, so a token from the revocation second still passes. Non-admin routes check only the
    global session epoch (`session-epoch.ts`), so a revoked non-admin keeps a valid access token
    for up to 15 minutes; only the refresh token stops working at once.
+9. **Admin route guards.** Every `/admin/*` controller carries `@UseGuards(AtGuard, AdminGuard)`,
+   with two exceptions. `GET /admin/backups/operation` has only `AtGuard`: it must answer during a
+   database swap, and its service checks the role when the database is available.
+   `GET /admin/backups/download/:token` has no guard: the one-time link in the URL is the
+   credential, and without a valid link it answers 404 `BACKUP_DOWNLOAD_LINK_EXPIRED`.
+   `admin-guards.e2e-spec.ts` checks that every other `/admin/*` route answers 401 without a
+   token and 403 for a USER.
 
 ## Local Verification Entry Points
 
