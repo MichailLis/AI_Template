@@ -10,10 +10,12 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { parseAnalysisResult } from '@/entities/public-test';
 import { Badge } from '@/shared/ui/badge';
 
-import type { AnalysisPayload, AnalysisResult } from '@/entities/public-test';
+import type {
+  PublicAiAnalysisSummary,
+  PublicSessionResultResponseDtoAnalysis,
+} from '@/shared/api/model';
 import type { ReactNode } from 'react';
 
 const levelLabels = {
@@ -92,7 +94,7 @@ function ResultSection({
   );
 }
 
-function SkillTile({ item }: { item: AnalysisResult['skillsLevel']['items'][number] }) {
+function SkillTile({ item }: { item: PublicAiAnalysisSummary['skillsLevel']['items'][number] }) {
   const score = typeof item.score === 'number' ? Math.max(0, Math.min(100, item.score)) : null;
 
   return (
@@ -127,7 +129,7 @@ function IntroductionSection({ introduction }: { introduction: string }) {
   );
 }
 
-function SkillsSection({ skillsLevel }: { skillsLevel: AnalysisResult['skillsLevel'] }) {
+function SkillsSection({ skillsLevel }: { skillsLevel: PublicAiAnalysisSummary['skillsLevel'] }) {
   return (
     <ResultSection icon={BrainCircuit} title={skillsLevel.title}>
       <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
@@ -142,7 +144,11 @@ function SkillsSection({ skillsLevel }: { skillsLevel: AnalysisResult['skillsLev
   );
 }
 
-function ThinkingSection({ thinkingType }: { thinkingType: AnalysisResult['thinkingType'] }) {
+function ThinkingSection({
+  thinkingType,
+}: {
+  thinkingType: PublicAiAnalysisSummary['thinkingType'];
+}) {
   return (
     <ResultSection icon={Lightbulb} title={thinkingType.title}>
       <div className="public-thinking-panel rounded-2xl p-4">
@@ -165,7 +171,7 @@ function ThinkingSection({ thinkingType }: { thinkingType: AnalysisResult['think
 function TraitsSection({
   personalityTraits,
 }: {
-  personalityTraits: AnalysisResult['personalityTraits'];
+  personalityTraits: PublicAiAnalysisSummary['personalityTraits'];
 }) {
   return (
     <ResultSection icon={UserRound} title={personalityTraits.title}>
@@ -212,7 +218,7 @@ function RecommendationGroup({ title, items }: { title: string; items: string[] 
 function CareerSection({
   careerDevelopment,
 }: {
-  careerDevelopment: AnalysisResult['careerDevelopment'];
+  careerDevelopment: PublicAiAnalysisSummary['careerDevelopment'];
 }) {
   return (
     <ResultSection icon={BriefcaseBusiness} title="Карьера и профессиональное развитие">
@@ -234,8 +240,12 @@ function CareerSection({
   );
 }
 
-export function PublicTestResultAnalysisView({ analysis }: { analysis: AnalysisPayload | null }) {
-  const parsed = parseAnalysisResult(analysis?.summary ?? null);
+export function PublicTestResultAnalysisView({
+  analysis,
+}: {
+  analysis: PublicSessionResultResponseDtoAnalysis | null;
+}) {
+  const parsed = analysis?.summary.resultKind === 'ai_analysis' ? analysis.summary : null;
 
   if (!analysis || analysis.status === 'PENDING') {
     return (

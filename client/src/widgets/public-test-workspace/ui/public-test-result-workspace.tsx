@@ -2,7 +2,7 @@ import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { getProfOrientationLlmStatus, parseAnalysisResult } from '@/entities/public-test';
+import { getProfOrientationLlmStatus } from '@/entities/public-test';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
@@ -11,8 +11,7 @@ import { PublicTestAnalysisProcessingScreen } from './public-test-analysis-proce
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
 import { PublicThemeLayout } from './public-theme-layout';
 
-import type { AnalysisResult } from '@/entities/public-test';
-import type { PublicSessionResultResponseDto } from '@/shared/api/model';
+import type { PublicAiAnalysisSummary, PublicSessionResultResponseDto } from '@/shared/api/model';
 import type { LucideIcon } from 'lucide-react';
 
 const resultPollIntervalMs = 3_000;
@@ -89,12 +88,12 @@ const getProcessingStartedAt = (
   return new Date(finishedAtMs ?? fallbackStartedAtMs).toISOString();
 };
 
-const getTopSkill = (analysis: AnalysisResult) =>
+const getTopSkill = (analysis: PublicAiAnalysisSummary) =>
   analysis.skillsLevel.items
     .filter((item) => typeof item.score === 'number')
     .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))[0] ?? null;
 
-const getHeroSignals = (analysis: AnalysisResult): HeroSignal[] => {
+const getHeroSignals = (analysis: PublicAiAnalysisSummary): HeroSignal[] => {
   const topSkill = getTopSkill(analysis);
   const thinkingStrengths = analysis.thinkingType.strengths.slice(0, 2).join(' · ');
   const topSkillScore =
@@ -285,7 +284,8 @@ export function PublicTestResultWorkspace() {
     return <PolusPublicResult result={result} />;
   }
 
-  const parsedAnalysis = parseAnalysisResult(result.analysis.summary);
+  const { summary } = result.analysis;
+  const parsedAnalysis = summary.resultKind === 'ai_analysis' ? summary : null;
   const hasAnalysis = Boolean(parsedAnalysis);
   const heroSignals = parsedAnalysis ? getHeroSignals(parsedAnalysis) : [];
 

@@ -3,31 +3,40 @@ import { describe, expect, it } from 'vitest';
 
 import { PolusPublicResult } from './polus-public-result';
 
-import type { PublicSessionResultResponseDto } from '@/shared/api/model';
+import type { PublicAiAnalysisSummary, PublicSessionResultResponseDto } from '@/shared/api/model';
 
-const buildResult = (items: unknown[], type: string) =>
-  ({
-    sessionToken: 't',
-    publicTemplate: 'POLUS',
-    status: 'COMPLETED',
-    finishedAt: null,
-    professionAtlasUrl: null,
-    analysis: {
-      providerMode: 'LLM',
-      status: 'READY',
-      errorMessage: null,
-      generatedAt: null,
-      summary: {
-        skillsLevel: { title: 'Навыки', summary: 'Сводка', items },
-        thinkingType: { title: 'Мышление', type, description: 'Описание', strengths: ['Сила'] },
-        personalityTraits: {
-          title: 'Черты',
-          traits: [{ name: 'Т', description: 'Д', careerImpact: 'К' }],
-        },
-        careerDevelopment: { summary: 'Карьера', developmentRecommendations: ['Учиться'] },
+type SkillItem = PublicAiAnalysisSummary['skillsLevel']['items'][number];
+
+const buildResult = (items: SkillItem[], type: string): PublicSessionResultResponseDto => ({
+  sessionToken: 't',
+  publicTemplate: 'POLUS',
+  publicBranding: null,
+  status: 'COMPLETED',
+  finishedAt: null,
+  professionAtlasUrl: null,
+  analysis: {
+    providerMode: 'LLM',
+    status: 'READY',
+    errorMessage: null,
+    generatedAt: null,
+    summary: {
+      resultKind: 'ai_analysis',
+      introduction: 'Введение',
+      skillsLevel: { title: 'Навыки', summary: 'Сводка', items },
+      thinkingType: { title: 'Мышление', type, description: 'Описание', strengths: ['Сила'] },
+      personalityTraits: {
+        title: 'Черты',
+        traits: [{ name: 'Т', description: 'Д', careerImpact: 'К' }],
+      },
+      careerDevelopment: {
+        summary: 'Карьера',
+        recommendedDirections: [],
+        developmentRecommendations: ['Учиться'],
+        professionalNextSteps: [],
       },
     },
-  }) as unknown as PublicSessionResultResponseDto;
+  },
+});
 
 describe('PolusPublicResult with a legacy analysis', () => {
   it('shows only real skills and no invented directions', () => {
@@ -49,7 +58,7 @@ describe('PolusPublicResult with a legacy analysis', () => {
     const { container } = render(
       <PolusPublicResult
         result={buildResult(
-          [{ name: 'Логика', description: 'Решает задачи', level: 'high' }],
+          [{ name: 'Логика', description: 'Решает задачи', level: 'high', score: null }],
           'Аналитик',
         )}
       />,

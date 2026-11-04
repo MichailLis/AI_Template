@@ -17,15 +17,6 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
   useTestsPublicControllerGetSessionResult: vi.fn(),
 }));
 
-vi.mock('@/entities/public-test', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('@/entities/public-test');
-
-  return {
-    ...actual,
-    parseAnalysisResult: () => null,
-  };
-});
-
 describe('PublicTestResultWorkspace', () => {
   it('shows one Atlas mini profession card from each direction for a mixed profile', () => {
     const mixedPrimaryDirection = {
@@ -48,10 +39,6 @@ describe('PublicTestResultWorkspace', () => {
             llm: { status: 'not_requested' },
             atlas: {
               status: 'ready',
-              publicUrl: 'https://atlas.example',
-              apiUrl: 'https://atlas.example/api-backend',
-              unmatchedProfessions: [],
-              duplicateProfessions: [],
               professions: [
                 {
                   source: 'primary',
@@ -155,10 +142,6 @@ describe('PublicTestResultWorkspace', () => {
           llm: { status: 'not_requested' },
           atlas: {
             status: 'ready',
-            publicUrl: 'https://atlas.example',
-            apiUrl: 'https://atlas.example/api-backend',
-            unmatchedProfessions: [],
-            duplicateProfessions: [],
             professions: [
               {
                 source: 'primary',

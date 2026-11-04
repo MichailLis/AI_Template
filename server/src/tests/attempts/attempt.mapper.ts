@@ -7,6 +7,7 @@ import type {
 } from '@prisma/client';
 
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
+import { PublicQuestionSettingsSchema } from '../dto/tests-public.dto';
 import { getAnalysisResultKind } from '../analysis/analysis-result-kind';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 import { getV3Summary } from '../reporting/analytics-summary';
@@ -14,26 +15,18 @@ import { getV3Summary } from '../reporting/analytics-summary';
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
 
-// Only the settings keys the public client reads; the rest (directionMap, weights) is scoring internals.
-const PUBLIC_QUESTION_SETTINGS_KEYS = [
-  'maxChoices',
-  'min',
-  'max',
-  'step',
-  'sliderKind',
-  'methodologySliderId',
-] as const;
-
+// Whitelist and types come from PublicQuestionSettingsSchema; a key of the wrong type is dropped
+// on its own, so one bad value does not take the question's other settings with it.
 const pickPublicQuestionSettings = (settings: Prisma.JsonValue | undefined) => {
   if (typeof settings !== 'object' || settings === null || Array.isArray(settings)) {
     return null;
   }
 
   const picked = Object.fromEntries(
-    PUBLIC_QUESTION_SETTINGS_KEYS.filter((key) => key in settings).map((key) => [
-      key,
-      settings[key],
-    ]),
+    Object.entries(PublicQuestionSettingsSchema.shape).flatMap(([key, schema]) => {
+      const value = schema.safeParse(settings[key]).data;
+      return value === undefined ? [] : [[key, value]];
+    }),
   );
 
   return Object.keys(picked).length > 0 ? picked : null;

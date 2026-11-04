@@ -3,10 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import { PublicTestResultAnalysisView } from './public-test-result-analysis-view';
 
-const readyAnalysis = {
+import type { PublicSessionResultResponseDtoAnalysis } from '@/shared/api/model';
+
+const readyAnalysis: PublicSessionResultResponseDtoAnalysis = {
   providerMode: 'LLM',
   status: 'READY',
   summary: {
+    resultKind: 'ai_analysis',
     introduction:
       'По результатам теста виден устойчивый интерес к практическим задачам и постепенному развитию профессиональных навыков.',
     skillsLevel: {
@@ -67,7 +70,7 @@ describe('PublicTestResultAnalysisView', () => {
         analysis={{
           providerMode: 'STUB',
           status: 'READY',
-          summary: null,
+          summary: { resultKind: 'none' },
           errorMessage: null,
           generatedAt: null,
         }}

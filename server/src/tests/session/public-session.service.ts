@@ -28,6 +28,7 @@ import {
 } from '../prof-orientation-v3-plus/scoring';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { getPlannedAnalysisKind } from '../analysis/analysis-result-kind';
+import { NO_PUBLIC_ANALYSIS_SUMMARY } from '../analysis/public-analysis-summary';
 import {
   validatePublicAnswerPayload,
   validatePublicAttemptAnswersForFinish,
@@ -72,7 +73,7 @@ export class TestsPublicSessionService {
       return {
         providerMode: 'STUB' as const,
         status: 'FAILED' as const,
-        summary: null,
+        summary: NO_PUBLIC_ANALYSIS_SUMMARY,
         errorMessage: 'Test session expired before completion',
         generatedAt: null,
       };

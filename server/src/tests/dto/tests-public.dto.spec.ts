@@ -245,7 +245,7 @@ describe('tests public DTO schemas', () => {
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: '2026-05-14T10:30:01.000Z',
       },
@@ -262,7 +262,7 @@ describe('tests public DTO schemas', () => {
     const result = PublicSessionAnalysisSchema.parse({
       providerMode: 'LLM',
       status: 'READY',
-      summary: null,
+      summary: { resultKind: 'none' },
       rawText: 'internal provider output',
       errorMessage: null,
       generatedAt: '2026-05-14T10:30:01.000Z',
@@ -271,31 +271,36 @@ describe('tests public DTO schemas', () => {
     expect(result).not.toHaveProperty('rawText');
   });
 
-  it('exposes public analysis summaries only as JSON objects or null', () => {
-    expect(() =>
-      PublicSessionAnalysisSchema.parse({
-        providerMode: 'LLM',
-        status: 'READY',
-        summary: {
-          introduction: 'Краткий результат',
-        },
-        errorMessage: null,
-        generatedAt: '2026-05-14T10:30:01.000Z',
-      }),
-    ).not.toThrow();
+  it('exposes the analysis summary only as one of the declared result kinds', () => {
+    const analysis = (summary: unknown) => ({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary,
+      errorMessage: null,
+      generatedAt: '2026-05-14T10:30:01.000Z',
+    });
 
-    expect(() =>
-      PublicSessionAnalysisSchema.parse({
-        providerMode: 'LLM',
-        status: 'READY',
-        summary: 'not-an-object',
-        errorMessage: null,
-        generatedAt: '2026-05-14T10:30:01.000Z',
-      }),
-    ).toThrow();
+    expect(() => PublicSessionAnalysisSchema.parse(analysis({ resultKind: 'none' }))).not.toThrow();
+    // an arbitrary object, a missing summary and a bare string no longer pass
+    expect(() => PublicSessionAnalysisSchema.parse(analysis({ introduction: 'x' }))).toThrow();
+    expect(() => PublicSessionAnalysisSchema.parse(analysis({ resultKind: 'other' }))).toThrow();
+    expect(() => PublicSessionAnalysisSchema.parse(analysis(null))).toThrow();
+    expect(() => PublicSessionAnalysisSchema.parse(analysis('not-an-object'))).toThrow();
   });
 
-  it('exposes question settings only as JSON objects or null', () => {
+  it('cuts fields the summary schema does not declare, whatever the service handed over', () => {
+    const { summary } = PublicSessionAnalysisSchema.parse({
+      providerMode: 'LLM',
+      status: 'READY',
+      summary: { resultKind: 'none', scores: { A1: 50 }, flags: ['x'] },
+      errorMessage: null,
+      generatedAt: null,
+    });
+
+    expect(summary).toEqual({ resultKind: 'none' });
+  });
+
+  it('exposes question settings only as the declared keys or null', () => {
     expect(() =>
       PublicTestQuestionSchema.parse({
         id: 1,
@@ -327,5 +332,21 @@ describe('tests public DTO schemas', () => {
         sliderBands: [],
       }),
     ).toThrow();
+  });
+
+  it('cuts scoring keys out of question settings', () => {
+    const question = PublicTestQuestionSchema.parse({
+      id: 1,
+      type: 'SLIDER',
+      title: 'Шкала интереса',
+      description: null,
+      required: true,
+      order: 1,
+      settings: { min: 1, max: 10, directionMap: { A1: 3 }, weights: { A1: 2 } },
+      options: [],
+      sliderBands: [],
+    });
+
+    expect(question.settings).toEqual({ min: 1, max: 10 });
   });
 });

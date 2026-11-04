@@ -1,13 +1,12 @@
 import { z } from 'zod';
 
 const NonEmptyStringSchema = z.string().trim().min(1);
-export const TestAnalysisSummarySchema = z.object({}).catchall(z.unknown());
-const MAX_SKILLS_COUNT = 6;
-const MAX_THINKING_STRENGTHS_COUNT = 4;
-const MAX_TRAITS_COUNT = 6;
-const MAX_RECOMMENDED_DIRECTIONS_COUNT = 6;
-const MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT = 6;
-const MAX_PROFESSIONAL_NEXT_STEPS_COUNT = 3;
+export const MAX_SKILLS_COUNT = 6;
+export const MAX_THINKING_STRENGTHS_COUNT = 4;
+export const MAX_TRAITS_COUNT = 6;
+export const MAX_RECOMMENDED_DIRECTIONS_COUNT = 6;
+export const MAX_DEVELOPMENT_RECOMMENDATIONS_COUNT = 6;
+export const MAX_PROFESSIONAL_NEXT_STEPS_COUNT = 3;
 
 export const TestAnalysisSkillLevelSchema = z.enum(['low', 'medium', 'high']);
 

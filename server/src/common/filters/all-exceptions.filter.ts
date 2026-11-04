@@ -7,13 +7,26 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ZodValidationException } from 'nestjs-zod';
+import { ZodSerializationException, ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
 
 interface HttpErrorResponse {
   message?: string | string[];
   error?: string;
 }
+
+// A response that did not match its DTO: which fields, never their values (they are student data).
+const describeSerializationFailure = (exception: unknown) => {
+  if (!(exception instanceof ZodSerializationException)) {
+    return '';
+  }
+
+  const issues = (exception.getZodError() as ZodError).issues
+    .slice(0, 10)
+    .map((issue) => `${issue.path.join('.')}: ${issue.code}`);
+
+  return ` (response does not match its schema: ${issues.join('; ')})`;
+};
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -82,7 +95,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (status >= 500) {
       // route template, not request.url: the URL carries session and backup tokens
       this.logger.error(
-        `${request.method} ${(request.route as { path?: string } | undefined)?.path ?? 'unmatched route'} -> ${status}`,
+        `${request.method} ${(request.route as { path?: string } | undefined)?.path ?? 'unmatched route'} -> ${status}${describeSerializationFailure(exception)}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
     }

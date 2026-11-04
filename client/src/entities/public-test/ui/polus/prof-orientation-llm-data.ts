@@ -1,21 +1,14 @@
 import { isRecord } from '@/shared/lib/type-guards';
 
-export interface ProfOrientationLlmState {
-  status: string;
-  analysis: unknown | null;
-  errorMessage: string | null;
-}
+import type { PublicProfOrientationEnrichment } from '@/shared/api/model';
 
 export interface ProfOrientationMethodologyEnrichment {
   professorSummary: string | null;
   summary: string;
-  confidenceComment: string;
-  methodSignals: string[];
   firstSteps: string[];
   learningPlan: string[];
   professionNotes: string[];
   nextMiniProject: string;
-  cautions: string[];
 }
 
 export const getProfOrientationLlmStatus = (summary: unknown) => {
@@ -201,68 +194,44 @@ const sanitizeMethodologyText = (text: string) => {
   ).trim();
 };
 
-const getString = (record: Record<string, unknown>, key: string) => {
-  const value = record[key];
+const toDisplayString = (value: string) => sanitizeMethodologyText(value.trim());
 
-  return typeof value === 'string' && value.trim() ? sanitizeMethodologyText(value.trim()) : null;
-};
-
-const getProfessorSummary = (record: Record<string, unknown>) => {
-  const value = getString(record, 'professorSummary');
-
-  return value && value.length >= 24 ? value : null;
-};
-
-const getStringArray = (record: Record<string, unknown>, key: string, maxItems: number) => {
-  const value = record[key];
-
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    .map((item) => sanitizeMethodologyText(item.trim()))
+const toDisplayStrings = (values: string[], maxItems: number) =>
+  values
+    .filter((item) => item.trim().length > 0)
+    .map(toDisplayString)
     .slice(0, maxItems);
-};
 
-export const parseProfOrientationMethodologyEnrichment = (
-  value: unknown,
+/**
+ * The model writes this text and the server hands it over as is, so a technical code can still
+ * slip into it. The student sees it with those codes replaced; `null` means the LLM text is not
+ * usable and the screen falls back to the card of the methodology.
+ */
+export const sanitizeProfOrientationEnrichment = (
+  analysis: PublicProfOrientationEnrichment | null,
 ): ProfOrientationMethodologyEnrichment | null => {
-  if (!isRecord(value)) {
+  if (!analysis) {
     return null;
   }
 
-  const summary = getString(value, 'summary');
-  const professorSummary = getProfessorSummary(value);
-  const confidenceComment = getString(value, 'confidenceComment');
-  const nextMiniProject = getString(value, 'nextMiniProject');
-  const methodSignals = getStringArray(value, 'methodSignals', 5);
-  const firstSteps = getStringArray(value, 'firstSteps', 5);
-  const learningPlan = getStringArray(value, 'learningPlan', 5);
-  const professionNotes = getStringArray(value, 'professionNotes', 4);
-  const cautions = getStringArray(value, 'cautions', 3);
+  const summary = toDisplayString(analysis.summary);
+  const professorSummary = analysis.professorSummary
+    ? toDisplayString(analysis.professorSummary)
+    : null;
+  const nextMiniProject = toDisplayString(analysis.nextMiniProject);
+  const firstSteps = toDisplayStrings(analysis.firstSteps, 5);
+  const learningPlan = toDisplayStrings(analysis.learningPlan, 5);
 
-  if (
-    !summary ||
-    !confidenceComment ||
-    !nextMiniProject ||
-    methodSignals.length === 0 ||
-    firstSteps.length === 0 ||
-    learningPlan.length === 0
-  ) {
+  if (!summary || !nextMiniProject || firstSteps.length === 0 || learningPlan.length === 0) {
     return null;
   }
 
   return {
-    professorSummary,
+    professorSummary: professorSummary && professorSummary.length >= 24 ? professorSummary : null,
     summary,
-    confidenceComment,
-    methodSignals,
     firstSteps,
     learningPlan,
-    professionNotes,
+    professionNotes: toDisplayStrings(analysis.professionNotes, 4),
     nextMiniProject,
-    cautions,
   };
 };

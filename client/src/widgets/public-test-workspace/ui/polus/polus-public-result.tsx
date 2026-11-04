@@ -1,17 +1,15 @@
 import { Download } from 'lucide-react';
 
-import {
-  parseAnalysisResult,
-  parseProfOrientationSummary,
-  PolusResultHero,
-  ProfOrientationResult,
-} from '@/entities/public-test';
+import { PolusResultHero, ProfOrientationResult } from '@/entities/public-test';
 
 import { PolusAtlasCard } from './polus-atlas-card';
 import { PolusPublicLayout } from './polus-public-layout';
 
-import type { AnalysisResult, ProfOrientationSummary } from '@/entities/public-test';
-import type { PublicSessionResultResponseDto } from '@/shared/api/model';
+import type {
+  PublicAiAnalysisSummary,
+  PublicProfOrientationSummary,
+  PublicSessionResultResponseDto,
+} from '@/shared/api/model';
 
 interface PolusPublicResultProps {
   result: PublicSessionResultResponseDto;
@@ -27,7 +25,7 @@ const handleExportPdf = () => {
   window.print();
 };
 
-const getTopSkills = (analysis: AnalysisResult): PolusSkill[] =>
+const getTopSkills = (analysis: PublicAiAnalysisSummary): PolusSkill[] =>
   analysis.skillsLevel.items
     .filter((item) => typeof item.score === 'number')
     .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
@@ -84,7 +82,7 @@ function PolusMatchCard({ skills }: { skills: PolusSkill[] }) {
   );
 }
 
-function PolusLegacyAnalysis({ analysis }: { analysis: AnalysisResult }) {
+function PolusLegacyAnalysis({ analysis }: { analysis: PublicAiAnalysisSummary }) {
   const skills = getTopSkills(analysis);
 
   return (
@@ -126,8 +124,8 @@ function PolusResultBody({
   parsedAnalysis,
 }: {
   result: PublicSessionResultResponseDto;
-  profOrientationSummary: ProfOrientationSummary | null;
-  parsedAnalysis: AnalysisResult | null;
+  profOrientationSummary: PublicProfOrientationSummary | null;
+  parsedAnalysis: PublicAiAnalysisSummary | null;
 }) {
   if (profOrientationSummary) {
     return (
@@ -146,8 +144,9 @@ function PolusResultBody({
 }
 
 export function PolusPublicResult({ result }: PolusPublicResultProps) {
-  const profOrientationSummary = parseProfOrientationSummary(result.analysis.summary);
-  const parsedAnalysis = parseAnalysisResult(result.analysis.summary);
+  const { summary } = result.analysis;
+  const profOrientationSummary = summary.resultKind === 'prof_orientation_v3_plus' ? summary : null;
+  const parsedAnalysis = summary.resultKind === 'ai_analysis' ? summary : null;
 
   return (
     <PolusPublicLayout view="result">

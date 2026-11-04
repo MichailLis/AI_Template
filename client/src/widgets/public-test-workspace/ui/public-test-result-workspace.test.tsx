@@ -17,22 +17,13 @@ vi.mock('@/shared/api/generated/tests-public/tests-public', () => ({
   useTestsPublicControllerGetSessionResult: vi.fn(),
 }));
 
-vi.mock('@/entities/public-test', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('@/entities/public-test');
-
-  return {
-    ...actual,
-    parseAnalysisResult: () => null,
-  };
-});
-
 describe('PublicTestResultWorkspace', () => {
   it('shows a full processing screen while analysis is still pending', () => {
     mockSessionResult({
       analysis: {
         providerMode: 'LLM',
         status: 'PENDING',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: null,
       },
@@ -51,7 +42,7 @@ describe('PublicTestResultWorkspace', () => {
       analysis: {
         providerMode: 'STUB',
         status: 'READY',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: '2026-09-13T12:00:00.000Z',
       },
@@ -104,7 +95,7 @@ describe('PublicTestResultWorkspace', () => {
       analysis: {
         providerMode: 'LLM',
         status: 'FAILED',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: 'provider error',
         generatedAt: null,
       },
@@ -134,12 +125,6 @@ describe('PublicTestResultWorkspace', () => {
                   'Тебе ближе 3D-моделирование: идеи хочется превращать в понятные цифровые модели и проверять их на практике.',
                 summary:
                   'Профиль single_profile означает, что участнику ближе перевод идеи в точную цифровую модель.',
-                confidenceComment:
-                  'Высокая уверенность связана с gap 12 и consistencyIndex 1 по цифровым шкалам.',
-                methodSignals: [
-                  'В большинстве вопросов выбран вариант, связанный с 3D-моделированием.',
-                  'Интерес к направлению A1 выше остальных.',
-                ],
                 firstSteps: [
                   'Смоделировать простой корпус устройства.',
                   'Сделать сборку из нескольких деталей.',
@@ -147,7 +132,6 @@ describe('PublicTestResultWorkspace', () => {
                 learningPlan: ['основы черчения', 'CAD/САПР'],
                 professionNotes: ['Инженер-конструктор проектирует детали и сборки.'],
                 nextMiniProject: 'Смоделируй корпус небольшого устройства и подготовь чертеж.',
-                cautions: [],
               },
             },
           }),
@@ -172,6 +156,7 @@ describe('PublicTestResultWorkspace', () => {
             type: 'single_profile',
             title: '3D-моделирование',
             meaning: 'Тебе ближе цифровое проектирование.',
+            miniProject: null,
           },
         },
         errorMessage: null,
@@ -198,7 +183,6 @@ describe('PublicTestResultWorkspace', () => {
     expect(view.queryByText(/consistencyIndex/i)).not.toBeInTheDocument();
     expect(view.queryByText(/gap/i)).not.toBeInTheDocument();
     expect(view.queryByText(/слайдер/i)).not.toBeInTheDocument();
-    expect(view.queryByText(/большинстве вопросов выбран вариант/i)).not.toBeInTheDocument();
     expect(view.getByText(/Как читать результат/i)).toBeInTheDocument();
     expect(container.textContent).not.toContain('Как это связано с профессиями');
     expect(container.textContent?.match(/Инженер-конструктор/g) ?? []).toHaveLength(1);
@@ -263,10 +247,6 @@ describe('PublicTestResultWorkspace', () => {
           llm: { status: 'not_requested' },
           atlas: {
             status: 'partial',
-            publicUrl: 'https://atlas.example',
-            apiUrl: 'https://atlas.example/api-backend',
-            unmatchedProfessions: ['Инженер по 3D-печати'],
-            duplicateProfessions: [],
             professions: [
               {
                 source: 'primary',
@@ -327,7 +307,7 @@ describe('PublicTestResultWorkspace', () => {
       analysis: {
         providerMode: 'ALGORITHM_LLM',
         status: 'READY',
-        summary: null,
+        summary: { resultKind: 'none' },
         errorMessage: null,
         generatedAt: '2026-05-12T12:00:01.000Z',
       },
@@ -372,10 +352,7 @@ describe('PublicTestResultWorkspace', () => {
         status: 'READY',
         summary: getMinimalProfOrientationSummary({
           meaning: 'Алгоритмическое описание карточки можно показать после ошибки ИИ.',
-          llm: {
-            status: 'failed',
-            errorMessage: 'AI provider request timeout',
-          },
+          llm: { status: 'failed' },
         }),
         errorMessage: 'AI provider request timeout',
         generatedAt: '2026-05-12T12:00:01.000Z',

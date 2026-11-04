@@ -5,10 +5,16 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
+import type { PublicSessionGetResponseDtoSessionQuestionsItemSettingsSliderKind } from './publicSessionGetResponseDtoSessionQuestionsItemSettingsSliderKind';
 
 /**
  * @nullable
  */
 export type PublicSessionGetResponseDtoSessionQuestionsItemSettings = {
-  [key: string]: unknown;
+  maxChoices?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  sliderKind?: PublicSessionGetResponseDtoSessionQuestionsItemSettingsSliderKind;
+  methodologySliderId?: string;
 } | null;

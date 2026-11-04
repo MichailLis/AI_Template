@@ -9,6 +9,11 @@ import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from '../prof-orientation-v3-plus/fixture';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 
+import {
+  buildStoredProfOrientationSummary,
+  storedAiAnalysis,
+  storedAtlas,
+} from '../analysis/analysis-summary.spec-fixtures';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { TEST_AI_PROVIDER_CONNECTION as testConnection } from '../../ai-provider/spec-fixtures';
 import { AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE } from '../../ai-provider/ai-provider.client';
@@ -257,7 +262,7 @@ describe('TestsAnalysisService', () => {
     const result = service.toPublicAnalysisResponse({
       providerMode: 'LLM',
       status: 'READY',
-      summary: { introduction: 'Student safe summary' },
+      summary: storedAiAnalysis,
       rawText: 'Internal provider output',
       errorMessage: null,
       generatedAt: new Date('2026-05-12T12:00:00.000Z'),
@@ -265,7 +270,7 @@ describe('TestsAnalysisService', () => {
     expect(result).toMatchObject({
       providerMode: 'LLM',
       status: 'READY',
-      summary: { introduction: 'Student safe summary' },
+      summary: { resultKind: 'ai_analysis', introduction: storedAiAnalysis.introduction },
       errorMessage: null,
       generatedAt: '2026-05-12T12:00:00.000Z',
     });
@@ -277,27 +282,36 @@ describe('TestsAnalysisService', () => {
       providerMode: 'ALGORITHM_LLM',
       status: 'READY',
       summary: {
-        profile: 'keep',
+        ...buildStoredProfOrientationSummary(),
         llm: {
           status: 'failed',
           model: 'openai/gpt-oss-120b',
           errorMessage: 'upstream https://secret.internal timed out',
         },
-        atlas: {
-          status: 'failed',
-          apiUrl: 'http://atlas.internal/api',
-          errorMessage: 'ECONNREFUSED',
-        },
+        atlas: storedAtlas,
       },
       errorMessage: 'ZodError: introduction expected string',
       generatedAt: null,
     } as never);
 
     expect(result.errorMessage).toBe('Analysis failed');
-    expect(result.summary).toEqual({
-      profile: 'keep',
-      llm: { status: 'failed' },
-      atlas: { status: 'failed' },
+    expect(result.summary).toMatchObject({
+      resultKind: 'prof_orientation_v3_plus',
+      llm: { status: 'failed', analysis: null },
+    });
+    const published = JSON.stringify(result);
+    expect(published).not.toContain('secret.internal');
+    expect(published).not.toContain('openai/gpt-oss-120b');
+    expect(published).not.toContain('ECONNREFUSED');
+  });
+
+  it('toPublicAnalysisResponse answers a missing analysis with a pending record and no result', () => {
+    expect(service.toPublicAnalysisResponse(null)).toEqual({
+      providerMode: 'STUB',
+      status: 'PENDING',
+      summary: { resultKind: 'none' },
+      errorMessage: null,
+      generatedAt: null,
     });
   });
 
