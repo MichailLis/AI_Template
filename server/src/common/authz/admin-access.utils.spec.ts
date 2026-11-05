@@ -1,4 +1,4 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenError, UnauthenticatedError } from '../errors/domain-error';
 
 import type { PrismaService } from '../../prisma.service';
 import { assertAdminUser, ensureAdminAccess } from './admin-access.utils';
@@ -36,7 +36,7 @@ describe('ensureAdminAccess', () => {
 
     await expect(
       ensureAdminAccess(prismaMock as unknown as PrismaService, 7),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('rejects non-admin users', async () => {
@@ -44,7 +44,7 @@ describe('ensureAdminAccess', () => {
 
     await expect(
       ensureAdminAccess(prismaMock as unknown as PrismaService, 7),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it.each([
@@ -61,7 +61,7 @@ describe('ensureAdminAccess', () => {
 
     const result = ensureAdminAccess(prismaMock as unknown as PrismaService, 7, iat);
 
-    if (status === 401) await expect(result).rejects.toBeInstanceOf(UnauthorizedException);
+    if (status === 401) await expect(result).rejects.toBeInstanceOf(UnauthenticatedError);
     else await expect(result).resolves.toBeUndefined();
   });
 
@@ -83,7 +83,7 @@ describe('ensureAdminAccess', () => {
 
     await expect(
       ensureAdminAccess(prismaMock as unknown as PrismaService, 7),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('returns an existing admin user from assertion checks', () => {
@@ -99,11 +99,11 @@ describe('ensureAdminAccess', () => {
 
   it('rejects non-admin and deactivated users from assertion checks', () => {
     expect(() => assertAdminUser({ id: 7, role: 'USER', deactivatedAt: null })).toThrow(
-      ForbiddenException,
+      ForbiddenError,
     );
     expect(() => assertAdminUser({ id: 7, role: 'ADMIN', deactivatedAt: new Date() })).toThrow(
-      ForbiddenException,
+      ForbiddenError,
     );
-    expect(() => assertAdminUser(null)).toThrow(ForbiddenException);
+    expect(() => assertAdminUser(null)).toThrow(ForbiddenError);
   });
 });

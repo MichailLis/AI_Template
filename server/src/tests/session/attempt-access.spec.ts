@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InvalidInputError, NotFoundError } from '../../common/errors/domain-error';
 
 import type { PrismaService } from '../../prisma.service';
 import {
@@ -70,28 +70,28 @@ describe('getSessionAttemptByTokenOrThrow', () => {
     {
       label: 'archived',
       publicLink: { archivedAt: new Date('2026-05-12T11:00:00.000Z') },
-      exception: NotFoundException,
+      exception: NotFoundError,
       message: 'Public test link not found',
       code: 'LINK_NOT_FOUND',
     },
     {
       label: 'disabled',
       publicLink: { isActive: false },
-      exception: BadRequestException,
+      exception: InvalidInputError,
       message: 'Public test link is disabled',
       code: 'LINK_DISABLED',
     },
     {
       label: 'not active yet',
       publicLink: { startsAt: new Date('2026-05-12T12:01:00.000Z') },
-      exception: BadRequestException,
+      exception: InvalidInputError,
       message: 'Public test link is not active yet',
       code: 'LINK_NOT_STARTED',
     },
     {
       label: 'expired',
       publicLink: { endsAt: new Date('2026-05-12T11:59:00.000Z') },
-      exception: BadRequestException,
+      exception: InvalidInputError,
       message: 'Public test link has expired',
       code: 'LINK_EXPIRED',
     },
@@ -101,7 +101,7 @@ describe('getSessionAttemptByTokenOrThrow', () => {
         isActive: true,
         educationOrganization: { isActive: false },
       },
-      exception: BadRequestException,
+      exception: InvalidInputError,
       message: 'Public test link is disabled because its education organization is disabled',
       code: 'LINK_DISABLED',
     },
@@ -119,9 +119,7 @@ describe('getSessionAttemptByTokenOrThrow', () => {
 
     await expect(result).rejects.toBeInstanceOf(testCase.exception);
     await expect(result).rejects.toMatchObject({ message: testCase.message });
-    await expect(result).rejects.toMatchObject({
-      response: { error: testCase.code },
-    });
+    await expect(result).rejects.toMatchObject({ code: testCase.code });
     expect(findUniqueMock).toHaveBeenCalledWith({
       where: { resumeToken: 'session-token' },
       include: attemptWithSessionInclude,
@@ -147,7 +145,7 @@ describe('getSessionAttemptByTokenOrThrow', () => {
 
     const result = getSessionAttemptByTokenOrThrow(prismaMock, 'session-token');
 
-    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toBeInstanceOf(InvalidInputError);
     await expect(result).rejects.toMatchObject({
       message: 'Public test link is disabled because its test is archived',
     });
@@ -196,13 +194,13 @@ describe('getResultAttemptByTokenOrThrow', () => {
     const attempt = createAttemptFixture({ archivedAt: new Date('2026-05-12T11:00:00.000Z') });
     const result = getResultAttemptByTokenOrThrow(createPrismaMock(attempt), 'session-token');
 
-    await expect(result).rejects.toBeInstanceOf(NotFoundException);
-    await expect(result).rejects.toMatchObject({ response: { error: 'LINK_NOT_FOUND' } });
+    await expect(result).rejects.toBeInstanceOf(NotFoundError);
+    await expect(result).rejects.toMatchObject({ code: 'LINK_NOT_FOUND' });
   });
 
   it('rejects an unknown session token', async () => {
     const result = getResultAttemptByTokenOrThrow(createPrismaMock(null), 'session-token');
 
-    await expect(result).rejects.toMatchObject({ response: { error: 'SESSION_NOT_FOUND' } });
+    await expect(result).rejects.toMatchObject({ code: 'SESSION_NOT_FOUND' });
   });
 });

@@ -1,6 +1,6 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { PersonalDataProcessingMode, Prisma } from '@prisma/client';
 
+import { InvalidInputError, NotFoundError } from '../../common/errors/domain-error';
 import { DEFAULT_PLATFORM_OPERATOR_FULL_NAME } from '../../app-settings/privacy-policy.constants';
 
 export const PUBLIC_OPERATOR_FULL_NAME = DEFAULT_PLATFORM_OPERATOR_FULL_NAME;
@@ -46,7 +46,7 @@ export const resolvePersonalDataOperator = async (
   }
 
   if (!educationOrganizationId) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Выберите учебное заведение для режима обработки по поручению',
       'OPERATOR_ORGANIZATION_REQUIRED',
     );
@@ -66,11 +66,11 @@ export const resolvePersonalDataOperator = async (
   });
 
   if (!organization) {
-    throw new NotFoundException('Учебное заведение не найдено', 'EDUCATION_ORGANIZATION_NOT_FOUND');
+    throw new NotFoundError('Учебное заведение не найдено', 'EDUCATION_ORGANIZATION_NOT_FOUND');
   }
 
   if (!organization.isActive) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Выбранное учебное заведение неактивно',
       'EDUCATION_ORGANIZATION_INACTIVE',
     );
@@ -81,21 +81,21 @@ export const resolvePersonalDataOperator = async (
   const privacyPolicyUrl = normalizeNullableString(organization.privacyPolicyUrl);
 
   if (!fullName) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Укажите полное наименование учебного заведения',
       'OPERATOR_FULL_NAME_REQUIRED',
     );
   }
 
   if (!shortName) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Укажите краткое наименование учебного заведения',
       'OPERATOR_SHORT_NAME_REQUIRED',
     );
   }
 
   if (!privacyPolicyUrl) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Укажите ссылку на Политику обработки ПДн учебного заведения',
       'OPERATOR_PRIVACY_POLICY_URL_REQUIRED',
     );

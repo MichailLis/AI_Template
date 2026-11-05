@@ -8,6 +8,7 @@ import type { GroupOrClassValidationMode, Prisma } from '@prisma/client';
 
 import { collectAuditChanges } from '../../audit/audit-changes';
 import { AuditService } from '../../audit/audit.service';
+import { InvalidInputError } from '../../common/errors/domain-error';
 import { PrismaService } from '../../prisma.service';
 import type {
   AdminCreateEducationOrganizationDto,
@@ -593,7 +594,7 @@ export class TestsEducationOrganizationService {
         organizationId,
       );
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof InvalidInputError) {
         throw new ConflictException(
           `У заведения есть действующие ссылки обработки ПДн от его имени, поэтому реквизиты нельзя оставить неполными. ${error.message}`,
           'EDUCATION_ORGANIZATION_HAS_ACTIVE_LINKS',

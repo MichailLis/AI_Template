@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+import { ConflictError } from '../../common/errors/domain-error';
 
 import type { PrismaService } from '../../prisma.service';
 import { TestsQuestionService } from '../topics/question.service';
@@ -91,7 +92,7 @@ describe('TestsQuestionService', () => {
         { id: 10, questions: [{ id: 100, order: 1 }] },
         { questionIds: [100] },
       ),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toThrow(ConflictError);
 
     expect(txMock.testTopicVersion.updateMany).toHaveBeenCalledWith({
       where: { id: 10, status: 'DRAFT' },

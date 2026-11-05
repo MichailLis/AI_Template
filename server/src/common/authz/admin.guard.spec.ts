@@ -1,4 +1,5 @@
-import { ForbiddenException, UnauthorizedException, type ExecutionContext } from '@nestjs/common';
+import { type ExecutionContext } from '@nestjs/common';
+import { ForbiddenError, UnauthenticatedError } from '../errors/domain-error';
 
 import { AdminBackupsController } from '../../admin/admin-backups.controller';
 import { AdminSettingsController } from '../../admin/admin-settings.controller';
@@ -36,7 +37,7 @@ describe('AdminGuard', () => {
     });
 
     await expect(guard.canActivate(contextFor({ sub: 7, iat: 9_999 }))).rejects.toBeInstanceOf(
-      UnauthorizedException,
+      UnauthenticatedError,
     );
     await expect(guard.canActivate(contextFor({ sub: 7, iat: 10_000 }))).resolves.toBe(true);
   });
@@ -48,9 +49,7 @@ describe('AdminGuard', () => {
   ])('rejects %s with 403', async (_label, row) => {
     findUnique.mockResolvedValue(row);
 
-    await expect(guard.canActivate(contextFor({ sub: 7 }))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(contextFor({ sub: 7 }))).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it.each([

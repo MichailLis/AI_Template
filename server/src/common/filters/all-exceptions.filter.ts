@@ -10,10 +10,21 @@ import { Request, Response } from 'express';
 import { ZodSerializationException, ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
 
+import { DomainError, type DomainErrorKind } from '../errors/domain-error';
+
 interface HttpErrorResponse {
   message?: string | string[];
   error?: string;
 }
+
+// The one place where domain errors learn about HTTP.
+const DOMAIN_ERROR_STATUS: Record<DomainErrorKind, HttpStatus> = {
+  INVALID_INPUT: HttpStatus.BAD_REQUEST,
+  NOT_FOUND: HttpStatus.NOT_FOUND,
+  CONFLICT: HttpStatus.CONFLICT,
+  FORBIDDEN: HttpStatus.FORBIDDEN,
+  UNAUTHENTICATED: HttpStatus.UNAUTHORIZED,
+};
 
 // A response that did not match its DTO: which fields, never their values (they are student data).
 const describeSerializationFailure = (exception: unknown) => {
@@ -50,6 +61,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? res
           : (Array.isArray(res.message) ? res.message[0] : res.message) || message;
       code = res.error || 'HTTP_ERROR';
+    }
+
+    if (exception instanceof DomainError) {
+      status = DOMAIN_ERROR_STATUS[exception.kind];
+      message = exception.message;
+      code = exception.code;
     }
 
     if (exception instanceof ZodValidationException) {
