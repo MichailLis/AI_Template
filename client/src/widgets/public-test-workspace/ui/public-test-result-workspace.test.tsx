@@ -50,7 +50,7 @@ describe('PublicTestResultWorkspace', () => {
       },
     });
     const hook = vi.mocked(useTestsPublicControllerGetSessionResult);
-    hook.mockReturnValue({ ...hook(''), isError: true });
+    hook.mockReturnValue({ ...hook(''), isError: true } as never);
 
     const { container } = render(<PublicTestResultWorkspace />);
     const view = within(container);
