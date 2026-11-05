@@ -4,12 +4,15 @@ import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import type {
+  ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionMessage,
 } from 'openai/resources/chat/completions';
 
 import { type AiProviderConnection, readFirstEnv } from './ai-provider.config';
 import { type AiFailureReason, classifyAiFailure } from './ai-provider.failure';
+import { type AiUsageContext, readCompletionUsage } from './ai-usage';
+import { AiUsageService } from './ai-usage.service';
 import {
   extractAiProviderErrorMessage,
   filterStructuredOutputPromptModels,
@@ -229,7 +232,10 @@ export class AiProviderClientService {
   private healthCache = new Map<string, { result: AiProviderHealth; cachedAt: number }>();
   private modelsCache = new Map<string, { catalog: AiModelCatalog; cachedAt: number }>();
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly usage: AiUsageService,
+  ) {}
 
   private createClient(connection: AiProviderConnection, timeoutMs: number) {
     return new OpenAI({
@@ -336,23 +342,30 @@ export class AiProviderClientService {
    * Без повторов и кэша: ответ нужен таким, какой он есть сейчас. Текст ошибки провайдера
    * показывается админу, но ключ из него вычищается.
    */
-  async checkCompletion(connection: AiProviderConnection): Promise<AiProviderCompletionCheck> {
+  async checkCompletion(
+    connection: AiProviderConnection,
+    actorUserId?: number,
+  ): Promise<AiProviderCompletionCheck> {
     const client = this.createClient(connection, AI_PROVIDER_COMPLETION_CHECK_TIMEOUT_MS);
+    const context: AiUsageContext = { purpose: 'CONNECTION_CHECK', actorUserId };
     let model = connection.defaultModel ?? 'unknown';
+    const startedAt = Date.now();
 
     try {
       model = connection.defaultModel ?? (await this.fetchModels(connection)).defaultModel;
-      await client.chat.completions.create({
+      const completion = await client.chat.completions.create({
         model,
         messages: [{ role: 'user', content: 'ping' }],
         max_tokens: 1,
         temperature: 0,
       });
+      await this.recordUsage(connection, model, context, startedAt, completion);
 
       return { status: 'ok', checkedAt: new Date().toISOString(), model };
     } catch (error) {
       const wrapped = toProviderError(error, connection.label, AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
       const failure = classifyAiFailure(wrapped);
+      await this.recordUsage(connection, model, context, startedAt, undefined, failure.reason);
       const message =
         wrapped instanceof Error ? wrapped.message : `${connection.label} check failed`;
 
@@ -390,16 +403,46 @@ export class AiProviderClientService {
     }
   }
 
+  /**
+   * Записывает расход вызова: токены, стоимость и фактическую модель. Здесь, а не у вызывающих,
+   * потому что тут уже есть ответ провайдера и сюда попадают все платные вызовы, включая неудачные.
+   * Сбой записи не прерывает вызов (`AiUsageService.record` его не пробрасывает).
+   */
+  private recordUsage(
+    connection: AiProviderConnection,
+    requestedModel: string,
+    context: AiUsageContext,
+    startedAt: number,
+    completion: unknown,
+    failureReason?: AiFailureReason,
+  ) {
+    return this.usage.record({
+      ...context,
+      ...readCompletionUsage(completion),
+      status: failureReason ? 'FAILED' : 'SUCCESS',
+      provider: connection.provider,
+      requestedModel,
+      durationMs: Date.now() - startedAt,
+      failureReason,
+    });
+  }
+
+  /**
+   * `options.usage` обязателен: вызов без вида в учёт не попадёт, а компилятор не даёт его забыть.
+   * В учёт идёт один вызов целиком; внутренние повторы 429/5xx не оплачиваются и отдельно не пишутся.
+   */
   async generatePrompt(
     connection: AiProviderConnection,
     dto: AiPromptRequest,
-    options?: { timeoutMs?: number },
+    options: { timeoutMs?: number; usage: AiUsageContext },
   ): Promise<AiPromptResult> {
-    const client = this.createClient(connection, this.resolveTimeoutMs(options?.timeoutMs));
+    const client = this.createClient(connection, this.resolveTimeoutMs(options.timeoutMs));
     const { body, responseFormat } = buildPromptRequestBody(dto, connection);
+    const startedAt = Date.now();
+    let completion: ChatCompletion | undefined;
 
     try {
-      const completion = await this.createCompletionWithRetry(client, body);
+      completion = await this.createCompletionWithRetry(client, body);
       const output = extractCompletionOutput(completion.choices?.[0]?.message);
 
       if (!output) {
@@ -421,6 +464,7 @@ export class AiProviderClientService {
           : output;
 
       const meta = completion as { provider?: unknown; usage?: AiPromptUsage };
+      await this.recordUsage(connection, dto.model, options.usage, startedAt, completion);
 
       return {
         model: dto.model,
@@ -429,7 +473,17 @@ export class AiProviderClientService {
         usage: meta.usage,
       };
     } catch (error) {
-      throw toProviderError(error, connection.label, AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
+      const wrapped = toProviderError(error, connection.label, AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
+      // Пустой ответ провайдер уже оплатил: токены и стоимость берём из него, даже если вызов неудачный.
+      await this.recordUsage(
+        connection,
+        dto.model,
+        options.usage,
+        startedAt,
+        completion,
+        classifyAiFailure(wrapped).reason,
+      );
+      throw wrapped;
     }
   }
 }

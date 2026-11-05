@@ -24,6 +24,8 @@ import type {
 import type {
   AdminAiProviderCheckResponseDto,
   AdminAiProviderSettingsResponseDto,
+  AdminAiUsageControllerGetSummaryParams,
+  AdminAiUsageSummaryResponseDto,
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
   AdminBackupOperationResponseDto,
@@ -2213,6 +2215,139 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model
+ */
+export const adminAiUsageControllerGetSummary = (
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminAiUsageSummaryResponseDto>(
+    { url: `/admin/ai-usage/summary`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getAdminAiUsageControllerGetSummaryQueryKey = (
+  params?: AdminAiUsageControllerGetSummaryParams,
+) => {
+  return [`/admin/ai-usage/summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminAiUsageControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminAiUsageControllerGetSummaryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>> = ({
+    signal,
+  }) => adminAiUsageControllerGetSummary(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminAiUsageControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+>;
+export type AdminAiUsageControllerGetSummaryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model
+ */
+
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminAiUsageControllerGetSummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

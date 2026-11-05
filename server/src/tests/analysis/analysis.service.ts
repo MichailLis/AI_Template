@@ -214,7 +214,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         const response = await this.aiProviderClient.generatePrompt(
           connection,
           { ...dto, sessionId: `prof-orientation-${attemptId}-try-${attempt + 1}` },
-          { timeoutMs },
+          { timeoutMs, usage: { purpose: 'PROF_ORIENTATION_ENRICHMENT', attemptId } },
         );
 
         this.logger.log(
@@ -561,19 +561,23 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       const model = await this.resolveStructuredModel(connection, promptVersion.model);
       const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
       const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.aiProviderClient.generatePrompt(connection, {
-        model,
-        prompt: buildAttemptAnalysisPrompt({
-          prompt: promptVersion.prompt,
-          questions,
-          answers,
-        }),
-        temperature: promptVersion.temperature,
-        responseFormat: 'json',
-        responseSchema: TestAnalysisResultJsonSchema,
-        requireParameters: true,
-        useResponseHealing: true,
-      });
+      const response = await this.aiProviderClient.generatePrompt(
+        connection,
+        {
+          model,
+          prompt: buildAttemptAnalysisPrompt({
+            prompt: promptVersion.prompt,
+            questions,
+            answers,
+          }),
+          temperature: promptVersion.temperature,
+          responseFormat: 'json',
+          responseSchema: TestAnalysisResultJsonSchema,
+          requireParameters: true,
+          useResponseHealing: true,
+        },
+        { usage: { purpose: 'STUDENT_ANALYSIS', attemptId } },
+      );
       const parsedOutput = TestAnalysisResultSchema.parse(JSON.parse(response.output));
 
       await this.prisma.testStudentAnalysis.update({

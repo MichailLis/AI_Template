@@ -129,8 +129,8 @@ describe('AdminSettingsController', () => {
     aiProviderConfig.getConnection.mockResolvedValue(connection);
     aiProviderClient.checkCompletion.mockResolvedValue(check);
 
-    await expect(controller.checkAiProvider()).resolves.toEqual(check);
-    expect(aiProviderClient.checkCompletion).toHaveBeenCalledWith(connection);
+    await expect(controller.checkAiProvider(7)).resolves.toEqual(check);
+    expect(aiProviderClient.checkCompletion).toHaveBeenCalledWith(connection, 7);
     expect(aiProviderClient.checkHealth).not.toHaveBeenCalled();
   });
 

@@ -109,8 +109,8 @@ describe('AnalysisPromptsController', () => {
     const response = { model: dto.model, output: '{}', syntheticAnswers: null, questionCount: 1 };
     serviceMock.simulatePrompt.mockResolvedValue(response);
 
-    await expect(controller.simulatePrompt(dto)).resolves.toEqual(response);
-    expect(serviceMock.simulatePrompt).toHaveBeenCalledWith(dto);
+    await expect(controller.simulatePrompt(9, dto)).resolves.toEqual(response);
+    expect(serviceMock.simulatePrompt).toHaveBeenCalledWith(9, dto);
   });
 
   it('listTestQuestions delegates to service', async () => {
@@ -139,7 +139,7 @@ describe('AnalysisPromptsController', () => {
     const response = { model: dto.model, output: '{}' };
     serviceMock.generatePrompt.mockResolvedValue(response);
 
-    await expect(controller.generatePrompt(dto)).resolves.toEqual(response);
-    expect(serviceMock.generatePrompt).toHaveBeenCalledWith(dto);
+    await expect(controller.generatePrompt(9, dto)).resolves.toEqual(response);
+    expect(serviceMock.generatePrompt).toHaveBeenCalledWith(9, dto);
   });
 });

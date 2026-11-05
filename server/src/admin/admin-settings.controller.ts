@@ -80,8 +80,11 @@ export class AdminSettingsController {
     summary: 'Check the AI provider key and balance with one real one-token request',
   })
   @ApiResponse({ status: HttpStatus.OK, type: AdminAiProviderCheckResponseDto })
-  async checkAiProvider() {
-    return this.aiProviderClient.checkCompletion(await this.aiProviderConfig.getConnection());
+  async checkAiProvider(@GetCurrentUserId() userId: number) {
+    return this.aiProviderClient.checkCompletion(
+      await this.aiProviderConfig.getConnection(),
+      userId,
+    );
   }
 
   @Patch('ai-provider')

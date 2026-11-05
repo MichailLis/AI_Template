@@ -109,6 +109,21 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
   Polza serves without a valid key, so it says «каталог моделей отвечает», not «работает». The key
   and the balance are checked by `POST /admin/settings/ai-provider/check`: one real one-token
   request to the default model with the saved settings, on the admin's click only.
+- **AI spend is recorded per provider call (#164).** `AiProviderClientService` is the only place
+  that writes `ai_usage_events`: `generatePrompt` (and `checkCompletion`) take a mandatory
+  `usage: { purpose, attemptId?, actorUserId? }`, so a new caller cannot forget the purpose
+  (`STUDENT_ANALYSIS`, `PROF_ORIENTATION_ENRICHMENT`, `TEST_GENERATION`, `PROMPT_SIMULATION`,
+  `CONNECTION_CHECK`). One row per call, failed ones included (a timeout may be billed): requested
+  and actual model, `prompt/completion/total` tokens, `cost` from `usage.cost` of the response
+  (an OpenRouter/Polza extension, `Decimal(18,8)`, in the provider account's units, empty — not
+  zero — when the provider sends none), duration, failure reason code. Never the prompt, the
+  answer or the provider's error text: they hold students' answers (#133). `AiUsageService.record`
+  swallows its own failure (warning in the log), so accounting never fails an analysis. The links
+  to the attempt and the admin are `ON DELETE SET NULL`: deleting an attempt keeps the spend.
+  `GET /admin/ai-usage/summary?from=<ISO instant>` returns totals, by purpose and by model since
+  `from`; the browser computes «today / 7 / 30 days» in its own time zone and sends the instant.
+  Shown in «Настройки → Провайдер ИИ». `callsWithoutCost` tells how many successful calls have no
+  cost, i.e. how much the sum is understated.
 - The model catalog keeps models that report structured output support (`response_format`, and
   for OpenRouter also `structured_outputs`). A catalog that reports no capabilities at all keeps
   every model; the request itself then decides.

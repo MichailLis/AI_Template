@@ -7,6 +7,9 @@ import {
   AI_PROVIDER_RETRY_DELAYS_MS,
   AiProviderClientService,
 } from './ai-provider.client';
+import type { AiUsageService } from './ai-usage.service';
+
+const analysisUsage = { purpose: 'STUDENT_ANALYSIS' } as const;
 
 const polzaConnection: AiProviderConnection = {
   provider: 'polza',
@@ -65,9 +68,10 @@ const readRequest = (fetchMock: jest.SpyInstance, index = 0) => {
 
 describe('ai provider client', () => {
   const createClient = (value: string | number | undefined) =>
-    new AiProviderClientService({
-      get: jest.fn().mockReturnValue(value),
-    } as unknown as ConfigService);
+    new AiProviderClientService(
+      { get: jest.fn().mockReturnValue(value) } as unknown as ConfigService,
+      { record: jest.fn() } as unknown as AiUsageService,
+    );
 
   afterEach(() => {
     jest.useRealTimers();
@@ -264,7 +268,9 @@ describe('ai provider client', () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('{"ok":true}'));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).resolves.toEqual({
       model: 'deepseek/deepseek-v4-flash',
       output: JSON.stringify({ ok: true }, null, 2),
@@ -293,7 +299,9 @@ describe('ai provider client', () => {
   it('passes OpenRouter routing, required parameters and response healing only to OpenRouter', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('{"ok":true}'));
 
-    await createClient(undefined).generatePrompt(openRouterConnection, structuredRequest);
+    await createClient(undefined).generatePrompt(openRouterConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
 
     const { url, headers, body } = readRequest(fetchMock);
 
@@ -333,8 +341,12 @@ describe('ai provider client', () => {
       ),
     );
 
-    const result = await createClient(undefined).generatePrompt(openRouterConnection, withRouting);
-    await createClient(undefined).generatePrompt(polzaConnection, withRouting);
+    const result = await createClient(undefined).generatePrompt(openRouterConnection, withRouting, {
+      usage: analysisUsage,
+    });
+    await createClient(undefined).generatePrompt(polzaConnection, withRouting, {
+      usage: analysisUsage,
+    });
 
     const openRouterBody = readRequest(fetchMock, 0).body;
     const polzaBody = readRequest(fetchMock, 1).body;
@@ -357,7 +369,9 @@ describe('ai provider client', () => {
       .mockResolvedValue(jsonResponse({ error: { message: 'User not found.' } }, 401));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow(/^User not found\.$/);
   });
 
@@ -368,7 +382,9 @@ describe('ai provider client', () => {
       .mockResolvedValueOnce(jsonResponse({ error: { message: 'Too many requests' } }, 429))
       .mockResolvedValueOnce(completion('{"ok":true}'));
 
-    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
     await jest.advanceTimersByTimeAsync(AI_PROVIDER_RETRY_DELAYS_MS[0]);
 
     await expect(pending).resolves.toMatchObject({ model: structuredRequest.model });
@@ -384,7 +400,9 @@ describe('ai provider client', () => {
         Promise.resolve(jsonResponse({ error: { message: 'Too many requests' } }, 429)),
       );
 
-    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
     const assertion = expect(pending).rejects.toThrow('Too many requests');
     await jest.advanceTimersByTimeAsync(
       AI_PROVIDER_RETRY_DELAYS_MS[0] + AI_PROVIDER_RETRY_DELAYS_MS[1],
@@ -401,7 +419,9 @@ describe('ai provider client', () => {
       .mockResolvedValue(jsonResponse({ error: { message: 'Bad key' } }, 401));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow('Bad key');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -417,7 +437,10 @@ describe('ai provider client', () => {
     );
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, { timeoutMs: 20 }),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        timeoutMs: 20,
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow(AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
   });
 

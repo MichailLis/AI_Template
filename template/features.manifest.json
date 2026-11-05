@@ -30,6 +30,8 @@
         "server/src/ai-provider/ai-provider.config.ts",
         "server/src/ai-provider/ai-provider-config.service.ts",
         "server/src/ai-provider/ai-provider.client.ts",
+        "server/src/ai-provider/ai-usage.ts",
+        "server/src/ai-provider/ai-usage.service.ts",
         "server/src/ai-provider/ai-provider.utils.ts"
       ]
     },
@@ -116,6 +118,8 @@
         "server/src/admin/admin.module.ts",
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin-settings.controller.ts",
+        "server/src/admin/admin-ai-usage.controller.ts",
+        "server/src/admin/dto/admin-ai-usage.dto.ts",
         "server/src/admin/admin.service.ts",
         "server/src/admin/admin-password.utils.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
@@ -192,6 +196,11 @@
         {
           "path": "/admin/settings/ai-provider/check",
           "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/ai-usage/summary",
+          "methods": ["get"],
           "protected": true
         },
         {

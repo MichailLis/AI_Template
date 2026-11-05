@@ -12,6 +12,7 @@ import {
   AdminBackupOperationController,
   AdminBackupsController,
 } from './admin-backups.controller';
+import { AdminAiUsageController } from './admin-ai-usage.controller';
 import { AdminSettingsController } from './admin-settings.controller';
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
@@ -21,6 +22,7 @@ import { AdminController } from './admin.controller';
   controllers: [
     AdminController,
     AdminSettingsController,
+    AdminAiUsageController,
     AdminBackupsController,
     AdminBackupOperationController,
     AdminBackupDownloadController,
