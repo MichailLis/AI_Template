@@ -23,6 +23,7 @@ import {
   type AiModelCatalog,
   type AiPromptRequest,
 } from '../../ai-provider/ai-provider.client';
+import { AiModelUnavailableError } from '../../ai-provider/ai-provider.failure';
 import { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import { PrismaService } from '../../prisma.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
@@ -43,6 +44,12 @@ import {
   mapQuestionToPromptPayload,
 } from '../analysis/prompt-payload.utils';
 import { mergeAnalysisSummaryKey } from '../analysis/analysis-summary.store';
+import { buildAnalysisFailure, describeAnalysisFailure } from './analysis-failure';
+import {
+  buildAttemptAnalysisPrompt,
+  buildProfOrientationEnrichmentPrompt,
+} from './analysis-prompt-text';
+import { claimFailedAnalysis, findFailedAttemptIds } from './analysis-restart';
 import {
   NO_PUBLIC_ANALYSIS_SUMMARY,
   toPublicAnalysisSummary,
@@ -122,28 +129,11 @@ const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 const PENDING_RECOVERY_INTERVAL_MS = 10 * 60 * 1000;
+/** Автоповторов за один проход: каждый — платный вызов, а при затяжном сбое созревают разом сотни. */
+const AUTO_RETRY_BATCH_LIMIT = 20;
 const DEFAULT_LLM_CONCURRENCY = 3;
 
 const PUBLIC_ANALYSIS_ERROR_MESSAGE = 'Analysis failed';
-
-/**
- * Что из алгоритмического результата уходит в промпт: без атласа и прежнего llm-блока, без баллов
- * и версии методики, без `primaryDirection`/`secondaryDirection` (это `topDirections[0]` и `[1]`).
- */
-const ENRICHMENT_PROMPT_OMITTED_FIELDS = new Set([
-  'atlas',
-  'llm',
-  'scores',
-  'resultKind',
-  'scoringVersion',
-  'primaryDirection',
-  'secondaryDirection',
-]);
-
-export const toEnrichmentPromptSummary = (summary: object) =>
-  Object.fromEntries(
-    Object.entries(summary).filter(([key]) => !ENRICHMENT_PROMPT_OMITTED_FIELDS.has(key)),
-  );
 
 @Injectable()
 export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDestroy {
@@ -161,62 +151,6 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     private readonly aiProviderClient: AiProviderClientService,
     private readonly profOrientationAtlas: ProfOrientationAtlasService,
   ) {}
-
-  private buildAttemptAnalysisPrompt(input: {
-    prompt: string;
-    questions: unknown[];
-    answers: unknown[];
-  }) {
-    return [
-      input.prompt.trim(),
-      '',
-      'Данные завершенного тестирования студента:',
-      JSON.stringify(
-        {
-          questions: input.questions,
-          answers: input.answers,
-        },
-        null,
-        2,
-      ),
-      '',
-      'Сформируй анализ в JSON по заданной схеме.',
-      'Обязательно заполни introduction: короткое введение к результату на 2-4 предложения без маркированного списка.',
-      'Остальные блоки: текущий уровень базовых навыков, тип мышления, личностные особенности, рекомендации по карьерному и профессиональному развитию.',
-    ].join('\n');
-  }
-
-  private buildProfOrientationEnrichmentPrompt(input: {
-    prompt: string;
-    algorithmSummary: object;
-    questions: unknown[];
-    answers: unknown[];
-  }) {
-    return [
-      input.prompt.trim(),
-      '',
-      'Алгоритмический результат профориентационного теста:',
-      JSON.stringify(toEnrichmentPromptSummary(input.algorithmSummary)),
-      '',
-      'Исходные вопросы и ответы участника:',
-      JSON.stringify({ questions: input.questions, answers: input.answers }),
-      '',
-      'Сформируй только дополнительное текстовое пояснение в JSON по методической схеме профориентации v3+.',
-      'Не меняй рассчитанные алгоритмом направление, уверенность, баллы, профиль и профессии.',
-      'professorSummary — 2-3 предложения для блока "Профессор Полюс говорит": простым языком объясни карточку результата, ближайший смысл для школьника и одну понятную практическую пробу; это должна быть законченная фраза 240-420 символов, не заголовок и не знак препинания. Не копируй дословно resultCard.meaning или profile.meaning, переформулируй их как живое ИИ-пояснение.',
-      'summary — человекочитаемое пояснение карточки результата для блока "Как читать результат": без нового вывода, без пересчета профиля и без внутренних деталей методики.',
-      'Пиши для школьника и педагога простым языком: не используй технические ключи JSON и внутренние коды вроде single_profile, mixed_profile, broad_interest, low_definition, topDirections, A1, gap, consistencyIndex, readinessTop, selectedCounts или sliderValues.',
-      'не раскрывай внутреннюю механику подсчета: не называй веса, формулы, балльные отрывы, значения слайдеров, номера вопросов и служебные признаки.',
-      'Опирайся на profile.type, profile, topDirections (первое — главное направление, второе — дополнительное), их resultCard, confidence, flags, selectedCounts и sliderValues.',
-      'Ветвление по profile.type обязательно: single_profile объясняй через resultCard первого направления из topDirections; mixed_profile — через profile.title, две topDirections и общий miniProject; broad_interest/low_definition — без жесткой рекомендации, как практические пробы нескольких направлений.',
-      'methodSignals нужны как внутренние опорные наблюдения; пиши их без кодов, чисел шкал, формул и служебных терминов.',
-      'firstSteps должны быть основаны на resultCard.tryActions, profile.miniProject или практических пробах из методики.',
-      'learningPlan должен быть основан на resultCard.learn и близких topDirections.',
-      'professionNotes комментируют только профессии из рассчитанных направлений; для broad_interest/low_definition можно вернуть пустой массив.',
-      'cautions заполняй только при низкой/широкой уверенности или flags; если сильных предупреждений нет, верни пустой массив.',
-      'Не создавай общий psychological/personality анализ и не используй старые блоки skillsLevel, thinkingType, personalityTraits, careerDevelopment.',
-    ].join('\n');
-  }
 
   private toErrorMessage(error: unknown) {
     return error instanceof Error ? error.message : 'Analysis generation failed';
@@ -280,7 +214,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         const response = await this.aiProviderClient.generatePrompt(
           connection,
           { ...dto, sessionId: `prof-orientation-${attemptId}-try-${attempt + 1}` },
-          { timeoutMs },
+          { timeoutMs, usage: { purpose: 'PROF_ORIENTATION_ENRICHMENT', attemptId } },
         );
 
         this.logger.log(
@@ -319,7 +253,9 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     }
 
     if (!catalog.models.some((model) => model.id === savedModel)) {
-      throw new Error(`Модель «${savedModel}» недоступна у провайдера: выберите другую в промпте`);
+      throw new AiModelUnavailableError(
+        `Модель «${savedModel}» недоступна у провайдера: выберите другую в промпте`,
+      );
     }
 
     return savedModel;
@@ -475,13 +411,14 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
 
   onApplicationBootstrap() {
     const recover = () =>
-      void this.recoverStalePendingLlmAnalyses().catch((error: unknown) =>
-        this.logger.error('Recovery of pending analyses failed', error),
-      );
+      void Promise.all([
+        this.recoverStalePendingLlmAnalyses(),
+        this.retryDueFailedAnalyses(),
+      ]).catch((error: unknown) => this.logger.error('Recovery of pending analyses failed', error));
 
     recover();
 
-    if (process.env.SKIP_DB_CONNECT !== 'true') {
+    if (this.config.get<string>('SKIP_DB_CONNECT') !== 'true') {
       this.recoveryTimer = setInterval(recover, PENDING_RECOVERY_INTERVAL_MS);
       this.recoveryTimer.unref();
     }
@@ -541,6 +478,50 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     return analyses.length;
   }
 
+  /** Упавший анализ → ожидание → очередь. `false`: он не упал (идёт, готов) или перезапуск уже занят. */
+  async restartFailedAnalysis(attemptId: number, retryDueAt?: Date) {
+    const claimed = await claimFailedAnalysis(this.prisma, attemptId, retryDueAt);
+
+    if (claimed) {
+      this.enqueueAttemptAnalysis(attemptId);
+    }
+
+    return claimed;
+  }
+
+  /** Автоповтор сбоев провайдера, чей срок вышел (`summary.llm.nextRetryAtMs`); партия небольшая. */
+  async retryDueFailedAnalyses(now = new Date()) {
+    const attemptIds = await findFailedAttemptIds(this.prisma, {
+      retryDueAt: now,
+      take: AUTO_RETRY_BATCH_LIMIT,
+    });
+    let restarted = 0;
+
+    for (const attemptId of attemptIds) {
+      if (await this.restartFailedAnalysis(attemptId, now)) {
+        restarted += 1;
+      }
+    }
+
+    return restarted;
+  }
+
+  /** Состояние неудачи для записи; в лог идёт код причины, а не текст провайдера, ключ или промпт. */
+  private recordFailure(
+    attemptId: number,
+    analysisId: number | undefined,
+    error: unknown,
+    previousSummary: unknown,
+  ) {
+    const { state } = buildAnalysisFailure(error, previousSummary);
+
+    this.logger.warn(
+      `Analysis ${analysisId ?? 'n/a'} of attempt ${attemptId} failed: ${describeAnalysisFailure(state)}`,
+    );
+
+    return state;
+  }
+
   async runAttemptAnalysis(attemptId: number) {
     const attempt = await this.prisma.testStudentAttempt.findUnique({
       where: { id: attemptId },
@@ -580,19 +561,23 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       const model = await this.resolveStructuredModel(connection, promptVersion.model);
       const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
       const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.aiProviderClient.generatePrompt(connection, {
-        model,
-        prompt: this.buildAttemptAnalysisPrompt({
-          prompt: promptVersion.prompt,
-          questions,
-          answers,
-        }),
-        temperature: promptVersion.temperature,
-        responseFormat: 'json',
-        responseSchema: TestAnalysisResultJsonSchema,
-        requireParameters: true,
-        useResponseHealing: true,
-      });
+      const response = await this.aiProviderClient.generatePrompt(
+        connection,
+        {
+          model,
+          prompt: buildAttemptAnalysisPrompt({
+            prompt: promptVersion.prompt,
+            questions,
+            answers,
+          }),
+          temperature: promptVersion.temperature,
+          responseFormat: 'json',
+          responseSchema: TestAnalysisResultJsonSchema,
+          requireParameters: true,
+          useResponseHealing: true,
+        },
+        { usage: { purpose: 'STUDENT_ANALYSIS', attemptId } },
+      );
       const parsedOutput = TestAnalysisResultSchema.parse(JSON.parse(response.output));
 
       await this.prisma.testStudentAnalysis.update({
@@ -608,12 +593,20 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         },
       });
     } catch (error) {
+      const failure = this.recordFailure(
+        attemptId,
+        attempt.analysis?.id,
+        error,
+        attempt.analysis?.summary,
+      );
+
       await this.prisma.testStudentAnalysis.update({
         where: { attemptId },
         data: {
           promptVersionId: promptVersion.id,
           providerMode: 'LLM',
           status: 'FAILED',
+          summary: { llm: failure },
           errorMessage: this.toErrorMessage(error),
           generatedAt: new Date(),
         },
@@ -664,7 +657,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         attempt.id,
         {
           model,
-          prompt: this.buildProfOrientationEnrichmentPrompt({
+          prompt: buildProfOrientationEnrichmentPrompt({
             prompt: promptVersion.prompt,
             algorithmSummary: currentSummary,
             questions,
@@ -696,12 +689,13 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       );
     } catch (error) {
       const errorMessage = this.toErrorMessage(error);
+      const failure = this.recordFailure(attempt.id, analysisId, error, currentSummary);
 
       await mergeAnalysisSummaryKey(
         this.prisma,
         analysisId,
         'llm',
-        { status: 'failed', model: promptVersion.model, errorMessage },
+        { status: 'failed', model: promptVersion.model, errorMessage, ...failure },
         {
           promptVersionId: promptVersion.id,
           providerMode: 'ALGORITHM_LLM',

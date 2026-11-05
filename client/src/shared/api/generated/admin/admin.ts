@@ -22,7 +22,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminAiProviderCheckResponseDto,
   AdminAiProviderSettingsResponseDto,
+  AdminAiUsageControllerGetSummaryParams,
+  AdminAiUsageSummaryResponseDto,
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
   AdminBackupOperationResponseDto,
@@ -1268,6 +1271,90 @@ export const useAdminSettingsControllerUpdateAiProviderSettings = <
   );
 };
 /**
+ * @summary Check the AI provider key and balance with one real one-token request
+ */
+export const adminSettingsControllerCheckAiProvider = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminAiProviderCheckResponseDto>(
+    { url: `/admin/settings/ai-provider/check`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerCheckAiProviderMutationKey = () =>
+  ['adminSettingsControllerCheckAiProvider'] as const;
+
+export const getAdminSettingsControllerCheckAiProviderMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getAdminSettingsControllerCheckAiProviderMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+    void
+  > = () => {
+    return adminSettingsControllerCheckAiProvider(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerCheckAiProviderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>
+>;
+
+export type AdminSettingsControllerCheckAiProviderMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Check the AI provider key and balance with one real one-token request
+ */
+export const useAdminSettingsControllerCheckAiProvider = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerCheckAiProviderMutationOptions(options),
+    queryClient,
+  );
+};
+/**
  * @summary Get profession atlas settings
  */
 export const adminSettingsControllerGetProfessionAtlasSettings = (
@@ -2128,6 +2215,139 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model
+ */
+export const adminAiUsageControllerGetSummary = (
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminAiUsageSummaryResponseDto>(
+    { url: `/admin/ai-usage/summary`, method: 'GET', params, signal },
+    options,
+  );
+};
+
+export const getAdminAiUsageControllerGetSummaryQueryKey = (
+  params?: AdminAiUsageControllerGetSummaryParams,
+) => {
+  return [`/admin/ai-usage/summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminAiUsageControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminAiUsageControllerGetSummaryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>> = ({
+    signal,
+  }) => adminAiUsageControllerGetSummary(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminAiUsageControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+>;
+export type AdminAiUsageControllerGetSummaryQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model
+ */
+
+export function useAdminAiUsageControllerGetSummary<
+  TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  params: AdminAiUsageControllerGetSummaryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminAiUsageControllerGetSummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

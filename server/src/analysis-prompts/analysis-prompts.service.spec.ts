@@ -280,9 +280,11 @@ describe('AnalysisPromptsService', () => {
     const response = { model: dto.model, output: '{}' };
     aiProviderClientMock.generatePrompt.mockResolvedValue(response);
 
-    await expect(service.generatePrompt(dto)).resolves.toBe(response);
+    await expect(service.generatePrompt(9, dto)).resolves.toBe(response);
     expect(aiProviderConfigMock.getConnection).toHaveBeenCalled();
-    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith({ apiKey: 'test-key' }, dto);
+    expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledWith({ apiKey: 'test-key' }, dto, {
+      usage: { purpose: 'TEST_GENERATION', actorUserId: 9 },
+    });
   });
 
   it('createPrompt creates a prompt with first draft version and fixed output schema', async () => {
@@ -792,7 +794,7 @@ describe('AnalysisPromptsService', () => {
         output: JSON.stringify({ skillsLevel: { title: 'ok' } }),
       });
 
-    const result = await service.simulatePrompt({
+    const result = await service.simulatePrompt(9, {
       prompt: 'Analyze selected answers',
       model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.2,
@@ -804,6 +806,10 @@ describe('AnalysisPromptsService', () => {
       testsPromptSimulationReadServiceMock.getPromptSimulationQuestionPayloads,
     ).toHaveBeenCalledWith([11]);
     expect(aiProviderClientMock.generatePrompt).toHaveBeenCalledTimes(2);
+    // Both paid calls of one simulation are counted under it, with the admin who started it.
+    for (const [, , options] of aiProviderClientMock.generatePrompt.mock.calls) {
+      expect(options).toEqual({ usage: { purpose: 'PROMPT_SIMULATION', actorUserId: 9 } });
+    }
     const analysisPromptRequest = aiProviderClientMock.generatePrompt.mock.calls[1]?.[1];
 
     expect(analysisPromptRequest).toMatchObject({
@@ -846,7 +852,7 @@ describe('AnalysisPromptsService', () => {
         output: JSON.stringify({ skillsLevel: { title: 'ok' } }),
       });
 
-    await service.simulatePrompt({
+    await service.simulatePrompt(9, {
       prompt: 'Analyze selected answers',
       model: 'openai/gpt-4.1',
       temperature: 0.2,
@@ -869,7 +875,7 @@ describe('AnalysisPromptsService', () => {
     );
 
     await expect(
-      service.simulatePrompt({
+      service.simulatePrompt(9, {
         prompt: 'Analyze selected answers',
         model: 'google/gemini-2.0-flash-exp:free',
         temperature: 0.2,

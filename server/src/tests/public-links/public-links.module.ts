@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
+import { AppSettingsModule } from '../../app-settings/app-settings.module';
 import { AuditModule } from '../../audit/audit.module';
 import { TestsAdminEducationOrganizationsController } from '../public-links/admin-education-organizations.controller';
 import { TestsAdminPublicLinksController } from '../public-links/admin-public-links.controller';
@@ -8,13 +8,9 @@ import { TestsEducationOrganizationService } from '../public-links/education-org
 import { TestsPublicLinkService } from '../public-links/public-link.service';
 
 @Module({
-  imports: [AuditModule],
+  imports: [AppSettingsModule, AuditModule],
   controllers: [TestsAdminPublicLinksController, TestsAdminEducationOrganizationsController],
-  providers: [
-    TestsPublicLinkService,
-    TestsEducationOrganizationService,
-    PrivacyPolicySettingsService,
-  ],
+  providers: [TestsPublicLinkService, TestsEducationOrganizationService],
   exports: [TestsPublicLinkService, TestsEducationOrganizationService],
 })
 export class TestsPublicLinksModule {}

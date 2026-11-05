@@ -1,6 +1,9 @@
+import { NotFoundException } from '@nestjs/common';
+
 import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import type { AuditService } from '../../audit/audit.service';
 import type { PrismaService } from '../../prisma.service';
+import { RESTART_BATCH_LIMIT } from '../analysis/analysis-restart';
 import { ATTEMPTS_EXPORT_LIMIT, TestsAdminAttemptService } from '../attempts/admin-attempt.service';
 import type { TestsAnalysisService } from '../analysis/analysis.service';
 
@@ -18,6 +21,10 @@ type PrismaMock = {
     findUnique: jest.Mock;
     deleteMany: jest.Mock;
   };
+  testStudentAnalysis: {
+    count: jest.Mock;
+    findMany: jest.Mock;
+  };
 };
 
 describe('TestsAdminAttemptService', () => {
@@ -25,6 +32,7 @@ describe('TestsAdminAttemptService', () => {
   let prismaMock: PrismaMock;
   let analysisServiceMock: {
     toAttemptStatus: jest.Mock;
+    restartFailedAnalysis: jest.Mock;
   };
   let professionAtlasSettingsServiceMock: {
     getProfessionAtlasUrl: jest.Mock;
@@ -48,9 +56,14 @@ describe('TestsAdminAttemptService', () => {
         findUnique: jest.fn(),
         deleteMany: jest.fn(),
       },
+      testStudentAnalysis: {
+        count: jest.fn().mockResolvedValue(0),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     };
     analysisServiceMock = {
       toAttemptStatus: jest.fn(() => 'COMPLETED'),
+      restartFailedAnalysis: jest.fn().mockResolvedValue(true),
     };
     professionAtlasSettingsServiceMock = {
       getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
@@ -79,6 +92,7 @@ describe('TestsAdminAttemptService', () => {
     prismaMock.user.findUnique.mockResolvedValue({ id: 7, role: 'ADMIN', deactivatedAt: null });
     prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
     prismaMock.testStudentAttempt.count.mockResolvedValue(23);
+    prismaMock.testStudentAnalysis.count.mockResolvedValue(4);
     prismaMock.testStudentAttempt.findMany.mockResolvedValue([
       {
         id: 101,
@@ -144,6 +158,7 @@ describe('TestsAdminAttemptService', () => {
           resultSummary: null,
         },
       ],
+      failedAnalysisCount: 4,
     });
   });
 
@@ -344,6 +359,72 @@ describe('TestsAdminAttemptService', () => {
 
     const response = await service.getAttemptDetail(505);
     expect(response.entryProfileMode).toBe('EDUCATION_DEMOGRAPHIC');
+  });
+
+  describe('analysis restart', () => {
+    it('counts the failed analyses of the whole link, not of the page or the filter', async () => {
+      prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
+      prismaMock.testStudentAttempt.count.mockResolvedValue(0);
+      prismaMock.testStudentAttempt.findMany.mockResolvedValue([]);
+      prismaMock.testStudentAnalysis.count.mockResolvedValue(7);
+
+      const response = await service.listAttemptsForLink(13, { page: 1, limit: 10, search: 'x' });
+
+      expect(response.failedAnalysisCount).toBe(7);
+      const [{ where }] = prismaMock.testStudentAnalysis.count.mock.calls[0] as [
+        { where: { attempt: unknown } },
+      ];
+
+      expect(where.attempt).toMatchObject({ publicLinkId: 13, status: 'COMPLETED' });
+    });
+
+    it('restarts the analysis of one attempt and reports its link for the journal', async () => {
+      prismaMock.testStudentAttempt.findUnique.mockResolvedValue({ publicLinkId: 13 });
+
+      await expect(service.restartAttemptAnalysis(33)).resolves.toEqual({
+        publicLinkId: 13,
+        restarted: true,
+      });
+      expect(analysisServiceMock.restartFailedAnalysis).toHaveBeenCalledWith(33);
+    });
+
+    it('answers restarted: false when the analysis was not failed or is already restarted', async () => {
+      prismaMock.testStudentAttempt.findUnique.mockResolvedValue({ publicLinkId: 13 });
+      analysisServiceMock.restartFailedAnalysis.mockResolvedValue(false);
+
+      await expect(service.restartAttemptAnalysis(33)).resolves.toMatchObject({ restarted: false });
+    });
+
+    it('answers 404 for an attempt that does not exist and restarts nothing', async () => {
+      prismaMock.testStudentAttempt.findUnique.mockResolvedValue(null);
+
+      await expect(service.restartAttemptAnalysis(33)).rejects.toThrow(NotFoundException);
+      expect(analysisServiceMock.restartFailedAnalysis).not.toHaveBeenCalled();
+    });
+
+    it('restarts the failed analyses of a link and counts only those that really restarted', async () => {
+      prismaMock.testPublicLink.findUnique.mockResolvedValue({ id: 13 });
+      prismaMock.testStudentAnalysis.findMany.mockResolvedValue([
+        { attemptId: 1 },
+        { attemptId: 2 },
+        { attemptId: 3 },
+      ]);
+      // Attempt 2 was restarted by a parallel request between the search and the claim.
+      analysisServiceMock.restartFailedAnalysis.mockImplementation((id: number) =>
+        Promise.resolve(id !== 2),
+      );
+
+      await expect(service.restartFailedAnalysesForLink(13)).resolves.toEqual({ restarted: 2 });
+      expect(prismaMock.testStudentAnalysis.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: RESTART_BATCH_LIMIT }),
+      );
+    });
+
+    it('answers 404 for a link that does not exist', async () => {
+      prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+
+      await expect(service.restartFailedAnalysesForLink(13)).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('listAttemptsForExport', () => {

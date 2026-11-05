@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpStatus, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from '../auth/decorators';
@@ -11,6 +20,7 @@ import { ProfOrientationAtlasService } from '../tests/prof-orientation-v3-plus/a
 import { AiProviderConfigService } from '../ai-provider/ai-provider-config.service';
 import { AiProviderClientService, type AiProviderHealth } from '../ai-provider/ai-provider.client';
 import {
+  AdminAiProviderCheckResponseDto,
   AdminAiProviderSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
@@ -58,6 +68,23 @@ export class AdminSettingsController {
         health,
       },
     };
+  }
+
+  /**
+   * Платная проверка (один токен), поэтому не в `GET`: настройки открывают постоянно, а ключ и
+   * баланс проверяет только явное действие админа.
+   */
+  @Post('ai-provider/check')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Check the AI provider key and balance with one real one-token request',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminAiProviderCheckResponseDto })
+  async checkAiProvider(@GetCurrentUserId() userId: number) {
+    return this.aiProviderClient.checkCompletion(
+      await this.aiProviderConfig.getConnection(),
+      userId,
+    );
   }
 
   @Patch('ai-provider')

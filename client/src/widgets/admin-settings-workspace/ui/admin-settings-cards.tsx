@@ -3,7 +3,9 @@ import { FileText, KeyRound, Link2 } from 'lucide-react';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { AiProviderCheck } from './admin-settings-ai-provider-check';
 import { AiProviderForm } from './admin-settings-ai-provider-form';
+import { AiUsageSummary } from './admin-settings-ai-usage';
 import {
   AiProviderStateBadge,
   AiProviderStatusPanel,
@@ -65,9 +67,16 @@ export function AiProviderSettingsCard({
         ) : null}
 
         {aiProvider ? <AiProviderStatusPanel aiProvider={aiProvider} /> : null}
+        {/* Тот же key, что у формы: после сохранения настроек прежний итог проверки устарел. */}
+        {aiProvider?.isConfigured ? (
+          <AiProviderCheck
+            key={`check|${aiProvider.provider}|${aiProvider.baseUrl}|${aiProvider.defaultModel}|${aiProvider.updatedAt}`}
+          />
+        ) : null}
+        {aiProvider ? <AiUsageSummary /> : null}
         {aiProvider ? (
           <AiProviderForm
-            key={`${aiProvider.provider}|${aiProvider.baseUrl}|${aiProvider.defaultModel}|${aiProvider.updatedAt}`}
+            key={`form|${aiProvider.provider}|${aiProvider.baseUrl}|${aiProvider.defaultModel}|${aiProvider.updatedAt}`}
             aiProvider={aiProvider}
           />
         ) : null}

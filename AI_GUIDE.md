@@ -32,6 +32,12 @@ Runtime security defaults:
   `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and explicit `CORS_ALLOWED_ORIGINS`.
 - `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
   wildcard origins with credentialed auth cookies.
+- Environment variables are checked once at startup by the zod schema in
+  `server/src/config/env.ts` (`ConfigModule.forRoot({ validate })`): a malformed number such as
+  `AI_TIMEOUT_MS=90s` stops the server with a message instead of silently becoming the default,
+  and the non-local checks above live in the same schema. Services read variables through
+  `ConfigService`, never `process.env`; defaults stay with the code that uses the value. Register
+  a new variable in the schema when it is numeric.
 
 Database backups add runtime requirements:
 
@@ -92,6 +98,38 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
   saved id is missing from the new catalog, analysis falls back to the catalog default model.
 - OpenRouter extensions are sent only to `openrouter`: a strict OpenAI-compatible service answers
   400 to unknown fields.
+- **A failed AI analysis does not stay failed (#166).** A plain analysis ends `FAILED`; for a
+  two-phase prof-orientation result the record stays `READY` and `summary.llm.status` is
+  `failed` (`canRestartAnalysis` is the one predicate for both). The admin restarts one attempt
+  (`POST /admin/tests/attempts/:id/analysis/restart`) or a batch of up to 200 for a link
+  (`POST /admin/tests/public-links/:id/attempts/analysis/restart-failed`); both go through
+  `claimFailedAnalysis`, which flips the analysis back to pending under a row lock, so a double
+  click or two tabs start one paid call. The periodic recovery also retries failures that a retry
+  can fix, at most 3 times, 10, 30 and 90 minutes after the failure (`AUTO_RETRY_DELAYS_MS`),
+  20 per pass. Key (401/403), balance (402), unknown model, a bad request and an answer that is not
+  valid JSON or does not match the schema are never retried by themselves: they wait for the admin.
+  The failure state (`reason`, `httpStatus`, `autoRetries`, `nextRetryAtMs`) lives in
+  `summary.llm`, so there is no migration; a manual restart starts the series again. Each failure
+  is logged as a warning with the analysis id and the reason code only.
+- «Проверка связи»: the badge in the settings header calls only the model catalog (free), which
+  Polza serves without a valid key, so it says «каталог моделей отвечает», not «работает». The key
+  and the balance are checked by `POST /admin/settings/ai-provider/check`: one real one-token
+  request to the default model with the saved settings, on the admin's click only.
+- **AI spend is recorded per provider call (#164).** `AiProviderClientService` is the only place
+  that writes `ai_usage_events`: `generatePrompt` (and `checkCompletion`) take a mandatory
+  `usage: { purpose, attemptId?, actorUserId? }`, so a new caller cannot forget the purpose
+  (`STUDENT_ANALYSIS`, `PROF_ORIENTATION_ENRICHMENT`, `TEST_GENERATION`, `PROMPT_SIMULATION`,
+  `CONNECTION_CHECK`). One row per call, failed ones included (a timeout may be billed): requested
+  and actual model, `prompt/completion/total` tokens, `cost` from `usage.cost` of the response
+  (an OpenRouter/Polza extension, `Decimal(18,8)`, in the provider account's units, empty — not
+  zero — when the provider sends none), duration, failure reason code. Never the prompt, the
+  answer or the provider's error text: they hold students' answers (#133). `AiUsageService.record`
+  swallows its own failure (warning in the log), so accounting never fails an analysis. The links
+  to the attempt and the admin are `ON DELETE SET NULL`: deleting an attempt keeps the spend.
+  `GET /admin/ai-usage/summary?from=<ISO instant>` returns totals, by purpose and by model since
+  `from`; the browser computes «today / 7 / 30 days» in its own time zone and sends the instant.
+  Shown in «Настройки → Провайдер ИИ». `callsWithoutCost` tells how many successful calls have no
+  cost, i.e. how much the sum is understated.
 - The model catalog keeps models that report structured output support (`response_format`, and
   for OpenRouter also `structured_outputs`). A catalog that reports no capabilities at all keeps
   every model; the request itself then decides.
@@ -263,11 +301,17 @@ Current ownership map:
   own entities from its own route. In `tests` the journal covers public links, education
   organizations (`EDUCATION_ORGANIZATION`, requisites that land in student consent) and topics
   (`TEST_TOPIC`: publish, archive, restore, delete), and every export of student data
-  (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor.
-- Integration-only backend modules (`ai-provider`, `audit`) are declared in
-  `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
+  (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor, and every
+  restart of failed AI analyses (`ANALYSIS_RESTARTED`, `ANALYSES_RESTARTED` on the link).
+- Integration-only backend modules (`ai-provider`, `app-settings`, `audit`, `backups`) are declared
+  in `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
+  `AppModule` imports only feature modules, so an integration module is imported by the modules
+  that use it and never listed in `providers` of a second module: Nest builds one instance per
+  module that declares a provider, and `server/test/module-singletons.e2e-spec.ts` fails on a
+  service declared twice.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent
-  product workflow and lifecycle.
+  product workflow and lifecycle. `AppSettingsModule` owns the settings services and the public
+  privacy policy route; `ProfOrientationAtlasModule` owns the atlas service.
 
 For every backend + frontend task, include this pre-implementation note in the working plan:
 

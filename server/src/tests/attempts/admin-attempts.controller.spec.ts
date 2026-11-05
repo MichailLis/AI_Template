@@ -9,6 +9,8 @@ describe('TestsAdminAttemptsController', () => {
     listAttemptsForExport: jest.Mock;
     getAttemptDetail: jest.Mock;
     deleteAttempt: jest.Mock;
+    restartAttemptAnalysis: jest.Mock;
+    restartFailedAnalysesForLink: jest.Mock;
   };
   let exportMock: { toExcel: jest.Mock };
   let auditMock: { record: jest.Mock };
@@ -19,6 +21,8 @@ describe('TestsAdminAttemptsController', () => {
       listAttemptsForExport: jest.fn(),
       getAttemptDetail: jest.fn(),
       deleteAttempt: jest.fn(),
+      restartAttemptAnalysis: jest.fn(),
+      restartFailedAnalysesForLink: jest.fn(),
     };
     exportMock = { toExcel: jest.fn() };
     auditMock = { record: jest.fn().mockResolvedValue(undefined) };
@@ -93,5 +97,55 @@ describe('TestsAdminAttemptsController', () => {
 
     await expect(controller.deletePublicLinkAttempt(5, 13, 33)).resolves.toEqual(response);
     expect(serviceMock.deleteAttempt).toHaveBeenCalledWith(5, 13, 33);
+  });
+
+  describe('analysis restart', () => {
+    it('restarts one analysis and writes who did it to the journal of the attempt link', async () => {
+      serviceMock.restartAttemptAnalysis.mockResolvedValue({ publicLinkId: 13, restarted: true });
+
+      await expect(controller.restartAttemptAnalysis(5, 33)).resolves.toEqual({
+        attemptId: 33,
+        restarted: true,
+      });
+      expect(serviceMock.restartAttemptAnalysis).toHaveBeenCalledWith(33);
+      expect(auditMock.record).toHaveBeenCalledWith({
+        entityType: 'PUBLIC_LINK',
+        entityId: 13,
+        action: 'ANALYSIS_RESTARTED',
+        actorUserId: 5,
+        changes: [{ field: 'attemptId', before: null, after: '33' }],
+      });
+    });
+
+    it('does not journal a click that restarted nothing', async () => {
+      serviceMock.restartAttemptAnalysis.mockResolvedValue({ publicLinkId: 13, restarted: false });
+
+      await expect(controller.restartAttemptAnalysis(5, 33)).resolves.toEqual({
+        attemptId: 33,
+        restarted: false,
+      });
+      expect(auditMock.record).not.toHaveBeenCalled();
+    });
+
+    it('restarts the failed analyses of a link and journals how many', async () => {
+      serviceMock.restartFailedAnalysesForLink.mockResolvedValue({ restarted: 12 });
+
+      await expect(controller.restartFailedAnalyses(5, 13)).resolves.toEqual({ restarted: 12 });
+      expect(serviceMock.restartFailedAnalysesForLink).toHaveBeenCalledWith(13);
+      expect(auditMock.record).toHaveBeenCalledWith({
+        entityType: 'PUBLIC_LINK',
+        entityId: 13,
+        action: 'ANALYSES_RESTARTED',
+        actorUserId: 5,
+        changes: [{ field: 'analysesRestarted', before: null, after: '12' }],
+      });
+    });
+
+    it('does not journal a bulk restart that found nothing to restart', async () => {
+      serviceMock.restartFailedAnalysesForLink.mockResolvedValue({ restarted: 0 });
+
+      await expect(controller.restartFailedAnalyses(5, 13)).resolves.toEqual({ restarted: 0 });
+      expect(auditMock.record).not.toHaveBeenCalled();
+    });
   });
 });

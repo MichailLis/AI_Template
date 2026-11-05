@@ -2,10 +2,14 @@ import type { ConfigService } from '@nestjs/config';
 
 import type { AiProviderConnection } from './ai-provider.config';
 import {
+  AI_PROVIDER_COMPLETION_CHECK_TIMEOUT_MS,
   AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE,
   AI_PROVIDER_RETRY_DELAYS_MS,
   AiProviderClientService,
 } from './ai-provider.client';
+import type { AiUsageService } from './ai-usage.service';
+
+const analysisUsage = { purpose: 'STUDENT_ANALYSIS' } as const;
 
 const polzaConnection: AiProviderConnection = {
   provider: 'polza',
@@ -64,9 +68,10 @@ const readRequest = (fetchMock: jest.SpyInstance, index = 0) => {
 
 describe('ai provider client', () => {
   const createClient = (value: string | number | undefined) =>
-    new AiProviderClientService({
-      get: jest.fn().mockReturnValue(value),
-    } as unknown as ConfigService);
+    new AiProviderClientService(
+      { get: jest.fn().mockReturnValue(value) } as unknown as ConfigService,
+      { record: jest.fn() } as unknown as AiUsageService,
+    );
 
   afterEach(() => {
     jest.useRealTimers();
@@ -156,11 +161,116 @@ describe('ai provider client', () => {
     expect(fetchModelsSpy).toHaveBeenCalledTimes(2);
   });
 
+  describe('checkCompletion', () => {
+    const connection = { ...polzaConnection, apiKey: 'pza-secret-key-1234', defaultModel: 'm-1' };
+
+    it('asks the selected model for a single token and reports success', async () => {
+      const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('p'));
+
+      const result = await createClient(undefined).checkCompletion(connection);
+
+      expect(result).toMatchObject({ status: 'ok', model: 'm-1' });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const { url, headers, body } = readRequest(fetchMock);
+
+      expect(url).toBe('https://polza.ai/api/v1/chat/completions');
+      expect(headers.get('authorization')).toBe('Bearer pza-secret-key-1234');
+      expect(body).toMatchObject({ model: 'm-1', max_tokens: 1 });
+    });
+
+    it('takes the catalog default when no model is chosen', async () => {
+      const client = createClient(undefined);
+      jest
+        .spyOn(client, 'fetchModels')
+        .mockResolvedValue({ defaultModel: 'catalog-m', models: [] });
+      const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('p'));
+
+      await expect(
+        client.checkCompletion({ ...connection, defaultModel: null }),
+      ).resolves.toMatchObject({
+        status: 'ok',
+        model: 'catalog-m',
+      });
+      expect(readRequest(fetchMock).body.model).toBe('catalog-m');
+    });
+
+    /**
+     * Находка #166: Polza отдаёт каталог моделей и без валидного ключа, поэтому «каталог отвечает»
+     * не значит «анализ сработает». Настоящий запрос видит отказ там, где `checkHealth` видит «ok».
+     */
+    it('reports a refused key even though the model catalog answers', async () => {
+      const client = createClient(undefined);
+      jest.spyOn(client, 'fetchModels').mockResolvedValue({ defaultModel: 'm-1', models: [] });
+      jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(jsonResponse({ error: { message: 'Неверные учётные данные' } }, 401));
+
+      await expect(client.checkHealth(connection)).resolves.toMatchObject({ status: 'ok' });
+      await expect(client.checkCompletion(connection)).resolves.toMatchObject({
+        status: 'failed',
+        reason: 'AUTH',
+        httpStatus: 401,
+        errorMessage: 'Неверные учётные данные',
+      });
+    });
+
+    it('names an empty balance and a provider outage by their reason', async () => {
+      const fetchMock = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce(jsonResponse({ error: { message: 'Insufficient balance' } }, 402))
+        .mockResolvedValueOnce(jsonResponse({ error: { message: 'Bad gateway' } }, 502));
+      const client = createClient(undefined);
+
+      await expect(client.checkCompletion(connection)).resolves.toMatchObject({
+        reason: 'PAYMENT',
+        httpStatus: 402,
+      });
+      await expect(client.checkCompletion(connection)).resolves.toMatchObject({
+        reason: 'PROVIDER_ERROR',
+        httpStatus: 502,
+      });
+      // A check shows the answer as it is now: no pause-and-retry on 502 or 429.
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not echo the key back when the provider quotes it in the error', async () => {
+      jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(
+          jsonResponse({ error: { message: 'Invalid key pza-secret-key-1234 for user' } }, 401),
+        );
+
+      const result = await createClient(undefined).checkCompletion(connection);
+
+      expect(result.errorMessage).toBe('Invalid key *** for user');
+      expect(JSON.stringify(result)).not.toContain('pza-secret-key-1234');
+    });
+
+    it('reports a connection that never answers as a timeout', async () => {
+      jest.useFakeTimers();
+      jest.spyOn(global, 'fetch').mockImplementation(
+        (_input, init) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () =>
+              reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+            );
+          }),
+      );
+
+      const pending = createClient(undefined).checkCompletion(connection);
+      await jest.advanceTimersByTimeAsync(AI_PROVIDER_COMPLETION_CHECK_TIMEOUT_MS + 1);
+
+      await expect(pending).resolves.toMatchObject({ status: 'failed', reason: 'TIMEOUT' });
+    });
+  });
+
   it('sends a standard Chat Completions request to the configured base URL', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('{"ok":true}'));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).resolves.toEqual({
       model: 'deepseek/deepseek-v4-flash',
       output: JSON.stringify({ ok: true }, null, 2),
@@ -189,7 +299,9 @@ describe('ai provider client', () => {
   it('passes OpenRouter routing, required parameters and response healing only to OpenRouter', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(completion('{"ok":true}'));
 
-    await createClient(undefined).generatePrompt(openRouterConnection, structuredRequest);
+    await createClient(undefined).generatePrompt(openRouterConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
 
     const { url, headers, body } = readRequest(fetchMock);
 
@@ -229,8 +341,12 @@ describe('ai provider client', () => {
       ),
     );
 
-    const result = await createClient(undefined).generatePrompt(openRouterConnection, withRouting);
-    await createClient(undefined).generatePrompt(polzaConnection, withRouting);
+    const result = await createClient(undefined).generatePrompt(openRouterConnection, withRouting, {
+      usage: analysisUsage,
+    });
+    await createClient(undefined).generatePrompt(polzaConnection, withRouting, {
+      usage: analysisUsage,
+    });
 
     const openRouterBody = readRequest(fetchMock, 0).body;
     const polzaBody = readRequest(fetchMock, 1).body;
@@ -253,7 +369,9 @@ describe('ai provider client', () => {
       .mockResolvedValue(jsonResponse({ error: { message: 'User not found.' } }, 401));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow(/^User not found\.$/);
   });
 
@@ -264,7 +382,9 @@ describe('ai provider client', () => {
       .mockResolvedValueOnce(jsonResponse({ error: { message: 'Too many requests' } }, 429))
       .mockResolvedValueOnce(completion('{"ok":true}'));
 
-    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
     await jest.advanceTimersByTimeAsync(AI_PROVIDER_RETRY_DELAYS_MS[0]);
 
     await expect(pending).resolves.toMatchObject({ model: structuredRequest.model });
@@ -280,7 +400,9 @@ describe('ai provider client', () => {
         Promise.resolve(jsonResponse({ error: { message: 'Too many requests' } }, 429)),
       );
 
-    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest);
+    const pending = createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+      usage: analysisUsage,
+    });
     const assertion = expect(pending).rejects.toThrow('Too many requests');
     await jest.advanceTimersByTimeAsync(
       AI_PROVIDER_RETRY_DELAYS_MS[0] + AI_PROVIDER_RETRY_DELAYS_MS[1],
@@ -297,7 +419,9 @@ describe('ai provider client', () => {
       .mockResolvedValue(jsonResponse({ error: { message: 'Bad key' } }, 401));
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow('Bad key');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -313,7 +437,10 @@ describe('ai provider client', () => {
     );
 
     await expect(
-      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, { timeoutMs: 20 }),
+      createClient(undefined).generatePrompt(polzaConnection, structuredRequest, {
+        timeoutMs: 20,
+        usage: analysisUsage,
+      }),
     ).rejects.toThrow(AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
   });
 

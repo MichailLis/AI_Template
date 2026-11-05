@@ -38,6 +38,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   ATTEMPTS_EXPORTED: 'Выгружены прохождения в Excel',
   ATTEMPT_DELETED: 'Удалена попытка ученика',
   ANALYTICS_EXPORTED: 'Выгружена аналитика',
+  ANALYSIS_RESTARTED: 'Перезапущен ИИ-анализ попытки',
+  ANALYSES_RESTARTED: 'Перезапущены упавшие ИИ-анализы',
 };
 
 const AUDIT_FIELD_LABELS: Record<string, string> = {
@@ -88,6 +90,8 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   groupValidationHint: 'Подсказка по классу',
   attemptId: 'ID попытки',
   rows: 'Строк в выгрузке',
+  attemptId: 'ID попытки',
+  analysesRestarted: 'Перезапущено анализов',
   format: 'Формат выгрузки',
 };
 

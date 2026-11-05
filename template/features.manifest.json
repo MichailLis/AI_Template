@@ -30,7 +30,32 @@
         "server/src/ai-provider/ai-provider.config.ts",
         "server/src/ai-provider/ai-provider-config.service.ts",
         "server/src/ai-provider/ai-provider.client.ts",
+        "server/src/ai-provider/ai-usage.ts",
+        "server/src/ai-provider/ai-usage.service.ts",
         "server/src/ai-provider/ai-provider.utils.ts"
+      ]
+    },
+    {
+      "name": "app-settings",
+      "backendModule": "AppSettingsModule",
+      "ownership": {
+        "kind": "integration",
+        "owns": [
+          "One instance per application of the privacy policy, profession atlas and public rate limit settings services",
+          "Public privacy policy route",
+          "Profession atlas HTTP client"
+        ]
+      },
+      "ownedRoots": {
+        "backend": ["server/src/app-settings"]
+      },
+      "backendFiles": [
+        "server/src/app-settings/app-settings.module.ts",
+        "server/src/app-settings/privacy-policy.controller.ts",
+        "server/src/app-settings/privacy-policy-settings.service.ts",
+        "server/src/app-settings/profession-atlas-settings.service.ts",
+        "server/src/app-settings/profession-atlas-client.service.ts",
+        "server/src/app-settings/public-rate-limit-settings.service.ts"
       ]
     },
     {
@@ -116,6 +141,8 @@
         "server/src/admin/admin.module.ts",
         "server/src/admin/admin.controller.ts",
         "server/src/admin/admin-settings.controller.ts",
+        "server/src/admin/admin-ai-usage.controller.ts",
+        "server/src/admin/dto/admin-ai-usage.dto.ts",
         "server/src/admin/admin.service.ts",
         "server/src/admin/admin-password.utils.ts",
         "server/src/admin/dto/admin-overview-response.dto.ts",
@@ -187,6 +214,16 @@
         {
           "path": "/admin/settings/ai-provider",
           "methods": ["get", "patch"],
+          "protected": true
+        },
+        {
+          "path": "/admin/settings/ai-provider/check",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/ai-usage/summary",
+          "methods": ["get"],
           "protected": true
         },
         {
@@ -385,6 +422,7 @@
         "server/src/tests/session/public.controller.ts",
         "server/src/tests/session/public-session.service.ts",
         "server/src/tests/analysis/prompt-simulation-read.module.ts",
+        "server/src/tests/prof-orientation-v3-plus/atlas.module.ts",
         "server/src/tests/analysis/analysis.service.ts",
         "server/src/tests/reporting/admin-analytics.controller.ts",
         "server/src/tests/attempts/admin-attempts.controller.ts",
@@ -540,6 +578,16 @@
         {
           "path": "/admin/tests/attempts/{attemptId}",
           "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/attempts/{attemptId}/analysis/restart",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/attempts/analysis/restart-failed",
+          "methods": ["post"],
           "protected": true
         },
         {

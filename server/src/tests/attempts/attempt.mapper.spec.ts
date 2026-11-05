@@ -1,4 +1,4 @@
-import { mapAttemptListItem, mapSessionState } from './attempt.mapper';
+import { mapAttemptDetail, mapAttemptListItem, mapSessionState } from './attempt.mapper';
 import {
   PROF_ORIENTATION_DIRECTIONS,
   PROF_ORIENTATION_V3_PLUS_RESULT_KIND,
@@ -66,6 +66,51 @@ describe('mapSessionState question settings', () => {
     ['only scoring keys', { directionMap: { engineering: 1 } }],
   ])('returns null for settings that are %s', (_label, settings) => {
     expect(mapSettings(settings)).toBeNull();
+  });
+});
+
+describe('mapAttemptDetail restart flag', () => {
+  const detailOf = (analysis: unknown) =>
+    mapAttemptDetail(
+      {
+        ...createAttempt(analysis),
+        publicLink: { id: 3, shortCode: 'abc123' },
+        consentAcceptedAt: new Date('2026-09-11T10:00:00.000Z'),
+        consentVersion: 'v1',
+        answers: [],
+        analysis:
+          analysis === null
+            ? null
+            : { rawText: null, errorMessage: null, generatedAt: null, ...(analysis as object) },
+      } as unknown as Parameters<typeof mapAttemptDetail>[0],
+      toAttemptStatus,
+    ).analysis;
+
+  it('offers a restart for a failed plain AI analysis', () => {
+    expect(detailOf({ providerMode: 'LLM', status: 'FAILED', summary: null })).toMatchObject({
+      resultKind: 'FAILED',
+      canRestart: true,
+    });
+  });
+
+  it('offers a restart for a failed enrichment although the record itself is READY', () => {
+    expect(
+      detailOf({
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: { resultKind: PROF_ORIENTATION_V3_PLUS_RESULT_KIND, llm: { status: 'failed' } },
+      }),
+    ).toMatchObject({ status: 'READY', resultKind: 'ALGORITHM_ONLY', canRestart: true });
+  });
+
+  it('offers nothing for an analysis that is running, finished or absent', () => {
+    expect(detailOf({ providerMode: 'LLM', status: 'PENDING', summary: null })).toMatchObject({
+      canRestart: false,
+    });
+    expect(detailOf({ providerMode: 'LLM', status: 'READY', summary: {} })).toMatchObject({
+      canRestart: false,
+    });
+    expect(detailOf(null)).toBeNull();
   });
 });
 

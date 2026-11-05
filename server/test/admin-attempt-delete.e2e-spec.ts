@@ -24,6 +24,7 @@ describe('Admin deletes a student attempt (e2e)', () => {
   let linkId: number;
   let otherLinkId: number;
   let attemptId: number;
+  let usageEventId: number;
   const suffix = Date.now();
   const adminEmail = `attempt-delete-admin-e2e-${suffix}@example.com`;
   const password = 'Password123';
@@ -142,6 +143,21 @@ describe('Admin deletes a student attempt (e2e)', () => {
     attemptId = (
       await prisma.testStudentAttempt.findUniqueOrThrow({ where: { resumeToken: sessionToken } })
     ).id;
+
+    // An AI usage row of this attempt: deleting the attempt must keep the row and clear its link.
+    usageEventId = (
+      await prisma.aiUsageEvent.create({
+        data: {
+          purpose: 'STUDENT_ANALYSIS',
+          status: 'SUCCESS',
+          provider: 'e2e',
+          requestedModel: 'e2e-model',
+          durationMs: 1,
+          attemptId,
+        },
+        select: { id: true },
+      })
+    ).id;
   });
 
   afterAll(async () => {
@@ -149,6 +165,7 @@ describe('Admin deletes a student attempt (e2e)', () => {
       where: { shortCode: { in: [shortCode, otherShortCode] } },
     });
     await prisma.testTopic.deleteMany({ where: { slug } });
+    await prisma.aiUsageEvent.deleteMany({ where: { id: usageEventId } });
     await prisma.user.deleteMany({ where: { email: adminEmail } });
     await app.close();
   });
@@ -157,6 +174,11 @@ describe('Admin deletes a student attempt (e2e)', () => {
     expect((await attemptsOf(linkId)).map((attempt) => attempt.attemptId)).toContain(attemptId);
     expect(await prisma.testStudentAnswer.count({ where: { attemptId } })).toBe(1);
     expect(await prisma.testStudentAnalysis.count({ where: { attemptId } })).toBe(1);
+    expect(
+      await prisma.aiUsageEvent.findUniqueOrThrow({ where: { id: usageEventId } }),
+    ).toMatchObject({
+      attemptId,
+    });
     expect(await exportedRowCount()).toBe(2);
   });
 
@@ -183,6 +205,9 @@ describe('Admin deletes a student attempt (e2e)', () => {
     expect(await prisma.testStudentAttempt.count({ where: { id: attemptId } })).toBe(0);
     expect(await prisma.testStudentAnswer.count({ where: { attemptId } })).toBe(0);
     expect(await prisma.testStudentAnalysis.count({ where: { attemptId } })).toBe(0);
+    // The usage row stays for the cost reports; only its link to the deleted attempt is cleared.
+    const usage = await prisma.aiUsageEvent.findUniqueOrThrow({ where: { id: usageEventId } });
+    expect(usage.attemptId).toBeNull();
   });
 
   it('removes the attempt from the list and from the export', async () => {

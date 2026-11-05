@@ -3,19 +3,18 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AuthModule } from './auth/auth.module';
+import { validateEnv } from './config/env';
 import { PrismaModule } from './prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { TestsModule } from './tests/tests.module';
 import { AnalysisPromptsModule } from './analysis-prompts/analysis-prompts.module';
-import { AuditService } from './audit/audit.service';
 import { HealthController } from './health.controller';
-import { PrivacyPolicyController } from './privacy-policy.controller';
-import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-settings.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnv,
     }),
     PrismaModule,
     AuthModule,
@@ -23,12 +22,8 @@ import { PrivacyPolicySettingsService } from './app-settings/privacy-policy-sett
     AnalysisPromptsModule,
     TestsModule,
   ],
-  controllers: [HealthController, PrivacyPolicyController],
+  controllers: [HealthController],
   providers: [
-    PrivacyPolicySettingsService,
-    // AppModule imports only feature modules (verify:architecture), so the audit trail that
-    // PrivacyPolicySettingsService writes to is provided here directly.
-    AuditService,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,

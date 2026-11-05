@@ -69,6 +69,16 @@ export const getAnalysisResultKind = (
 };
 
 /**
+ * ИИ-часть записи упала, и её можно перезапустить. Обычный анализ в этом случае `FAILED`; у
+ * профориентации запись остаётся `READY` (инвариант 7), поэтому там смотрят на `llm.status`.
+ */
+export const canRestartAnalysis = (analysis: AnalysisResultState | null | undefined) =>
+  analysis?.providerMode === 'LLM'
+    ? analysis.status === 'FAILED'
+    : analysis?.providerMode === 'ALGORITHM_LLM' &&
+      getProfOrientationLlmStatus(analysis.summary) === 'failed';
+
+/**
  * Какой результат получит ученик по настройкам версии теста — до прохождения. Тот же выбор делает
  * завершение попытки, поэтому обещание на странице входа не расходится с тем, что будет записано.
  */

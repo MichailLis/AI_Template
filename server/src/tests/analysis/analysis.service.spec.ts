@@ -368,27 +368,33 @@ describe('TestsAnalysisService', () => {
 
   it('starts stale pending LLM analysis recovery during application bootstrap', () => {
     const recoverySpy = jest.spyOn(service, 'recoverStalePendingLlmAnalyses').mockResolvedValue(0);
+    const retrySpy = jest.spyOn(service, 'retryDueFailedAnalyses').mockResolvedValue(0);
 
     service.onApplicationBootstrap();
     expect(recoverySpy).toHaveBeenCalledTimes(1);
+    expect(retrySpy).toHaveBeenCalledTimes(1);
 
     recoverySpy.mockRestore();
+    retrySpy.mockRestore();
     service.onModuleDestroy();
   });
 
   it('repeats pending recovery on a timer until the module is destroyed', () => {
     jest.useFakeTimers();
     const recoverySpy = jest.spyOn(service, 'recoverStalePendingLlmAnalyses').mockResolvedValue(0);
+    const retrySpy = jest.spyOn(service, 'retryDueFailedAnalyses').mockResolvedValue(0);
 
     service.onApplicationBootstrap();
     jest.advanceTimersByTime(10 * 60 * 1000);
     expect(recoverySpy).toHaveBeenCalledTimes(2);
+    expect(retrySpy).toHaveBeenCalledTimes(2);
 
     service.onModuleDestroy();
     jest.advanceTimersByTime(10 * 60 * 1000);
     expect(recoverySpy).toHaveBeenCalledTimes(2);
 
     recoverySpy.mockRestore();
+    retrySpy.mockRestore();
   });
 
   it('runs at most ANALYSIS_LLM_CONCURRENCY analyses at once and skips attempts already queued', async () => {
@@ -631,6 +637,7 @@ describe('TestsAnalysisService', () => {
         requireParameters: true,
         useResponseHealing: true,
       }),
+      { usage: { purpose: 'STUDENT_ANALYSIS', attemptId: 5 } },
     );
     const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('introduction');
@@ -804,7 +811,7 @@ describe('TestsAnalysisService', () => {
           ignore: ['cloudflare'],
         },
       }),
-      { timeoutMs: 90_000 },
+      { timeoutMs: 90_000, usage: { purpose: 'PROF_ORIENTATION_ENRICHMENT', attemptId: 5 } },
     );
     const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.sessionId).toMatch(/^prof-orientation-\d+-try-1$/);

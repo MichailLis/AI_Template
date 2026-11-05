@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiCookieAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -18,7 +19,15 @@ import {
 @ApiErrorResponses()
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  /** Cookie с refresh-токеном уходит только по HTTPS в production. */
+  private readonly secureCookies: boolean;
+
+  constructor(
+    private authService: AuthService,
+    config: ConfigService,
+  ) {
+    this.secureCookies = config.get<string>('NODE_ENV') === 'production';
+  }
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
@@ -26,7 +35,12 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, type: AuthResponseDto })
   async signin(@Body() dto: SigninDto, @Res({ passthrough: true }) response: Response) {
     const authResult = await this.authService.signin(dto);
-    setRefreshTokenCookie(response, authResult.refreshToken, authResult.refreshCookieMaxAgeMs);
+    setRefreshTokenCookie(
+      response,
+      authResult.refreshToken,
+      authResult.refreshCookieMaxAgeMs,
+      this.secureCookies,
+    );
 
     return {
       accessToken: authResult.accessToken,
@@ -46,7 +60,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     await this.authService.logout(userId, sessionId);
-    clearRefreshTokenCookie(response);
+    clearRefreshTokenCookie(response, this.secureCookies);
   }
 
   @UseGuards(RtGuard)
@@ -62,7 +76,12 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const tokens = await this.authService.refreshTokens(userId, sessionId, refreshToken);
-    setRefreshTokenCookie(response, tokens.refreshToken, tokens.refreshCookieMaxAgeMs);
+    setRefreshTokenCookie(
+      response,
+      tokens.refreshToken,
+      tokens.refreshCookieMaxAgeMs,
+      this.secureCookies,
+    );
 
     return {
       accessToken: tokens.accessToken,

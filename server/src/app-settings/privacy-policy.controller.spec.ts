@@ -1,4 +1,4 @@
-import type { PrivacyPolicySettingsService } from './app-settings/privacy-policy-settings.service';
+import type { PrivacyPolicySettingsService } from './privacy-policy-settings.service';
 import { PrivacyPolicyController } from './privacy-policy.controller';
 
 describe('PrivacyPolicyController', () => {

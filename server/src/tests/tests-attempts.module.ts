@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { ProfessionAtlasClientService } from '../app-settings/profession-atlas-client.service';
-import { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
-import { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
-import { PublicRateLimitSettingsService } from '../app-settings/public-rate-limit-settings.service';
+import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { AuditModule } from '../audit/audit.module';
 import { AiProviderModule } from '../ai-provider/ai-provider.module';
-import { ProfOrientationAtlasService } from './prof-orientation-v3-plus/atlas';
+import { ProfOrientationAtlasModule } from './prof-orientation-v3-plus/atlas.module';
 import { TestsAdminAnalyticsController } from './reporting/admin-analytics.controller';
 import { TestsAdminAttemptService } from './attempts/admin-attempt.service';
 import { TestsAdminAttemptsController } from './attempts/admin-attempts.controller';
@@ -22,7 +19,13 @@ import { TestsPublicSessionService } from './session/public-session.service';
 import { PublicRateLimitBuckets, PublicRateLimitGuard } from './session/public-rate-limit.guard';
 
 @Module({
-  imports: [AiProviderModule, TestsPublicLinksModule, AuditModule],
+  imports: [
+    AiProviderModule,
+    AppSettingsModule,
+    AuditModule,
+    ProfOrientationAtlasModule,
+    TestsPublicLinksModule,
+  ],
   controllers: [TestsPublicController, TestsAdminAttemptsController, TestsAdminAnalyticsController],
   providers: [
     TestsAnalyticsService,
@@ -33,11 +36,6 @@ import { PublicRateLimitBuckets, PublicRateLimitGuard } from './session/public-r
     TestsPublicAttemptAllocationService,
     TestsAdminAttemptService,
     TestsAttemptsExportService,
-    PrivacyPolicySettingsService,
-    ProfessionAtlasSettingsService,
-    ProfessionAtlasClientService,
-    ProfOrientationAtlasService,
-    PublicRateLimitSettingsService,
     PublicRateLimitBuckets,
     PublicRateLimitGuard,
   ],

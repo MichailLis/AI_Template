@@ -56,13 +56,18 @@ const createAtlas = (
  * той же странице — «Недоступен · fetch failed». Бейдж обязан отражать результат проверки.
  */
 describe('getAiProviderHealthBadge', () => {
-  it('reports a working connection with the check time', () => {
-    expect(
-      getAiProviderHealthBadge(createAiProvider({ status: 'ok', checkedAt: CHECKED_AT })),
-    ).toEqual({
-      label: `OpenRouter работает · ${formatDateTime(CHECKED_AT)}`,
+  // Находка #166: каталог моделей Polza отвечает и при отозванном ключе, поэтому бейдж не может
+  // обещать больше, чем проверил: ключ и баланс видит только кнопка с настоящим запросом.
+  it('reports only that the catalog answers, not that the key or the balance are fine', () => {
+    const badge = getAiProviderHealthBadge(
+      createAiProvider({ status: 'ok', checkedAt: CHECKED_AT }),
+    );
+
+    expect(badge).toEqual({
+      label: `OpenRouter: каталог моделей отвечает · ${formatDateTime(CHECKED_AT)}`,
       tone: 'success',
     });
+    expect(badge.label).not.toContain('работает');
   });
 
   it('names the configured provider in the badge', () => {
@@ -74,7 +79,7 @@ describe('getAiProviderHealthBadge', () => {
         ),
       ),
     ).toEqual({
-      label: `Polza.ai работает · ${formatDateTime(CHECKED_AT)}`,
+      label: `Polza.ai: каталог моделей отвечает · ${formatDateTime(CHECKED_AT)}`,
       tone: 'success',
     });
   });
@@ -126,7 +131,7 @@ describe('getAiProviderHealthBadge', () => {
         isError: true,
       }),
     ).toEqual({
-      label: `OpenRouter работает · ${formatDateTime(CHECKED_AT)}`,
+      label: `OpenRouter: каталог моделей отвечает · ${formatDateTime(CHECKED_AT)}`,
       tone: 'success',
     });
   });

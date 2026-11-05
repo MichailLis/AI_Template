@@ -6,6 +6,11 @@ import { PrismaService } from '../../prisma.service';
 import type { AdminPublicAttemptsListQueryDto } from '../dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from '../attempts/attempt.mapper';
 import { TestsAnalysisService } from '../analysis/analysis.service';
+import {
+  RESTART_BATCH_LIMIT,
+  countFailedAnalyses,
+  findFailedAttemptIds,
+} from '../analysis/analysis-restart';
 import { buildAttemptListOrderBy, buildAttemptListWhere } from './attempt-list-query';
 
 /** Верхняя граница выгрузки: файл должен собираться в памяти за один запрос. */
@@ -38,6 +43,7 @@ export class TestsAdminAttemptService {
     const limit = query.limit ?? 10;
     const where = buildAttemptListWhere(linkId, query);
     const total = await this.prisma.testStudentAttempt.count({ where });
+    const failedAnalysisCount = await countFailedAnalyses(this.prisma, linkId);
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const currentPage = Math.min(page, totalPages);
     const skip = (currentPage - 1) * limit;
@@ -73,7 +79,51 @@ export class TestsAdminAttemptService {
           this.analysisService.toAttemptStatus(currentAttempt),
         ),
       ),
+      failedAnalysisCount,
     };
+  }
+
+  /** Перезапуск одного упавшего анализа; `restarted: false` — нечего перезапускать или уже перезапущен. */
+  async restartAttemptAnalysis(attemptId: number) {
+    const attempt = await this.prisma.testStudentAttempt.findUnique({
+      where: { id: attemptId },
+      select: { publicLinkId: true },
+    });
+
+    if (!attempt) {
+      throw new NotFoundException('Attempt not found', 'ATTEMPT_NOT_FOUND');
+    }
+
+    return {
+      publicLinkId: attempt.publicLinkId,
+      restarted: await this.analysisService.restartFailedAnalysis(attemptId),
+    };
+  }
+
+  /** Перезапуск упавших анализов ссылки, не больше `RESTART_BATCH_LIMIT` за запрос. */
+  async restartFailedAnalysesForLink(linkId: number) {
+    const link = await this.prisma.testPublicLink.findUnique({
+      where: { id: linkId },
+      select: { id: true },
+    });
+
+    if (!link) {
+      throw new NotFoundException('Public link not found', 'PUBLIC_LINK_NOT_FOUND');
+    }
+
+    const attemptIds = await findFailedAttemptIds(this.prisma, {
+      linkId,
+      take: RESTART_BATCH_LIMIT,
+    });
+    let restarted = 0;
+
+    for (const attemptId of attemptIds) {
+      if (await this.analysisService.restartFailedAnalysis(attemptId)) {
+        restarted += 1;
+      }
+    }
+
+    return { restarted };
   }
 
   async listAttemptsForExport(linkId: number, query: AdminPublicAttemptsListQueryDto) {
