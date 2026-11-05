@@ -149,6 +149,8 @@ describe('PublicLinksAttemptDetailDialog', () => {
         formatDateTime={(value) => value ?? '—'}
         toPrettyJson={(value) => JSON.stringify(value, null, 2)}
         onRequestDelete={handler}
+        isRestartingAnalysis={false}
+        onRestartAnalysis={vi.fn()}
       />
     );
     const { rerender } = render(renderDialog());

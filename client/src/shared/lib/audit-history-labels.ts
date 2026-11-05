@@ -90,7 +90,6 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   groupValidationHint: 'Подсказка по классу',
   attemptId: 'ID попытки',
   rows: 'Строк в выгрузке',
-  attemptId: 'ID попытки',
   analysesRestarted: 'Перезапущено анализов',
   format: 'Формат выгрузки',
 };
