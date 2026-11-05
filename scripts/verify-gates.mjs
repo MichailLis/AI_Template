@@ -180,7 +180,7 @@ const main = () => {
 
       // 3. Run gate directly: node scripts/<gate>.mjs
       const scriptFullPath = join(rootDir, mutation.script);
-      gateResult = spawnSync(process.execPath, [scriptFullPath], {
+      gateResult = spawnSync(process.execPath, [scriptFullPath, ...(mutation.args ?? [])], {
         cwd: rootDir,
         stdio: 'pipe',
         env: process.env,

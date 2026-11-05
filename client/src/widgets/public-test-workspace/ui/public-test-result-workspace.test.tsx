@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
+
 import { PublicTestResultWorkspace } from './public-test-result-workspace';
 import {
   getMinimalProfOrientationSummary,
@@ -37,6 +39,26 @@ describe('PublicTestResultWorkspace', () => {
   });
 
   /** Находка аудита UX-16: честный экран без карточек-заглушек при тесте без анализа. */
+  it('keeps the loaded screen when a background poll fails', () => {
+    mockSessionResult({
+      analysis: {
+        providerMode: 'LLM',
+        status: 'PENDING',
+        summary: { resultKind: 'none' },
+        errorMessage: null,
+        generatedAt: null,
+      },
+    });
+    const hook = vi.mocked(useTestsPublicControllerGetSessionResult);
+    hook.mockReturnValue({ ...hook(''), isError: true });
+
+    const { container } = render(<PublicTestResultWorkspace />);
+    const view = within(container);
+
+    expect(view.getByRole('heading', { name: /формируем отчет/i })).toBeInTheDocument();
+    expect(view.queryByText(/не удалось загрузить результат/i)).not.toBeInTheDocument();
+  });
+
   it('renders an honest completion screen without placeholder hero cards when test has no analysis', () => {
     mockSessionResult({
       analysis: {

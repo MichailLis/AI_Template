@@ -1,8 +1,13 @@
 #!/usr/bin/env node
+import { mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { chromium } from 'playwright';
 
+import { fillPublicEntryForm, runStudentResultScenarios } from './lib/e2e-public-result-flows.mjs';
 import { spawnNpm, spawnSyncNpm } from './lib/npm-runner.mjs';
 import { getProcessTreeSpawnOptions, stopProcessTree } from './lib/process-tree.mjs';
 
@@ -165,13 +170,49 @@ const waitForClient = async (url, timeoutMs) => {
 // runs still build, because nothing else guarantees dist/ matches the sources.
 const skipClientBuild = process.argv.includes('--skip-build');
 
-const buildClient = () => {
+// `--only=id,id` is the targeted run verify:gates uses to test one mutation: it builds with Vite
+// alone (no tsc) and runs just those student scenarios instead of the whole gate.
+const onlyArg = process.argv.find((arg) => arg.startsWith('--only='));
+const onlyScenarios = onlyArg ? onlyArg.slice('--only='.length).split(',') : null;
+
+// A build of its own goes to a temp dir: verify:gates runs this gate on mutated sources, and a
+// mutated client/dist left behind would be served by the next --skip-build run.
+const buildOutDir = skipClientBuild ? null : mkdtempSync(join(tmpdir(), 'e2e-critical-'));
+
+const buildClientWithViteOnly = async () => {
+  const client = join(process.cwd(), 'client');
+  const { build } = await import(
+    pathToFileURL(join(client, 'node_modules/vite/dist/node/index.js'))
+  );
+
+  await build({
+    root: client,
+    logLevel: 'error',
+    build: { outDir: buildOutDir, emptyOutDir: true },
+  });
+};
+
+const buildClient = async () => {
   if (skipClientBuild) {
     console.log('Skipping client build (--skip-build).');
     return;
   }
 
-  const buildArgs = ['run', 'build', '--prefix', 'client'];
+  if (onlyScenarios) {
+    await buildClientWithViteOnly();
+    return;
+  }
+
+  const buildArgs = [
+    'run',
+    'build',
+    '--prefix',
+    'client',
+    '--',
+    '--outDir',
+    buildOutDir,
+    '--emptyOutDir',
+  ];
   const buildProcess = spawnSyncNpm(buildArgs, {
     stdio: 'inherit',
   });
@@ -197,6 +238,7 @@ const startPreview = () => {
     '--port',
     previewPort,
     '--strictPort',
+    ...(buildOutDir ? ['--outDir', buildOutDir] : []),
   ];
   const preview = spawnNpm(
     previewArgs,
@@ -251,7 +293,7 @@ const isMockedApiRequest = (url) =>
 const getApiPath = (url) =>
   url.pathname.startsWith('/api/') ? url.pathname.slice(4) : url.pathname;
 
-const setupApiMocks = async (context, unhandledApiRequests) => {
+const setupApiMocks = async (context, unhandledApiRequests, publicMock = null) => {
   let educationOrganizations = [{ ...mockEducationOrganization }];
 
   await context.route('**/*', async (route) => {
@@ -273,6 +315,19 @@ const setupApiMocks = async (context, unhandledApiRequests) => {
 
     if (method === 'OPTIONS') {
       await fulfillCorsPreflight(route);
+      return;
+    }
+
+    // A result scenario owns the student endpoints; the smoke mocks below stay for the others.
+    if (
+      publicMock &&
+      (await publicMock.handle({
+        method,
+        apiPath,
+        request,
+        respond: (body, status) => fulfillJson(route, body, status),
+      }))
+    ) {
       return;
     }
 
@@ -402,6 +457,28 @@ const createContext = async (browser, { authenticated = false } = {}) => {
   return context;
 };
 
+// A page with the API mocked. `allowedBrowserErrors` lists the console errors a scenario causes
+// on purpose (a 404 chunk, a 5xx poll); anything else, or any unmocked request, fails the run.
+const openMockedPage = async (browser, { publicMock = null, allowedBrowserErrors = [] } = {}) => {
+  const unhandledApiRequests = [];
+  const browserErrors = [];
+  const context = await createContext(browser);
+  await setupApiMocks(context, unhandledApiRequests, publicMock);
+  const page = await context.newPage();
+  watchPageHealth(page, browserErrors);
+
+  return {
+    page,
+    assertHealthy: () => {
+      assertNoBrowserErrors(
+        browserErrors.filter((text) => !allowedBrowserErrors.some((pattern) => pattern.test(text))),
+      );
+      assertNoUnhandledApiRequests(unhandledApiRequests);
+    },
+    close: () => context.close(),
+  };
+};
+
 const assertNoBrowserErrors = (browserErrors) => {
   if (browserErrors.length > 0) {
     throw new Error(`Browser emitted errors:\n${browserErrors.join('\n')}`);
@@ -512,12 +589,7 @@ const runPublicSessionSmoke = async (browser) => {
   try {
     await page.goto(`${targetUrl}/t/SMOKE`);
     await page.getByText('Smoke Public Test').waitFor({ timeout: 10000 });
-    await page.getByLabel('Имя').fill('Иван');
-    await page.getByLabel('Фамилия (1-я буква)').fill('И');
-    await page.getByLabel('Отчество (1-я буква)').fill('О');
-    await page.getByLabel('Учебное заведение').fill('Школа');
-    await page.getByLabel('Группа / класс').fill('СМ-1');
-    await page.getByRole('checkbox', { name: /политик/i }).check();
+    await fillPublicEntryForm(page);
     await page.getByRole('button', { name: /Начать тестирование/ }).click();
 
     await page
@@ -552,12 +624,44 @@ const runPublicSessionSmoke = async (browser) => {
   }
 };
 
+const runCoreSmokes = async (browser) => {
+  await runLoginAndProtectedRouteSmoke(browser);
+  console.log('✓ /login and unauthenticated /admin/tests redirect smoke passed');
+
+  await runAuthenticatedAdminTestsSmoke(browser);
+  console.log('✓ authenticated /admin/tests smoke passed');
+
+  await runEducationOrganizationsEditorSmoke(browser);
+  console.log('✓ education organizations create/edit smoke passed');
+
+  await runPublicSessionSmoke(browser);
+  console.log('✓ /t/:code -> /t/:code/session/:sessionToken smoke passed');
+};
+
+// verify:gates runs this script before verify:e2e:critical gets to install Chromium.
+const launchBrowser = async () => {
+  try {
+    return await chromium.launch({ headless: true });
+  } catch (error) {
+    if (!String(error).includes("Executable doesn't exist")) {
+      throw error;
+    }
+
+    spawnSyncNpm(['exec', '--', 'playwright', 'install', 'chromium'], { stdio: 'inherit' });
+    return chromium.launch({ headless: true });
+  }
+};
+
 const main = async () => {
+  if (buildOutDir) {
+    process.on('exit', () => rmSync(buildOutDir, { recursive: true, force: true }));
+  }
+
   let previewProcess = null;
   let getPreviewLogs = () => '';
 
   try {
-    buildClient();
+    await buildClient();
     previewPort = await findAvailablePort();
     targetUrl = `http://${previewHost}:${previewPort}`;
     const { preview, getLogs } = startPreview();
@@ -565,19 +669,16 @@ const main = async () => {
     getPreviewLogs = getLogs;
     await waitForClient(targetUrl, 30000);
 
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowser();
     try {
-      await runLoginAndProtectedRouteSmoke(browser);
-      console.log('✓ /login and unauthenticated /admin/tests redirect smoke passed');
+      if (!onlyScenarios) {
+        await runCoreSmokes(browser);
+      }
 
-      await runAuthenticatedAdminTestsSmoke(browser);
-      console.log('✓ authenticated /admin/tests smoke passed');
-
-      await runEducationOrganizationsEditorSmoke(browser);
-      console.log('✓ education organizations create/edit smoke passed');
-
-      await runPublicSessionSmoke(browser);
-      console.log('✓ /t/:code -> /t/:code/session/:sessionToken smoke passed');
+      await runStudentResultScenarios(
+        { baseUrl: targetUrl, openMockedPage: (options) => openMockedPage(browser, options) },
+        onlyScenarios,
+      );
     } finally {
       await browser.close();
     }
