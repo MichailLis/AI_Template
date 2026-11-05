@@ -1,6 +1,6 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
 import type { Prisma, TestQuestionType } from '@prisma/client';
 
+import { ConflictError, InvalidInputError } from '../../common/errors/domain-error';
 import type { CreateTestsTopicFromAiDto } from '../dto/tests.dto';
 import {
   parseSliderSettings,
@@ -48,7 +48,7 @@ export const lockDraftVersion = async (tx: TransactionClient, versionId: number)
   });
 
   if (count === 0) {
-    throw new ConflictException(
+    throw new ConflictError(
       'Черновик уже опубликован или изменен, обновите страницу',
       'DRAFT_CHANGED',
     );
@@ -140,7 +140,7 @@ export const buildAiQuestionPayloads = (questions: CreateTestsTopicFromAiDto['qu
       (payload.type === 'SINGLE_CHOICE' || payload.type === 'MULTI_CHOICE') &&
       payload.options.length < 2
     ) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${questionLabel} requires at least two options`,
         'QUESTION_OPTIONS_REQUIRED',
       );
@@ -148,7 +148,7 @@ export const buildAiQuestionPayloads = (questions: CreateTestsTopicFromAiDto['qu
 
     if (payload.type === 'SLIDER') {
       if (payload.sliderBands.length === 0) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `${questionLabel} requires at least one slider band`,
           'SLIDER_BANDS_REQUIRED',
         );
@@ -156,7 +156,7 @@ export const buildAiQuestionPayloads = (questions: CreateTestsTopicFromAiDto['qu
 
       const sliderSettings = parseSliderSettings(payload.settings);
       if (!sliderSettings) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `${questionLabel} has invalid slider settings`,
           'SLIDER_SETTINGS_INVALID',
         );

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 
 import { prepareQuestionPayload, validateDraftForPublish } from '../shared/domain.utils';
 
@@ -12,7 +12,7 @@ describe('tests domain utils', () => {
         settings: { min: 0, max: 10, step: 1 },
         sliderBands: [{ minValue: 0, maxValue: 0, label: 'Zero range', weight: 0 }],
       }),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
   });
 
   /**
@@ -63,7 +63,7 @@ describe('tests domain utils', () => {
           },
         ],
       }),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
   });
 
   it('rejects overlapping slider bands on question upsert', () => {

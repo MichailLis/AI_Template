@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+import { ConflictError, InvalidInputError } from '../../common/errors/domain-error';
 
 import type { AuditService } from '../../audit/audit.service';
 import type { PrismaService } from '../../prisma.service';
@@ -437,7 +438,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(service.updateTopicDraft(1, { title: 'Late edit' })).rejects.toThrow(
-      ConflictException,
+      ConflictError,
     );
     expect(txMock.testTopicVersion.update).not.toHaveBeenCalled();
   });
@@ -556,7 +557,7 @@ describe('TestsService analysis prompt attachment', () => {
       },
     });
 
-    await expect(service.publishTopic(5, 1)).rejects.toThrow(BadRequestException);
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(InvalidInputError);
     expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
   });
 
@@ -564,7 +565,7 @@ describe('TestsService analysis prompt attachment', () => {
     txMock.testTopic.findUnique.mockResolvedValue(createTopicSnapshot());
     txMock.testTopicVersion.updateMany.mockResolvedValue({ count: 0 });
 
-    await expect(service.publishTopic(5, 1)).rejects.toThrow(ConflictException);
+    await expect(service.publishTopic(5, 1)).rejects.toThrow(ConflictError);
     expect(txMock.testTopicVersion.create).not.toHaveBeenCalled();
   });
 

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 
 import { createPublicSessionHarness } from '../session/public-session.spec-harness';
 
@@ -60,7 +60,7 @@ describe('TestsPublicSessionService start', () => {
       createPublicSessionStartDto({ groupOrClass: 'ИС-21' }),
     );
 
-    await expect(startPromise).rejects.toThrow(BadRequestException);
+    await expect(startPromise).rejects.toThrow(InvalidInputError);
     await expect(startPromise).rejects.toThrow('Неверный формат группы');
     expect(updateManyMock).not.toHaveBeenCalled();
   });
@@ -213,7 +213,7 @@ describe('TestsPublicSessionService start', () => {
         'DEMO2026',
         createPublicSessionDemographicStartDto({ age: undefined }),
       ),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidInputError);
     expect(createAttemptMock).not.toHaveBeenCalled();
   });
 

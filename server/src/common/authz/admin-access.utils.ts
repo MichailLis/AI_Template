@@ -1,6 +1,6 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { Role } from '@prisma/client';
 
+import { ForbiddenError, UnauthenticatedError } from '../errors/domain-error';
 import type { PrismaService } from '../../prisma.service';
 
 type AdminAccessUser = {
@@ -14,7 +14,7 @@ export const assertAdminUser = <TUser extends AdminAccessUser>(
   user: TUser | null | undefined,
 ): TUser => {
   if (!user || user.role !== 'ADMIN' || user.deactivatedAt !== null) {
-    throw new ForbiddenException('Admin area only', 'ADMIN_ONLY');
+    throw new ForbiddenError('Admin area only', 'ADMIN_ONLY');
   }
 
   return user;
@@ -42,6 +42,6 @@ export const ensureAdminAccess = async (
     admin.sessionsRevokedAt &&
     tokenIat < Math.floor(admin.sessionsRevokedAt.getTime() / 1000)
   ) {
-    throw new UnauthorizedException('Session expired', 'AUTH_SESSION_EXPIRED');
+    throw new UnauthenticatedError('Session expired', 'AUTH_SESSION_EXPIRED');
   }
 };

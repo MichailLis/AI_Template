@@ -1,4 +1,5 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenError } from '../common/errors/domain-error';
 import * as argon2 from 'argon2';
 
 import type { PrismaService } from '../prisma.service';
@@ -116,7 +117,7 @@ describe('AdminService user management', () => {
 
     await expect(
       service.createUser(ADMIN_ID, { email: 'new@example.com', role: 'USER' }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(ForbiddenError);
     expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 

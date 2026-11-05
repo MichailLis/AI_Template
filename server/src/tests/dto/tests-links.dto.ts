@@ -289,6 +289,11 @@ export const AdminDeletePublicLinkResponseSchema = z.object({
   linkId: z.number(),
 });
 
+export const AdminDeletePublicAttemptResponseSchema = z.object({
+  linkId: z.number(),
+  attemptId: z.number(),
+});
+
 export const AdminPublicAttemptSummarySchema = z.object({
   attemptId: z.number(),
   attemptNumber: z.number().int().min(1),
@@ -444,6 +449,9 @@ export class AdminPublicLinksListResponseDto extends createZodDto(
 ) {}
 export class AdminDeletePublicLinkResponseDto extends createZodDto(
   AdminDeletePublicLinkResponseSchema,
+) {}
+export class AdminDeletePublicAttemptResponseDto extends createZodDto(
+  AdminDeletePublicAttemptResponseSchema,
 ) {}
 export class AdminPublicAttemptsListQueryDto extends createZodDto(
   AdminPublicAttemptsListQuerySchema,

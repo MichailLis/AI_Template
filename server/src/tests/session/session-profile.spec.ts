@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 
 import {
   matchesGroupPattern,
@@ -74,17 +74,14 @@ describe('public session entry profile rules', () => {
         groupValidationHint: 'Two digits then one capital letter',
       });
 
-      expect(() => validateGroupOrClassForLink('IS-21', link)).toThrow(BadRequestException);
+      expect(() => validateGroupOrClassForLink('IS-21', link)).toThrow(InvalidInputError);
       expect(() => validateGroupOrClassForLink('IS-21', link)).toThrow(
         'Two digits then one capital letter',
       );
       expect((): void => validateGroupOrClassForLink('IS-21', link)).toThrow(
         expect.objectContaining({
-          response: {
-            message: 'Two digits then one capital letter',
-            error: 'GROUP_FORMAT_INVALID',
-            statusCode: 400,
-          },
+          message: 'Two digits then one capital letter',
+          code: 'GROUP_FORMAT_INVALID',
         }) as Error,
       );
     });
@@ -107,7 +104,7 @@ describe('public session entry profile rules', () => {
       });
 
       expect(() => validateGroupOrClassForLink('Группа', link)).not.toThrow();
-      expect(() => validateGroupOrClassForLink('10A', link)).toThrow(BadRequestException);
+      expect(() => validateGroupOrClassForLink('10A', link)).toThrow(InvalidInputError);
     });
   });
 
@@ -117,7 +114,7 @@ describe('public session entry profile rules', () => {
     });
 
     it.each([undefined, '', '   ', '\t\n'])('rejects %p', (value) => {
-      expect(() => normalizeRequiredString(value, 'required')).toThrow(BadRequestException);
+      expect(() => normalizeRequiredString(value, 'required')).toThrow(InvalidInputError);
       expect(() => normalizeRequiredString(value, 'required')).toThrow('required');
     });
   });
@@ -139,7 +136,7 @@ describe('public session entry profile rules', () => {
     it('rejects a request stating a different mode than the link', () => {
       expect(() =>
         validateEntryProfileMode(createLink({}, 'EDUCATION'), dto('DEMOGRAPHIC')),
-      ).toThrow(BadRequestException);
+      ).toThrow(InvalidInputError);
     });
   });
 
@@ -166,24 +163,22 @@ describe('public session entry profile rules', () => {
 
     it('rejects a request without a gender', () => {
       expect(() => resolveDemographicProfile(dto({ gender: undefined }))).toThrow(
-        BadRequestException,
+        InvalidInputError,
       );
     });
 
     it('rejects a request without an education level', () => {
       expect(() => resolveDemographicProfile(dto({ educationLevel: undefined }))).toThrow(
-        BadRequestException,
+        InvalidInputError,
       );
     });
 
     it('rejects a blank residence', () => {
-      expect(() => resolveDemographicProfile(dto({ residence: '   ' }))).toThrow(
-        BadRequestException,
-      );
+      expect(() => resolveDemographicProfile(dto({ residence: '   ' }))).toThrow(InvalidInputError);
     });
 
     it.each([undefined, 0, -1, 121, 17.5, Number.NaN])('rejects age %p', (age) => {
-      expect(() => resolveDemographicProfile(dto({ age }))).toThrow(BadRequestException);
+      expect(() => resolveDemographicProfile(dto({ age }))).toThrow(InvalidInputError);
     });
 
     it.each([1, 120])('accepts age %p at the boundary', (age) => {

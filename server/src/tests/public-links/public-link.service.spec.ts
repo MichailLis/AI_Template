@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 import { Prisma } from '@prisma/client';
 
 import {
@@ -829,7 +830,7 @@ describe('TestsPublicLinkService', () => {
 
     const result = service.getAccessiblePublicLinkByCode('demo2026');
 
-    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toBeInstanceOf(InvalidInputError);
     await expect(result).rejects.toMatchObject({
       message: 'Public test link is disabled because its test is archived',
     });
@@ -851,7 +852,7 @@ describe('TestsPublicLinkService', () => {
     );
 
     await expect(service.getAccessiblePublicLinkByCode('demo2026')).rejects.toThrow(
-      BadRequestException,
+      InvalidInputError,
     );
   });
 
@@ -868,7 +869,7 @@ describe('TestsPublicLinkService', () => {
 
     const result = service.getAccessiblePublicLinkByCode('demo2026');
 
-    await expect(result).rejects.toBeInstanceOf(BadRequestException);
+    await expect(result).rejects.toBeInstanceOf(InvalidInputError);
     await expect(result).rejects.toMatchObject({
       message: 'Public test link is disabled because its education organization is disabled',
     });

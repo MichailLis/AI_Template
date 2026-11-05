@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma.service';
 import type { AdminPublicAttemptsListQueryDto } from '../dto/tests-links.dto';
 import { mapAttemptDetail, mapAttemptListItem } from '../attempts/attempt.mapper';
@@ -21,6 +22,7 @@ export class TestsAdminAttemptService {
     private readonly prisma: PrismaService,
     private readonly analysisService: TestsAnalysisService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
+    private readonly auditService: AuditService,
   ) {}
 
   async listAttemptsForLink(linkId: number, query: AdminPublicAttemptsListQueryDto) {
@@ -190,5 +192,35 @@ export class TestsAdminAttemptService {
       (currentAttempt) => this.analysisService.toAttemptStatus(currentAttempt),
       professionAtlasUrl,
     );
+  }
+
+  /**
+   * Необратимое удаление прохождения. Ответы и анализ уходят каскадом по внешним ключам. Попытка
+   * ищется внутри своей ссылки, поэтому чужой id даёт тот же 404, что и несуществующий. В журнале
+   * только id: ФИО и класс ученика туда не пишем, это ПДн.
+   */
+  async deleteAttempt(userId: number, linkId: number, attemptId: number) {
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.testStudentAttempt.deleteMany({
+        where: { id: attemptId, publicLinkId: linkId },
+      });
+
+      if (count === 0) {
+        throw new NotFoundException('Attempt not found', 'ATTEMPT_NOT_FOUND');
+      }
+
+      await this.auditService.record(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: linkId,
+          action: 'ATTEMPT_DELETED',
+          actorUserId: userId,
+          changes: [{ field: 'attemptId', before: String(attemptId), after: null }],
+        },
+        tx,
+      );
+    });
+
+    return { linkId, attemptId };
   }
 }

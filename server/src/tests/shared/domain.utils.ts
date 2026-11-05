@@ -1,8 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { createHash, randomBytes } from 'node:crypto';
 import type { TestQuestionType } from '@prisma/client';
 
+import { InvalidInputError } from '../../common/errors/domain-error';
 import type { UpsertTestsQuestionDto } from '../dto/tests.dto';
 
 const isInputJsonValue = (value: unknown): value is Prisma.InputJsonValue => {
@@ -36,7 +36,7 @@ export const toPrismaSettingsInput = (
   }
 
   if (!isInputJsonValue(value)) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Question settings must be valid JSON',
       'QUESTION_SETTINGS_INVALID_JSON',
     );
@@ -53,7 +53,7 @@ export const toPrismaRequiredJsonInput = (
   }
 
   if (!isInputJsonValue(value)) {
-    throw new BadRequestException('Value must be valid JSON', 'VALUE_INVALID_JSON');
+    throw new InvalidInputError('Value must be valid JSON', 'VALUE_INVALID_JSON');
   }
 
   return value;
@@ -199,14 +199,14 @@ export const validateDraftForPublish = (draft: {
   // фоновый анализ берет промпт из версии теста и не смотрит, удален ли он.
   const attachedPrompt = draft.analysisPromptVersion?.analysisPrompt;
   if (attachedPrompt?.archivedAt) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       `Промпт анализа «${attachedPrompt.title}» удален. Подключите другой промпт перед публикацией.`,
       'DRAFT_PROMPT_ARCHIVED',
     );
   }
 
   if (draft.questions.length === 0) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Draft must contain at least one question before publish',
       'DRAFT_HAS_NO_QUESTIONS',
     );
@@ -216,7 +216,7 @@ export const validateDraftForPublish = (draft: {
 
   for (const question of draft.questions) {
     if (seenOrder.has(question.order)) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         'Questions order must be unique within draft',
         'QUESTION_ORDER_NOT_UNIQUE',
       );
@@ -225,7 +225,7 @@ export const validateDraftForPublish = (draft: {
 
     if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTI_CHOICE') {
       if (question.options.length < 2) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `Question "${question.title}" requires at least two options`,
           'QUESTION_OPTIONS_REQUIRED',
         );
@@ -236,7 +236,7 @@ export const validateDraftForPublish = (draft: {
       const sliderSettings = parseSliderSettings(question.settings);
 
       if (!sliderSettings) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `Slider question "${question.title}" has invalid settings`,
           'SLIDER_SETTINGS_INVALID',
         );
@@ -244,7 +244,7 @@ export const validateDraftForPublish = (draft: {
 
       for (const band of question.sliderBands) {
         if (band.maxValue <= band.minValue) {
-          throw new BadRequestException(
+          throw new InvalidInputError(
             `Slider question "${question.title}" has invalid score range`,
             'SLIDER_SETTINGS_INVALID',
           );
@@ -256,7 +256,7 @@ export const validateDraftForPublish = (draft: {
           const a = question.sliderBands[i];
           const b = question.sliderBands[j];
           if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
-            throw new BadRequestException(
+            throw new InvalidInputError(
               `Slider question "${question.title}" has overlapping score ranges: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
               'SLIDER_BANDS_OVERLAP',
             );
@@ -282,7 +282,7 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
     dto.type === 'SLIDER'
       ? (dto.sliderBands ?? []).map((band, index) => {
           if (band.maxValue <= band.minValue) {
-            throw new BadRequestException(
+            throw new InvalidInputError(
               'Slider band maxValue must be greater than minValue',
               'SLIDER_BAND_RANGE_INVALID',
             );
@@ -304,7 +304,7 @@ export const prepareQuestionPayload = (dto: UpsertTestsQuestionDto) => {
         const a = sliderBands[i];
         const b = sliderBands[j];
         if (a.minValue <= b.maxValue && b.minValue <= a.maxValue) {
-          throw new BadRequestException(
+          throw new InvalidInputError(
             `Slider bands must not overlap: [${a.minValue}..${a.maxValue}] and [${b.minValue}..${b.maxValue}]`,
             'SLIDER_BANDS_OVERLAP',
           );

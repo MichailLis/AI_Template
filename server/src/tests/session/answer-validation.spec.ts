@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 
 import {
   getMaxChoices,
@@ -62,7 +62,7 @@ describe('tests answer validation', () => {
         }),
         'Z',
       ),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
 
     expect(() =>
       validatePublicAnswerPayload(
@@ -72,7 +72,7 @@ describe('tests answer validation', () => {
         }),
         ['A', 'A'],
       ),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
 
     expect(() =>
       validatePublicAnswerPayload(
@@ -82,7 +82,7 @@ describe('tests answer validation', () => {
         }),
         5,
       ),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
   });
 
   it('rejects finish when required questions are missing or invalid', () => {
@@ -98,14 +98,14 @@ describe('tests answer validation', () => {
 
     expect(() =>
       validatePublicAttemptAnswersForFinish(questions, [{ questionId: 1, answerPayload: 'Ready' }]),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
 
     expect(() =>
       validatePublicAttemptAnswersForFinish(questions, [
         { questionId: 1, answerPayload: 'Ready' },
         { questionId: 2, answerPayload: 'Z' },
       ]),
-    ).toThrow(BadRequestException);
+    ).toThrow(InvalidInputError);
 
     expect(() =>
       validatePublicAttemptAnswersForFinish(questions, [

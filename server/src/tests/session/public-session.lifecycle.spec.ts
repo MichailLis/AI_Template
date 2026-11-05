@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { InvalidInputError } from '../../common/errors/domain-error';
 
 import {
   getResultAttemptByTokenOrThrow,
@@ -94,7 +94,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       service.saveAnswers('session-token', {
         answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidInputError);
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
@@ -114,7 +114,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       service.saveAnswers('session-token', {
         answers: [{ questionId: 100, answerPayload: 'A' }],
       }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidInputError);
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
@@ -263,7 +263,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       service.saveAnswers('session-token', {
         answers: [{ questionId: 100, answerPayload: 'Z' }],
       }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidInputError);
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
@@ -276,7 +276,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       analysis: null,
     } as never);
 
-    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    await expect(service.finishSession('session-token')).rejects.toThrow(InvalidInputError);
     expect(toPublicAnalysisResponseMock).not.toHaveBeenCalled();
     expect(transactionMock).not.toHaveBeenCalled();
   });
@@ -294,7 +294,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       },
     } as never);
 
-    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    await expect(service.finishSession('session-token')).rejects.toThrow(InvalidInputError);
     expect(toPublicAnalysisResponseMock).not.toHaveBeenCalled();
     expect(transactionMock).not.toHaveBeenCalled();
   });
@@ -388,7 +388,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       answers: [],
     } as never);
 
-    await expect(service.finishSession('session-token')).rejects.toThrow(BadRequestException);
+    await expect(service.finishSession('session-token')).rejects.toThrow(InvalidInputError);
     expect(txMock.testStudentAttempt.update).not.toHaveBeenCalled();
     expect(upsertStubAnalysisMock).not.toHaveBeenCalled();
   });

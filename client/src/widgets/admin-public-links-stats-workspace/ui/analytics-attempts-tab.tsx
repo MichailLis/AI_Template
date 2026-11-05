@@ -15,12 +15,17 @@ import { Input } from '@/shared/ui/input';
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
 import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
 import { downloadTestAnalyticsBlob } from './test-analytics-download';
-import { useAttemptDetail, usePaginatedPublicAttempts } from './use-admin-public-links-attempts';
+import {
+  useAttemptDetail,
+  useDeletePublicLinkAttempt,
+  usePaginatedPublicAttempts,
+} from './use-admin-public-links-attempts';
 import { useRestartAnalysis } from './use-restart-analysis';
 
 interface AnalyticsAttemptsTabProps {
   selectedPublicLink: { id: number; shortCode?: string } | null;
   effectivePublicLinkId: number | null;
+  effectiveTopicId: number | null;
   attemptsPage: number;
   attemptsLimit: number;
   setAttemptsPage: (updater: (previous: number) => number) => void;
@@ -44,6 +49,7 @@ const toPrettyJson = (value: unknown) => {
 export function AnalyticsAttemptsTab({
   selectedPublicLink,
   effectivePublicLinkId,
+  effectiveTopicId,
   attemptsPage,
   attemptsLimit,
   setAttemptsPage,
@@ -126,6 +132,22 @@ export function AnalyticsAttemptsTab({
     handleOpenAttemptDetails,
     handleCloseAttemptDetails,
   } = useAttemptDetail();
+  const [pendingDeleteAttemptId, setPendingDeleteAttemptId] = useState<number | null>(null);
+  const { deleteAttempt, isDeleting } = useDeletePublicLinkAttempt(
+    effectivePublicLinkId,
+    effectiveTopicId,
+  );
+
+  const handleConfirmDeleteAttempt = () => {
+    if (pendingDeleteAttemptId === null) {
+      return;
+    }
+
+    deleteAttempt(pendingDeleteAttemptId, () => {
+      setPendingDeleteAttemptId(null);
+      handleCloseAttemptDetails();
+    });
+  };
 
   const handlePreviousAttemptsPage = () => {
     setAttemptsPage((previous) => Math.max(1, previous - 1));
@@ -237,6 +259,18 @@ export function AnalyticsAttemptsTab({
         onRestartAnalysis={restartAttemptAnalysis}
         formatDateTime={formatDateTimePreciseOrDash}
         toPrettyJson={toPrettyJson}
+        onRequestDelete={setPendingDeleteAttemptId}
+      />
+
+      <ConfirmActionDialog
+        open={pendingDeleteAttemptId !== null}
+        title="Удалить попытку?"
+        description="Действие необратимо: ответы и результат ученика будут удалены. Запись об удалении останется в журнале ссылки."
+        confirmLabel="Удалить попытку"
+        variant="destructive"
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDeleteAttempt}
+        onClose={() => setPendingDeleteAttemptId(null)}
       />
 
       <ConfirmActionDialog

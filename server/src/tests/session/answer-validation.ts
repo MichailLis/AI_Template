@@ -1,6 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
 import type { TestQuestionType } from '@prisma/client';
 
+import { InvalidInputError } from '../../common/errors/domain-error';
 import { parseSliderSettings } from '../shared/domain.utils';
 
 const OPEN_TEXT_MAX_LENGTH = 5000;
@@ -34,7 +34,7 @@ export const getMaxChoices = (settings: unknown) => {
 
 const assertKnownOption = (question: PublicAnswerQuestion, value: string) => {
   if (!question.options.some((option) => option.value === value)) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       `${getQuestionLabel(question)} contains an unknown option`,
       'ANSWER_INVALID',
     );
@@ -52,7 +52,7 @@ export const validatePublicAnswerPayload = (
 ) => {
   if (question.type === 'OPEN_TEXT') {
     if (typeof answerPayload !== 'string') {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} expects a text answer`,
         'ANSWER_INVALID',
       );
@@ -60,14 +60,14 @@ export const validatePublicAnswerPayload = (
 
     const normalizedText = answerPayload.trim();
     if (!normalizedText) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} requires a non-empty answer`,
         'ANSWER_INVALID',
       );
     }
 
     if (normalizedText.length > OPEN_TEXT_MAX_LENGTH) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} answer is too long`,
         'ANSWER_INVALID',
       );
@@ -78,7 +78,7 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'SINGLE_CHOICE') {
     if (typeof answerPayload !== 'string' || !answerPayload.trim()) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} expects a single option`,
         'ANSWER_INVALID',
       );
@@ -90,7 +90,7 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'MULTI_CHOICE') {
     if (!Array.isArray(answerPayload) || answerPayload.length === 0) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} expects one or more options`,
         'ANSWER_INVALID',
       );
@@ -100,14 +100,14 @@ export const validatePublicAnswerPayload = (
     const selectedValues: string[] = [];
     for (const value of answerPayload as unknown[]) {
       if (typeof value !== 'string' || !value.trim()) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `${getQuestionLabel(question)} expects string options`,
           'ANSWER_INVALID',
         );
       }
 
       if (uniqueValues.has(value)) {
-        throw new BadRequestException(
+        throw new InvalidInputError(
           `${getQuestionLabel(question)} contains duplicate options`,
           'ANSWER_INVALID',
         );
@@ -120,7 +120,7 @@ export const validatePublicAnswerPayload = (
 
     const maxChoices = getMaxChoices(question.settings);
     if (maxChoices !== null && selectedValues.length > maxChoices) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} has too many selected options`,
         'ANSWER_INVALID',
       );
@@ -131,7 +131,7 @@ export const validatePublicAnswerPayload = (
 
   if (question.type === 'SLIDER') {
     if (typeof answerPayload !== 'number' || !Number.isFinite(answerPayload)) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} expects a numeric answer`,
         'ANSWER_INVALID',
       );
@@ -139,21 +139,21 @@ export const validatePublicAnswerPayload = (
 
     const settings = parseSliderSettings(question.settings);
     if (!settings) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} has invalid slider settings`,
         'ANSWER_INVALID',
       );
     }
 
     if (answerPayload < settings.min || answerPayload > settings.max) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} is outside the allowed range`,
         'ANSWER_INVALID',
       );
     }
 
     if (!isAlignedToStep(answerPayload, settings.min, settings.step)) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `${getQuestionLabel(question)} does not match slider step`,
         'ANSWER_INVALID',
       );
@@ -162,7 +162,7 @@ export const validatePublicAnswerPayload = (
     return answerPayload;
   }
 
-  throw new BadRequestException(
+  throw new InvalidInputError(
     `${getQuestionLabel(question)} has unsupported question type`,
     'ANSWER_INVALID',
   );
@@ -178,7 +178,7 @@ export const validatePublicAttemptAnswersForFinish = (
   for (const answer of answers) {
     const question = questionMap.get(answer.questionId);
     if (!question) {
-      throw new BadRequestException(
+      throw new InvalidInputError(
         `Question ${answer.questionId} does not belong to this session`,
         'QUESTION_NOT_IN_SESSION',
       );
@@ -193,7 +193,7 @@ export const validatePublicAttemptAnswersForFinish = (
   );
 
   if (missingRequiredQuestion) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       `${getQuestionLabel(missingRequiredQuestion)} is required`,
       'ANSWER_REQUIRED',
     );
