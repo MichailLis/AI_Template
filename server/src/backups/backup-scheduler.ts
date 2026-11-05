@@ -1,4 +1,5 @@
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { BackupSettingsService, getCurrentScheduleSlot } from './backup-settings.service';
 import { BackupStorage } from './backup-storage';
@@ -22,10 +23,11 @@ export class BackupScheduler implements OnModuleInit, OnModuleDestroy {
     private readonly backups: BackupsService,
     private readonly settingsService: BackupSettingsService,
     private readonly storage: BackupStorage,
+    private readonly config: ConfigService,
   ) {}
 
   onModuleInit() {
-    if (process.env.SKIP_DB_CONNECT === 'true') {
+    if (this.config.get<string>('SKIP_DB_CONNECT') === 'true') {
       return;
     }
 

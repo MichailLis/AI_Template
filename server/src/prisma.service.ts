@@ -7,6 +7,8 @@ import * as pg from 'pg';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly pool: pg.Pool;
+  /** Флаг для генерации OpenAPI и тестов без базы: соединение не открывается. */
+  private readonly skipDbConnect: boolean;
 
   constructor(config: ConfigService) {
     const pool = new pg.Pool({
@@ -21,10 +23,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const adapter = new PrismaPg(pool);
     super({ adapter });
     this.pool = pool;
+    this.skipDbConnect = config.get<string>('SKIP_DB_CONNECT') === 'true';
   }
 
   async onModuleInit() {
-    if (process.env.SKIP_DB_CONNECT === 'true') {
+    if (this.skipDbConnect) {
       return;
     }
 
@@ -32,7 +35,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleDestroy() {
-    if (process.env.SKIP_DB_CONNECT !== 'true') {
+    if (!this.skipDbConnect) {
       await this.$disconnect();
     }
 

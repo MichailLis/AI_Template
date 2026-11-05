@@ -59,6 +59,7 @@ describe('BackupRestoreService', () => {
   let prisma: { user: { findUnique: jest.Mock } };
   let adminCount: number;
   let restoredMigration: string | null;
+  let nodeEnv: string | undefined;
   let service: BackupRestoreService;
   let maintenanceDuringPgRestore: boolean;
 
@@ -85,6 +86,7 @@ describe('BackupRestoreService', () => {
     maintenance = new MaintenanceState();
     adminCount = 1;
     restoredMigration = '20261011000000_add_database_backup_audit_entity';
+    nodeEnv = undefined;
     maintenanceDuringPgRestore = false;
 
     backups = {
@@ -142,6 +144,9 @@ describe('BackupRestoreService', () => {
       databases as unknown as DatabaseAdmin,
       runner,
       maintenance,
+      {
+        get: (key: string) => (key === 'NODE_ENV' ? nodeEnv : undefined),
+      } as unknown as ConfigService,
     );
   });
 
@@ -210,6 +215,26 @@ describe('BackupRestoreService', () => {
 
     expect(operation.errorMessage).toContain('более новой версией приложения');
     expect(databases.swapDatabases).not.toHaveBeenCalled();
+  });
+
+  it('refuses a copy without migration history in production only', async () => {
+    restoredMigration = null;
+    nodeEnv = 'production';
+
+    await service.startRestore(ADMIN_ID, BACKUP_ID, 'RESTORE');
+    const operation = await waitForOperation();
+
+    expect(operation.errorMessage).toContain('нет истории миграций');
+    expect(databases.swapDatabases).not.toHaveBeenCalled();
+  });
+
+  it('accepts a copy without migration history outside production', async () => {
+    restoredMigration = null;
+
+    await service.startRestore(ADMIN_ID, BACKUP_ID, 'RESTORE');
+    await waitForOperation();
+
+    expect(databases.swapDatabases).toHaveBeenCalledTimes(1);
   });
 
   it('brings an older copy up to date with migrations before the swap', async () => {

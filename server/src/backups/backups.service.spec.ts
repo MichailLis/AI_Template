@@ -64,7 +64,7 @@ describe('BackupsService', () => {
       settingsService,
       maintenance,
     );
-    scheduler = new BackupScheduler(service, settingsService, storage);
+    scheduler = new BackupScheduler(service, settingsService, storage, config);
   };
 
   const waitForIdle = async () => {

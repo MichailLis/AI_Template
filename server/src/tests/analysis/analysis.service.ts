@@ -418,7 +418,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
 
     recover();
 
-    if (process.env.SKIP_DB_CONNECT !== 'true') {
+    if (this.config.get<string>('SKIP_DB_CONNECT') !== 'true') {
       this.recoveryTimer = setInterval(recover, PENDING_RECOVERY_INTERVAL_MS);
       this.recoveryTimer.unref();
     }
