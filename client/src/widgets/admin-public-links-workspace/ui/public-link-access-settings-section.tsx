@@ -1,5 +1,6 @@
 import { useWatch } from 'react-hook-form';
 
+import { PublicLinkAccessWindowFields } from '@/features/manage-public-link';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
@@ -8,6 +9,21 @@ import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
 import type { PublicLinkAccessSettingsSectionProps } from './public-link-create-card.types';
+
+function AccessWindowFields({
+  form,
+  onAccessWindowDraftValidityChange,
+}: PublicLinkAccessSettingsSectionProps) {
+  const [startsAt, endsAt] = useWatch({ control: form.control, name: ['startsAt', 'endsAt'] });
+
+  return (
+    <PublicLinkAccessWindowFields
+      values={{ startsAt, endsAt }}
+      onChange={(field, value) => form.setValue(field, value, { shouldDirty: true })}
+      onDraftValidityChange={onAccessWindowDraftValidityChange}
+    />
+  );
+}
 
 function PublicTemplateField({ form }: PublicLinkAccessSettingsSectionProps) {
   return (
@@ -86,7 +102,10 @@ function ConsentDetails({ form }: PublicLinkAccessSettingsSectionProps) {
   );
 }
 
-export function PublicLinkAccessSettingsSection({ form }: PublicLinkAccessSettingsSectionProps) {
+export function PublicLinkAccessSettingsSection({
+  form,
+  onAccessWindowDraftValidityChange,
+}: PublicLinkAccessSettingsSectionProps) {
   const shortCodeField = form.register('shortCode');
 
   return (
@@ -119,6 +138,10 @@ export function PublicLinkAccessSettingsSection({ form }: PublicLinkAccessSettin
           <PublicTemplateField form={form} />
           <EntryProfileModeField form={form} />
           <AttemptLimitFields form={form} />
+          <AccessWindowFields
+            form={form}
+            onAccessWindowDraftValidityChange={onAccessWindowDraftValidityChange}
+          />
         </div>
 
         <label className={adminClassNames.form.checkboxLabel}>

@@ -14,6 +14,8 @@ export const CREATE_PUBLIC_LINK_DEFAULTS: CreatePublicLinkValues = {
   consentVersion: 'v1',
   consentText:
     'Я даю согласие на обработку персональных данных для прохождения тестирования и формирования аналитики.',
+  startsAt: '',
+  endsAt: '',
 };
 
 interface TopicOption {

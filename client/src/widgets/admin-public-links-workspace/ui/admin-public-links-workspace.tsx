@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWatch } from 'react-hook-form';
 
 import { EducationOrganizationEditorSheet } from '@/features/education-organization-editor';
+import { PublicLinkAccessWindowDialog } from '@/features/manage-public-link';
 import { parseApiError } from '@/shared/lib/api-error';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
@@ -39,6 +40,7 @@ const buildListCardProps = (
   onOpenBrandingBuilder: (link: PublicLinkListItem) => void,
   onOpenQr: (shortCode: string) => void,
   onOpenHistory: (link: PublicLinkListItem) => void,
+  onEditAccessWindow: (link: PublicLinkListItem) => void,
 ) => ({
   publicLinksTab: state.publicLinksTab,
   visiblePublicLinks: state.visiblePublicLinks,
@@ -50,6 +52,7 @@ const buildListCardProps = (
   onOpenShortLink: state.handleOpenShortLink,
   onOpenQr,
   onOpenBrandingBuilder,
+  onEditAccessWindow,
   onTogglePublicLink: state.handleTogglePublicLink,
   onRegenerateShortCode: state.handleRegeneratePublicLinkShortCode,
   onArchivePublicLink: state.setPendingDeletePublicLinkId,
@@ -72,6 +75,7 @@ export function AdminPublicLinksWorkspace() {
   const [brandingBuilderLink, setBrandingBuilderLink] = useState<PublicLinkListItem | null>(null);
   const [qrShortCode, setQrShortCode] = useState<string | null>(null);
   const [historyLink, setHistoryLink] = useState<PublicLinkListItem | null>(null);
+  const [accessWindowLink, setAccessWindowLink] = useState<PublicLinkListItem | null>(null);
   const [organizationEditorMode, setOrganizationEditorMode] = useState<'create' | 'edit' | null>(
     null,
   );
@@ -95,6 +99,7 @@ export function AdminPublicLinksWorkspace() {
     setBrandingBuilderLink,
     setQrShortCode,
     setHistoryLink,
+    setAccessWindowLink,
   );
 
   return (
@@ -119,6 +124,11 @@ export function AdminPublicLinksWorkspace() {
       />
 
       <PublicLinkHistoryDialog link={historyLink} onClose={() => setHistoryLink(null)} />
+
+      <PublicLinkAccessWindowDialog
+        link={accessWindowLink}
+        onClose={() => setAccessWindowLink(null)}
+      />
 
       <PublicLinkCreateDialog
         {...createCardProps}
