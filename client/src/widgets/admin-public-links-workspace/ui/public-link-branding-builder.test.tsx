@@ -15,6 +15,8 @@ const standardLink = {
   createdAt: '2026-05-19T10:30:00.000Z',
   archivedAt: null,
   topicArchivedAt: null,
+  startsAt: null,
+  endsAt: null,
   isActive: true,
   publishedVersionId: 50,
   topicVersionNumber: 1,

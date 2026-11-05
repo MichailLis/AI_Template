@@ -14,6 +14,7 @@ const baseHandlers = {
   onArchivePublicLink: vi.fn(),
   onRestorePublicLink: vi.fn(),
   onOpenBrandingBuilder: vi.fn(),
+  onEditAccessWindow: vi.fn(),
   onMoveToActiveVersion: vi.fn(),
   onOpenHistory: vi.fn(),
   isUpdatingPublicLink: false,
@@ -69,6 +70,8 @@ describe('PublicLinksListCard', () => {
       createdAt,
       archivedAt: null,
       topicArchivedAt: null,
+      startsAt: null,
+      endsAt: null,
       isActive: true,
       ...upToDateVersion,
     };
@@ -101,6 +104,8 @@ describe('PublicLinksListCard', () => {
       createdAt: '2026-05-19T10:30:00.000Z',
       archivedAt: null,
       topicArchivedAt: '2026-09-11T10:00:00.000Z',
+      startsAt: null,
+      endsAt: null,
       isActive: true,
       ...upToDateVersion,
     };
@@ -133,6 +138,8 @@ describe('PublicLinksListCard', () => {
       createdAt: '2026-05-19T10:30:00.000Z',
       archivedAt: null,
       topicArchivedAt: null,
+      startsAt: null,
+      endsAt: null,
       isActive: true,
       ...upToDateVersion,
     };
@@ -153,6 +160,57 @@ describe('PublicLinksListCard', () => {
 
     expect(baseHandlers.onOpenBrandingBuilder).toHaveBeenCalledWith(standardLink);
   });
+
+  it('shows the access window status of a link and opens its window from the menu', async () => {
+    const user = userEvent.setup();
+    // Даты далеко в прошлом и будущем: статус не зависит от того, когда запущены тесты.
+    const scheduledLink = {
+      id: 44,
+      shortCode: 'WINDOW26',
+      title: 'Профориентационный тест',
+      educationOrganizationName: null,
+      publicTemplate: 'STANDARD' as const,
+      entryProfileMode: 'EDUCATION' as const,
+      createdAt: '2026-05-19T10:30:00.000Z',
+      archivedAt: null,
+      topicArchivedAt: null,
+      startsAt: '2099-11-12T07:00:00.000Z',
+      endsAt: null,
+      isActive: true,
+      ...upToDateVersion,
+    };
+
+    renderLinks([scheduledLink]);
+
+    expect(screen.getByText(/^Откроется /)).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Действия публичной ссылки'));
+    await user.click(screen.getByRole('button', { name: 'Окно доступа' }));
+
+    expect(baseHandlers.onEditAccessWindow).toHaveBeenCalledWith(scheduledLink);
+  });
+
+  it('marks a link whose window has already ended as closed', () => {
+    renderLinks([
+      {
+        id: 45,
+        shortCode: 'ENDED2020',
+        title: 'Профориентационный тест',
+        educationOrganizationName: null,
+        publicTemplate: 'STANDARD' as const,
+        entryProfileMode: 'EDUCATION' as const,
+        createdAt: '2026-05-19T10:30:00.000Z',
+        archivedAt: null,
+        topicArchivedAt: null,
+        startsAt: null,
+        endsAt: '2020-01-01T07:00:00.000Z',
+        isActive: true,
+        ...upToDateVersion,
+      },
+    ]);
+
+    expect(screen.getByText(/^Закрыта /)).toBeInTheDocument();
+  });
 });
 
 /**
@@ -170,6 +228,8 @@ describe('PublicLinksListCard test version', () => {
     createdAt: '2026-05-19T10:30:00.000Z',
     archivedAt: null,
     topicArchivedAt: null,
+    startsAt: null,
+    endsAt: null,
     isActive: true,
     publishedVersionId: 50,
     topicVersionNumber: 1,
@@ -257,6 +317,8 @@ describe('PublicLinksListCard test version', () => {
       createdAt: '2026-05-19T10:30:00.000Z',
       archivedAt: null,
       topicArchivedAt: null,
+      startsAt: null,
+      endsAt: null,
       isActive: true,
       ...upToDateVersion,
     };

@@ -181,6 +181,36 @@ describe('useAdminPublicLinksActions', () => {
     expect(createPublicLinkMutate).not.toHaveBeenCalled();
   });
 
+  it('sends the access window as ISO time when creating a link', async () => {
+    createPublicLinkMutate.mockReset();
+    const { result } = renderActions({
+      values: { ...createValues, startsAt: '2026-11-12T10:00', endsAt: '2026-11-12T10:45' },
+    });
+
+    await act(() => result.current.actions.handleCreatePublicLink());
+
+    expect(createPublicLinkMutate).toHaveBeenCalledWith(
+      {
+        data: expect.objectContaining({
+          startsAt: new Date('2026-11-12T10:00').toISOString(),
+          endsAt: new Date('2026-11-12T10:45').toISOString(),
+        }),
+      },
+      expect.any(Object),
+    );
+  });
+
+  it('refuses a window that closes before it opens', async () => {
+    createPublicLinkMutate.mockReset();
+    const { result } = renderActions({
+      values: { ...createValues, startsAt: '2026-11-12T10:45', endsAt: '2026-11-12T10:00' },
+    });
+
+    await act(() => result.current.actions.handleCreatePublicLink());
+
+    expect(createPublicLinkMutate).not.toHaveBeenCalled();
+  });
+
   it('submits public branding updates for the constructor', () => {
     updatePublicLinkMutate.mockClear();
     const { result } = renderActions();

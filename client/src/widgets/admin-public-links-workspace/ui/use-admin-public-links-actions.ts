@@ -1,9 +1,11 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
-  getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey,
-  getTestsAdminPublicLinksControllerListPublicLinksQueryKey,
+  buildAccessWindowPayload,
+  useInvalidatePublicLinkLists,
+  validateAccessWindow,
+} from '@/features/manage-public-link';
+import {
   useTestsAdminPublicLinksControllerCreatePublicLink,
   useTestsAdminPublicLinksControllerDeletePublicLink,
   useTestsAdminPublicLinksControllerMoveToActivePublishedVersion,
@@ -54,20 +56,6 @@ const handleOpenShortLink = (shortCode: string) => {
   window.open(getShortLinkUrl(shortCode), '_blank', 'noopener,noreferrer');
 };
 
-/** Both lists change together: archiving and restoring move a link from one to the other. */
-function useInvalidatePublicLinks() {
-  const queryClient = useQueryClient();
-
-  return () => {
-    void queryClient.invalidateQueries({
-      queryKey: getTestsAdminPublicLinksControllerListPublicLinksQueryKey(),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: getTestsAdminPublicLinksControllerListArchivedPublicLinksQueryKey(),
-    });
-  };
-}
-
 function useCreatePublicLinkAction({
   form,
   selection,
@@ -76,7 +64,7 @@ function useCreatePublicLinkAction({
   onPublicLinkCreated,
 }: UseAdminPublicLinksActionsParams) {
   const createPublicLinkMutation = useTestsAdminPublicLinksControllerCreatePublicLink();
-  const invalidatePublicLinks = useInvalidatePublicLinks();
+  const invalidatePublicLinks = useInvalidatePublicLinkLists();
 
   const createPublicLink = (values: CreatePublicLinkValues) => {
     const isDemographic = values.entryProfileMode === 'DEMOGRAPHIC';
@@ -94,6 +82,12 @@ function useCreatePublicLinkAction({
       return;
     }
 
+    const accessWindowError = validateAccessWindow(values);
+    if (accessWindowError) {
+      toast.error(accessWindowError);
+      return;
+    }
+
     createPublicLinkMutation.mutate(
       {
         data: {
@@ -108,6 +102,7 @@ function useCreatePublicLinkAction({
           allowResume: values.allowResume,
           consentVersion: values.consentVersion.trim() || 'v1',
           consentText: values.consentText.trim(),
+          ...buildAccessWindowPayload(values),
         },
       },
       {
@@ -138,7 +133,7 @@ function useCreatePublicLinkAction({
 function useMovePublicLinkAction(selection: PublicLinksSelection) {
   const moveToActivePublishedVersionMutation =
     useTestsAdminPublicLinksControllerMoveToActivePublishedVersion();
-  const invalidatePublicLinks = useInvalidatePublicLinks();
+  const invalidatePublicLinks = useInvalidatePublicLinkLists();
 
   const handleMovePublicLinkToActiveVersion = () => {
     const link = selection.pendingMovePublicLink;
@@ -172,7 +167,7 @@ export function useAdminPublicLinksActions(params: UseAdminPublicLinksActionsPar
     useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode();
   const deletePublicLinkMutation = useTestsAdminPublicLinksControllerDeletePublicLink();
   const restorePublicLinkMutation = useTestsAdminPublicLinksControllerRestorePublicLink();
-  const invalidatePublicLinks = useInvalidatePublicLinks();
+  const invalidatePublicLinks = useInvalidatePublicLinkLists();
 
   const handleTogglePublicLink = (linkId: number, nextActive: boolean) => {
     updatePublicLinkMutation.mutate(

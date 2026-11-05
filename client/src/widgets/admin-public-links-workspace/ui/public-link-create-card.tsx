@@ -62,9 +62,21 @@ interface PublicLinkCreateWizardProps extends PublicLinkCreateCardProps {
  */
 function PublicLinkCreateWizard({ onCancel, ...props }: PublicLinkCreateWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
+  const [isAccessWindowValid, setIsAccessWindowValid] = useState(true);
 
   const isLastStep = stepIndex === CREATE_STEPS.length - 1;
   const canLeaveCurrentStep = stepIndex > 0 || props.hasPublishedVersion;
+
+  const goBack = () => {
+    if (stepIndex === 0) {
+      onCancel();
+      return;
+    }
+
+    // Поля окна размонтируются вместе с шагом и теряют черновик ввода, поэтому флаг сбрасывается.
+    setIsAccessWindowValid(true);
+    setStepIndex(stepIndex - 1);
+  };
 
   return (
     <>
@@ -86,7 +98,12 @@ function PublicLinkCreateWizard({ onCancel, ...props }: PublicLinkCreateWizardPr
 
         {stepIndex === 1 ? <PublicLinkOrganizationSection {...props} /> : null}
 
-        {stepIndex === 2 ? <PublicLinkAccessSettingsSection {...props} /> : null}
+        {stepIndex === 2 ? (
+          <PublicLinkAccessSettingsSection
+            {...props}
+            onAccessWindowDraftValidityChange={setIsAccessWindowValid}
+          />
+        ) : null}
 
         {isLastStep && props.createError ? (
           <p role="alert" className={adminClassNames.panel.dangerInline}>
@@ -96,18 +113,16 @@ function PublicLinkCreateWizard({ onCancel, ...props }: PublicLinkCreateWizardPr
       </div>
 
       <DialogFooter className="gap-2 sm:space-x-0 [&>button]:w-full sm:[&>button]:w-auto">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => (stepIndex === 0 ? onCancel() : setStepIndex(stepIndex - 1))}
-        >
+        <Button type="button" variant="outline" onClick={goBack}>
           {stepIndex === 0 ? 'Отмена' : 'Назад'}
         </Button>
         {isLastStep ? (
           <Button
             type="button"
             onClick={props.onCreatePublicLink}
-            disabled={props.isCreatingPublicLink || !props.hasPublishedVersion}
+            disabled={
+              props.isCreatingPublicLink || !props.hasPublishedVersion || !isAccessWindowValid
+            }
           >
             {props.isCreatingPublicLink ? 'Создаем...' : 'Создать ссылку'}
           </Button>
