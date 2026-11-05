@@ -32,6 +32,12 @@ Runtime security defaults:
   `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and explicit `CORS_ALLOWED_ORIGINS`.
 - `CORS_ALLOWED_ORIGINS` is a comma-separated list of frontend origins. Do not use
   wildcard origins with credentialed auth cookies.
+- Environment variables are checked once at startup by the zod schema in
+  `server/src/config/env.ts` (`ConfigModule.forRoot({ validate })`): a malformed number such as
+  `AI_TIMEOUT_MS=90s` stops the server with a message instead of silently becoming the default,
+  and the non-local checks above live in the same schema. Services read variables through
+  `ConfigService`, never `process.env`; defaults stay with the code that uses the value. Register
+  a new variable in the schema when it is numeric.
 
 Database backups add runtime requirements:
 
@@ -297,10 +303,15 @@ Current ownership map:
   (`TEST_TOPIC`: publish, archive, restore, delete), and every export of student data
   (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor, and every
   restart of failed AI analyses (`ANALYSIS_RESTARTED`, `ANALYSES_RESTARTED` on the link).
-- Integration-only backend modules (`ai-provider`, `audit`) are declared in
-  `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
+- Integration-only backend modules (`ai-provider`, `app-settings`, `audit`, `backups`) are declared
+  in `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
+  `AppModule` imports only feature modules, so an integration module is imported by the modules
+  that use it and never listed in `providers` of a second module: Nest builds one instance per
+  module that declares a provider, and `server/test/module-singletons.e2e-spec.ts` fails on a
+  service declared twice.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent
-  product workflow and lifecycle.
+  product workflow and lifecycle. `AppSettingsModule` owns the settings services and the public
+  privacy policy route; `ProfOrientationAtlasModule` owns the atlas service.
 
 For every backend + frontend task, include this pre-implementation note in the working plan:
 

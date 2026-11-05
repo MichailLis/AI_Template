@@ -1,3 +1,4 @@
+import type { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 
 import { AuthController } from './auth.controller';
@@ -24,6 +25,14 @@ describe('AuthController', () => {
     refreshTokens: jest.Mock;
   };
 
+  const createController = (nodeEnv?: string) =>
+    new AuthController(
+      authServiceMock as unknown as AuthService,
+      {
+        get: (key: string) => (key === 'NODE_ENV' ? nodeEnv : undefined),
+      } as unknown as ConfigService,
+    );
+
   beforeEach(() => {
     authServiceMock = {
       signin: jest.fn(),
@@ -31,7 +40,7 @@ describe('AuthController', () => {
       refreshTokens: jest.fn(),
     };
 
-    controller = new AuthController(authServiceMock as unknown as AuthService);
+    controller = createController();
   });
 
   afterEach(() => {
@@ -93,6 +102,27 @@ describe('AuthController', () => {
       REFRESH_TOKEN_COOKIE_NAME,
       'refresh-token',
       expect.objectContaining({ maxAge: 1000 }),
+    );
+  });
+
+  it('sends the refresh cookie over HTTPS only in production', async () => {
+    authServiceMock.signin.mockResolvedValue({ accessToken: 'a', refreshToken: 'r', user: {} });
+    const productionResponse = createMockResponse();
+    const developmentResponse = createMockResponse();
+    const dto: SigninDto = { email: 'signin@example.com', password: 'Password123' };
+
+    await createController('production').signin(dto, productionResponse);
+    await createController('development').signin(dto, developmentResponse);
+
+    expect(productionResponse.cookie).toHaveBeenCalledWith(
+      REFRESH_TOKEN_COOKIE_NAME,
+      'r',
+      expect.objectContaining({ secure: true }),
+    );
+    expect(developmentResponse.cookie).toHaveBeenCalledWith(
+      REFRESH_TOKEN_COOKIE_NAME,
+      'r',
+      expect.objectContaining({ secure: false }),
     );
   });
 

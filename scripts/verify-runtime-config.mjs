@@ -39,6 +39,11 @@ const legacyDevJwtValue = ['secret', '123'].join('');
 const openRouterKeyPrefix = ['sk', 'or'].join('-');
 const setupAppPath = join(rootDir, 'server', 'src', 'setup-app.ts');
 const setupAppSource = readFileSync(setupAppPath, 'utf8');
+// The runtime guards (CORS allowlist, placeholder secrets) live in the env schema, which
+// ConfigModule runs at startup; setup-app only reads the already validated values.
+const envSchemaSource = readFileSync(join(rootDir, 'server', 'src', 'config', 'env.ts'), 'utf8');
+const appModuleSource = readFileSync(join(rootDir, 'server', 'src', 'app.module.ts'), 'utf8');
+const mainSource = readFileSync(join(rootDir, 'server', 'src', 'main.ts'), 'utf8');
 const deployComposePath = join(rootDir, 'docker-compose.deploy.yml');
 const deployComposeSource = readFileSync(deployComposePath, 'utf8');
 const runtimeEnvNames = [
@@ -138,8 +143,20 @@ if (/origin:\s*true/.test(setupAppSource)) {
   fail('server/src/setup-app.ts must not enable credentialed CORS for every origin');
 }
 
-if (!setupAppSource.includes('CORS_ALLOWED_ORIGINS')) {
-  fail('server/src/setup-app.ts must read CORS_ALLOWED_ORIGINS');
+if (!envSchemaSource.includes('CORS_ALLOWED_ORIGINS')) {
+  fail('server/src/config/env.ts must read CORS_ALLOWED_ORIGINS');
+}
+
+if (!setupAppSource.includes('resolveCorsAllowedOrigins')) {
+  fail('server/src/setup-app.ts must resolve the CORS allowlist through resolveCorsAllowedOrigins');
+}
+
+if (!/validate:\s*validateEnv\b/.test(appModuleSource)) {
+  fail('server/src/app.module.ts must pass validate: validateEnv to ConfigModule.forRoot');
+}
+
+if (!mainSource.includes('enableShutdownHooks()')) {
+  fail('server/src/main.ts must call app.enableShutdownHooks() so OnModuleDestroy runs on SIGTERM');
 }
 
 for (const marker of [
@@ -148,8 +165,8 @@ for (const marker of [
   'dev-access-secret-change-me',
   'dev-refresh-secret-change-me',
 ]) {
-  if (!setupAppSource.includes(marker)) {
-    fail(`server/src/setup-app.ts must enforce runtime guard marker: ${marker}`);
+  if (!envSchemaSource.includes(marker)) {
+    fail(`server/src/config/env.ts must enforce runtime guard marker: ${marker}`);
   }
 }
 

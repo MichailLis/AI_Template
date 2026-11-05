@@ -5,6 +5,7 @@ import {
   Logger,
   type OnApplicationBootstrap,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -70,6 +71,7 @@ export class BackupRestoreService implements OnApplicationBootstrap {
     private readonly databases: DatabaseAdmin,
     private readonly runner: PgToolsRunner,
     private readonly maintenance: MaintenanceState,
+    private readonly config: ConfigService,
   ) {}
 
   private get temporaryDatabase() {
@@ -306,7 +308,7 @@ export class BackupRestoreService implements OnApplicationBootstrap {
     const appMigration = await this.readAppLastMigration();
 
     if (restoredMigration === null) {
-      if (process.env.NODE_ENV === 'production') {
+      if (this.config.get<string>('NODE_ENV') === 'production') {
         throw new Error(
           'В копии нет истории миграций Prisma: восстановите ее вручную по инструкции',
         );

@@ -36,6 +36,29 @@
       ]
     },
     {
+      "name": "app-settings",
+      "backendModule": "AppSettingsModule",
+      "ownership": {
+        "kind": "integration",
+        "owns": [
+          "One instance per application of the privacy policy, profession atlas and public rate limit settings services",
+          "Public privacy policy route",
+          "Profession atlas HTTP client"
+        ]
+      },
+      "ownedRoots": {
+        "backend": ["server/src/app-settings"]
+      },
+      "backendFiles": [
+        "server/src/app-settings/app-settings.module.ts",
+        "server/src/app-settings/privacy-policy.controller.ts",
+        "server/src/app-settings/privacy-policy-settings.service.ts",
+        "server/src/app-settings/profession-atlas-settings.service.ts",
+        "server/src/app-settings/profession-atlas-client.service.ts",
+        "server/src/app-settings/public-rate-limit-settings.service.ts"
+      ]
+    },
+    {
       "name": "audit",
       "backendModule": "AuditModule",
       "ownership": {
@@ -399,6 +422,7 @@
         "server/src/tests/session/public.controller.ts",
         "server/src/tests/session/public-session.service.ts",
         "server/src/tests/analysis/prompt-simulation-read.module.ts",
+        "server/src/tests/prof-orientation-v3-plus/atlas.module.ts",
         "server/src/tests/analysis/analysis.service.ts",
         "server/src/tests/reporting/admin-analytics.controller.ts",
         "server/src/tests/attempts/admin-attempts.controller.ts",
