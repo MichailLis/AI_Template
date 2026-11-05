@@ -347,6 +347,30 @@ export const AdminPublicAttemptsListResponseSchema = z.object({
   total: z.number().int().min(0),
   totalPages: z.number().int().min(1),
   attempts: z.array(AdminPublicAttemptSummarySchema),
+  failedAnalysisCount: z
+    .number()
+    .int()
+    .min(0)
+    .describe(
+      'Сколько ИИ-анализов ссылки упало и может быть перезапущено; не зависит от фильтров и страницы списка',
+    ),
+});
+
+export const AdminRestartAttemptAnalysisResponseSchema = z.object({
+  attemptId: z.number().int().min(1),
+  restarted: z
+    .boolean()
+    .describe(
+      'false: анализ не в состоянии ошибки (идёт или готов) или его уже перезапустил другой запрос',
+    ),
+});
+
+export const AdminRestartFailedAnalysesResponseSchema = z.object({
+  restarted: z
+    .number()
+    .int()
+    .min(0)
+    .describe('Сколько упавших анализов поставлено в очередь за этот запрос (партия ограничена)'),
 });
 
 export const AdminPublicAttemptAnswerSchema = z.object({
@@ -366,6 +390,11 @@ export const AdminPublicAttemptAnalysisSchema = z
     rawText: z.string().nullable(),
     errorMessage: z.string().nullable(),
     generatedAt: z.string().nullable(),
+    canRestart: z
+      .boolean()
+      .describe(
+        'ИИ-часть анализа упала и её можно перезапустить (у профориентации запись при этом READY: признак — llm.status)',
+      ),
   })
   .nullable();
 
@@ -424,6 +453,12 @@ export class AdminPublicAttemptsListResponseDto extends createZodDto(
 ) {}
 export class AdminPublicAttemptDetailResponseDto extends createZodDto(
   AdminPublicAttemptDetailResponseSchema,
+) {}
+export class AdminRestartAttemptAnalysisResponseDto extends createZodDto(
+  AdminRestartAttemptAnalysisResponseSchema,
+) {}
+export class AdminRestartFailedAnalysesResponseDto extends createZodDto(
+  AdminRestartFailedAnalysesResponseSchema,
 ) {}
 export class AdminCreateEducationOrganizationDto extends createZodDto(
   AdminCreateEducationOrganizationSchema,

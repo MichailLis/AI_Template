@@ -8,7 +8,7 @@ import type {
 
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
 import { PublicQuestionSettingsSchema } from '../dto/tests-public.dto';
-import { getAnalysisResultKind } from '../analysis/analysis-result-kind';
+import { canRestartAnalysis, getAnalysisResultKind } from '../analysis/analysis-result-kind';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 import { getV3Summary } from '../reporting/analytics-summary';
 
@@ -277,6 +277,7 @@ export const mapAttemptDetail = (
           rawText: attempt.analysis.rawText,
           errorMessage: attempt.analysis.errorMessage,
           generatedAt: toOptionalIsoString(attempt.analysis.generatedAt),
+          canRestart: canRestartAnalysis(attempt.analysis),
         }
       : null,
   };

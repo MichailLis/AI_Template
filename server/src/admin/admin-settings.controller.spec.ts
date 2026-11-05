@@ -14,6 +14,7 @@ describe('AdminSettingsController', () => {
   };
   let aiProviderClient: {
     checkHealth: jest.Mock;
+    checkCompletion: jest.Mock;
   };
   let professionAtlasSettingsService: {
     getProfessionAtlasSettings: jest.Mock;
@@ -38,6 +39,7 @@ describe('AdminSettingsController', () => {
     };
     aiProviderClient = {
       checkHealth: jest.fn(),
+      checkCompletion: jest.fn(),
     };
     professionAtlasSettingsService = {
       getProfessionAtlasSettings: jest.fn(),
@@ -109,6 +111,39 @@ describe('AdminSettingsController', () => {
     });
     expect(aiProviderConfig.getAiProviderSettings).toHaveBeenCalledWith();
     expect(aiProviderClient.checkHealth).toHaveBeenCalledWith(connection);
+  });
+
+  /**
+   * Находка #166: каталог моделей отвечает и при отозванном ключе. Настоящая проверка идёт к модели
+   * по явному действию, а не при открытии настроек.
+   */
+  it('checks the saved key and balance with a real request, only on request', async () => {
+    const connection = { baseUrl: 'https://polza.ai/api/v1', apiKey: 'pza-env-secret' };
+    const check = {
+      status: 'failed',
+      checkedAt: '2026-09-12T20:05:00.000Z',
+      model: 'm',
+      reason: 'PAYMENT',
+      httpStatus: 402,
+    };
+    aiProviderConfig.getConnection.mockResolvedValue(connection);
+    aiProviderClient.checkCompletion.mockResolvedValue(check);
+
+    await expect(controller.checkAiProvider()).resolves.toEqual(check);
+    expect(aiProviderClient.checkCompletion).toHaveBeenCalledWith(connection);
+    expect(aiProviderClient.checkHealth).not.toHaveBeenCalled();
+  });
+
+  it('opening the settings never makes the paid one-token request', async () => {
+    aiProviderConfig.getAiProviderSettings.mockResolvedValue({
+      aiProvider: { isConfigured: true, maskedValue: 'k', source: 'ENV', updatedAt: null },
+    });
+    aiProviderConfig.getConnection.mockResolvedValue({ apiKey: 'k' });
+    aiProviderClient.checkHealth.mockResolvedValue({ status: 'ok', checkedAt: 'x' });
+
+    await controller.getAiProviderSettings();
+
+    expect(aiProviderClient.checkCompletion).not.toHaveBeenCalled();
   });
 
   it('does not call the AI provider when no key is configured', async () => {

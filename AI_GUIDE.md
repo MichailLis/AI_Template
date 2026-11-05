@@ -92,6 +92,23 @@ OPENROUTER_APP_NAME="AI Template Admin"           # OpenRouter only
   saved id is missing from the new catalog, analysis falls back to the catalog default model.
 - OpenRouter extensions are sent only to `openrouter`: a strict OpenAI-compatible service answers
   400 to unknown fields.
+- **A failed AI analysis does not stay failed (#166).** A plain analysis ends `FAILED`; for a
+  two-phase prof-orientation result the record stays `READY` and `summary.llm.status` is
+  `failed` (`canRestartAnalysis` is the one predicate for both). The admin restarts one attempt
+  (`POST /admin/tests/attempts/:id/analysis/restart`) or a batch of up to 200 for a link
+  (`POST /admin/tests/public-links/:id/attempts/analysis/restart-failed`); both go through
+  `claimFailedAnalysis`, which flips the analysis back to pending under a row lock, so a double
+  click or two tabs start one paid call. The periodic recovery also retries failures that a retry
+  can fix, at most 3 times, 10, 30 and 90 minutes after the failure (`AUTO_RETRY_DELAYS_MS`),
+  20 per pass. Key (401/403), balance (402), unknown model, a bad request and an answer that is not
+  valid JSON or does not match the schema are never retried by themselves: they wait for the admin.
+  The failure state (`reason`, `httpStatus`, `autoRetries`, `nextRetryAtMs`) lives in
+  `summary.llm`, so there is no migration; a manual restart starts the series again. Each failure
+  is logged as a warning with the analysis id and the reason code only.
+- «Проверка связи»: the badge in the settings header calls only the model catalog (free), which
+  Polza serves without a valid key, so it says «каталог моделей отвечает», not «работает». The key
+  and the balance are checked by `POST /admin/settings/ai-provider/check`: one real one-token
+  request to the default model with the saved settings, on the admin's click only.
 - The model catalog keeps models that report structured output support (`response_format`, and
   for OpenRouter also `structured_outputs`). A catalog that reports no capabilities at all keeps
   every model; the request itself then decides.
@@ -263,7 +280,8 @@ Current ownership map:
   own entities from its own route. In `tests` the journal covers public links, education
   organizations (`EDUCATION_ORGANIZATION`, requisites that land in student consent) and topics
   (`TEST_TOPIC`: publish, archive, restore, delete), and every export of student data
-  (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor.
+  (`ATTEMPTS_EXPORTED` on the link, `ANALYTICS_EXPORTED` on the topic) with the actor, and every
+  restart of failed AI analyses (`ANALYSIS_RESTARTED`, `ANALYSES_RESTARTED` on the link).
 - Integration-only backend modules (`ai-provider`, `audit`) are declared in
   `template/features.manifest.json` `integrationModules`, not as feature-owned route contexts.
 - `app-settings` is system configuration/infrastructure unless a task gives it an independent

@@ -190,6 +190,11 @@
           "protected": true
         },
         {
+          "path": "/admin/settings/ai-provider/check",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
           "path": "/admin/settings/profession-atlas",
           "methods": ["get", "patch"],
           "protected": true
@@ -535,6 +540,16 @@
         {
           "path": "/admin/tests/attempts/{attemptId}",
           "methods": ["get"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/attempts/{attemptId}/analysis/restart",
+          "methods": ["post"],
+          "protected": true
+        },
+        {
+          "path": "/admin/tests/public-links/{linkId}/attempts/analysis/restart-failed",
+          "methods": ["post"],
           "protected": true
         },
         {

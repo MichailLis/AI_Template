@@ -1,9 +1,11 @@
 import {
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
+  Post,
   Query,
   Res,
   StreamableFile,
@@ -20,6 +22,8 @@ import {
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListQueryDto,
   AdminPublicAttemptsListResponseDto,
+  AdminRestartAttemptAnalysisResponseDto,
+  AdminRestartFailedAnalysesResponseDto,
 } from '../dto/tests-links.dto';
 import { TestsAdminAttemptService } from '../attempts/admin-attempt.service';
 import { ApiErrorResponses } from '../../common/decorators/api-error-responses.decorator';
@@ -96,5 +100,53 @@ export class TestsAdminAttemptsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptDetailResponseDto })
   getAttemptDetail(@Param('attemptId', ParseIntPipe) attemptId: number) {
     return this.testsAdminAttemptService.getAttemptDetail(attemptId);
+  }
+
+  @Post('attempts/:attemptId/analysis/restart')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restart a failed AI analysis of one attempt' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminRestartAttemptAnalysisResponseDto })
+  async restartAttemptAnalysis(
+    @GetCurrentUserId() userId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    const { publicLinkId, restarted } =
+      await this.testsAdminAttemptService.restartAttemptAnalysis(attemptId);
+
+    // Перезапуск тратит деньги провайдера: фиксируем, кто его нажал. Пустой ответ не событие.
+    if (restarted) {
+      await this.auditService.record({
+        entityType: 'PUBLIC_LINK',
+        entityId: publicLinkId,
+        action: 'ANALYSIS_RESTARTED',
+        actorUserId: userId,
+        changes: [{ field: 'attemptId', before: null, after: String(attemptId) }],
+      });
+    }
+
+    return { attemptId, restarted };
+  }
+
+  @Post('public-links/:linkId/attempts/analysis/restart-failed')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restart every failed AI analysis of a public link (one batch)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminRestartFailedAnalysesResponseDto })
+  async restartFailedAnalyses(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+  ) {
+    const { restarted } = await this.testsAdminAttemptService.restartFailedAnalysesForLink(linkId);
+
+    if (restarted > 0) {
+      await this.auditService.record({
+        entityType: 'PUBLIC_LINK',
+        entityId: linkId,
+        action: 'ANALYSES_RESTARTED',
+        actorUserId: userId,
+        changes: [{ field: 'analysesRestarted', before: null, after: String(restarted) }],
+      });
+    }
+
+    return { restarted };
   }
 }

@@ -31,6 +31,8 @@ import type {
   AdminPublicAttemptsListResponseDto,
   AdminPublicLinkDto,
   AdminPublicLinksListResponseDto,
+  AdminRestartAttemptAnalysisResponseDto,
+  AdminRestartFailedAnalysesResponseDto,
   AdminTestAnalyticsSummaryDto,
   AdminUpdateEducationOrganizationDto,
   AdminUpdatePublicLinkDto,
@@ -3731,6 +3733,190 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+/**
+ * @summary Restart a failed AI analysis of one attempt
+ */
+export const testsAdminAttemptsControllerRestartAttemptAnalysis = (
+  attemptId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminRestartAttemptAnalysisResponseDto>(
+    { url: `/admin/tests/attempts/${attemptId}/analysis/restart`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getTestsAdminAttemptsControllerRestartAttemptAnalysisMutationKey = () =>
+  ['testsAdminAttemptsControllerRestartAttemptAnalysis'] as const;
+
+export const getTestsAdminAttemptsControllerRestartAttemptAnalysisMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>,
+    TError,
+    TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>,
+  TError,
+  TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTestsAdminAttemptsControllerRestartAttemptAnalysisMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>,
+    TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables
+  > = (props) => {
+    const { attemptId } = props ?? {};
+
+    return testsAdminAttemptsControllerRestartAttemptAnalysis(attemptId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsAdminAttemptsControllerRestartAttemptAnalysisMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>
+>;
+
+export type TestsAdminAttemptsControllerRestartAttemptAnalysisMutationError =
+  ErrorType<ErrorResponseDto>;
+export type TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables = {
+  attemptId: number;
+};
+
+/**
+ * @summary Restart a failed AI analysis of one attempt
+ */
+export const useTestsAdminAttemptsControllerRestartAttemptAnalysis = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>,
+      TError,
+      TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartAttemptAnalysis>>,
+  TError,
+  TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getTestsAdminAttemptsControllerRestartAttemptAnalysisMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Restart every failed AI analysis of a public link (one batch)
+ */
+export const testsAdminAttemptsControllerRestartFailedAnalyses = (
+  linkId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminRestartFailedAnalysesResponseDto>(
+    {
+      url: `/admin/tests/public-links/${linkId}/attempts/analysis/restart-failed`,
+      method: 'POST',
+      signal,
+    },
+    options,
+  );
+};
+
+export const getTestsAdminAttemptsControllerRestartFailedAnalysesMutationKey = () =>
+  ['testsAdminAttemptsControllerRestartFailedAnalyses'] as const;
+
+export const getTestsAdminAttemptsControllerRestartFailedAnalysesMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>,
+    TError,
+    TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>,
+  TError,
+  TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTestsAdminAttemptsControllerRestartFailedAnalysesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>,
+    TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables
+  > = (props) => {
+    const { linkId } = props ?? {};
+
+    return testsAdminAttemptsControllerRestartFailedAnalyses(linkId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsAdminAttemptsControllerRestartFailedAnalysesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>
+>;
+
+export type TestsAdminAttemptsControllerRestartFailedAnalysesMutationError =
+  ErrorType<ErrorResponseDto>;
+export type TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables = { linkId: number };
+
+/**
+ * @summary Restart every failed AI analysis of a public link (one batch)
+ */
+export const useTestsAdminAttemptsControllerRestartFailedAnalyses = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>,
+      TError,
+      TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerRestartFailedAnalyses>>,
+  TError,
+  TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getTestsAdminAttemptsControllerRestartFailedAnalysesMutationOptions(options),
+    queryClient,
+  );
+};
 /**
  * @summary Get analytics summary for topic
  */

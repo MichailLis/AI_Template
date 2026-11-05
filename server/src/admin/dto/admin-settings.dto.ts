@@ -2,6 +2,7 @@ import { createZodDto } from '../../common/zod-dto';
 import { z } from 'zod';
 
 import { AI_PROVIDER_IDS } from '../../ai-provider/ai-provider.config';
+import { AI_FAILURE_REASONS } from '../../ai-provider/ai-provider.failure';
 
 export const AiProviderApiKeySourceSchema = z.enum(['DB', 'ENV', 'NONE']);
 
@@ -12,6 +13,16 @@ export const AiProviderApiKeySourceSchema = z.enum(['DB', 'ENV', 'NONE']);
 export const AiProviderHealthSchema = z.object({
   status: z.enum(['ok', 'failed', 'not_configured']),
   checkedAt: z.string().datetime(),
+  errorMessage: z.string().optional(),
+});
+
+/** Итог настоящего запроса к модели: в отличие от `health`, он знает про ключ и баланс. */
+export const AiProviderCheckSchema = z.object({
+  status: z.enum(['ok', 'failed']),
+  checkedAt: z.string().datetime(),
+  model: z.string(),
+  reason: z.enum(AI_FAILURE_REASONS).optional(),
+  httpStatus: z.number().int().optional(),
   errorMessage: z.string().optional(),
 });
 
@@ -112,6 +123,8 @@ export const UpdatePrivacyPolicySchema = z.object({
 export class AdminAiProviderSettingsResponseDto extends createZodDto(
   AdminAiProviderSettingsResponseSchema,
 ) {}
+
+export class AdminAiProviderCheckResponseDto extends createZodDto(AiProviderCheckSchema) {}
 
 export class UpdateAiProviderDto extends createZodDto(UpdateAiProviderSchema) {}
 

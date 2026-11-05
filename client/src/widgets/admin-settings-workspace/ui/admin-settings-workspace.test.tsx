@@ -34,6 +34,7 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
     refetch: vi.fn(),
   }),
   getAdminSettingsControllerGetAiProviderSettingsQueryKey: () => ['ai-provider'],
+  useAdminSettingsControllerCheckAiProvider: () => ({ mutate: vi.fn(), isPending: false }),
   useAdminSettingsControllerUpdateAiProviderSettings: () => ({
     mutate: updateAiProvider,
     isPending: false,
@@ -139,6 +140,13 @@ describe('AdminSettingsWorkspace integration health header', () => {
     expect(screen.getByText(/^Атлас недоступен · /)).toBeInTheDocument();
     expect(screen.queryByText('OpenRouter готов')).not.toBeInTheDocument();
     expect(screen.queryByText('Атлас подключен')).not.toBeInTheDocument();
+  });
+
+  // Находка #166: бейдж видит только каталог моделей, поэтому ключ и баланс проверяет отдельная кнопка.
+  it('offers a real key and balance check next to the badge that only knows the catalog', () => {
+    renderWorkspace();
+
+    expect(screen.getByRole('button', { name: 'Проверить ключ и баланс' })).toBeEnabled();
   });
 
   /** Находка аудита #147: настройки открываются сразу, покрытие атласа догружается отдельно. */
