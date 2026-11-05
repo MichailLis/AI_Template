@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
@@ -132,6 +132,30 @@ describe('PublicLinksAttemptDetailDialog', () => {
     ).toHaveAttribute('href', 'https://atlas.example/professions');
     expect(document.body.textContent).not.toContain('Структурированные данные анализа');
     expect(document.body.textContent).not.toContain('"resultKind"');
+  });
+
+  it('offers the delete action only with a handler and passes it the attempt id', () => {
+    const onRequestDelete = vi.fn();
+    const renderDialog = (handler?: (attemptId: number) => void) => (
+      <PublicLinksAttemptDetailDialog
+        isOpen
+        detailView="answers"
+        detailAttempt={detailAttempt}
+        isLoading={false}
+        onClose={vi.fn()}
+        formatDateTime={(value) => value ?? '—'}
+        toPrettyJson={(value) => JSON.stringify(value, null, 2)}
+        onRequestDelete={handler}
+      />
+    );
+    const { rerender } = render(renderDialog());
+
+    expect(screen.queryByRole('button', { name: 'Удалить попытку' })).not.toBeInTheDocument();
+
+    rerender(renderDialog(onRequestDelete));
+    fireEvent.click(screen.getByRole('button', { name: 'Удалить попытку' }));
+
+    expect(onRequestDelete).toHaveBeenCalledWith(detailAttempt.attemptId);
   });
 
   it('carries the attempt id and timing that the table no longer shows', () => {

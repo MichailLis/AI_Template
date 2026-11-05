@@ -56,6 +56,7 @@ export * from './adminCreatePublicLinkDtoPublicBrandingHeaderLogosItemSize';
 export * from './adminCreatePublicLinkDtoPublicBrandingSurfaces';
 export * from './adminCreatePublicLinkDtoPublicBrandingVersion';
 export * from './adminCreatePublicLinkDtoPublicTemplate';
+export * from './adminDeletePublicAttemptResponseDto';
 export * from './adminDeletePublicLinkResponseDto';
 export * from './adminEducationOrganizationDto';
 export * from './adminEducationOrganizationDtoGroupValidationMode';

@@ -8,6 +8,7 @@ describe('TestsAdminAttemptsController', () => {
     listAttemptsForLink: jest.Mock;
     listAttemptsForExport: jest.Mock;
     getAttemptDetail: jest.Mock;
+    deleteAttempt: jest.Mock;
   };
   let exportMock: { toExcel: jest.Mock };
   let auditMock: { record: jest.Mock };
@@ -17,6 +18,7 @@ describe('TestsAdminAttemptsController', () => {
       listAttemptsForLink: jest.fn(),
       listAttemptsForExport: jest.fn(),
       getAttemptDetail: jest.fn(),
+      deleteAttempt: jest.fn(),
     };
     exportMock = { toExcel: jest.fn() };
     auditMock = { record: jest.fn().mockResolvedValue(undefined) };
@@ -83,5 +85,13 @@ describe('TestsAdminAttemptsController', () => {
 
     await expect(controller.getAttemptDetail(33)).resolves.toEqual(response);
     expect(serviceMock.getAttemptDetail).toHaveBeenCalledWith(33);
+  });
+
+  it('deletePublicLinkAttempt passes the admin and both ids to the service', async () => {
+    const response = { linkId: 13, attemptId: 33 };
+    serviceMock.deleteAttempt.mockResolvedValue(response);
+
+    await expect(controller.deletePublicLinkAttempt(5, 13, 33)).resolves.toEqual(response);
+    expect(serviceMock.deleteAttempt).toHaveBeenCalledWith(5, 13, 33);
   });
 });

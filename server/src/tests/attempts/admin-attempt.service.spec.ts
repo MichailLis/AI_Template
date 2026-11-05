@@ -1,9 +1,11 @@
 import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
+import type { AuditService } from '../../audit/audit.service';
 import type { PrismaService } from '../../prisma.service';
 import { ATTEMPTS_EXPORT_LIMIT, TestsAdminAttemptService } from '../attempts/admin-attempt.service';
 import type { TestsAnalysisService } from '../analysis/analysis.service';
 
 type PrismaMock = {
+  $transaction: jest.Mock;
   user: {
     findUnique: jest.Mock;
   };
@@ -14,6 +16,7 @@ type PrismaMock = {
     count: jest.Mock;
     findMany: jest.Mock;
     findUnique: jest.Mock;
+    deleteMany: jest.Mock;
   };
 };
 
@@ -26,9 +29,13 @@ describe('TestsAdminAttemptService', () => {
   let professionAtlasSettingsServiceMock: {
     getProfessionAtlasUrl: jest.Mock;
   };
+  let auditServiceMock: {
+    record: jest.Mock;
+  };
 
   beforeEach(() => {
     prismaMock = {
+      $transaction: jest.fn((callback: (tx: PrismaMock) => unknown) => callback(prismaMock)),
       user: {
         findUnique: jest.fn(),
       },
@@ -39,6 +46,7 @@ describe('TestsAdminAttemptService', () => {
         count: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        deleteMany: jest.fn(),
       },
     };
     analysisServiceMock = {
@@ -47,11 +55,15 @@ describe('TestsAdminAttemptService', () => {
     professionAtlasSettingsServiceMock = {
       getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
     };
+    auditServiceMock = {
+      record: jest.fn().mockResolvedValue(undefined),
+    };
 
     service = new TestsAdminAttemptService(
       prismaMock as unknown as PrismaService,
       analysisServiceMock as unknown as TestsAnalysisService,
       professionAtlasSettingsServiceMock as unknown as ProfessionAtlasSettingsService,
+      auditServiceMock as unknown as AuditService,
     );
   });
 
@@ -383,6 +395,49 @@ describe('TestsAdminAttemptService', () => {
 
       expect(response.truncated).toBe(false);
       expect(response.attempts).toHaveLength(ATTEMPTS_EXPORT_LIMIT);
+    });
+  });
+
+  describe('deleteAttempt', () => {
+    const deleteAttempt = (attemptId: number, linkId = 13) =>
+      service.deleteAttempt(7, linkId, attemptId);
+
+    it('deletes the attempt inside its link and records the audit event in the same transaction', async () => {
+      prismaMock.testStudentAttempt.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(deleteAttempt(33)).resolves.toEqual({ linkId: 13, attemptId: 33 });
+
+      expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(prismaMock.testStudentAttempt.deleteMany).toHaveBeenCalledWith({
+        where: { id: 33, publicLinkId: 13 },
+      });
+      // Only ids reach the journal: the student's name, class and group are personal data.
+      expect(auditServiceMock.record).toHaveBeenCalledWith(
+        {
+          entityType: 'PUBLIC_LINK',
+          entityId: 13,
+          action: 'ATTEMPT_DELETED',
+          actorUserId: 7,
+          changes: [{ field: 'attemptId', before: '33', after: null }],
+        },
+        prismaMock,
+      );
+    });
+
+    it('answers 404 for an attempt of another link and writes no audit event', async () => {
+      prismaMock.testStudentAttempt.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(deleteAttempt(33, 14)).rejects.toMatchObject({
+        response: { error: 'ATTEMPT_NOT_FOUND' },
+      });
+      expect(auditServiceMock.record).not.toHaveBeenCalled();
+    });
+
+    it('does not swallow an audit failure, so the delete is not reported as done', async () => {
+      prismaMock.testStudentAttempt.deleteMany.mockResolvedValue({ count: 1 });
+      auditServiceMock.record.mockRejectedValueOnce(new Error('Audit DB failure'));
+
+      await expect(deleteAttempt(33)).rejects.toThrow('Audit DB failure');
     });
   });
 });
