@@ -24,6 +24,7 @@ import type {
 import type {
   AdminCreateEducationOrganizationDto,
   AdminCreatePublicLinkDto,
+  AdminDeletePublicAttemptResponseDto,
   AdminDeletePublicLinkResponseDto,
   AdminEducationOrganizationDto,
   AdminEducationOrganizationsListResponseDto,
@@ -3733,6 +3734,99 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+/**
+ * @summary Delete student attempt with its answers and analysis (irreversible)
+ */
+export const testsAdminAttemptsControllerDeletePublicLinkAttempt = (
+  linkId: number,
+  attemptId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminDeletePublicAttemptResponseDto>(
+    { url: `/admin/tests/public-links/${linkId}/attempts/${attemptId}`, method: 'DELETE', signal },
+    options,
+  );
+};
+
+export const getTestsAdminAttemptsControllerDeletePublicLinkAttemptMutationKey = () =>
+  ['testsAdminAttemptsControllerDeletePublicLinkAttempt'] as const;
+
+export const getTestsAdminAttemptsControllerDeletePublicLinkAttemptMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>,
+    TError,
+    TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>,
+  TError,
+  TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTestsAdminAttemptsControllerDeletePublicLinkAttemptMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>,
+    TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables
+  > = (props) => {
+    const { linkId, attemptId } = props ?? {};
+
+    return testsAdminAttemptsControllerDeletePublicLinkAttempt(linkId, attemptId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>
+>;
+
+export type TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationError =
+  ErrorType<ErrorResponseDto>;
+export type TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables = {
+  linkId: number;
+  attemptId: number;
+};
+
+/**
+ * @summary Delete student attempt with its answers and analysis (irreversible)
+ */
+export const useTestsAdminAttemptsControllerDeletePublicLinkAttempt = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>,
+      TError,
+      TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testsAdminAttemptsControllerDeletePublicLinkAttempt>>,
+  TError,
+  TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getTestsAdminAttemptsControllerDeletePublicLinkAttemptMutationOptions(options),
+    queryClient,
+  );
+};
 /**
  * @summary Restart a failed AI analysis of one attempt
  */

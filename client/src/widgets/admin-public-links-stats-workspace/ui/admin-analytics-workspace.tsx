@@ -129,6 +129,7 @@ export function AdminAnalyticsWorkspace() {
           <AnalyticsAttemptsTab
             selectedPublicLink={selectedPublicLink}
             effectivePublicLinkId={effectivePublicLinkId}
+            effectiveTopicId={effectiveTopicId}
             attemptsPage={attemptsPage}
             attemptsLimit={attemptsLimit}
             setAttemptsPage={setAttemptsPage}

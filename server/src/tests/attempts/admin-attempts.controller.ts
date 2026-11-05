@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -19,6 +20,7 @@ import { GetCurrentUserId } from '../../auth/decorators';
 import { AtGuard } from '../../auth/guards';
 import { AdminGuard } from '../../common/authz/admin.guard';
 import {
+  AdminDeletePublicAttemptResponseDto,
   AdminPublicAttemptDetailResponseDto,
   AdminPublicAttemptsListQueryDto,
   AdminPublicAttemptsListResponseDto,
@@ -100,6 +102,17 @@ export class TestsAdminAttemptsController {
   @ApiResponse({ status: HttpStatus.OK, type: AdminPublicAttemptDetailResponseDto })
   getAttemptDetail(@Param('attemptId', ParseIntPipe) attemptId: number) {
     return this.testsAdminAttemptService.getAttemptDetail(attemptId);
+  }
+
+  @Delete('public-links/:linkId/attempts/:attemptId')
+  @ApiOperation({ summary: 'Delete student attempt with its answers and analysis (irreversible)' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminDeletePublicAttemptResponseDto })
+  deletePublicLinkAttempt(
+    @GetCurrentUserId() userId: number,
+    @Param('linkId', ParseIntPipe) linkId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    return this.testsAdminAttemptService.deleteAttempt(userId, linkId, attemptId);
   }
 
   @Post('attempts/:attemptId/analysis/restart')

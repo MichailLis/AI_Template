@@ -36,6 +36,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   TOPIC_RESTORED: 'Тест восстановлен',
   TOPIC_DELETED: 'Тест удален',
   ATTEMPTS_EXPORTED: 'Выгружены прохождения в Excel',
+  ATTEMPT_DELETED: 'Удалена попытка ученика',
   ANALYTICS_EXPORTED: 'Выгружена аналитика',
   ANALYSIS_RESTARTED: 'Перезапущен ИИ-анализ попытки',
   ANALYSES_RESTARTED: 'Перезапущены упавшие ИИ-анализы',
@@ -87,8 +88,8 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   groupValidationPattern: 'Шаблон класса',
   groupValidationExample: 'Пример класса',
   groupValidationHint: 'Подсказка по классу',
-  rows: 'Строк в выгрузке',
   attemptId: 'ID попытки',
+  rows: 'Строк в выгрузке',
   analysesRestarted: 'Перезапущено анализов',
   format: 'Формат выгрузки',
 };

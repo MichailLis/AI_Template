@@ -571,6 +571,11 @@
           "protected": true
         },
         {
+          "path": "/admin/tests/public-links/{linkId}/attempts/{attemptId}",
+          "methods": ["delete"],
+          "protected": true
+        },
+        {
           "path": "/admin/tests/attempts/{attemptId}",
           "methods": ["get"],
           "protected": true

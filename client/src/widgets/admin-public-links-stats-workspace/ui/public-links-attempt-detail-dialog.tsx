@@ -167,6 +167,34 @@ interface PublicLinksAttemptDetailDialogProps {
   onRestartAnalysis: (attemptId: number) => void;
   formatDateTime: (value: string | null) => string;
   toPrettyJson: (value: unknown) => string;
+  /** Удаление начинает родитель: он же показывает подтверждение. */
+  onRequestDelete?: (attemptId: number) => void;
+}
+
+interface AttemptDeleteFooterProps {
+  attempt: AttemptDetail | null;
+  isLoading: boolean;
+  onRequestDelete?: (attemptId: number) => void;
+}
+
+/** Кнопка удаления внизу карточки: видна, когда карточка загружена и есть обработчик. */
+function AttemptDeleteFooter({ attempt, isLoading, onRequestDelete }: AttemptDeleteFooterProps) {
+  if (isLoading || !attempt || !onRequestDelete) {
+    return null;
+  }
+
+  return (
+    <div className="mt-6 flex justify-end border-t border-admin-border pt-4">
+      <Button
+        type="button"
+        variant="destructive"
+        size="sm"
+        onClick={() => onRequestDelete(attempt.attemptId)}
+      >
+        Удалить попытку
+      </Button>
+    </div>
+  );
 }
 
 export function PublicLinksAttemptDetailDialog({
@@ -179,6 +207,7 @@ export function PublicLinksAttemptDetailDialog({
   onRestartAnalysis,
   formatDateTime,
   toPrettyJson,
+  onRequestDelete,
 }: PublicLinksAttemptDetailDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -289,6 +318,12 @@ export function PublicLinksAttemptDetailDialog({
               )}
             </div>
           ) : null}
+
+          <AttemptDeleteFooter
+            attempt={detailAttempt}
+            isLoading={isLoading}
+            onRequestDelete={onRequestDelete}
+          />
         </div>
       </DialogContent>
     </Dialog>
