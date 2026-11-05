@@ -1,6 +1,7 @@
 import {
   Archive,
   ArrowUpRight,
+  CalendarClock,
   History,
   MoreHorizontal,
   Palette,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { getAccessWindowStatus } from '@/features/manage-public-link';
 import { cn } from '@/shared/lib/utils';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
@@ -19,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { PublicLinkQuickActions } from './public-link-quick-actions';
 import {
   formatPublicLinkCreatedAt,
+  getAccessWindowBadgeClassName,
   getEntryProfileModeBadgeLabel,
   getLinkRowClassName,
   getLinkStateClassName,
@@ -37,6 +40,7 @@ export interface PublicLinkActionHandlers {
   onOpenShortLink: (shortCode: string) => void;
   onOpenQr: (shortCode: string) => void;
   onOpenBrandingBuilder: (link: PublicLinkListItem) => void;
+  onEditAccessWindow: (link: PublicLinkListItem) => void;
   onTogglePublicLink: (linkId: number, nextActive: boolean) => void;
   onRegenerateShortCode: (linkId: number) => void;
   onArchivePublicLink: (linkId: number) => void;
@@ -73,6 +77,7 @@ function ActivePublicLinkActions({
   link,
   onTogglePublicLink,
   onOpenBrandingBuilder,
+  onEditAccessWindow,
   onRegenerateShortCode,
   onArchivePublicLink,
   onMoveToActiveVersion,
@@ -108,6 +113,16 @@ function ActivePublicLinkActions({
           Оформление страницы
         </Button>
       ) : null}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-8 justify-start px-2 text-left text-sm"
+        onClick={() => onEditAccessWindow(link)}
+      >
+        <CalendarClock className="mr-2 h-3.5 w-3.5" />
+        Окно доступа
+      </Button>
       <Button
         type="button"
         variant="ghost"
@@ -203,6 +218,7 @@ function PublicLinkActionMenu({ link, publicLinksTab, ...handlers }: PublicLinkA
               link={link}
               {...handlers}
               onOpenBrandingBuilder={closeAfter(handlers.onOpenBrandingBuilder)}
+              onEditAccessWindow={closeAfter(handlers.onEditAccessWindow)}
               onTogglePublicLink={closeAfter(handlers.onTogglePublicLink)}
               onRegenerateShortCode={closeAfter(handlers.onRegenerateShortCode)}
               onArchivePublicLink={closeAfter(handlers.onArchivePublicLink)}
@@ -238,6 +254,7 @@ export function PublicLinkRow({
   ...handlers
 }: PublicLinkRowProps) {
   const newerVersionNumber = getNewerPublishedVersionNumber(link);
+  const accessWindowStatus = link.archivedAt ? null : getAccessWindowStatus(link, new Date());
 
   return (
     <div className={cn(adminClassNames.publicLinks.rowBase, getLinkRowClassName(link))}>
@@ -262,6 +279,13 @@ export function PublicLinkRow({
           >
             {getLinkStateLabel(link)}
           </span>
+          {accessWindowStatus ? (
+            <span
+              className={`rounded-full border px-2 py-0.5 text-xs font-medium ${getAccessWindowBadgeClassName(accessWindowStatus.tone)}`}
+            >
+              {accessWindowStatus.label}
+            </span>
+          ) : null}
           <span
             className={`rounded-full border px-2 py-0.5 text-xs font-medium ${adminBadgeClassNames.neutral}`}
           >

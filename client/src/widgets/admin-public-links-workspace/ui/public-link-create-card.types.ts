@@ -30,6 +30,9 @@ export interface CreatePublicLinkValues {
   allowResume: boolean;
   consentVersion: string;
   consentText: string;
+  /** Окно доступа в локальном времени браузера (`ГГГГ-ММ-ДДTЧЧ:мм`) или пусто, см. features/manage-public-link. */
+  startsAt: string;
+  endsAt: string;
 }
 
 export type CreatePublicLinkForm = UseFormReturn<CreatePublicLinkValues>;
@@ -64,4 +67,6 @@ export interface PublicLinkOrganizationSectionProps {
 
 export interface PublicLinkAccessSettingsSectionProps {
   form: CreatePublicLinkForm;
+  /** Сообщает false, пока в поле окна доступа незавершенный ввод: создать ссылку нельзя. */
+  onAccessWindowDraftValidityChange?: (isValid: boolean) => void;
 }

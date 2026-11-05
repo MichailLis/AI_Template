@@ -3,6 +3,7 @@ import { getEntryProfileModeLabel, getPublicTemplateLabel } from '@/shared/lib/p
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 
 import type { PublicBrandingConfig } from '@/entities/public-test';
+import type { AccessWindowStatusTone } from '@/features/manage-public-link';
 
 export interface PublicLinkListItem {
   id: number;
@@ -10,6 +11,9 @@ export interface PublicLinkListItem {
   title: string;
   educationOrganizationName: string | null;
   educationOrganizationIsActive?: boolean | null;
+  /** Окно доступа в ISO UTC; `null`, если граница не задана. */
+  startsAt: string | null;
+  endsAt: string | null;
   publicTemplate: 'STANDARD' | 'POLUS';
   publicBranding?: PublicBrandingConfig;
   entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
@@ -61,6 +65,15 @@ export const getLinkStateClassName = (link: PublicLinkListItem) => {
 
   return adminBadgeClassNames.success;
 };
+
+const ACCESS_WINDOW_BADGE_CLASS_NAMES: Record<AccessWindowStatusTone, string> = {
+  upcoming: adminBadgeClassNames.neutral,
+  open: adminBadgeClassNames.success,
+  closed: adminBadgeClassNames.warning,
+};
+
+export const getAccessWindowBadgeClassName = (tone: AccessWindowStatusTone) =>
+  ACCESS_WINDOW_BADGE_CLASS_NAMES[tone];
 
 export const getPublicTemplateBadgeLabel = (link: PublicLinkListItem) =>
   `Шаблон: ${getPublicTemplateLabel(link.publicTemplate)}`;
