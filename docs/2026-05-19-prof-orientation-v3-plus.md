@@ -89,7 +89,7 @@ The prompt carries the algorithmic summary and the questions with answers as
 compact JSON. The summary is trimmed before it is sent: `atlas`, the previous
 `llm` block, `scores`, `resultKind`, `scoringVersion`, `primaryDirection` and
 `secondaryDirection` are left out (the last two are `topDirections[0]` and
-`[1]`). See `toEnrichmentPromptSummary` in `analysis.service.ts`.
+`[1]`). See `toEnrichmentPromptSummary` in `analysis-prompt-text.ts`.
 
 The model is the one saved in the prompt version, never a substitute. If the
 provider's model catalog loads and does not list it, enrichment fails with

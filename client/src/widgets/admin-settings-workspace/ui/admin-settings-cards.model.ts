@@ -1,6 +1,8 @@
 import { formatDateTime } from '@/shared/lib/date-format';
 
 import type {
+  AdminAiProviderCheckResponseDto,
+  AdminAiProviderCheckResponseDtoReason,
   AdminAiProviderSettingsResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
@@ -32,6 +34,26 @@ export const atlasCoverageItemStatusLabels: Record<
   duplicate: 'дубли',
 };
 
+export type AiProviderCheck = AdminAiProviderCheckResponseDto;
+
+/**
+ * Что значит отказ настоящего запроса к модели и что делать. Текст самого провайдера показывается
+ * отдельной строкой: он точнее, но по-английски и не всегда понятен без подсказки.
+ */
+export const aiCheckReasonLabels: Record<AdminAiProviderCheckResponseDtoReason, string> = {
+  AUTH: 'Провайдер не принял ключ: он отозван, неверен или выпущен для другого адреса.',
+  PAYMENT: 'На балансе провайдера не хватает средств: пополните баланс.',
+  RATE_LIMITED: 'Провайдер ограничил число запросов. Повторите проверку позже.',
+  PROVIDER_ERROR: 'Сервис провайдера сейчас недоступен. Повторите проверку позже.',
+  TIMEOUT: 'Провайдер не ответил за отведённое время.',
+  NETWORK: 'Не удалось соединиться с провайдером: проверьте адрес API и сеть сервера.',
+  MODEL_UNAVAILABLE: 'У провайдера нет этой модели. Укажите другую модель по умолчанию.',
+  BAD_REQUEST: 'Провайдер отклонил пробный запрос.',
+  NOT_CONFIGURED: 'Провайдер не настроен: проверьте адрес и ключ.',
+  INVALID_RESPONSE: 'Провайдер ответил непонятным образом.',
+  UNKNOWN: 'Проверка не удалась по неизвестной причине.',
+};
+
 export type IntegrationHealthTone = 'success' | 'warning' | 'danger' | 'neutral';
 
 export interface IntegrationHealthBadge {
@@ -53,9 +75,11 @@ const withCheckTime = (label: string, checkedAt: string) =>
   `${label} · ${formatDateTime(checkedAt)}`;
 
 /**
- * Бейдж в шапке отвечает на вопрос «работает ли», а не «задан ли ключ». Раньше «OpenRouter готов»
- * показывался по одному наличию ключа и оставался зелёным при отозванном ключе или упавшем
- * сервисе. Отказ провайдера ИИ — danger: без него не работает ИИ-анализ. Бейдж называет
+ * Бейдж в шапке отвечает на вопрос «отвечает ли провайдер», а не «задан ли ключ». Раньше
+ * «OpenRouter готов» показывался по одному наличию ключа и оставался зелёным при упавшем сервисе.
+ * Отказ провайдера ИИ — danger: без него не работает ИИ-анализ. Но проверка при открытии настроек
+ * бесплатная и видит только каталог моделей: Polza отдаёт его и без валидного ключа. Поэтому бейдж
+ * не говорит «работает»: ключ и баланс проверяет кнопка «Проверить ключ и баланс». Бейдж называет
  * подключённого провайдера (Polza.ai, OpenRouter, …), пока настройки не загружены — «ИИ».
  */
 export const getAiProviderHealthBadge = (
@@ -71,7 +95,10 @@ export const getAiProviderHealthBadge = (
   const { health, label } = aiProvider;
 
   if (health.status === 'ok') {
-    return { label: withCheckTime(`${label} работает`, health.checkedAt), tone: 'success' };
+    return {
+      label: withCheckTime(`${label}: каталог моделей отвечает`, health.checkedAt),
+      tone: 'success',
+    };
   }
 
   if (health.status === 'failed') {

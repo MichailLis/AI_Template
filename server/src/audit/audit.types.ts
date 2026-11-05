@@ -38,6 +38,8 @@ export const AUDIT_ACTIONS = [
   'TOPIC_DELETED',
   'ATTEMPTS_EXPORTED',
   'ANALYTICS_EXPORTED',
+  'ANALYSIS_RESTARTED',
+  'ANALYSES_RESTARTED',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

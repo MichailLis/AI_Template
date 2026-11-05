@@ -22,6 +22,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminAiProviderCheckResponseDto,
   AdminAiProviderSettingsResponseDto,
   AdminBackupDeleteResponseDto,
   AdminBackupDownloadLinkResponseDto,
@@ -1264,6 +1265,90 @@ export const useAdminSettingsControllerUpdateAiProviderSettings = <
 > => {
   return useMutation(
     getAdminSettingsControllerUpdateAiProviderSettingsMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * @summary Check the AI provider key and balance with one real one-token request
+ */
+export const adminSettingsControllerCheckAiProvider = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminAiProviderCheckResponseDto>(
+    { url: `/admin/settings/ai-provider/check`, method: 'POST', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerCheckAiProviderMutationKey = () =>
+  ['adminSettingsControllerCheckAiProvider'] as const;
+
+export const getAdminSettingsControllerCheckAiProviderMutationOptions = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getAdminSettingsControllerCheckAiProviderMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+    void
+  > = () => {
+    return adminSettingsControllerCheckAiProvider(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSettingsControllerCheckAiProviderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>
+>;
+
+export type AdminSettingsControllerCheckAiProviderMutationError = ErrorType<ErrorResponseDto>;
+
+/**
+ * @summary Check the AI provider key and balance with one real one-token request
+ */
+export const useAdminSettingsControllerCheckAiProvider = <
+  TError = ErrorType<ErrorResponseDto>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminSettingsControllerCheckAiProvider>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(
+    getAdminSettingsControllerCheckAiProviderMutationOptions(options),
     queryClient,
   );
 };

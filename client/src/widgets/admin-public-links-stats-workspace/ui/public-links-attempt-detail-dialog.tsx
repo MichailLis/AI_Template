@@ -1,9 +1,12 @@
+import { RotateCw } from 'lucide-react';
+
 import { PublicTestStudentAnalysisView } from '@/entities/public-test';
 import { getAttemptStatusLabel } from '@/shared/lib/attempt-status-labels';
 import { studentEducationLevelLabels, studentGenderLabels } from '@/shared/lib/public-test-labels';
 import { getQuestionTypeLabel } from '@/shared/lib/report-value-labels';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +33,8 @@ interface AttemptAnalysis {
   summary: unknown;
   rawText: string | null;
   errorMessage: string | null;
+  /** ИИ-часть упала и её можно перезапустить; у профориентации сама запись при этом READY. */
+  canRestart: boolean;
 }
 
 interface AttemptDetail {
@@ -114,12 +119,52 @@ const getAttemptTimingItems = (
   { label: 'Истекает через', value: formatDateTime(attempt.expiresAt) },
 ];
 
+/** Упавший ИИ-анализ: причина и кнопка. Сервер сам отказывается перезапускать то, что не упало. */
+function RestartAnalysisNotice({
+  analysis,
+  attemptId,
+  isRestarting,
+  onRestart,
+}: {
+  analysis: AttemptAnalysis | null;
+  attemptId: number;
+  isRestarting: boolean;
+  onRestart: (attemptId: number) => void;
+}) {
+  if (!analysis?.canRestart) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`flex flex-wrap items-center justify-between gap-3 ${adminClassNames.panel.warningInline}`}
+    >
+      <span>
+        ИИ-анализ не удался{analysis.errorMessage ? `: ${analysis.errorMessage}` : ''}. Если причина
+        устранена (ключ, баланс, сервис провайдера), запустите его заново.
+      </span>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={isRestarting}
+        onClick={() => onRestart(attemptId)}
+      >
+        <RotateCw className="h-4 w-4" />
+        {isRestarting ? 'Перезапускаем...' : 'Перезапустить анализ'}
+      </Button>
+    </div>
+  );
+}
+
 interface PublicLinksAttemptDetailDialogProps {
   isOpen: boolean;
   detailView: AttemptDetailView | null;
   detailAttempt: AttemptDetail | null;
   isLoading: boolean;
+  isRestartingAnalysis: boolean;
   onClose: () => void;
+  onRestartAnalysis: (attemptId: number) => void;
   formatDateTime: (value: string | null) => string;
   toPrettyJson: (value: unknown) => string;
 }
@@ -129,7 +174,9 @@ export function PublicLinksAttemptDetailDialog({
   detailView,
   detailAttempt,
   isLoading,
+  isRestartingAnalysis,
   onClose,
+  onRestartAnalysis,
   formatDateTime,
   toPrettyJson,
 }: PublicLinksAttemptDetailDialogProps) {
@@ -192,13 +239,21 @@ export function PublicLinksAttemptDetailDialog({
                   Прохождение не завершено: анализ появится после ответа на все вопросы.
                 </p>
               ) : (
-                <PublicTestStudentAnalysisView
-                  analysis={detailAttempt.analysis}
-                  professionAtlasUrl={detailAttempt.professionAtlasUrl}
-                  generatedAtLabel={`Сгенерировано: ${formatDateTime(
-                    detailAttempt.analysis?.generatedAt ?? null,
-                  )}`}
-                />
+                <>
+                  <RestartAnalysisNotice
+                    analysis={detailAttempt.analysis}
+                    attemptId={detailAttempt.attemptId}
+                    isRestarting={isRestartingAnalysis}
+                    onRestart={onRestartAnalysis}
+                  />
+                  <PublicTestStudentAnalysisView
+                    analysis={detailAttempt.analysis}
+                    professionAtlasUrl={detailAttempt.professionAtlasUrl}
+                    generatedAtLabel={`Сгенерировано: ${formatDateTime(
+                      detailAttempt.analysis?.generatedAt ?? null,
+                    )}`}
+                  />
+                </>
               )}
             </div>
           ) : null}

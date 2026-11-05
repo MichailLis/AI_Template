@@ -29,4 +29,10 @@ export interface AdminPublicAttemptsListResponseDto {
    */
   totalPages: number;
   attempts: AdminPublicAttemptsListResponseDtoAttemptsItem[];
+  /**
+   * Сколько ИИ-анализов ссылки упало и может быть перезапущено; не зависит от фильтров и страницы списка
+   * @minimum 0
+   * @maximum 9007199254740991
+   */
+  failedAnalysisCount: number;
 }

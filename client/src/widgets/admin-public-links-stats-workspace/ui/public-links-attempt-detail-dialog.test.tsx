@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
@@ -89,6 +89,7 @@ const detailAttempt = {
     rawText: null,
     errorMessage: null,
     generatedAt: '2026-05-12T12:00:01.000Z',
+    canRestart: false,
   },
   answers: [],
 };
@@ -103,7 +104,9 @@ describe('PublicLinksAttemptDetailDialog', () => {
         detailView="analysis"
         detailAttempt={detailAttempt}
         isLoading={false}
+        isRestartingAnalysis={false}
         onClose={vi.fn()}
+        onRestartAnalysis={vi.fn()}
         formatDateTime={(value) => value ?? '—'}
         toPrettyJson={(value) => JSON.stringify(value, null, 2)}
       />,
@@ -141,7 +144,9 @@ describe('PublicLinksAttemptDetailDialog', () => {
         detailView="analysis"
         detailAttempt={detailAttempt}
         isLoading={false}
+        isRestartingAnalysis={false}
         onClose={vi.fn()}
+        onRestartAnalysis={vi.fn()}
         formatDateTime={(value) => value ?? '—'}
         toPrettyJson={(value) => JSON.stringify(value, null, 2)}
       />,
@@ -153,6 +158,74 @@ describe('PublicLinksAttemptDetailDialog', () => {
     expect(screen.getByText('Завершение работы')).toBeInTheDocument();
     expect(screen.getByText('2026-05-12T11:40:00.000Z')).toBeInTheDocument();
     expect(screen.getByText('Истекает через')).toBeInTheDocument();
+  });
+
+  describe('restart of a failed analysis', () => {
+    const failedAttempt = {
+      ...detailAttempt,
+      analysis: {
+        ...detailAttempt.analysis,
+        resultKind: 'ALGORITHM_ONLY',
+        summary: { ...profOrientationSummary, llm: { status: 'failed' } },
+        errorMessage: 'Неверные учётные данные авторизации',
+        canRestart: true,
+      },
+    };
+    const renderDialog = (attempt: typeof failedAttempt, overrides = {}) => {
+      const onRestartAnalysis = vi.fn();
+
+      render(
+        <PublicLinksAttemptDetailDialog
+          isOpen
+          detailView="analysis"
+          detailAttempt={attempt}
+          isLoading={false}
+          isRestartingAnalysis={false}
+          onClose={vi.fn()}
+          onRestartAnalysis={onRestartAnalysis}
+          formatDateTime={(value) => value ?? '—'}
+          toPrettyJson={(value) => JSON.stringify(value, null, 2)}
+          {...overrides}
+        />,
+      );
+
+      return onRestartAnalysis;
+    };
+
+    it('offers a restart with the reason and restarts the attempt on click', () => {
+      const onRestartAnalysis = renderDialog(failedAttempt);
+
+      expect(
+        screen.getByText(/ИИ-анализ не удался: Неверные учётные данные авторизации/),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Перезапустить анализ' }));
+
+      expect(onRestartAnalysis).toHaveBeenCalledTimes(1);
+      expect(onRestartAnalysis).toHaveBeenCalledWith(191);
+    });
+
+    it('blocks a second click while the first restart is being sent', () => {
+      renderDialog(failedAttempt, { isRestartingAnalysis: true });
+
+      expect(screen.getByRole('button', { name: 'Перезапускаем...' })).toBeDisabled();
+    });
+
+    it('offers nothing when the analysis did not fail', () => {
+      renderDialog(detailAttempt as unknown as typeof failedAttempt);
+
+      expect(
+        screen.queryByRole('button', { name: /Перезапустить анализ/ }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/ИИ-анализ не удался/)).not.toBeInTheDocument();
+    });
+
+    it('does not offer a restart in the answers view', () => {
+      renderDialog(failedAttempt, { detailView: 'answers' });
+
+      expect(
+        screen.queryByRole('button', { name: /Перезапустить анализ/ }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   /**
@@ -177,7 +250,9 @@ describe('PublicLinksAttemptDetailDialog', () => {
           ],
         }}
         isLoading={false}
+        isRestartingAnalysis={false}
         onClose={vi.fn()}
+        onRestartAnalysis={vi.fn()}
         formatDateTime={(value) => value ?? '—'}
         toPrettyJson={(value) => JSON.stringify(value, null, 2)}
       />,

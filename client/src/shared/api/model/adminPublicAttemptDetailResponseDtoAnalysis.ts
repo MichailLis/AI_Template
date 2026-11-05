@@ -24,4 +24,6 @@ export type AdminPublicAttemptDetailResponseDtoAnalysis = {
   errorMessage: string | null;
   /** @nullable */
   generatedAt: string | null;
+  /** ИИ-часть анализа упала и её можно перезапустить (у профориентации запись при этом READY: признак — llm.status) */
+  canRestart: boolean;
 } | null;

@@ -1,4 +1,4 @@
-import { FileSpreadsheet } from 'lucide-react';
+import { FileSpreadsheet, RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { testsAdminAttemptsControllerExportPublicLinkAttempts } from '@/shared/api/generated/tests/tests';
@@ -9,12 +9,14 @@ import {
 } from '@/shared/lib/date-format';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Button } from '@/shared/ui/button';
+import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 import { Input } from '@/shared/ui/input';
 
 import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
 import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
 import { downloadTestAnalyticsBlob } from './test-analytics-download';
 import { useAttemptDetail, usePaginatedPublicAttempts } from './use-admin-public-links-attempts';
+import { useRestartAnalysis } from './use-restart-analysis';
 
 interface AnalyticsAttemptsTabProps {
   selectedPublicLink: { id: number; shortCode?: string } | null;
@@ -101,6 +103,7 @@ export function AnalyticsAttemptsTab({
   };
 
   const {
+    failedAnalysisCount,
     publicAttempts,
     publicAttemptsPage,
     publicAttemptsQuery,
@@ -112,6 +115,9 @@ export function AnalyticsAttemptsTab({
     sortBy,
     sortOrder,
   });
+  const { restartAttemptAnalysis, isRestartingAttempt, restartFailedAnalyses, isRestartingFailed } =
+    useRestartAnalysis(effectivePublicLinkId);
+  const [isRestartConfirmOpen, setIsRestartConfirmOpen] = useState(false);
   const {
     detailView,
     detailAttempt,
@@ -171,17 +177,32 @@ export function AnalyticsAttemptsTab({
               <option value="IN_PROGRESS">В процессе</option>
               <option value="EXPIRED">Истекло</option>
             </AdminSelectField>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="sm:ml-auto sm:h-9"
-              disabled={isExporting || !selectedPublicLink}
-              onClick={() => void handleExport()}
-            >
-              <FileSpreadsheet />
-              {isExporting ? 'Готовим XLSX...' : 'Выгрузить XLSX'}
-            </Button>
+            <div className="flex flex-col gap-2 sm:ml-auto sm:flex-row">
+              {failedAnalysisCount > 0 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="sm:h-9"
+                  disabled={isRestartingFailed}
+                  onClick={() => setIsRestartConfirmOpen(true)}
+                >
+                  <RotateCw />
+                  {`Перезапустить неудачные (${failedAnalysisCount})`}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="sm:h-9"
+                disabled={isExporting || !selectedPublicLink}
+                onClick={() => void handleExport()}
+              >
+                <FileSpreadsheet />
+                {isExporting ? 'Готовим XLSX...' : 'Выгрузить XLSX'}
+              </Button>
+            </div>
           </div>
         }
         exportError={exportError}
@@ -211,9 +232,23 @@ export function AnalyticsAttemptsTab({
         detailView={detailView}
         detailAttempt={detailAttempt ?? null}
         isLoading={attemptDetailQuery.isLoading}
+        isRestartingAnalysis={isRestartingAttempt}
         onClose={handleCloseAttemptDetails}
+        onRestartAnalysis={restartAttemptAnalysis}
         formatDateTime={formatDateTimePreciseOrDash}
         toPrettyJson={toPrettyJson}
+      />
+
+      <ConfirmActionDialog
+        open={isRestartConfirmOpen}
+        title={`Перезапустить неудачные анализы (${failedAnalysisCount})?`}
+        description="Анализы, которые закончились ошибкой, будут запущены заново. Каждый перезапуск — отдельный платный запрос к провайдеру ИИ, поэтому сначала убедитесь, что причина устранена: ключ действует, на балансе есть средства, сервис отвечает (это показывает «Проверить ключ и баланс» в настройках). Если неудачных много, они перезапускаются партиями: повторите действие, когда партия обработается."
+        confirmLabel="Перезапустить"
+        onConfirm={() => {
+          setIsRestartConfirmOpen(false);
+          restartFailedAnalyses();
+        }}
+        onClose={() => setIsRestartConfirmOpen(false)}
       />
     </>
   );

@@ -1,4 +1,8 @@
-import { getAnalysisResultKind, getPlannedAnalysisKind } from './analysis-result-kind';
+import {
+  canRestartAnalysis,
+  getAnalysisResultKind,
+  getPlannedAnalysisKind,
+} from './analysis-result-kind';
 import { PROF_ORIENTATION_V3_PLUS_RESULT_KIND } from '../prof-orientation-v3-plus/types';
 
 const profOrientationSummary = (llmStatus?: string) => ({
@@ -107,6 +111,44 @@ describe('getAnalysisResultKind', () => {
     expect(getAnalysisResultKind({ providerMode: 'LLM', status: 'FAILED', summary: null })).toBe(
       'FAILED',
     );
+  });
+});
+
+describe('canRestartAnalysis', () => {
+  it('allows restarting a plain AI analysis only when it failed', () => {
+    expect(canRestartAnalysis({ providerMode: 'LLM', status: 'FAILED', summary: null })).toBe(true);
+    expect(canRestartAnalysis({ providerMode: 'LLM', status: 'PENDING', summary: null })).toBe(
+      false,
+    );
+    expect(canRestartAnalysis({ providerMode: 'LLM', status: 'READY', summary: {} })).toBe(false);
+  });
+
+  // Invariant 7: the record of a two-phase analysis stays READY, so the signal is llm.status.
+  it('reads llm.status, not the record status, for a two-phase prof-orientation analysis', () => {
+    const analysis = (llmStatus?: string) => ({
+      providerMode: 'ALGORITHM_LLM',
+      status: 'READY',
+      summary: profOrientationSummary(llmStatus),
+    });
+
+    expect(canRestartAnalysis(analysis('failed'))).toBe(true);
+    expect(canRestartAnalysis(analysis('pending'))).toBe(false);
+    expect(canRestartAnalysis(analysis('ready'))).toBe(false);
+    expect(canRestartAnalysis(analysis())).toBe(false);
+  });
+
+  it('never restarts a stub, an algorithm-only result or a missing analysis', () => {
+    expect(canRestartAnalysis({ providerMode: 'STUB', status: 'FAILED', summary: null })).toBe(
+      false,
+    );
+    expect(
+      canRestartAnalysis({
+        providerMode: 'ALGORITHM',
+        status: 'READY',
+        summary: profOrientationSummary('failed'),
+      }),
+    ).toBe(false);
+    expect(canRestartAnalysis(null)).toBe(false);
   });
 });
 

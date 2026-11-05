@@ -14,6 +14,17 @@ describe('audit history labels', () => {
     expect(getAuditActionLabel('SOMETHING_NEW')).toBe('SOMETHING_NEW');
   });
 
+  it('names the restart of failed AI analyses and what it touched', () => {
+    expect(getAuditActionLabel('ANALYSIS_RESTARTED')).toBe('Перезапущен ИИ-анализ попытки');
+    expect(getAuditActionLabel('ANALYSES_RESTARTED')).toBe('Перезапущены упавшие ИИ-анализы');
+    expect(formatAuditChange({ field: 'attemptId', before: null, after: '33' })).toBe(
+      'ID попытки: — → 33',
+    );
+    expect(formatAuditChange({ field: 'analysesRestarted', before: null, after: '12' })).toBe(
+      'Перезапущено анализов: — → 12',
+    );
+  });
+
   it('writes a change as the field with its old and new values', () => {
     expect(formatAuditChange({ field: 'role', before: 'USER', after: 'ADMIN' })).toBe(
       'Роль: Пользователь → Администратор',

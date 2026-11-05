@@ -9,6 +9,7 @@ import type {
 } from 'openai/resources/chat/completions';
 
 import { type AiProviderConnection, readFirstEnv } from './ai-provider.config';
+import { type AiFailureReason, classifyAiFailure } from './ai-provider.failure';
 import {
   extractAiProviderErrorMessage,
   filterStructuredOutputPromptModels,
@@ -172,15 +173,19 @@ const extractCompletionOutput = (message: ChatCompletionMessage | undefined) => 
       : '';
 };
 
+// `cause` keeps the SDK error: its HTTP status is what tells a revoked key from an outage.
 const toProviderError = (error: unknown, label: string, timeoutMessage: string) => {
   if (error instanceof OpenAI.APIConnectionTimeoutError) {
-    return new BadGatewayException(timeoutMessage, 'AI_PROVIDER_TIMEOUT');
+    return new BadGatewayException(timeoutMessage, {
+      cause: error,
+      description: 'AI_PROVIDER_TIMEOUT',
+    });
   }
 
   if (error instanceof OpenAI.APIError) {
     return new BadGatewayException(
       extractAiProviderErrorMessage(error, `${label} request failed`),
-      'AI_PROVIDER_REQUEST_FAILED',
+      { cause: error, description: 'AI_PROVIDER_REQUEST_FAILED' },
     );
   }
 
@@ -193,6 +198,17 @@ export type AiProviderHealth = {
   errorMessage?: string;
 };
 
+/** Итог настоящего запроса к модели: ключ, баланс и сама модель, а не только каталог. */
+export type AiProviderCompletionCheck = {
+  status: 'ok' | 'failed';
+  checkedAt: string;
+  model: string;
+  reason?: AiFailureReason;
+  httpStatus?: number;
+  errorMessage?: string;
+};
+
+export const AI_PROVIDER_COMPLETION_CHECK_TIMEOUT_MS = 20_000;
 export const AI_PROVIDER_HEALTH_CHECK_TIMEOUT_MS = 5_000;
 export const AI_PROVIDER_HEALTH_CHECK_CACHE_TTL_MS = 30_000;
 export const AI_PROVIDER_MODELS_CACHE_TTL_MS = 5 * 60_000;
@@ -283,8 +299,10 @@ export class AiProviderClientService {
   }
 
   /**
-   * Проверка связи для экрана настроек. Каталог моделей запрашивается с коротким таймаутом (5с)
-   * и кэшируется на 30с, чтобы медленный или фильтруемый внешний провайдер не блокировал админку.
+   * Достижимость провайдера для бейджа в настройках. Каталог моделей запрашивается с коротким
+   * таймаутом (5с) и кэшируется на 30с, чтобы медленный внешний провайдер не блокировал админку.
+   * Каталог Polza отдаёт и без валидного ключа, поэтому «ok» здесь не говорит ни о ключе, ни о
+   * балансе: их проверяет `checkCompletion`.
    */
   async checkHealth(connection: AiProviderConnection): Promise<AiProviderHealth> {
     const cacheKey = `${connection.baseUrl}\n${connection.apiKey}`;
@@ -309,6 +327,42 @@ export class AiProviderClientService {
         checkedAt: new Date().toISOString(),
         errorMessage:
           error instanceof Error ? error.message : `${connection.label} connection check failed`,
+      };
+    }
+  }
+
+  /**
+   * Настоящая проверка: один запрос к модели на один токен, только по действию админа (платный).
+   * Без повторов и кэша: ответ нужен таким, какой он есть сейчас. Текст ошибки провайдера
+   * показывается админу, но ключ из него вычищается.
+   */
+  async checkCompletion(connection: AiProviderConnection): Promise<AiProviderCompletionCheck> {
+    const client = this.createClient(connection, AI_PROVIDER_COMPLETION_CHECK_TIMEOUT_MS);
+    let model = connection.defaultModel ?? 'unknown';
+
+    try {
+      model = connection.defaultModel ?? (await this.fetchModels(connection)).defaultModel;
+      await client.chat.completions.create({
+        model,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+        temperature: 0,
+      });
+
+      return { status: 'ok', checkedAt: new Date().toISOString(), model };
+    } catch (error) {
+      const wrapped = toProviderError(error, connection.label, AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE);
+      const failure = classifyAiFailure(wrapped);
+      const message =
+        wrapped instanceof Error ? wrapped.message : `${connection.label} check failed`;
+
+      return {
+        status: 'failed',
+        checkedAt: new Date().toISOString(),
+        model,
+        reason: failure.reason,
+        ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }),
+        errorMessage: connection.apiKey ? message.split(connection.apiKey).join('***') : message,
       };
     }
   }
