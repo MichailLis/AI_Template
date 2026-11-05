@@ -2,7 +2,7 @@ import { BriefcaseBusiness, Download, ExternalLink, Gauge, Route, Target } from 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { getProfOrientationLlmStatus } from '@/entities/public-test';
+import { getProfOrientationLlmStatus, ProfOrientationResult } from '@/entities/public-test';
 import { useTestsPublicControllerGetSessionResult } from '@/shared/api/generated/tests-public/tests-public';
 import { Button } from '@/shared/ui/button';
 
@@ -13,6 +13,8 @@ import { PublicThemeLayout } from './public-theme-layout';
 
 import type { PublicAiAnalysisSummary, PublicSessionResultResponseDto } from '@/shared/api/model';
 import type { LucideIcon } from 'lucide-react';
+
+type PublicSessionResultKind = PublicSessionResultResponseDto['analysis']['summary']['resultKind'];
 
 const resultPollIntervalMs = 3_000;
 const resultClockIntervalMs = 1_000;
@@ -62,21 +64,19 @@ const shouldShowProcessingScreen = (
     return false;
   }
 
-  if (result.analysis.status === 'PENDING') {
+  // Что ждём — определяет результат, а не шаблон: пояснение ИИ ещё не готово в любом оформлении.
+  if (
+    result.analysis.status === 'PENDING' ||
+    getProfOrientationLlmStatus(result.analysis.summary) === 'pending'
+  ) {
     return true;
   }
 
-  if (result.publicTemplate !== 'POLUS') {
-    return false;
-  }
-
-  const elapsedMs = getElapsedSinceFinishedMs(result, nowMs, fallbackStartedAtMs);
-
-  if (elapsedMs < polusMinimumProcessingMs) {
-    return true;
-  }
-
-  return getProfOrientationLlmStatus(result.analysis.summary) === 'pending';
+  // Только POLUS: профессор «думает» не меньше минимального времени — это часть оформления.
+  return (
+    result.publicTemplate === 'POLUS' &&
+    getElapsedSinceFinishedMs(result, nowMs, fallbackStartedAtMs) < polusMinimumProcessingMs
+  );
 };
 
 const getProcessingStartedAt = (
@@ -136,17 +136,22 @@ function HeroSignalCard({ icon: Icon, label, value, note }: HeroSignal) {
   );
 }
 
-function ResultHeroCopy({ hasAnalysis }: { hasAnalysis: boolean }) {
+const resultDescriptions = {
+  ai_analysis: 'Итог прохождения и анализ инженерно-технического профиля.',
+  prof_orientation_v3_plus:
+    'Итог профориентационного теста: подходящие направления и специальности.',
+  none: 'Ответы сохранены. Результат пришлет преподаватель или анализ не предусмотрен.',
+} as const;
+
+function ResultHeroCopy({ resultKind }: { resultKind: PublicSessionResultKind }) {
   return (
     <div className="relative min-w-0 max-w-3xl space-y-4">
       <div className="space-y-3">
         <h1 className="text-balance text-3xl font-black leading-tight md:text-5xl md:leading-12">
-          {hasAnalysis ? 'Результат теста' : 'Тестирование завершено'}
+          {resultKind === 'none' ? 'Тестирование завершено' : 'Результат теста'}
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-inherit md:text-base md:leading-6">
-          {hasAnalysis
-            ? 'Итог прохождения и анализ инженерно-технического профиля.'
-            : 'Ответы сохранены. Результат пришлет преподаватель или анализ не предусмотрен.'}
+          {resultDescriptions[resultKind]}
         </p>
       </div>
     </div>
@@ -168,12 +173,12 @@ function ResultPdfButton({ className }: { className: string }) {
   );
 }
 
-function ResultHero({ hasAnalysis }: { hasAnalysis: boolean }) {
+function ResultHero({ resultKind }: { resultKind: PublicSessionResultKind }) {
   return (
     <div className="public-result-hero relative overflow-hidden rounded-[1.5rem] px-5 py-6 text-white md:px-7 md:py-7">
       <div className="relative flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-        <ResultHeroCopy hasAnalysis={hasAnalysis} />
-        {hasAnalysis ? (
+        <ResultHeroCopy resultKind={resultKind} />
+        {resultKind !== 'none' ? (
           <ResultPdfButton className="public-result-pdf-action w-fit shrink-0 rounded-xl border-white/25 bg-transparent text-white shadow-xs backdrop-blur-sm hover:bg-transparent hover:text-white" />
         ) : null}
       </div>
@@ -208,6 +213,67 @@ function ProfessionAtlasLink({ url }: { url: string }) {
         </a>
       </div>
     </aside>
+  );
+}
+
+/** Какой результат показывать, решает вид результата; шаблон «Стандартный» задаёт только оформление. */
+function StandardResultBody({ result }: { result: PublicSessionResultResponseDto }) {
+  const { summary } = result.analysis;
+
+  if (summary.resultKind === 'prof_orientation_v3_plus') {
+    return (
+      <div className="prof-result-stack">
+        <ProfOrientationResult professionAtlasUrl={result.professionAtlasUrl} summary={summary} />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <PublicTestResultAnalysisView analysis={result.analysis} />
+
+      {result.professionAtlasUrl ? (
+        <div className="mt-8">
+          <ProfessionAtlasLink url={result.professionAtlasUrl} />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function StandardPublicResult({ result }: { result: PublicSessionResultResponseDto }) {
+  const { summary } = result.analysis;
+  const heroSignals = summary.resultKind === 'ai_analysis' ? getHeroSignals(summary) : [];
+
+  return (
+    <PublicThemeLayout
+      branding={result.publicBranding}
+      containerClassName="public-result-page max-w-6xl py-6 md:py-8"
+    >
+      <section className="public-glass public-result-shell rounded-[1.75rem] px-4 py-4 md:px-6 md:py-6">
+        <header className="space-y-4">
+          <ResultHero resultKind={summary.resultKind} />
+
+          {heroSignals.length > 0 ? (
+            <div className="public-result-signal-grid grid gap-3 lg:grid-cols-3">
+              {heroSignals.map((signal) => (
+                <HeroSignalCard key={signal.label} {...signal} />
+              ))}
+            </div>
+          ) : null}
+        </header>
+
+        <div className="mt-8 md:mt-9">
+          <StandardResultBody result={result} />
+        </div>
+
+        {summary.resultKind !== 'none' ? (
+          <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
+            <ResultPdfButton className="rounded-xl px-5 shadow-xs" />
+          </div>
+        ) : null}
+      </section>
+    </PublicThemeLayout>
   );
 }
 
@@ -284,45 +350,5 @@ export function PublicTestResultWorkspace() {
     return <PolusPublicResult result={result} />;
   }
 
-  const { summary } = result.analysis;
-  const parsedAnalysis = summary.resultKind === 'ai_analysis' ? summary : null;
-  const hasAnalysis = Boolean(parsedAnalysis);
-  const heroSignals = parsedAnalysis ? getHeroSignals(parsedAnalysis) : [];
-
-  return (
-    <PublicThemeLayout
-      branding={result.publicBranding}
-      containerClassName="public-result-page max-w-6xl py-6 md:py-8"
-    >
-      <section className="public-glass public-result-shell rounded-[1.75rem] px-4 py-4 md:px-6 md:py-6">
-        <header className="space-y-4">
-          <ResultHero hasAnalysis={hasAnalysis} />
-
-          {hasAnalysis ? (
-            <div className="public-result-signal-grid grid gap-3 lg:grid-cols-3">
-              {heroSignals.map((signal) => (
-                <HeroSignalCard key={signal.label} {...signal} />
-              ))}
-            </div>
-          ) : null}
-        </header>
-
-        <div className="mt-8 md:mt-9">
-          <PublicTestResultAnalysisView analysis={result.analysis} />
-        </div>
-
-        {result.professionAtlasUrl ? (
-          <div className="mt-8">
-            <ProfessionAtlasLink url={result.professionAtlasUrl} />
-          </div>
-        ) : null}
-
-        {hasAnalysis ? (
-          <div className="public-result-pdf-action mt-8 flex justify-center border-t border-border/60 pt-6">
-            <ResultPdfButton className="rounded-xl px-5 shadow-xs" />
-          </div>
-        ) : null}
-      </section>
-    </PublicThemeLayout>
-  );
+  return <StandardPublicResult result={result} />;
 }

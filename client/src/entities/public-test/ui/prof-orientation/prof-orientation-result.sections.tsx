@@ -1,6 +1,5 @@
 import { ExternalLink } from 'lucide-react';
 
-import { PolusResultHero } from './polus-result-hero';
 import {
   formatProfessionCode,
   getProfessionNote,
@@ -28,7 +27,7 @@ function ProfOrientationInlineList({ items }: { items: string[] }) {
   }
 
   return (
-    <ul className="polus-inline-list">
+    <ul className="prof-result-inline-list">
       {items.map((item, index) => (
         <li key={`${item}-${index}`}>{item}</li>
       ))}
@@ -48,7 +47,7 @@ function ProfOrientationProfileNote({
   }
 
   return (
-    <div className="polus-inline-note">
+    <div className="prof-result-inline-note">
       <h4>Как читать результат</h4>
       <p>{getProfileExplanation({ analysis, meaning })}</p>
     </div>
@@ -65,12 +64,12 @@ function ProfOrientationNextSteps({
   }
 
   return (
-    <div className="polus-method-columns">
-      <div className="polus-method-column">
+    <div className="prof-result-method-columns">
+      <div className="prof-result-method-column">
         <h4>Первые пробы</h4>
         <ProfOrientationInlineList items={analysis.firstSteps.slice(0, 3)} />
       </div>
-      <div className="polus-method-column">
+      <div className="prof-result-method-column">
         <h4>Что подтянуть</h4>
         <ProfOrientationInlineList items={analysis.learningPlan.slice(0, 3)} />
       </div>
@@ -80,10 +79,10 @@ function ProfOrientationNextSteps({
 
 function ProfOrientationAtlasAction({ url }: { url: string }) {
   return (
-    <div className="polus-profession-atlas">
+    <div className="prof-result-profession-atlas">
       <p>В атласе можно открыть подробные описания специальностей и посмотреть спрос на них.</p>
       <a
-        className="polus-secondary-action polus-atlas-action polus-atlas-inline-action"
+        className="prof-result-action prof-result-atlas-action prof-result-atlas-inline-action"
         href={url}
         target="_blank"
         rel="noreferrer"
@@ -123,25 +122,25 @@ function ProfOrientationProfessionCard({
   );
   const content = (
     <>
-      <div className="polus-atlas-profession-header">
-        <span className="polus-atlas-profession-source">
+      <div className="prof-result-atlas-profession-header">
+        <span className="prof-result-atlas-profession-source">
           {atlasProfession ? atlasProfessionSourceLabels[atlasProfession.source] : 'Специальность'}
         </span>
         {professionCode ? (
-          <span className="polus-atlas-profession-code">Код {professionCode}</span>
+          <span className="prof-result-atlas-profession-code">Код {professionCode}</span>
         ) : null}
       </div>
       <strong>{profession.title}</strong>
       {description ? <p>{description}</p> : null}
       {metaItems.length > 0 ? (
-        <div className="polus-atlas-profession-meta">
+        <div className="prof-result-atlas-profession-meta">
           {metaItems.map((item) => (
             <span key={`${profession.code}-${item}`}>{item}</span>
           ))}
         </div>
       ) : null}
       {atlasProfession?.skills.length ? (
-        <div className="polus-atlas-skill-list">
+        <div className="prof-result-atlas-skill-list">
           {atlasProfession.skills.slice(0, 4).map((skill) => (
             <span key={`${profession.code}-${skill}`}>{skill}</span>
           ))}
@@ -149,7 +148,7 @@ function ProfOrientationProfessionCard({
       ) : null}
       {url ? <ExternalLink className="h-4 w-4" aria-hidden="true" /> : null}
       {url ? (
-        <span className="polus-print-link" aria-hidden="true">
+        <span className="prof-result-print-link" aria-hidden="true">
           Открыть: {url}
         </span>
       ) : null}
@@ -157,13 +156,13 @@ function ProfOrientationProfessionCard({
   );
 
   if (!url) {
-    return <div className="polus-atlas-profession-card">{content}</div>;
+    return <div className="prof-result-atlas-profession-card">{content}</div>;
   }
 
   return (
     <a
       aria-label={`${profession.title} в Атласе профессий`}
-      className="polus-atlas-profession-card"
+      className="prof-result-atlas-profession-card"
       href={url}
       target="_blank"
       rel="noreferrer"
@@ -187,12 +186,14 @@ function ProfOrientationAtlasRecommendationList({
   }
 
   return (
-    <div className={`polus-atlas-recommendation-group polus-atlas-recommendation-group--${layout}`}>
+    <div
+      className={`prof-result-atlas-recommendation-group prof-result-atlas-recommendation-group--${layout}`}
+    >
       <h4>{title}</h4>
-      <div className="polus-atlas-recommendation-list">
+      <div className="prof-result-atlas-recommendation-list">
         {items.slice(0, 2).map((item) => (
           <a
-            className="polus-atlas-recommendation"
+            className="prof-result-atlas-recommendation"
             href={item.url}
             key={`${title}-${item.slug}`}
             target="_blank"
@@ -204,7 +205,7 @@ function ProfOrientationAtlasRecommendationList({
             </span>
             {item.summary ? <p>{item.summary}</p> : null}
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            <span className="polus-print-link" aria-hidden="true">
+            <span className="prof-result-print-link" aria-hidden="true">
               Открыть: {item.url}
             </span>
           </a>
@@ -214,14 +215,14 @@ function ProfOrientationAtlasRecommendationList({
   );
 }
 
-export function ProfOrientationHero({
-  headline,
-  professorSummary,
-}: {
-  headline: string;
-  professorSummary: string;
-}) {
-  return <PolusResultHero headline={headline} professorSummary={professorSummary} />;
+/** Neutral banner; a themed wrapper swaps it for its own through `renderHero`. */
+export function ProfOrientationHero({ headline, summary }: { headline: string; summary: string }) {
+  return (
+    <section className="prof-result-hero" aria-label="Итог">
+      <h2>{headline}</h2>
+      <p>{summary}</p>
+    </section>
+  );
 }
 
 export function ProfOrientationScoreGrid({
@@ -230,9 +231,9 @@ export function ProfOrientationScoreGrid({
   directions: ProfOrientationSummary['topDirections'];
 }) {
   return (
-    <div className="polus-result-grid">
+    <div className="prof-result-score-grid">
       {directions.slice(0, 3).map((direction) => (
-        <div className="polus-result-tile" key={direction.id}>
+        <div className="prof-result-score-tile" key={direction.id}>
           <strong>{getScoreLabel(direction.score)}</strong>
           <span>{direction.name}</span>
         </div>
@@ -253,12 +254,12 @@ export function ProfOrientationProfileCard({
   title: string;
 }) {
   return (
-    <section className="polus-profile-card" aria-label="Расширенный профиль участника">
-      <div className="polus-profile-heading">
+    <section className="prof-result-profile-card" aria-label="Расширенный профиль участника">
+      <div className="prof-result-profile-heading">
         <h3>{title}</h3>
         <p>{meaning}</p>
       </div>
-      <ul className="polus-profile-bullets">
+      <ul className="prof-result-profile-bullets">
         {items.map((item, index) => (
           <li key={`${item}-${index}`}>{item}</li>
         ))}
@@ -278,9 +279,9 @@ export function ProfOrientationProfessionsCard({
   professionAtlasUrl?: null | string;
 }) {
   return (
-    <section className="polus-method-card" aria-label="Подходящие специальности">
-      <span className="polus-method-label">Подходящие специальности</span>
-      <div className="polus-atlas-profession-grid">
+    <section className="prof-result-method-card" aria-label="Подходящие специальности">
+      <span className="prof-result-method-label">Подходящие специальности</span>
+      <div className="prof-result-atlas-profession-grid">
         {professions.map((profession, index) => (
           <ProfOrientationProfessionCard
             analysis={analysis}
@@ -312,14 +313,17 @@ export function ProfOrientationAtlasRecommendationsCard({
   }
 
   return (
-    <section className="polus-method-card polus-atlas-result-card" aria-label="Атлас профессий">
-      <span className="polus-method-label">Дальше в Атласе профессий</span>
+    <section
+      className="prof-result-method-card prof-result-atlas-result-card"
+      aria-label="Атлас профессий"
+    >
+      <span className="prof-result-method-label">Дальше в Атласе профессий</span>
 
       {atlas.status === 'partial' ? (
-        <p className="polus-atlas-note">Показаны найденные совпадения по Атласу.</p>
+        <p className="prof-result-atlas-note">Показаны найденные совпадения по Атласу.</p>
       ) : null}
 
-      <div className="polus-atlas-recommendation-grid">
+      <div className="prof-result-atlas-recommendation-grid">
         <ProfOrientationAtlasRecommendationList title="Предприятия" items={atlas.enterprises} />
         <ProfOrientationAtlasRecommendationList
           layout="events"
@@ -344,8 +348,8 @@ export function ProfOrientationMiniProjectCard({
   miniProject: string;
 }) {
   return (
-    <section className="polus-method-card" aria-label="Мини-проект">
-      <span className="polus-method-label">Мини-проект</span>
+    <section className="prof-result-method-card" aria-label="Мини-проект">
+      <span className="prof-result-method-label">Мини-проект</span>
       <p>{miniProject}</p>
       <ProfOrientationNextSteps analysis={analysis} />
     </section>

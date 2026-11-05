@@ -14,6 +14,7 @@ import {
 } from './prof-orientation-result.sections';
 
 import type { ProfOrientationSummary } from './prof-orientation-summary';
+import type { ReactNode } from 'react';
 
 type ProfOrientationProfession = NonNullable<
   ProfOrientationSummary['primaryDirection']
@@ -57,11 +58,23 @@ const getAtlasProfession = (
   );
 };
 
+export interface ProfOrientationHeroContent {
+  headline: string;
+  summary: string;
+}
+
+/**
+ * The result of the profession-orientation methodology, the same for every public template.
+ * The template only decides how it looks: the styles come from the theme around it, and a
+ * themed wrapper may replace the banner through `renderHero` (POLUS puts the professor there).
+ */
 export function ProfOrientationResult({
   professionAtlasUrl,
+  renderHero,
   summary,
 }: {
   professionAtlasUrl?: null | string;
+  renderHero?: (hero: ProfOrientationHeroContent) => ReactNode;
   summary: ProfOrientationSummary;
 }) {
   const primary = summary.primaryDirection;
@@ -99,7 +112,11 @@ export function ProfOrientationResult({
 
   return (
     <>
-      <ProfOrientationHero headline={headline} professorSummary={professorSummary} />
+      {renderHero ? (
+        renderHero({ headline, summary: professorSummary })
+      ) : (
+        <ProfOrientationHero headline={headline} summary={professorSummary} />
+      )}
       <ProfOrientationScoreGrid directions={summary.topDirections} />
       <ProfOrientationProfileCard
         analysis={llmAnalysis}

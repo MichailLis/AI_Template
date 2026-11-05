@@ -7,9 +7,10 @@ export { PublicTestStudentAnalysisView } from './ui/public-test-student-analysis
 export { TestAnalysisResultView } from './ui/test-analysis-result-view';
 
 export { getMaxChoices, isChoiceLimitReached } from './lib/public-question-choice-limit';
-export { getProfOrientationLlmStatus } from './ui/polus/prof-orientation-llm-data';
+export { getProfOrientationLlmStatus } from './ui/prof-orientation/prof-orientation-llm-data';
 export { hexToHslToken, resolvePublicBrandingTheme } from './public-branding';
-export { ProfOrientationResult } from './ui/polus/prof-orientation-result';
+export { ProfOrientationResult } from './ui/prof-orientation/prof-orientation-result';
+export { PolusProfOrientationResult } from './ui/polus/polus-prof-orientation-result';
 export { polusAssets } from './ui/polus/polus-public-assets';
 export { PolusResultHero } from './ui/polus/polus-result-hero';
 

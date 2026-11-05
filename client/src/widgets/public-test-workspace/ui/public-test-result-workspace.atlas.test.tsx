@@ -221,10 +221,10 @@ describe('PublicTestResultWorkspace', () => {
       within(professionsSection as HTMLElement).getByText(
         'Открыть: https://atlas.example/professions/engineer-designer',
       ),
-    ).toHaveClass('polus-print-link');
+    ).toHaveClass('prof-result-print-link');
     const professionCode = within(professionsSection as HTMLElement).getByText('Код 20.15.24');
-    expect(professionCode).toHaveClass('polus-atlas-profession-code');
-    expect(professionCode.closest('.polus-atlas-profession-header')).toBeInTheDocument();
+    expect(professionCode).toHaveClass('prof-result-atlas-profession-code');
+    expect(professionCode.closest('.prof-result-atlas-profession-header')).toBeInTheDocument();
     expect(
       within(atlasSection as HTMLElement).queryByRole('link', {
         name: /Инженер-конструктор/i,
@@ -239,12 +239,12 @@ describe('PublicTestResultWorkspace', () => {
       within(atlasSection as HTMLElement).getByText(
         'Открыть: https://atlas.example/enterprises#enterprise-future-plant',
       ),
-    ).toHaveClass('polus-print-link');
+    ).toHaveClass('prof-result-print-link');
     expect(
       within(atlasSection as HTMLElement)
         .getByText('Мероприятия')
-        .closest('.polus-atlas-recommendation-group'),
-    ).toHaveClass('polus-atlas-recommendation-group--events');
+        .closest('.prof-result-atlas-recommendation-group'),
+    ).toHaveClass('prof-result-atlas-recommendation-group--events');
     expect(
       within(atlasSection as HTMLElement).getByRole('link', {
         name: /CAD-практикум/i,
@@ -254,12 +254,12 @@ describe('PublicTestResultWorkspace', () => {
       within(atlasSection as HTMLElement).getByText(
         'Открыть: https://atlas.example/events#event-cad-practice',
       ),
-    ).toHaveClass('polus-print-link');
+    ).toHaveClass('prof-result-print-link');
     expect(
       within(atlasSection as HTMLElement)
         .getByText('Учебные заведения')
-        .closest('.polus-atlas-recommendation-group'),
-    ).toHaveClass('polus-atlas-recommendation-group--institutions');
+        .closest('.prof-result-atlas-recommendation-group'),
+    ).toHaveClass('prof-result-atlas-recommendation-group--institutions');
     expect(
       within(atlasSection as HTMLElement).getByRole('link', {
         name: /Политехнический колледж/i,

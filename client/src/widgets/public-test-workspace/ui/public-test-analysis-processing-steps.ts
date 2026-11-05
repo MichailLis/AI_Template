@@ -6,5 +6,5 @@ export const analysisProcessingSteps: AnalysisProcessingStep[] = [
   { id: 'patterns', text: 'Выделяем ключевые закономерности' },
   { id: 'strengths', text: 'Собираем выводы о сильных сторонах' },
   { id: 'directions', text: 'Подбираем направления развития' },
-  { id: 'report', text: 'Профессор формулирует понятное пояснение' },
+  { id: 'report', text: 'Формулируем понятное пояснение' },
 ];
