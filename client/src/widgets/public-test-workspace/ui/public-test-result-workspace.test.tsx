@@ -199,7 +199,7 @@ describe('PublicTestResultWorkspace', () => {
       name: /перейти в атлас профессий/i,
     });
     expect(atlasLink).toHaveAttribute('href', 'https://atlas.example/professions');
-    expect(atlasLink).toHaveClass('polus-atlas-inline-action');
+    expect(atlasLink).toHaveClass('prof-result-atlas-inline-action');
     expect(
       container.querySelector('section[aria-label="Атлас профессий"]'),
     ).not.toBeInTheDocument();

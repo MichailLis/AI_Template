@@ -7,7 +7,7 @@ export type ProfOrientationProfession = NonNullable<
 
 export const getProfessorStatusText = (llmStatus: string) => {
   if (llmStatus === 'pending') {
-    return 'Профессор Полюс формулирует понятное ИИ-пояснение. Базовый результат ниже уже готов.';
+    return 'Формулируем понятное ИИ-пояснение. Базовый результат ниже уже готов.';
   }
 
   if (llmStatus === 'failed') {

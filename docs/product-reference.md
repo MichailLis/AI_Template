@@ -263,7 +263,8 @@ UI/theming contract for public pages:
 - do not move public-theme tokens into global `client/src/app/index.css`
 - `STANDARD` must preserve the existing public components and remains the default unless a link explicitly stores `publicTemplate = POLUS`
 - `STANDARD` may apply `publicBranding` from the public link through `PublicThemeLayout`; empty branding keeps the default look
-- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; shared Polus result rendering, styles, and assets live under `client/src/entities/public-test/ui/polus/*`
+- `POLUS` public shell components live under `client/src/widgets/public-test-workspace/ui/polus/*`; Polus styles, assets and the professor banner live under `client/src/entities/public-test/ui/polus/*`
+- The result screen is chosen by `summary.resultKind`, not by the template: the profession-orientation result (`client/src/entities/public-test/ui/prof-orientation/*`) is the same for `STANDARD` and `POLUS`, and the template only sets its look (`STANDARD` has its own styles next to it, `POLUS` adds the professor banner). The STANDARD template is allowed for the profession-orientation v3+ test
 - Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus ignores the `STANDARD` branding config, and assets/fonts belong in the Polus public-test asset folder, not `client/public/prototypes`
 - user-facing statuses must stay human-readable (`готов`, `в обработке`, `ошибка`) and avoid raw technical states in UI (for example `IN_PROGRESS` badge)
 - Detailed public branding/autosave/analytics/settings update: `docs/2026-05-27-public-test-branding-and-autosave.md`

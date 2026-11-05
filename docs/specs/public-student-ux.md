@@ -37,7 +37,7 @@ UI/theming rules:
 7. Entry page should remain center-composed with mobile-safe layout (no horizontal overflow).
 8. Entry/run/result pages must branch by the link `publicTemplate` without changing public routes:
    - `STANDARD` preserves the existing public components.
-   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; shared result rendering, styles, and assets live under `client/src/entities/public-test/ui/polus/*`.
+   - `POLUS` uses public shell components under `client/src/widgets/public-test-workspace/ui/polus/*`; Polus styles, assets and the professor banner live under `client/src/entities/public-test/ui/polus/*`. The result screen follows `summary.resultKind` (`ai_analysis`, `prof_orientation_v3_plus`, `none`) for both templates; the shared profession-orientation result lives in `client/src/entities/public-test/ui/prof-orientation/*`.
 9. Polus styles must stay scoped through the Polus variant of `PublicThemeLayout`; Polus assets/fonts belong in the production-owned Polus public-test asset folder, not `client/public/prototypes`.
 10. Entry page must branch by the link `entryProfileMode` without changing public routes:
     - `DEMOGRAPHIC` shows the demographic profile form.

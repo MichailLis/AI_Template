@@ -1,5 +1,5 @@
-import { ProfOrientationResult } from './polus/prof-orientation-result';
-import { parseProfOrientationSummary } from './polus/prof-orientation-summary';
+import { PolusProfOrientationResult } from './polus/polus-prof-orientation-result';
+import { parseProfOrientationSummary } from './prof-orientation/prof-orientation-summary';
 import { TestAnalysisResultView } from './test-analysis-result-view';
 
 import type { AnalysisPayload } from '../lib/test-analysis-result-parser';
@@ -24,7 +24,7 @@ export function PublicTestStudentAnalysisView({
           <div className="polus-state-view">
             <div className="polus-result-layout">
               <p className="polus-section-label">Персональная карта развития</p>
-              <ProfOrientationResult
+              <PolusProfOrientationResult
                 professionAtlasUrl={professionAtlasUrl}
                 summary={profOrientationSummary}
               />

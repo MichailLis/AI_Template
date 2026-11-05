@@ -204,8 +204,8 @@
       "type": "behaviour",
       "authority": "server",
       "client": {
-        "file": "client/src/entities/public-test/ui/polus/prof-orientation-result.helpers.ts",
-        "testFile": "client/src/entities/public-test/ui/polus/prof-orientation-result.helpers.test.ts"
+        "file": "client/src/entities/public-test/ui/prof-orientation/prof-orientation-result.helpers.ts",
+        "testFile": "client/src/entities/public-test/ui/prof-orientation/prof-orientation-result.helpers.test.ts"
       },
       "server": {
         "file": "server/src/tests/prof-orientation-v3-plus/atlas.logic.ts",
@@ -229,8 +229,8 @@
       "type": "behaviour",
       "authority": "server",
       "client": {
-        "file": "client/src/entities/public-test/ui/polus/prof-orientation-llm-data.ts",
-        "testFile": "client/src/entities/public-test/ui/polus/prof-orientation-llm-data.test.ts"
+        "file": "client/src/entities/public-test/ui/prof-orientation/prof-orientation-llm-data.ts",
+        "testFile": "client/src/entities/public-test/ui/prof-orientation/prof-orientation-llm-data.test.ts"
       },
       "server": {
         "file": "server/src/tests/prof-orientation-v3-plus/scoring.ts",

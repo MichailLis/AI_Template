@@ -1,6 +1,6 @@
 import { Download } from 'lucide-react';
 
-import { PolusResultHero, ProfOrientationResult } from '@/entities/public-test';
+import { PolusProfOrientationResult, PolusResultHero } from '@/entities/public-test';
 
 import { PolusAtlasCard } from './polus-atlas-card';
 import { PolusPublicLayout } from './polus-public-layout';
@@ -129,7 +129,7 @@ function PolusResultBody({
 }) {
   if (profOrientationSummary) {
     return (
-      <ProfOrientationResult
+      <PolusProfOrientationResult
         professionAtlasUrl={result.professionAtlasUrl}
         summary={profOrientationSummary}
       />
