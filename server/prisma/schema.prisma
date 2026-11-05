@@ -30,7 +30,6 @@ enum TestStudentAttemptStatus {
   IN_PROGRESS
   COMPLETED
   EXPIRED
-  ABANDONED
 }
 
 enum TestStudentAnalysisStatus {

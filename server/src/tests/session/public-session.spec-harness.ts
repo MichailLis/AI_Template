@@ -13,7 +13,7 @@ import type { AccessibleLinkFixture } from '../session/spec-fixtures';
 export type AttemptHistoryItem = {
   id: number;
   attemptNumber: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'ABANDONED';
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
   resumeToken: string;
   expiresAt: Date | null;
 };

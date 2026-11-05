@@ -13,5 +13,4 @@ export const AdminPublicAttemptsListResponseDtoAttemptsItemStatus = {
   IN_PROGRESS: 'IN_PROGRESS',
   COMPLETED: 'COMPLETED',
   EXPIRED: 'EXPIRED',
-  ABANDONED: 'ABANDONED',
 } as const;

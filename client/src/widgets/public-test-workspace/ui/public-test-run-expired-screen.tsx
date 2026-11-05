@@ -12,14 +12,7 @@ interface PublicTestRunExpiredScreenProps {
   session: PublicTestSession;
 }
 
-const getScreenTitle = (status: PublicTestSession['status']) =>
-  status === 'ABANDONED' ? 'Попытка закрыта' : 'Время вышло';
-
 const getScreenMessage = (session: PublicTestSession) => {
-  if (session.status === 'ABANDONED') {
-    return 'Эта попытка была прервана или закрыта. Ответы больше не принимаются, и результат по ней не формируется.';
-  }
-
   const limitText = session.timeLimitMinutes
     ? ` — ${session.timeLimitMinutes} ${pluralizeRu(session.timeLimitMinutes, ['минута', 'минуты', 'минут'])} —`
     : '';
@@ -30,10 +23,10 @@ const getScreenMessage = (session: PublicTestSession) => {
 const NEXT_STEP_MESSAGE =
   'Если по ссылке можно пройти тест еще раз, начните заново. Если попыток не осталось, обратитесь к педагогу или администратору теста.';
 
-// Экран закрытой попытки (истекшей по времени или брошенной): вопросы не показываются, потому что сервер ответы уже не примет.
+// Экран закрытой попытки (истекшей по времени): вопросы не показываются, потому что сервер ответы уже не примет.
 export function PublicTestRunExpiredScreen({ code, session }: PublicTestRunExpiredScreenProps) {
   const entryPath = `/t/${code}`;
-  const title = getScreenTitle(session.status);
+  const title = 'Время вышло';
   const message = getScreenMessage(session);
 
   if (session.publicTemplate === 'POLUS') {

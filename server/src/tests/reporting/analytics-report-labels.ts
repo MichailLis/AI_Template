@@ -71,7 +71,6 @@ const attemptStatusLabels: Record<string, string> = {
   IN_PROGRESS: 'В процессе',
   COMPLETED: 'Пройдено',
   EXPIRED: 'Истекло',
-  ABANDONED: 'Брошено',
 };
 
 const analysisStatusLabels: Record<string, string> = {

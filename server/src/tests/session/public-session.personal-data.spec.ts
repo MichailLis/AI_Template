@@ -16,7 +16,7 @@ import {
 type AttemptHistoryItem = {
   id: number;
   attemptNumber: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'ABANDONED';
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
   resumeToken: string;
   expiresAt: Date | null;
 };
