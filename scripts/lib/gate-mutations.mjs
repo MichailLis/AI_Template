@@ -442,6 +442,94 @@ export const GATE_MUTATIONS = [
       "\nimport { TestEditor } from '@/features/test-editor';\n" +
       'Object.assign(globalThis, { TestEditor });\n',
   },
+
+  // 11. e2e-critical-flows.mjs. `args` runs the gate on the scenario that must catch the change
+  // (targeted run, Vite-only build, a few seconds); the baseline above runs the whole gate. Every
+  // replacement keeps the sources type-correct, so a catch comes from a scenario and not from tsc.
+  {
+    id: 'e2e-critical-result-screen-blank',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=standard-ai,standard-prof,no-result'],
+    file: 'client/src/widgets/public-test-workspace/ui/public-test-result-workspace.tsx',
+    description: 'The STANDARD result screen renders nothing after the finish',
+    action: 'replace',
+    search: 'return <StandardPublicResult result={result} />;',
+    replace: 'return result.sessionToken ? null : <StandardPublicResult result={result} />;',
+  },
+  {
+    id: 'e2e-critical-result-polling-stops',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=polus-prof,poll-failure'],
+    file: 'client/src/widgets/public-test-workspace/ui/public-test-result-workspace.tsx',
+    description: 'The result page stops polling while the analysis is still pending',
+    action: 'replace',
+    search: 'return shouldPollAnalysis(data) ? resultPollIntervalMs : false;',
+    replace: 'return shouldPollAnalysis(data) && !data ? resultPollIntervalMs : false;',
+  },
+  {
+    id: 'e2e-critical-failed-poll-wipes-screen',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=poll-failure'],
+    file: 'client/src/widgets/public-test-workspace/ui/public-test-result-workspace.tsx',
+    description: 'One failed poll replaces the loaded screen with the error alert',
+    action: 'replace',
+    search: /if \(!result\) \{(?=\s*return \(\s*<PublicThemeLayout)/,
+    replace: 'if (resultQuery.isError || !result) {',
+  },
+  {
+    id: 'e2e-critical-standard-polus-nodes',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=standard-prof'],
+    file: 'client/src/widgets/public-test-workspace/ui/public-test-result-workspace.tsx',
+    description: 'The STANDARD profession-orientation result carries a polus-* node',
+    action: 'replace',
+    search: '<div className="prof-result-stack">',
+    replace: '<div className="prof-result-stack polus-result-layout">',
+  },
+  {
+    id: 'e2e-critical-polus-invented-profile',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=no-result'],
+    file: 'client/src/widgets/public-test-workspace/ui/polus/polus-public-result.tsx',
+    description: 'POLUS shows a made-up profile where there is no result',
+    action: 'replace',
+    search: 'Результат для этого теста не предусмотрен или его передаст преподаватель.',
+    replace: 'Ваш профиль: Конструирование БПЛА 86%',
+  },
+  {
+    id: 'e2e-critical-stale-chunk-reload-removed',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=stale-chunk'],
+    file: 'client/src/main.tsx',
+    description: 'Drop the one-time reload after a stale chunk from the client entry',
+    action: 'replace',
+    search: 'installStaleChunkReload();',
+    replace: 'void installStaleChunkReload;',
+  },
+  {
+    id: 'e2e-critical-answers-not-saved-on-finish',
+    gate: 'e2e-critical-flows.mjs',
+    script: 'scripts/e2e-critical-flows.mjs',
+    npmScript: 'verify:e2e:critical',
+    args: ['--only=standard-ai'],
+    file: 'client/src/widgets/public-test-workspace/ui/use-public-test-run-workspace.ts',
+    description: 'The finish call no longer saves the answers first',
+    action: 'replace',
+    search: 'if (answers.length > 0) {',
+    replace: 'if (answers.length > 0 && !answers) {',
+  },
 ];
 
 /**
@@ -468,13 +556,6 @@ export const GATE_EXCEPTIONS = [
     npmScript: 'verify:smoke:server',
     reason:
       'Starts live backend server process and tests HTTP endpoints; requires running services',
-  },
-  {
-    gate: 'e2e-critical-flows.mjs',
-    script: 'scripts/e2e-critical-flows.mjs',
-    npmScript: 'verify:e2e:critical',
-    reason:
-      'End-to-end browser automation suite via Playwright; requires running frontend and backend containers',
   },
 ];
 

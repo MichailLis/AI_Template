@@ -323,7 +323,8 @@ export function PublicTestResultWorkspace() {
     return <PublicTestAnalysisProcessingScreen startedAt={null} />;
   }
 
-  if (resultQuery.isError || !result) {
+  // One failed background poll must not replace a loaded result or the waiting screen.
+  if (!result) {
     return (
       <PublicThemeLayout containerClassName="max-w-3xl">
         <div

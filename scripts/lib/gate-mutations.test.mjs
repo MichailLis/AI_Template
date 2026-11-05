@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
@@ -10,6 +11,7 @@ import {
   describeGateRun,
   extractPipelineGates,
 } from './gate-mutations.mjs';
+import { studentScenarioIds } from './e2e-public-result-flows.mjs';
 
 describe('applyMutation', () => {
   it('appends content to string', () => {
@@ -261,5 +263,39 @@ describe('classifyGateRun', () => {
 
   it('treats an error alongside a zero status as not run', () => {
     assert.equal(classifyGateRun({ status: 0, error: new Error('boom') }), 'not-run');
+  });
+});
+
+describe('e2e-critical-flows mutations', () => {
+  const e2eMutations = GATE_MUTATIONS.filter(
+    (mutation) => mutation.npmScript === 'verify:e2e:critical',
+  );
+  const targetedIds = (mutation) =>
+    (mutation.args ?? []).flatMap((arg) => arg.replace(/^--only=/, '').split(','));
+
+  // An unknown id makes the gate exit non-zero, which verify:gates would count as a catch.
+  it('target scenarios that exist', () => {
+    for (const mutation of e2eMutations) {
+      assert.ok(mutation.args?.length === 1, `${mutation.id} needs one --only= argument`);
+      for (const id of targetedIds(mutation)) {
+        assert.ok(studentScenarioIds.includes(id), `${mutation.id}: unknown scenario "${id}"`);
+      }
+    }
+  });
+
+  it('cover every student scenario with at least one mutation', () => {
+    const covered = new Set(e2eMutations.flatMap(targetedIds));
+
+    for (const id of studentScenarioIds) {
+      assert.ok(covered.has(id), `Scenario "${id}" has no mutation proving it can fail`);
+    }
+  });
+
+  it('apply to the real sources', () => {
+    for (const mutation of e2eMutations) {
+      const source = readFileSync(new URL(`../../${mutation.file}`, import.meta.url));
+
+      assert.doesNotThrow(() => applyMutation(source, mutation), mutation.id);
+    }
   });
 });
