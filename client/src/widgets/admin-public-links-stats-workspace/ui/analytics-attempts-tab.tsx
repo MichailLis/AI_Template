@@ -265,7 +265,7 @@ export function AnalyticsAttemptsTab({
       <ConfirmActionDialog
         open={pendingDeleteAttemptId !== null}
         title="Удалить попытку?"
-        description="Действие необратимо: ответы и результат ученика будут удалены. Запись о удалении останется в журнале ссылки."
+        description="Действие необратимо: ответы и результат ученика будут удалены. Запись об удалении останется в журнале ссылки."
         confirmLabel="Удалить попытку"
         variant="destructive"
         isConfirming={isDeleting}

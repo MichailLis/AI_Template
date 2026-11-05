@@ -267,7 +267,7 @@ describe('AnalyticsAttemptsTab', () => {
     const dialog = await screen.findByRole('alertdialog');
     expect(
       within(dialog).getByText(
-        'Действие необратимо: ответы и результат ученика будут удалены. Запись о удалении останется в журнале ссылки.',
+        'Действие необратимо: ответы и результат ученика будут удалены. Запись об удалении останется в журнале ссылки.',
       ),
     ).toBeInTheDocument();
     expect(deleteAttemptMock).not.toHaveBeenCalled();
