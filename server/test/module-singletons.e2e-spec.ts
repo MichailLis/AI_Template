@@ -83,12 +83,14 @@ describe('Provider instances (e2e)', () => {
     expect(duplicates).toEqual([]);
   });
 
-  it.each([
-    PrivacyPolicySettingsService,
-    ProfessionAtlasSettingsService,
-    ProfessionAtlasClientService,
-    PublicRateLimitSettingsService,
-  ])('keeps $name only in AppSettingsModule', (service) => {
+  it.each(
+    [
+      PrivacyPolicySettingsService,
+      ProfessionAtlasSettingsService,
+      ProfessionAtlasClientService,
+      PublicRateLimitSettingsService,
+    ].map((service) => [service.name, service] as const),
+  )('keeps %s only in AppSettingsModule', (_name, service) => {
     expect(listDeclaringModules(app.get(ModulesContainer)).get(service)).toEqual([
       AppSettingsModule.name,
     ]);
