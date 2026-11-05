@@ -1,5 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
-
+import { InvalidInputError } from '../../common/errors/domain-error';
 import type { PublicSessionStartRequestDto } from '../dto/tests-public.dto';
 import type { TestsPublicLinkService } from '../public-links/public-link.service';
 import { isSafeGroupPattern } from '../shared/group-pattern';
@@ -50,7 +49,7 @@ export const validateGroupOrClassForLink = (groupOrClass: string, link: Accessib
   }
 
   if (!matchesGroupPattern(groupOrClass, validationPattern)) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       link.educationOrganization?.groupValidationHint ||
         'Формат поля "Группа / класс" не соответствует требованиям учебного заведения',
       'GROUP_FORMAT_INVALID',
@@ -62,7 +61,7 @@ export const normalizeRequiredString = (value: string | undefined, message: stri
   const normalizedValue = value?.trim() ?? '';
 
   if (!normalizedValue) {
-    throw new BadRequestException(message, 'PROFILE_INVALID');
+    throw new InvalidInputError(message, 'PROFILE_INVALID');
   }
 
   return normalizedValue;
@@ -73,7 +72,7 @@ export const validateEntryProfileMode = (
   dto: PublicSessionStartRequestDto,
 ) => {
   if (dto.entryProfileMode && dto.entryProfileMode !== link.entryProfileMode) {
-    throw new BadRequestException(
+    throw new InvalidInputError(
       'Анкета не соответствует настройкам ссылки',
       'PROFILE_MODE_MISMATCH',
     );
@@ -84,7 +83,7 @@ export const resolveDemographicProfile = (
   dto: PublicSessionStartRequestDto,
 ): DemographicProfile => {
   if (!dto.gender) {
-    throw new BadRequestException('Укажите пол', 'PROFILE_INVALID');
+    throw new InvalidInputError('Укажите пол', 'PROFILE_INVALID');
   }
 
   const studentAge = dto.age;
@@ -95,13 +94,13 @@ export const resolveDemographicProfile = (
     studentAge < 1 ||
     studentAge > 120
   ) {
-    throw new BadRequestException('Укажите корректный возраст', 'PROFILE_INVALID');
+    throw new InvalidInputError('Укажите корректный возраст', 'PROFILE_INVALID');
   }
 
   const studentResidence = normalizeRequiredString(dto.residence, 'Укажите место жительства');
 
   if (!dto.educationLevel) {
-    throw new BadRequestException('Укажите уровень образования', 'PROFILE_INVALID');
+    throw new InvalidInputError('Укажите уровень образования', 'PROFILE_INVALID');
   }
 
   return {

@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InvalidInputError, NotFoundError } from '../../common/errors/domain-error';
 
 import type { PrismaService } from '../../prisma.service';
 import { resolvePersonalDataOperator } from '../shared/personal-data-operator';
@@ -69,7 +69,7 @@ describe('resolvePersonalDataOperator', () => {
         'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
         null,
       ),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidInputError);
     await expect(
       resolvePersonalDataOperator(
         prismaMock as unknown as PrismaService,
@@ -96,7 +96,7 @@ describe('resolvePersonalDataOperator', () => {
         'ON_BEHALF_OF_EDUCATION_ORGANIZATION',
         404,
       ),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(NotFoundError);
     await expect(
       resolvePersonalDataOperator(
         prismaMock as unknown as PrismaService,

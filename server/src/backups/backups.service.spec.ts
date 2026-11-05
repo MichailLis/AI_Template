@@ -1,4 +1,5 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenError } from '../common/errors/domain-error';
 import type { ConfigService } from '@nestjs/config';
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -358,7 +359,7 @@ describe('BackupsService', () => {
 
     prisma.user.findUnique.mockResolvedValue({ id: ADMIN_ID, role: 'USER', deactivatedAt: null });
 
-    await expect(service.openDownload(token)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.openDownload(token)).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('deletes a backup and records it', async () => {

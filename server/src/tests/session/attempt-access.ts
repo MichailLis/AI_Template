@@ -1,5 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
-
+import { NotFoundError } from '../../common/errors/domain-error';
 import type { PrismaService } from '../../prisma.service';
 import { attemptWithSessionInclude, type AttemptWithSessionData } from '../attempts/attempt.query';
 import { ensurePublicLinkAccessible } from '../public-links/public-link-access';
@@ -14,7 +13,7 @@ const findSessionAttemptByTokenOrThrow = async (
   });
 
   if (!attempt) {
-    throw new NotFoundException('Test session not found', 'SESSION_NOT_FOUND');
+    throw new NotFoundError('Test session not found', 'SESSION_NOT_FOUND');
   }
 
   return attempt;
@@ -43,7 +42,7 @@ export const getResultAttemptByTokenOrThrow = async (
   const attempt = await findSessionAttemptByTokenOrThrow(prisma, sessionToken);
 
   if (attempt.publicLink.archivedAt) {
-    throw new NotFoundException('Public test link not found', 'LINK_NOT_FOUND');
+    throw new NotFoundError('Public test link not found', 'LINK_NOT_FOUND');
   }
 
   return attempt;
