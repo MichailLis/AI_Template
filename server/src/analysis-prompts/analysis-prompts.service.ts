@@ -377,10 +377,13 @@ export class AnalysisPromptsService {
     return this.aiProviderClient.fetchModels(connection);
   }
 
-  async generatePrompt(dto: GeneratePromptDto) {
+  /** Единственный вызывающий — генерация вопросов теста в редакторе. */
+  async generatePrompt(userId: number, dto: GeneratePromptDto) {
     const connection = await this.aiProviderConfig.getConnection();
 
-    return this.aiProviderClient.generatePrompt(connection, dto);
+    return this.aiProviderClient.generatePrompt(connection, dto, {
+      usage: { purpose: 'TEST_GENERATION', actorUserId: userId },
+    });
   }
 
   async createPrompt(
@@ -626,8 +629,12 @@ export class AnalysisPromptsService {
     };
   }
 
-  async simulatePrompt(dto: PromptSimulationRequestDto): Promise<PromptSimulationResponseDto> {
+  async simulatePrompt(
+    userId: number,
+    dto: PromptSimulationRequestDto,
+  ): Promise<PromptSimulationResponseDto> {
     const connection = await this.aiProviderConfig.getConnection();
+    const usage = { purpose: 'PROMPT_SIMULATION', actorUserId: userId } as const;
     const questionPayloads =
       await this.testsPromptSimulationReadService.getPromptSimulationQuestionPayloads(
         dto.questionIds,
@@ -638,27 +645,35 @@ export class AnalysisPromptsService {
         ? null
         : parseJsonOutput(
             (
-              await this.aiProviderClient.generatePrompt(connection, {
-                model: dto.model,
-                prompt: this.buildSyntheticAnswersPrompt(questionPayloads),
-                temperature: 0.2,
-                responseFormat: 'json',
-                responseSchema: syntheticAnswersJsonSchema,
-                requireParameters: true,
-                useResponseHealing: true,
-              })
+              await this.aiProviderClient.generatePrompt(
+                connection,
+                {
+                  model: dto.model,
+                  prompt: this.buildSyntheticAnswersPrompt(questionPayloads),
+                  temperature: 0.2,
+                  responseFormat: 'json',
+                  responseSchema: syntheticAnswersJsonSchema,
+                  requireParameters: true,
+                  useResponseHealing: true,
+                },
+                { usage },
+              )
             ).output,
           );
 
-    const analysisResponse = await this.aiProviderClient.generatePrompt(connection, {
-      model: dto.model,
-      prompt: this.buildAnalysisPrompt(dto.prompt, questionPayloads, syntheticAnswers),
-      temperature: dto.temperature ?? 0.2,
-      responseFormat: 'json',
-      responseSchema: TestAnalysisResultJsonSchema,
-      requireParameters: true,
-      useResponseHealing: true,
-    });
+    const analysisResponse = await this.aiProviderClient.generatePrompt(
+      connection,
+      {
+        model: dto.model,
+        prompt: this.buildAnalysisPrompt(dto.prompt, questionPayloads, syntheticAnswers),
+        temperature: dto.temperature ?? 0.2,
+        responseFormat: 'json',
+        responseSchema: TestAnalysisResultJsonSchema,
+        requireParameters: true,
+        useResponseHealing: true,
+      },
+      { usage },
+    );
 
     return {
       model: analysisResponse.model,

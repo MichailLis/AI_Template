@@ -64,8 +64,8 @@ export class AnalysisPromptsController {
   @Post('generate')
   @ApiOperation({ summary: 'Generate response from prompt via the AI provider' })
   @ApiResponse({ status: HttpStatus.OK, type: AdminPromptResponseDto })
-  generatePrompt(@Body() dto: GeneratePromptDto) {
-    return this.analysisPromptsService.generatePrompt(dto);
+  generatePrompt(@GetCurrentUserId() userId: number, @Body() dto: GeneratePromptDto) {
+    return this.analysisPromptsService.generatePrompt(userId, dto);
   }
 
   @Post()
@@ -120,7 +120,7 @@ export class AnalysisPromptsController {
   @Post('simulate')
   @ApiOperation({ summary: 'Simulate analysis prompt with selected test questions' })
   @ApiResponse({ status: HttpStatus.CREATED, type: PromptSimulationResponseDto })
-  simulatePrompt(@Body() dto: PromptSimulationRequestDto) {
-    return this.analysisPromptsService.simulatePrompt(dto);
+  simulatePrompt(@GetCurrentUserId() userId: number, @Body() dto: PromptSimulationRequestDto) {
+    return this.analysisPromptsService.simulatePrompt(userId, dto);
   }
 }

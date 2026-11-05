@@ -102,6 +102,20 @@ enum AuditEntityType {
   TEST_TOPIC
 }
 
+/// Для чего сделан вызов провайдера ИИ. Новые виды добавляются в конец (ALTER TYPE ... ADD VALUE).
+enum AiUsagePurpose {
+  STUDENT_ANALYSIS
+  PROF_ORIENTATION_ENRICHMENT
+  TEST_GENERATION
+  PROMPT_SIMULATION
+  CONNECTION_CHECK
+}
+
+enum AiUsageStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id                Int       @id @default(autoincrement())
   /// Stored lowercased by AuthService; citext keeps database uniqueness case-insensitive.
@@ -122,6 +136,7 @@ model User {
   createdPublicTestLinks TestPublicLink[] @relation("PublicLinkCreatedBy")
   auditEvents            AuditEvent[]     @relation("AuditEventActor")
   authSessions           AuthSession[]
+  aiUsageEvents          AiUsageEvent[]   @relation("AiUsageEventActor")
 
   @@map("users")
 }
@@ -370,6 +385,7 @@ model TestStudentAttempt {
   operatorEducationOrganization EducationOrganization? @relation(fields: [operatorEducationOrganizationId], references: [id], onDelete: SetNull)
   answers                       TestStudentAnswer[]
   analysis                      TestStudentAnalysis?
+  aiUsageEvents                 AiUsageEvent[]
 
   @@unique([publicLinkId, studentKeyHash, attemptNumber])
   @@index([publicLinkId, startedAt])
@@ -452,6 +468,39 @@ model AnalysisPromptVersion {
   @@index([promptId, status])
   @@index([status])
   @@map("analysis_prompt_versions")
+}
+
+/// Один вызов провайдера ИИ (#164). Только метаданные: текст промпта и ответ не хранятся, они
+/// содержат ответы учеников. Неудачные вызовы тоже пишутся: таймаут оплачивается. Ссылки на
+/// попытку и автора обнуляются при их удалении, расходы остаются.
+model AiUsageEvent {
+  id               Int            @id @default(autoincrement())
+  purpose          AiUsagePurpose
+  status           AiUsageStatus
+  /// Пресет провайдера (polza, openrouter, openai-compatible).
+  provider         String
+  requestedModel   String
+  /// Модель из ответа провайдера: может отличаться от запрошенной. Null, если ответа не было.
+  actualModel      String?
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  /// Стоимость из usage.cost ответа, в единицах счёта провайдера. Null, если провайдер её не отдал.
+  cost             Decimal?       @db.Decimal(18, 8)
+  durationMs       Int
+  /// Код причины (AiFailureReason) у неудачного вызова; текст ошибки провайдера не хранится.
+  failureReason    String?
+  attemptId        Int?
+  actorUserId      Int?
+  createdAt        DateTime       @default(now())
+
+  attempt TestStudentAttempt? @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+  actor   User?               @relation("AiUsageEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([attemptId])
+  @@index([actorUserId])
+  @@map("ai_usage_events")
 }
 
 model AppSetting {

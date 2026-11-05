@@ -637,6 +637,7 @@ describe('TestsAnalysisService', () => {
         requireParameters: true,
         useResponseHealing: true,
       }),
+      { usage: { purpose: 'STUDENT_ANALYSIS', attemptId: 5 } },
     );
     const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.prompt).toContain('introduction');
@@ -810,7 +811,7 @@ describe('TestsAnalysisService', () => {
           ignore: ['cloudflare'],
         },
       }),
-      { timeoutMs: 90_000 },
+      { timeoutMs: 90_000, usage: { purpose: 'PROF_ORIENTATION_ENRICHMENT', attemptId: 5 } },
     );
     const promptOptions = aiProviderClientMock.generatePrompt.mock.calls[0]?.[1];
     expect(promptOptions?.sessionId).toMatch(/^prof-orientation-\d+-try-1$/);

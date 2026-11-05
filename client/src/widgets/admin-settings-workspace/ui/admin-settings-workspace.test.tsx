@@ -35,6 +35,11 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
   }),
   getAdminSettingsControllerGetAiProviderSettingsQueryKey: () => ['ai-provider'],
   useAdminSettingsControllerCheckAiProvider: () => ({ mutate: vi.fn(), isPending: false }),
+  useAdminAiUsageControllerGetSummary: () => ({
+    data: undefined,
+    isLoading: true,
+    refetch: vi.fn(),
+  }),
   useAdminSettingsControllerUpdateAiProviderSettings: () => ({
     mutate: updateAiProvider,
     isPending: false,
