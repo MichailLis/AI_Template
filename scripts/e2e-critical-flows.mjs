@@ -185,6 +185,7 @@ const buildClientWithViteOnly = async () => {
     pathToFileURL(join(client, 'node_modules/vite/dist/node/index.js'))
   );
 
+  process.env.NODE_ENV = 'production';
   await build({
     root: client,
     logLevel: 'error',
@@ -213,8 +214,10 @@ const buildClient = async () => {
     buildOutDir,
     '--emptyOutDir',
   ];
+  // CI exports NODE_ENV=test, which would make this a development bundle with other messages.
   const buildProcess = spawnSyncNpm(buildArgs, {
     stdio: 'inherit',
+    env: { ...process.env, NODE_ENV: 'production' },
   });
 
   if (buildProcess.error) {

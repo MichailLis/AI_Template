@@ -122,8 +122,14 @@ const main = () => {
         `${script} could not be started (${describeGateRun(baseline)}); nothing can be concluded about its mutations`,
       );
     } else {
+      const output = `${baseline.stderr ?? ''}${baseline.stdout ?? ''}`.trimEnd().split(/\r?\n/);
       baselineErrors.push(
-        `${script} already fails without any mutation; its mutations would all look caught`,
+        `${script} already fails without any mutation; its mutations would all look caught\n` +
+          `    --- last ${Math.min(output.length, 40)} lines of its output ---\n` +
+          output
+            .slice(-40)
+            .map((line) => `    ${line}`)
+            .join('\n'),
       );
     }
   }

@@ -218,6 +218,9 @@ const staleChunk = async (harness) => {
       /dynamically imported module/,
       /Route render failed/,
       /reading 'default'/,
+      // The same failure as a NODE_ENV=test (development) bundle words it:
+      /Expected the result of a dynamic import/,
+      /The above error occurred in the/,
     ],
   };
   const results = [resultBodies.aiAnalysis('STANDARD')];
