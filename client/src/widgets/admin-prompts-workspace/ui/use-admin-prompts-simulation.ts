@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { getApiErrorMessage } from '@/shared/lib/api-error';
+
 import { INITIAL_RUNS } from '../lib/constants';
-import { estimateTokens, formatNow, generateRunId, getApiErrorMessage } from '../lib/utils';
+import { estimateTokens, formatNow, generateRunId } from '../lib/utils';
 
 import {
   applySimulationError,
@@ -111,7 +113,7 @@ export function useAdminPromptsSimulation({
           setRuns((prev) => applySimulationSuccess(prev, runId, data, latencyMs, totalTokens));
         },
         onError: (error: unknown) => {
-          const message = getApiErrorMessage(error);
+          const message = getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' });
           setRuns((prev) => applySimulationError(prev, runId, message));
           toast.error(message);
         },
