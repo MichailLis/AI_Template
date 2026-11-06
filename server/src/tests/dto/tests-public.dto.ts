@@ -139,12 +139,7 @@ export const PublicSessionAnswerSchema = z.object({
   updatedAt: z.string(),
 });
 
-export const PublicSessionStatusSchema = z.enum([
-  'IN_PROGRESS',
-  'COMPLETED',
-  'EXPIRED',
-  'ABANDONED',
-]);
+export const PublicSessionStatusSchema = z.enum(['IN_PROGRESS', 'COMPLETED', 'EXPIRED']);
 
 export const PublicGroupValidationModeSchema = z.enum(['NONE', 'HINT', 'STRICT']);
 

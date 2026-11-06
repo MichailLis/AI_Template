@@ -18,7 +18,6 @@ const attemptStatusLabels: Record<string, string> = {
   IN_PROGRESS: 'В процессе',
   COMPLETED: 'Пройдено',
   EXPIRED: 'Истекло',
-  ABANDONED: 'Брошено',
 };
 
 export const getAttemptStatusLabel = (status: string) => attemptStatusLabels[status] ?? status;

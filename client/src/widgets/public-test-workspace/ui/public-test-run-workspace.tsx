@@ -84,8 +84,8 @@ export function PublicTestRunWorkspace() {
     return <Navigate to={`/t/${code}/result/${sessionToken}`} replace />;
   }
 
-  // Статус с сервера является авторитетным: переход на экран истечения происходит, когда сервер зафиксировал EXPIRED или ABANDONED.
-  if (session.status === 'EXPIRED' || session.status === 'ABANDONED') {
+  // Статус с сервера является авторитетным: переход на экран истечения происходит, когда сервер зафиксировал EXPIRED.
+  if (session.status === 'EXPIRED') {
     return <PublicTestRunExpiredScreen code={code} session={session} />;
   }
 

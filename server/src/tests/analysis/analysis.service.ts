@@ -737,10 +737,6 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       return 'EXPIRED' as const;
     }
 
-    if (attempt.status === 'ABANDONED') {
-      return 'ABANDONED' as const;
-    }
-
     if (attempt.finishedAt) {
       return 'COMPLETED' as const;
     }
