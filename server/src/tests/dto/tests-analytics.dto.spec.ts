@@ -112,7 +112,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         residence: [],
         educationLevel: [],
       },
-      attempts: [
+      recentAttempts: [
         {
           attemptId: 1,
           publicLinkId: 10,
@@ -126,7 +126,7 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         },
       ],
     });
-    expect(result.attempts).toHaveLength(1);
+    expect(result.recentAttempts).toHaveLength(1);
     expect(result.filters.publicLinkId).toBeNull();
     expect(typeof result.topic.generatedAt).toBe('string');
   });
@@ -181,9 +181,9 @@ describe('AdminTestAnalyticsSummarySchema', () => {
         residence: [],
         educationLevel: [],
       },
-      attempts: [],
+      recentAttempts: [],
     });
     expect(typeof result.topic.generatedAt).toBe('string');
-    expect(result.attempts[0]).toBeUndefined();
+    expect(result.recentAttempts[0]).toBeUndefined();
   });
 });

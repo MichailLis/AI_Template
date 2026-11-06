@@ -78,7 +78,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     residence: [],
     educationLevel: [],
   },
-  attempts: [],
+  recentAttempts: [],
 });
 
 describe('TestsAnalyticsPdfRendererService', () => {

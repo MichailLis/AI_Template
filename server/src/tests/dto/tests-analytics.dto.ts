@@ -194,7 +194,8 @@ export const AdminTestAnalyticsSummarySchema = z.object({
   publicLinks: AdminTestAnalyticsPublicLinkSectionSchema,
   groups: AdminTestAnalyticsGroupsSchema,
   demographics: AdminTestAnalyticsDemographicsSchema,
-  attempts: z.array(AdminTestAnalyticsAttemptRowSchema),
+  /** Последние попытки для экрана; полный список есть только в выгрузке XLSX. */
+  recentAttempts: z.array(AdminTestAnalyticsAttemptRowSchema).max(12),
 });
 
 export class AdminTestAnalyticsQueryDto extends createZodDto(AdminTestAnalyticsQuerySchema) {}

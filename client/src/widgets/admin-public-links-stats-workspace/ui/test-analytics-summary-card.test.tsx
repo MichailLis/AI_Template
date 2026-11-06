@@ -60,7 +60,7 @@ const createSummary = (
     residence: [],
     educationLevel: [],
   },
-  attempts: [],
+  recentAttempts: [],
 });
 
 const renderCard = (summary: AdminTestAnalyticsSummaryDto) =>

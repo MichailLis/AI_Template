@@ -12,6 +12,7 @@ describe('TestsAdminAnalyticsController', () => {
   let controller: TestsAdminAnalyticsController;
   let analyticsServiceMock: {
     getSummary: jest.Mock;
+    getExportSummary: jest.Mock;
   };
   let exportServiceMock: {
     toExcel: jest.Mock;
@@ -77,6 +78,7 @@ describe('TestsAdminAnalyticsController', () => {
   beforeEach(() => {
     analyticsServiceMock = {
       getSummary: jest.fn(),
+      getExportSummary: jest.fn(),
     };
     exportServiceMock = {
       toExcel: jest.fn(),
@@ -134,12 +136,12 @@ describe('TestsAdminAnalyticsController', () => {
     };
     const summary = createSummary();
     const buffer = Buffer.from('xlsx');
-    analyticsServiceMock.getSummary.mockResolvedValue(summary);
+    analyticsServiceMock.getExportSummary.mockResolvedValue(summary);
     exportServiceMock.toExcel.mockResolvedValue(buffer);
 
     const result = await controller.exportXlsx(5, 22, query, responseMock);
 
-    expect(analyticsServiceMock.getSummary).toHaveBeenCalledWith(22, query);
+    expect(analyticsServiceMock.getExportSummary).toHaveBeenCalledWith(22, query);
     expect(exportServiceMock.toExcel).toHaveBeenCalledWith(summary);
     expect(setHeaderMock).toHaveBeenCalledWith(
       'Content-Type',

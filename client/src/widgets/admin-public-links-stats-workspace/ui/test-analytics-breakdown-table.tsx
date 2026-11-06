@@ -210,7 +210,7 @@ function TestAnalyticsAttemptsTable({
   summary: AdminTestAnalyticsSummaryDto;
   formatDateTime: (value: string | null) => string;
 }) {
-  const attempts = summary.attempts.slice(0, 12);
+  const attempts = summary.recentAttempts;
 
   return (
     <Card className={adminClassNames.panel.card}>

@@ -9,10 +9,10 @@
 /**
  * Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа
  */
-export type AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind =
-  (typeof AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind)[keyof typeof AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind];
+export type AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind =
+  (typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind)[keyof typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind];
 
-export const AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind = {
+export const AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind = {
   AI: 'AI',
   ALGORITHM_AI_PENDING: 'ALGORITHM_AI_PENDING',
   ALGORITHM_ONLY: 'ALGORITHM_ONLY',

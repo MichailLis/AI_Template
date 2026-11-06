@@ -1,5 +1,5 @@
 import type { ScoringMethodology } from '../methodology/scoring-methodology';
-import { buildV3AnalyticsSections, getV3Summary } from './analytics';
+import { buildV3AnalyticsSections, getV3Summary, toV3AnalyticsFacts } from './analytics';
 import { shouldRefreshProfOrientationAtlasSummary } from './atlas.logic';
 import {
   ProfOrientationV3PlusEnrichmentJsonSchema,
@@ -89,7 +89,7 @@ export const profOrientationV3PlusMethodology: ScoringMethodology = {
       : null;
   },
   analytics: {
-    countResults: (summaries) => summaries.filter((summary) => getV3Summary(summary)).length,
+    toFacts: toV3AnalyticsFacts,
     buildSections: buildV3AnalyticsSections,
   },
   importTemplate: {

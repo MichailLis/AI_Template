@@ -2,9 +2,9 @@ import ExcelJS from 'exceljs';
 
 import { TestsAnalyticsExportService } from '../reporting/analytics-export.service';
 import { TestsAnalyticsPdfRendererService } from '../reporting/analytics-pdf-renderer.service';
-import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
+import type { AnalyticsSummaryWithAttempts } from '../reporting/analytics.service';
 
-const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
+const createSummary = (title: string): AnalyticsSummaryWithAttempts => ({
   topic: {
     topicId: 1,
     slug: 'sample-topic',
@@ -103,6 +103,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
     residence: [{ label: 'Москва', count: 2, share: 66.7 }],
     educationLevel: [{ label: 'SECONDARY_GENERAL', count: 3, share: 100 }],
   },
+  recentAttempts: [],
   attempts: [
     {
       attemptId: 101,
@@ -130,7 +131,7 @@ const createSummary = (title: string): AdminTestAnalyticsSummaryDto => ({
 });
 
 class TestsAnalyticsPdfRendererMock extends TestsAnalyticsPdfRendererService {
-  override render = jest.fn<Promise<Buffer>, [AdminTestAnalyticsSummaryDto]>();
+  override render = jest.fn<Promise<Buffer>, [AnalyticsSummaryWithAttempts]>();
 }
 
 describe('TestsAnalyticsExportService', () => {

@@ -10,11 +10,11 @@
  * Статус асинхронного LLM-обогащения для двухфазного анализа
  * @nullable
  */
-export type AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus =
-  | (typeof AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus)[keyof typeof AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus]
+export type AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus =
+  | (typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus)[keyof typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus]
   | null;
 
-export const AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus = {
+export const AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus = {
   not_requested: 'not_requested',
   pending: 'pending',
   ready: 'ready',

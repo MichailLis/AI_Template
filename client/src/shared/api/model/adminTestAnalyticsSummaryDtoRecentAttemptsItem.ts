@@ -5,12 +5,12 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import type { AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind } from './adminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind';
-import type { AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus';
-import type { AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemLlmStatus';
-import type { AdminTestAnalyticsSummaryDtoAttemptsItemStatus } from './adminTestAnalyticsSummaryDtoAttemptsItemStatus';
+import type { AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind } from './adminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind';
+import type { AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus } from './adminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus';
+import type { AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus } from './adminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus';
+import type { AdminTestAnalyticsSummaryDtoRecentAttemptsItemStatus } from './adminTestAnalyticsSummaryDtoRecentAttemptsItemStatus';
 
-export type AdminTestAnalyticsSummaryDtoAttemptsItem = {
+export type AdminTestAnalyticsSummaryDtoRecentAttemptsItem = {
   /**
    * @minimum 1
    * @maximum 9007199254740991
@@ -26,17 +26,17 @@ export type AdminTestAnalyticsSummaryDtoAttemptsItem = {
   startedAt: string;
   /** @nullable */
   finishedAt: string | null;
-  status: AdminTestAnalyticsSummaryDtoAttemptsItemStatus;
+  status: AdminTestAnalyticsSummaryDtoRecentAttemptsItemStatus;
   /**
    * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
    * @nullable
    */
-  analysisStatus: AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus;
+  analysisStatus: AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus;
   /**
    * Статус асинхронного LLM-обогащения для двухфазного анализа
    * @nullable
    */
-  llmStatus: AdminTestAnalyticsSummaryDtoAttemptsItemLlmStatus;
+  llmStatus: AdminTestAnalyticsSummaryDtoRecentAttemptsItemLlmStatus;
   /** Что на самом деле лежит в записи анализа: статус READY одинаков у заглушки и у настоящего ИИ-анализа */
-  analysisResultKind: AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisResultKind;
+  analysisResultKind: AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisResultKind;
 };
