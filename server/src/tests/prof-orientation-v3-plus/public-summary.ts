@@ -5,13 +5,16 @@ import {
   PublicProfOrientationSummarySchema,
   type PublicProfOrientationSummary,
 } from '../dto/tests-public-result.dto';
+import { toStudentEnrichment } from './enrichment-text';
 import { getProfOrientationLlmStatus } from './scoring';
 import type { ProfOrientationSummary } from './types';
 
 /** Белый список полей v3+ для ученика: поля берутся через схему, а не удаляются из сохранённого. */
 const toProfOrientationEnrichment = (llm: unknown) =>
-  PublicProfOrientationEnrichmentSchema.safeParse(isRecord(llm) ? llm.analysis : undefined).data ??
-  null;
+  toStudentEnrichment(
+    PublicProfOrientationEnrichmentSchema.safeParse(isRecord(llm) ? llm.analysis : undefined)
+      .data ?? null,
+  );
 
 // A broken optional section (atlas, LLM text) must not hide the result the algorithm computed.
 export const toPublicProfOrientationSummary = (

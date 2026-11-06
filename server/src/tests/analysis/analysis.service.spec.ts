@@ -543,6 +543,8 @@ describe('TestsAnalysisService', () => {
     const upsertArgs = upsertMock.mock.calls[0]?.[0];
 
     expect(upsertArgs?.create.summary.scoringVersion).toBe('3.1-custom');
+    // Алгоритмическая фаза не хранит вторую копию summary в rawText.
+    expect((upsertArgs?.create as { rawText?: unknown }).rawText).toBeNull();
   });
 
   it('sets llmStatus pending in phase 1 when prompt version is present, and not_requested when absent', async () => {

@@ -352,7 +352,6 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       llmRequested: Boolean(input.promptVersionId),
     });
     const providerMode = input.promptVersionId ? 'ALGORITHM_LLM' : 'ALGORITHM';
-    const rawText = JSON.stringify(summary);
 
     return tx.testStudentAnalysis.upsert({
       where: {
@@ -364,7 +363,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         providerMode,
         status: 'READY',
         summary: summary as Prisma.InputJsonValue,
-        rawText,
+        rawText: null,
         errorMessage: null,
         generatedAt: now,
       },
@@ -373,7 +372,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         providerMode,
         status: 'READY',
         summary: summary as Prisma.InputJsonValue,
-        rawText,
+        rawText: null,
         errorMessage: null,
         generatedAt: now,
       },

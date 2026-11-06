@@ -32,6 +32,23 @@ describe('toPublicAnalysisSummary: prof-orientation v3+', () => {
     atlas: storedAtlas,
   };
 
+  it('cleans technical codes out of LLM text stored before the server did it', () => {
+    const summary = asProfOrientation(
+      toPublicAnalysisSummary({
+        ...stored,
+        llm: {
+          status: 'ready',
+          analysis: {
+            ...storedEnrichment,
+            summary: 'Сильная сторона: A1 (Q1_A1, Q2_A1, Q3_A1), gap 12.5',
+          },
+        },
+      }),
+    );
+
+    expect(summary.llm.analysis?.summary).toBe('Сильная сторона: направление, отрыв по баллам');
+  });
+
   it('keeps what the result screen renders, including the scores of the leading directions', () => {
     const summary = asProfOrientation(toPublicAnalysisSummary(stored));
 

@@ -1,4 +1,3 @@
-import { sanitizeProfOrientationEnrichment } from './prof-orientation-llm-data';
 import {
   getProfessorStatusText,
   getProfessorText,
@@ -80,8 +79,7 @@ export function ProfOrientationResult({
   const primary = summary.primaryDirection;
   const headline = primary?.resultCard.headline ?? summary.profile.title;
   const meaning = primary?.resultCard.meaning ?? summary.profile.meaning;
-  const llmAnalysis =
-    summary.llm.status === 'ready' ? sanitizeProfOrientationEnrichment(summary.llm.analysis) : null;
+  const llmAnalysis = summary.llm.status === 'ready' ? summary.llm.analysis : null;
   const professorSummary = getProfessorText({
     analysis: llmAnalysis,
     fallback:
