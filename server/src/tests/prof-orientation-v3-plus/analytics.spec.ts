@@ -1,5 +1,10 @@
 import { PROF_ORIENTATION_DIRECTIONS } from './types';
-import { buildV3AnalyticsSections, getV3Summary } from './analytics';
+import {
+  buildV3AnalyticsSections as buildFromFacts,
+  getV3Summary,
+  toV3AnalyticsFacts,
+  type V3AnalyticsFacts,
+} from './analytics';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from './fixture';
 
 const directionName = (id: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) =>
@@ -90,6 +95,17 @@ const createAttempt = (id: number, summary: unknown) => ({
   llmStatus: null,
   summary,
 });
+
+const buildV3AnalyticsSections = (
+  attempts: ReturnType<typeof createAttempt>[],
+  scoringConfig?: unknown,
+) =>
+  buildFromFacts(
+    attempts
+      .map((attempt) => toV3AnalyticsFacts(attempt.summary))
+      .filter((facts): facts is V3AnalyticsFacts => facts !== null),
+    scoringConfig,
+  );
 
 describe('getV3Summary', () => {
   it('returns summary for valid v3+ payload and null otherwise', () => {

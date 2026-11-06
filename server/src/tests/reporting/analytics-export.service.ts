@@ -4,6 +4,7 @@ import ExcelJS from 'exceljs';
 
 import { formatInTimeZone } from '../../common/time-zone';
 import type { AdminTestAnalyticsSummaryDto } from '../dto/tests-analytics.dto';
+import type { AnalyticsSummaryWithAttempts } from './analytics.service';
 import { TestsAnalyticsPdfRendererService } from '../reporting/analytics-pdf-renderer.service';
 import {
   buildReportFilterRows,
@@ -93,7 +94,7 @@ const toDemographyRows = (
 export class TestsAnalyticsExportService {
   constructor(private readonly pdfRenderer: TestsAnalyticsPdfRendererService) {}
 
-  async toExcel(summary: AdminTestAnalyticsSummaryDto): Promise<Buffer> {
+  async toExcel(summary: AnalyticsSummaryWithAttempts): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
 
     workbook.creator = 'AI Template';
@@ -282,7 +283,7 @@ export class TestsAnalyticsExportService {
 
   private writeAttemptsSheet(
     workbook: ExcelJS.Workbook,
-    summary: AdminTestAnalyticsSummaryDto,
+    summary: AnalyticsSummaryWithAttempts,
   ): void {
     const sheet = createSheet(workbook, 'Прохождения', [
       { header: 'ID прохождения', width: 14 },

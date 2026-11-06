@@ -10,11 +10,11 @@
  * Статус алгоритмической записи анализа (не является признаком завершения LLM-обогащения)
  * @nullable
  */
-export type AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus =
-  | (typeof AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus)[keyof typeof AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus]
+export type AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus =
+  | (typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus)[keyof typeof AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus]
   | null;
 
-export const AdminTestAnalyticsSummaryDtoAttemptsItemAnalysisStatus = {
+export const AdminTestAnalyticsSummaryDtoRecentAttemptsItemAnalysisStatus = {
   PENDING: 'PENDING',
   READY: 'READY',
   FAILED: 'FAILED',

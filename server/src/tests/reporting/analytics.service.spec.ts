@@ -319,7 +319,7 @@ describe('TestsAnalyticsService', () => {
       residence: [],
       educationLevel: [],
     });
-    expect(result.attempts).toEqual([]);
+    expect(result.recentAttempts).toEqual([]);
     expect(prismaMock.testStudentAttempt.findMany).not.toHaveBeenCalled();
   });
 
@@ -681,5 +681,98 @@ describe('TestsAnalyticsService', () => {
         },
       }),
     );
+  });
+
+  describe('batched reading', () => {
+    const analyses = [
+      { providerMode: 'ALGORITHM_LLM', status: 'READY', summary: createV3Summary() },
+      { providerMode: 'STUB', status: 'READY', summary: { text: 'stub' } },
+      { providerMode: 'LLM', status: 'FAILED', summary: null },
+      null,
+      {
+        providerMode: 'ALGORITHM_LLM',
+        status: 'READY',
+        summary: { ...createV3Summary(), llm: { status: 'ready' } },
+      },
+    ];
+    // Новые первыми, как отдаёт запрос: id убывает вместе с startedAt.
+    const rows = Array.from({ length: 15 }, (_, index) => ({
+      id: 200 - index,
+      status: index % 3 === 0 ? 'IN_PROGRESS' : 'COMPLETED',
+      startedAt: new Date(Date.UTC(2026, 4, 20, 12, 0, 0) - index * 3_600_000),
+      finishedAt: null,
+      publicLink: publicLinks[index % 2],
+      topicVersion: publicLinks[index % 2].topicVersion,
+      analysis: analyses[index % analyses.length],
+      educationOrganization: index % 2 ? 'Лицей' : null,
+      groupOrClass: index % 4 ? '10А' : '9Б',
+      studentGender: index % 2 ? 'FEMALE' : null,
+      studentAge: 12 + (index % 8),
+      studentResidence: index % 5 ? 'Москва' : null,
+      studentEducationLevel: null,
+    }));
+    const query = { scope: 'TOPIC', linkStatus: 'ALL' } as const;
+
+    const useRows = () => {
+      prismaMock.testTopic.findUnique.mockResolvedValue(topicSelect);
+      prismaMock.testPublicLink.findMany.mockResolvedValue(publicLinks);
+      // Имитация курсорной пагинации Prisma: cursor включает свою строку, skip: 1 её пропускает.
+      prismaMock.testStudentAttempt.findMany.mockImplementation(
+        (args: { take: number; cursor?: { id: number }; skip?: number }) => {
+          const start = args.cursor
+            ? rows.findIndex((row) => row.id === args.cursor?.id) + (args.skip ?? 0)
+            : 0;
+
+          return Promise.resolve(rows.slice(start, start + args.take));
+        },
+      );
+    };
+    const withoutClock = <T extends { topic: { generatedAt: string } }>(summary: T) => ({
+      ...summary,
+      topic: { ...summary.topic, generatedAt: '' },
+    });
+
+    it('gives the same figures with several batches as with a single one', async () => {
+      useRows();
+      const single = await service.getSummary(1, query, { batchSize: 1000 });
+      prismaMock.testStudentAttempt.findMany.mockClear();
+      const batched = await service.getSummary(1, query, { batchSize: 4 });
+
+      expect(prismaMock.testStudentAttempt.findMany).toHaveBeenCalledTimes(4);
+      expect(withoutClock(batched)).toEqual(withoutClock(single));
+      expect(single.coverage.attemptsTotal).toBe(15);
+      expect(single.coverage.v3Results).toBe(6);
+      expect(single.coverage.analysisMissing).toBe(3);
+      expect(single.coverage.analysisStub).toBe(3);
+      expect(single.coverage.analysisFailed).toBe(3);
+      expect(single.coverage.analysisAiReady).toBe(3);
+      expect(single.coverage.analysisWithoutAi).toBe(3);
+      expect(single.directions.find((item) => item.id === 'A1')?.count).toBe(6);
+    });
+
+    it('stops on an exact multiple of the batch size without losing rows', async () => {
+      useRows();
+      const result = await service.getSummary(1, query, { batchSize: 5 });
+
+      expect(result.coverage.attemptsTotal).toBe(15);
+      expect(prismaMock.testStudentAttempt.findMany).toHaveBeenCalledTimes(4);
+    });
+
+    it('returns at most 12 recent attempts to the screen and all of them to the export', async () => {
+      useRows();
+      const screen = await service.getSummary(1, query, { batchSize: 4 });
+      const exported = await service.getExportSummary(1, query, { batchSize: 4 });
+
+      expect(screen.recentAttempts).toHaveLength(12);
+      expect(screen).not.toHaveProperty('attempts');
+      expect(screen.coverage.attemptsTotal).toBe(15);
+      expect(exported.attempts).toHaveLength(15);
+      expect(exported.attempts.map((row) => row.attemptId)).toEqual(rows.map((row) => row.id));
+      expect(exported.recentAttempts).toEqual(exported.attempts.slice(0, 12));
+      expect(screen.recentAttempts).toEqual(exported.attempts.slice(0, 12));
+      expect(withoutClock({ ...exported, attempts: [] })).toEqual(
+        withoutClock({ ...screen, attempts: [] }),
+      );
+    });
   });
 });

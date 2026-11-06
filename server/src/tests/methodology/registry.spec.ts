@@ -63,6 +63,9 @@ describe('scoring methodology registry', () => {
   });
 
   it('exposes analytics sections from the methodology that has them', () => {
-    expect(getAnalyticsSections().countResults([v3Summary, {}, null])).toBe(1);
+    const analytics = getAnalyticsSections();
+    expect(analytics.toFacts(v3Summary)).not.toBeNull();
+    expect(analytics.toFacts({})).toBeNull();
+    expect(analytics.toFacts(null)).toBeNull();
   });
 });

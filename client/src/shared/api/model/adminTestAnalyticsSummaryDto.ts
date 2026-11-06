@@ -5,7 +5,6 @@
  * The API documentation for our base project
  * OpenAPI spec version: 1.0
  */
-import type { AdminTestAnalyticsSummaryDtoAttemptsItem } from './adminTestAnalyticsSummaryDtoAttemptsItem';
 import type { AdminTestAnalyticsSummaryDtoConfidence } from './adminTestAnalyticsSummaryDtoConfidence';
 import type { AdminTestAnalyticsSummaryDtoCoverage } from './adminTestAnalyticsSummaryDtoCoverage';
 import type { AdminTestAnalyticsSummaryDtoDemographics } from './adminTestAnalyticsSummaryDtoDemographics';
@@ -16,6 +15,7 @@ import type { AdminTestAnalyticsSummaryDtoFlagsItem } from './adminTestAnalytics
 import type { AdminTestAnalyticsSummaryDtoGroupsItem } from './adminTestAnalyticsSummaryDtoGroupsItem';
 import type { AdminTestAnalyticsSummaryDtoProfilesItem } from './adminTestAnalyticsSummaryDtoProfilesItem';
 import type { AdminTestAnalyticsSummaryDtoPublicLinksItem } from './adminTestAnalyticsSummaryDtoPublicLinksItem';
+import type { AdminTestAnalyticsSummaryDtoRecentAttemptsItem } from './adminTestAnalyticsSummaryDtoRecentAttemptsItem';
 import type { AdminTestAnalyticsSummaryDtoScoreAveragesItem } from './adminTestAnalyticsSummaryDtoScoreAveragesItem';
 import type { AdminTestAnalyticsSummaryDtoTopic } from './adminTestAnalyticsSummaryDtoTopic';
 
@@ -32,5 +32,6 @@ export interface AdminTestAnalyticsSummaryDto {
   publicLinks: AdminTestAnalyticsSummaryDtoPublicLinksItem[];
   groups: AdminTestAnalyticsSummaryDtoGroupsItem[];
   demographics: AdminTestAnalyticsSummaryDtoDemographics;
-  attempts: AdminTestAnalyticsSummaryDtoAttemptsItem[];
+  /** @maxItems 12 */
+  recentAttempts: AdminTestAnalyticsSummaryDtoRecentAttemptsItem[];
 }

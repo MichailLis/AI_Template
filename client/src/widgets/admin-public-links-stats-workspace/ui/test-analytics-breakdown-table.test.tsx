@@ -6,7 +6,7 @@ import { TestAnalyticsBreakdownTables } from './test-analytics-breakdown-table';
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 
 const createSummary = (
-  attempts: AdminTestAnalyticsSummaryDto['attempts'],
+  attempts: AdminTestAnalyticsSummaryDto['recentAttempts'],
   scoringKind: AdminTestAnalyticsSummaryDto['topic']['scoringKind'] = 'PROF_ORIENTATION_V3_PLUS',
 ): AdminTestAnalyticsSummaryDto => ({
   topic: {
@@ -57,7 +57,7 @@ const createSummary = (
     residence: [],
     educationLevel: [],
   },
-  attempts,
+  recentAttempts: attempts,
 });
 
 describe('TestAnalyticsBreakdownTables', () => {

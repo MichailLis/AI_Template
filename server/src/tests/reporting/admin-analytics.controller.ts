@@ -124,7 +124,7 @@ export class TestsAdminAnalyticsController {
     @Query() query: AdminTestAnalyticsQueryDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const summary = await this.analyticsService.getSummary(topicId, query);
+    const summary = await this.analyticsService.getExportSummary(topicId, query);
     const disposition = buildAnalyticsExportDisposition(summary, topicId, 'xlsx');
     const file = new StreamableFile(await this.exportService.toExcel(summary), {
       type: XLSX_CONTENT_TYPE,

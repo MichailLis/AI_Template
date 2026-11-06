@@ -6,7 +6,6 @@ import {
   type CountRecord,
 } from '../reporting/analytics-summary';
 import type {
-  AnalyticsAttemptRecord,
   DirectionPairItem,
   FlagCountItem,
   MethodologyAnalyticsSections,
@@ -60,6 +59,40 @@ const hasValidV3SummaryShape = (value: unknown) =>
 export const getV3Summary = (value: unknown): ProfOrientationSummary | null =>
   isProfOrientationV3PlusSummary(value) && hasValidV3SummaryShape(value) ? value : null;
 
+/**
+ * Всё, что нужно разделам аналитики от результата. Остальной `summary` (профессии, карточки,
+ * текст LLM) — килобайты на попытку — в память не попадает.
+ */
+export type V3AnalyticsFacts = {
+  primaryDirectionId: ProfOrientationDirectionId | null;
+  secondaryDirectionId: ProfOrientationDirectionId | null;
+  scores: Record<ProfOrientationDirectionId, number>;
+  profile: { type: string; title: string };
+  confidence: { level: string; gap: number; consistencyIndex: number; readinessTop: number };
+  flags: { code: string; label: string }[];
+};
+
+/** `null` — не результат V3+ (заглушка, чужая методика, битая форма). */
+export const toV3AnalyticsFacts = (value: unknown): V3AnalyticsFacts | null => {
+  const summary = getV3Summary(value);
+
+  return summary
+    ? {
+        primaryDirectionId: summary.primaryDirection?.id ?? null,
+        secondaryDirectionId: summary.secondaryDirection?.id ?? null,
+        scores: summary.scores,
+        profile: { type: summary.profile.type, title: summary.profile.title },
+        confidence: {
+          level: summary.confidence.level,
+          gap: summary.confidence.gap,
+          consistencyIndex: summary.confidence.consistencyIndex,
+          readinessTop: summary.confidence.readinessTop,
+        },
+        flags: summary.flags.map((flag) => ({ code: flag.code, label: flag.label })),
+      }
+    : null;
+};
+
 const getDirectionLabel = (
   directionLabelById: Map<ProfOrientationDirectionId, string>,
   directionId: ProfOrientationDirectionId,
@@ -73,7 +106,7 @@ const collectDirectionLabels = (scoringConfig: unknown) => {
 };
 
 const buildDirectionItems = (
-  summaries: ProfOrientationSummary[],
+  summaries: V3AnalyticsFacts[],
   directionLabelById: Map<ProfOrientationDirectionId, string>,
 ): ShareItem[] => {
   if (summaries.length === 0) {
@@ -83,7 +116,7 @@ const buildDirectionItems = (
   const counts = new Map<ProfOrientationDirectionId, CountRecord>();
 
   for (const summary of summaries) {
-    const directionId = summary.primaryDirection?.id;
+    const directionId = summary.primaryDirectionId;
     if (!directionId) {
       continue;
     }
@@ -115,7 +148,7 @@ const buildDirectionItems = (
 };
 
 const buildDirectionPairItems = (
-  summaries: ProfOrientationSummary[],
+  summaries: V3AnalyticsFacts[],
   directionLabelById: Map<ProfOrientationDirectionId, string>,
 ): DirectionPairItem[] => {
   const counts = new Map<
@@ -129,8 +162,8 @@ const buildDirectionPairItems = (
   >();
 
   for (const summary of summaries) {
-    const primaryDirectionId = summary.primaryDirection?.id;
-    const secondaryDirectionId = summary.secondaryDirection?.id;
+    const primaryDirectionId = summary.primaryDirectionId;
+    const secondaryDirectionId = summary.secondaryDirectionId;
     if (!primaryDirectionId || !secondaryDirectionId) {
       continue;
     }
@@ -158,7 +191,7 @@ const buildDirectionPairItems = (
 };
 
 const buildScoreAverages = (
-  summaries: ProfOrientationSummary[],
+  summaries: V3AnalyticsFacts[],
   directionLabelById: Map<ProfOrientationDirectionId, string>,
 ) => {
   if (summaries.length === 0) {
@@ -187,7 +220,7 @@ const buildScoreAverages = (
   }));
 };
 
-const buildProfileItems = (summaries: ProfOrientationSummary[]): ProfileCountItem[] => {
+const buildProfileItems = (summaries: V3AnalyticsFacts[]): ProfileCountItem[] => {
   const counts = new Map<string, CountRecord>();
   for (const summary of summaries) {
     const key = summary.profile.type;
@@ -206,7 +239,7 @@ const buildProfileItems = (summaries: ProfOrientationSummary[]): ProfileCountIte
   }));
 };
 
-const buildConfidence = (summaries: ProfOrientationSummary[]) => {
+const buildConfidence = (summaries: V3AnalyticsFacts[]) => {
   const total = summaries.length;
   if (total === 0) {
     return {
@@ -246,7 +279,7 @@ const buildConfidence = (summaries: ProfOrientationSummary[]) => {
   };
 };
 
-const buildFlagItems = (summaries: ProfOrientationSummary[]): FlagCountItem[] => {
+const buildFlagItems = (summaries: V3AnalyticsFacts[]): FlagCountItem[] => {
   const counts = new Map<string, CountRecord>();
 
   for (const summary of summaries) {
@@ -268,21 +301,18 @@ const buildFlagItems = (summaries: ProfOrientationSummary[]): FlagCountItem[] =>
 };
 
 export const buildV3AnalyticsSections = (
-  attempts: readonly AnalyticsAttemptRecord[],
+  summaries: readonly V3AnalyticsFacts[],
   scoringConfig?: unknown,
 ): MethodologyAnalyticsSections => {
-  const summaries = attempts
-    .map((attempt) => getV3Summary(attempt.summary))
-    .filter((summary): summary is ProfOrientationSummary => summary !== null);
-
   const directionLabelById = collectDirectionLabels(scoringConfig);
+  const facts = [...summaries];
 
   return {
-    directions: buildDirectionItems(summaries, directionLabelById),
-    directionPairs: buildDirectionPairItems(summaries, directionLabelById),
-    scoreAverages: buildScoreAverages(summaries, directionLabelById),
-    profiles: buildProfileItems(summaries),
-    confidence: buildConfidence(summaries),
-    flags: buildFlagItems(summaries),
+    directions: buildDirectionItems(facts, directionLabelById),
+    directionPairs: buildDirectionPairItems(facts, directionLabelById),
+    scoreAverages: buildScoreAverages(facts, directionLabelById),
+    profiles: buildProfileItems(facts),
+    confidence: buildConfidence(facts),
+    flags: buildFlagItems(facts),
   };
 };

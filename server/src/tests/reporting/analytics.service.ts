@@ -5,10 +5,12 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import {
   getAnalysisResultKind,
+  type AnalysisResultKind,
   isAnalysisResultWithoutAi,
   isMeaningfulAnalysisResult,
 } from '../analysis/analysis-result-kind';
 import { getAnalyticsSections, getSummaryLlmStatus } from '../methodology/registry';
+import type { AnalysisLlmStatus } from '../methodology/scoring-methodology';
 import { toShare } from '../reporting/analytics-summary';
 import type {
   AdminTestAnalyticsQueryDto,
@@ -116,7 +118,11 @@ const getLinkStatusFilter = (linkStatus: 'ALL' | 'ACTIVE' | 'ARCHIVED') => {
   return {};
 };
 
-const toAttemptRecord = (attempt: AttemptRecord) => ({
+const toAttemptRecord = (
+  attempt: AttemptRecord,
+  analysisKind: AnalysisResultKind,
+  llmStatus: AnalysisLlmStatus | null,
+) => ({
   attemptId: attempt.id,
   publicLinkId: attempt.publicLink.id,
   shortCode: attempt.publicLink.shortCode,
@@ -124,9 +130,22 @@ const toAttemptRecord = (attempt: AttemptRecord) => ({
   finishedAt: attempt.finishedAt ? attempt.finishedAt.toISOString() : null,
   status: attempt.status,
   analysisStatus: attempt.analysis?.status ?? null,
-  llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
-  analysisResultKind: getAnalysisResultKind(attempt.analysis),
+  llmStatus,
+  analysisResultKind: analysisKind,
 });
+
+/** Сколько последних попыток отдаёт экран аналитики; полный список нужен только выгрузке. */
+export const RECENT_ATTEMPTS_LIMIT = 12;
+
+/** Размер пачки чтения попыток: в памяти одновременно не больше стольких `summary`. */
+const ATTEMPT_BATCH_SIZE = 500;
+
+type AttemptRow = ReturnType<typeof toAttemptRecord>;
+
+export type AnalyticsSummaryWithAttempts = AdminTestAnalyticsSummaryDto & {
+  /** Все попытки в порядке «новые первыми» — для листа XLSX. */
+  attempts: AttemptRow[];
+};
 
 const buildShareSection = (counts: Map<string, number>, total: number) =>
   Array.from(counts.entries())
@@ -164,7 +183,35 @@ export class TestsAnalyticsService {
   async getSummary(
     topicId: number,
     query: AdminTestAnalyticsQueryDto,
+    options: { batchSize?: number } = {},
   ): Promise<AdminTestAnalyticsSummaryDto> {
+    const { summary } = await this.buildSummary(topicId, query, {
+      ...options,
+      keepAttempts: RECENT_ATTEMPTS_LIMIT,
+    });
+
+    return summary;
+  }
+
+  /** Сводка для выгрузок: те же цифры, что на экране, плюс полный список попыток. */
+  async getExportSummary(
+    topicId: number,
+    query: AdminTestAnalyticsQueryDto,
+    options: { batchSize?: number } = {},
+  ): Promise<AnalyticsSummaryWithAttempts> {
+    const { summary, attempts } = await this.buildSummary(topicId, query, {
+      ...options,
+      keepAttempts: Infinity,
+    });
+
+    return { ...summary, attempts };
+  }
+
+  private async buildSummary(
+    topicId: number,
+    query: AdminTestAnalyticsQueryDto,
+    options: { batchSize?: number; keepAttempts: number },
+  ): Promise<{ summary: AdminTestAnalyticsSummaryDto; attempts: AttemptRow[] }> {
     const topic = await this.prisma.testTopic.findUnique({
       where: {
         id: topicId,
@@ -233,17 +280,6 @@ export class TestsAnalyticsService {
       ...(Object.keys(startedAtWhere).length > 0 ? { startedAt: startedAtWhere } : {}),
     };
 
-    const attempts =
-      linkIds.length === 0
-        ? []
-        : await this.prisma.testStudentAttempt.findMany({
-            where: attemptDateWhere,
-            select: ATTEMPT_SELECT,
-            orderBy: {
-              startedAt: 'desc',
-            },
-          });
-
     const coverage = {
       publicLinks: links.length,
       attemptsTotal: 0,
@@ -257,79 +293,10 @@ export class TestsAnalyticsService {
       analysisMissing: 0,
       v3Results: 0,
     };
-    const attemptsByPublicLinkId = new Map<number, AttemptRecord[]>();
-
-    for (const attempt of attempts) {
-      const linkAttempts = attemptsByPublicLinkId.get(attempt.publicLink.id) ?? [];
-      linkAttempts.push(attempt);
-      attemptsByPublicLinkId.set(attempt.publicLink.id, linkAttempts);
-
-      coverage.attemptsTotal += 1;
-
-      if (attempt.status === 'COMPLETED') {
-        coverage.attemptsCompleted += 1;
-      }
-
-      /**
-       * `status === 'READY'` не означает, что анализ содержательный: так помечены и заглушки, и
-       * двухфазный prof-orientation сразу после алгоритмической фазы. Показатели считаются по
-       * источнику результата, иначе заглушка давала «готовый анализ 100%».
-       */
-      const analysisKind = getAnalysisResultKind(attempt.analysis);
-
-      if (analysisKind === 'MISSING') {
-        coverage.analysisMissing += 1;
-        continue;
-      }
-
-      if (analysisKind === 'PENDING') {
-        coverage.analysisPending += 1;
-        continue;
-      }
-
-      if (analysisKind === 'FAILED') {
-        coverage.analysisFailed += 1;
-        continue;
-      }
-
-      if (analysisKind === 'STUB') {
-        coverage.analysisStub += 1;
-        continue;
-      }
-
-      coverage.analysisReady += 1;
-
-      if (isAnalysisResultWithoutAi(analysisKind)) {
-        coverage.analysisWithoutAi += 1;
-      } else {
-        coverage.analysisAiReady += 1;
-      }
-    }
-
-    coverage.v3Results = getAnalyticsSections().countResults(
-      attempts.map((attempt) => attempt.analysis?.summary),
-    );
-
-    const publicLinkRows = links.map((link) => {
-      const linkAttempts = attemptsByPublicLinkId.get(link.id) ?? [];
-
-      return {
-        publicLinkId: link.id,
-        shortCode: link.shortCode,
-        title: link.topicVersion.title,
-        archivedAt: link.archivedAt ? link.archivedAt.toISOString() : null,
-        attemptsTotal: linkAttempts.length,
-        attemptsCompleted: linkAttempts.filter((attempt) => attempt.status === 'COMPLETED').length,
-        analysisReady: linkAttempts.filter((attempt) =>
-          isMeaningfulAnalysisResult(getAnalysisResultKind(attempt.analysis)),
-        ).length,
-        analysisStub: linkAttempts.filter(
-          (attempt) => getAnalysisResultKind(attempt.analysis) === 'STUB',
-        ).length,
-        share: toShare(linkAttempts.length, coverage.attemptsTotal),
-      };
-    });
-
+    const linkCounts = new Map<
+      number,
+      { total: number; completed: number; ready: number; stub: number }
+    >();
     const groupsMap = new Map<
       string,
       {
@@ -339,45 +306,149 @@ export class TestsAnalyticsService {
         attemptsCompleted: number;
       }
     >();
-
     const demographicCounts = {
       gender: new Map<string, number>(),
       ageRange: new Map<string, number>(),
       residence: new Map<string, number>(),
       educationLevel: new Map<string, number>(),
     };
+    const analytics = getAnalyticsSections();
+    const facts: unknown[] = [];
+    const attemptRows: AttemptRow[] = [];
+    const batchSize = options.batchSize ?? ATTEMPT_BATCH_SIZE;
 
-    for (const attempt of attempts) {
-      const gender = attempt.studentGender ?? UNSPECIFIED_LABEL;
-      demographicCounts.gender.set(gender, (demographicCounts.gender.get(gender) ?? 0) + 1);
+    /**
+     * Попытки читаются пачками по курсору, а `summary` сразу сворачивается в лёгкую проекцию:
+     * целиком JSON (около 11 КБ на попытку) в памяти не накапливается.
+     */
+    let cursorId: number | undefined;
+    while (linkIds.length > 0) {
+      const batch: AttemptRecord[] = await this.prisma.testStudentAttempt.findMany({
+        where: attemptDateWhere,
+        select: ATTEMPT_SELECT,
+        orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+        take: batchSize,
+        ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
+      });
 
-      const ageRange = mapAgeRange(attempt.studentAge);
-      demographicCounts.ageRange.set(ageRange, (demographicCounts.ageRange.get(ageRange) ?? 0) + 1);
+      for (const attempt of batch) {
+        const summaryJson = attempt.analysis?.summary;
+        const linkCount = linkCounts.get(attempt.publicLink.id) ?? {
+          total: 0,
+          completed: 0,
+          ready: 0,
+          stub: 0,
+        };
+        linkCounts.set(attempt.publicLink.id, linkCount);
+        linkCount.total += 1;
+        coverage.attemptsTotal += 1;
 
-      const residence = attempt.studentResidence ?? UNSPECIFIED_LABEL;
-      demographicCounts.residence.set(
-        residence,
-        (demographicCounts.residence.get(residence) ?? 0) + 1,
-      );
+        if (attempt.status === 'COMPLETED') {
+          linkCount.completed += 1;
+          coverage.attemptsCompleted += 1;
+        }
 
-      const educationLevel = attempt.studentEducationLevel ?? UNSPECIFIED_LABEL;
-      demographicCounts.educationLevel.set(
-        educationLevel,
-        (demographicCounts.educationLevel.get(educationLevel) ?? 0) + 1,
-      );
+        /**
+         * `status === 'READY'` не означает, что анализ содержательный: так помечены и заглушки, и
+         * двухфазный prof-orientation сразу после алгоритмической фазы. Показатели считаются по
+         * источнику результата, иначе заглушка давала «готовый анализ 100%».
+         */
+        const analysisKind = getAnalysisResultKind(attempt.analysis);
 
-      const key = `${attempt.educationOrganization ?? ''}\u0000${attempt.groupOrClass ?? ''}`;
-      const current = groupsMap.get(key) ?? {
-        educationOrganization: attempt.educationOrganization,
-        groupOrClass: attempt.groupOrClass,
-        attemptsTotal: 0,
-        attemptsCompleted: 0,
-      };
+        if (isMeaningfulAnalysisResult(analysisKind)) {
+          linkCount.ready += 1;
+        }
 
-      current.attemptsTotal += 1;
-      current.attemptsCompleted += attempt.status === 'COMPLETED' ? 1 : 0;
-      groupsMap.set(key, current);
+        if (analysisKind === 'STUB') {
+          linkCount.stub += 1;
+        }
+
+        if (analysisKind === 'MISSING') {
+          coverage.analysisMissing += 1;
+        } else if (analysisKind === 'PENDING') {
+          coverage.analysisPending += 1;
+        } else if (analysisKind === 'FAILED') {
+          coverage.analysisFailed += 1;
+        } else if (analysisKind === 'STUB') {
+          coverage.analysisStub += 1;
+        } else {
+          coverage.analysisReady += 1;
+
+          if (isAnalysisResultWithoutAi(analysisKind)) {
+            coverage.analysisWithoutAi += 1;
+          } else {
+            coverage.analysisAiReady += 1;
+          }
+        }
+
+        const attemptFacts = analytics.toFacts(summaryJson);
+        if (attemptFacts !== null) {
+          facts.push(attemptFacts);
+        }
+
+        if (attemptRows.length < options.keepAttempts) {
+          attemptRows.push(
+            toAttemptRecord(attempt, analysisKind, getSummaryLlmStatus(summaryJson)),
+          );
+        }
+
+        const gender = attempt.studentGender ?? UNSPECIFIED_LABEL;
+        demographicCounts.gender.set(gender, (demographicCounts.gender.get(gender) ?? 0) + 1);
+
+        const ageRange = mapAgeRange(attempt.studentAge);
+        demographicCounts.ageRange.set(
+          ageRange,
+          (demographicCounts.ageRange.get(ageRange) ?? 0) + 1,
+        );
+
+        const residence = attempt.studentResidence ?? UNSPECIFIED_LABEL;
+        demographicCounts.residence.set(
+          residence,
+          (demographicCounts.residence.get(residence) ?? 0) + 1,
+        );
+
+        const educationLevel = attempt.studentEducationLevel ?? UNSPECIFIED_LABEL;
+        demographicCounts.educationLevel.set(
+          educationLevel,
+          (demographicCounts.educationLevel.get(educationLevel) ?? 0) + 1,
+        );
+
+        const key = `${attempt.educationOrganization ?? ''}\u0000${attempt.groupOrClass ?? ''}`;
+        const current = groupsMap.get(key) ?? {
+          educationOrganization: attempt.educationOrganization,
+          groupOrClass: attempt.groupOrClass,
+          attemptsTotal: 0,
+          attemptsCompleted: 0,
+        };
+
+        current.attemptsTotal += 1;
+        current.attemptsCompleted += attempt.status === 'COMPLETED' ? 1 : 0;
+        groupsMap.set(key, current);
+      }
+
+      if (batch.length < batchSize) {
+        break;
+      }
+      cursorId = batch[batch.length - 1].id;
     }
+
+    coverage.v3Results = facts.length;
+
+    const publicLinkRows = links.map((link) => {
+      const counts = linkCounts.get(link.id);
+
+      return {
+        publicLinkId: link.id,
+        shortCode: link.shortCode,
+        title: link.topicVersion.title,
+        archivedAt: link.archivedAt ? link.archivedAt.toISOString() : null,
+        attemptsTotal: counts?.total ?? 0,
+        attemptsCompleted: counts?.completed ?? 0,
+        analysisReady: counts?.ready ?? 0,
+        analysisStub: counts?.stub ?? 0,
+        share: toShare(counts?.total ?? 0, coverage.attemptsTotal),
+      };
+    });
 
     const groups = Array.from(groupsMap.values())
       .map((group) => ({
@@ -391,16 +462,7 @@ export class TestsAnalyticsService {
           (left.groupOrClass ?? '').localeCompare(right.groupOrClass ?? ''),
       );
 
-    const v3Sections = getAnalyticsSections().buildSections(
-      attempts.map((attempt) => ({
-        attemptId: attempt.id,
-        status: attempt.status,
-        analysisStatus: attempt.analysis?.status ?? null,
-        llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
-        summary: attempt.analysis?.summary,
-      })),
-      topic.activePublishedVersion?.scoringConfig,
-    );
+    const v3Sections = analytics.buildSections(facts, topic.activePublishedVersion?.scoringConfig);
 
     const topicSummary = topic.activePublishedVersion ?? {
       title: 'Тема теста',
@@ -410,7 +472,7 @@ export class TestsAnalyticsService {
       },
     };
 
-    return {
+    const summary: AdminTestAnalyticsSummaryDto = {
       topic: {
         topicId: topic.id,
         slug: topic.slug,
@@ -442,7 +504,9 @@ export class TestsAnalyticsService {
         residence: buildShareSection(demographicCounts.residence, coverage.attemptsTotal),
         educationLevel: buildShareSection(demographicCounts.educationLevel, coverage.attemptsTotal),
       },
-      attempts: attempts.map((attempt) => toAttemptRecord(attempt)),
+      recentAttempts: attemptRows.slice(0, RECENT_ATTEMPTS_LIMIT),
     };
+
+    return { summary, attempts: attemptRows };
   }
 }

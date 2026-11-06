@@ -45,14 +45,6 @@ export interface MethodologyImportTemplate {
   prompt: { title: string; description: string; model: string; text: string };
 }
 
-export interface MethodologyAttemptRow {
-  attemptId: number;
-  status: string;
-  analysisStatus: string | null;
-  llmStatus: string | null;
-  summary: unknown;
-}
-
 export interface ScoringMethodology {
   kind: TestScoringKind;
   /** Дискриминант публичного `summary`. */
@@ -76,12 +68,12 @@ export interface ScoringMethodology {
     stored: unknown,
   ): { primaryDirectionLabel: string | null; profileTitle: string | null } | null;
   analytics?: {
-    /** Сколько из записей — валидные результаты этой методики. */
-    countResults(summaries: readonly unknown[]): number;
-    buildSections(
-      attempts: readonly MethodologyAttemptRow[],
-      scoringConfig?: unknown,
-    ): MethodologyAnalyticsSections;
+    /**
+     * Лёгкая проекция сохранённого `summary` для разделов аналитики; `null` — запись не
+     * результат этой методики. Сервис читает `summary` пачками и держит в памяти только проекции.
+     */
+    toFacts(summary: unknown): unknown;
+    buildSections(facts: readonly unknown[], scoringConfig?: unknown): MethodologyAnalyticsSections;
   };
   importTemplate?: MethodologyImportTemplate;
 }
