@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 import { resolveEffectivePublicLinkId } from '@/entities/public-link';
 import { resolveEffectiveTopicId } from '@/entities/test-topic';
+import { useEducationOrganizationEditor } from '@/features/education-organization-editor';
 import {
-  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
-  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
   useTestsAdminPublicLinksControllerListArchivedPublicLinks,
   useTestsAdminPublicLinksControllerListPublicLinks,
   useTestsControllerGetTopicDraft,
@@ -19,10 +17,7 @@ import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
 
 import type { CreatePublicLinkValues } from './public-link-create-card.types';
-import type {
-  AdminCreateEducationOrganizationDto,
-  AdminUpdateEducationOrganizationDto,
-} from '@/shared/api/model';
+import type { AdminCreateEducationOrganizationDto } from '@/shared/api/model';
 
 interface UseAdminPublicLinksWorkspaceParams {
   onPublicLinkCreated?: () => void;
@@ -36,10 +31,8 @@ export function useAdminPublicLinksWorkspace({
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
   const listEducationOrganizationsQuery =
     useTestsAdminEducationOrganizationsControllerListEducationOrganizations();
-  const createEducationOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
-  const updateEducationOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
+  const { createOrganization, updateOrganization: updateEducationOrganization } =
+    useEducationOrganizationEditor();
   const createForm = useForm<CreatePublicLinkValues>({
     defaultValues: CREATE_PUBLIC_LINK_DEFAULTS,
   });
@@ -86,18 +79,8 @@ export function useAdminPublicLinksWorkspace({
 
   // Errors propagate: EducationOrganizationEditorSheet maps them onto its fields.
   const createEducationOrganization = async (payload: AdminCreateEducationOrganizationDto) => {
-    const organization = await createEducationOrganizationMutation.mutateAsync({ data: payload });
-    toast.success('Учебное заведение добавлено');
-    await listEducationOrganizationsQuery.refetch();
+    const organization = await createOrganization(payload);
     createForm.setValue('educationOrganizationId', organization.id);
-  };
-  const updateEducationOrganization = async (
-    organizationId: number,
-    payload: AdminUpdateEducationOrganizationDto,
-  ) => {
-    await updateEducationOrganizationMutation.mutateAsync({ organizationId, data: payload });
-    toast.success('Настройки учебного заведения сохранены');
-    await listEducationOrganizationsQuery.refetch();
   };
 
   const actions = useAdminPublicLinksActions({

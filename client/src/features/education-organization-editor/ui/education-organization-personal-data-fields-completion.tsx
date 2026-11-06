@@ -3,7 +3,7 @@ import { CheckCircle2, Circle } from 'lucide-react';
 import {
   getPersonalDataFieldsCompletion,
   type EducationOrganizationFormValues,
-} from './education-organization-form.schema';
+} from '../model/education-organization-form.schema';
 
 interface EducationOrganizationPersonalDataFieldsCompletionProps {
   values: EducationOrganizationFormValues;

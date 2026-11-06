@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,7 +11,6 @@ import type { AdminEducationOrganizationsListResponseDtoOrganizationsItem } from
 const apiMocks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
-  refetch: vi.fn(),
   listParams: vi.fn(),
 }));
 
@@ -56,9 +56,11 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
         totalPages: 1,
       },
       isFetching: false,
-      refetch: apiMocks.refetch,
     };
   },
+  getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey: () => [
+    '/admin/tests/education-organizations',
+  ],
   useTestsAdminEducationOrganizationsControllerCreateEducationOrganization: () => ({
     mutateAsync: apiMocks.create,
   }),
@@ -67,18 +69,22 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
   }),
 }));
 
+const queryClient = new QueryClient();
+const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+
 const renderWorkspace = () =>
   render(
-    <MemoryRouter>
-      <AdminEducationOrganizationsWorkspace />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <AdminEducationOrganizationsWorkspace />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 describe('AdminEducationOrganizationsWorkspace', () => {
   beforeEach(() => {
     apiMocks.create.mockResolvedValue(organization);
     apiMocks.update.mockResolvedValue(organization);
-    apiMocks.refetch.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -128,7 +134,7 @@ describe('AdminEducationOrganizationsWorkspace', () => {
     );
   });
 
-  it('creates an organization, refetches page one and closes the editor', async () => {
+  it('creates an organization, invalidates the list and closes the editor', async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
@@ -139,7 +145,9 @@ describe('AdminEducationOrganizationsWorkspace', () => {
     expect(apiMocks.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ name: 'Гимназия 7' }),
     });
-    expect(apiMocks.refetch).toHaveBeenCalledTimes(1);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['/admin/tests/education-organizations'],
+    });
     expect(screen.queryByLabelText('Название *')).not.toBeInTheDocument();
   });
 });
