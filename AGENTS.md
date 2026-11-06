@@ -146,10 +146,10 @@ The long form is `AI_GUIDE.md`, "Verifying A Change". The ones that bite most of
 4. Clearing generated artifacts? Ask `git check-ignore`, do not go by the name.
    `client/src/shared/api/generated/**` and `.../model/**` are generated **and committed**, and
    `verify:api-mutator` reads them before `gen:api` runs.
-5. After `npm run gen:api`, read `git diff --numstat`, not `git status`. Orval rewrites every
-   generated file with LF, so `git status` listed 313 modified files where only two had changed
-   at all. Drop the noise with `git checkout -- client/src/shared/api/` before you commit, or the
-   diff buries the real change.
+5. After `npm run gen:api`, read `git diff --numstat`, not `git status`. Orval rewrites generated
+   files, so `git status` lists every one of them; `numstat` shows only the real change.
+   `.gitattributes` pins `client/src/shared/api/generated/**` and `.../model/**` to `eol=lf`, so
+   line endings no longer add noise.
 6. Editing files with a script? This tree is CRLF. Normalise to `\n` in memory and convert once on
    write, or you will write `\r\r\n` and `$` will stop matching under `re.MULTILINE`.
 

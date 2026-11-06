@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
 
+import { getApiErrorMessage } from '@/shared/lib/api-error';
+
 import { DEFAULT_PROMPT_TITLE, INITIAL_PROMPT } from '../lib/constants';
-import { getApiErrorMessage } from '../lib/utils';
 
 import {
   DEFAULT_TEMPERATURE,
@@ -103,7 +104,7 @@ export function usePromptEditActions({
           toast.success('Промпт удален');
         },
         onError: (error: unknown) => {
-          toast.error(getApiErrorMessage(error));
+          toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
         },
       },
     );

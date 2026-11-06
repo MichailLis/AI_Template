@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
 
+import { getApiErrorMessage } from '@/shared/lib/api-error';
+
 import { DEFAULT_PROMPT_DESCRIPTION } from '../lib/constants';
-import { getApiErrorMessage } from '../lib/utils';
 
 import {
   getPromptSaveError,
@@ -79,7 +80,7 @@ export function usePromptSaveAction({
             );
           },
           onError: (error: unknown) => {
-            toast.error(getApiErrorMessage(error));
+            toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
           },
         },
       );
@@ -99,7 +100,7 @@ export function usePromptSaveAction({
           );
         },
         onError: (error: unknown) => {
-          toast.error(getApiErrorMessage(error));
+          toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
         },
       },
     );

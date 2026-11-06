@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 
-import { getApiErrorMessage } from '../lib/utils';
+import { getApiErrorMessage } from '@/shared/lib/api-error';
 
 import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
 import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
@@ -85,7 +85,7 @@ export const publishDraftPromptVersion = (
         toast.success(successMessage);
       },
       onError: (error: unknown) => {
-        toast.error(getApiErrorMessage(error));
+        toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
       },
     },
   );
