@@ -1,16 +1,11 @@
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
-import {
-  useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
-  useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
-  useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization,
-} from '@/shared/api/generated/tests/tests';
+import { useEducationOrganizationEditor } from '@/features/education-organization-editor';
+import { useTestsAdminEducationOrganizationsControllerListEducationOrganizations } from '@/shared/api/generated/tests/tests';
 
 import type {
   AdminCreateEducationOrganizationDto,
   AdminEducationOrganizationsListResponseDtoOrganizationsItem,
-  AdminUpdateEducationOrganizationDto,
 } from '@/shared/api/model';
 
 const ORGANIZATIONS_LIMIT = 10;
@@ -37,33 +32,16 @@ export function useAdminEducationOrganizationsWorkspace() {
         },
       },
     );
-  const createOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerCreateEducationOrganization();
-  const updateOrganizationMutation =
-    useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization();
+  const { createOrganization: createOrganizationRecord, updateOrganization } =
+    useEducationOrganizationEditor();
   const organizations = useMemo(
     () => listOrganizationsQuery.data?.organizations ?? [],
     [listOrganizationsQuery.data?.organizations],
   );
 
   const createOrganization = async (payload: AdminCreateEducationOrganizationDto) => {
-    await createOrganizationMutation.mutateAsync({ data: payload });
-    toast.success('Учебное заведение добавлено');
-
-    if (page === 1) {
-      await listOrganizationsQuery.refetch();
-    } else {
-      setPage(1);
-    }
-  };
-
-  const updateOrganization = async (
-    organizationId: number,
-    payload: AdminUpdateEducationOrganizationDto,
-  ) => {
-    await updateOrganizationMutation.mutateAsync({ organizationId, data: payload });
-    toast.success('Настройки учебного заведения сохранены');
-    await listOrganizationsQuery.refetch();
+    await createOrganizationRecord(payload);
+    setPage(1);
   };
 
   const handlePreviousPage = () => {

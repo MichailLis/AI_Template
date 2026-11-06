@@ -6,9 +6,8 @@ import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace
 
 import type { ReactNode } from 'react';
 
-const { createOrganization, refetchOrganizations, idleMutation, emptyQuery } = vi.hoisted(() => ({
+const { createOrganization, idleMutation, emptyQuery } = vi.hoisted(() => ({
   createOrganization: vi.fn(),
-  refetchOrganizations: vi.fn(),
   idleMutation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   emptyQuery: (data: unknown) => () => ({ data, refetch: vi.fn(), isLoading: false }),
 }));
@@ -20,9 +19,11 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
   useTestsControllerGetTopicDraft: emptyQuery(undefined),
   useTestsAdminPublicLinksControllerListPublicLinks: emptyQuery({ links: [] }),
   useTestsAdminPublicLinksControllerListArchivedPublicLinks: emptyQuery({ links: [] }),
+  getTestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryKey: () => [
+    '/admin/tests/education-organizations',
+  ],
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations: () => ({
     data: { organizations: [] },
-    refetch: refetchOrganizations,
   }),
   useTestsAdminEducationOrganizationsControllerCreateEducationOrganization: () => ({
     mutateAsync: createOrganization,
@@ -40,8 +41,8 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
 describe('useAdminPublicLinksWorkspace', () => {
   it('selects the organization created from the editor sheet in the link form', async () => {
     createOrganization.mockResolvedValue({ id: 42 });
-    refetchOrganizations.mockResolvedValue(undefined);
     const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useAdminPublicLinksWorkspace(), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -53,7 +54,9 @@ describe('useAdminPublicLinksWorkspace', () => {
     await act(() => result.current.createEducationOrganization({ name: 'Лицей 42' }));
 
     expect(createOrganization).toHaveBeenCalledWith({ data: { name: 'Лицей 42' } });
-    expect(refetchOrganizations).toHaveBeenCalled();
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['/admin/tests/education-organizations'],
+    });
     expect(result.current.createForm.getValues('educationOrganizationId')).toBe(42);
   });
 });

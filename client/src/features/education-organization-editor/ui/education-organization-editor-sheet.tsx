@@ -17,7 +17,6 @@ import {
   SheetTitle,
 } from '@/shared/ui/sheet';
 
-import { EducationOrganizationForm } from './education-organization-form';
 import {
   createEducationOrganizationFormValues,
   educationOrganizationFormSchema,
@@ -26,7 +25,9 @@ import {
   toUpdateEducationOrganizationPayload,
   type EducationOrganizationFormValues,
   type OrganizationEditorMode,
-} from './education-organization-form.schema';
+} from '../model/education-organization-form.schema';
+
+import { EducationOrganizationForm } from './education-organization-form';
 import { EducationOrganizationHistory } from './education-organization-history';
 
 import type {

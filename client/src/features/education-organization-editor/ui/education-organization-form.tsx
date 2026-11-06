@@ -17,7 +17,8 @@ import { Input } from '@/shared/ui/input';
 import {
   type EducationOrganizationFormValues,
   type OrganizationEditorMode,
-} from './education-organization-form.schema';
+} from '../model/education-organization-form.schema';
+
 import { EducationOrganizationPersonalDataFieldsCompletion } from './education-organization-personal-data-fields-completion';
 
 import type { UseFormReturn } from 'react-hook-form';

@@ -2,9 +2,10 @@ import { EducationOrganizationEditorSheet } from '@/features/education-organizat
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
+import { useAdminEducationOrganizationsWorkspace } from '../model/use-admin-education-organizations-workspace';
+
 import { EducationOrganizationsListCard } from './education-organizations-list-card';
 import { EducationOrganizationsNavigationCard } from './education-organizations-navigation-card';
-import { useAdminEducationOrganizationsWorkspace } from './use-admin-education-organizations-workspace';
 
 export function AdminEducationOrganizationsWorkspace() {
   const {
