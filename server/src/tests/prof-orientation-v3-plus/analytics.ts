@@ -13,7 +13,7 @@ import type {
   ProfileCountItem,
   ShareItem,
 } from '../reporting/analytics.types';
-import { isProfOrientationV3PlusSummary } from './scoring';
+import { isProfOrientationV3PlusSummary, resolveProfOrientationV3PlusConfig } from './scoring';
 import {
   PROF_ORIENTATION_DIRECTIONS,
   type ProfOrientationDirectionId,
@@ -65,24 +65,21 @@ const getDirectionLabel = (
   directionId: ProfOrientationDirectionId,
 ) => directionLabelById.get(directionId) ?? directionId;
 
-const collectDirectionLabels = (summaries: ProfOrientationSummary[]) => {
-  const directionLabelById = new Map<ProfOrientationDirectionId, string>();
+// Названия берём из конфига методики: направление, ни разу не бывшее первым/вторым, не попадёт в summary.
+const collectDirectionLabels = (scoringConfig: unknown) => {
+  const { directions } = resolveProfOrientationV3PlusConfig(scoringConfig);
 
-  for (const summary of summaries) {
-    for (const direction of summary.topDirections) {
-      directionLabelById.set(direction.id, direction.name);
-    }
-  }
-
-  return directionLabelById;
+  return new Map(PROF_ORIENTATION_DIRECTIONS.map((id) => [id, directions[id].name]));
 };
 
-const buildDirectionItems = (summaries: ProfOrientationSummary[]): ShareItem[] => {
+const buildDirectionItems = (
+  summaries: ProfOrientationSummary[],
+  directionLabelById: Map<ProfOrientationDirectionId, string>,
+): ShareItem[] => {
   if (summaries.length === 0) {
     return [];
   }
 
-  const directionLabelById = collectDirectionLabels(summaries);
   const counts = new Map<ProfOrientationDirectionId, CountRecord>();
 
   for (const summary of summaries) {
@@ -117,8 +114,10 @@ const buildDirectionItems = (summaries: ProfOrientationSummary[]): ShareItem[] =
   );
 };
 
-const buildDirectionPairItems = (summaries: ProfOrientationSummary[]): DirectionPairItem[] => {
-  const directionLabelById = collectDirectionLabels(summaries);
+const buildDirectionPairItems = (
+  summaries: ProfOrientationSummary[],
+  directionLabelById: Map<ProfOrientationDirectionId, string>,
+): DirectionPairItem[] => {
   const counts = new Map<
     string,
     {
@@ -158,12 +157,14 @@ const buildDirectionPairItems = (summaries: ProfOrientationSummary[]): Direction
     .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
 };
 
-const buildScoreAverages = (summaries: ProfOrientationSummary[]) => {
+const buildScoreAverages = (
+  summaries: ProfOrientationSummary[],
+  directionLabelById: Map<ProfOrientationDirectionId, string>,
+) => {
   if (summaries.length === 0) {
     return [];
   }
 
-  const directionLabelById = collectDirectionLabels(summaries);
   const sums = new Map<ProfOrientationDirectionId, number>();
   const totalAttempts = summaries.length;
   const denominator = totalAttempts === 0 ? 1 : totalAttempts;
@@ -268,15 +269,18 @@ const buildFlagItems = (summaries: ProfOrientationSummary[]): FlagCountItem[] =>
 
 export const buildV3AnalyticsSections = (
   attempts: readonly AnalyticsAttemptRecord[],
+  scoringConfig?: unknown,
 ): MethodologyAnalyticsSections => {
   const summaries = attempts
     .map((attempt) => getV3Summary(attempt.summary))
     .filter((summary): summary is ProfOrientationSummary => summary !== null);
 
+  const directionLabelById = collectDirectionLabels(scoringConfig);
+
   return {
-    directions: buildDirectionItems(summaries),
-    directionPairs: buildDirectionPairItems(summaries),
-    scoreAverages: buildScoreAverages(summaries),
+    directions: buildDirectionItems(summaries, directionLabelById),
+    directionPairs: buildDirectionPairItems(summaries, directionLabelById),
+    scoreAverages: buildScoreAverages(summaries, directionLabelById),
     profiles: buildProfileItems(summaries),
     confidence: buildConfidence(summaries),
     flags: buildFlagItems(summaries),

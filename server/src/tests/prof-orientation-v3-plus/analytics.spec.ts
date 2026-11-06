@@ -1,5 +1,9 @@
 import { PROF_ORIENTATION_DIRECTIONS } from './types';
 import { buildV3AnalyticsSections, getV3Summary } from './analytics';
+import { PROF_ORIENTATION_V3_PLUS_CONFIG } from './fixture';
+
+const directionName = (id: (typeof PROF_ORIENTATION_DIRECTIONS)[number]) =>
+  PROF_ORIENTATION_V3_PLUS_CONFIG.directions[id].name;
 
 const FLAG_LABELS = {
   readiness_conflict: 'Готовность к ведущему направлению пока низкая',
@@ -107,6 +111,26 @@ describe('getV3Summary', () => {
 });
 
 describe('buildV3AnalyticsSections', () => {
+  it('labels directions from the scoring config, even if never primary or secondary', () => {
+    const result = buildV3AnalyticsSections([
+      createAttempt(
+        1,
+        createSummary({
+          primaryDirection: 'A1',
+          secondaryDirection: 'A2',
+          profileType: 'mixed_profile',
+          confidenceLevel: 'mixed',
+        }),
+      ),
+    ]);
+    const labels = [...result.directions, ...result.scoreAverages].map((item) => item.label);
+    for (const id of PROF_ORIENTATION_DIRECTIONS) {
+      expect(result.directions.find((item) => item.id === id)?.label).toBe(directionName(id));
+      expect(result.scoreAverages.find((item) => item.id === id)?.label).toBe(directionName(id));
+    }
+    expect(labels).not.toContain('B1');
+  });
+
   it('returns empty aggregate arrays when there are no valid v3 summaries', () => {
     const result = buildV3AnalyticsSections([createAttempt(1, null)]);
     expect(result.directions).toEqual([]);
@@ -168,14 +192,14 @@ describe('buildV3AnalyticsSections', () => {
         {
           primaryDirectionId: 'A1',
           secondaryDirectionId: 'A2',
-          label: 'Direction A1 + Direction A2',
+          label: `${directionName('A1')} + ${directionName('A2')}`,
           count: 1,
           share: 50,
         },
         {
           primaryDirectionId: 'B3',
           secondaryDirectionId: 'B1',
-          label: 'Direction B3 + Direction B1',
+          label: `${directionName('B3')} + ${directionName('B1')}`,
           count: 1,
           share: 50,
         },
