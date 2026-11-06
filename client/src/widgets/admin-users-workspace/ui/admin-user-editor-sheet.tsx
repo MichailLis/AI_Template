@@ -3,6 +3,15 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import {
+  adminUserFormSchema,
+  getAdminUserFormValues,
+  toAdminUserFormField,
+  toCreateUserPayload,
+  toUpdateUserPayload,
+  translateServerFieldMessage,
+  type AdminUserFormValues,
+} from '@/features/manage-user';
 import { extractApiValidationIssues, parseApiError } from '@/shared/lib/api-error';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
@@ -28,18 +37,9 @@ import {
   SheetTitle,
 } from '@/shared/ui/sheet';
 
-import {
-  adminUserFormSchema,
-  getAdminUserFormValues,
-  toAdminUserFormField,
-  toCreateUserPayload,
-  toUpdateUserPayload,
-  translateServerFieldMessage,
-  type AdminUserFormValues,
-} from './admin-user-form.schema';
 import { AdminUserHistory } from './admin-user-history';
 
-import type { AdminUser } from './admin-users-workspace.types';
+import type { AdminUser } from '@/features/manage-user';
 import type { CreateUserDto, UpdateUserDto } from '@/shared/api/model';
 import type { UseFormReturn } from 'react-hook-form';
 

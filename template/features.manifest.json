@@ -132,6 +132,7 @@
         "backend": ["server/src/admin", "server/src/app-settings"],
         "frontend": [
           "client/src/features/admin",
+          "client/src/features/manage-user",
           "client/src/widgets/admin-page-layout",
           "client/src/widgets/admin-settings-workspace",
           "client/src/widgets/admin-users-workspace"

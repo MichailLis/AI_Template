@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog';
 
-import type { IssuedCredentials } from './admin-users-workspace.types';
+import type { IssuedCredentials } from '@/features/manage-user';
 
 interface AdminUserCredentialsDialogProps {
   credentials: IssuedCredentials | null;

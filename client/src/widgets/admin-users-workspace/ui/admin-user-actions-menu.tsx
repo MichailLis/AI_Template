@@ -16,7 +16,7 @@ import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
-import type { UserRole } from './admin-users-workspace.types';
+import type { UserRole } from '@/features/manage-user';
 import type { ReactNode } from 'react';
 
 interface AdminUserActionsMenuProps {

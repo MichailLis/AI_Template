@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import {
+  getAdminControllerGetUsersQueryKey,
   useAdminControllerCreateUser,
   useAdminControllerResetUserPassword,
   useAdminControllerRevokeUserSessions,
@@ -11,7 +13,7 @@ import {
 } from '@/shared/api/generated/admin/admin';
 import { getApiErrorMessage } from '@/shared/lib/api-error';
 
-import type { AdminUser, IssuedCredentials, UserRole } from './admin-users-workspace.types';
+import type { AdminUser, IssuedCredentials, UserRole } from './types';
 import type { CreateUserDto, UpdateUserDto } from '@/shared/api/model';
 
 export type UserEditorState = 'closed' | { mode: 'create' } | { mode: 'edit'; user: AdminUser };
@@ -23,12 +25,11 @@ const ROLE_LABEL_BY_CODE: Record<UserRole, string> = {
   ADMIN: 'Администратор',
 };
 
-interface UseAdminUserActionsOptions {
-  /** Перечитывает список после изменения: сортировку и фильтры решает сервер. */
-  onUsersChanged: () => Promise<unknown>;
-}
-
-export function useAdminUserActions({ onUsersChanged }: UseAdminUserActionsOptions) {
+export function useManageUser() {
+  const queryClient = useQueryClient();
+  // Перечитывает список после изменения: сортировку и фильтры решает сервер.
+  const onUsersChanged = () =>
+    queryClient.invalidateQueries({ queryKey: getAdminControllerGetUsersQueryKey() });
   const [editorState, setEditorState] = useState<UserEditorState>('closed');
   const [confirmation, setConfirmation] = useState<UserConfirmation>(null);
   const [credentials, setCredentials] = useState<IssuedCredentials | null>(null);

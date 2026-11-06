@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AdminUserEditorSheet } from './admin-user-editor-sheet';
 
-import type { AdminUser } from './admin-users-workspace.types';
+import type { AdminUser } from '@/features/manage-user';
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
