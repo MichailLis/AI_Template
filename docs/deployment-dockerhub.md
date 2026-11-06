@@ -388,6 +388,18 @@ docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t y
    браузере: логин и пароль вводятся в форму, открывается `/admin/tests`. Если браузерный вход не
    удался по любой причине, образ не публикуется.
 
+Часть этой проверки автоматизирована: job `Prod stack smoke` в `.github/workflows/ci.yml` на каждый
+PR собирает оба образа (`docker-compose.build.yml`), поднимает `docker-compose.deploy.yml` с
+фейковым `ci/prod-stack.env` (без реальных секретов, порт 18080, имена `ai_template_ci_*`) и
+запускает `scripts/e2e-prod-stack.mjs` без моков: `nginx -t` и `proxy_read_timeout` медленных
+`/api`-маршрутов (#130), вход в админку через форму, `POST /api/auth/refresh` из страницы (cookie
+на `/api/auth/refresh`, #118), создание теста и ссылки через API, прохождение `/t/:code` до
+экрана результата, отсутствие токенов сессии в логе nginx (#151). Ту же проверку можно запустить
+локально, не задев dev-стек: соберите образы и поднимите стек теми же командами, что в job, затем
+`npm run verify:e2e:prod-stack` (`E2E_BROWSER_CHANNEL=chrome` берёт установленный Chrome вместо
+Playwright Chromium) и `down -v`. Job проверяет образ, но не заменяет пункт 3 перед публикацией
+своих образов с вашими `VITE_API_URL` и env.
+
 ## 10. Важное про существующую базу и миграции
 
 `docker compose pull` и `up -d` не удаляют PostgreSQL volume. Данные сохраняются в
