@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 
 import { getDuplicateVariableData, interpolatePrompt } from '../lib/utils';
+import { resolveSelectedPromptModel } from '../lib/workspace-helpers';
 
-import { resolveSelectedPromptModel } from './admin-prompts-workspace.helpers';
-
-import type { ModelFilter, PromptVariable } from '../model/types';
+import type { ModelFilter, PromptVariable } from './types';
 import type {
   AdminPromptModelsResponseDto,
   AdminPromptModelsResponseDtoModelsItem,

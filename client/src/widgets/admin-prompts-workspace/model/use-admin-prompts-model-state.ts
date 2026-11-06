@@ -1,6 +1,6 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 
-import type { ModelFilter, ResponseFormat } from '../model/types';
+import type { ModelFilter, ResponseFormat } from './types';
 
 export interface AdminPromptsModelState {
   model: string;

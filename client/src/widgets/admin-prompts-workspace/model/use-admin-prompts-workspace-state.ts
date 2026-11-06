@@ -1,12 +1,8 @@
 import {
   useAnalysisPromptsControllerGetPromptModels,
-  useAnalysisPromptsControllerCreatePrompt,
-  useAnalysisPromptsControllerDeletePrompt,
   useAnalysisPromptsControllerListPrompts,
   useAnalysisPromptsControllerListTestQuestions,
-  useAnalysisPromptsControllerPublishVersion,
   useAnalysisPromptsControllerSimulatePrompt,
-  useAnalysisPromptsControllerUpdatePrompt,
 } from '@/shared/api/generated/admin/admin';
 
 import { useAdminPromptsActions } from './use-admin-prompts-actions';
@@ -21,10 +17,6 @@ export function useAdminPromptsWorkspaceData() {
   const modelsQuery = useAnalysisPromptsControllerGetPromptModels();
   const promptsQuery = useAnalysisPromptsControllerListPrompts();
   const testQuestionsQuery = useAnalysisPromptsControllerListTestQuestions();
-  const createPromptMutation = useAnalysisPromptsControllerCreatePrompt();
-  const updatePromptMutation = useAnalysisPromptsControllerUpdatePrompt();
-  const deletePromptMutation = useAnalysisPromptsControllerDeletePrompt();
-  const publishVersionMutation = useAnalysisPromptsControllerPublishVersion();
   const simulateMutation = useAnalysisPromptsControllerSimulatePrompt();
   const editorState = useAdminPromptsEditorState();
   const catalog = usePromptCatalog({
@@ -66,11 +58,6 @@ export function useAdminPromptsWorkspaceData() {
     temperature: editorState.temperature,
     promptTemplate: editorState.promptTemplate,
     variables: editorState.variables,
-    promptsQuery,
-    createPromptMutation,
-    updatePromptMutation,
-    deletePromptMutation,
-    publishVersionMutation,
     setSelectedPromptId: editorState.setSelectedPromptId,
     setPromptTitle: editorState.setPromptTitle,
     setModel: editorState.setModel,
@@ -86,10 +73,6 @@ export function useAdminPromptsWorkspaceData() {
     modelsQuery,
     promptsQuery,
     testQuestionsQuery,
-    createPromptMutation,
-    updatePromptMutation,
-    deletePromptMutation,
-    publishVersionMutation,
     simulateMutation,
     editorState: {
       ...editorState,

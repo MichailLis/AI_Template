@@ -1,9 +1,4 @@
-import type { ModelFilter, PromptVariable } from '../model/types';
-import type { useAnalysisPromptsControllerCreatePrompt } from '@/shared/api/generated/admin/admin';
-import type { useAnalysisPromptsControllerDeletePrompt } from '@/shared/api/generated/admin/admin';
-import type { useAnalysisPromptsControllerListPrompts } from '@/shared/api/generated/admin/admin';
-import type { useAnalysisPromptsControllerPublishVersion } from '@/shared/api/generated/admin/admin';
-import type { useAnalysisPromptsControllerUpdatePrompt } from '@/shared/api/generated/admin/admin';
+import type { ModelFilter, PromptVariable } from './types';
 import type {
   AdminPromptModelsResponseDtoModelsItem,
   AnalysisPromptListResponseDtoPromptsItem,
@@ -22,11 +17,6 @@ export interface UseAdminPromptsActionsParams {
   temperature: string;
   promptTemplate: string;
   variables: PromptVariable[];
-  promptsQuery: Pick<ReturnType<typeof useAnalysisPromptsControllerListPrompts>, 'refetch'>;
-  createPromptMutation: ReturnType<typeof useAnalysisPromptsControllerCreatePrompt>;
-  updatePromptMutation: ReturnType<typeof useAnalysisPromptsControllerUpdatePrompt>;
-  deletePromptMutation: ReturnType<typeof useAnalysisPromptsControllerDeletePrompt>;
-  publishVersionMutation: ReturnType<typeof useAnalysisPromptsControllerPublishVersion>;
   setSelectedPromptId: Dispatch<SetStateAction<number | null>>;
   setPromptTitle: Dispatch<SetStateAction<string>>;
   setModel: Dispatch<SetStateAction<string>>;

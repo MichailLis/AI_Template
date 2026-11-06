@@ -8,7 +8,7 @@ import {
   getPromptUsageSummary,
   resolveSelectedPromptModel,
   validateSimulationInput,
-} from './admin-prompts-workspace.helpers';
+} from './workspace-helpers';
 
 import type { DuplicateVariableData, SimulationRun } from '../model/types';
 import type {
