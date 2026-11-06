@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isRecord } from '../../common/type-guards';
+import { sanitizeMethodologyText } from './enrichment-text';
 
 const NonEmptyStringSchema = z.string().trim().min(1);
 const PROFESSOR_SUMMARY_MAX_LENGTH = 420;
@@ -122,6 +123,9 @@ const toProfessionNote = (value: unknown) => {
   return title ?? note;
 };
 
+const toCleanText = (value: string | null) =>
+  value ? sanitizeMethodologyText(value) || null : null;
+
 const toStringArray = (
   value: unknown,
   maxItems: number,
@@ -137,26 +141,30 @@ const toStringArray = (
 export const parseProfOrientationV3PlusEnrichment = (
   value: unknown,
 ): ProfOrientationV3PlusEnrichment => {
+  // Коды методики вычищаются до проверки длины: замены меняют длину текста.
+  const cleanList = (items: string[]) =>
+    items.map((item) => sanitizeMethodologyText(item)).filter((item) => item.length > 0);
   const normalizedValue = isRecord(value)
     ? (() => {
-        const firstSteps = toStringArray(value.firstSteps, MAX_FIRST_STEPS);
-        const summary = toTrimmedString(value.summary);
+        const firstSteps = cleanList(toStringArray(value.firstSteps, MAX_FIRST_STEPS));
+        const summary = toCleanText(toTrimmedString(value.summary));
 
         return {
           ...value,
-          professorSummary: toDisplayProfessorSummary(value.professorSummary, value.summary),
+          professorSummary: toDisplayProfessorSummary(
+            toCleanText(toTrimmedString(value.professorSummary)),
+            summary,
+          ),
           summary,
           confidenceComment: toTrimmedString(value.confidenceComment) ?? summary,
           methodSignals: toStringArray(value.methodSignals, MAX_METHOD_SIGNALS),
           firstSteps,
-          learningPlan: toStringArray(value.learningPlan, MAX_LEARNING_ITEMS),
-          professionNotes: toStringArray(
-            value.professionNotes,
-            MAX_PROFESSION_NOTES,
-            toProfessionNote,
+          learningPlan: cleanList(toStringArray(value.learningPlan, MAX_LEARNING_ITEMS)),
+          professionNotes: cleanList(
+            toStringArray(value.professionNotes, MAX_PROFESSION_NOTES, toProfessionNote),
           ),
           nextMiniProject:
-            toTrimmedString(value.nextMiniProject) ?? firstSteps[0] ?? toTrimmedString(summary),
+            toCleanText(toTrimmedString(value.nextMiniProject)) ?? firstSteps[0] ?? summary,
           cautions: toStringArray(value.cautions, MAX_CAUTIONS),
         };
       })()
