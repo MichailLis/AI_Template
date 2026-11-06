@@ -1,17 +1,11 @@
 import { toast } from 'sonner';
 
-import { getApiErrorMessage } from '@/shared/lib/api-error';
-
 import { DEFAULT_PROMPT_TITLE, INITIAL_PROMPT } from '../lib/constants';
+import { DEFAULT_TEMPERATURE, getDefaultModel, getPromptModelFilter } from '../lib/prompt-defaults';
 
-import {
-  DEFAULT_TEMPERATURE,
-  getDefaultModel,
-  getPromptModelFilter,
-} from './use-admin-prompts-actions.utils';
-
-import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
-import type { ModelFilter } from '../model/types';
+import type { UseAdminPromptsActionsParams } from './actions.types';
+import type { ModelFilter } from './types';
+import type { useManageAnalysisPrompt } from '@/features/manage-analysis-prompt';
 
 export function usePromptEditActions({
   prompts,
@@ -26,8 +20,7 @@ export function usePromptEditActions({
   setPromptEditorScrollTop,
   setModelSearch,
   setModelFilter,
-  deletePromptMutation,
-  promptsQuery,
+  deletePrompt,
 }: Pick<
   UseAdminPromptsActionsParams,
   | 'prompts'
@@ -42,9 +35,8 @@ export function usePromptEditActions({
   | 'setPromptEditorScrollTop'
   | 'setModelSearch'
   | 'setModelFilter'
-  | 'deletePromptMutation'
-  | 'promptsQuery'
->) {
+> &
+  Pick<ReturnType<typeof useManageAnalysisPrompt>, 'deletePrompt'>) {
   const resolveDefaultModel = () => getDefaultModel(structuredOutputModels, defaultModel);
 
   const resetPromptEditor = () => {
@@ -91,23 +83,13 @@ export function usePromptEditActions({
   };
 
   const handleDeletePrompt = (promptId: number) => {
-    deletePromptMutation.mutate(
-      { promptId },
-      {
-        onSuccess: () => {
-          void promptsQuery.refetch();
-
-          if (selectedPromptId === promptId) {
-            resetPromptEditor();
-          }
-
-          toast.success('Промпт удален');
-        },
-        onError: (error: unknown) => {
-          toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
-        },
+    deletePrompt(promptId, {
+      onDeleted: () => {
+        if (selectedPromptId === promptId) {
+          resetPromptEditor();
+        }
       },
-    );
+    });
   };
 
   return {

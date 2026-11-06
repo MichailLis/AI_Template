@@ -1,8 +1,10 @@
+import { useManageAnalysisPrompt } from '@/features/manage-analysis-prompt';
+
 import { usePromptEditActions } from './use-admin-prompts-actions-editor';
 import { usePromptSaveAction } from './use-admin-prompts-actions-save';
 import { useAdminPromptsVariableActions } from './use-admin-prompts-actions-variable';
 
-import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
+import type { UseAdminPromptsActionsParams } from './actions.types';
 
 export function useAdminPromptsActions({
   prompts,
@@ -16,11 +18,6 @@ export function useAdminPromptsActions({
   temperature,
   promptTemplate,
   variables,
-  promptsQuery,
-  createPromptMutation,
-  updatePromptMutation,
-  deletePromptMutation,
-  publishVersionMutation,
   setSelectedPromptId,
   setPromptTitle,
   setModel,
@@ -31,6 +28,7 @@ export function useAdminPromptsActions({
   setModelFilter,
   setVariables,
 }: UseAdminPromptsActionsParams) {
+  const { savePrompt, deletePrompt, isSaving, isDeleting } = useManageAnalysisPrompt();
   const variableActions = useAdminPromptsVariableActions({
     variables,
     setVariables,
@@ -48,8 +46,7 @@ export function useAdminPromptsActions({
     setPromptEditorScrollTop,
     setModelSearch,
     setModelFilter,
-    deletePromptMutation,
-    promptsQuery,
+    deletePrompt,
   });
   const saveAction = usePromptSaveAction({
     selectedPromptId,
@@ -60,15 +57,14 @@ export function useAdminPromptsActions({
     temperature,
     promptTemplate,
     setSelectedPromptId,
-    createPromptMutation,
-    updatePromptMutation,
-    promptsQuery,
-    publishVersionMutation,
+    savePrompt,
   });
 
   return {
     ...variableActions,
     ...editActions,
     ...saveAction,
+    isSavingPrompt: isSaving,
+    isDeletingPrompt: isDeleting,
   };
 }

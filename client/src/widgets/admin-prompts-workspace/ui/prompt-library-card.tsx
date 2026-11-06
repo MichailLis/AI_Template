@@ -15,7 +15,8 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
-import { getPromptUsageSummary } from './admin-prompts-workspace.helpers';
+import { getPromptUsageSummary } from '../lib/workspace-helpers';
+
 import { PromptHistoryDialog } from './prompt-history-dialog';
 
 import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';

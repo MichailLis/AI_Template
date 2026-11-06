@@ -9,7 +9,7 @@ import { PromptEditorSettingsSection } from './prompt-editor-settings-section';
 import { PromptEditorTemplateSection } from './prompt-editor-template-section';
 import { PromptEditorVariablesSection } from './prompt-editor-variables-section';
 
-import type { PromptModelMismatch } from './admin-prompts-workspace.helpers';
+import type { PromptModelMismatch } from '../lib/workspace-helpers';
 import type {
   DuplicateVariableData,
   ModelFilter,

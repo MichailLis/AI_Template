@@ -2,7 +2,7 @@ import { useState, type Dispatch, type SetStateAction } from 'react';
 
 import { DEFAULT_PROMPT_TITLE, INITIAL_PROMPT, INITIAL_VARIABLES } from '../lib/constants';
 
-import type { PromptVariable } from '../model/types';
+import type { PromptVariable } from './types';
 
 export interface AdminPromptsDocumentState {
   selectedPromptId: number | null;

@@ -1,19 +1,17 @@
-import { getPromptModelMismatch } from './admin-prompts-workspace.helpers';
+import { getPromptModelMismatch } from '../lib/workspace-helpers';
+
 import { PromptEditorCard } from './prompt-editor-card';
 import { PromptLibraryCard } from './prompt-library-card';
 import { SimulationOutputCard } from './simulation-output-card';
 
-import type { AdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
+import type { AdminPromptsWorkspaceState } from '../model/use-admin-prompts-workspace-state';
 
 interface AdminPromptsWorkspaceContentProps {
   workspace: AdminPromptsWorkspaceState;
 }
 
 export function AdminPromptsWorkspaceContent({ workspace }: AdminPromptsWorkspaceContentProps) {
-  const isSavingPromptVersion =
-    workspace.createPromptMutation.isPending ||
-    workspace.updatePromptMutation.isPending ||
-    workspace.publishVersionMutation.isPending;
+  const isSavingPromptVersion = workspace.isSavingPrompt;
   const canRun =
     !!workspace.selectedModel &&
     workspace.selectedModelItem?.supportsStructuredOutputs === true &&
@@ -28,7 +26,7 @@ export function AdminPromptsWorkspaceContent({ workspace }: AdminPromptsWorkspac
           prompts={workspace.prompts}
           selectedPromptId={workspace.selectedPromptId}
           isLoading={workspace.promptsQuery.isLoading}
-          isDeleting={workspace.deletePromptMutation.isPending}
+          isDeleting={workspace.isDeletingPrompt}
           onCreateNewPrompt={workspace.handleCreateNewPrompt}
           onSelectPrompt={workspace.handleSelectPrompt}
           onDeletePrompt={workspace.handleDeletePrompt}

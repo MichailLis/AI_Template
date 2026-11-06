@@ -3,8 +3,9 @@ import { AdminSkeletonRows } from '@/shared/ui/admin-skeleton';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
+import { useAdminPromptsWorkspaceState } from '../model/use-admin-prompts-workspace-state';
+
 import { AdminPromptsWorkspaceContent } from './admin-prompts-workspace-content';
-import { useAdminPromptsWorkspaceState } from './use-admin-prompts-workspace-state';
 
 /**
  * Каталог моделей провайдера ИИ нужен одному выпадающему списку в редакторе, а библиотека промптов и

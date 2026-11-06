@@ -56,4 +56,3 @@ export const INITIAL_RUNS: SimulationRun[] = [
 ];
 
 export const DEFAULT_PROMPT_TITLE = 'Карьерный анализ по тесту';
-export const DEFAULT_PROMPT_DESCRIPTION = 'Промпт анализа студенческих ответов';

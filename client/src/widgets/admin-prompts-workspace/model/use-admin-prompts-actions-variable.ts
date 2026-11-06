@@ -1,6 +1,6 @@
 import { createVariableId } from '../lib/utils';
 
-import type { UseAdminPromptsActionsParams } from './use-admin-prompts-actions.types';
+import type { UseAdminPromptsActionsParams } from './actions.types';
 
 export function useAdminPromptsVariableActions({
   variables,

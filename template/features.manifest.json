@@ -310,7 +310,10 @@
       "openApiInventoryPrefixes": ["/admin/prompts"],
       "ownedRoots": {
         "backend": ["server/src/analysis-prompts"],
-        "frontend": ["client/src/widgets/admin-prompts-workspace"]
+        "frontend": [
+          "client/src/features/manage-analysis-prompt",
+          "client/src/widgets/admin-prompts-workspace"
+        ]
       },
       "backendFiles": [
         "server/src/analysis-prompts/analysis-prompts.module.ts",

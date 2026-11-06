@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import type { PromptModelMismatch } from './admin-prompts-workspace.helpers';
+import type { PromptModelMismatch } from '../lib/workspace-helpers';
 import type { ModelFilter } from '../model/types';
 import type { AdminPromptModelsResponseDtoModelsItem } from '@/shared/api/model';
 

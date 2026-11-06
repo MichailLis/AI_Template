@@ -5,15 +5,14 @@ import { getApiErrorMessage } from '@/shared/lib/api-error';
 
 import { INITIAL_RUNS } from '../lib/constants';
 import { estimateTokens, formatNow, generateRunId } from '../lib/utils';
-
 import {
   applySimulationError,
   applySimulationSuccess,
   buildRunningSimulationRun,
   validateSimulationInput,
-} from './admin-prompts-workspace.helpers';
+} from '../lib/workspace-helpers';
 
-import type { DuplicateVariableData, ResponseFormat, SimulationRun } from '../model/types';
+import type { DuplicateVariableData, ResponseFormat, SimulationRun } from './types';
 import type { useAnalysisPromptsControllerSimulatePrompt } from '@/shared/api/generated/admin/admin';
 import type { PromptTestQuestionsResponseDtoTestsItem } from '@/shared/api/model';
 
