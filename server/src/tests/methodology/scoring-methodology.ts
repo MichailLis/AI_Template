@@ -78,7 +78,10 @@ export interface ScoringMethodology {
   analytics?: {
     /** Сколько из записей — валидные результаты этой методики. */
     countResults(summaries: readonly unknown[]): number;
-    buildSections(attempts: readonly MethodologyAttemptRow[]): MethodologyAnalyticsSections;
+    buildSections(
+      attempts: readonly MethodologyAttemptRow[],
+      scoringConfig?: unknown,
+    ): MethodologyAnalyticsSections;
   };
   importTemplate?: MethodologyImportTemplate;
 }

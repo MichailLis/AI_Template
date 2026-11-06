@@ -41,6 +41,7 @@ const TOPIC_SELECT = {
     select: {
       title: true,
       scoringKind: true,
+      scoringConfig: true,
       _count: {
         select: {
           questions: true,
@@ -398,6 +399,7 @@ export class TestsAnalyticsService {
         llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
         summary: attempt.analysis?.summary,
       })),
+      topic.activePublishedVersion?.scoringConfig,
     );
 
     const topicSummary = topic.activePublishedVersion ?? {
