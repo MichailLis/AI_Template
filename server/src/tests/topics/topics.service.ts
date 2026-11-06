@@ -15,17 +15,8 @@ import type {
   UpdateTestsTopicDraftDto,
   UpsertTestsQuestionDto,
 } from '../dto/tests.dto';
-import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
-import {
-  buildProfOrientationV3PlusQuestionPayloads,
-  PROF_ORIENTATION_V3_PLUS_CONFIG,
-  PROF_ORIENTATION_V3_PLUS_PROMPT,
-  PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
-  PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
-  PROF_ORIENTATION_V3_PLUS_SLUG,
-  PROF_ORIENTATION_V3_PLUS_TITLE,
-  toProfOrientationScoringConfig,
-} from '../prof-orientation-v3-plus/fixture';
+import { getScoringMethodology } from '../methodology/registry';
+import type { MethodologyImportTemplate } from '../methodology/scoring-methodology';
 import {
   buildAiQuestionPayloads,
   cloneQuestionsToVersion,
@@ -174,10 +165,14 @@ export class TestsService {
     };
   }
 
-  private async ensureProfOrientationPromptVersion(tx: Prisma.TransactionClient) {
+  private async ensureMethodologyPromptVersion(
+    tx: Prisma.TransactionClient,
+    { prompt: template }: MethodologyImportTemplate,
+    outputSchema: Prisma.InputJsonValue,
+  ) {
     const existingPrompt = await tx.analysisPrompt.findFirst({
       where: {
-        title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
+        title: template.title,
         archivedAt: null,
       },
       include: {
@@ -198,8 +193,8 @@ export class TestsService {
       existingPrompt ??
       (await tx.analysisPrompt.create({
         data: {
-          title: PROF_ORIENTATION_V3_PLUS_PROMPT_TITLE,
-          description: 'Built-in prompt for Polus prof-orientation v3+ result enrichment',
+          title: template.title,
+          description: template.description,
         },
       }));
     const latestVersion = existingPrompt
@@ -214,10 +209,10 @@ export class TestsService {
         promptId: prompt.id,
         versionNumber: (latestVersion?.versionNumber ?? 0) + 1,
         status: 'PUBLISHED',
-        model: PROF_ORIENTATION_V3_PLUS_PROMPT_MODEL,
+        model: template.model,
         temperature: 0.2,
-        prompt: PROF_ORIENTATION_V3_PLUS_PROMPT,
-        outputSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
+        prompt: template.text,
+        outputSchema,
         publishedAt: new Date(),
       },
       select: { id: true },
@@ -488,18 +483,29 @@ export class TestsService {
   }
 
   async importProfOrientationV3Plus(): Promise<TestsTopicDetailResponseDto> {
-    const slug = await ensureUniqueTopicSlug(this.prisma, PROF_ORIENTATION_V3_PLUS_SLUG);
-    const questionPayloads = buildProfOrientationV3PlusQuestionPayloads();
+    const methodology = getScoringMethodology('PROF_ORIENTATION_V3_PLUS');
+    const template = methodology.importTemplate;
+
+    if (!template) {
+      throw new Error(`Methodology ${methodology.kind} has no import template`);
+    }
+
+    const slug = await ensureUniqueTopicSlug(this.prisma, template.slug);
+    const questionPayloads = template.buildQuestions();
 
     const topicId = await this.prisma.$transaction(async (tx) => {
-      const analysisPromptVersionId = await this.ensureProfOrientationPromptVersion(tx);
+      const analysisPromptVersionId = await this.ensureMethodologyPromptVersion(
+        tx,
+        template,
+        methodology.enrichment.jsonSchema as Prisma.InputJsonValue,
+      );
       const createdTopic = await createTopicWithDraft(tx, {
         slug,
-        title: PROF_ORIENTATION_V3_PLUS_TITLE,
-        description: PROF_ORIENTATION_V3_PLUS_CONFIG.purpose,
+        title: template.title,
+        description: template.description,
         analysisPromptVersionId,
-        scoringKind: 'PROF_ORIENTATION_V3_PLUS',
-        scoringConfig: toProfOrientationScoringConfig(),
+        scoringKind: methodology.kind,
+        scoringConfig: template.scoringConfig,
       });
 
       await createQuestionsInVersion(tx, createdTopic.draftVersionId, questionPayloads);

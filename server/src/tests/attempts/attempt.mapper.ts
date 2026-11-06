@@ -9,8 +9,7 @@ import type {
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
 import { PublicQuestionSettingsSchema } from '../dto/tests-public.dto';
 import { canRestartAnalysis, getAnalysisResultKind } from '../analysis/analysis-result-kind';
-import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
-import { getV3Summary } from '../reporting/analytics-summary';
+import { getMethodologyBySummary, getSummaryLlmStatus } from '../methodology/registry';
 
 import { toOptionalIsoString } from '../shared/date.utils';
 import { toPublicBrandingResponse } from '../shared/public-branding.utils';
@@ -212,16 +211,8 @@ const getAttemptDurationSeconds = (attempt: { startedAt: Date; finishedAt: Date 
     ? Math.max(0, Math.round((attempt.finishedAt.getTime() - attempt.startedAt.getTime()) / 1000))
     : null;
 
-const getAttemptResultSummary = (summary: unknown) => {
-  const v3Summary = getV3Summary(summary);
-
-  return v3Summary
-    ? {
-        primaryDirectionLabel: v3Summary.primaryDirection?.name ?? null,
-        profileTitle: v3Summary.profile.title ?? null,
-      }
-    : null;
-};
+const getAttemptResultSummary = (summary: unknown) =>
+  getMethodologyBySummary(summary).listSummary?.(summary) ?? null;
 
 export const mapAttemptListItem = (
   attempt: AttemptListRecord,
@@ -236,7 +227,7 @@ export const mapAttemptListItem = (
     finishedAt: toOptionalIsoString(attempt.finishedAt),
     expiresAt: toOptionalIsoString(attempt.expiresAt),
     analysisStatus: attempt.analysis?.status ?? null,
-    llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
+    llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
     analysisResultKind: getAnalysisResultKind(attempt.analysis),
     durationSeconds: getAttemptDurationSeconds(attempt),
     resultSummary: getAttemptResultSummary(attempt.analysis?.summary),

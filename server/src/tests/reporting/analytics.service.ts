@@ -8,9 +8,8 @@ import {
   isAnalysisResultWithoutAi,
   isMeaningfulAnalysisResult,
 } from '../analysis/analysis-result-kind';
-import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
-
-import { buildV3AnalyticsSections, getV3Summary, toShare } from '../reporting/analytics-summary';
+import { getAnalyticsSections, getSummaryLlmStatus } from '../methodology/registry';
+import { toShare } from '../reporting/analytics-summary';
 import type {
   AdminTestAnalyticsQueryDto,
   AdminTestAnalyticsSummaryDto,
@@ -100,7 +99,6 @@ const ATTEMPT_SELECT = {
   studentEducationLevel: true,
 } as const satisfies Prisma.TestStudentAttemptSelect;
 
-type V3Summary = ReturnType<typeof getV3Summary>;
 type AttemptRecord = Prisma.TestStudentAttemptGetPayload<{ select: typeof ATTEMPT_SELECT }>;
 
 const UNSPECIFIED_LABEL = 'не указано';
@@ -125,7 +123,7 @@ const toAttemptRecord = (attempt: AttemptRecord) => ({
   finishedAt: attempt.finishedAt ? attempt.finishedAt.toISOString() : null,
   status: attempt.status,
   analysisStatus: attempt.analysis?.status ?? null,
-  llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
+  llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
   analysisResultKind: getAnalysisResultKind(attempt.analysis),
 });
 
@@ -307,10 +305,9 @@ export class TestsAnalyticsService {
       }
     }
 
-    const coverageV3Summaries = attempts
-      .map((attempt) => getV3Summary(attempt.analysis?.summary))
-      .filter((summary): summary is NonNullable<V3Summary> => summary !== null);
-    coverage.v3Results = coverageV3Summaries.length;
+    coverage.v3Results = getAnalyticsSections().countResults(
+      attempts.map((attempt) => attempt.analysis?.summary),
+    );
 
     const publicLinkRows = links.map((link) => {
       const linkAttempts = attemptsByPublicLinkId.get(link.id) ?? [];
@@ -393,12 +390,12 @@ export class TestsAnalyticsService {
           (left.groupOrClass ?? '').localeCompare(right.groupOrClass ?? ''),
       );
 
-    const v3Sections = buildV3AnalyticsSections(
+    const v3Sections = getAnalyticsSections().buildSections(
       attempts.map((attempt) => ({
         attemptId: attempt.id,
         status: attempt.status,
         analysisStatus: attempt.analysis?.status ?? null,
-        llmStatus: getProfOrientationLlmStatus(attempt.analysis?.summary),
+        llmStatus: getSummaryLlmStatus(attempt.analysis?.summary),
         summary: attempt.analysis?.summary,
       })),
     );

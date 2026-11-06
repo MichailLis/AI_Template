@@ -6,6 +6,7 @@ import type { PrismaService } from '../../prisma.service';
 import { TEST_AI_PROVIDER_CONNECTION } from '../../ai-provider/spec-fixtures';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import { PROF_ORIENTATION_ATLAS_RECOMMENDATION_VERSION } from '../prof-orientation-v3-plus/atlas.logic';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 
@@ -95,7 +96,7 @@ describe('TestsAnalysisService: atlas in the background task', () => {
         fetchModels: jest.fn().mockRejectedValue(new Error('no catalog')),
         generatePrompt,
       } as unknown as AiProviderClientService,
-      atlas as ProfOrientationAtlasService,
+      { atlas } as unknown as MethodologyServices,
     );
 
   beforeEach(() => {

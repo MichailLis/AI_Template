@@ -1,4 +1,6 @@
-import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
+import type { TestScoringKind } from '@prisma/client';
+
+import { getSummaryLlmStatus, hasAlgorithmicPhase } from '../methodology/registry';
 
 /**
  * Что на самом деле лежит в записи анализа. Статус `READY` этого не говорит: у заглушки он такой
@@ -48,7 +50,7 @@ export const getAnalysisResultKind = (
   }
 
   if (analysis.providerMode === 'ALGORITHM_LLM') {
-    const llmStatus = getProfOrientationLlmStatus(analysis.summary);
+    const llmStatus = getSummaryLlmStatus(analysis.summary);
 
     if (llmStatus === 'ready') {
       return 'AI';
@@ -76,7 +78,7 @@ export const canRestartAnalysis = (analysis: AnalysisResultState | null | undefi
   analysis?.providerMode === 'LLM'
     ? analysis.status === 'FAILED'
     : analysis?.providerMode === 'ALGORITHM_LLM' &&
-      getProfOrientationLlmStatus(analysis.summary) === 'failed';
+      getSummaryLlmStatus(analysis.summary) === 'failed';
 
 /**
  * Какой результат получит ученик по настройкам версии теста — до прохождения. Тот же выбор делает
@@ -87,12 +89,12 @@ export const PLANNED_ANALYSIS_KINDS = ['ALGORITHM_AI', 'ALGORITHM', 'AI', 'BASIC
 export type PlannedAnalysisKind = (typeof PLANNED_ANALYSIS_KINDS)[number];
 
 export const getPlannedAnalysisKind = (topicVersion: {
-  scoringKind: string;
+  scoringKind: TestScoringKind;
   analysisPromptVersionId: number | null;
 }): PlannedAnalysisKind => {
   const hasAi = topicVersion.analysisPromptVersionId !== null;
 
-  if (topicVersion.scoringKind === 'PROF_ORIENTATION_V3_PLUS') {
+  if (hasAlgorithmicPhase(topicVersion.scoringKind)) {
     return hasAi ? 'ALGORITHM_AI' : 'ALGORITHM';
   }
 

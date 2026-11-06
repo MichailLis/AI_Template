@@ -722,6 +722,7 @@ describe('TestsPublicLinkService', () => {
           groupValidationHint: null,
         },
         topicVersion: {
+          scoringKind: 'DEFAULT',
           id: 50,
           topicId: 7,
           topic: { archivedAt: null },
@@ -766,6 +767,7 @@ describe('TestsPublicLinkService', () => {
           groupValidationHint: null,
         },
         topicVersion: {
+          scoringKind: 'DEFAULT',
           id: 50,
           topicId: 7,
           topic: { archivedAt: null },

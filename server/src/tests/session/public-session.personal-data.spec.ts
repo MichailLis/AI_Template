@@ -1,7 +1,7 @@
 import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-policy-settings.service';
 import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import type { PrismaService } from '../../prisma.service';
-import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import type { TestsAnalysisService } from '../analysis/analysis.service';
 import type { TestsPublicLinkService } from '../public-links/public-link.service';
 import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
@@ -67,7 +67,7 @@ describe('TestsPublicSessionService personal-data snapshots', () => {
       } as unknown as TestsPublicLinkService,
       {} as TestsAnalysisService,
       {} as ProfessionAtlasSettingsService,
-      {} as ProfOrientationAtlasService,
+      {} as MethodologyServices,
       new TestsPublicAttemptAllocationService(
         prismaMock as unknown as PrismaService,
         privacyPolicySettingsServiceMock,

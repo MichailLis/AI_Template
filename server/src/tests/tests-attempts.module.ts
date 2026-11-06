@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { AuditModule } from '../audit/audit.module';
 import { AiProviderModule } from '../ai-provider/ai-provider.module';
+import { MethodologyServices } from './methodology/methodology-services';
 import { ProfOrientationAtlasModule } from './prof-orientation-v3-plus/atlas.module';
 import { TestsAdminAnalyticsController } from './reporting/admin-analytics.controller';
 import { TestsAdminAttemptService } from './attempts/admin-attempt.service';
@@ -31,6 +32,7 @@ import { PublicRateLimitBuckets, PublicRateLimitGuard } from './session/public-r
     TestsAnalyticsService,
     TestsAnalyticsExportService,
     TestsAnalyticsPdfRendererService,
+    MethodologyServices,
     TestsAnalysisService,
     TestsPublicSessionService,
     TestsPublicAttemptAllocationService,

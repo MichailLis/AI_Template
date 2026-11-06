@@ -20,14 +20,13 @@ import {
   toPrismaRequiredJsonInput,
 } from '../shared/domain.utils';
 import { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
-import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
-import { shouldRefreshProfOrientationAtlasSummary } from '../prof-orientation-v3-plus/atlas.logic';
+import { MethodologyServices } from '../methodology/methodology-services';
 import {
-  getProfOrientationLlmStatus,
-  isProfOrientationV3PlusSummary,
-} from '../prof-orientation-v3-plus/scoring';
+  getMethodologyBySummary,
+  getScoringMethodology,
+  getSummaryLlmStatus,
+} from '../methodology/registry';
 import { TestsAnalysisService } from '../analysis/analysis.service';
-import { getPlannedAnalysisKind } from '../analysis/analysis-result-kind';
 import { NO_PUBLIC_ANALYSIS_SUMMARY } from '../analysis/public-analysis-summary';
 import {
   validatePublicAnswerPayload,
@@ -61,7 +60,7 @@ export class TestsPublicSessionService {
     private readonly publicLinkService: TestsPublicLinkService,
     private readonly analysisService: TestsAnalysisService,
     private readonly professionAtlasSettingsService: ProfessionAtlasSettingsService,
-    private readonly profOrientationAtlasService: ProfOrientationAtlasService,
+    private readonly methodologyServices: MethodologyServices,
     private readonly attemptAllocationService: TestsPublicAttemptAllocationService,
   ) {}
 
@@ -82,28 +81,31 @@ export class TestsPublicSessionService {
     return this.analysisService.toPublicAnalysisResponse(analysis);
   }
 
-  private async refreshStaleProfOrientationAtlasAnalysis(
+  private async refreshStaleAfterFinish(
     analysis: Parameters<TestsAnalysisService['toPublicAnalysisResponse']>[0],
   ) {
+    const afterFinish = analysis && getMethodologyBySummary(analysis.summary).afterFinish;
+
     if (
       !analysis ||
-      !isProfOrientationV3PlusSummary(analysis.summary) ||
-      // Пока идёт AI-анализ, атлас пишет его фоновая задача: второй писатель только удвоил бы
+      !afterFinish ||
+      // Пока идёт AI-анализ, дозаполнение пишет его фоновая задача: второй писатель только удвоил бы
       // запросы к Атласу.
-      getProfOrientationLlmStatus(analysis.summary) === 'pending' ||
-      !shouldRefreshProfOrientationAtlasSummary(analysis.summary)
+      getSummaryLlmStatus(analysis.summary) === 'pending' ||
+      !afterFinish.isStale(analysis.summary)
     ) {
       return analysis;
     }
 
-    const summary = await this.profOrientationAtlasService.saveEnrichedAnalysis(
+    const summary = await afterFinish.apply(
       analysis.id,
       analysis.summary,
+      this.methodologyServices,
     );
 
     return {
       ...analysis,
-      summary: summary as unknown as typeof analysis.summary,
+      summary: summary as typeof analysis.summary,
     };
   }
 
@@ -359,11 +361,10 @@ export class TestsPublicSessionService {
       });
 
       const promptVersionId = attempt.topicVersion.analysisPromptVersionId;
-      const plannedKind = getPlannedAnalysisKind(attempt.topicVersion);
-      const isProfOrientationScoring =
-        plannedKind === 'ALGORITHM' || plannedKind === 'ALGORITHM_AI';
-      const analysis = isProfOrientationScoring
-        ? await this.analysisService.upsertProfOrientationV3PlusAnalysis(tx, {
+      const methodology = getScoringMethodology(attempt.topicVersion.scoringKind);
+      const hasAlgorithmicPhase = methodology.score !== undefined;
+      const analysis = hasAlgorithmicPhase
+        ? await this.analysisService.upsertAlgorithmicAnalysis(tx, {
             attempt,
             promptVersionId,
           })
@@ -381,7 +382,7 @@ export class TestsPublicSessionService {
       return {
         updatedAttempt,
         analysis,
-        isProfOrientationScoring,
+        methodology,
         shouldEnqueueAnalysis: Boolean(promptVersionId),
       };
     });
@@ -395,21 +396,24 @@ export class TestsPublicSessionService {
 
     let analysis = finishedAttempt.analysis;
 
-    // С LLM атлас получает фоновая задача анализа (до LLM): «Завершить» не ждёт Атлас. Без LLM
-    // задачи нет, а экран результата такой анализ не опрашивает, поэтому атлас остаётся здесь.
+    // С LLM дозаполнение (атлас) делает фоновая задача анализа (до LLM): «Завершить» не ждёт Атлас.
+    // Без LLM задачи нет, а экран результата такой анализ не опрашивает, поэтому оно остаётся здесь.
+    const { afterFinish } = finishedAttempt.methodology;
+
     if (
-      finishedAttempt.isProfOrientationScoring &&
+      afterFinish &&
       !finishedAttempt.shouldEnqueueAnalysis &&
-      isProfOrientationV3PlusSummary(analysis.summary)
+      afterFinish.isStale(analysis.summary)
     ) {
-      const enrichedSummary = await this.profOrientationAtlasService.saveEnrichedAnalysis(
+      const enrichedSummary = await afterFinish.apply(
         analysis.id,
         analysis.summary,
+        this.methodologyServices,
       );
 
       analysis = {
         ...analysis,
-        summary: enrichedSummary as unknown as typeof analysis.summary,
+        summary: enrichedSummary as typeof analysis.summary,
       };
     }
 
@@ -445,7 +449,7 @@ export class TestsPublicSessionService {
       throw new BadRequestException('Test session is still in progress', 'SESSION_IN_PROGRESS');
     }
 
-    const analysis = await this.refreshStaleProfOrientationAtlasAnalysis(attempt.analysis);
+    const analysis = await this.refreshStaleAfterFinish(attempt.analysis);
 
     return {
       sessionToken,

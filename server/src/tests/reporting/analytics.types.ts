@@ -1,8 +1,3 @@
-import type {
-  ProfOrientationDirectionId,
-  ProfOrientationProfileType,
-} from '../prof-orientation-v3-plus/types';
-
 export type AnalyticsAttemptRecord = {
   attemptId: number;
 
@@ -23,8 +18,8 @@ export type ShareItem = {
 };
 
 export type DirectionPairItem = {
-  primaryDirectionId: ProfOrientationDirectionId;
-  secondaryDirectionId: ProfOrientationDirectionId;
+  primaryDirectionId: string;
+  secondaryDirectionId: string;
   label: string;
   count: number;
   share: number;
@@ -37,7 +32,7 @@ export type ScoreAverageItem = {
 };
 
 export type ProfileCountItem = {
-  profileType: ProfOrientationProfileType;
+  profileType: string;
   label: string;
   count: number;
   share: number;
@@ -72,7 +67,7 @@ export type ConfidenceSection = {
   };
 };
 
-export type V3AnalyticsSections = {
+export type MethodologyAnalyticsSections = {
   directions: ShareItem[];
   directionPairs: DirectionPairItem[];
   scoreAverages: ScoreAverageItem[];

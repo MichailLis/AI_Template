@@ -4,7 +4,7 @@ import { TestAnalysisResultJsonSchema } from '../../common/analysis/test-analysi
 import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
 import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import type { PrismaService } from '../../prisma.service';
-import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import { ProfOrientationV3PlusEnrichmentJsonSchema } from '../prof-orientation-v3-plus/enrichment';
 import { PROF_ORIENTATION_V3_PLUS_CONFIG } from '../prof-orientation-v3-plus/fixture';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
@@ -196,7 +196,7 @@ describe('TestsAnalysisService', () => {
       configMock as unknown as ConfigService,
       aiProviderConfigMock as unknown as AiProviderConfigService,
       aiProviderClientMock as unknown as AiProviderClientService,
-      atlasMock as unknown as ProfOrientationAtlasService,
+      { atlas: atlasMock } as unknown as MethodologyServices,
     );
   });
 
@@ -518,13 +518,14 @@ describe('TestsAnalysisService', () => {
     enqueueSpy.mockRestore();
   });
 
-  it('upsertProfOrientationV3PlusAnalysis uses the topic version scoring config', async () => {
+  it('upsertAlgorithmicAnalysis uses the topic version scoring config', async () => {
     txMock.testStudentAnalysis.upsert.mockResolvedValue({});
 
-    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+    await service.upsertAlgorithmicAnalysis(txMock as never, {
       attempt: {
         id: 5,
         topicVersion: {
+          scoringKind: 'PROF_ORIENTATION_V3_PLUS',
           scoringConfig: {
             ...PROF_ORIENTATION_V3_PLUS_CONFIG,
             version: '3.1-custom',
@@ -547,10 +548,11 @@ describe('TestsAnalysisService', () => {
   it('sets llmStatus pending in phase 1 when prompt version is present, and not_requested when absent', async () => {
     txMock.testStudentAnalysis.upsert.mockResolvedValue({});
 
-    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+    await service.upsertAlgorithmicAnalysis(txMock as never, {
       attempt: {
         id: 11,
         topicVersion: {
+          scoringKind: 'PROF_ORIENTATION_V3_PLUS',
           scoringConfig: PROF_ORIENTATION_V3_PLUS_CONFIG,
           questions: [],
         },
@@ -570,10 +572,11 @@ describe('TestsAnalysisService', () => {
 
     upsertMock.mockClear();
 
-    await service.upsertProfOrientationV3PlusAnalysis(txMock as never, {
+    await service.upsertAlgorithmicAnalysis(txMock as never, {
       attempt: {
         id: 12,
         topicVersion: {
+          scoringKind: 'PROF_ORIENTATION_V3_PLUS',
           scoringConfig: PROF_ORIENTATION_V3_PLUS_CONFIG,
           questions: [],
         },
@@ -592,6 +595,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersion: {
           id: 42,
           model: 'google/gemini-2.0-flash-exp:free',
@@ -660,6 +664,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersion: {
           id: 42,
           model: 'google/gemini-2.0-flash-exp:free',
@@ -694,6 +699,7 @@ describe('TestsAnalysisService', () => {
     prismaMock.testStudentAttempt.findUnique.mockResolvedValue({
       id: 5,
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersion: {
           id: 42,
           model: 'baidu/qianfan-ocr-fast:free',
