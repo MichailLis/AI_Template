@@ -90,3 +90,48 @@ jobs:
       # the diff has no line-ending noise.
       - name: Generated API client is committed
         run: git diff --exit-code --stat -- client/src/shared/api
+
+  # #136: what ships is the Docker images behind nginx, which `verify` never builds. This job runs
+  # docker-compose.deploy.yml from freshly built images and drives it with a real browser, no mocks.
+  prod-stack:
+    name: Prod stack smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      COMPOSE_STACK: docker compose -p ai_template_ci -f docker-compose.deploy.yml --env-file ci/prod-stack.env
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24.21.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # No push: the namespace in ci/prod-stack.env only names the local images.
+      - name: Build production images
+        run: docker compose -f docker-compose.build.yml --env-file ci/prod-stack.env build
+
+      - name: Start the deploy stack
+        run: $COMPOSE_STACK up -d --wait --wait-timeout 180
+
+      - name: Smoke through nginx
+        run: npm run verify:e2e:prod-stack
+
+      - name: Stack logs
+        if: failure()
+        run: $COMPOSE_STACK logs --no-color --tail 200
+
+      - name: Stop the stack
+        if: always()
+        run: $COMPOSE_STACK down -v
