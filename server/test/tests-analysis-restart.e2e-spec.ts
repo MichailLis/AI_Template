@@ -219,7 +219,6 @@ describe('Restart of a failed AI analysis (e2e)', () => {
             model: 'google/gemini-2.0-flash-exp:free',
             temperature: 0.2,
             prompt: 'Проанализируй ответы ученика',
-            outputSchema: {},
             publishedAt: new Date(),
           },
         },

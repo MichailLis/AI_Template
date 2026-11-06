@@ -123,7 +123,6 @@ describe('AI usage accounting (e2e)', () => {
             model,
             temperature: 0.2,
             prompt: 'Проанализируй ответы ученика',
-            outputSchema: {},
             publishedAt: new Date(),
           },
         },

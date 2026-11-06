@@ -168,7 +168,6 @@ export class TestsService {
   private async ensureMethodologyPromptVersion(
     tx: Prisma.TransactionClient,
     { prompt: template }: MethodologyImportTemplate,
-    outputSchema: Prisma.InputJsonValue,
   ) {
     const existingPrompt = await tx.analysisPrompt.findFirst({
       where: {
@@ -212,7 +211,6 @@ export class TestsService {
         model: template.model,
         temperature: 0.2,
         prompt: template.text,
-        outputSchema,
         publishedAt: new Date(),
       },
       select: { id: true },
@@ -494,11 +492,7 @@ export class TestsService {
     const questionPayloads = template.buildQuestions();
 
     const topicId = await this.prisma.$transaction(async (tx) => {
-      const analysisPromptVersionId = await this.ensureMethodologyPromptVersion(
-        tx,
-        template,
-        methodology.enrichment.jsonSchema as Prisma.InputJsonValue,
-      );
+      const analysisPromptVersionId = await this.ensureMethodologyPromptVersion(tx, template);
       const createdTopic = await createTopicWithDraft(tx, {
         slug,
         title: template.title,
