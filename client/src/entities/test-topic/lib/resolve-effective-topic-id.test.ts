@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEffectiveTopicId } from './admin-public-links-workspace.helpers';
+import {
+  resolveEffectiveAnalyticsTopicId,
+  resolveEffectiveTopicId,
+} from './resolve-effective-topic-id';
 
 const draft = (id: number) => ({ id, publishedVersionNumber: null });
 const published = (id: number) => ({ id, publishedVersionNumber: 1 });
@@ -24,5 +27,16 @@ describe('resolveEffectiveTopicId', () => {
 
   it('returns 0 when there are no tests', () => {
     expect(resolveEffectiveTopicId(null, [])).toBe(0);
+  });
+});
+
+describe('resolveEffectiveAnalyticsTopicId', () => {
+  it('keeps the selected topic, otherwise the first one', () => {
+    expect(resolveEffectiveAnalyticsTopicId(2, [{ id: 1 }, { id: 2 }])).toBe(2);
+    expect(resolveEffectiveAnalyticsTopicId(9, [{ id: 1 }, { id: 2 }])).toBe(1);
+  });
+
+  it('returns null when there are no topics', () => {
+    expect(resolveEffectiveAnalyticsTopicId(null, [])).toBeNull();
   });
 });

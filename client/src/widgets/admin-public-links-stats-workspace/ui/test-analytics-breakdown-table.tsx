@@ -10,6 +10,8 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
+import { formatNumber, formatShare } from '../lib/format-analytics';
+
 import { LlmStatusBadge } from './llm-status-badge';
 import { hasV3PlusReport } from './test-analytics-v3.model';
 
@@ -30,9 +32,6 @@ interface TestAnalyticsBreakdownTableProps {
   valueHeader?: string;
   emptyMessage: string;
 }
-
-const formatNumber = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
-const formatShare = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)}%`;
 
 const BREAKDOWN_COLUMNS = [
   { id: 'label', header: 'Показатель', className: 'min-w-64' },

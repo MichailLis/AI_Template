@@ -18,15 +18,6 @@ export const CREATE_PUBLIC_LINK_DEFAULTS: CreatePublicLinkValues = {
   endsAt: '',
 };
 
-interface TopicOption {
-  id: number;
-  publishedVersionNumber: number | null;
-}
-
-interface PublicLinkOption {
-  id: number;
-}
-
 interface ValidateCreatePublicLinkParams {
   publishedVersionId: number | undefined;
   educationOrganizationId: number | null;
@@ -52,35 +43,6 @@ type ValidateCreatePublicLinkResult =
       ok: false;
       error: string;
     };
-
-export const resolveEffectiveTopicId = (selectedTopicId: number | null, topics: TopicOption[]) => {
-  if (topics.length === 0) {
-    return 0;
-  }
-
-  if (selectedTopicId && topics.some((topic) => topic.id === selectedTopicId)) {
-    return selectedTopicId;
-  }
-
-  // Ссылку можно создать только на опубликованный тест: первый в списке часто свежий черновик, и
-  // мастер открывался сразу с предупреждением.
-  return (topics.find((topic) => topic.publishedVersionNumber !== null) ?? topics[0]).id;
-};
-
-export const resolveEffectivePublicLinkId = (
-  selectedPublicLinkId: number | null,
-  visiblePublicLinks: PublicLinkOption[],
-) => {
-  if (visiblePublicLinks.length === 0) {
-    return null;
-  }
-
-  if (selectedPublicLinkId && visiblePublicLinks.some((link) => link.id === selectedPublicLinkId)) {
-    return selectedPublicLinkId;
-  }
-
-  return visiblePublicLinks[0].id;
-};
 
 export const validateCreatePublicLinkInput = ({
   publishedVersionId,

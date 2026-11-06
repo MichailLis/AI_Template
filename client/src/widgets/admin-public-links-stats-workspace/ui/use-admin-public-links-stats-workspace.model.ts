@@ -66,36 +66,6 @@ export const buildTopicOptions = (links: PublicLinkSummary[]): TopicOption[] => 
   return Array.from(options.entries()).map(([id, title]) => ({ id, title }));
 };
 
-export const resolveEffectiveTopicId = (
-  selectedTopicId: number | null,
-  topicOptions: TopicOption[],
-) => {
-  if (topicOptions.length === 0) {
-    return null;
-  }
-
-  if (selectedTopicId && topicOptions.some((topic) => topic.id === selectedTopicId)) {
-    return selectedTopicId;
-  }
-
-  return topicOptions[0].id;
-};
-
-export const resolveEffectivePublicLinkId = (
-  selectedPublicLinkId: number | null,
-  linksForTopic: PublicLinkSummary[],
-) => {
-  if (linksForTopic.length === 0) {
-    return null;
-  }
-
-  if (selectedPublicLinkId && linksForTopic.some((link) => link.id === selectedPublicLinkId)) {
-    return selectedPublicLinkId;
-  }
-
-  return linksForTopic[0].id;
-};
-
 export const buildAnalyticsParams = ({
   scope,
   publicLinkId,
