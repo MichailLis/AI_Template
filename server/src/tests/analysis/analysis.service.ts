@@ -12,10 +12,6 @@ import {
   type TestStudentAttempt,
 } from '@prisma/client';
 
-import {
-  TestAnalysisResultJsonSchema,
-  TestAnalysisResultSchema,
-} from '../../common/analysis/test-analysis-result.contract';
 import { readFirstEnv, type AiProviderConnection } from '../../ai-provider/ai-provider.config';
 import {
   AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE,
@@ -26,29 +22,16 @@ import {
 import { AiModelUnavailableError } from '../../ai-provider/ai-provider.failure';
 import { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import { PrismaService } from '../../prisma.service';
-import { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
-import { shouldRefreshProfOrientationAtlasSummary } from '../prof-orientation-v3-plus/atlas.logic';
-import {
-  ProfOrientationV3PlusEnrichmentJsonSchema,
-  parseProfOrientationV3PlusEnrichment,
-} from '../prof-orientation-v3-plus/enrichment';
-import {
-  isProfOrientationV3PlusSummary,
-  resolveProfOrientationV3PlusConfig,
-  scoreProfOrientationV3Plus,
-} from '../prof-orientation-v3-plus/scoring';
+import { getScoringMethodology } from '../methodology/registry';
+import { MethodologyServices } from '../methodology/methodology-services';
+import type { MethodologyEnrichment, ScoringMethodology } from '../methodology/scoring-methodology';
 import type { AttemptWithSessionData } from '../attempts/attempt.query';
-import type { ProfOrientationSummary } from '../prof-orientation-v3-plus/types';
 import {
   mapAnswerToPromptPayload,
   mapQuestionToPromptPayload,
 } from '../analysis/prompt-payload.utils';
 import { mergeAnalysisSummaryKey } from '../analysis/analysis-summary.store';
 import { buildAnalysisFailure, describeAnalysisFailure } from './analysis-failure';
-import {
-  buildAttemptAnalysisPrompt,
-  buildProfOrientationEnrichmentPrompt,
-} from './analysis-prompt-text';
 import { claimFailedAnalysis, findFailedAttemptIds } from './analysis-restart';
 import {
   NO_PUBLIC_ANALYSIS_SUMMARY,
@@ -67,7 +50,7 @@ interface PendingLlmAnalysisInput {
   promptVersionId: number;
 }
 
-interface ProfOrientationAnalysisInput {
+interface AlgorithmicAnalysisInput {
   attempt: AttemptWithSessionData;
   promptVersionId: number | null;
 }
@@ -79,7 +62,7 @@ interface AnalysisPromptVersionRecord {
   prompt: string;
 }
 
-interface ProfOrientationAttemptAnalysisRecord {
+interface AlgorithmicAttemptRecord {
   id: number;
   analysis: {
     id: number;
@@ -117,15 +100,6 @@ interface ProfOrientationAttemptAnalysisRecord {
   }>;
 }
 
-const PROF_ORIENTATION_AI_TIMEOUT_MS = 90_000;
-const PROF_ORIENTATION_TIMEOUT_RETRIES = 2;
-const PROF_ORIENTATION_MAX_TIMEOUT_RETRIES = 2;
-// Замеры 2026-10-08: Cloudflare отвечал 60–175 с и стоил в 15 раз дороже, поэтому исключён.
-/** Маршрутизация OpenRouter; другим провайдерам клиент её не передаёт. */
-const PROF_ORIENTATION_OPENROUTER_PROVIDER = {
-  preferred_min_throughput: { p50: 50 },
-  ignore: ['cloudflare'],
-} as const;
 const STALE_PENDING_ANALYSIS_MINUTES = 10;
 const STALE_PENDING_ANALYSIS_RECOVERY_LIMIT = 20;
 const PENDING_RECOVERY_INTERVAL_MS = 10 * 60 * 1000;
@@ -149,7 +123,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     private readonly config: ConfigService,
     private readonly aiProviderConfig: AiProviderConfigService,
     private readonly aiProviderClient: AiProviderClientService,
-    private readonly profOrientationAtlas: ProfOrientationAtlasService,
+    private readonly methodologyServices: MethodologyServices,
   ) {}
 
   private toErrorMessage(error: unknown) {
@@ -160,11 +134,12 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     return this.toErrorMessage(error) === AI_PROVIDER_REQUEST_TIMEOUT_MESSAGE;
   }
 
-  private getProfOrientationAiTimeoutMs() {
-    const rawValue = readFirstEnv(this.config, [
-      'AI_PROF_ORIENTATION_TIMEOUT_MS',
-      'OPENROUTER_PROF_ORIENTATION_TIMEOUT_MS',
-    ]);
+  private readTimeoutMs({ timeoutMs }: MethodologyEnrichment) {
+    if (!timeoutMs) {
+      return undefined;
+    }
+
+    const rawValue = readFirstEnv(this.config, [...timeoutMs.envKeys]);
     const parsedValue =
       typeof rawValue === 'number'
         ? rawValue
@@ -172,18 +147,15 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
           ? Number(rawValue)
           : NaN;
 
-    if (Number.isFinite(parsedValue) && parsedValue > 0) {
-      return parsedValue;
-    }
-
-    return PROF_ORIENTATION_AI_TIMEOUT_MS;
+    return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : timeoutMs.fallback;
   }
 
-  private getProfOrientationTimeoutRetries() {
-    const rawValue = readFirstEnv(this.config, [
-      'AI_PROF_ORIENTATION_TIMEOUT_RETRIES',
-      'OPENROUTER_PROF_ORIENTATION_TIMEOUT_RETRIES',
-    ]);
+  private readTimeoutRetries({ timeoutRetries }: MethodologyEnrichment) {
+    if (!timeoutRetries) {
+      return 0;
+    }
+
+    const rawValue = readFirstEnv(this.config, [...timeoutRetries.envKeys]);
     const parsedValue =
       typeof rawValue === 'number'
         ? rawValue
@@ -192,20 +164,44 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
           : NaN;
 
     if (!Number.isFinite(parsedValue)) {
-      return PROF_ORIENTATION_TIMEOUT_RETRIES;
+      return timeoutRetries.fallback;
     }
 
-    return Math.min(PROF_ORIENTATION_MAX_TIMEOUT_RETRIES, Math.max(0, Math.floor(parsedValue)));
+    return Math.min(timeoutRetries.max, Math.max(0, Math.floor(parsedValue)));
   }
 
-  private async generateProfOrientationPromptWithTimeoutRetry(
+  /** Запрос LLM-фазы методики: таймаут, повторы и маршрутизация берутся из её `enrichment`. */
+  private async requestEnrichment(
+    methodology: ScoringMethodology,
     connection: AiProviderConnection,
-    attemptId: number,
-    dto: AiPromptRequest,
+    promptVersion: AnalysisPromptVersionRecord,
+    attempt: {
+      id: number;
+      answers: Parameters<typeof mapAnswerToPromptPayload>[0][];
+      topicVersion: { questions: Parameters<typeof mapQuestionToPromptPayload>[0][] };
+    },
+    summary: unknown,
   ) {
-    const retries = this.getProfOrientationTimeoutRetries();
-    const timeoutMs = this.getProfOrientationAiTimeoutMs();
-    let attempt = 0;
+    const { enrichment } = methodology;
+    const model = await this.resolveStructuredModel(connection, promptVersion.model);
+    const dto: AiPromptRequest = {
+      model,
+      prompt: enrichment.buildPrompt({
+        prompt: promptVersion.prompt,
+        summary,
+        questions: attempt.topicVersion.questions.map(mapQuestionToPromptPayload),
+        answers: attempt.answers.map(mapAnswerToPromptPayload),
+      }),
+      temperature: promptVersion.temperature,
+      responseFormat: 'json',
+      responseSchema: enrichment.jsonSchema,
+      requireParameters: true,
+      useResponseHealing: true,
+      ...(enrichment.provider ? { provider: enrichment.provider } : {}),
+    };
+    const retries = this.readTimeoutRetries(enrichment);
+    const timeoutMs = this.readTimeoutMs(enrichment);
+    let tryNumber = 0;
 
     while (true) {
       const startedAt = Date.now();
@@ -213,12 +209,20 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       try {
         const response = await this.aiProviderClient.generatePrompt(
           connection,
-          { ...dto, sessionId: `prof-orientation-${attemptId}-try-${attempt + 1}` },
-          { timeoutMs, usage: { purpose: 'PROF_ORIENTATION_ENRICHMENT', attemptId } },
+          enrichment.sessionIdPrefix
+            ? {
+                ...dto,
+                sessionId: `${enrichment.sessionIdPrefix}-${attempt.id}-try-${tryNumber + 1}`,
+              }
+            : dto,
+          {
+            ...(timeoutMs ? { timeoutMs } : {}),
+            usage: { purpose: enrichment.purpose, attemptId: attempt.id },
+          },
         );
 
         this.logger.log(
-          `Prof-orientation enrichment attempt ${attemptId} succeeded on try ${attempt + 1} in ${Date.now() - startedAt} ms (model: ${response.model}, provider: ${response.provider ?? 'unknown'}, usage: ${JSON.stringify(response.usage ?? null)})`,
+          `Enrichment ${enrichment.purpose} of attempt ${attempt.id} succeeded on try ${tryNumber + 1} in ${Date.now() - startedAt} ms (model: ${response.model}, provider: ${response.provider ?? 'unknown'}, usage: ${JSON.stringify(response.usage ?? null)})`,
         );
 
         return response;
@@ -230,14 +234,14 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         }
 
         this.logger.warn(
-          `Prof-orientation enrichment attempt ${attemptId} timed out on try ${attempt + 1} after ${Date.now() - startedAt} ms`,
+          `Enrichment ${enrichment.purpose} of attempt ${attempt.id} timed out on try ${tryNumber + 1} after ${Date.now() - startedAt} ms`,
         );
 
-        if (attempt >= retries) {
+        if (tryNumber >= retries) {
           throw error;
         }
 
-        attempt += 1;
+        tryNumber += 1;
       }
     }
   }
@@ -332,16 +336,20 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
     });
   }
 
-  upsertProfOrientationV3PlusAnalysis(
+  upsertAlgorithmicAnalysis(
     tx: Prisma.TransactionClient,
-    input: ProfOrientationAnalysisInput,
+    input: AlgorithmicAnalysisInput,
   ): Promise<TestStudentAnalysis> {
     const now = new Date();
-    const summary = scoreProfOrientationV3Plus({
-      questions: input.attempt.topicVersion.questions,
-      answers: input.attempt.answers,
-      config: resolveProfOrientationV3PlusConfig(input.attempt.topicVersion.scoringConfig),
-      llmStatus: input.promptVersionId ? 'pending' : 'not_requested',
+    const methodology = getScoringMethodology(input.attempt.topicVersion.scoringKind);
+
+    if (!methodology.score) {
+      throw new Error(`Methodology ${methodology.kind} has no algorithmic phase`);
+    }
+
+    const summary = methodology.score({
+      attempt: input.attempt,
+      llmRequested: Boolean(input.promptVersionId),
     });
     const providerMode = input.promptVersionId ? 'ALGORITHM_LLM' : 'ALGORITHM';
     const rawText = JSON.stringify(summary);
@@ -355,7 +363,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         promptVersionId: input.promptVersionId,
         providerMode,
         status: 'READY',
-        summary: summary as unknown as Prisma.InputJsonValue,
+        summary: summary as Prisma.InputJsonValue,
         rawText,
         errorMessage: null,
         generatedAt: now,
@@ -364,7 +372,7 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
         promptVersionId: input.promptVersionId,
         providerMode,
         status: 'READY',
-        summary: summary as unknown as Prisma.InputJsonValue,
+        summary: summary as Prisma.InputJsonValue,
         rawText,
         errorMessage: null,
         generatedAt: now,
@@ -551,34 +559,25 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
       return;
     }
 
-    if (attempt.topicVersion.scoringKind === 'PROF_ORIENTATION_V3_PLUS') {
-      await this.runProfOrientationEnrichment(attempt, promptVersion);
+    const methodology = getScoringMethodology(attempt.topicVersion.scoringKind);
+
+    if (methodology.score) {
+      await this.runAlgorithmicEnrichment(methodology, attempt, promptVersion);
       return;
     }
 
     try {
       const connection = await this.aiProviderConfig.getConnection();
-      const model = await this.resolveStructuredModel(connection, promptVersion.model);
-      const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
-      const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.aiProviderClient.generatePrompt(
+      const response = await this.requestEnrichment(
+        methodology,
         connection,
-        {
-          model,
-          prompt: buildAttemptAnalysisPrompt({
-            prompt: promptVersion.prompt,
-            questions,
-            answers,
-          }),
-          temperature: promptVersion.temperature,
-          responseFormat: 'json',
-          responseSchema: TestAnalysisResultJsonSchema,
-          requireParameters: true,
-          useResponseHealing: true,
-        },
-        { usage: { purpose: 'STUDENT_ANALYSIS', attemptId } },
+        promptVersion,
+        attempt,
+        null,
       );
-      const parsedOutput = TestAnalysisResultSchema.parse(JSON.parse(response.output));
+      const parsedOutput = methodology.enrichment.parse(
+        JSON.parse(response.output),
+      ) as Prisma.InputJsonValue;
 
       await this.prisma.testStudentAnalysis.update({
         where: { attemptId },
@@ -620,58 +619,50 @@ export class TestsAnalysisService implements OnApplicationBootstrap, OnModuleDes
    * задачу берёт восстановление, и свежий атлас второй раз не запрашивается. Сбой атласа не
    * отменяет AI-анализ; `GET /result` повторит атлас после паузы, когда LLM уже не pending.
    */
-  private async enrichProfOrientationAtlas(analysisId: number, summary: ProfOrientationSummary) {
-    if (!shouldRefreshProfOrientationAtlasSummary(summary)) {
+  private async applyAfterFinish(
+    methodology: ScoringMethodology,
+    analysisId: number,
+    summary: unknown,
+  ) {
+    const { afterFinish } = methodology;
+
+    if (!afterFinish?.isStale(summary)) {
       return;
     }
 
     try {
-      await this.profOrientationAtlas.saveEnrichedAnalysis(analysisId, summary);
+      await afterFinish.apply(analysisId, summary, this.methodologyServices);
     } catch (error) {
       this.logger.warn(
-        `Atlas enrichment of analysis ${analysisId} failed: ${this.toErrorMessage(error)}`,
+        `Post-finish enrichment of analysis ${analysisId} failed: ${this.toErrorMessage(error)}`,
       );
     }
   }
 
-  private async runProfOrientationEnrichment(
-    attempt: ProfOrientationAttemptAnalysisRecord,
+  private async runAlgorithmicEnrichment(
+    methodology: ScoringMethodology,
+    attempt: AlgorithmicAttemptRecord,
     promptVersion: AnalysisPromptVersionRecord,
   ) {
     const analysisId = attempt.analysis?.id;
     const currentSummary = attempt.analysis?.summary;
 
-    if (!analysisId || !isProfOrientationV3PlusSummary(currentSummary)) {
+    if (!analysisId || !methodology.isSummary(currentSummary)) {
       return;
     }
 
-    await this.enrichProfOrientationAtlas(analysisId, currentSummary);
+    await this.applyAfterFinish(methodology, analysisId, currentSummary);
 
     try {
       const connection = await this.aiProviderConfig.getConnection();
-      const model = await this.resolveStructuredModel(connection, promptVersion.model);
-      const questions = attempt.topicVersion.questions.map(mapQuestionToPromptPayload);
-      const answers = attempt.answers.map(mapAnswerToPromptPayload);
-      const response = await this.generateProfOrientationPromptWithTimeoutRetry(
+      const response = await this.requestEnrichment(
+        methodology,
         connection,
-        attempt.id,
-        {
-          model,
-          prompt: buildProfOrientationEnrichmentPrompt({
-            prompt: promptVersion.prompt,
-            algorithmSummary: currentSummary,
-            questions,
-            answers,
-          }),
-          temperature: promptVersion.temperature,
-          responseFormat: 'json',
-          responseSchema: ProfOrientationV3PlusEnrichmentJsonSchema,
-          requireParameters: true,
-          useResponseHealing: true,
-          provider: PROF_ORIENTATION_OPENROUTER_PROVIDER,
-        },
+        promptVersion,
+        attempt,
+        currentSummary,
       );
-      const parsedOutput = parseProfOrientationV3PlusEnrichment(JSON.parse(response.output));
+      const parsedOutput = methodology.enrichment.parse(JSON.parse(response.output));
 
       await mergeAnalysisSummaryKey(
         this.prisma,

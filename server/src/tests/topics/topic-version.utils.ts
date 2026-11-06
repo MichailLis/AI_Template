@@ -1,4 +1,4 @@
-import type { Prisma, TestQuestionType } from '@prisma/client';
+import type { Prisma, TestQuestionType, TestScoringKind } from '@prisma/client';
 
 import { ConflictError, InvalidInputError } from '../../common/errors/domain-error';
 import type { CreateTestsTopicFromAiDto } from '../dto/tests.dto';
@@ -93,7 +93,7 @@ export const createTopicWithDraft = async (
     title: string;
     description: string | null;
     analysisPromptVersionId?: number | null;
-    scoringKind?: 'DEFAULT' | 'PROF_ORIENTATION_V3_PLUS';
+    scoringKind?: TestScoringKind;
     scoringConfig?: unknown;
   },
 ) => {

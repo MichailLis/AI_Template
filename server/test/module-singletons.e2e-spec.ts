@@ -12,6 +12,7 @@ import { ProfessionAtlasSettingsService } from '../src/app-settings/profession-a
 import { PublicRateLimitSettingsService } from '../src/app-settings/public-rate-limit-settings.service';
 import { AuditService } from '../src/audit/audit.service';
 import { TestsAnalysisService } from '../src/tests/analysis/analysis.service';
+import { TestsPublicSessionService } from '../src/tests/session/public-session.service';
 import { TestsPublicLinkService } from '../src/tests/public-links/public-link.service';
 import { TestsPublicAttemptAllocationService } from '../src/tests/session/attempt-allocation.service';
 import { ProfOrientationAtlasService } from '../src/tests/prof-orientation-v3-plus/atlas';
@@ -124,6 +125,8 @@ describe('Provider instances (e2e)', () => {
 
     const atlas = injected(get(AdminSettingsController), 'profOrientationAtlasService');
     expect(atlas).toBeInstanceOf(ProfOrientationAtlasService);
-    expect(injected(get(TestsAnalysisService), 'profOrientationAtlas')).toBe(atlas);
+    const services = injected(get(TestsAnalysisService), 'methodologyServices');
+    expect(injected(services, 'atlas')).toBe(atlas);
+    expect(injected(get(TestsPublicSessionService), 'methodologyServices')).toBe(services);
   });
 });

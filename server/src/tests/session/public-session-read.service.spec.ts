@@ -5,7 +5,7 @@ import { ProfessionAtlasSettingsService } from '../../app-settings/profession-at
 import type { AiProviderConfigService } from '../../ai-provider/ai-provider-config.service';
 import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
 import type { PrismaService } from '../../prisma.service';
-import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import { TestsAnalysisService } from '../analysis/analysis.service';
 import type { TestsPublicLinkService } from '../public-links/public-link.service';
 import type { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
@@ -75,7 +75,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
-      {} as ProfOrientationAtlasService,
+      {} as MethodologyServices,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -85,8 +85,10 @@ describe('TestsPublicSessionService read paths', () => {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
       {
-        saveEnrichedAnalysis: jest.fn(),
-      } as unknown as ProfOrientationAtlasService,
+        atlas: {
+          saveEnrichedAnalysis: jest.fn(),
+        },
+      } as unknown as MethodologyServices,
       // These cases only read an existing session; nothing here allocates an attempt.
       {} as TestsPublicAttemptAllocationService,
     );
@@ -128,7 +130,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
-      {} as ProfOrientationAtlasService,
+      {} as MethodologyServices,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -138,8 +140,10 @@ describe('TestsPublicSessionService read paths', () => {
         getProfessionAtlasUrl: jest.fn().mockResolvedValue(null),
       } as unknown as ProfessionAtlasSettingsService,
       {
-        saveEnrichedAnalysis: jest.fn(),
-      } as unknown as ProfOrientationAtlasService,
+        atlas: {
+          saveEnrichedAnalysis: jest.fn(),
+        },
+      } as unknown as MethodologyServices,
       // These cases only read an existing session; nothing here allocates an attempt.
       {} as TestsPublicAttemptAllocationService,
     );
@@ -192,7 +196,7 @@ describe('TestsPublicSessionService read paths', () => {
       {} as ConfigService,
       {} as AiProviderConfigService,
       {} as AiProviderClientService,
-      {} as ProfOrientationAtlasService,
+      {} as MethodologyServices,
     );
     const service = new TestsPublicSessionService(
       prismaMock,
@@ -201,8 +205,10 @@ describe('TestsPublicSessionService read paths', () => {
       // Read paths never change settings, so the audit trail is never written here.
       new ProfessionAtlasSettingsService(prismaMock, {} as AuditService),
       {
-        saveEnrichedAnalysis: jest.fn(),
-      } as unknown as ProfOrientationAtlasService,
+        atlas: {
+          saveEnrichedAnalysis: jest.fn(),
+        },
+      } as unknown as MethodologyServices,
       // These cases only read an existing session; nothing here allocates an attempt.
       {} as TestsPublicAttemptAllocationService,
     );

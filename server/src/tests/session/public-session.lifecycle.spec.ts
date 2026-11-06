@@ -308,6 +308,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       analysis: null,
       answers: [],
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersionId: null,
         questions: [{ id: 100 }],
       },
@@ -347,6 +348,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       analysis: null,
       answers: [],
       topicVersion: { analysisPromptVersionId: 42, questions: [{ id: 100 }] },
+      scoringKind: 'DEFAULT',
     };
     jest
       .mocked(getSessionAttemptByTokenOrThrow)
@@ -402,6 +404,7 @@ describe('TestsPublicSessionService lifecycle', () => {
       analysis: null,
       answers: [],
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersionId: 42,
         questions: [{ id: 100 }],
       },

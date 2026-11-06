@@ -2,7 +2,7 @@ import type { PrivacyPolicySettingsService } from '../../app-settings/privacy-po
 import type { ProfessionAtlasSettingsService } from '../../app-settings/profession-atlas-settings.service';
 import type { PrismaService } from '../../prisma.service';
 
-import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import type { TestsAnalysisService } from '../analysis/analysis.service';
 import type { TestsPublicLinkService } from '../public-links/public-link.service';
 import { TestsPublicAttemptAllocationService } from '../session/attempt-allocation.service';
@@ -122,7 +122,7 @@ export const createPublicSessionHarness = (): PublicSessionHarness => {
     enqueueAttemptAnalysis: enqueueAttemptAnalysisMock,
     upsertStubAnalysis: upsertStubAnalysisMock,
     upsertPendingLlmAnalysis: upsertPendingLlmAnalysisMock,
-    upsertProfOrientationV3PlusAnalysis: upsertProfOrientationAnalysisMock,
+    upsertAlgorithmicAnalysis: upsertProfOrientationAnalysisMock,
     toPublicAnalysisResponse: toPublicAnalysisResponseMock,
     toAttemptStatus: toAttemptStatusMock,
   };
@@ -146,8 +146,10 @@ export const createPublicSessionHarness = (): PublicSessionHarness => {
       getProfessionAtlasUrl: getProfessionAtlasUrlMock,
     } as unknown as ProfessionAtlasSettingsService,
     {
-      saveEnrichedAnalysis: saveEnrichedAnalysisMock,
-    } as unknown as ProfOrientationAtlasService,
+      atlas: {
+        saveEnrichedAnalysis: saveEnrichedAnalysisMock,
+      },
+    } as unknown as MethodologyServices,
     attemptAllocationService,
   );
 

@@ -13,6 +13,7 @@ import {
   type ProfOrientationSummary,
 } from './types';
 import { isRecord } from '../../common/type-guards';
+import type { AnalysisLlmStatus } from '../methodology/scoring-methodology';
 
 type QuestionType = 'OPEN_TEXT' | 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'SLIDER';
 
@@ -436,8 +437,6 @@ export const scoreProfOrientationV3Plus = ({
 
 export const isProfOrientationV3PlusSummary = (value: unknown): value is ProfOrientationSummary =>
   isRecord(value) && value.resultKind === PROF_ORIENTATION_V3_PLUS_RESULT_KIND;
-
-export type AnalysisLlmStatus = 'not_requested' | 'pending' | 'ready' | 'failed';
 
 const ANALYSIS_LLM_STATUSES: readonly string[] = [
   'not_requested',

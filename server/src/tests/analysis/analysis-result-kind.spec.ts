@@ -1,3 +1,4 @@
+import type { TestScoringKind } from '@prisma/client';
 import {
   canRestartAnalysis,
   getAnalysisResultKind,
@@ -153,11 +154,11 @@ describe('canRestartAnalysis', () => {
 });
 
 describe('getPlannedAnalysisKind', () => {
-  it.each([
+  it.each<[TestScoringKind, number | null, string]>([
     ['PROF_ORIENTATION_V3_PLUS', 5, 'ALGORITHM_AI'],
     ['PROF_ORIENTATION_V3_PLUS', null, 'ALGORITHM'],
-    ['STANDARD', 5, 'AI'],
-    ['STANDARD', null, 'BASIC'],
+    ['DEFAULT', 5, 'AI'],
+    ['DEFAULT', null, 'BASIC'],
   ])('%s with prompt %s plans %s', (scoringKind, analysisPromptVersionId, expected) => {
     expect(getPlannedAnalysisKind({ scoringKind, analysisPromptVersionId })).toBe(expected);
   });

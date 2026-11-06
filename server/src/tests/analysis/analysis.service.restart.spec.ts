@@ -7,7 +7,7 @@ import type { AiProviderConfigService } from '../../ai-provider/ai-provider-conf
 import type { AiProviderClientService } from '../../ai-provider/ai-provider.client';
 import { TEST_AI_PROVIDER_CONNECTION } from '../../ai-provider/spec-fixtures';
 import type { PrismaService } from '../../prisma.service';
-import type { ProfOrientationAtlasService } from '../prof-orientation-v3-plus/atlas';
+import type { MethodologyServices } from '../methodology/methodology-services';
 import { getProfOrientationLlmStatus } from '../prof-orientation-v3-plus/scoring';
 import { TestsAnalysisService } from './analysis.service';
 
@@ -93,7 +93,7 @@ const createService = (prisma: unknown) => {
       getConnection: jest.fn().mockResolvedValue(TEST_AI_PROVIDER_CONNECTION),
     } as unknown as AiProviderConfigService,
     aiProviderClient as unknown as AiProviderClientService,
-    { saveEnrichedAnalysis: jest.fn() } as unknown as ProfOrientationAtlasService,
+    { atlas: { saveEnrichedAnalysis: jest.fn() } } as unknown as MethodologyServices,
   );
   const enqueue = jest.spyOn(service, 'enqueueAttemptAnalysis').mockImplementation(() => undefined);
 
@@ -308,6 +308,7 @@ describe('restart of a failed analysis', () => {
       id: 5,
       analysis: { id: 77, summary },
       topicVersion: {
+        scoringKind: 'DEFAULT',
         analysisPromptVersion: { id: 42, model: 'm', temperature: 0.2, prompt: PROMPT_TEXT },
         questions: [],
       },
@@ -401,7 +402,7 @@ describe('restart of a failed analysis', () => {
         {
           ...attempt,
           topicVersion: { ...attempt.topicVersion, scoringKind: 'PROF_ORIENTATION_V3_PLUS' },
-        } as typeof attempt,
+        },
         providerFailure(429),
       );
 
