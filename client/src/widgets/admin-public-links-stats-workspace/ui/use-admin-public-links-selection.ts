@@ -2,6 +2,8 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { resolveEffectivePublicLinkId } from '@/entities/public-link';
+import { resolveEffectiveAnalyticsTopicId } from '@/entities/test-topic';
 import {
   getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions,
   useTestsAdminPublicLinksControllerListArchivedPublicLinks,
@@ -14,8 +16,6 @@ import {
   readLimit,
   readNumber,
   readTab,
-  resolveEffectivePublicLinkId,
-  resolveEffectiveTopicId,
 } from './use-admin-public-links-stats-workspace.model';
 
 import type {
@@ -92,7 +92,7 @@ export const usePublicLinkSelection = (
   );
   const topicOptions = useMemo(() => buildTopicOptions(visiblePublicLinks), [visiblePublicLinks]);
   const effectiveTopicId = useMemo(
-    () => resolveEffectiveTopicId(selectedTopicId, topicOptions),
+    () => resolveEffectiveAnalyticsTopicId(selectedTopicId, topicOptions),
     [selectedTopicId, topicOptions],
   );
   const linksForTopic = useMemo(

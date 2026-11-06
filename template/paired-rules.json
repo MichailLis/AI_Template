@@ -297,7 +297,7 @@
       "name": "formatNumber",
       "type": "unrelated",
       "client": {
-        "file": "client/src/widgets/admin-public-links-stats-workspace/ui/test-analytics-summary-card.tsx"
+        "file": "client/src/widgets/admin-public-links-stats-workspace/lib/format-analytics.ts"
       },
       "server": {
         "file": "server/src/tests/reporting/analytics-report-labels.ts"

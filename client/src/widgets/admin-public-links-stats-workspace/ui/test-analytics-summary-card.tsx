@@ -13,6 +13,8 @@ import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { formatNumber, formatShare } from '../lib/format-analytics';
+
 import { hasV3PlusReport } from './test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
@@ -35,9 +37,6 @@ interface MetricItem {
   tone: AdminTone;
   icon: typeof Link2;
 }
-
-const formatNumber = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
-const formatShare = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)}%`;
 
 const toShare = (count: number, total: number) => {
   if (total === 0) {

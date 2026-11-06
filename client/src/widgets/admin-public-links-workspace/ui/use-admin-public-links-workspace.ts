@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { resolveEffectivePublicLinkId } from '@/entities/public-link';
+import { resolveEffectiveTopicId } from '@/entities/test-topic';
 import {
   useTestsAdminEducationOrganizationsControllerCreateEducationOrganization,
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
@@ -12,11 +14,7 @@ import {
   useTestsControllerListTopics,
 } from '@/shared/api/generated/tests/tests';
 
-import {
-  CREATE_PUBLIC_LINK_DEFAULTS,
-  resolveEffectivePublicLinkId,
-  resolveEffectiveTopicId,
-} from './admin-public-links-workspace.helpers';
+import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
 
