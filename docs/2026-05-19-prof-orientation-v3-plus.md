@@ -120,6 +120,11 @@ The Polus result UI merges these fields into existing result blocks instead of
 rendering a separate oversized LLM block. When the LLM result is missing or
 failed, the UI falls back to deterministic methodology text.
 
+The server strips technical methodology codes from these texts before a student sees them
+(`sanitizeMethodologyText` in `server/src/tests/prof-orientation-v3-plus/enrichment-text.ts`):
+once when the model response is parsed and again when a stored result is served, which also
+cleans records written before the rule existed.
+
 ## OpenRouter Timeout And Retry
 
 The default OpenRouter timeout remains global for ordinary requests, but the

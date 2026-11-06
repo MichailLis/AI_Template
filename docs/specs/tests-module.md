@@ -12,12 +12,24 @@ Current tests implementation is wired as a dedicated backend module + admin work
   | `analysis/`                 | Explaining **one** attempt — LLM and algorithm pipelines, prompt simulation |
   | `reporting/`                | Aggregating **many** attempts — analytics, XLSX and PDF export              |
   | `attempts/`                 | Operator-facing view of a single attempt                                    |
+  | `methodology/`              | The scoring methodology registry and the `DEFAULT` methodology              |
   | `prof-orientation-v3-plus/` | The built-in methodology and its committed fixture                          |
   | `shared/`                   | Helpers used across more than one of the above                              |
 
   `analysis` and `reporting` are named apart on purpose: one explains a single student's
   attempt, the other aggregates across attempts. The two Nest modules that wire these areas
   together, `tests.module.ts` and `tests-attempts.module.ts`, stay at the root.
+
+- Scoring methodologies: `methodology/registry.ts` maps every `TestScoringKind` to a
+  `ScoringMethodology` (`methodology/scoring-methodology.ts`). The registry is the only place in
+  the shared pipeline that knows concrete methodologies; `analysis`, `session`, `reporting`,
+  `attempts` and `topics` ask it instead of branching on `scoringKind`. A methodology supplies its LLM
+  enrichment (schema, prompt input, parsing, timeouts), and optionally an algorithmic `score`
+  phase, the student-facing summary, analytics sections and a one-click import template. Stored
+  results are matched by the shape of `summary` (`getMethodologyBySummary`), not by the topic's
+  current kind, because old attempts keep the methodology they were scored with. To add a
+  methodology: add the enum value, implement `ScoringMethodology` next to its scoring code, and
+  register it — the `Record<TestScoringKind, …>` type fails the build until you do.
 
 - Frontend page wrapper: `client/src/pages/admin/admin-tests-page.tsx`
 - Frontend workspace: `client/src/widgets/admin-tests-workspace/*`
@@ -112,7 +124,11 @@ Built-in prof-orientation v3+ baseline:
    fallbacks); retries are allowed only for `AI provider request timeout` and must
    stay capped at 2.
 9. Polus result UI should merge LLM explanations into existing methodology blocks
-   and avoid exposing raw method internals to students.
+   and avoid exposing raw method internals to students. Technical methodology codes are
+   removed from LLM text on the server (`sanitizeMethodologyText` in
+   `prof-orientation-v3-plus/enrichment-text.ts`), both when the enrichment is parsed and when
+   a stored result is served to a student, so older records are cleaned too. The client does
+   not sanitize. `rawText` holds only the raw LLM response; the algorithmic phase writes `null`.
 10. Detailed contract: `docs/2026-05-19-prof-orientation-v3-plus.md`.
 
 ---
