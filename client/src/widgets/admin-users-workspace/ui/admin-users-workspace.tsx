@@ -1,3 +1,4 @@
+import { useManageUser, type UserConfirmationKind } from '@/features/manage-user';
 import { adminClassNames, getAdminRoleBadgeClassName } from '@/shared/ui/admin-design-tokens';
 import { AdminPagination } from '@/shared/ui/admin-pagination';
 import { AdminStateBlock } from '@/shared/ui/admin-state-block';
@@ -5,13 +6,13 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
+import { formatDateTime } from '../lib/admin-users-workspace.utils';
+import { useAdminUsersWorkspace } from '../model/use-admin-users-workspace';
+
 import { AdminUserCredentialsDialog } from './admin-user-credentials-dialog';
 import { AdminUserEditorSheet } from './admin-user-editor-sheet';
 import { AdminUsersFilters } from './admin-users-filters';
 import { AdminUsersTable } from './admin-users-table';
-import { formatDateTime } from './admin-users-workspace.utils';
-import { useAdminUserActions, type UserConfirmationKind } from './use-admin-user-actions';
-import { useAdminUsersWorkspace } from './use-admin-users-workspace';
 
 const roleLabel = (role: string) => {
   if (role === 'ADMIN') {
@@ -53,7 +54,7 @@ const CONFIRMATION_COPY: Record<
   },
 };
 
-function AdminUserActionDialogs({ actions }: { actions: ReturnType<typeof useAdminUserActions> }) {
+function AdminUserActionDialogs({ actions }: { actions: ReturnType<typeof useManageUser> }) {
   const { editorState, confirmation } = actions;
   const confirmationCopy = confirmation ? CONFIRMATION_COPY[confirmation.kind] : null;
 
@@ -121,7 +122,7 @@ export function AdminUsersWorkspace() {
     handlePreviousPage,
     handleNextPage,
   } = useAdminUsersWorkspace();
-  const actions = useAdminUserActions({ onUsersChanged: () => usersQuery.refetch() });
+  const actions = useManageUser();
 
   if (usersQuery.isLoading) {
     return (

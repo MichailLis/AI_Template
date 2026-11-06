@@ -4,9 +4,14 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/entities/session';
 import { useAdminControllerGetUsers } from '@/shared/api/generated/admin/admin';
 
-import { buildUsersQueryParams } from './admin-users-workspace.utils';
+import { buildUsersQueryParams } from '../lib/admin-users-workspace.utils';
 
-import type { RoleFilter, SortBy, SortOrder, StatusFilter } from './admin-users-workspace.types';
+import type {
+  RoleFilter,
+  SortBy,
+  SortOrder,
+  StatusFilter,
+} from '../model/admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 const LIMIT = 10;

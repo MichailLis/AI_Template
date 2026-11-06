@@ -6,7 +6,8 @@ import { TableCell } from '@/shared/ui/table';
 
 import { AdminUserActionsMenu } from './admin-user-actions-menu';
 
-import type { AdminUser, SortBy, SortOrder, UserRole } from './admin-users-workspace.types';
+import type { SortBy, SortOrder } from '../model/admin-users-workspace.types';
+import type { AdminUser, UserRole } from '@/features/manage-user';
 
 interface AdminUsersTableProps {
   users: AdminUser[];

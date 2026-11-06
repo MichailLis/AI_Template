@@ -6,7 +6,7 @@ import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
-import type { RoleFilter, StatusFilter } from './admin-users-workspace.types';
+import type { RoleFilter, StatusFilter } from '../model/admin-users-workspace.types';
 import type { FormEvent } from 'react';
 
 interface AdminUsersFiltersProps {

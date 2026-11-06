@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AdminUsersTable } from './admin-users-table';
 
-import type { AdminUser } from './admin-users-workspace.types';
+import type { AdminUser } from '@/features/manage-user';
 
 const createUser = (overrides: Partial<AdminUser> = {}): AdminUser => ({
   id: 562,

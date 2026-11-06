@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { AdminUser } from './admin-users-workspace.types';
+import type { AdminUser } from '../model/types';
 import type { CreateUserDto, UpdateUserDto } from '@/shared/api/model';
 import type { FieldPath } from 'react-hook-form';
 
