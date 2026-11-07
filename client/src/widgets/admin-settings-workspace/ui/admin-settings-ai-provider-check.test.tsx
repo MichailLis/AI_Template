@@ -5,10 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminAiProviderCheckResponseDtoReason } from '@/shared/api/model';
 import { formatDateTime } from '@/shared/lib/date-format';
 
-import { AiProviderCheck } from './admin-settings-ai-provider-check';
-import { aiCheckReasonLabels } from './admin-settings-cards.model';
+import { aiCheckReasonLabels } from '../lib/admin-settings-cards.model';
 
-import type { AiProviderCheck as AiProviderCheckResult } from './admin-settings-cards.model';
+import { AiProviderCheck } from './admin-settings-ai-provider-check';
+
+import type { AiProviderCheck as AiProviderCheckResult } from '../lib/admin-settings-cards.model';
 
 const hoisted = vi.hoisted(() => ({
   mutate: vi.fn(),

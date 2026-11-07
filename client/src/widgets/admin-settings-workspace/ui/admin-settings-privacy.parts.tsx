@@ -7,9 +7,9 @@ import { Label } from '@/shared/ui/label';
 import { RuDateInput } from '@/shared/ui/ru-date-input';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { formatUpdatedAt } from './admin-settings-cards.model';
+import { formatUpdatedAt } from '../lib/admin-settings-cards.model';
 
-import type { PrivacyPolicySettings } from './admin-settings-cards.model';
+import type { PrivacyPolicySettings } from '../lib/admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
 export function PrivacyPolicyStatusPanel({

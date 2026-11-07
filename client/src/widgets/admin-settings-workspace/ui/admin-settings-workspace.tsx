@@ -1,22 +1,21 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
+import { useSaveProfessionAtlasUrl } from '@/features/manage-app-settings';
+import { usePrivacyPolicyFormState, useSavePrivacyPolicy } from '@/features/manage-privacy-policy';
 import {
-  getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey,
-  getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey,
-  getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey,
+  useAdminSettingsControllerGetAiProviderSettings,
   useAdminSettingsControllerGetPrivacyPolicySettings,
   useAdminSettingsControllerGetProfessionAtlasCoverage,
   useAdminSettingsControllerGetProfessionAtlasSettings,
-  useAdminSettingsControllerGetAiProviderSettings,
-  useAdminSettingsControllerUpdatePrivacyPolicy,
-  useAdminSettingsControllerUpdateProfessionAtlasUrl,
 } from '@/shared/api/generated/admin/admin';
-import { getApiErrorMessage as getSharedApiErrorMessage } from '@/shared/lib/api-error';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminTabs } from '@/shared/ui/admin-tabs';
 import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
+
+import {
+  getAiProviderHealthBadge,
+  getProfessionAtlasHealthBadge,
+} from '../lib/admin-settings-cards.model';
 
 import { BackupsSettingsCard } from './admin-settings-backups';
 import {
@@ -24,13 +23,8 @@ import {
   PrivacyPolicySettingsCard,
   ProfessionAtlasSettingsCard,
 } from './admin-settings-cards';
-import {
-  getAiProviderHealthBadge,
-  getProfessionAtlasHealthBadge,
-} from './admin-settings-cards.model';
 import { AdminSettingsHero } from './admin-settings-hero';
 import { PublicRateLimitSettingsCard } from './admin-settings-rate-limit';
-import { usePrivacyPolicyFormState } from './use-privacy-policy-form-state';
 
 import type { FormEvent } from 'react';
 
@@ -49,25 +43,11 @@ const DEFAULT_ATLAS_PUBLIC_URL = 'https://atlas.rcs-center.ru';
 const DEFAULT_ATLAS_API_URL = 'https://atlas.rcs-center.ru/api-backend';
 
 function PrivacyPolicySettingsWorkspaceCard() {
-  const queryClient = useQueryClient();
   const privacyPolicyQuery = useAdminSettingsControllerGetPrivacyPolicySettings();
   const privacyPolicy = privacyPolicyQuery.data?.privacyPolicy;
   const form = usePrivacyPolicyFormState(privacyPolicy);
 
-  const updatePrivacyPolicyMutation = useAdminSettingsControllerUpdatePrivacyPolicy({
-    mutation: {
-      onError: (error) => {
-        toast.error(getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
-      },
-      onSuccess: async () => {
-        form.resetForm();
-        await queryClient.invalidateQueries({
-          queryKey: getAdminSettingsControllerGetPrivacyPolicySettingsQueryKey(),
-        });
-        toast.success('Политика персональных данных сохранена');
-      },
-    },
-  });
+  const { savePrivacyPolicy, isSaving } = useSavePrivacyPolicy({ onSaved: form.resetForm });
 
   const handlePrivacyPolicySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,18 +58,16 @@ function PrivacyPolicySettingsWorkspaceCard() {
       !form.normalizedContent ||
       !form.normalizedOperatorFullName ||
       !form.publishedAtIso ||
-      updatePrivacyPolicyMutation.isPending
+      isSaving
     ) {
       return;
     }
 
-    updatePrivacyPolicyMutation.mutate({
-      data: {
-        version: form.normalizedVersion,
-        publishedAt: form.publishedAtIso,
-        content: form.normalizedContent,
-        operatorFullName: form.normalizedOperatorFullName,
-      },
+    savePrivacyPolicy({
+      version: form.normalizedVersion,
+      publishedAt: form.publishedAtIso,
+      content: form.normalizedContent,
+      operatorFullName: form.normalizedOperatorFullName,
     });
   };
 
@@ -102,13 +80,13 @@ function PrivacyPolicySettingsWorkspaceCard() {
           form.normalizedContent &&
           form.normalizedOperatorFullName &&
           form.publishedAtIso,
-        ) && !updatePrivacyPolicyMutation.isPending
+        ) && !isSaving
       }
       content={form.content}
       isError={privacyPolicyQuery.isError}
       isLoading={privacyPolicyQuery.isLoading}
       isOldDateWithNewContent={form.isOldDateWithNewContent}
-      isSaving={updatePrivacyPolicyMutation.isPending}
+      isSaving={isSaving}
       operatorFullName={form.operatorFullName}
       privacyPolicy={privacyPolicy}
       publishedAt={form.publishedAt}
@@ -128,7 +106,6 @@ function PrivacyPolicySettingsWorkspaceCard() {
 }
 
 export function AdminSettingsWorkspace() {
-  const queryClient = useQueryClient();
   const [settingsTab, setSettingsTab] = useState<AdminSettingsTab>('integrations');
   const [professionAtlasForm, setProfessionAtlasForm] = useState({
     apiUrl: '',
@@ -140,24 +117,8 @@ export function AdminSettingsWorkspace() {
   const professionAtlasQuery = useAdminSettingsControllerGetProfessionAtlasSettings();
   // Покрытие обходит Атлас десятки раз, поэтому не задерживает настройки: догружается отдельно.
   const coverageQuery = useAdminSettingsControllerGetProfessionAtlasCoverage();
-  const updateProfessionAtlasUrlMutation = useAdminSettingsControllerUpdateProfessionAtlasUrl({
-    mutation: {
-      onError: (error) => {
-        toast.error(getSharedApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
-      },
-      onSuccess: async () => {
-        setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' });
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: getAdminSettingsControllerGetProfessionAtlasSettingsQueryKey(),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: getAdminSettingsControllerGetProfessionAtlasCoverageQueryKey(),
-          }),
-        ]);
-        toast.success('Настройки Атласа профессий сохранены');
-      },
-    },
+  const { saveProfessionAtlasUrl, isSaving: isProfessionAtlasSaving } = useSaveProfessionAtlasUrl({
+    onSaved: () => setProfessionAtlasForm({ apiUrl: '', isDirty: false, publicUrl: '' }),
   });
 
   const aiProvider = settingsQuery.data?.aiProvider;
@@ -181,16 +142,14 @@ export function AdminSettingsWorkspace() {
     if (
       !normalizedProfessionAtlasPublicUrl ||
       !normalizedProfessionAtlasApiUrl ||
-      updateProfessionAtlasUrlMutation.isPending
+      isProfessionAtlasSaving
     ) {
       return;
     }
 
-    updateProfessionAtlasUrlMutation.mutate({
-      data: {
-        publicUrl: normalizedProfessionAtlasPublicUrl,
-        apiUrl: normalizedProfessionAtlasApiUrl,
-      },
+    saveProfessionAtlasUrl({
+      publicUrl: normalizedProfessionAtlasPublicUrl,
+      apiUrl: normalizedProfessionAtlasApiUrl,
     });
   };
 
@@ -236,13 +195,13 @@ export function AdminSettingsWorkspace() {
             publicUrl={professionAtlasPublicUrl}
             canSubmit={
               Boolean(normalizedProfessionAtlasPublicUrl && normalizedProfessionAtlasApiUrl) &&
-              !updateProfessionAtlasUrlMutation.isPending
+              !isProfessionAtlasSaving
             }
             isCoverageError={coverageQuery.isError}
             isCoverageLoading={coverageQuery.isLoading}
             isError={professionAtlasQuery.isError}
             isLoading={professionAtlasQuery.isLoading}
-            isSaving={updateProfessionAtlasUrlMutation.isPending}
+            isSaving={isProfessionAtlasSaving}
             professionAtlas={professionAtlas}
             onCoverageRetry={() => {
               void coverageQuery.refetch();

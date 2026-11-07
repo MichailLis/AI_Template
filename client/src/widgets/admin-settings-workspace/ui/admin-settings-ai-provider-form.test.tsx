@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AiProviderForm } from './admin-settings-ai-provider-form';
 
-import type { AiProviderSettings } from './admin-settings-cards.model';
+import type { AiProviderSettings } from '../lib/admin-settings-cards.model';
 
 const mutate = vi.fn();
 

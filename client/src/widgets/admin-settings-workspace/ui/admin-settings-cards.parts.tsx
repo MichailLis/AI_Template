@@ -16,13 +16,13 @@ import {
   formatAtlasErrorMessage,
   formatUpdatedAt,
   sourceLabels,
-} from './admin-settings-cards.model';
+} from '../lib/admin-settings-cards.model';
 
 import type {
   AiProviderSettings,
   ProfessionAtlasCoverage,
   ProfessionAtlasSettings,
-} from './admin-settings-cards.model';
+} from '../lib/admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
 export function AiProviderStateBadge({ aiProvider }: { aiProvider: AiProviderSettings }) {

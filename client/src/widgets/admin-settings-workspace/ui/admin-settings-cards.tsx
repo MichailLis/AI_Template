@@ -20,7 +20,7 @@ import type {
   AiProviderSettings,
   PrivacyPolicySettings,
   ProfessionAtlasSettings,
-} from './admin-settings-cards.model';
+} from '../lib/admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
 interface AiProviderSettingsCardProps {

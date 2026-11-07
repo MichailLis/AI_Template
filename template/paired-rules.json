@@ -319,7 +319,7 @@
       "name": "formatAtlasErrorMessage",
       "type": "unrelated",
       "client": {
-        "file": "client/src/widgets/admin-settings-workspace/ui/admin-settings-cards.model.ts"
+        "file": "client/src/widgets/admin-settings-workspace/lib/admin-settings-cards.model.ts"
       },
       "server": {
         "file": "server/src/tests/prof-orientation-v3-plus/atlas.ts"
