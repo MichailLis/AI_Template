@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { resolveEffectivePublicLinkId } from '@/entities/public-link';
 import { resolveEffectiveAnalyticsTopicId } from '@/entities/test-topic';
+import { useInvalidatePublicLinkLists } from '@/features/manage-public-link';
 import {
   getTestsAdminAttemptsControllerListPublicLinkAttemptsQueryOptions,
   useTestsAdminPublicLinksControllerListArchivedPublicLinks,
@@ -26,6 +27,7 @@ import type {
 export const usePublicLinksData = () => {
   const listPublicLinksQuery = useTestsAdminPublicLinksControllerListPublicLinks();
   const listArchivedPublicLinksQuery = useTestsAdminPublicLinksControllerListArchivedPublicLinks();
+  const invalidatePublicLinks = useInvalidatePublicLinkLists();
 
   const activePublicLinks = useMemo(
     () => listPublicLinksQuery.data?.links ?? [],
@@ -45,10 +47,7 @@ export const usePublicLinksData = () => {
     archivedPublicLinks,
     isPublicLinksError: listPublicLinksQuery.isError || listArchivedPublicLinksQuery.isError,
     isPublicLinksLoading: listPublicLinksQuery.isLoading || listArchivedPublicLinksQuery.isLoading,
-    refetchPublicLinks: () => {
-      void listPublicLinksQuery.refetch();
-      void listArchivedPublicLinksQuery.refetch();
-    },
+    refetchPublicLinks: invalidatePublicLinks,
   };
 };
 

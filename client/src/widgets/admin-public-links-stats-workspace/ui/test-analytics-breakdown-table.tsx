@@ -11,9 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { TableCell } from '@/shared/ui/table';
 
 import { formatNumber, formatShare } from '../lib/format-analytics';
+import { hasV3PlusReport } from '../lib/test-analytics-v3.model';
 
 import { LlmStatusBadge } from './llm-status-badge';
-import { hasV3PlusReport } from './test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 

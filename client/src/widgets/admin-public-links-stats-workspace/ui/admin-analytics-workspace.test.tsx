@@ -24,7 +24,7 @@ const useAnalyticsReportMock = vi.fn((..._args: unknown[]) => ({
   handleAnalyticsDateToChange: vi.fn(),
 }));
 
-vi.mock('./use-admin-public-links-analytics-report', () => ({
+vi.mock('../model/use-admin-public-links-analytics-report', () => ({
   useAnalyticsReport: (...args: unknown[]) => useAnalyticsReportMock(...args),
 }));
 
@@ -36,7 +36,7 @@ const publicLinksData = {
   refetchPublicLinks: vi.fn(),
 };
 
-vi.mock('./use-admin-public-links-selection', () => ({
+vi.mock('../model/use-admin-public-links-selection', () => ({
   usePublicLinksData: () => publicLinksData,
   usePublicLinkSelection: () => ({
     publicLinksTab: 'active',

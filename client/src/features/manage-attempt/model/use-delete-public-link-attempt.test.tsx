@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useDeletePublicLinkAttempt } from './use-admin-public-links-attempts';
+import { useDeletePublicLinkAttempt } from './use-delete-public-link-attempt';
 
 import type { ReactNode } from 'react';
 

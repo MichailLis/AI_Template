@@ -15,8 +15,9 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { TableCell } from '@/shared/ui/table';
 
+import { ATTEMPTS_LIMIT_OPTIONS } from '../model/use-admin-public-links-stats-workspace.model';
+
 import { LlmStatusBadge } from './llm-status-badge';
-import { ATTEMPTS_LIMIT_OPTIONS } from './use-admin-public-links-stats-workspace.model';
 
 import type { AdminDataTableSortDirection } from '@/shared/ui/admin-data-table';
 import type { ReactNode } from 'react';
