@@ -1,5 +1,13 @@
-import type { AnalysisPromptVersionSummary } from './admin-tests-analysis-prompt-settings-section';
 import type { AnalysisPromptListResponseDtoPromptsItem } from '@/shared/api/model';
+
+export interface AnalysisPromptVersionSummary {
+  id: number;
+  promptId: number;
+  promptTitle: string;
+  versionNumber: number;
+  model: string;
+  promptArchived: boolean;
+}
 
 export interface NewerAnalysisPromptVersion {
   versionId: number;

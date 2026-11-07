@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 
+import { useAdminTestsWorkspace } from '../model/use-admin-tests-workspace';
+import { useAdminTestsWorkspaceNavigation } from '../model/use-admin-tests-workspace-navigation';
+
 import { AdminTestsWorkspaceContent } from './admin-tests-workspace-content';
 import { AdminTestsWorkspaceModals } from './admin-tests-workspace-modals';
-import { useAdminTestsWorkspace } from './use-admin-tests-workspace';
-import { useAdminTestsWorkspaceNavigation } from './use-admin-tests-workspace-navigation';
 
 export function AdminTestsWorkspace() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

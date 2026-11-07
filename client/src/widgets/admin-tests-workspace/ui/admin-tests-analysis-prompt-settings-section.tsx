@@ -6,17 +6,12 @@ import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
 
-import { getNewerAnalysisPromptVersion } from './admin-tests-analysis-prompt.helpers';
-import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
+import {
+  getNewerAnalysisPromptVersion,
+  type AnalysisPromptVersionSummary,
+} from '../lib/admin-tests-analysis-prompt.helpers';
 
-export interface AnalysisPromptVersionSummary {
-  id: number;
-  promptId: number;
-  promptTitle: string;
-  versionNumber: number;
-  model: string;
-  promptArchived: boolean;
-}
+import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
 
 interface AdminTestsAnalysisPromptSettingsSectionProps {
   selectedAnalysisPromptVersion: AnalysisPromptVersionSummary | null;

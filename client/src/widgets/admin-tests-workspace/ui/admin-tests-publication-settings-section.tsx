@@ -9,7 +9,7 @@ import { Button } from '@/shared/ui/button';
 
 import { AdminTestsSettingsPanel } from './admin-tests-settings-panel';
 
-import type { AnalysisPromptVersionSummary } from './admin-tests-analysis-prompt-settings-section';
+import type { AnalysisPromptVersionSummary } from '../lib/admin-tests-analysis-prompt.helpers';
 
 export interface PublishedVersion {
   versionNumber: number;

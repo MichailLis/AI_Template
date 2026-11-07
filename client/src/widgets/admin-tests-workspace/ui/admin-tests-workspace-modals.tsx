@@ -1,10 +1,11 @@
 import { AiTestGeneratorModal, QuestionModal, TestsCreateModal } from '@/features/test-editor';
 
+import { findProfOrientationV3PlusCopies } from '../lib/admin-tests-import.helpers';
+
 import { AdminTestsConfirmDialogs } from './admin-tests-confirm-dialogs';
 import { AdminTestsImportDialog } from './admin-tests-import-dialog';
-import { findProfOrientationV3PlusCopies } from './admin-tests-import.helpers';
 
-import type { useAdminTestsWorkspace } from './use-admin-tests-workspace';
+import type { useAdminTestsWorkspace } from '../model/use-admin-tests-workspace';
 import type { Dispatch, SetStateAction } from 'react';
 
 type AdminTestsWorkspaceState = ReturnType<typeof useAdminTestsWorkspace>;
@@ -41,7 +42,7 @@ export function AdminTestsWorkspaceModals({
     <>
       <TestsCreateModal
         open={isListRoute && isCreateModalOpen}
-        isCreating={workspace.createTopicMutation.isPending}
+        isCreating={workspace.isCreatingTopic}
         form={workspace.createForm}
         onOpenChange={setIsCreateModalOpen}
         onCreateTest={() => void workspace.handleCreateTest()}
@@ -49,7 +50,7 @@ export function AdminTestsWorkspaceModals({
 
       <AiTestGeneratorModal
         open={workspace.isAiGeneratorOpen}
-        isCreating={workspace.createTopicFromAiMutation.isPending}
+        isCreating={workspace.isCreatingTopicFromAi}
         onOpenChange={workspace.setIsAiGeneratorOpen}
         onCreate={workspace.handleCreateTestFromAi}
       />
@@ -60,7 +61,7 @@ export function AdminTestsWorkspaceModals({
           workspace.activeTopicsQuery.data?.topics ?? [],
           workspace.archivedTopicsQuery.data?.topics ?? [],
         )}
-        isImporting={workspace.importProfOrientationV3PlusMutation.isPending}
+        isImporting={workspace.isImportingProfOrientation}
         onOpenCopy={(topicId) => {
           workspace.setIsImportConfirmOpen(false);
           workspace.handleSelectTest(topicId);
@@ -90,15 +91,15 @@ export function AdminTestsWorkspaceModals({
           workspace.questionEditor.setIsDiscardQuestionConfirmOpen(false)
         }
         pendingDeleteTopic={workspace.pendingDeleteTopic}
-        isDeletingTopic={workspace.deleteTopicMutation.isPending}
+        isDeletingTopic={workspace.isDeletingTopic}
         onConfirmDeleteTopic={workspace.handleConfirmDeleteTopic}
         onCloseDeleteTopic={() => workspace.setPendingDeleteTopic(null)}
         pendingArchiveTopic={workspace.pendingArchiveTopic}
-        isArchivingTopic={workspace.archiveTopicMutation.isPending}
+        isArchivingTopic={workspace.isArchivingTopic}
         onConfirmArchiveTopic={workspace.handleConfirmArchiveTopic}
         onCloseArchiveTopic={() => workspace.setPendingArchiveTopic(null)}
         pendingRestoreTopic={workspace.pendingRestoreTopic}
-        isRestoringTopic={workspace.restoreTopicMutation.isPending}
+        isRestoringTopic={workspace.isRestoringTopic}
         onConfirmRestoreTopic={workspace.handleConfirmRestoreTopic}
         onCloseRestoreTopic={() => workspace.setPendingRestoreTopic(null)}
         pendingDeleteQuestion={workspace.questionEditor.pendingDeleteQuestion}
@@ -106,7 +107,7 @@ export function AdminTestsWorkspaceModals({
         onConfirmDeleteQuestion={workspace.questionEditor.handleConfirmDeleteQuestion}
         onCloseDeleteQuestion={() => workspace.questionEditor.setPendingDeleteQuestion(null)}
         isPublishConfirmOpen={workspace.isPublishConfirmOpen}
-        isPublishing={workspace.publishMutation.isPending}
+        isPublishing={workspace.isPublishing}
         onConfirmPublish={workspace.handleConfirmPublish}
         onClosePublish={() => workspace.setIsPublishConfirmOpen(false)}
         isNavigationConfirmOpen={workspace.isNavigationConfirmOpen}
