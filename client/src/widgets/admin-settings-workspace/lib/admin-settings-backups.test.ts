@@ -5,9 +5,9 @@ import {
   formatScheduleHour,
   getBackupAuthorLabel,
   shouldPollBackups,
-} from './admin-settings-backups.model';
+} from './admin-settings-backups';
 
-import type { BackupItem } from './admin-settings-backups.model';
+import type { BackupItem } from './admin-settings-backups';
 
 const readyBackup: BackupItem = {
   id: 'backup-20261011T100000Z-abcdef',

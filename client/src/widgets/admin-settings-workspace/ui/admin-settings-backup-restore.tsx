@@ -1,11 +1,7 @@
 import { CircleCheck, History, LoaderCircle, TriangleAlert, Undo2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import {
-  useAdminBackupsControllerRestoreBackup,
-  useAdminBackupsControllerUndoRestore,
-} from '@/shared/api/generated/admin/admin';
+import { useRestoreBackup, useUndoRestore } from '@/features/manage-backups';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
@@ -21,33 +17,16 @@ import {
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import { RESTORE_CONFIRMATION } from './admin-settings-backups.model';
-import { toBackupErrorMessage } from './use-backups-settings';
+import { RESTORE_CONFIRMATION } from '../lib/admin-settings-backups';
 
-import type { BackupItem } from './admin-settings-backups.model';
-import type { RestoreOperationStatus } from './use-restore-operation';
+import type { BackupItem } from '../lib/admin-settings-backups';
+import type { RestoreOperationStatus } from '../model/use-restore-operation';
 import type { FormEvent } from 'react';
 
 /** Ход и итог последнего восстановления и возможность вернуть базу, которая была до него. */
-export function RestoreStatusPanel({
-  status,
-  onRefresh,
-}: {
-  status: RestoreOperationStatus | undefined;
-  onRefresh: () => Promise<void>;
-}) {
+export function RestoreStatusPanel({ status }: { status: RestoreOperationStatus | undefined }) {
   const [isUndoOpen, setIsUndoOpen] = useState(false);
-  const undoMutation = useAdminBackupsControllerUndoRestore({
-    mutation: {
-      onError: (error) => {
-        toast.error(toBackupErrorMessage(error));
-      },
-      onSuccess: async () => {
-        setIsUndoOpen(false);
-        await onRefresh();
-      },
-    },
-  });
+  const { undoRestore, isUndoing } = useUndoRestore({ onUndone: () => setIsUndoOpen(false) });
   const operation = status?.operation;
   const previousDatabase = status?.previousDatabase;
 
@@ -106,8 +85,8 @@ export function RestoreStatusPanel({
         description="Вернется база, которая была до восстановления. Все изменения, сделанные после восстановления, пропадут. Сайт будет недоступен около минуты, после этого все войдут заново."
         confirmLabel="Вернуть прежнюю базу"
         variant="destructive"
-        isConfirming={undoMutation.isPending}
-        onConfirm={() => undoMutation.mutate()}
+        isConfirming={isUndoing}
+        onConfirm={undoRestore}
         onClose={() => setIsUndoOpen(false)}
       />
     </>
@@ -117,31 +96,23 @@ export function RestoreStatusPanel({
 interface RestoreBackupDialogProps {
   backup: BackupItem | null;
   onClose: () => void;
-  onStarted: () => Promise<void>;
 }
 
 /** Подтверждение вводом слова: восстановление заменяет все данные, кнопки «Да» для этого мало. */
-export function RestoreBackupDialog({ backup, onClose, onStarted }: RestoreBackupDialogProps) {
+export function RestoreBackupDialog({ backup, onClose }: RestoreBackupDialogProps) {
   const [confirmation, setConfirmation] = useState('');
-  const restoreMutation = useAdminBackupsControllerRestoreBackup({
-    mutation: {
-      onError: (error) => {
-        toast.error(toBackupErrorMessage(error));
-      },
-      onSuccess: async () => {
-        setConfirmation('');
-        onClose();
-        toast.success('Восстановление запущено');
-        await onStarted();
-      },
+  const { restoreBackup, isRestoring } = useRestoreBackup({
+    onStarted: () => {
+      setConfirmation('');
+      onClose();
     },
   });
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (backup && confirmation === RESTORE_CONFIRMATION && !restoreMutation.isPending) {
-      restoreMutation.mutate({ id: backup.id, data: { confirmation } });
+    if (backup && confirmation === RESTORE_CONFIRMATION && !isRestoring) {
+      restoreBackup(backup.id, confirmation);
     }
   };
 
@@ -183,9 +154,9 @@ export function RestoreBackupDialog({ backup, onClose, onStarted }: RestoreBacku
             <Button
               type="submit"
               variant="destructive"
-              disabled={confirmation !== RESTORE_CONFIRMATION || restoreMutation.isPending}
+              disabled={confirmation !== RESTORE_CONFIRMATION || isRestoring}
             >
-              {restoreMutation.isPending ? 'Запускаем...' : 'Восстановить'}
+              {isRestoring ? 'Запускаем...' : 'Восстановить'}
             </Button>
           </DialogFooter>
         </form>

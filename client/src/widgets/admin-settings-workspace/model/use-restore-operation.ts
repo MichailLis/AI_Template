@@ -1,11 +1,6 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useAdminBackupOperationControllerGetOperation } from '@/shared/api/generated/admin/admin';
 
-import {
-  getAdminBackupOperationControllerGetOperationQueryKey,
-  useAdminBackupOperationControllerGetOperation,
-} from '@/shared/api/generated/admin/admin';
-
-import { BACKUPS_POLL_INTERVAL_MS } from './admin-settings-backups.model';
+import { BACKUPS_POLL_INTERVAL_MS } from '../lib/admin-settings-backups';
 
 import type { AdminBackupOperationResponseDto } from '@/shared/api/model';
 
@@ -13,7 +8,6 @@ export type RestoreOperationStatus = AdminBackupOperationResponseDto;
 
 /** Статус восстановления опрашивается, пока оно идет: сам маршрут работает и в режиме обслуживания. */
 export function useRestoreOperation() {
-  const queryClient = useQueryClient();
   const operationQuery = useAdminBackupOperationControllerGetOperation({
     query: {
       refetchInterval: (query) =>
@@ -23,16 +17,10 @@ export function useRestoreOperation() {
     },
   });
 
-  const refreshOperation = () =>
-    queryClient.invalidateQueries({
-      queryKey: getAdminBackupOperationControllerGetOperationQueryKey(),
-    });
-
   return {
     status: operationQuery.data,
     isRunning:
       Boolean(operationQuery.data?.maintenance) ||
       operationQuery.data?.operation?.status === 'RUNNING',
-    refreshOperation,
   };
 }

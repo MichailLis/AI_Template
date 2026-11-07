@@ -1,6 +1,7 @@
 import { DatabaseBackup, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { toBackupErrorMessage } from '@/features/manage-backups';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
@@ -8,19 +9,20 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
-import { BackupImportButton } from './admin-settings-backup-import';
-import { RestoreBackupDialog, RestoreStatusPanel } from './admin-settings-backup-restore';
-import { BackupOverviewSections } from './admin-settings-backup-storage';
 import {
   backupStatusLabels,
   formatBackupSize,
   getBackupAuthorLabel,
-} from './admin-settings-backups.model';
-import { SettingsLoadError } from './admin-settings-cards.parts';
-import { toBackupErrorMessage, useBackupsSettings } from './use-backups-settings';
-import { useRestoreOperation } from './use-restore-operation';
+} from '../lib/admin-settings-backups';
+import { useBackupsSettings } from '../model/use-backups-settings';
+import { useRestoreOperation } from '../model/use-restore-operation';
 
-import type { BackupItem } from './admin-settings-backups.model';
+import { BackupImportButton } from './admin-settings-backup-import';
+import { RestoreBackupDialog, RestoreStatusPanel } from './admin-settings-backup-restore';
+import { BackupOverviewSections } from './admin-settings-backup-storage';
+import { SettingsLoadError } from './admin-settings-cards.parts';
+
+import type { BackupItem } from '../lib/admin-settings-backups';
 
 const statusBadgeClassNames: Record<BackupItem['status'], string> = {
   RUNNING: adminBadgeClassNames.info,
@@ -172,7 +174,7 @@ export function BackupsSettingsCard() {
           />
         ) : null}
 
-        <RestoreStatusPanel status={restore.status} onRefresh={restore.refreshOperation} />
+        <RestoreStatusPanel status={restore.status} />
 
         {overview ? <BackupOverviewSections overview={overview} /> : null}
 
@@ -197,11 +199,7 @@ export function BackupsSettingsCard() {
         ) : null}
       </CardContent>
 
-      <RestoreBackupDialog
-        backup={backupToRestore}
-        onClose={() => setBackupToRestore(null)}
-        onStarted={restore.refreshOperation}
-      />
+      <RestoreBackupDialog backup={backupToRestore} onClose={() => setBackupToRestore(null)} />
 
       <ConfirmActionDialog
         open={backupToDelete !== null}

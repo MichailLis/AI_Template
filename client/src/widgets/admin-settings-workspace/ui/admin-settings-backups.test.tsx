@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackupsSettingsCard } from './admin-settings-backups';
 
-import type { BackupsOverview } from './admin-settings-backups.model';
+import type { BackupsOverview } from '../lib/admin-settings-backups';
 
 const createBackup = vi.fn();
 const deleteBackup = vi.fn();

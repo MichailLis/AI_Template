@@ -133,6 +133,7 @@
         "frontend": [
           "client/src/features/admin",
           "client/src/features/manage-user",
+          "client/src/features/manage-backups",
           "client/src/widgets/admin-page-layout",
           "client/src/widgets/admin-settings-workspace",
           "client/src/widgets/admin-users-workspace"

@@ -331,7 +331,7 @@
       "type": "constant",
       "authority": "server",
       "client": {
-        "file": "client/src/widgets/admin-settings-workspace/ui/admin-settings-backups.model.ts"
+        "file": "client/src/widgets/admin-settings-workspace/lib/admin-settings-backups.ts"
       },
       "server": {
         "file": "server/src/backups/backup-restore.service.ts"
