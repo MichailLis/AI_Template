@@ -1,12 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { CalendarClock, Save } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import {
-  getAdminBackupsControllerGetOverviewQueryKey,
-  useAdminBackupsControllerUpdateSettings,
-} from '@/shared/api/generated/admin/admin';
+import { useUpdateBackupSettings } from '@/features/manage-backups';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { cn } from '@/shared/lib/utils';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
@@ -15,10 +10,9 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import { formatScheduleHour, SCHEDULE_HOURS } from './admin-settings-backups.model';
-import { toBackupErrorMessage } from './use-backups-settings';
+import { formatScheduleHour, SCHEDULE_HOURS } from '../lib/admin-settings-backups';
 
-import type { BackupSettings } from './admin-settings-backups.model';
+import type { BackupSettings } from '../lib/admin-settings-backups';
 import type { FormEvent } from 'react';
 
 interface BackupScheduleFormProps {
@@ -31,32 +25,18 @@ interface BackupScheduleFormProps {
  * сбрасывается после сохранения: до первой правки форма показывает то, что вернул сервер.
  */
 export function BackupScheduleForm({ settings, nextScheduledAt }: BackupScheduleFormProps) {
-  const queryClient = useQueryClient();
   const [draft, setDraft] = useState<BackupSettings | null>(null);
   const values = draft ?? settings;
 
-  const updateMutation = useAdminBackupsControllerUpdateSettings({
-    mutation: {
-      onError: (error) => {
-        toast.error(toBackupErrorMessage(error));
-      },
-      onSuccess: async () => {
-        setDraft(null);
-        toast.success('Настройки резервного копирования сохранены');
-        await queryClient.invalidateQueries({
-          queryKey: getAdminBackupsControllerGetOverviewQueryKey(),
-        });
-      },
-    },
-  });
+  const { updateSettings, isSaving } = useUpdateBackupSettings({ onSaved: () => setDraft(null) });
 
   const update = (patch: Partial<BackupSettings>) => setDraft({ ...values, ...patch });
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (draft && !updateMutation.isPending) {
-      updateMutation.mutate({ data: draft });
+    if (draft && !isSaving) {
+      updateSettings(draft);
     }
   };
 
@@ -139,9 +119,9 @@ export function BackupScheduleForm({ settings, nextScheduledAt }: BackupSchedule
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" size="sm" disabled={!draft || updateMutation.isPending}>
+        <Button type="submit" size="sm" disabled={!draft || isSaving}>
           <Save />
-          {updateMutation.isPending ? 'Сохраняем...' : 'Сохранить'}
+          {isSaving ? 'Сохраняем...' : 'Сохранить'}
         </Button>
       </div>
     </form>

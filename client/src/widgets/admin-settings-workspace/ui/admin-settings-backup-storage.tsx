@@ -2,10 +2,11 @@ import { HardDrive, TriangleAlert } from 'lucide-react';
 
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 
-import { BackupScheduleForm } from './admin-settings-backup-schedule';
-import { formatBackupSize } from './admin-settings-backups.model';
+import { formatBackupSize } from '../lib/admin-settings-backups';
 
-import type { BackupsOverview } from './admin-settings-backups.model';
+import { BackupScheduleForm } from './admin-settings-backup-schedule';
+
+import type { BackupsOverview } from '../lib/admin-settings-backups';
 
 /**
  * Место на диске под копии. Предупреждение появляется заранее, пока еще есть место на пару
