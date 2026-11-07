@@ -28,18 +28,18 @@ vi.mock('@/shared/api/generated/tests/tests', () => ({
   testsAdminAttemptsControllerExportPublicLinkAttempts: exportMock,
 }));
 
-vi.mock('./test-analytics-download', () => ({
+vi.mock('../lib/test-analytics-download', () => ({
   downloadTestAnalyticsBlob: downloadMock,
 }));
 
-vi.mock('./use-restart-analysis', () => ({
+vi.mock('@/features/manage-attempt', () => ({
   useRestartAnalysis: restartHookMock,
+  useDeletePublicLinkAttempt: () => deleteHookMock(),
 }));
 
-vi.mock('./use-admin-public-links-attempts', () => ({
+vi.mock('../model/use-admin-public-links-attempts', () => ({
   usePaginatedPublicAttempts: listHookMock,
   useAttemptDetail: () => detailHookMock(),
-  useDeletePublicLinkAttempt: () => deleteHookMock(),
 }));
 
 const closedDetail = {

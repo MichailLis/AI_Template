@@ -4,7 +4,7 @@ import { TestAnalyticsBreakdownTables } from './test-analytics-breakdown-table';
 import { TestAnalyticsExportActions } from './test-analytics-export-actions';
 import { TestAnalyticsSummaryCard } from './test-analytics-summary-card';
 
-import type { useAnalyticsReport } from './use-admin-public-links-analytics-report';
+import type { useAnalyticsReport } from '../model/use-admin-public-links-analytics-report';
 
 interface AnalyticsReportTabProps {
   /** Состояние отчёта поднято в рабочую область: его поля стоят в общем блоке фильтров. */

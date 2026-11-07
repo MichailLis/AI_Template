@@ -6,7 +6,8 @@ import {
   useTestsAdminAnalyticsControllerGetSummary,
 } from '@/shared/api/generated/tests/tests';
 
-import { downloadTestAnalyticsBlob } from './test-analytics-download';
+import { downloadTestAnalyticsBlob } from '../lib/test-analytics-download';
+
 import {
   buildAnalyticsFileName,
   buildAnalyticsParams,

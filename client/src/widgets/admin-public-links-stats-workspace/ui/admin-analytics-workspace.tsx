@@ -7,6 +7,13 @@ import { getAdminTabPanelProps } from '@/shared/ui/admin-tabs.model';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 
+import { useAnalyticsReport } from '../model/use-admin-public-links-analytics-report';
+import {
+  usePublicLinkSelection,
+  usePublicLinksData,
+} from '../model/use-admin-public-links-selection';
+import { resolveAnalyticsTab } from '../model/use-admin-public-links-stats-workspace.model';
+
 import {
   ANALYTICS_PANEL_ID,
   AdminAnalyticsNavigationCard,
@@ -14,11 +21,8 @@ import {
 } from './admin-analytics-filters';
 import { AnalyticsAttemptsTab } from './analytics-attempts-tab';
 import { AnalyticsReportTab } from './analytics-report-tab';
-import { useAnalyticsReport } from './use-admin-public-links-analytics-report';
-import { usePublicLinkSelection, usePublicLinksData } from './use-admin-public-links-selection';
-import { resolveAnalyticsTab } from './use-admin-public-links-stats-workspace.model';
 
-import type { AnalyticsTab } from './use-admin-public-links-stats-workspace.model';
+import type { AnalyticsTab } from '../model/use-admin-public-links-stats-workspace.model';
 
 export function AdminAnalyticsWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();

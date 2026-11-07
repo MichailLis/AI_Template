@@ -14,8 +14,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 import { formatNumber, formatShare } from '../lib/format-analytics';
-
-import { hasV3PlusReport } from './test-analytics-v3.model';
+import { hasV3PlusReport } from '../lib/test-analytics-v3.model';
 
 import type { AdminTestAnalyticsSummaryDto } from '@/shared/api/model';
 import type { ReactNode } from 'react';

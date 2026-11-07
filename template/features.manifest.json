@@ -407,6 +407,7 @@
         "frontend": [
           "client/src/features/test-editor",
           "client/src/features/education-organization-editor",
+          "client/src/features/manage-attempt",
           "client/src/features/manage-public-link",
           "client/src/entities/public-test",
           "client/src/widgets/admin-tests-workspace",

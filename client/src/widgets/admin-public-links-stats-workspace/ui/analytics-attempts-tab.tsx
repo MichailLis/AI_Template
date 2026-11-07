@@ -1,6 +1,7 @@
 import { FileSpreadsheet, RotateCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useDeletePublicLinkAttempt, useRestartAnalysis } from '@/features/manage-attempt';
 import { testsAdminAttemptsControllerExportPublicLinkAttempts } from '@/shared/api/generated/tests/tests';
 import {
   formatDateTimeOrDash,
@@ -12,15 +13,14 @@ import { Button } from '@/shared/ui/button';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 import { Input } from '@/shared/ui/input';
 
-import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
-import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
-import { downloadTestAnalyticsBlob } from './test-analytics-download';
+import { downloadTestAnalyticsBlob } from '../lib/test-analytics-download';
 import {
   useAttemptDetail,
-  useDeletePublicLinkAttempt,
   usePaginatedPublicAttempts,
-} from './use-admin-public-links-attempts';
-import { useRestartAnalysis } from './use-restart-analysis';
+} from '../model/use-admin-public-links-attempts';
+
+import { PublicLinksAttemptDetailDialog } from './public-links-attempt-detail-dialog';
+import { PublicLinksAttemptsTableCard } from './public-links-attempts-table-card';
 
 interface AnalyticsAttemptsTabProps {
   selectedPublicLink: { id: number; shortCode?: string } | null;
