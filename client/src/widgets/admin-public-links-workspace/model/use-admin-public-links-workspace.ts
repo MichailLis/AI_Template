@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { resolveEffectivePublicLinkId } from '@/entities/public-link';
 import { resolveEffectiveTopicId } from '@/entities/test-topic';
 import { useEducationOrganizationEditor } from '@/features/education-organization-editor';
+import { useInvalidatePublicLinkLists } from '@/features/manage-public-link';
 import {
   useTestsAdminEducationOrganizationsControllerListEducationOrganizations,
   useTestsAdminPublicLinksControllerListArchivedPublicLinks,
@@ -12,11 +13,12 @@ import {
   useTestsControllerListTopics,
 } from '@/shared/api/generated/tests/tests';
 
-import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
+import { CREATE_PUBLIC_LINK_DEFAULTS } from '../lib/admin-public-links-workspace.helpers';
+
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 import { useAdminPublicLinksSelectionState } from './use-admin-public-links-selection-state';
 
-import type { CreatePublicLinkValues } from './public-link-create-card.types';
+import type { CreatePublicLinkValues } from '@/features/manage-public-link';
 import type { AdminCreateEducationOrganizationDto } from '@/shared/api/model';
 
 interface UseAdminPublicLinksWorkspaceParams {
@@ -73,9 +75,7 @@ export function useAdminPublicLinksWorkspace({
     [selection.selectedPublicLinkId, visiblePublicLinks],
   );
 
-  const refetchPublicLinks = () => {
-    void Promise.all([listPublicLinksQuery.refetch(), listArchivedPublicLinksQuery.refetch()]);
-  };
+  const retryPublicLinks = useInvalidatePublicLinkLists();
 
   // Errors propagate: EducationOrganizationEditorSheet maps them onto its fields.
   const createEducationOrganization = async (payload: AdminCreateEducationOrganizationDto) => {
@@ -101,7 +101,7 @@ export function useAdminPublicLinksWorkspace({
     publicLinksLoading: currentPublicLinksQuery.isLoading,
     publicLinksError: currentPublicLinksQuery.isError,
     effectivePublicLinkId,
-    refetchPublicLinks,
+    retryPublicLinks,
     ...selection,
     ...actions,
     createEducationOrganization,

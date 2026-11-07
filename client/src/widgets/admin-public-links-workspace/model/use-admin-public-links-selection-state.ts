@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import type { PublicLinksTab } from '../lib/admin-public-links-workspace.helpers';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
 
 /** List-level UI state: what the operator is looking at, not what they are creating. */
 export function useAdminPublicLinksSelectionState() {

@@ -3,10 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
+import { CREATE_PUBLIC_LINK_DEFAULTS } from '../lib/admin-public-links-workspace.helpers';
+
 import { PublicLinkAccessSettingsSection } from './public-link-access-settings-section';
 
-import type { CreatePublicLinkValues } from './public-link-create-card.types';
+import type { CreatePublicLinkValues } from '@/features/manage-public-link';
+
+import type {} from '../model/public-link-create-card.types';
 
 const createForm = () =>
   renderHook(() => useForm<CreatePublicLinkValues>({ defaultValues: CREATE_PUBLIC_LINK_DEFAULTS }))

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminListToolbar } from '@/shared/ui/admin-list-toolbar';
 import { Button } from '@/shared/ui/button';
 
-import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
+import type { PublicLinksTab } from '../lib/admin-public-links-workspace.helpers';
 
 interface PublicLinksListHeaderProps {
   publicLinksTab: PublicLinksTab;

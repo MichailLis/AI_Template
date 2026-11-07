@@ -3,13 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
+import { CREATE_PUBLIC_LINK_DEFAULTS } from '../lib/admin-public-links-workspace.helpers';
+
 import { PublicLinkOrganizationSection } from './public-link-organization-section';
 
-import type {
-  CreatePublicLinkValues,
-  EducationOrganizationOption,
-} from './public-link-create-card.types';
+import type { EducationOrganizationOption } from '../model/public-link-create-card.types';
+import type { CreatePublicLinkValues } from '@/features/manage-public-link';
 
 const organizations: EducationOrganizationOption[] = [
   { id: 1, name: 'Готовый лицей', isActive: true, personalDataReady: true },

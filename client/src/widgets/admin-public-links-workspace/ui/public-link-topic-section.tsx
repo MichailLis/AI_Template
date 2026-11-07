@@ -3,7 +3,7 @@ import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
 
-import type { PublicLinkTopicSectionProps } from './public-link-create-card.types';
+import type { PublicLinkTopicSectionProps } from '../model/public-link-create-card.types';
 
 /**
  * Опубликованные тесты идут первыми: по ним ссылку можно создать сразу. Остальные вынесены в группу

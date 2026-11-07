@@ -13,23 +13,24 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog';
 
-import { BuilderPanelDialog } from './public-link-branding-builder-panels';
-import { BrandingPreview } from './public-link-branding-builder-preview';
-import { ZoneButton } from './public-link-branding-builder-zone-button';
 import {
   brandingPreviewStates,
   type BrandingPreviewState,
-} from './public-link-branding-builder.fixtures';
+} from '../lib/public-link-branding-builder.fixtures';
 import {
   createDefaultBrandingConfig,
   createDraftBrandingConfig,
   type DraftPublicBrandingConfig,
-} from './public-link-branding-builder.helpers';
+} from '../lib/public-link-branding-builder.helpers';
+
+import { BuilderPanelDialog } from './public-link-branding-builder-panels';
+import { BrandingPreview } from './public-link-branding-builder-preview';
+import { ZoneButton } from './public-link-branding-builder-zone-button';
 
 import type {
   BuilderPanel,
   PublicLinkBrandingBuilderProps,
-} from './public-link-branding-builder.types';
+} from '../model/public-link-branding-builder.types';
 
 const wideDialogClassName = [
   'left-4 right-4 top-4 max-h-[calc(100vh-2rem)] w-auto max-w-none',

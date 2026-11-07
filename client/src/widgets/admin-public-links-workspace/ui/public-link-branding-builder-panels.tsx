@@ -13,11 +13,18 @@ import {
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import { isValidHexColor, updateBrandingSection } from './public-link-branding-builder.helpers';
+import {
+  isValidHexColor,
+  updateBrandingSection,
+} from '../lib/public-link-branding-builder.helpers';
+
 import { PublicLinkBrandingColorField } from './public-link-branding-color-field';
 
-import type { DraftPublicBrandingConfig } from './public-link-branding-builder.helpers';
-import type { BrandingBuilderPanelProps, BuilderPanel } from './public-link-branding-builder.types';
+import type { DraftPublicBrandingConfig } from '../lib/public-link-branding-builder.helpers';
+import type {
+  BrandingBuilderPanelProps,
+  BuilderPanel,
+} from '../model/public-link-branding-builder.types';
 
 const normalizeOptionalValue = (value: string) => value.trim() || undefined;
 

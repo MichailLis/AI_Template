@@ -1,7 +1,7 @@
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import { isValidHexColor } from './public-link-branding-builder.helpers';
+import { isValidHexColor } from '../lib/public-link-branding-builder.helpers';
 
 const brandColorSwatches = [
   '#0066cc',

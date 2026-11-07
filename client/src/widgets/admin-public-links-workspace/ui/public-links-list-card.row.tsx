@@ -18,7 +18,6 @@ import { adminBadgeClassNames, adminClassNames } from '@/shared/ui/admin-design-
 import { Button } from '@/shared/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 
-import { PublicLinkQuickActions } from './public-link-quick-actions';
 import {
   formatPublicLinkCreatedAt,
   getAccessWindowBadgeClassName,
@@ -30,10 +29,12 @@ import {
   getNewerPublishedVersionNumber,
   getPublicTemplateBadgeLabel,
   isPublicLinkClosedForStudents,
-} from './public-links-list-card.helpers';
+} from '../lib/public-links-list-card.helpers';
 
-import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import { PublicLinkQuickActions } from './public-link-quick-actions';
+
+import type { PublicLinksTab } from '../lib/admin-public-links-workspace.helpers';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
 
 export interface PublicLinkActionHandlers {
   onCopyShortLink: (shortCode: string) => Promise<void>;
