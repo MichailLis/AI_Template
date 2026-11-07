@@ -531,4 +531,7 @@ Rule functions and utilities do not know HTTP: they throw a `DomainError` subcla
 - Every declared `publicRoutes` entry must be wired in `client/src/app/App.tsx`.
 - Every generated API directory outside feature names (for example `tests-public`) must be declared in `generatedApiDirs`.
 - `npm run verify:architecture` fails if any of these constraints are broken.
+- It also fails when a `ui/` segment of a `widgets/*`, `features/*` or `entities/*` slice holds a
+  `use-*.ts(x)` file or calls `.mutate`, `.mutateAsync` or `useMutation` (tests excluded): hooks
+  and mutation scenarios live in `model/`, components in `ui/` (#168).
 - It also fails on stale architecture artifacts not declared in manifest (extra backend feature modules, extra non-auth feature/page directories, stale generated API directories, unexpected routes in App routing).

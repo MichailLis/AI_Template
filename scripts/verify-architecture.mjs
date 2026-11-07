@@ -462,6 +462,36 @@ const hasLayerBypass = (fromLayer, toLayer, rules) =>
 const hasDeepImportBypass = (specifier, rules) =>
   rules.some((rule) => specifier.startsWith(rule.prefix));
 
+const UI_SEGMENT_LAYERS = ['widgets', 'features', 'entities'];
+const UI_SEGMENT_PATH_REGEX = /^client\/src\/(?:widgets|features|entities)\/[^/]+\/ui\//;
+const UI_SEGMENT_MUTATION_REGEX = /\.mutate(?:Async)?\b|\buseMutation\s*\(/;
+
+/**
+ * Сегмент `ui/` слайса — только компоненты (#168, решение владельца 07.11.2026). Хуки и
+ * сценарии с мутациями живут в `model/`, чистые функции — в `lib/`.
+ */
+const verifyUiSegment = async (errors) => {
+  for (const layer of UI_SEGMENT_LAYERS) {
+    const layerPath = `client/src/${layer}`;
+    if (!(await existsFromRoot(layerPath))) continue;
+
+    for (const filePath of await collectClientSourceFiles(layerPath)) {
+      if (!UI_SEGMENT_PATH_REGEX.test(filePath) || /\.test\.[jt]sx?$/.test(filePath)) continue;
+
+      const fileName = filePath.slice(filePath.lastIndexOf('/') + 1);
+      if (/^use-.*\.[jt]sx?$/.test(fileName)) {
+        errors.push(`FSD ui segment: ${filePath} is a hook; move it to model/`);
+      }
+
+      if (UI_SEGMENT_MUTATION_REGEX.test(await readFromRoot(filePath))) {
+        errors.push(
+          `FSD ui segment: ${filePath} calls a mutation; move the scenario to a model/ hook`,
+        );
+      }
+    }
+  }
+};
+
 const verifyFsdRules = async (errors) => {
   const fsdRulesPath = 'template/fsd.rules.json';
 
@@ -836,6 +866,7 @@ const verify = async () => {
   await verifyWidgetInventory(errors, features);
   verifyOpenApiInventoryCoverage(errors, openApiDoc, features);
   await verifyFsdRules(errors);
+  await verifyUiSegment(errors);
 
   if (errors.length > 0) {
     console.error('Architecture verification failed.');
