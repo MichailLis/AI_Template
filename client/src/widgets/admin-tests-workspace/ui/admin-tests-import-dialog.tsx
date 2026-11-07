@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 
-import type { ProfOrientationV3PlusCopy } from './admin-tests-import.helpers';
+import type { ProfOrientationV3PlusCopy } from '../lib/admin-tests-import.helpers';
 
 const getCopyStatus = ({ topic, isArchived }: ProfOrientationV3PlusCopy) => {
   if (isArchived) {

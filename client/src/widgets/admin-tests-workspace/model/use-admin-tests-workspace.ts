@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 
 import { useQuestionEditor } from '@/features/test-editor';
 
-import { buildAutosaveHint } from './admin-tests-workspace-actions.helpers';
+import { buildAutosaveHint } from '../lib/admin-tests-workspace-actions.helpers';
+
 import { useAdminTestsActions } from './use-admin-tests-actions';
 import { useAdminTestsDialogState } from './use-admin-tests-dialog-state';
 import { useAdminTestsDraft } from './use-admin-tests-draft';

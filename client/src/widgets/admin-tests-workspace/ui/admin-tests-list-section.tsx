@@ -2,7 +2,7 @@ import { TestsListCard, TestsListHeader, type TestTopicListItem } from '@/featur
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 
-import type { ListMode } from './use-admin-tests-workspace';
+import type { ListMode } from '../model/use-admin-tests-workspace';
 
 interface AdminTestsListSectionProps {
   topics: TestTopicListItem[];

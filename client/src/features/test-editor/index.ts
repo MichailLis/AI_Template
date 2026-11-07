@@ -9,6 +9,7 @@ export { TestQuestionsOnlyView } from './ui/test-questions-only-view';
 export { useAiTestGeneration } from './model/use-ai-test-generation';
 export { useDraftAutosave } from './model/use-draft-autosave';
 export { useQuestionEditor } from './model/use-question-editor';
+export { useReorderQuestions } from './model/use-reorder-questions';
 
 export { hasDraftEdits } from './lib/tests-utils';
 

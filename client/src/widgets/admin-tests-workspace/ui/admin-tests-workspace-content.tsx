@@ -3,7 +3,7 @@ import { TestQuestionsOnlyView } from '@/features/test-editor';
 import { AdminTestsListSection } from './admin-tests-list-section';
 import { AdminTestsSettingsCard } from './admin-tests-settings-card';
 
-import type { useAdminTestsWorkspace } from './use-admin-tests-workspace';
+import type { useAdminTestsWorkspace } from '../model/use-admin-tests-workspace';
 
 type AdminTestsWorkspaceState = ReturnType<typeof useAdminTestsWorkspace>;
 
@@ -31,18 +31,18 @@ export function AdminTestsWorkspaceContent({
         topicsError={workspace.topicsQuery.isError}
         topicsErrorMessage={workspace.topicsErrorMessage}
         searchValue={workspace.testSearch}
-        isArchivingTopic={workspace.archiveTopicMutation.isPending}
+        isArchivingTopic={workspace.isArchivingTopic}
         archivingTopicId={workspace.pendingArchiveTopic?.id ?? null}
-        isRestoringTopic={workspace.restoreTopicMutation.isPending}
+        isRestoringTopic={workspace.isRestoringTopic}
         restoringTopicId={workspace.pendingRestoreTopic?.id ?? null}
-        isDeletingTopic={workspace.deleteTopicMutation.isPending}
+        isDeletingTopic={workspace.isDeletingTopic}
         deletingTopicId={workspace.pendingDeleteTopic?.id ?? null}
         onSearchChange={workspace.setTestSearch}
         onListModeChange={workspace.setListMode}
         onOpenCreateModal={onOpenCreateModal}
         onOpenAiGenerator={() => workspace.setIsAiGeneratorOpen(true)}
         onImportProfOrientation={() => workspace.setIsImportConfirmOpen(true)}
-        isImportingProfOrientation={workspace.importProfOrientationV3PlusMutation.isPending}
+        isImportingProfOrientation={workspace.isImportingProfOrientation}
         onSelectTest={workspace.handleSelectTest}
         onOpenSettings={(topicId) => onWorkspaceNavigate(`/admin/tests/${topicId}/settings`)}
         onRequestArchiveTest={workspace.setPendingArchiveTopic}
@@ -68,9 +68,9 @@ export function AdminTestsWorkspaceContent({
         isSavingDraft={workspace.draftAutosave.isSavingDraft}
         autoSaveError={workspace.draftAutosave.autoSaveError}
         autosaveHint={workspace.autosaveHint}
-        isPublishing={workspace.publishMutation.isPending}
-        isArchivingTopic={workspace.archiveTopicMutation.isPending}
-        isRestoringTopic={workspace.restoreTopicMutation.isPending}
+        isPublishing={workspace.isPublishing}
+        isArchivingTopic={workspace.isArchivingTopic}
+        isRestoringTopic={workspace.isRestoringTopic}
         onBackToQuestions={() =>
           onWorkspaceNavigate(`/admin/tests/${workspace.effectiveSelectedTopicId}`)
         }
@@ -95,7 +95,7 @@ export function AdminTestsWorkspaceContent({
       error={workspace.detailQuery.isError}
       errorMessage={workspace.detailErrorMessage}
       detail={workspace.detail}
-      isReorderingQuestions={workspace.reorderQuestionsMutation.isPending}
+      isReorderingQuestions={workspace.isReorderingQuestions}
       isDeletingQuestion={workspace.questionEditor.isDeletingQuestion}
       topicId={workspace.effectiveSelectedTopicId ?? 0}
       onRetryLoad={() => {

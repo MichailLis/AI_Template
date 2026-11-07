@@ -7,10 +7,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
-import {
-  AdminTestsAnalysisPromptSettingsSection,
-  type AnalysisPromptVersionSummary,
-} from './admin-tests-analysis-prompt-settings-section';
+import { AdminTestsAnalysisPromptSettingsSection } from './admin-tests-analysis-prompt-settings-section';
 import {
   AdminTestsMetadataSettingsSection,
   type AdminTestsDraftForm,
@@ -21,6 +18,8 @@ import {
   AdminTestsPublishSection,
   type PublishedVersion,
 } from './admin-tests-publication-settings-section';
+
+import type { AnalysisPromptVersionSummary } from '../lib/admin-tests-analysis-prompt.helpers';
 
 /** История теста: публикации, архив, восстановление и выгрузки аналитики. */
 function AdminTestsHistorySection({ topicId }: { topicId: number }) {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getNewerAnalysisPromptVersion } from './admin-tests-analysis-prompt.helpers';
 
-import type { AnalysisPromptVersionSummary } from './admin-tests-analysis-prompt-settings-section';
+import type { AnalysisPromptVersionSummary } from './admin-tests-analysis-prompt.helpers';
 import type {
   AnalysisPromptListResponseDtoPromptsItem,
   AnalysisPromptListResponseDtoPromptsItemVersionsItem,
