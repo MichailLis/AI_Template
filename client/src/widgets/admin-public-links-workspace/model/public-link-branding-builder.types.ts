@@ -1,6 +1,6 @@
-import type { BrandingPreviewState } from './public-link-branding-builder.fixtures';
-import type { DraftPublicBrandingConfig } from './public-link-branding-builder.helpers';
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import type { BrandingPreviewState } from '../lib/public-link-branding-builder.fixtures';
+import type { DraftPublicBrandingConfig } from '../lib/public-link-branding-builder.helpers';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
 import type { PublicBrandingConfig } from '@/entities/public-test';
 
 export type BuilderPanel = 'background' | 'header' | 'buttons' | 'surfaces' | 'accent';

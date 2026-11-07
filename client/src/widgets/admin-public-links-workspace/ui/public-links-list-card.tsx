@@ -5,12 +5,13 @@ import { AdminStateBlock } from '@/shared/ui/admin-state-block';
 import { Button } from '@/shared/ui/button';
 import { CardContent } from '@/shared/ui/card';
 
-import { buildLinkSearchText, getEmptyStateText } from './public-links-list-card.helpers';
+import { buildLinkSearchText, getEmptyStateText } from '../lib/public-links-list-card.helpers';
+
 import { PublicLinkRow } from './public-links-list-card.row';
 
-import type { PublicLinksTab } from './admin-public-links-workspace.helpers';
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
 import type { PublicLinkActionHandlers } from './public-links-list-card.row';
+import type { PublicLinksTab } from '../lib/admin-public-links-workspace.helpers';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
 
 interface PublicLinksListCardProps extends PublicLinkActionHandlers {
   publicLinksTab: PublicLinksTab;

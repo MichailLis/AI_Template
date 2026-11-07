@@ -3,14 +3,13 @@ import { act, renderHook } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CREATE_PUBLIC_LINK_DEFAULTS } from './admin-public-links-workspace.helpers';
+import { CREATE_PUBLIC_LINK_DEFAULTS } from '../lib/admin-public-links-workspace.helpers';
+
 import { useAdminPublicLinksActions } from './use-admin-public-links-actions';
 
-import type {
-  CreatePublicLinkValues,
-  EducationOrganizationOption,
-} from './public-link-create-card.types';
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import type { EducationOrganizationOption } from './public-link-create-card.types';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
+import type { CreatePublicLinkValues } from '@/features/manage-public-link';
 import type { ReactNode } from 'react';
 
 const createPublicLinkMutate = vi.fn();

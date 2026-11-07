@@ -1,8 +1,5 @@
+import type { CreatePublicLinkValues } from '@/features/manage-public-link';
 import type { UseFormReturn } from 'react-hook-form';
-
-export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
-export type PublicLinkTemplate = 'STANDARD' | 'POLUS';
-export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
 
 export interface TopicOption {
   id: number;
@@ -16,23 +13,6 @@ export interface EducationOrganizationOption {
   name: string;
   isActive: boolean;
   personalDataReady: boolean;
-}
-
-/** Поля создаваемой ссылки. Числа остаются строками до validateCreatePublicLinkInput. */
-export interface CreatePublicLinkValues {
-  shortCode: string;
-  educationOrganizationId: number | null;
-  personalDataProcessingMode: PersonalDataProcessingMode;
-  publicTemplate: PublicLinkTemplate;
-  entryProfileMode: PublicLinkEntryProfileMode;
-  maxAttempts: string;
-  timeLimit: string;
-  allowResume: boolean;
-  consentVersion: string;
-  consentText: string;
-  /** Окно доступа в локальном времени браузера (`ГГГГ-ММ-ДДTЧЧ:мм`) или пусто, см. features/manage-public-link. */
-  startsAt: string;
-  endsAt: string;
 }
 
 export type CreatePublicLinkForm = UseFormReturn<CreatePublicLinkValues>;

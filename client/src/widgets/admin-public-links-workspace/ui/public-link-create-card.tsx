@@ -16,7 +16,7 @@ import { PublicLinkAccessSettingsSection } from './public-link-access-settings-s
 import { PublicLinkOrganizationSection } from './public-link-organization-section';
 import { PublicLinkTopicSection } from './public-link-topic-section';
 
-import type { PublicLinkCreateCardProps } from './public-link-create-card.types';
+import type { PublicLinkCreateCardProps } from '../model/public-link-create-card.types';
 
 interface PublicLinkCreateDialogProps extends PublicLinkCreateCardProps {
   open: boolean;

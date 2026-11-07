@@ -8,16 +8,17 @@ import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Card } from '@/shared/ui/card';
 import { ConfirmActionDialog } from '@/shared/ui/confirm-action-dialog';
 
-import { getShortLinkQrUrl, getShortLinkUrl } from './admin-public-links-workspace.helpers';
+import { getShortLinkQrUrl, getShortLinkUrl } from '../lib/admin-public-links-workspace.helpers';
+import { useAdminPublicLinksWorkspace } from '../model/use-admin-public-links-workspace';
+
 import { PublicLinkBrandingBuilder } from './public-link-branding-builder';
 import { PublicLinkCreateDialog } from './public-link-create-card';
 import { PublicLinkHistoryDialog } from './public-link-history-dialog';
 import { PublicLinkQrDialog } from './public-link-qr-dialog';
 import { PublicLinksListCard } from './public-links-list-card';
 import { PublicLinksListHeader } from './public-links-list-header';
-import { useAdminPublicLinksWorkspace } from './use-admin-public-links-workspace';
 
-import type { PublicLinkListItem } from './public-links-list-card.helpers';
+import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
 
 type AdminPublicLinksWorkspaceState = ReturnType<typeof useAdminPublicLinksWorkspace>;
 
@@ -47,7 +48,7 @@ const buildListCardProps = (
   publicLinksLoading: state.publicLinksLoading,
   publicLinksError: state.publicLinksError,
   searchValue: state.publicLinksSearch,
-  onRetryPublicLinks: state.refetchPublicLinks,
+  onRetryPublicLinks: state.retryPublicLinks,
   onCopyShortLink: state.handleCopyShortLink,
   onOpenShortLink: state.handleOpenShortLink,
   onOpenQr,
@@ -59,10 +60,10 @@ const buildListCardProps = (
   onRestorePublicLink: state.handleRestorePublicLink,
   onMoveToActiveVersion: state.setPendingMovePublicLink,
   onOpenHistory,
-  isUpdatingPublicLink: state.updatePublicLinkMutation.isPending,
-  isRegeneratingShortCode: state.regeneratePublicLinkShortCodeMutation.isPending,
-  isArchivingPublicLink: state.deletePublicLinkMutation.isPending,
-  isRestoringPublicLink: state.restorePublicLinkMutation.isPending,
+  isUpdatingPublicLink: state.isUpdatingPublicLink,
+  isRegeneratingShortCode: state.isRegeneratingShortCode,
+  isArchivingPublicLink: state.isArchivingPublicLink,
+  isRestoringPublicLink: state.isRestoringPublicLink,
 });
 
 const buildMoveDialogTitle = (link: PublicLinkListItem | null) =>
@@ -160,7 +161,7 @@ export function AdminPublicLinksWorkspace() {
       <PublicLinkBrandingBuilder
         open={Boolean(brandingBuilderLink)}
         link={brandingBuilderLink}
-        isSaving={workspaceState.updatePublicLinkMutation.isPending}
+        isSaving={workspaceState.isUpdatingPublicLink}
         onOpenChange={(open) => {
           if (!open) {
             setBrandingBuilderLink(null);
@@ -175,7 +176,7 @@ export function AdminPublicLinksWorkspace() {
         description="Ссылка станет недоступной и исчезнет из списка. Данные попыток сохранятся."
         confirmLabel="Архивировать"
         variant="destructive"
-        isConfirming={workspaceState.deletePublicLinkMutation.isPending}
+        isConfirming={workspaceState.isArchivingPublicLink}
         onConfirm={workspaceState.handleDeletePublicLink}
         onClose={() => workspaceState.setPendingDeletePublicLinkId(null)}
       />
@@ -185,7 +186,7 @@ export function AdminPublicLinksWorkspace() {
         title={buildMoveDialogTitle(workspaceState.pendingMovePublicLink)}
         description="Новые прохождения по ссылке пойдут по опубликованной версии теста. Начатые прохождения завершатся по прежней версии, поэтому в аналитике по ссылке будут результаты обеих версий."
         confirmLabel="Перевести"
-        isConfirming={workspaceState.moveToActivePublishedVersionMutation.isPending}
+        isConfirming={workspaceState.isMovingToActiveVersion}
         onConfirm={workspaceState.handleMovePublicLinkToActiveVersion}
         onClose={() => workspaceState.setPendingMovePublicLink(null)}
       />

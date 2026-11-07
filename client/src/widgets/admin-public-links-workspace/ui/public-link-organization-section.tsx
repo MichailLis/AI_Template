@@ -9,7 +9,7 @@ import { Label } from '@/shared/ui/label';
 import type {
   CreatePublicLinkForm,
   PublicLinkOrganizationSectionProps,
-} from './public-link-create-card.types';
+} from '../model/public-link-create-card.types';
 
 function PersonalDataProcessingModeField({ form }: { form: CreatePublicLinkForm }) {
   return (

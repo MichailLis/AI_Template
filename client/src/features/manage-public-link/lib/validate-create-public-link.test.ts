@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateCreatePublicLinkInput } from './admin-public-links-workspace.helpers';
+import { validateCreatePublicLinkInput } from './validate-create-public-link';
 
 const baseInput = {
   publishedVersionId: 10,

@@ -9,10 +9,11 @@ import {
 import { PublicThemeLayout } from '@/entities/public-test';
 import { Button } from '@/shared/ui/button';
 
-import { ZoneButton } from './public-link-branding-builder-zone-button';
-import { brandingPreviewQuestion } from './public-link-branding-builder.fixtures';
+import { brandingPreviewQuestion } from '../lib/public-link-branding-builder.fixtures';
 
-import type { BrandingPreviewProps } from './public-link-branding-builder.types';
+import { ZoneButton } from './public-link-branding-builder-zone-button';
+
+import type { BrandingPreviewProps } from '../model/public-link-branding-builder.types';
 
 export function BrandingPreview({ draft, link, previewState, onEditPanel }: BrandingPreviewProps) {
   const headerSlot = (

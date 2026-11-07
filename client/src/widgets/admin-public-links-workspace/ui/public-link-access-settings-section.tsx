@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 
-import type { PublicLinkAccessSettingsSectionProps } from './public-link-create-card.types';
+import type { PublicLinkAccessSettingsSectionProps } from '../model/public-link-create-card.types';
 
 function AccessWindowFields({
   form,
