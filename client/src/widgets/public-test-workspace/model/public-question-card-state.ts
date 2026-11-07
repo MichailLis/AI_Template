@@ -1,5 +1,5 @@
-import { getSliderQuestionMeta } from './public-question-card.utils';
-import { hasMeaningfulQuestionAnswer } from './public-test-run-answer.helpers';
+import { getSliderQuestionMeta } from '../lib/public-question-card.utils';
+import { hasMeaningfulQuestionAnswer } from '../lib/public-test-run-answer.helpers';
 
 import type { PublicTestQuestion } from './public-test-run.types';
 

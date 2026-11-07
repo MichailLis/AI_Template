@@ -1,27 +1,26 @@
 import { GraduationCap } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-  useTestsPublicControllerGetLinkAccess,
-  useTestsPublicControllerStartSession,
-} from '@/shared/api/generated/tests-public/tests-public';
+import { useTestsPublicControllerGetLinkAccess } from '@/shared/api/generated/tests-public/tests-public';
+
+import { resolveGroupValidationWarning } from '../lib/public-test-entry.helpers';
+import { getPublicTestRefusal } from '../lib/public-test-refusal';
+import { createPublicTestEntryStartHandler } from '../model/public-test-entry-submit';
+import { usePublicTestEntryState } from '../model/use-public-test-entry-state';
+import { usePublicTestStartSession } from '../model/use-public-test-start-session';
 
 import { PolusPublicEntry } from './polus/polus-public-entry';
 import { PublicEntryStateCard } from './public-entry-state-card';
 import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
-import { createPublicTestEntryStartHandler } from './public-test-entry-submit';
-import { resolveGroupValidationWarning } from './public-test-entry.helpers';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
-import { getPublicTestRefusal } from './public-test-refusal';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 import { PublicThemeLayout } from './public-theme-layout';
-import { usePublicTestEntryState } from './use-public-test-entry-state';
 
 import type {
   DemographicFormState,
   EntryProfileMode,
   StudentFormState,
-} from './public-test-entry.types';
+} from '../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDto } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 
@@ -139,7 +138,7 @@ export function PublicTestEntryWorkspace() {
       retry: false,
     },
   });
-  const startMutation = useTestsPublicControllerStartSession();
+  const { startSession, isStarting } = usePublicTestStartSession();
 
   if (!code) {
     return (
@@ -196,7 +195,7 @@ export function PublicTestEntryWorkspace() {
           }
         : undefined,
     startsAt: link.startsAt,
-    startSession: startMutation.mutateAsync,
+    startSession,
     navigate,
   });
 
@@ -209,7 +208,7 @@ export function PublicTestEntryWorkspace() {
         registrationFormState={registrationFormState}
         currentGroupValidationWarning={currentGroupValidationWarning}
         nameInputWarning={nameInputWarning}
-        isSubmitting={startMutation.isPending}
+        isSubmitting={isStarting}
         onSubmit={handleStart}
         onEducationFieldChange={updateEducationField}
         onDemographicFieldChange={updateDemographicField}
@@ -225,7 +224,7 @@ export function PublicTestEntryWorkspace() {
       registrationFormState={registrationFormState}
       currentGroupValidationWarning={currentGroupValidationWarning}
       nameInputWarning={nameInputWarning}
-      isSubmitting={startMutation.isPending}
+      isSubmitting={isStarting}
       onSubmit={handleStart}
       onEducationFieldChange={updateEducationField}
       onDemographicFieldChange={updateDemographicField}

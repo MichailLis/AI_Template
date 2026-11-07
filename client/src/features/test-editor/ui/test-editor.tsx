@@ -4,9 +4,10 @@ import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-t
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
+import { useQuestionReorderDnd } from '../model/use-question-reorder-dnd';
+
 import { TestEditorDraftSection } from './test-editor-draft-section';
 import { TestEditorQuestionsSection } from './test-editor-questions-section';
-import { useQuestionReorderDnd } from './use-question-reorder-dnd';
 
 import type { TestDraftQuestion } from '../model/types';
 import type { TestsTopicDetailResponseDto } from '@/shared/api/model';

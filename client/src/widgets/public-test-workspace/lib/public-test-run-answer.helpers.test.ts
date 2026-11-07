@@ -6,7 +6,7 @@ import {
   hasMeaningfulQuestionAnswer,
 } from './public-test-run-answer.helpers';
 
-import type { PublicTestQuestion } from './public-test-run.types';
+import type { PublicTestQuestion } from '../model/public-test-run.types';
 
 const makeQuestion = (id: number, type: PublicTestQuestion['type']): PublicTestQuestion =>
   ({

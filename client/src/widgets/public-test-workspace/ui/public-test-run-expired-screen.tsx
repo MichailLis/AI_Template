@@ -5,7 +5,7 @@ import { pluralizeRu } from '@/shared/lib/ru-plural';
 import { PolusPublicLayout } from './polus/polus-public-layout';
 import { PublicThemeLayout } from './public-theme-layout';
 
-import type { PublicTestSession } from './public-test-run.types';
+import type { PublicTestSession } from '../model/public-test-run.types';
 
 interface PublicTestRunExpiredScreenProps {
   code: string;

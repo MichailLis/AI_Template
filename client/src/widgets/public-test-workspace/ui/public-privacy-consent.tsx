@@ -2,7 +2,7 @@ import { useId } from 'react';
 
 import { cn } from '@/shared/lib/utils';
 
-import { getPublicDocumentLinkProps } from './public-document-link';
+import { getPublicDocumentLinkProps } from '../lib/public-document-link';
 
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 

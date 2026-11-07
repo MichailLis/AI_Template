@@ -3,7 +3,7 @@ import { PublicTestRunTimer } from '../public-test-run-timer';
 import { PolusPublicLayout } from './polus-public-layout';
 import { PolusPublicQuestionCard } from './polus-public-question-card';
 
-import type { PublicTestSession } from '../public-test-run.types';
+import type { PublicTestSession } from '../../model/public-test-run.types';
 
 interface AnswerOverride {
   questionId: number;

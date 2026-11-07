@@ -3,12 +3,15 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { getMaxChoices, isChoiceLimitReached } from '@/entities/public-test';
 
-import { getPublicQuestionCardState, type AnswerOverride } from '../public-question-card-state';
+import { getPolusSliderPresentation } from '../../lib/polus-public-slider-presentation';
+import {
+  getPublicQuestionCardState,
+  type AnswerOverride,
+} from '../../model/public-question-card-state';
 
 import { PolusPublicSliderField } from './polus-public-slider-field';
-import { getPolusSliderPresentation } from './polus-public-slider-presentation';
 
-import type { PublicTestQuestion } from '../public-test-run.types';
+import type { PublicTestQuestion } from '../../model/public-test-run.types';
 
 interface PolusPublicQuestionCardProps {
   question: PublicTestQuestion;

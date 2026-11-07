@@ -1,6 +1,6 @@
 import { type DragEvent, useState } from 'react';
 
-import type { TestDraftQuestion } from '../model/types';
+import type { TestDraftQuestion } from './types';
 
 export type DropPosition = 'before' | 'after';
 

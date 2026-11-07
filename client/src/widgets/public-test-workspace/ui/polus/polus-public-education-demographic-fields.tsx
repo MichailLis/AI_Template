@@ -5,7 +5,7 @@ import {
 
 import { PolusSelectField } from './polus-public-select-field';
 
-import type { DemographicFormState, StudentFormState } from '../public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from '../../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDto } from '@/shared/api/model';
 
 type EducationFieldChangeHandler = <K extends keyof StudentFormState>(

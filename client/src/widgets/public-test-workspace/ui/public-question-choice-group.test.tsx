@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicQuestionChoiceGroup } from './public-question-choice-group';
 
-import type { PublicTestQuestionOption } from './public-test-run.types';
+import type { PublicTestQuestionOption } from '../model/public-test-run.types';
 
 const options = [
   { id: 1, value: 'a', label: 'Первый' },

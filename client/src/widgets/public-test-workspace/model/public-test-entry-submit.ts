@@ -3,8 +3,8 @@ import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/shared/lib/api-error';
 import { safeStorage } from '@/shared/lib/storage';
 
-import { normalizeInitial, resolveGroupValidationWarning } from './public-test-entry.helpers';
-import { getPublicTestRefusal } from './public-test-refusal';
+import { normalizeInitial, resolveGroupValidationWarning } from '../lib/public-test-entry.helpers';
+import { getPublicTestRefusal } from '../lib/public-test-refusal';
 
 import type {
   DemographicFormState,

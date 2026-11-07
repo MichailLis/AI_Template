@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { getRemainingSeconds } from './public-test-run-timer.helpers';
+import { getRemainingSeconds } from '../lib/public-test-run-timer.helpers';
 
 const COUNTDOWN_TICK_MS = 1_000;
 

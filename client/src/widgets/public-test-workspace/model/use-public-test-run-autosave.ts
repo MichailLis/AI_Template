@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { testsPublicControllerSaveAnswers } from '@/shared/api/generated/tests-public/tests-public';
 
-import { buildSessionAnswers } from './public-test-run-answer.helpers';
+import { buildSessionAnswers } from '../lib/public-test-run-answer.helpers';
 
 import type {
   PublicTestAnswerDraft,

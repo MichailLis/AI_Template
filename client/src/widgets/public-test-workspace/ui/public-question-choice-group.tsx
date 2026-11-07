@@ -1,8 +1,8 @@
 import { getMaxChoices, isChoiceLimitReached } from '@/entities/public-test';
 
-import { getChoiceOptionClass } from './public-question-card.utils';
+import { getChoiceOptionClass } from '../lib/public-question-card.utils';
 
-import type { PublicTestQuestionOption } from './public-test-run.types';
+import type { PublicTestQuestionOption } from '../model/public-test-run.types';
 
 interface ChoiceGroupBaseProps {
   questionId: number;

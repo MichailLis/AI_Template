@@ -3,11 +3,15 @@ import { ArrowLeft, ArrowRight, SendHorizontal } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { getPublicQuestionCardState, type AnswerOverride } from './public-question-card-state';
+import {
+  getPublicQuestionCardState,
+  type AnswerOverride,
+} from '../model/public-question-card-state';
+
 import { PublicQuestionChoiceGroup } from './public-question-choice-group';
 import { PublicQuestionSliderField } from './public-question-slider-field';
 
-import type { PublicTestQuestion } from './public-test-run.types';
+import type { PublicTestQuestion } from '../model/public-test-run.types';
 
 interface QuestionNavigationProps {
   canGoBack: boolean;

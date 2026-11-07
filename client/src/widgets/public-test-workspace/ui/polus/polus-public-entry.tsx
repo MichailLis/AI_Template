@@ -15,7 +15,7 @@ import type {
   DemographicFormState,
   EntryProfileMode,
   StudentFormState,
-} from '../public-test-entry.types';
+} from '../../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDto } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 

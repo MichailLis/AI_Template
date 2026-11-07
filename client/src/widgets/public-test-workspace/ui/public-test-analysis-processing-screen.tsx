@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 
 import { polusAssets, type PublicBrandingConfig } from '@/entities/public-test';
 
+import { analysisProcessingSteps } from '../lib/public-test-analysis-processing-steps';
+
 import { PolusPublicLayout } from './polus/polus-public-layout';
-import { analysisProcessingSteps } from './public-test-analysis-processing-steps';
 import { PublicThemeLayout } from './public-theme-layout';
 
 import type { ReactNode } from 'react';
