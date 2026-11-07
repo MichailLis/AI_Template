@@ -14,6 +14,20 @@ const createUseStateOverflowContent = (count = 15) => {
  * Registry of mutations per verification gate.
  * Each gate has at least two negative proof mutations.
  */
+/** verify-architecture: a ui/ component that calls a mutation (#168). */
+const uiSegmentMutation = (id, slice, component, call) => ({
+  id: `architecture-ui-segment-${id}`,
+  gate: 'verify-architecture.mjs',
+  script: 'scripts/verify-architecture.mjs',
+  npmScript: 'verify:architecture',
+  file: `client/src/${slice}/ui/${component}.tsx`,
+  description: `Call ${call} inside a ui/ component`,
+  action: 'append',
+  append: `\n// Mutation in ui segment\nconst _m = { mutate: () => undefined };\nexport const _ui = () => ${call};\n`,
+  requiredFile: 'server/openapi.json',
+  skipReason: 'server/openapi.json is missing (requires gen:openapi)',
+});
+
 export const GATE_MUTATIONS = [
   // 1. verify-api-mutator.mjs
   {
@@ -368,6 +382,8 @@ export const GATE_MUTATIONS = [
     requiredFile: 'server/openapi.json',
     skipReason: 'server/openapi.json is missing (requires gen:openapi)',
   },
+  uiSegmentMutation('mutate', 'widgets/admin-users-workspace', 'admin-users-table', '_m.mutate()'),
+  uiSegmentMutation('use-mutation', 'features/auth', 'login-form', 'useMutation({})'),
 
   // 8. verify-stack.mjs
   {
