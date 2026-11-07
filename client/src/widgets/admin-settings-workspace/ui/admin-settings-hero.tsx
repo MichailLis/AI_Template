@@ -7,7 +7,10 @@ import {
 } from '@/shared/ui/admin-design-tokens';
 import { Badge } from '@/shared/ui/badge';
 
-import type { IntegrationHealthBadge, IntegrationHealthTone } from './admin-settings-cards.model';
+import type {
+  IntegrationHealthBadge,
+  IntegrationHealthTone,
+} from '../lib/admin-settings-cards.model';
 
 const integrationBadgeClassNames: Record<IntegrationHealthTone, string> = {
   success: adminBadgeClassNames.success,

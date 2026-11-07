@@ -1,15 +1,13 @@
 import { ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
 
-import { useAdminSettingsControllerCheckAiProvider } from '@/shared/api/generated/admin/admin';
-import { getApiErrorMessage } from '@/shared/lib/api-error';
+import { useCheckAiProvider } from '@/features/manage-app-settings';
 import { formatDateTime } from '@/shared/lib/date-format';
 import { adminClassNames, adminToneClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 
-import { aiCheckReasonLabels } from './admin-settings-cards.model';
+import { aiCheckReasonLabels } from '../lib/admin-settings-cards.model';
 
-import type { AiProviderCheck } from './admin-settings-cards.model';
+import type { AiProviderCheck } from '../lib/admin-settings-cards.model';
 
 function AiProviderCheckResult({ result }: { result: AiProviderCheck }) {
   const checkedAt = formatDateTime(result.checkedAt);
@@ -47,13 +45,7 @@ function AiProviderCheckResult({ result }: { result: AiProviderCheck }) {
  * токен) и потому идёт только по кнопке, не при открытии настроек.
  */
 export function AiProviderCheck() {
-  const mutation = useAdminSettingsControllerCheckAiProvider({
-    mutation: {
-      onError: (error) => {
-        toast.error(getApiErrorMessage(error, { fallbackMessage: 'Проверка не выполнена' }));
-      },
-    },
-  });
+  const { check, isChecking, result } = useCheckAiProvider();
 
   return (
     <div className={`flex flex-col gap-3 ${adminClassNames.panel.compactSection}`}>
@@ -69,18 +61,12 @@ export function AiProviderCheck() {
         </p>
       </div>
       <div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
+        <Button type="button" variant="outline" size="sm" disabled={isChecking} onClick={check}>
           <ShieldCheck className="h-4 w-4" />
-          {mutation.isPending ? 'Проверяем...' : 'Проверить ключ и баланс'}
+          {isChecking ? 'Проверяем...' : 'Проверить ключ и баланс'}
         </Button>
       </div>
-      {mutation.data ? <AiProviderCheckResult result={mutation.data} /> : null}
+      {result ? <AiProviderCheckResult result={result} /> : null}
     </div>
   );
 }

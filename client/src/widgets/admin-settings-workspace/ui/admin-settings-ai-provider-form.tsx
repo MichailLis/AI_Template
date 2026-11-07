@@ -1,20 +1,14 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import {
-  getAdminSettingsControllerGetAiProviderSettingsQueryKey,
-  useAdminSettingsControllerUpdateAiProviderSettings,
-} from '@/shared/api/generated/admin/admin';
-import { getApiErrorMessage } from '@/shared/lib/api-error';
+import { useSaveAiProviderSettings } from '@/features/manage-app-settings';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { AdminSelectField } from '@/shared/ui/admin-select-field';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import type { AiProviderSettings } from './admin-settings-cards.model';
+import type { AiProviderSettings } from '../lib/admin-settings-cards.model';
 import type { FormEvent } from 'react';
 
 type ProviderId = AiProviderSettings['provider'];
@@ -35,26 +29,16 @@ const PROVIDER_OPTIONS: Array<{ value: ProviderId; label: string; baseUrlHint: s
  * пустое, пока админ не введёт новый.
  */
 export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings }) {
-  const queryClient = useQueryClient();
   const [provider, setProvider] = useState<ProviderId>(aiProvider.provider);
   const [baseUrl, setBaseUrl] = useState(aiProvider.baseUrl ?? '');
   const [apiKey, setApiKey] = useState('');
   const [defaultModel, setDefaultModel] = useState(aiProvider.defaultModel ?? '');
   const [clearApiKey, setClearApiKey] = useState(false);
 
-  const mutation = useAdminSettingsControllerUpdateAiProviderSettings({
-    mutation: {
-      onError: (error) => {
-        toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
-      },
-      onSuccess: async () => {
-        setApiKey('');
-        setClearApiKey(false);
-        await queryClient.invalidateQueries({
-          queryKey: getAdminSettingsControllerGetAiProviderSettingsQueryKey(),
-        });
-        toast.success('Настройки провайдера ИИ сохранены');
-      },
+  const { saveAiProviderSettings, isSaving } = useSaveAiProviderSettings({
+    onSaved: () => {
+      setApiKey('');
+      setClearApiKey(false);
     },
   });
 
@@ -66,7 +50,7 @@ export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings 
   const isKeyRequired =
     nextBaseUrl !== (aiProvider.baseUrl ?? '') && !apiKey.trim() && !clearApiKey;
   const canSubmit =
-    !mutation.isPending && !isKeyRequired && (!isBaseUrlRequired || baseUrl.trim().length > 0);
+    !isSaving && !isKeyRequired && (!isBaseUrlRequired || baseUrl.trim().length > 0);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,14 +59,12 @@ export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings 
       return;
     }
 
-    mutation.mutate({
-      data: {
-        provider,
-        baseUrl: baseUrl.trim() || null,
-        defaultModel: defaultModel.trim() || null,
-        ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
-        ...(clearApiKey && !apiKey.trim() ? { clearApiKey: true } : {}),
-      },
+    saveAiProviderSettings({
+      provider,
+      baseUrl: baseUrl.trim() || null,
+      defaultModel: defaultModel.trim() || null,
+      ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      ...(clearApiKey && !apiKey.trim() ? { clearApiKey: true } : {}),
     });
   };
 
@@ -166,7 +148,7 @@ export function AiProviderForm({ aiProvider }: { aiProvider: AiProviderSettings 
 
       <Button type="submit" disabled={!canSubmit}>
         <Save className="h-4 w-4" />
-        {mutation.isPending ? 'Сохраняем...' : 'Сохранить настройки'}
+        {isSaving ? 'Сохраняем...' : 'Сохранить настройки'}
       </Button>
     </form>
   );

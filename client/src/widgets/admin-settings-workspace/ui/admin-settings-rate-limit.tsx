@@ -1,14 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { Gauge, Save } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import {
-  getAdminSettingsControllerGetPublicRateLimitSettingsQueryKey,
-  useAdminSettingsControllerGetPublicRateLimitSettings,
-  useAdminSettingsControllerUpdatePublicRateLimit,
-} from '@/shared/api/generated/admin/admin';
-import { getApiErrorMessage } from '@/shared/lib/api-error';
+import { useSavePublicRateLimit } from '@/features/manage-app-settings';
+import { useAdminSettingsControllerGetPublicRateLimitSettings } from '@/shared/api/generated/admin/admin';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -28,7 +22,6 @@ const parseRateLimitValue = (value: string) => {
 };
 
 export function PublicRateLimitSettingsCard() {
-  const queryClient = useQueryClient();
   const settingsQuery = useAdminSettingsControllerGetPublicRateLimitSettings();
   const saved = settingsQuery.data?.publicRateLimit;
   // Черновик появляется с первой правкой; до неё поля показывают сохранённые значения.
@@ -38,22 +31,11 @@ export function PublicRateLimitSettingsCard() {
   const parsedPerMinute = parseRateLimitValue(perMinute);
   const parsedBurst = parseRateLimitValue(burst);
 
-  const updateMutation = useAdminSettingsControllerUpdatePublicRateLimit({
-    mutation: {
-      onError: (error) => {
-        toast.error(getApiErrorMessage(error, { fallbackMessage: 'Запрос не выполнен' }));
-      },
-      onSuccess: async () => {
-        setDraft(null);
-        await queryClient.invalidateQueries({
-          queryKey: getAdminSettingsControllerGetPublicRateLimitSettingsQueryKey(),
-        });
-        toast.success('Лимит запросов сохранён');
-      },
-    },
+  const { savePublicRateLimit, isSaving } = useSavePublicRateLimit({
+    onSaved: () => setDraft(null),
   });
 
-  const canSubmit = Boolean(draft && parsedPerMinute && parsedBurst) && !updateMutation.isPending;
+  const canSubmit = Boolean(draft && parsedPerMinute && parsedBurst) && !isSaving;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,7 +44,7 @@ export function PublicRateLimitSettingsCard() {
       return;
     }
 
-    updateMutation.mutate({ data: { perMinute: parsedPerMinute, burst: parsedBurst } });
+    savePublicRateLimit({ perMinute: parsedPerMinute, burst: parsedBurst });
   };
 
   const updateDraft = (field: 'perMinute' | 'burst', value: string) =>
@@ -135,7 +117,7 @@ export function PublicRateLimitSettingsCard() {
 
             <Button type="submit" disabled={!canSubmit}>
               <Save className="h-4 w-4" />
-              {updateMutation.isPending ? 'Сохраняем...' : 'Сохранить лимит'}
+              {isSaving ? 'Сохраняем...' : 'Сохранить лимит'}
             </Button>
           </form>
         ) : null}

@@ -1,44 +1,22 @@
 import { useState } from 'react';
 
-import type { PrivacyPolicySettings } from './admin-settings-cards.model';
+import {
+  getNowDateTimeLocalValue,
+  toDateTimeLocalValue,
+  toIsoFromDateTimeLocal,
+} from '../lib/date-time-local';
 
-export const EMPTY_PRIVACY_POLICY_FORM = {
+import type { AdminPrivacyPolicySettingsResponseDto } from '@/shared/api/model';
+
+type PrivacyPolicySettings = AdminPrivacyPolicySettingsResponseDto['privacyPolicy'];
+
+const EMPTY_PRIVACY_POLICY_FORM = {
   content: '',
   isDirty: false,
   isPublishedAtManual: false,
   operatorFullName: '',
   publishedAt: '',
   version: '',
-};
-
-export const toDateTimeLocalValue = (value: string | null | undefined) => {
-  if (!value) {
-    return '';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  const pad = (part: number) => part.toString().padStart(2, '0');
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
-};
-
-export const getNowDateTimeLocalValue = () => toDateTimeLocalValue(new Date().toISOString());
-
-export const toIsoFromDateTimeLocal = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date.toISOString();
 };
 
 export function usePrivacyPolicyFormState(privacyPolicy: PrivacyPolicySettings | undefined) {

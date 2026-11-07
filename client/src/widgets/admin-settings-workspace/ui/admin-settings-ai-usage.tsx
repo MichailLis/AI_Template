@@ -15,10 +15,11 @@ import {
   formatAiUsageCost,
   formatAiUsageCount,
   getAiUsagePeriodStart,
-} from './admin-settings-ai-usage.model';
+} from '../lib/admin-settings-ai-usage.model';
+
 import { SettingsLoadError } from './admin-settings-cards.parts';
 
-import type { AiUsageBucket, AiUsagePeriod } from './admin-settings-ai-usage.model';
+import type { AiUsageBucket, AiUsagePeriod } from '../lib/admin-settings-ai-usage.model';
 
 const PANEL_ID = 'ai-usage-panel';
 

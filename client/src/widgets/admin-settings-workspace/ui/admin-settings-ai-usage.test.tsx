@@ -3,10 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { formatDateTime } from '@/shared/lib/date-format';
 
-import { AiUsageSummary } from './admin-settings-ai-usage';
-import { getAiUsagePeriodStart } from './admin-settings-ai-usage.model';
+import { getAiUsagePeriodStart } from '../lib/admin-settings-ai-usage.model';
 
-import type { AiUsageSummaryData } from './admin-settings-ai-usage.model';
+import { AiUsageSummary } from './admin-settings-ai-usage';
+
+import type { AiUsageSummaryData } from '../lib/admin-settings-ai-usage.model';
 
 const hoisted = vi.hoisted(() => ({
   refetch: vi.fn(),
