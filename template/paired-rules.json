@@ -20,8 +20,8 @@
       "type": "behaviour",
       "authority": "server",
       "client": {
-        "file": "client/src/widgets/public-test-workspace/ui/public-test-entry.helpers.ts",
-        "testFile": "client/src/widgets/public-test-workspace/ui/public-test-entry.helpers.test.ts"
+        "file": "client/src/widgets/public-test-workspace/lib/public-test-entry.helpers.ts",
+        "testFile": "client/src/widgets/public-test-workspace/lib/public-test-entry.helpers.test.ts"
       },
       "server": {
         "file": "server/src/tests/session/session-profile.ts",
@@ -170,7 +170,7 @@
       "name": "getSettingsRecord",
       "type": "unrelated",
       "client": {
-        "file": "client/src/widgets/public-test-workspace/ui/polus/polus-public-slider-presentation.ts"
+        "file": "client/src/widgets/public-test-workspace/lib/polus-public-slider-presentation.ts"
       },
       "server": {
         "file": "server/src/tests/prof-orientation-v3-plus/scoring.ts"

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PolusPublicQuestionCard } from './polus-public-question-card';
 
-import type { PublicTestQuestion } from '../public-test-run.types';
+import type { PublicTestQuestion } from '../../model/public-test-run.types';
 
 const singleChoiceQuestion = {
   id: 1,

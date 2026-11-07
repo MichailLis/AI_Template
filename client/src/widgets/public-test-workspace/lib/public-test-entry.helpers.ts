@@ -1,6 +1,6 @@
 import { isSafeGroupPattern, type GroupValidationMode } from '@/shared/lib/group-validation';
 
-import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from '../model/public-test-entry.types';
 
 interface GroupValidationWarningParams {
   groupValue: string;

@@ -1,4 +1,4 @@
-import type { AnalysisProcessingStep } from './public-test-analysis.types';
+import type { AnalysisProcessingStep } from '../model/public-test-analysis.types';
 
 /** Copy shown to the student while the analysis is being produced. */
 export const analysisProcessingSteps: AnalysisProcessingStep[] = [

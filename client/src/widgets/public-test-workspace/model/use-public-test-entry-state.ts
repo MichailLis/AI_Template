@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { initialDemographicFormState, initialFormState } from './public-test-entry.helpers';
+import { initialDemographicFormState, initialFormState } from '../lib/public-test-entry.helpers';
 
 import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
 

@@ -1,4 +1,4 @@
-import type { PublicTestAnswerDraft, PublicTestQuestion } from './public-test-run.types';
+import type { PublicTestAnswerDraft, PublicTestQuestion } from '../model/public-test-run.types';
 
 type PublicTestAnswerPayload = string | string[] | number;
 

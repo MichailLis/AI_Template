@@ -3,6 +3,10 @@ import { Navigate } from 'react-router-dom';
 
 import { getApiErrorStatus } from '@/shared/lib/api-error';
 
+import { usePublicTestRunCountdown } from '../model/use-public-test-run-countdown';
+import { usePublicTestRunWorkspace } from '../model/use-public-test-run-workspace';
+import { useQuestionTransition } from '../model/use-question-transition';
+
 import { PolusPublicRun } from './polus/polus-public-run';
 import { PublicQuestionCard } from './public-question-card';
 import { PublicTestRunExpiredScreen } from './public-test-run-expired-screen';
@@ -10,9 +14,6 @@ import { PublicTestRunProgress } from './public-test-run-progress';
 import { PublicTestRunStateScreen } from './public-test-run-state-screen';
 import { PublicTestRunTimer } from './public-test-run-timer';
 import { PublicThemeLayout } from './public-theme-layout';
-import { usePublicTestRunCountdown } from './use-public-test-run-countdown';
-import { usePublicTestRunWorkspace } from './use-public-test-run-workspace';
-import { useQuestionTransition } from './use-question-transition';
 
 export function PublicTestRunWorkspace() {
   const {

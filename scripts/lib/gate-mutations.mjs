@@ -524,7 +524,7 @@ export const GATE_MUTATIONS = [
     script: 'scripts/e2e-critical-flows.mjs',
     npmScript: 'verify:e2e:critical',
     args: ['--only=standard-ai'],
-    file: 'client/src/widgets/public-test-workspace/ui/use-public-test-run-workspace.ts',
+    file: 'client/src/widgets/public-test-workspace/model/use-public-test-run-workspace.ts',
     description: 'The finish call no longer saves the answers first',
     action: 'replace',
     search: 'if (answers.length > 0) {',

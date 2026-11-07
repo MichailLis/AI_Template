@@ -4,12 +4,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/entities/session';
-import { useAuthControllerSignin } from '@/shared/api/generated/auth/auth';
 import { loginSchema } from '@/shared/api/schemas';
 import { adminClassNames } from '@/shared/ui/admin-design-tokens';
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
+
+import { useLogin } from '../model/use-login';
 
 import type { LoginInput } from '@/shared/api/schemas';
 
@@ -75,7 +76,7 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const loginMutation = useAuthControllerSignin();
+  const { login, isPending } = useLogin();
   const redirectTo = resolveLoginRedirect(location.state, location.search);
   const isSessionExpired = resolveSessionExpired(location.state, location.search);
 
@@ -89,36 +90,33 @@ export const LoginForm = () => {
   });
 
   async function onSubmit(values: LoginInput) {
-    loginMutation.mutate(
-      { data: values },
-      {
-        onSuccess: (data) => {
-          setAuth(data.user, data.accessToken, values.rememberDevice);
+    login(values, {
+      onSuccess: (data) => {
+        setAuth(data.user, data.accessToken, values.rememberDevice);
 
-          // Приветствуем только тех, кого пустят дальше: пользователь без роли администратора
-          // попадает на экран «Доступ пока не выдан», и «С возвращением!» над ним звучит как ошибка.
-          if (data.user.role === 'ADMIN') {
-            toast.success('С возвращением!');
-          }
+        // Приветствуем только тех, кого пустят дальше: пользователь без роли администратора
+        // попадает на экран «Доступ пока не выдан», и «С возвращением!» над ним звучит как ошибка.
+        if (data.user.role === 'ADMIN') {
+          toast.success('С возвращением!');
+        }
 
-          navigate(redirectTo);
-        },
-        onError: (error: unknown) => {
-          const authError = error as AuthError;
-          const backendError = authError.response?.data?.error;
-          const message =
-            (backendError?.code ? LOGIN_ERROR_MESSAGES[backendError.code] : undefined) ??
-            backendError?.message ??
-            'Не удалось войти. Попробуйте еще раз.';
-
-          /**
-           * Ошибка входа показывается один раз непосредственно на форме, чтобы избежать
-           * дублирования сообщения между формой и всплывающим тостом (UX-19).
-           */
-          form.setError('root', { message });
-        },
+        navigate(redirectTo);
       },
-    );
+      onError: (error: unknown) => {
+        const authError = error as AuthError;
+        const backendError = authError.response?.data?.error;
+        const message =
+          (backendError?.code ? LOGIN_ERROR_MESSAGES[backendError.code] : undefined) ??
+          backendError?.message ??
+          'Не удалось войти. Попробуйте еще раз.';
+
+        /**
+         * Ошибка входа показывается один раз непосредственно на форме, чтобы избежать
+         * дублирования сообщения между формой и всплывающим тостом (UX-19).
+         */
+        form.setError('root', { message });
+      },
+    });
   }
 
   return (
@@ -171,8 +169,8 @@ export const LoginForm = () => {
           </p>
         ) : null}
 
-        <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? 'Загрузка...' : 'Войти'}
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? 'Загрузка...' : 'Войти'}
         </Button>
       </form>
     </Form>

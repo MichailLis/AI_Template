@@ -11,13 +11,14 @@ import {
 } from '@/shared/api/generated/tests-public/tests-public';
 import { getApiErrorCode, getApiErrorStatus } from '@/shared/lib/api-error';
 
-import { getPublicTestRefusal } from './public-test-refusal';
+import { getPublicTestRefusal } from '../lib/public-test-refusal';
 import {
   buildSessionAnswers,
   dropSavedDraftEntries,
   getEffectiveQuestionAnswer,
   hasMeaningfulQuestionAnswer,
-} from './public-test-run-answer.helpers';
+} from '../lib/public-test-run-answer.helpers';
+
 import {
   usePublicTestRunAutosave,
   type SavedPublicAnswerPayload,

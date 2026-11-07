@@ -9,7 +9,7 @@ import { PublicPersonalDataOperator } from './public-personal-data-operator';
 import { PublicPrivacyConsent } from './public-privacy-consent';
 import { RegistrationDemographicFields } from './public-test-registration-demographic-fields';
 
-import type { DemographicFormState, StudentFormState } from './public-test-entry.types';
+import type { DemographicFormState, StudentFormState } from '../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 

@@ -4,13 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PublicTestRunWorkspace } from './public-test-run-workspace';
 
-import type { PublicTestAutosaveStatus, PublicTestSession } from './public-test-run.types';
+import type { PublicTestAutosaveStatus, PublicTestSession } from '../model/public-test-run.types';
 
 const publicRunMocks = vi.hoisted(() => ({
   useWorkspace: vi.fn(),
 }));
 
-vi.mock('./use-public-test-run-workspace', () => ({
+vi.mock('../model/use-public-test-run-workspace', () => ({
   usePublicTestRunWorkspace: publicRunMocks.useWorkspace,
 }));
 

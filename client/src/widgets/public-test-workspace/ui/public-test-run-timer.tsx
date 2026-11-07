@@ -2,7 +2,7 @@ import { Clock3 } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 
-import { formatRemainingTime, isPublicTestTimeWarning } from './public-test-run-timer.helpers';
+import { formatRemainingTime, isPublicTestTimeWarning } from '../lib/public-test-run-timer.helpers';
 
 interface PublicTestRunTimerProps {
   remainingSeconds: number;

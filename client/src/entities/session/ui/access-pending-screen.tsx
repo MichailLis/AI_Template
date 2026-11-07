@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 
-import { useAuthControllerLogout } from '@/shared/api/generated/auth/auth';
 import { Button } from '@/shared/ui/button';
 
 import { useAuthStore } from '../model/store';
+import { useLogout } from '../model/use-logout';
 
 /**
  * Экран для вошедшего пользователя без роли администратора. Роль USER пока не открывает ни одного
@@ -12,16 +12,10 @@ import { useAuthStore } from '../model/store';
 export function AccessPendingScreen() {
   const navigate = useNavigate();
   const email = useAuthStore((state) => state.user?.email);
-  const logoutLocal = useAuthStore((state) => state.logout);
-  const logoutMutation = useAuthControllerLogout();
+  const { logout, isPending } = useLogout();
 
   const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSettled: () => {
-        logoutLocal();
-        navigate('/login');
-      },
-    });
+    logout(() => navigate('/login'));
   };
 
   return (
@@ -32,12 +26,7 @@ export function AccessPendingScreen() {
           Вы вошли как {email}. Разделы панели доступны только администраторам — если доступ нужен,
           обратитесь к администратору.
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleLogout}
-          disabled={logoutMutation.isPending}
-        >
+        <Button type="button" variant="outline" onClick={handleLogout} disabled={isPending}>
           Выйти
         </Button>
       </section>

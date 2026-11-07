@@ -12,7 +12,7 @@ import { Label } from '@/shared/ui/label';
 import { PublicPersonalDataOperator } from './public-personal-data-operator';
 import { PublicPrivacyConsent } from './public-privacy-consent';
 
-import type { DemographicFormState } from './public-test-entry.types';
+import type { DemographicFormState } from '../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 import type { FormEvent } from 'react';
 

@@ -5,7 +5,7 @@ import {
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 
-import type { DemographicFormState } from './public-test-entry.types';
+import type { DemographicFormState } from '../model/public-test-entry.types';
 
 type DemographicFieldChangeHandler = <K extends keyof DemographicFormState>(
   key: K,

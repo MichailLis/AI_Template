@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PublicTestRegistrationCard } from './public-test-registration-card';
 
-import type { StudentFormState } from './public-test-entry.types';
+import type { StudentFormState } from '../model/public-test-entry.types';
 import type { PublicLinkAccessResponseDtoPersonalData } from '@/shared/api/model';
 
 const personalData: PublicLinkAccessResponseDtoPersonalData = {

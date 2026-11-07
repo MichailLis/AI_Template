@@ -189,7 +189,7 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 
 **Mapped UI surfaces:**
 
-- `client/src/widgets/public-test-workspace/ui/use-public-test-run-autosave.ts` - Student-facing autosave state
+- `client/src/widgets/public-test-workspace/model/use-public-test-run-autosave.ts` - Student-facing autosave state
 - `client/src/widgets/public-test-workspace/ui/polus/polus-public-run.tsx` - Polus run autosave status
 
 ---
@@ -270,7 +270,7 @@ Canonical Russian terminology for admin and public student UI surfaces. This glo
 | анализ                | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempt-detail-dialog.tsx` | Tab button "Анализ", sections "Сводка", "Исходный текст"                                                                                                   |
 | анализ                | `client/src/widgets/admin-public-links-stats-workspace/ui/public-links-attempts-table-card.tsx`   | Action button "Анализ"                                                                                                                                     |
 | аналитика             | `client/src/features/admin/ui/admin-shell.tsx`                                                    | Nav item "Аналитика" (id: 'analytics' - aggregate metrics only)                                                                                            |
-| автосохранение        | `client/src/widgets/public-test-workspace/ui/use-public-test-run-autosave.ts`                     | Student-facing status for background answer saves                                                                                                          |
+| автосохранение        | `client/src/widgets/public-test-workspace/model/use-public-test-run-autosave.ts`                  | Student-facing status for background answer saves                                                                                                          |
 | конструктор брендинга | `client/src/widgets/admin-public-links-workspace/ui/public-link-branding-builder.tsx`             | Admin editor for STANDARD public link appearance                                                                                                           |
 | резервная копия       | `client/src/widgets/admin-settings-workspace/ui/admin-settings-backups.tsx`                       | Settings tab "Резервные копии", buttons "Создать копию", "Загрузить копию", "Восстановить"                                                                 |
 

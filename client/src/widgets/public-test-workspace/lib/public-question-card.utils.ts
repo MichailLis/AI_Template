@@ -1,4 +1,4 @@
-import type { PublicTestQuestionSliderBand } from './public-test-run.types';
+import type { PublicTestQuestionSliderBand } from '../model/public-test-run.types';
 
 interface SliderQuestionMeta {
   min: number;

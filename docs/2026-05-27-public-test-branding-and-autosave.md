@@ -45,8 +45,8 @@ Behavior:
 
 Relevant frontend files:
 
-- `client/src/widgets/public-test-workspace/ui/use-public-test-run-autosave.ts`
-- `client/src/widgets/public-test-workspace/ui/use-public-test-run-workspace.ts`
+- `client/src/widgets/public-test-workspace/model/use-public-test-run-autosave.ts`
+- `client/src/widgets/public-test-workspace/model/use-public-test-run-workspace.ts`
 - `client/src/widgets/public-test-workspace/ui/polus/polus-public-run.tsx`
 
 ## Profession Atlas URL
