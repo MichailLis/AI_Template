@@ -155,7 +155,7 @@ describe('production Tailwind CSS compatibility', () => {
     expect(declarations('data-[state=open]:animate-in')['animation-name']).toContain('enter');
     expect(declarations('data-[state=closed]:animate-out')['animation-name']).toContain('exit');
     expect(
-      declarations('data-[state=open]:slide-in-from-right')['--tw-enter-translate-x'],
+      declarations('data-[state=open]:slide-in-from-right-full')['--tw-enter-translate-x'],
     ).toContain('100%');
   });
 

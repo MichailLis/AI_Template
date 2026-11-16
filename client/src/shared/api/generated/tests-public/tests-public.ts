@@ -108,6 +108,7 @@ export type TestsPublicControllerGetLinkAccessQueryResult = NonNullable<
 >;
 export type TestsPublicControllerGetLinkAccessQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get public test link metadata */
 export function useTestsPublicControllerGetLinkAccess<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetLinkAccess>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -129,6 +130,7 @@ export function useTestsPublicControllerGetLinkAccess<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test link metadata */
 export function useTestsPublicControllerGetLinkAccess<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetLinkAccess>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -150,6 +152,7 @@ export function useTestsPublicControllerGetLinkAccess<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test link metadata */
 export function useTestsPublicControllerGetLinkAccess<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetLinkAccess>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -163,10 +166,7 @@ export function useTestsPublicControllerGetLinkAccess<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get public test link metadata
- */
-
+/** @summary Get public test link metadata */
 export function useTestsPublicControllerGetLinkAccess<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetLinkAccess>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -259,9 +259,7 @@ export type TestsPublicControllerStartSessionMutationVariables = {
   data: PublicSessionStartRequestDto;
 };
 
-/**
- * @summary Start or resume public test session
- */
+/** @summary Start or resume public test session */
 export const useTestsPublicControllerStartSession = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -340,6 +338,7 @@ export type TestsPublicControllerGetSessionQueryResult = NonNullable<
 >;
 export type TestsPublicControllerGetSessionQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get public test session state by token */
 export function useTestsPublicControllerGetSession<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSession>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -361,6 +360,7 @@ export function useTestsPublicControllerGetSession<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test session state by token */
 export function useTestsPublicControllerGetSession<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSession>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -382,6 +382,7 @@ export function useTestsPublicControllerGetSession<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test session state by token */
 export function useTestsPublicControllerGetSession<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSession>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -395,10 +396,7 @@ export function useTestsPublicControllerGetSession<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get public test session state by token
- */
-
+/** @summary Get public test session state by token */
 export function useTestsPublicControllerGetSession<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSession>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -491,9 +489,7 @@ export type TestsPublicControllerSaveAnswersMutationVariables = {
   data: PublicSessionSaveAnswersRequestDto;
 };
 
-/**
- * @summary Save public test session answers
- */
+/** @summary Save public test session answers */
 export const useTestsPublicControllerSaveAnswers = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -576,9 +572,7 @@ export type TestsPublicControllerFinishSessionMutationResult = NonNullable<
 export type TestsPublicControllerFinishSessionMutationError = ErrorType<ErrorResponseDto>;
 export type TestsPublicControllerFinishSessionMutationVariables = { sessionToken: string };
 
-/**
- * @summary Finish public test session and compute analysis
- */
+/** @summary Finish public test session and compute analysis */
 export const useTestsPublicControllerFinishSession = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -661,6 +655,7 @@ export type TestsPublicControllerGetSessionResultQueryResult = NonNullable<
 >;
 export type TestsPublicControllerGetSessionResultQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get public test session analysis result */
 export function useTestsPublicControllerGetSessionResult<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSessionResult>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -686,6 +681,7 @@ export function useTestsPublicControllerGetSessionResult<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test session analysis result */
 export function useTestsPublicControllerGetSessionResult<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSessionResult>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -711,6 +707,7 @@ export function useTestsPublicControllerGetSessionResult<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public test session analysis result */
 export function useTestsPublicControllerGetSessionResult<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSessionResult>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -728,10 +725,7 @@ export function useTestsPublicControllerGetSessionResult<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get public test session analysis result
- */
-
+/** @summary Get public test session analysis result */
 export function useTestsPublicControllerGetSessionResult<
   TData = Awaited<ReturnType<typeof testsPublicControllerGetSessionResult>>,
   TError = ErrorType<ErrorResponseDto>,
