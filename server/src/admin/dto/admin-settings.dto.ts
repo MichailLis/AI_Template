@@ -149,3 +149,9 @@ export class AdminPublicRateLimitSettingsResponseDto extends createZodDto(
 ) {}
 
 export class UpdatePublicRateLimitDto extends createZodDto(PublicRateLimitSchema) {}
+
+export const AdminBuildInfoSchema = z.object({
+  build: z.string(),
+});
+
+export class AdminBuildInfoResponseDto extends createZodDto(AdminBuildInfoSchema) {}

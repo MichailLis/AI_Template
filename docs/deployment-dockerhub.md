@@ -306,10 +306,18 @@ docker compose --project-name ai_template_clean --env-file .env.deploy.clean -f 
    ```bash
    git fetch origin
    git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
+   grep -n "3000/health" docker-compose.deploy.yml   # пусто, а в файле есть /api-json: compose старый
    docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
    docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
    ```
+
+   Compose обновляется вместе с образами: старый файл с новыми образами оставляет backend
+   `unhealthy` (его healthcheck ходит в `/api-json`, а Swagger в production выключен), и frontend
+   не стартует с `dependency failed to start`. Если файлы на сервер копировали без git, скачайте
+   их из `prod_ready` заново. `up -d` без списка сервисов пересоздаёт каждый контейнер, у которого
+   сменился образ или настройки, включая Adminer; в `ps` у него должен быть порт
+   `127.0.0.1:8081->8080/tcp`, не `0.0.0.0`.
 
    В `.env.deploy` должно быть `DOCKERHUB_NAMESPACE=morro665065` и `APP_IMAGE_TAG=prod`.
    Старые переменные `OPENROUTER_API_KEY` и `OPENROUTER_DEFAULT_MODEL` продолжают работать;
@@ -352,11 +360,11 @@ docker buildx imagetools create -t your-dockerhub/ai-template-backend:prod-YYYYM
 docker buildx imagetools create -t your-dockerhub/ai-template-frontend:prod-YYYYMMDD your-dockerhub/ai-template-frontend:prod
 ```
 
-Если нужно опубликовать образы в свой Docker Hub namespace:
+Если нужно опубликовать образы в свой Docker Hub namespace (`APP_BUILD` — номер сборки, который видит владелец в админке в «Настройках»; без него будет `dev`):
 
 ```bash
 docker login
-docker compose --env-file .env.deploy -f docker-compose.build.yml build
+APP_BUILD=$(git rev-parse --short HEAD) docker compose --env-file .env.deploy -f docker-compose.build.yml build
 docker compose --env-file .env.deploy -f docker-compose.build.yml push
 ```
 
@@ -370,7 +378,7 @@ Vite-конфига, затем production bundle. Контекст сборки
 
 ```bash
 docker buildx create --use
-docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t your-dockerhub/ai-template-backend:prod --push server
+docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t your-dockerhub/ai-template-backend:prod --build-arg APP_BUILD=$(git rev-parse --short HEAD) --push server
 docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t your-dockerhub/ai-template-frontend:prod --push client
 ```
 

@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from '../auth/decorators';
@@ -22,6 +23,7 @@ import { AiProviderClientService, type AiProviderHealth } from '../ai-provider/a
 import {
   AdminAiProviderCheckResponseDto,
   AdminAiProviderSettingsResponseDto,
+  AdminBuildInfoResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
   AdminProfessionAtlasSettingsResponseDto,
   AdminPublicRateLimitSettingsResponseDto,
@@ -46,6 +48,7 @@ export class AdminSettingsController {
     private readonly privacyPolicySettingsService: PrivacyPolicySettingsService,
     private readonly profOrientationAtlasService: ProfOrientationAtlasService,
     private readonly publicRateLimitSettingsService: PublicRateLimitSettingsService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -150,5 +153,13 @@ export class AdminSettingsController {
   @ApiResponse({ status: HttpStatus.OK, type: ProfessionAtlasCoverageResponseDto })
   getProfessionAtlasCoverage() {
     return this.profOrientationAtlasService.buildCoverageReport();
+  }
+
+  /** Номер сборки, который владелец сверяет с тем, что на проде; без APP_BUILD (локально) — `dev`. */
+  @Get('build-info')
+  @ApiOperation({ summary: 'Get the backend build identifier set when the image was built' })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminBuildInfoResponseDto })
+  getBuildInfo() {
+    return { build: this.config.get<string>('APP_BUILD')?.trim() || 'dev' };
   }
 }

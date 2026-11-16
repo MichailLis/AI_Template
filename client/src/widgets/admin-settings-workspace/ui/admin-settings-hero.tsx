@@ -26,9 +26,11 @@ const integrationBadgeClassNames: Record<IntegrationHealthTone, string> = {
  */
 export function AdminSettingsHero({
   aiProviderBadge,
+  build,
   professionAtlasBadge,
 }: {
   aiProviderBadge: IntegrationHealthBadge;
+  build?: string;
   professionAtlasBadge: IntegrationHealthBadge;
 }) {
   return (
@@ -50,6 +52,9 @@ export function AdminSettingsHero({
               Провайдер ИИ (OpenAI-совместимый API) используется для анализа ответов. Атлас
               профессий показывается на публичной странице результата.
             </p>
+            {build ? (
+              <p className={`mt-1 text-xs ${adminClassNames.text.body}`}>Сборка: {build}</p>
+            ) : null}
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

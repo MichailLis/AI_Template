@@ -4,6 +4,7 @@ import { useSaveProfessionAtlasUrl } from '@/features/manage-app-settings';
 import { usePrivacyPolicyFormState, useSavePrivacyPolicy } from '@/features/manage-privacy-policy';
 import {
   useAdminSettingsControllerGetAiProviderSettings,
+  useAdminSettingsControllerGetBuildInfo,
   useAdminSettingsControllerGetPrivacyPolicySettings,
   useAdminSettingsControllerGetProfessionAtlasCoverage,
   useAdminSettingsControllerGetProfessionAtlasSettings,
@@ -114,6 +115,7 @@ export function AdminSettingsWorkspace() {
   });
 
   const settingsQuery = useAdminSettingsControllerGetAiProviderSettings();
+  const buildInfoQuery = useAdminSettingsControllerGetBuildInfo();
   const professionAtlasQuery = useAdminSettingsControllerGetProfessionAtlasSettings();
   // Покрытие обходит Атлас десятки раз, поэтому не задерживает настройки: догружается отдельно.
   const coverageQuery = useAdminSettingsControllerGetProfessionAtlasCoverage();
@@ -156,6 +158,7 @@ export function AdminSettingsWorkspace() {
   return (
     <div className={`mx-auto max-w-4xl ${adminClassNames.layout.page}`}>
       <AdminSettingsHero
+        build={buildInfoQuery.data?.build}
         aiProviderBadge={getAiProviderHealthBadge(aiProvider, { isError: settingsQuery.isError })}
         professionAtlasBadge={getProfessionAtlasHealthBadge(professionAtlas, {
           isError: professionAtlasQuery.isError,
