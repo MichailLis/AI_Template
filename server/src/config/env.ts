@@ -161,6 +161,7 @@ export const envSchema = z
     DATABASE_URL: optionalString,
     JWT_ACCESS_SECRET: optionalString,
     JWT_REFRESH_SECRET: optionalString,
+    APP_BUILD: optionalString,
     [CORS_ALLOWED_ORIGINS_ENV]: optionalString,
     ...Object.fromEntries(NUMERIC_ENV_NAMES.map((name) => [name, numericVariable(name)])),
   })

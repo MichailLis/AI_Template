@@ -352,11 +352,11 @@ docker buildx imagetools create -t your-dockerhub/ai-template-backend:prod-YYYYM
 docker buildx imagetools create -t your-dockerhub/ai-template-frontend:prod-YYYYMMDD your-dockerhub/ai-template-frontend:prod
 ```
 
-Если нужно опубликовать образы в свой Docker Hub namespace:
+Если нужно опубликовать образы в свой Docker Hub namespace (`APP_BUILD` — номер сборки, который видит владелец в админке в «Настройках»; без него будет `dev`):
 
 ```bash
 docker login
-docker compose --env-file .env.deploy -f docker-compose.build.yml build
+APP_BUILD=$(git rev-parse --short HEAD) docker compose --env-file .env.deploy -f docker-compose.build.yml build
 docker compose --env-file .env.deploy -f docker-compose.build.yml push
 ```
 
@@ -370,7 +370,7 @@ Vite-конфига, затем production bundle. Контекст сборки
 
 ```bash
 docker buildx create --use
-docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t your-dockerhub/ai-template-backend:prod --push server
+docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile -t your-dockerhub/ai-template-backend:prod --build-arg APP_BUILD=$(git rev-parse --short HEAD) --push server
 docker buildx build --platform linux/amd64,linux/arm64 -f client/Dockerfile -t your-dockerhub/ai-template-frontend:prod --push client
 ```
 
