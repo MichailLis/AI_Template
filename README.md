@@ -109,8 +109,25 @@ git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
 Если `git pull` ругается на локальные изменения, остановитесь и не делайте `reset --hard`: ваш
 `.env.deploy` в git не входит, а конфликт значит, что кто-то правил tracked-файлы на сервере.
 
+Если файлы на сервер копировали вручную, а не через git, скачайте `docker-compose.deploy.yml` и
+`.env.deploy.example` из ветки `prod_ready` заново. Старый compose с новыми образами не запускается:
+backend остаётся `unhealthy`, а frontend падает с `dependency failed to start`.
+
+Убедитесь, что compose новый, прежде чем идти дальше:
+
+```bash
+grep -n "3000/health" docker-compose.deploy.yml
+```
+
+Команда должна вывести строку healthcheck. Если она ничего не выводит, а в файле есть `/api-json`,
+compose старый: в production Swagger (`/api-json`) выключен, и проверка здоровья по нему никогда не
+пройдёт.
+
 Что изменилось в compose относительно прошлого релиза (правок в `.env.deploy` не требуется):
 
+- healthcheck backend проверяет `GET /health` вместо `/api-json`;
+- Adminer публикуется только на `127.0.0.1` (`ADMINER_PORT`), снаружи его открывают через
+  SSH-туннель: `ssh -L 8081:127.0.0.1:8081 user@SERVER_IP`;
 - добавлен том `ai_template_backups` с копиями базы из админки (создаётся сам);
 - переменные ИИ называются `AI_*`. Старые `OPENROUTER_API_KEY` и `OPENROUTER_DEFAULT_MODEL`
   продолжают работать и передаются как раньше; таймауты `OPENROUTER_*_TIMEOUT*` больше не
@@ -125,11 +142,18 @@ git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ```
 
+`up -d` без списка сервисов пересоздаёт каждый контейнер, у которого сменился образ или настройки
+в compose, включая Adminer. Если перечислить только `backend frontend`, Adminer останется со старой
+публикацией порта (`0.0.0.0:8081`).
+
 Том с базой не меняется: контейнер PostgreSQL при обновлении на этот релиз пересоздаётся из-за новых настроек, данные остаются в томе. При старте backend сам применяет новые миграции.
+
+В `ps` у `postgres`, `backend` и `frontend` должно быть `healthy`, а у `adminer` порт
+`127.0.0.1:8081->8080/tcp` (не `0.0.0.0`).
 
 ### 4. Проверка
 
