@@ -33,6 +33,7 @@ import type {
   AdminBackupSettingsResponseDto,
   AdminBackupsControllerImportBackupParams,
   AdminBackupsOverviewResponseDto,
+  AdminBuildInfoResponseDto,
   AdminControllerGetUsersParams,
   AdminOverviewResponseDto,
   AdminPrivacyPolicySettingsResponseDto,
@@ -2215,6 +2216,145 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminSettingsControllerGetProfessionAtlasCoverageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * @summary Get the backend build identifier set when the image was built
+ */
+export const adminSettingsControllerGetBuildInfo = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<AdminBuildInfoResponseDto>(
+    { url: `/admin/settings/build-info`, method: 'GET', signal },
+    options,
+  );
+};
+
+export const getAdminSettingsControllerGetBuildInfoQueryKey = () => {
+  return [`/admin/settings/build-info`] as const;
+};
+
+export const getAdminSettingsControllerGetBuildInfoQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminSettingsControllerGetBuildInfoQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>> = ({
+    signal,
+  }) => adminSettingsControllerGetBuildInfo(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminSettingsControllerGetBuildInfoQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>
+>;
+export type AdminSettingsControllerGetBuildInfoQueryError = ErrorType<ErrorResponseDto>;
+
+export function useAdminSettingsControllerGetBuildInfo<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetBuildInfo<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+          TError,
+          Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminSettingsControllerGetBuildInfo<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the backend build identifier set when the image was built
+ */
+
+export function useAdminSettingsControllerGetBuildInfo<
+  TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+  TError = ErrorType<ErrorResponseDto>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminSettingsControllerGetBuildInfoQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

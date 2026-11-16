@@ -1,4 +1,4 @@
-export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+export type EntryProfileMode = 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 
 export type StudentGender = 'MALE' | 'FEMALE';
 

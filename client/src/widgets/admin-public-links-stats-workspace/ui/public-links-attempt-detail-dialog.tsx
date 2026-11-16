@@ -42,7 +42,7 @@ interface AttemptDetail {
   startedAt: string;
   finishedAt: string | null;
   expiresAt: string | null;
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+  entryProfileMode: 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   professionAtlasUrl: string | null;
   studentName: string | null;
   studentLastInitial: string | null;

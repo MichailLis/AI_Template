@@ -27,7 +27,9 @@ export function useCreatePublicLink({
     values: CreatePublicLinkValues,
     onCreated: (link: { id: number }) => void,
   ) => {
-    const isDemographic = values.entryProfileMode === 'DEMOGRAPHIC';
+    // Демографическая и анонимная ссылки всегда дают одну попытку.
+    const isDemographic =
+      values.entryProfileMode === 'DEMOGRAPHIC' || values.entryProfileMode === 'ANONYMOUS';
     const validation = validateCreatePublicLinkInput({
       publishedVersionId,
       educationOrganizationId: values.educationOrganizationId,

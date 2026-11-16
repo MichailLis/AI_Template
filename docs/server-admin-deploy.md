@@ -164,10 +164,17 @@ curl -f http://localhost/api/health
    ```bash
    git fetch origin
    git pull --ff-only origin "$(git rev-parse --abbrev-ref HEAD)"
+   grep -n "3000/health" docker-compose.deploy.yml   # пусто, а в файле есть /api-json: compose старый
    docker compose --env-file .env.deploy -f docker-compose.deploy.yml pull
-   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d --force-recreate backend frontend
+   docker compose --env-file .env.deploy -f docker-compose.deploy.yml up -d
    docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
    ```
+
+   Compose обновляется вместе с образами: старый файл с новыми образами оставляет backend
+   `unhealthy` (его healthcheck ходит в `/api-json`, а Swagger в production выключен), и frontend
+   не стартует с `dependency failed to start`. Если файлы на сервер копировали без git, скачайте
+   их из `prod_ready` заново. `up -d` без списка сервисов применяет и изменённые настройки Adminer;
+   в `ps` у него должен быть порт `127.0.0.1:8081->8080/tcp`.
 
 3. Проверить: `curl -f http://localhost/health`, лог backend (`All migrations have been
 successfully applied`), `sh scripts/db-counts.sh | diff counts-before.txt -`.

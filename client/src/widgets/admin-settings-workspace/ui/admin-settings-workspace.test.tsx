@@ -34,6 +34,7 @@ vi.mock('@/shared/api/generated/admin/admin', () => ({
     refetch: vi.fn(),
   }),
   getAdminSettingsControllerGetAiProviderSettingsQueryKey: () => ['ai-provider'],
+  useAdminSettingsControllerGetBuildInfo: () => ({ data: { build: 'a1b2c3d' } }),
   useAdminSettingsControllerCheckAiProvider: () => ({ mutate: vi.fn(), isPending: false }),
   useAdminAiUsageControllerGetSummary: () => ({
     data: undefined,
@@ -145,6 +146,12 @@ describe('AdminSettingsWorkspace integration health header', () => {
     expect(screen.getByText(/^Атлас недоступен · /)).toBeInTheDocument();
     expect(screen.queryByText('OpenRouter готов')).not.toBeInTheDocument();
     expect(screen.queryByText('Атлас подключен')).not.toBeInTheDocument();
+  });
+
+  it('shows the backend build number in the header', () => {
+    renderWorkspace();
+
+    expect(screen.getByText('Сборка: a1b2c3d')).toBeInTheDocument();
   });
 
   // Находка #166: бейдж видит только каталог моделей, поэтому ключ и баланс проверяет отдельная кнопка.

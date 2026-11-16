@@ -3,6 +3,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+      args:
+        APP_BUILD: ${APP_BUILD:-dev}
     image: ${DOCKERHUB_NAMESPACE:?Set DOCKERHUB_NAMESPACE in .env}/ai-template-backend:${APP_IMAGE_TAG:-latest}
 
   frontend:

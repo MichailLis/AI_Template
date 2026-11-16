@@ -11,6 +11,7 @@ export type PublicLinkAccessResponseDtoEntryProfileMode =
 
 export const PublicLinkAccessResponseDtoEntryProfileMode = {
   DEMOGRAPHIC: 'DEMOGRAPHIC',
+  ANONYMOUS: 'ANONYMOUS',
   EDUCATION: 'EDUCATION',
   EDUCATION_DEMOGRAPHIC: 'EDUCATION_DEMOGRAPHIC',
 } as const;

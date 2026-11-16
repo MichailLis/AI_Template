@@ -64,27 +64,30 @@ describe('createPublicTestEntryStartHandler', () => {
     expect(safeStorage.getItem('public-test-attempt:OTHER123')).toBe('other-link-token');
   });
 
-  it('keeps no token in demographic mode, where nobody can come back', async () => {
-    const startSession = vi.fn().mockResolvedValue({ session: { sessionToken: 'anon-token' } });
-    safeStorage.setItem('public-test-attempt:ABCD1234', 'stale-token');
+  it.each(['DEMOGRAPHIC', 'ANONYMOUS'] as const)(
+    'keeps no token in %s mode, where nobody can come back',
+    async (entryProfileMode) => {
+      const startSession = vi.fn().mockResolvedValue({ session: { sessionToken: 'anon-token' } });
+      safeStorage.setItem('public-test-attempt:ABCD1234', 'stale-token');
 
-    await createPublicTestEntryStartHandler({
-      code: 'ABCD1234',
-      entryProfileMode: 'DEMOGRAPHIC',
-      educationFormState: validFormState,
-      demographicFormState: validDemographicFormState,
-      linkData: undefined,
-      startSession,
-      navigate: vi.fn(),
-    })(createSubmitEvent());
+      await createPublicTestEntryStartHandler({
+        code: 'ABCD1234',
+        entryProfileMode,
+        educationFormState: validFormState,
+        demographicFormState: validDemographicFormState,
+        linkData: undefined,
+        startSession,
+        navigate: vi.fn(),
+      })(createSubmitEvent());
 
-    expect(startSession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.not.objectContaining({ resumeToken: expect.anything() }),
-      }),
-    );
-    expect(safeStorage.getItem('public-test-attempt:ABCD1234')).toBe('stale-token');
-  });
+      expect(startSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.not.objectContaining({ resumeToken: expect.anything() }),
+        }),
+      );
+      expect(safeStorage.getItem('public-test-attempt:ABCD1234')).toBe('stale-token');
+    },
+  );
 
   it('submits normalized student data and navigates to the returned session', async () => {
     const startSession = vi.fn().mockResolvedValue({

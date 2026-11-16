@@ -1,3 +1,4 @@
+import type { ConfigService } from '@nestjs/config';
 import { AdminSettingsController } from './admin-settings.controller';
 import type { ProfessionAtlasSettingsService } from '../app-settings/profession-atlas-settings.service';
 import type { PrivacyPolicySettingsService } from '../app-settings/privacy-policy-settings.service';
@@ -32,7 +33,10 @@ describe('AdminSettingsController', () => {
     updateSettings: jest.Mock;
   };
 
+  let configService: { get: jest.Mock };
+
   beforeEach(() => {
+    configService = { get: jest.fn() };
     aiProviderConfig = {
       getAiProviderSettings: jest.fn(),
       getConnection: jest.fn(),
@@ -64,6 +68,7 @@ describe('AdminSettingsController', () => {
       privacyPolicySettingsService as unknown as PrivacyPolicySettingsService,
       profOrientationAtlasService as unknown as ProfOrientationAtlasService,
       publicRateLimitSettingsService as unknown as PublicRateLimitSettingsService,
+      configService as unknown as ConfigService,
     );
   });
 
@@ -283,5 +288,20 @@ describe('AdminSettingsController', () => {
       perMinute: 30,
       burst: 60,
     });
+  });
+
+  it('returns the build identifier from APP_BUILD', () => {
+    configService.get.mockReturnValue('a1b2c3d');
+
+    expect(controller.getBuildInfo()).toEqual({ build: 'a1b2c3d' });
+    expect(configService.get).toHaveBeenCalledWith('APP_BUILD');
+  });
+
+  it('falls back to dev when APP_BUILD is unset or blank', () => {
+    configService.get.mockReturnValue(undefined);
+    expect(controller.getBuildInfo()).toEqual({ build: 'dev' });
+
+    configService.get.mockReturnValue('   ');
+    expect(controller.getBuildInfo()).toEqual({ build: 'dev' });
   });
 });

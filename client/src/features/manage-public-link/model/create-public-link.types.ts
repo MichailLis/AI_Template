@@ -1,4 +1,5 @@
-export type PublicLinkEntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+export type PublicLinkEntryProfileMode =
+  'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 export type PublicLinkTemplate = 'STANDARD' | 'POLUS';
 export type PersonalDataProcessingMode = 'PUBLIC' | 'ON_BEHALF_OF_EDUCATION_ORGANIZATION';
 

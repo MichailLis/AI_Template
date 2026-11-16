@@ -35,7 +35,7 @@ interface StartSessionRequestData {
   age?: number;
   residence?: string;
   educationLevel?: StudentEducationLevel;
-  consentAccepted: true;
+  consentAccepted?: true;
   resumeToken?: string;
 }
 
@@ -232,7 +232,10 @@ export const createPublicTestEntryStartHandler = ({
 
     let data: StartSessionRequestData | null;
 
-    if (entryProfileMode === 'DEMOGRAPHIC') {
+    if (entryProfileMode === 'ANONYMOUS') {
+      // Анкеты и согласия нет: персональные данные не собираются.
+      data = { entryProfileMode: 'ANONYMOUS' };
+    } else if (entryProfileMode === 'DEMOGRAPHIC') {
       data = buildDemographicPayload(demographicFormState);
     } else if (entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
       data = buildEducationDemographicPayload(educationFormState, demographicFormState, linkData);
@@ -244,8 +247,8 @@ export const createPublicTestEntryStartHandler = ({
       return;
     }
 
-    // В режиме DEMOGRAPHIC ученика не узнать: каждый старт — новая попытка, возвращаться некуда.
-    const canResume = entryProfileMode !== 'DEMOGRAPHIC';
+    // В режимах DEMOGRAPHIC и ANONYMOUS ученика не узнать: каждый старт — новая попытка, возвращаться некуда.
+    const canResume = entryProfileMode !== 'DEMOGRAPHIC' && entryProfileMode !== 'ANONYMOUS';
     const attemptStorageKey = getAttemptStorageKey(code);
     const resumeToken = canResume ? safeStorage.getItem(attemptStorageKey) : null;
 

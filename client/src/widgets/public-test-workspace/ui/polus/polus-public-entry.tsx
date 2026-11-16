@@ -290,6 +290,32 @@ export function PolusPublicEntry({
     );
   }
 
+  if (entryProfileMode === 'ANONYMOUS') {
+    return (
+      <PolusPublicLayout view="entry">
+        <PolusIntroPanel />
+
+        <section className="polus-test-stage" aria-live="polite">
+          <header className="polus-stage-header">
+            <div className="polus-stage-title">
+              <strong>{link.title}</strong>
+            </div>
+          </header>
+
+          <div className="polus-state-view">
+            <form className="polus-form-grid" onSubmit={onSubmit}>
+              <div className="polus-form-actions">
+                <button className="polus-primary-action" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Запускаем тест...' : 'Начать'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </PolusPublicLayout>
+    );
+  }
+
   return (
     <PolusPublicLayout view="entry">
       <PolusIntroPanel />
