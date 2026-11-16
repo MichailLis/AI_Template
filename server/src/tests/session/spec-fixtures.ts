@@ -2,7 +2,7 @@ import type { PublicSessionStartRequestDto } from '../dto/tests-public.dto';
 import type { SessionStateResponse } from '../session/public-session.service';
 
 export type GroupValidationMode = 'NONE' | 'HINT' | 'STRICT';
-export type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+export type EntryProfileMode = 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 
 export type AccessibleLinkFixture = {
   id: number;

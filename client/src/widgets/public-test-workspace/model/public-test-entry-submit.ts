@@ -35,7 +35,7 @@ interface StartSessionRequestData {
   age?: number;
   residence?: string;
   educationLevel?: StudentEducationLevel;
-  consentAccepted: true;
+  consentAccepted?: true;
   resumeToken?: string;
 }
 
@@ -232,7 +232,10 @@ export const createPublicTestEntryStartHandler = ({
 
     let data: StartSessionRequestData | null;
 
-    if (entryProfileMode === 'DEMOGRAPHIC') {
+    if (entryProfileMode === 'ANONYMOUS') {
+      // Анкеты и согласия нет: персональные данные не собираются.
+      data = { entryProfileMode: 'ANONYMOUS' };
+    } else if (entryProfileMode === 'DEMOGRAPHIC') {
       data = buildDemographicPayload(demographicFormState);
     } else if (entryProfileMode === 'EDUCATION_DEMOGRAPHIC') {
       data = buildEducationDemographicPayload(educationFormState, demographicFormState, linkData);

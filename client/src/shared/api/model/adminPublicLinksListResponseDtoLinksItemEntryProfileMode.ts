@@ -11,6 +11,7 @@ export type AdminPublicLinksListResponseDtoLinksItemEntryProfileMode =
 
 export const AdminPublicLinksListResponseDtoLinksItemEntryProfileMode = {
   DEMOGRAPHIC: 'DEMOGRAPHIC',
+  ANONYMOUS: 'ANONYMOUS',
   EDUCATION: 'EDUCATION',
   EDUCATION_DEMOGRAPHIC: 'EDUCATION_DEMOGRAPHIC',
 } as const;

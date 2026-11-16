@@ -190,6 +190,32 @@ describe('TestsPublicLinkService', () => {
     expect(result.maxAttemptsPerStudent).toBe(1);
   });
 
+  it('createPublicLink forces one attempt for ANONYMOUS mode', async () => {
+    prismaMock.testTopicVersion.findUnique.mockResolvedValue({
+      id: 50,
+      topicId: 7,
+      status: 'PUBLISHED',
+    });
+    prismaMock.testPublicLink.findUnique.mockResolvedValue(null);
+    prismaMock.testPublicLink.create.mockResolvedValue(
+      createPublicLinkRecordFixture({ entryProfileMode: 'ANONYMOUS', maxAttemptsPerStudent: 1 }),
+    );
+
+    await service.createPublicLink(7, {
+      publishedVersionId: 50,
+      shortCode: 'ANON2026',
+      entryProfileMode: 'ANONYMOUS',
+      maxAttemptsPerStudent: 5,
+      consentVersion: 'v1',
+      consentText: 'Согласие',
+    });
+
+    const createCall = prismaMock.testPublicLink.create.mock.calls[0]?.[0];
+
+    expect(createCall?.data.entryProfileMode).toBe('ANONYMOUS');
+    expect(createCall?.data.maxAttemptsPerStudent).toBe(1);
+  });
+
   it('createPublicLink stores POLUS template when requested', async () => {
     prismaMock.testTopicVersion.findUnique.mockResolvedValue({
       id: 50,

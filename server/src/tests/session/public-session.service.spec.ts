@@ -199,6 +199,77 @@ describe('TestsPublicSessionService start', () => {
     expect(getSessionByTokenSpy).toHaveBeenNthCalledWith(2, 'resume-demo-2');
   });
 
+  it('starts an ANONYMOUS attempt without consent or profile and marks the consent columns', async () => {
+    getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+      createAccessibleLinkFixture({
+        entryProfileMode: 'ANONYMOUS',
+        educationOrganization: {
+          id: 42,
+          name: 'Лицей 42',
+          logoUrl: null,
+          groupValidationMode: 'NONE',
+          groupValidationPattern: null,
+          groupValidationHint: null,
+        },
+        allowResume: true,
+        maxAttemptsPerStudent: 1,
+      }),
+    );
+    updateManyMock.mockResolvedValue({ count: 0 });
+    findManyMock.mockResolvedValue([]);
+    createAttemptMock
+      .mockResolvedValueOnce({ resumeToken: 'resume-anon-1' })
+      .mockResolvedValueOnce({ resumeToken: 'resume-anon-2' });
+    jest
+      .spyOn(service, 'getSessionByToken')
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-anon-1'))
+      .mockResolvedValueOnce(createPublicSessionStateResponse('resume-anon-2'));
+
+    await service.startSessionByCode('ANON2026', { entryProfileMode: 'ANONYMOUS' });
+    await service.startSessionByCode('ANON2026', { entryProfileMode: 'ANONYMOUS' });
+
+    const first = createAttemptMock.mock.calls[0]?.[0].data;
+    const second = createAttemptMock.mock.calls[1]?.[0].data;
+
+    expect(first).toMatchObject({
+      attemptNumber: 1,
+      educationOrganization: 'Лицей 42',
+      studentLastInitial: null,
+      groupOrClass: null,
+      studentGender: null,
+      studentAge: null,
+      consentVersion: 'ANONYMOUS',
+      consentTextSnapshot:
+        'Анонимное прохождение: персональные данные не собираются, согласие не требуется',
+    });
+    expect(first?.consentAcceptedAt).toBeInstanceOf(Date);
+    expect(first?.studentName).toBe(`user ${String(first?.studentKeyHash).slice(0, 8)}`);
+    expect(first?.studentName).toMatch(/^user [0-9a-f]{8}$/);
+    // Каждый старт — новый участник, а не вторая попытка того же.
+    expect(second?.attemptNumber).toBe(1);
+    expect(second?.studentKeyHash).not.toBe(first?.studentKeyHash);
+  });
+
+  it.each(['EDUCATION', 'DEMOGRAPHIC', 'EDUCATION_DEMOGRAPHIC'] as const)(
+    'rejects a %s start without consent (CONSENT_REQUIRED)',
+    async (entryProfileMode) => {
+      getAccessiblePublicLinkByCodeMock.mockResolvedValue(
+        createAccessibleLinkFixture({ entryProfileMode, maxAttemptsPerStudent: 1 }),
+      );
+      const dto =
+        entryProfileMode === 'DEMOGRAPHIC'
+          ? createPublicSessionDemographicStartDto({ consentAccepted: undefined })
+          : entryProfileMode === 'EDUCATION_DEMOGRAPHIC'
+            ? createPublicSessionEducationDemographicStartDto({ consentAccepted: undefined })
+            : createPublicSessionStartDto({ consentAccepted: undefined });
+
+      await expect(service.startSessionByCode('ABC123', dto)).rejects.toMatchObject({
+        code: 'CONSENT_REQUIRED',
+      });
+      expect(createAttemptMock).not.toHaveBeenCalled();
+    },
+  );
+
   it('startSessionByCode rejects incomplete DEMOGRAPHIC profile data', async () => {
     getAccessiblePublicLinkByCodeMock.mockResolvedValue(
       createAccessibleLinkFixture({

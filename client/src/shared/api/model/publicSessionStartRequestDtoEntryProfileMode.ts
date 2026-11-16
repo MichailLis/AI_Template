@@ -11,6 +11,7 @@ export type PublicSessionStartRequestDtoEntryProfileMode =
 
 export const PublicSessionStartRequestDtoEntryProfileMode = {
   DEMOGRAPHIC: 'DEMOGRAPHIC',
+  ANONYMOUS: 'ANONYMOUS',
   EDUCATION: 'EDUCATION',
   EDUCATION_DEMOGRAPHIC: 'EDUCATION_DEMOGRAPHIC',
 } as const;
