@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
 
 import { PrismaService } from '../../prisma.service';
+import { InvalidInputError } from '../../common/errors/domain-error';
 import type {
   PublicSessionSaveAnswersRequestDto,
   PublicSessionStartRequestDto,
@@ -124,6 +125,17 @@ export class TestsPublicSessionService {
     const link = await this.publicLinkService.getAccessiblePublicLinkByCode(shortCode);
     validateEntryProfileMode(link, dto);
 
+    if (link.entryProfileMode === 'ANONYMOUS') {
+      return this.startAnonymousSession(link);
+    }
+
+    if (dto.consentAccepted !== true) {
+      throw new InvalidInputError(
+        'Необходимо согласие на обработку персональных данных',
+        'CONSENT_REQUIRED',
+      );
+    }
+
     if (link.entryProfileMode === 'DEMOGRAPHIC') {
       return this.startDemographicSession(link, dto);
     }
@@ -190,6 +202,27 @@ export class TestsPublicSessionService {
         studentAge: demographicProfile?.studentAge ?? null,
         studentResidence: demographicProfile?.studentResidence ?? null,
         studentEducationLevel: demographicProfile?.studentEducationLevel ?? null,
+      },
+    });
+  }
+
+  private async startAnonymousSession(link: AccessiblePublicLink): Promise<SessionStateResponse> {
+    // Как у DEMOGRAPHIC: ключ случаен, повторный старт всегда новый участник.
+    const studentKeyHash = createRandomToken(32);
+
+    return this.startAllocatedSession({
+      link,
+      studentKeyHash,
+      profile: {
+        studentName: `user ${studentKeyHash.slice(0, 8)}`,
+        studentLastInitial: null,
+        studentMiddleInitial: null,
+        educationOrganization: link.educationOrganization?.name ?? null,
+        groupOrClass: null,
+        studentGender: null,
+        studentAge: null,
+        studentResidence: null,
+        studentEducationLevel: null,
       },
     });
   }

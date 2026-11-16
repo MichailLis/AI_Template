@@ -48,7 +48,7 @@ export interface PublicSessionStartRequestDto {
    */
   residence?: string;
   educationLevel?: PublicSessionStartRequestDtoEducationLevel;
-  consentAccepted: true;
+  consentAccepted?: true;
   /**
    * @minLength 1
    * @maxLength 128

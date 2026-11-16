@@ -44,6 +44,7 @@ export * from './adminBackupsOverviewResponseDtoBackupsItemStatus';
 export * from './adminBackupsOverviewResponseDtoBackupsItemTrigger';
 export * from './adminBackupsOverviewResponseDtoSettings';
 export * from './adminBackupsOverviewResponseDtoStorage';
+export * from './adminBuildInfoResponseDto';
 export * from './adminControllerGetUsersParams';
 export * from './adminControllerGetUsersRole';
 export * from './adminControllerGetUsersSortBy';

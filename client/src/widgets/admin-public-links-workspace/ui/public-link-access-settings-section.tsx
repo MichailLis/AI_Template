@@ -46,11 +46,12 @@ function EntryProfileModeField({ form }: PublicLinkAccessSettingsSectionProps) {
       <Label htmlFor="public-entry-profile-mode">Анкета перед тестом</Label>
       <AdminSelectField id="public-entry-profile-mode" {...form.register('entryProfileMode')}>
         <option value="DEMOGRAPHIC">Демографическая анкета</option>
+        <option value="ANONYMOUS">Анонимно (без анкеты)</option>
         <option value="EDUCATION">Анкета по учебным данным</option>
         <option value="EDUCATION_DEMOGRAPHIC">Учебные данные + демографическая анкета</option>
       </AdminSelectField>
       <p className={`text-xs ${adminClassNames.text.muted}`}>
-        Для демографической анкеты лимит попыток устанавливается равным 1.
+        Для демографической анкеты и анонимной ссылки лимит попыток устанавливается равным 1.
       </p>
     </div>
   );
@@ -64,7 +65,7 @@ function AttemptLimitFields({ form }: PublicLinkAccessSettingsSectionProps) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="public-max-attempts">Лимит попыток</Label>
         {/* Демографическая анкета всегда дает одну попытку; введенный лимит вернется при смене анкеты. */}
-        {entryProfileMode === 'DEMOGRAPHIC' ? (
+        {entryProfileMode === 'DEMOGRAPHIC' || entryProfileMode === 'ANONYMOUS' ? (
           <Input id="public-max-attempts" type="number" value="1" disabled readOnly />
         ) : (
           <Input id="public-max-attempts" type="number" min={1} {...form.register('maxAttempts')} />
