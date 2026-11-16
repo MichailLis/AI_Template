@@ -9,7 +9,7 @@ type StudentEducationLevel =
 
 type PublicTemplate = 'STANDARD' | 'POLUS';
 
-type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+type EntryProfileMode = 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 
 export const studentGenderLabels: Record<StudentGender, string> = {
   MALE: 'Мужской',
@@ -60,6 +60,7 @@ export const publicTemplateLabels: Record<PublicTemplate, string> = {
 
 export const entryProfileModeLabels: Record<EntryProfileMode, string> = {
   DEMOGRAPHIC: 'Демографическая',
+  ANONYMOUS: 'Анонимно',
   EDUCATION: 'Учебная',
   EDUCATION_DEMOGRAPHIC: 'Учебная + демографическая',
 };

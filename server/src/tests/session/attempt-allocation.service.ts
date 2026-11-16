@@ -10,6 +10,11 @@ import {
 
 import type { AccessiblePublicLink, DemographicProfile } from '../session/session-profile';
 
+/** Колонки согласия NOT NULL: у анонимной ссылки согласия нет, пишем маркер. */
+export const ANONYMOUS_CONSENT_VERSION = 'ANONYMOUS';
+export const ANONYMOUS_CONSENT_TEXT =
+  'Анонимное прохождение: персональные данные не собираются, согласие не требуется';
+
 /**
  * Allocating an attempt for a returning student: expire whatever has run out, resume an attempt
  * that is still open, refuse once the link's limit is reached, and otherwise create the next one.
@@ -145,7 +150,11 @@ export class TestsPublicAttemptAllocationService {
 
     let usedAttempts = previousAttempts.length;
 
-    if (link.allowResume && link.entryProfileMode !== 'DEMOGRAPHIC') {
+    if (
+      link.allowResume &&
+      link.entryProfileMode !== 'DEMOGRAPHIC' &&
+      link.entryProfileMode !== 'ANONYMOUS'
+    ) {
       const openAttempts = previousAttempts.filter(
         (attempt) =>
           attempt.status === 'IN_PROGRESS' &&
@@ -188,8 +197,15 @@ export class TestsPublicAttemptAllocationService {
         ...profile,
         studentKeyHash,
         consentAcceptedAt: now,
-        consentVersion: link.consentVersion,
-        consentTextSnapshot: link.consentTextSnapshot,
+        ...(link.entryProfileMode === 'ANONYMOUS'
+          ? {
+              consentVersion: ANONYMOUS_CONSENT_VERSION,
+              consentTextSnapshot: ANONYMOUS_CONSENT_TEXT,
+            }
+          : {
+              consentVersion: link.consentVersion,
+              consentTextSnapshot: link.consentTextSnapshot,
+            }),
         policyVersionSnapshot: activePolicy.version,
         policyPublishedAtSnapshot: activePolicy.publishedAt,
         ...toAttemptOperatorSnapshot(link),

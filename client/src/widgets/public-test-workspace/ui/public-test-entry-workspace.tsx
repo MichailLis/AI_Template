@@ -11,6 +11,7 @@ import { usePublicTestStartSession } from '../model/use-public-test-start-sessio
 
 import { PolusPublicEntry } from './polus/polus-public-entry';
 import { PublicEntryStateCard } from './public-entry-state-card';
+import { PublicTestAnonymousStartCard } from './public-test-anonymous-start-card';
 import { PublicTestDemographicProfileCard } from './public-test-demographic-profile-card';
 import { PublicTestOverviewPanel } from './public-test-overview-panel';
 import { PublicTestRegistrationCard } from './public-test-registration-card';
@@ -87,10 +88,14 @@ function StandardPublicTestEntry({
           maxAttemptsPerStudent={link.maxAttemptsPerStudent}
           timeLimitMinutes={link.timeLimitMinutes}
           resultKind={link.resultKind}
-          showAttempts={entryProfileMode !== 'DEMOGRAPHIC'}
+          showAttempts={entryProfileMode !== 'DEMOGRAPHIC' && entryProfileMode !== 'ANONYMOUS'}
         />
 
-        {entryProfileMode === 'DEMOGRAPHIC' ? (
+        {entryProfileMode === 'ANONYMOUS' && (
+          <PublicTestAnonymousStartCard isSubmitting={isSubmitting} onSubmit={onSubmit} />
+        )}
+
+        {entryProfileMode === 'DEMOGRAPHIC' && (
           <PublicTestDemographicProfileCard
             formState={demographicFormState}
             personalData={link.personalData}
@@ -98,7 +103,9 @@ function StandardPublicTestEntry({
             onSubmit={onSubmit}
             onFieldChange={onDemographicFieldChange}
           />
-        ) : (
+        )}
+
+        {entryProfileMode !== 'ANONYMOUS' && entryProfileMode !== 'DEMOGRAPHIC' && (
           <PublicTestRegistrationCard
             formState={registrationFormState}
             personalData={link.personalData}
@@ -186,7 +193,7 @@ export function PublicTestEntryWorkspace() {
     educationFormState,
     demographicFormState,
     linkData:
-      entryProfileMode !== 'DEMOGRAPHIC'
+      entryProfileMode !== 'DEMOGRAPHIC' && entryProfileMode !== 'ANONYMOUS'
         ? {
             educationOrganization: link.educationOrganization,
             groupValidationMode: link.groupValidationMode,

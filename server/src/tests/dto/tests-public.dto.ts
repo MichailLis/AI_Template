@@ -22,7 +22,12 @@ export const PublicQuestionSliderBandSchema = z.object({
   order: z.number(),
 });
 
-export const EntryProfileModeSchema = z.enum(['DEMOGRAPHIC', 'EDUCATION', 'EDUCATION_DEMOGRAPHIC']);
+export const EntryProfileModeSchema = z.enum([
+  'DEMOGRAPHIC',
+  'ANONYMOUS',
+  'EDUCATION',
+  'EDUCATION_DEMOGRAPHIC',
+]);
 
 export const PublicTemplateSchema = z.enum(['STANDARD', 'POLUS']);
 
@@ -108,7 +113,8 @@ export const PublicStudentProfileSchema = z.object({
   age: z.number().int().min(1).max(120).optional(),
   residence: z.string().trim().min(1).max(300).optional(),
   educationLevel: PublicStudentEducationLevelSchema.optional(),
-  consentAccepted: z.literal(true),
+  // Нужен для всех режимов, кроме ANONYMOUS: проверяет сервис (граница доверия).
+  consentAccepted: z.literal(true).optional(),
 });
 
 // Only the settings keys the public client reads; the rest (directionMap, weights) is scoring internals.

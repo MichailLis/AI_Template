@@ -51,7 +51,8 @@ const baseLink = {
 
 const mockLinkAccess = (
   publicTemplate: 'STANDARD' | 'POLUS',
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC' = 'DEMOGRAPHIC',
+  entryProfileMode:
+    'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC' = 'DEMOGRAPHIC',
   overrides: Partial<typeof baseLink> = {},
 ) => {
   vi.mocked(useTestsPublicControllerGetLinkAccess).mockReturnValue({
@@ -64,10 +65,13 @@ const mockLinkAccess = (
       ...overrides,
     },
   } as never);
+  const mutateAsync = vi.fn().mockResolvedValue({ session: { sessionToken: 'tok' } });
   vi.mocked(useTestsPublicControllerStartSession).mockReturnValue({
-    mutateAsync: vi.fn(),
+    mutateAsync,
     isPending: false,
   } as never);
+
+  return mutateAsync;
 };
 
 describe('PublicTestEntryWorkspace', () => {
@@ -103,6 +107,31 @@ describe('PublicTestEntryWorkspace', () => {
     expect(screen.getByText('Система профориентации')).toBeInTheDocument();
     expect(screen.getByText(/подробный анализ/i)).toBeInTheDocument();
   });
+
+  it.each(['STANDARD', 'POLUS'] as const)(
+    'shows only the title and a start button on ANONYMOUS %s links, and sends no consent',
+    async (template) => {
+      const mutateAsync = mockLinkAccess(template, 'ANONYMOUS');
+
+      render(<PublicTestEntryWorkspace />);
+
+      expect(screen.getByText('Инженерный маршрут')).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Пол')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Возраст')).not.toBeInTheDocument();
+      expect(screen.queryByText('ООО «Оператор тестирования»')).not.toBeInTheDocument();
+      // No auto-start on open: link previews must not create attempts.
+      expect(mutateAsync).not.toHaveBeenCalled();
+
+      await userEvent.click(screen.getByRole('button', { name: /Начать/ }));
+
+      expect(mutateAsync).toHaveBeenCalledTimes(1);
+      const { data } = mutateAsync.mock.calls[0][0];
+      expect(data).toMatchObject({ entryProfileMode: 'ANONYMOUS' });
+      expect(data).not.toHaveProperty('consentAccepted');
+    },
+  );
 
   it('hides the attempts limit in the DEMOGRAPHIC mode where it does not apply', () => {
     mockLinkAccess('STANDARD', 'DEMOGRAPHIC');

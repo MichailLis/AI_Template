@@ -34,7 +34,7 @@ interface PublicAttemptRow {
 
   llmStatus?: string | null;
 
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+  entryProfileMode: 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   studentName: string | null;
   studentLastInitial: string | null;
   studentMiddleInitial: string | null;

@@ -11,6 +11,7 @@ export type AdminPublicAttemptDetailResponseDtoEntryProfileMode =
 
 export const AdminPublicAttemptDetailResponseDtoEntryProfileMode = {
   DEMOGRAPHIC: 'DEMOGRAPHIC',
+  ANONYMOUS: 'ANONYMOUS',
   EDUCATION: 'EDUCATION',
   EDUCATION_DEMOGRAPHIC: 'EDUCATION_DEMOGRAPHIC',
 } as const;

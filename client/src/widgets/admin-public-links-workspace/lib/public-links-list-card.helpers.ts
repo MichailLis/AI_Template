@@ -16,7 +16,7 @@ export interface PublicLinkListItem {
   endsAt: string | null;
   publicTemplate: 'STANDARD' | 'POLUS';
   publicBranding?: PublicBrandingConfig;
-  entryProfileMode: 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+  entryProfileMode: 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
   createdAt: string;
   archivedAt: string | null;
   /**

@@ -38,7 +38,7 @@ const DEFAULT_ALLOW_RESUME = true;
 const DEFAULT_ENTRY_PROFILE_MODE = 'EDUCATION';
 const DEFAULT_PUBLIC_TEMPLATE = 'STANDARD';
 const DEFAULT_PERSONAL_DATA_PROCESSING_MODE = 'PUBLIC';
-type EntryProfileMode = 'DEMOGRAPHIC' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
+type EntryProfileMode = 'DEMOGRAPHIC' | 'ANONYMOUS' | 'EDUCATION' | 'EDUCATION_DEMOGRAPHIC';
 type PublicTemplate = 'STANDARD' | 'POLUS';
 
 const toPublicPersonalData = (link: PublicLinkWithTopicVersion) => {
@@ -88,7 +88,7 @@ const resolveMaxAttemptsForEntryProfileMode = (
   entryProfileMode: EntryProfileMode,
   requestedMaxAttempts: number | undefined,
 ) => {
-  if (entryProfileMode === 'DEMOGRAPHIC') {
+  if (entryProfileMode === 'DEMOGRAPHIC' || entryProfileMode === 'ANONYMOUS') {
     return 1;
   }
 
