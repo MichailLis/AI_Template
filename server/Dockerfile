@@ -54,6 +54,10 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
 
+# Номер сборки для админки (Настройки); задаётся `--build-arg APP_BUILD=<коммит>`, по умолчанию `dev`.
+ARG APP_BUILD=dev
+ENV APP_BUILD=$APP_BUILD
+
 USER node
 
 EXPOSE 3000
