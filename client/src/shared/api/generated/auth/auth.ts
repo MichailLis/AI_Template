@@ -85,9 +85,7 @@ export type AuthControllerSigninMutationBody = SigninDto;
 export type AuthControllerSigninMutationError = ErrorType<ErrorResponseDto>;
 export type AuthControllerSigninMutationVariables = { data: SigninDto };
 
-/**
- * @summary Login
- */
+/** @summary Login */
 export const useAuthControllerSignin = <TError = ErrorType<ErrorResponseDto>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
@@ -159,9 +157,7 @@ export type AuthControllerLogoutMutationResult = NonNullable<
 
 export type AuthControllerLogoutMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Logout
- */
+/** @summary Logout */
 export const useAuthControllerLogout = <TError = ErrorType<ErrorResponseDto>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
@@ -232,9 +228,7 @@ export type AuthControllerRefreshTokensMutationResult = NonNullable<
 
 export type AuthControllerRefreshTokensMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Refresh tokens
- */
+/** @summary Refresh tokens */
 export const useAuthControllerRefreshTokens = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,

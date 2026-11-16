@@ -136,6 +136,7 @@ export type AdminControllerGetOverviewQueryResult = NonNullable<
 >;
 export type AdminControllerGetOverviewQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get admin dashboard overview */
 export function useAdminControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -156,6 +157,7 @@ export function useAdminControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get admin dashboard overview */
 export function useAdminControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -176,6 +178,7 @@ export function useAdminControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get admin dashboard overview */
 export function useAdminControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -188,10 +191,7 @@ export function useAdminControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get admin dashboard overview
- */
-
+/** @summary Get admin dashboard overview */
 export function useAdminControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -263,6 +263,7 @@ export type AdminControllerGetUsersQueryResult = NonNullable<
 >;
 export type AdminControllerGetUsersQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List users for admin management */
 export function useAdminControllerGetUsers<
   TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -284,6 +285,7 @@ export function useAdminControllerGetUsers<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List users for admin management */
 export function useAdminControllerGetUsers<
   TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -305,6 +307,7 @@ export function useAdminControllerGetUsers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List users for admin management */
 export function useAdminControllerGetUsers<
   TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -318,10 +321,7 @@ export function useAdminControllerGetUsers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List users for admin management
- */
-
+/** @summary List users for admin management */
 export function useAdminControllerGetUsers<
   TData = Awaited<ReturnType<typeof adminControllerGetUsers>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -409,9 +409,7 @@ export type AdminControllerCreateUserMutationBody = CreateUserDto;
 export type AdminControllerCreateUserMutationError = ErrorType<ErrorResponseDto>;
 export type AdminControllerCreateUserMutationVariables = { data: CreateUserDto };
 
-/**
- * @summary Create a user account
- */
+/** @summary Create a user account */
 export const useAdminControllerCreateUser = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -500,9 +498,7 @@ export type AdminControllerUpdateUserMutationBody = UpdateUserDto;
 export type AdminControllerUpdateUserMutationError = ErrorType<ErrorResponseDto>;
 export type AdminControllerUpdateUserMutationVariables = { id: number; data: UpdateUserDto };
 
-/**
- * @summary Update user email and name
- */
+/** @summary Update user email and name */
 export const useAdminControllerUpdateUser = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -595,9 +591,7 @@ export type AdminControllerResetUserPasswordMutationVariables = {
   data: ResetUserPasswordDto;
 };
 
-/**
- * @summary Reset user password and end their sessions
- */
+/** @summary Reset user password and end their sessions */
 export const useAdminControllerResetUserPassword = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -690,9 +684,7 @@ export type AdminControllerUpdateUserStatusMutationVariables = {
   data: UpdateUserStatusDto;
 };
 
-/**
- * @summary Activate or deactivate a user account
- */
+/** @summary Activate or deactivate a user account */
 export const useAdminControllerUpdateUserStatus = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -777,6 +769,7 @@ export type AdminControllerRevokeUserSessionsMutationError = ErrorType<ErrorResp
 export type AdminControllerRevokeUserSessionsMutationVariables = { id: number };
 
 /**
+ * Invalidates the refresh token; an issued access token expires within 15 minutes.
  * @summary End user sessions
  */
 export const useAdminControllerRevokeUserSessions = <
@@ -854,6 +847,7 @@ export type AdminControllerGetUserHistoryQueryResult = NonNullable<
 >;
 export type AdminControllerGetUserHistoryQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List recorded changes of a user account */
 export function useAdminControllerGetUserHistory<
   TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -875,6 +869,7 @@ export function useAdminControllerGetUserHistory<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a user account */
 export function useAdminControllerGetUserHistory<
   TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -896,6 +891,7 @@ export function useAdminControllerGetUserHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a user account */
 export function useAdminControllerGetUserHistory<
   TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -909,10 +905,7 @@ export function useAdminControllerGetUserHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recorded changes of a user account
- */
-
+/** @summary List recorded changes of a user account */
 export function useAdminControllerGetUserHistory<
   TData = Awaited<ReturnType<typeof adminControllerGetUserHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1005,9 +998,7 @@ export type AdminControllerUpdateUserRoleMutationVariables = {
   data: UpdateUserRoleDto;
 };
 
-/**
- * @summary Update user role
- */
+/** @summary Update user role */
 export const useAdminControllerUpdateUserRole = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1081,6 +1072,7 @@ export type AdminSettingsControllerGetAiProviderSettingsQueryResult = NonNullabl
 >;
 export type AdminSettingsControllerGetAiProviderSettingsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get AI provider settings with a live connection check */
 export function useAdminSettingsControllerGetAiProviderSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1105,6 +1097,7 @@ export function useAdminSettingsControllerGetAiProviderSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get AI provider settings with a live connection check */
 export function useAdminSettingsControllerGetAiProviderSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1129,6 +1122,7 @@ export function useAdminSettingsControllerGetAiProviderSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get AI provider settings with a live connection check */
 export function useAdminSettingsControllerGetAiProviderSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1145,10 +1139,7 @@ export function useAdminSettingsControllerGetAiProviderSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get AI provider settings with a live connection check
- */
-
+/** @summary Get AI provider settings with a live connection check */
 export function useAdminSettingsControllerGetAiProviderSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetAiProviderSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1243,9 +1234,7 @@ export type AdminSettingsControllerUpdateAiProviderSettingsMutationVariables = {
   data: UpdateAiProviderDto;
 };
 
-/**
- * @summary Update AI provider settings (provider, base URL, API key, model)
- */
+/** @summary Update AI provider settings (provider, base URL, API key, model) */
 export const useAdminSettingsControllerUpdateAiProviderSettings = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1327,9 +1316,7 @@ export type AdminSettingsControllerCheckAiProviderMutationResult = NonNullable<
 
 export type AdminSettingsControllerCheckAiProviderMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Check the AI provider key and balance with one real one-token request
- */
+/** @summary Check the AI provider key and balance with one real one-token request */
 export const useAdminSettingsControllerCheckAiProvider = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1407,6 +1394,7 @@ export type AdminSettingsControllerGetProfessionAtlasSettingsQueryResult = NonNu
 export type AdminSettingsControllerGetProfessionAtlasSettingsQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary Get profession atlas settings */
 export function useAdminSettingsControllerGetProfessionAtlasSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1431,6 +1419,7 @@ export function useAdminSettingsControllerGetProfessionAtlasSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get profession atlas settings */
 export function useAdminSettingsControllerGetProfessionAtlasSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1455,6 +1444,7 @@ export function useAdminSettingsControllerGetProfessionAtlasSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get profession atlas settings */
 export function useAdminSettingsControllerGetProfessionAtlasSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1471,10 +1461,7 @@ export function useAdminSettingsControllerGetProfessionAtlasSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get profession atlas settings
- */
-
+/** @summary Get profession atlas settings */
 export function useAdminSettingsControllerGetProfessionAtlasSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1570,9 +1557,7 @@ export type AdminSettingsControllerUpdateProfessionAtlasUrlMutationVariables = {
   data: UpdateProfessionAtlasUrlDto;
 };
 
-/**
- * @summary Update profession atlas URL
- */
+/** @summary Update profession atlas URL */
 export const useAdminSettingsControllerUpdateProfessionAtlasUrl = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1649,6 +1634,7 @@ export type AdminSettingsControllerGetPrivacyPolicySettingsQueryResult = NonNull
 >;
 export type AdminSettingsControllerGetPrivacyPolicySettingsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get privacy policy settings */
 export function useAdminSettingsControllerGetPrivacyPolicySettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1673,6 +1659,7 @@ export function useAdminSettingsControllerGetPrivacyPolicySettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get privacy policy settings */
 export function useAdminSettingsControllerGetPrivacyPolicySettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1697,6 +1684,7 @@ export function useAdminSettingsControllerGetPrivacyPolicySettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get privacy policy settings */
 export function useAdminSettingsControllerGetPrivacyPolicySettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1713,10 +1701,7 @@ export function useAdminSettingsControllerGetPrivacyPolicySettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get privacy policy settings
- */
-
+/** @summary Get privacy policy settings */
 export function useAdminSettingsControllerGetPrivacyPolicySettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPrivacyPolicySettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1810,9 +1795,7 @@ export type AdminSettingsControllerUpdatePrivacyPolicyMutationVariables = {
   data: UpdatePrivacyPolicyDto;
 };
 
-/**
- * @summary Update privacy policy settings
- */
+/** @summary Update privacy policy settings */
 export const useAdminSettingsControllerUpdatePrivacyPolicy = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1890,6 +1873,7 @@ export type AdminSettingsControllerGetPublicRateLimitSettingsQueryResult = NonNu
 export type AdminSettingsControllerGetPublicRateLimitSettingsQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary Get rate limit for public test start and finish */
 export function useAdminSettingsControllerGetPublicRateLimitSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1914,6 +1898,7 @@ export function useAdminSettingsControllerGetPublicRateLimitSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get rate limit for public test start and finish */
 export function useAdminSettingsControllerGetPublicRateLimitSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1938,6 +1923,7 @@ export function useAdminSettingsControllerGetPublicRateLimitSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get rate limit for public test start and finish */
 export function useAdminSettingsControllerGetPublicRateLimitSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1954,10 +1940,7 @@ export function useAdminSettingsControllerGetPublicRateLimitSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get rate limit for public test start and finish
- */
-
+/** @summary Get rate limit for public test start and finish */
 export function useAdminSettingsControllerGetPublicRateLimitSettings<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetPublicRateLimitSettings>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2051,9 +2034,7 @@ export type AdminSettingsControllerUpdatePublicRateLimitMutationVariables = {
   data: UpdatePublicRateLimitDto;
 };
 
-/**
- * @summary Update rate limit for public test start and finish
- */
+/** @summary Update rate limit for public test start and finish */
 export const useAdminSettingsControllerUpdatePublicRateLimit = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2131,6 +2112,7 @@ export type AdminSettingsControllerGetProfessionAtlasCoverageQueryResult = NonNu
 export type AdminSettingsControllerGetProfessionAtlasCoverageQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary Check profession atlas coverage for prof-orientation professions */
 export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2155,6 +2137,7 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Check profession atlas coverage for prof-orientation professions */
 export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2179,6 +2162,7 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Check profession atlas coverage for prof-orientation professions */
 export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2195,10 +2179,7 @@ export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Check profession atlas coverage for prof-orientation professions
- */
-
+/** @summary Check profession atlas coverage for prof-orientation professions */
 export function useAdminSettingsControllerGetProfessionAtlasCoverage<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetProfessionAtlasCoverage>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2270,6 +2251,7 @@ export type AdminSettingsControllerGetBuildInfoQueryResult = NonNullable<
 >;
 export type AdminSettingsControllerGetBuildInfoQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get the backend build identifier set when the image was built */
 export function useAdminSettingsControllerGetBuildInfo<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2294,6 +2276,7 @@ export function useAdminSettingsControllerGetBuildInfo<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get the backend build identifier set when the image was built */
 export function useAdminSettingsControllerGetBuildInfo<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2318,6 +2301,7 @@ export function useAdminSettingsControllerGetBuildInfo<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get the backend build identifier set when the image was built */
 export function useAdminSettingsControllerGetBuildInfo<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2334,10 +2318,7 @@ export function useAdminSettingsControllerGetBuildInfo<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the backend build identifier set when the image was built
- */
-
+/** @summary Get the backend build identifier set when the image was built */
 export function useAdminSettingsControllerGetBuildInfo<
   TData = Awaited<ReturnType<typeof adminSettingsControllerGetBuildInfo>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2415,6 +2396,7 @@ export type AdminAiUsageControllerGetSummaryQueryResult = NonNullable<
 >;
 export type AdminAiUsageControllerGetSummaryQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model */
 export function useAdminAiUsageControllerGetSummary<
   TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2436,6 +2418,7 @@ export function useAdminAiUsageControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model */
 export function useAdminAiUsageControllerGetSummary<
   TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2457,6 +2440,7 @@ export function useAdminAiUsageControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model */
 export function useAdminAiUsageControllerGetSummary<
   TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2470,10 +2454,7 @@ export function useAdminAiUsageControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model
- */
-
+/** @summary AI provider usage since a given moment: calls, tokens and cost by purpose and model */
 export function useAdminAiUsageControllerGetSummary<
   TData = Awaited<ReturnType<typeof adminAiUsageControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2542,6 +2523,7 @@ export type AdminBackupsControllerGetOverviewQueryResult = NonNullable<
 >;
 export type AdminBackupsControllerGetOverviewQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List database backups and check whether backups are available */
 export function useAdminBackupsControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2562,6 +2544,7 @@ export function useAdminBackupsControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List database backups and check whether backups are available */
 export function useAdminBackupsControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2582,6 +2565,7 @@ export function useAdminBackupsControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List database backups and check whether backups are available */
 export function useAdminBackupsControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2594,10 +2578,7 @@ export function useAdminBackupsControllerGetOverview<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List database backups and check whether backups are available
- */
-
+/** @summary List database backups and check whether backups are available */
 export function useAdminBackupsControllerGetOverview<
   TData = Awaited<ReturnType<typeof adminBackupsControllerGetOverview>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2675,9 +2656,7 @@ export type AdminBackupsControllerCreateBackupMutationResult = NonNullable<
 
 export type AdminBackupsControllerCreateBackupMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Start a database backup in the background
- */
+/** @summary Start a database backup in the background */
 export const useAdminBackupsControllerCreateBackup = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2768,9 +2747,7 @@ export type AdminBackupsControllerUpdateSettingsMutationVariables = {
   data: UpdateBackupSettingsDto;
 };
 
-/**
- * @summary Update the backup schedule and retention
- */
+/** @summary Update the backup schedule and retention */
 export const useAdminBackupsControllerUpdateSettings = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2864,9 +2841,7 @@ export type AdminBackupsControllerImportBackupMutationVariables = {
   params?: AdminBackupsControllerImportBackupParams;
 };
 
-/**
- * @summary Upload a pg_dump custom-format file as a backup
- */
+/** @summary Upload a pg_dump custom-format file as a backup */
 export const useAdminBackupsControllerImportBackup = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2945,9 +2920,7 @@ export type AdminBackupsControllerUndoRestoreMutationResult = NonNullable<
 
 export type AdminBackupsControllerUndoRestoreMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Bring back the database that was replaced by the last restore
- */
+/** @summary Bring back the database that was replaced by the last restore */
 export const useAdminBackupsControllerUndoRestore = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3040,9 +3013,7 @@ export type AdminBackupsControllerRestoreBackupMutationVariables = {
   data: RestoreBackupDto;
 };
 
-/**
- * @summary Restore the database from a backup on the server
- */
+/** @summary Restore the database from a backup on the server */
 export const useAdminBackupsControllerRestoreBackup = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3125,9 +3096,7 @@ export type AdminBackupsControllerDeleteBackupMutationResult = NonNullable<
 export type AdminBackupsControllerDeleteBackupMutationError = ErrorType<ErrorResponseDto>;
 export type AdminBackupsControllerDeleteBackupMutationVariables = { id: string };
 
-/**
- * @summary Delete a database backup
- */
+/** @summary Delete a database backup */
 export const useAdminBackupsControllerDeleteBackup = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3210,9 +3179,7 @@ export type AdminBackupsControllerCreateDownloadLinkMutationResult = NonNullable
 export type AdminBackupsControllerCreateDownloadLinkMutationError = ErrorType<ErrorResponseDto>;
 export type AdminBackupsControllerCreateDownloadLinkMutationVariables = { id: string };
 
-/**
- * @summary Issue a one-time link to download a database backup
- */
+/** @summary Issue a one-time link to download a database backup */
 export const useAdminBackupsControllerCreateDownloadLink = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3289,6 +3256,7 @@ export type AdminBackupOperationControllerGetOperationQueryResult = NonNullable<
 >;
 export type AdminBackupOperationControllerGetOperationQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get the state of a database restore (works during maintenance) */
 export function useAdminBackupOperationControllerGetOperation<
   TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3313,6 +3281,7 @@ export function useAdminBackupOperationControllerGetOperation<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get the state of a database restore (works during maintenance) */
 export function useAdminBackupOperationControllerGetOperation<
   TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3337,6 +3306,7 @@ export function useAdminBackupOperationControllerGetOperation<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get the state of a database restore (works during maintenance) */
 export function useAdminBackupOperationControllerGetOperation<
   TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3353,10 +3323,7 @@ export function useAdminBackupOperationControllerGetOperation<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the state of a database restore (works during maintenance)
- */
-
+/** @summary Get the state of a database restore (works during maintenance) */
 export function useAdminBackupOperationControllerGetOperation<
   TData = Awaited<ReturnType<typeof adminBackupOperationControllerGetOperation>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3442,6 +3409,7 @@ export type AdminBackupDownloadControllerDownloadQueryResult = NonNullable<
 >;
 export type AdminBackupDownloadControllerDownloadQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Download a database backup by a one-time link */
 export function useAdminBackupDownloadControllerDownload<
   TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3467,6 +3435,7 @@ export function useAdminBackupDownloadControllerDownload<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Download a database backup by a one-time link */
 export function useAdminBackupDownloadControllerDownload<
   TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3492,6 +3461,7 @@ export function useAdminBackupDownloadControllerDownload<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Download a database backup by a one-time link */
 export function useAdminBackupDownloadControllerDownload<
   TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3509,10 +3479,7 @@ export function useAdminBackupDownloadControllerDownload<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Download a database backup by a one-time link
- */
-
+/** @summary Download a database backup by a one-time link */
 export function useAdminBackupDownloadControllerDownload<
   TData = Awaited<ReturnType<typeof adminBackupDownloadControllerDownload>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3585,6 +3552,7 @@ export type AnalysisPromptsControllerListPromptsQueryResult = NonNullable<
 >;
 export type AnalysisPromptsControllerListPromptsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List analysis prompts and versions */
 export function useAnalysisPromptsControllerListPrompts<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3609,6 +3577,7 @@ export function useAnalysisPromptsControllerListPrompts<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List analysis prompts and versions */
 export function useAnalysisPromptsControllerListPrompts<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3633,6 +3602,7 @@ export function useAnalysisPromptsControllerListPrompts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List analysis prompts and versions */
 export function useAnalysisPromptsControllerListPrompts<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3649,10 +3619,7 @@ export function useAnalysisPromptsControllerListPrompts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List analysis prompts and versions
- */
-
+/** @summary List analysis prompts and versions */
 export function useAnalysisPromptsControllerListPrompts<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListPrompts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3746,9 +3713,7 @@ export type AnalysisPromptsControllerCreatePromptMutationVariables = {
   data: CreateAnalysisPromptDto;
 };
 
-/**
- * @summary Create analysis prompt draft
- */
+/** @summary Create analysis prompt draft */
 export const useAnalysisPromptsControllerCreatePrompt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3822,6 +3787,7 @@ export type AnalysisPromptsControllerListTestQuestionsQueryResult = NonNullable<
 >;
 export type AnalysisPromptsControllerListTestQuestionsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List test questions for prompt simulation */
 export function useAnalysisPromptsControllerListTestQuestions<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3846,6 +3812,7 @@ export function useAnalysisPromptsControllerListTestQuestions<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List test questions for prompt simulation */
 export function useAnalysisPromptsControllerListTestQuestions<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3870,6 +3837,7 @@ export function useAnalysisPromptsControllerListTestQuestions<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List test questions for prompt simulation */
 export function useAnalysisPromptsControllerListTestQuestions<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3886,10 +3854,7 @@ export function useAnalysisPromptsControllerListTestQuestions<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List test questions for prompt simulation
- */
-
+/** @summary List test questions for prompt simulation */
 export function useAnalysisPromptsControllerListTestQuestions<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerListTestQuestions>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3965,6 +3930,7 @@ export type AnalysisPromptsControllerGetPromptModelsQueryResult = NonNullable<
 >;
 export type AnalysisPromptsControllerGetPromptModelsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get available AI provider models */
 export function useAnalysisPromptsControllerGetPromptModels<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3989,6 +3955,7 @@ export function useAnalysisPromptsControllerGetPromptModels<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get available AI provider models */
 export function useAnalysisPromptsControllerGetPromptModels<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4013,6 +3980,7 @@ export function useAnalysisPromptsControllerGetPromptModels<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get available AI provider models */
 export function useAnalysisPromptsControllerGetPromptModels<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4029,10 +3997,7 @@ export function useAnalysisPromptsControllerGetPromptModels<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get available AI provider models
- */
-
+/** @summary Get available AI provider models */
 export function useAnalysisPromptsControllerGetPromptModels<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptModels>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4124,9 +4089,7 @@ export type AnalysisPromptsControllerGeneratePromptMutationBody = GeneratePrompt
 export type AnalysisPromptsControllerGeneratePromptMutationError = ErrorType<ErrorResponseDto>;
 export type AnalysisPromptsControllerGeneratePromptMutationVariables = { data: GeneratePromptDto };
 
-/**
- * @summary Generate response from prompt via the AI provider
- */
+/** @summary Generate response from prompt via the AI provider */
 export const useAnalysisPromptsControllerGeneratePrompt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -4222,9 +4185,7 @@ export type AnalysisPromptsControllerUpdatePromptMutationVariables = {
   data: UpdateAnalysisPromptVersionDto;
 };
 
-/**
- * @summary Update analysis prompt and create next draft version
- */
+/** @summary Update analysis prompt and create next draft version */
 export const useAnalysisPromptsControllerUpdatePrompt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -4307,9 +4268,7 @@ export type AnalysisPromptsControllerDeletePromptMutationResult = NonNullable<
 export type AnalysisPromptsControllerDeletePromptMutationError = ErrorType<ErrorResponseDto>;
 export type AnalysisPromptsControllerDeletePromptMutationVariables = { promptId: number };
 
-/**
- * @summary Archive analysis prompt
- */
+/** @summary Archive analysis prompt */
 export const useAnalysisPromptsControllerDeletePrompt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -4392,6 +4351,7 @@ export type AnalysisPromptsControllerGetPromptHistoryQueryResult = NonNullable<
 >;
 export type AnalysisPromptsControllerGetPromptHistoryQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List recorded changes of an analysis prompt */
 export function useAnalysisPromptsControllerGetPromptHistory<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4417,6 +4377,7 @@ export function useAnalysisPromptsControllerGetPromptHistory<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of an analysis prompt */
 export function useAnalysisPromptsControllerGetPromptHistory<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4442,6 +4403,7 @@ export function useAnalysisPromptsControllerGetPromptHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of an analysis prompt */
 export function useAnalysisPromptsControllerGetPromptHistory<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4459,10 +4421,7 @@ export function useAnalysisPromptsControllerGetPromptHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recorded changes of an analysis prompt
- */
-
+/** @summary List recorded changes of an analysis prompt */
 export function useAnalysisPromptsControllerGetPromptHistory<
   TData = Awaited<ReturnType<typeof analysisPromptsControllerGetPromptHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4549,9 +4508,7 @@ export type AnalysisPromptsControllerPublishVersionMutationResult = NonNullable<
 export type AnalysisPromptsControllerPublishVersionMutationError = ErrorType<ErrorResponseDto>;
 export type AnalysisPromptsControllerPublishVersionMutationVariables = { versionId: number };
 
-/**
- * @summary Publish analysis prompt version
- */
+/** @summary Publish analysis prompt version */
 export const useAnalysisPromptsControllerPublishVersion = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -4645,9 +4602,7 @@ export type AnalysisPromptsControllerSimulatePromptMutationVariables = {
   data: PromptSimulationRequestDto;
 };
 
-/**
- * @summary Simulate analysis prompt with selected test questions
- */
+/** @summary Simulate analysis prompt with selected test questions */
 export const useAnalysisPromptsControllerSimulatePrompt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,

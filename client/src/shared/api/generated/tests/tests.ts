@@ -128,6 +128,7 @@ export type TestsControllerListTopicsQueryResult = NonNullable<
 >;
 export type TestsControllerListTopicsQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List test topics with draft and published snapshots */
 export function useTestsControllerListTopics<
   TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -149,6 +150,7 @@ export function useTestsControllerListTopics<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List test topics with draft and published snapshots */
 export function useTestsControllerListTopics<
   TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -170,6 +172,7 @@ export function useTestsControllerListTopics<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List test topics with draft and published snapshots */
 export function useTestsControllerListTopics<
   TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -183,10 +186,7 @@ export function useTestsControllerListTopics<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List test topics with draft and published snapshots
- */
-
+/** @summary List test topics with draft and published snapshots */
 export function useTestsControllerListTopics<
   TData = Awaited<ReturnType<typeof testsControllerListTopics>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -275,9 +275,7 @@ export type TestsControllerCreateTopicMutationBody = CreateTestsTopicDto;
 export type TestsControllerCreateTopicMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerCreateTopicMutationVariables = { data: CreateTestsTopicDto };
 
-/**
- * @summary Create test topic with initial draft version
- */
+/** @summary Create test topic with initial draft version */
 export const useTestsControllerCreateTopic = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -360,9 +358,7 @@ export type TestsControllerArchiveTopicMutationResult = NonNullable<
 export type TestsControllerArchiveTopicMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerArchiveTopicMutationVariables = { topicId: number };
 
-/**
- * @summary Archive test topic
- */
+/** @summary Archive test topic */
 export const useTestsControllerArchiveTopic = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -445,9 +441,7 @@ export type TestsControllerRestoreTopicMutationResult = NonNullable<
 export type TestsControllerRestoreTopicMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerRestoreTopicMutationVariables = { topicId: number };
 
-/**
- * @summary Restore archived test topic
- */
+/** @summary Restore archived test topic */
 export const useTestsControllerRestoreTopic = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -525,6 +519,7 @@ export type TestsControllerGetTopicHistoryQueryResult = NonNullable<
 >;
 export type TestsControllerGetTopicHistoryQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List recorded changes of a test topic */
 export function useTestsControllerGetTopicHistory<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -546,6 +541,7 @@ export function useTestsControllerGetTopicHistory<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a test topic */
 export function useTestsControllerGetTopicHistory<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -567,6 +563,7 @@ export function useTestsControllerGetTopicHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a test topic */
 export function useTestsControllerGetTopicHistory<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -580,10 +577,7 @@ export function useTestsControllerGetTopicHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recorded changes of a test topic
- */
-
+/** @summary List recorded changes of a test topic */
 export function useTestsControllerGetTopicHistory<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -672,9 +666,7 @@ export type TestsControllerCreateTopicFromAiMutationBody = CreateTestsTopicFromA
 export type TestsControllerCreateTopicFromAiMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerCreateTopicFromAiMutationVariables = { data: CreateTestsTopicFromAiDto };
 
-/**
- * @summary Create test topic with generated questions in one transaction
- */
+/** @summary Create test topic with generated questions in one transaction */
 export const useTestsControllerCreateTopicFromAi = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -753,9 +745,7 @@ export type TestsControllerImportProfOrientationV3PlusMutationResult = NonNullab
 
 export type TestsControllerImportProfOrientationV3PlusMutationError = ErrorType<ErrorResponseDto>;
 
-/**
- * @summary Import built-in prof-orientation v3+ methodology as Polus test draft
- */
+/** @summary Import built-in prof-orientation v3+ methodology as Polus test draft */
 export const useTestsControllerImportProfOrientationV3Plus = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -841,9 +831,7 @@ export type TestsControllerDeleteTopicMutationResult = NonNullable<
 export type TestsControllerDeleteTopicMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerDeleteTopicMutationVariables = { topicId: number };
 
-/**
- * @summary Delete test topic with all versions and questions
- */
+/** @summary Delete test topic with all versions and questions */
 export const useTestsControllerDeleteTopic = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -919,6 +907,7 @@ export type TestsControllerGetTopicDraftQueryResult = NonNullable<
 >;
 export type TestsControllerGetTopicDraftQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get active draft topic detail */
 export function useTestsControllerGetTopicDraft<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -940,6 +929,7 @@ export function useTestsControllerGetTopicDraft<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get active draft topic detail */
 export function useTestsControllerGetTopicDraft<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -961,6 +951,7 @@ export function useTestsControllerGetTopicDraft<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get active draft topic detail */
 export function useTestsControllerGetTopicDraft<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -974,10 +965,7 @@ export function useTestsControllerGetTopicDraft<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get active draft topic detail
- */
-
+/** @summary Get active draft topic detail */
 export function useTestsControllerGetTopicDraft<
   TData = Awaited<ReturnType<typeof testsControllerGetTopicDraft>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1070,9 +1058,7 @@ export type TestsControllerUpdateTopicDraftMutationVariables = {
   data: UpdateTestsTopicDraftDto;
 };
 
-/**
- * @summary Update active draft topic metadata
- */
+/** @summary Update active draft topic metadata */
 export const useTestsControllerUpdateTopicDraft = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1165,9 +1151,7 @@ export type TestsControllerCreateQuestionMutationVariables = {
   data: UpsertTestsQuestionDto;
 };
 
-/**
- * @summary Create question in active draft
- */
+/** @summary Create question in active draft */
 export const useTestsControllerCreateQuestion = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1260,9 +1244,7 @@ export type TestsControllerReorderQuestionsMutationVariables = {
   data: ReorderTestsQuestionsDto;
 };
 
-/**
- * @summary Reorder questions in active draft
- */
+/** @summary Reorder questions in active draft */
 export const useTestsControllerReorderQuestions = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1357,9 +1339,7 @@ export type TestsControllerUpdateQuestionMutationVariables = {
   data: UpsertTestsQuestionDto;
 };
 
-/**
- * @summary Update draft question
- */
+/** @summary Update draft question */
 export const useTestsControllerUpdateQuestion = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1446,9 +1426,7 @@ export type TestsControllerDeleteQuestionMutationVariables = {
   questionId: number;
 };
 
-/**
- * @summary Delete draft question
- */
+/** @summary Delete draft question */
 export const useTestsControllerDeleteQuestion = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1531,9 +1509,7 @@ export type TestsControllerPublishTopicMutationResult = NonNullable<
 export type TestsControllerPublishTopicMutationError = ErrorType<ErrorResponseDto>;
 export type TestsControllerPublishTopicMutationVariables = { topicId: number };
 
-/**
- * @summary Publish active draft and create next draft version
- */
+/** @summary Publish active draft and create next draft version */
 export const useTestsControllerPublishTopic = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1625,9 +1601,7 @@ export type TestsAdminPublicLinksControllerCreatePublicLinkMutationVariables = {
   data: AdminCreatePublicLinkDto;
 };
 
-/**
- * @summary Create short public link for published test version
- */
+/** @summary Create short public link for published test version */
 export const useTestsAdminPublicLinksControllerCreatePublicLink = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -1704,6 +1678,7 @@ export type TestsAdminPublicLinksControllerListPublicLinksQueryResult = NonNulla
 >;
 export type TestsAdminPublicLinksControllerListPublicLinksQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary List short public links for tests */
 export function useTestsAdminPublicLinksControllerListPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1728,6 +1703,7 @@ export function useTestsAdminPublicLinksControllerListPublicLinks<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List short public links for tests */
 export function useTestsAdminPublicLinksControllerListPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1752,6 +1728,7 @@ export function useTestsAdminPublicLinksControllerListPublicLinks<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List short public links for tests */
 export function useTestsAdminPublicLinksControllerListPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1768,10 +1745,7 @@ export function useTestsAdminPublicLinksControllerListPublicLinks<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List short public links for tests
- */
-
+/** @summary List short public links for tests */
 export function useTestsAdminPublicLinksControllerListPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1850,6 +1824,7 @@ export type TestsAdminPublicLinksControllerListArchivedPublicLinksQueryResult = 
 export type TestsAdminPublicLinksControllerListArchivedPublicLinksQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary List archived public links for tests */
 export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1874,6 +1849,7 @@ export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List archived public links for tests */
 export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1898,6 +1874,7 @@ export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List archived public links for tests */
 export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -1914,10 +1891,7 @@ export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List archived public links for tests
- */
-
+/** @summary List archived public links for tests */
 export function useTestsAdminPublicLinksControllerListArchivedPublicLinks<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerListArchivedPublicLinks>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2015,9 +1989,7 @@ export type TestsAdminPublicLinksControllerUpdatePublicLinkMutationVariables = {
   data: AdminUpdatePublicLinkDto;
 };
 
-/**
- * @summary Update short public link settings
- */
+/** @summary Update short public link settings */
 export const useTestsAdminPublicLinksControllerUpdatePublicLink = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2104,9 +2076,7 @@ export type TestsAdminPublicLinksControllerDeletePublicLinkMutationError =
   ErrorType<ErrorResponseDto>;
 export type TestsAdminPublicLinksControllerDeletePublicLinkMutationVariables = { linkId: number };
 
-/**
- * @summary Archive public link (disable access and hide from default list)
- */
+/** @summary Archive public link (disable access and hide from default list) */
 export const useTestsAdminPublicLinksControllerDeletePublicLink = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2196,9 +2166,7 @@ export type TestsAdminPublicLinksControllerRegeneratePublicLinkShortCodeMutation
   linkId: number;
 };
 
-/**
- * @summary Regenerate short code for public link
- */
+/** @summary Regenerate short code for public link */
 export const useTestsAdminPublicLinksControllerRegeneratePublicLinkShortCode = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2285,9 +2253,7 @@ export type TestsAdminPublicLinksControllerRestorePublicLinkMutationError =
   ErrorType<ErrorResponseDto>;
 export type TestsAdminPublicLinksControllerRestorePublicLinkMutationVariables = { linkId: number };
 
-/**
- * @summary Restore archived public link
- */
+/** @summary Restore archived public link */
 export const useTestsAdminPublicLinksControllerRestorePublicLink = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2376,9 +2342,7 @@ export type TestsAdminPublicLinksControllerMoveToActivePublishedVersionMutationV
   linkId: number;
 };
 
-/**
- * @summary Move public link to the currently published version of its test
- */
+/** @summary Move public link to the currently published version of its test */
 export const useTestsAdminPublicLinksControllerMoveToActivePublishedVersion = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2467,6 +2431,7 @@ export type TestsAdminPublicLinksControllerGetPublicLinkHistoryQueryResult = Non
 export type TestsAdminPublicLinksControllerGetPublicLinkHistoryQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary List recorded changes of a public link */
 export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2492,6 +2457,7 @@ export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a public link */
 export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2517,6 +2483,7 @@ export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of a public link */
 export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2534,10 +2501,7 @@ export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recorded changes of a public link
- */
-
+/** @summary List recorded changes of a public link */
 export function useTestsAdminPublicLinksControllerGetPublicLinkHistory<
   TData = Awaited<ReturnType<typeof testsAdminPublicLinksControllerGetPublicLinkHistory>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -2638,6 +2602,7 @@ export type TestsAdminEducationOrganizationsControllerListEducationOrganizations
 export type TestsAdminEducationOrganizationsControllerListEducationOrganizationsQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary List educational organizations for link binding */
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>
@@ -2671,6 +2636,7 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List educational organizations for link binding */
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>
@@ -2704,6 +2670,7 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List educational organizations for link binding */
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>
@@ -2725,10 +2692,7 @@ export function useTestsAdminEducationOrganizationsControllerListEducationOrgani
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List educational organizations for link binding
- */
-
+/** @summary List educational organizations for link binding */
 export function useTestsAdminEducationOrganizationsControllerListEducationOrganizations<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerListEducationOrganizations>
@@ -2843,9 +2807,7 @@ export type TestsAdminEducationOrganizationsControllerCreateEducationOrganizatio
 export type TestsAdminEducationOrganizationsControllerCreateEducationOrganizationMutationVariables =
   { data: AdminCreateEducationOrganizationDto };
 
-/**
- * @summary Create educational organization for link binding
- */
+/** @summary Create educational organization for link binding */
 export const useTestsAdminEducationOrganizationsControllerCreateEducationOrganization = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -2957,9 +2919,7 @@ export type TestsAdminEducationOrganizationsControllerUpdateEducationOrganizatio
 export type TestsAdminEducationOrganizationsControllerUpdateEducationOrganizationMutationVariables =
   { organizationId: number; data: AdminUpdateEducationOrganizationDto };
 
-/**
- * @summary Update educational organization validation settings
- */
+/** @summary Update educational organization validation settings */
 export const useTestsAdminEducationOrganizationsControllerUpdateEducationOrganization = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3077,6 +3037,7 @@ export type TestsAdminEducationOrganizationsControllerGetEducationOrganizationHi
 export type TestsAdminEducationOrganizationsControllerGetEducationOrganizationHistoryQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary List recorded changes of an educational organization */
 export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
@@ -3116,6 +3077,7 @@ export function useTestsAdminEducationOrganizationsControllerGetEducationOrganiz
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of an educational organization */
 export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
@@ -3155,6 +3117,7 @@ export function useTestsAdminEducationOrganizationsControllerGetEducationOrganiz
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List recorded changes of an educational organization */
 export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
@@ -3178,10 +3141,7 @@ export function useTestsAdminEducationOrganizationsControllerGetEducationOrganiz
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recorded changes of an educational organization
- */
-
+/** @summary List recorded changes of an educational organization */
 export function useTestsAdminEducationOrganizationsControllerGetEducationOrganizationHistory<
   TData = Awaited<
     ReturnType<typeof testsAdminEducationOrganizationsControllerGetEducationOrganizationHistory>
@@ -3286,6 +3246,7 @@ export type TestsAdminAttemptsControllerListPublicLinkAttemptsQueryResult = NonN
 export type TestsAdminAttemptsControllerListPublicLinkAttemptsQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary List student attempts by public link */
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3312,6 +3273,7 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List student attempts by public link */
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3338,6 +3300,7 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary List student attempts by public link */
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3356,10 +3319,7 @@ export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List student attempts by public link
- */
-
+/** @summary List student attempts by public link */
 export function useTestsAdminAttemptsControllerListPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerListPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3468,6 +3428,7 @@ export type TestsAdminAttemptsControllerExportPublicLinkAttemptsQueryResult = No
 export type TestsAdminAttemptsControllerExportPublicLinkAttemptsQueryError =
   ErrorType<ErrorResponseDto>;
 
+/** @summary Export student attempts of a public link in XLSX */
 export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3494,6 +3455,7 @@ export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export student attempts of a public link in XLSX */
 export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3520,6 +3482,7 @@ export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export student attempts of a public link in XLSX */
 export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3538,10 +3501,7 @@ export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Export student attempts of a public link in XLSX
- */
-
+/** @summary Export student attempts of a public link in XLSX */
 export function useTestsAdminAttemptsControllerExportPublicLinkAttempts<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerExportPublicLinkAttempts>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3634,6 +3594,7 @@ export type TestsAdminAttemptsControllerGetAttemptDetailQueryResult = NonNullabl
 >;
 export type TestsAdminAttemptsControllerGetAttemptDetailQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get student attempt details with answers and analysis */
 export function useTestsAdminAttemptsControllerGetAttemptDetail<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3659,6 +3620,7 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get student attempt details with answers and analysis */
 export function useTestsAdminAttemptsControllerGetAttemptDetail<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3684,6 +3646,7 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get student attempt details with answers and analysis */
 export function useTestsAdminAttemptsControllerGetAttemptDetail<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3701,10 +3664,7 @@ export function useTestsAdminAttemptsControllerGetAttemptDetail<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get student attempt details with answers and analysis
- */
-
+/** @summary Get student attempt details with answers and analysis */
 export function useTestsAdminAttemptsControllerGetAttemptDetail<
   TData = Awaited<ReturnType<typeof testsAdminAttemptsControllerGetAttemptDetail>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -3799,9 +3759,7 @@ export type TestsAdminAttemptsControllerDeletePublicLinkAttemptMutationVariables
   attemptId: number;
 };
 
-/**
- * @summary Delete student attempt with its answers and analysis (irreversible)
- */
+/** @summary Delete student attempt with its answers and analysis (irreversible) */
 export const useTestsAdminAttemptsControllerDeletePublicLinkAttempt = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3890,9 +3848,7 @@ export type TestsAdminAttemptsControllerRestartAttemptAnalysisMutationVariables 
   attemptId: number;
 };
 
-/**
- * @summary Restart a failed AI analysis of one attempt
- */
+/** @summary Restart a failed AI analysis of one attempt */
 export const useTestsAdminAttemptsControllerRestartAttemptAnalysis = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -3983,9 +3939,7 @@ export type TestsAdminAttemptsControllerRestartFailedAnalysesMutationError =
   ErrorType<ErrorResponseDto>;
 export type TestsAdminAttemptsControllerRestartFailedAnalysesMutationVariables = { linkId: number };
 
-/**
- * @summary Restart every failed AI analysis of a public link (one batch)
- */
+/** @summary Restart every failed AI analysis of a public link (one batch) */
 export const useTestsAdminAttemptsControllerRestartFailedAnalyses = <
   TError = ErrorType<ErrorResponseDto>,
   TContext = unknown,
@@ -4077,6 +4031,7 @@ export type TestsAdminAnalyticsControllerGetSummaryQueryResult = NonNullable<
 >;
 export type TestsAdminAnalyticsControllerGetSummaryQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get analytics summary for topic */
 export function useTestsAdminAnalyticsControllerGetSummary<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4103,6 +4058,7 @@ export function useTestsAdminAnalyticsControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get analytics summary for topic */
 export function useTestsAdminAnalyticsControllerGetSummary<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4129,6 +4085,7 @@ export function useTestsAdminAnalyticsControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get analytics summary for topic */
 export function useTestsAdminAnalyticsControllerGetSummary<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4147,10 +4104,7 @@ export function useTestsAdminAnalyticsControllerGetSummary<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get analytics summary for topic
- */
-
+/** @summary Get analytics summary for topic */
 export function useTestsAdminAnalyticsControllerGetSummary<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerGetSummary>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4257,6 +4211,7 @@ export type TestsAdminAnalyticsControllerExportXlsxQueryResult = NonNullable<
 >;
 export type TestsAdminAnalyticsControllerExportXlsxQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Export analytics summary in XLSX */
 export function useTestsAdminAnalyticsControllerExportXlsx<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4283,6 +4238,7 @@ export function useTestsAdminAnalyticsControllerExportXlsx<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export analytics summary in XLSX */
 export function useTestsAdminAnalyticsControllerExportXlsx<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4309,6 +4265,7 @@ export function useTestsAdminAnalyticsControllerExportXlsx<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export analytics summary in XLSX */
 export function useTestsAdminAnalyticsControllerExportXlsx<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4327,10 +4284,7 @@ export function useTestsAdminAnalyticsControllerExportXlsx<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Export analytics summary in XLSX
- */
-
+/** @summary Export analytics summary in XLSX */
 export function useTestsAdminAnalyticsControllerExportXlsx<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportXlsx>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4437,6 +4391,7 @@ export type TestsAdminAnalyticsControllerExportPdfQueryResult = NonNullable<
 >;
 export type TestsAdminAnalyticsControllerExportPdfQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Export analytics summary in PDF */
 export function useTestsAdminAnalyticsControllerExportPdf<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4463,6 +4418,7 @@ export function useTestsAdminAnalyticsControllerExportPdf<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export analytics summary in PDF */
 export function useTestsAdminAnalyticsControllerExportPdf<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4489,6 +4445,7 @@ export function useTestsAdminAnalyticsControllerExportPdf<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Export analytics summary in PDF */
 export function useTestsAdminAnalyticsControllerExportPdf<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -4507,10 +4464,7 @@ export function useTestsAdminAnalyticsControllerExportPdf<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Export analytics summary in PDF
- */
-
+/** @summary Export analytics summary in PDF */
 export function useTestsAdminAnalyticsControllerExportPdf<
   TData = Awaited<ReturnType<typeof testsAdminAnalyticsControllerExportPdf>>,
   TError = ErrorType<ErrorResponseDto>,

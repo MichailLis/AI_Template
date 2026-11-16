@@ -90,6 +90,7 @@ export type PrivacyPolicyControllerGetPrivacyPolicyQueryResult = NonNullable<
 >;
 export type PrivacyPolicyControllerGetPrivacyPolicyQueryError = ErrorType<ErrorResponseDto>;
 
+/** @summary Get public privacy policy */
 export function usePrivacyPolicyControllerGetPrivacyPolicy<
   TData = Awaited<ReturnType<typeof privacyPolicyControllerGetPrivacyPolicy>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -114,6 +115,7 @@ export function usePrivacyPolicyControllerGetPrivacyPolicy<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public privacy policy */
 export function usePrivacyPolicyControllerGetPrivacyPolicy<
   TData = Awaited<ReturnType<typeof privacyPolicyControllerGetPrivacyPolicy>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -138,6 +140,7 @@ export function usePrivacyPolicyControllerGetPrivacyPolicy<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/** @summary Get public privacy policy */
 export function usePrivacyPolicyControllerGetPrivacyPolicy<
   TData = Awaited<ReturnType<typeof privacyPolicyControllerGetPrivacyPolicy>>,
   TError = ErrorType<ErrorResponseDto>,
@@ -154,10 +157,7 @@ export function usePrivacyPolicyControllerGetPrivacyPolicy<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get public privacy policy
- */
-
+/** @summary Get public privacy policy */
 export function usePrivacyPolicyControllerGetPrivacyPolicy<
   TData = Awaited<ReturnType<typeof privacyPolicyControllerGetPrivacyPolicy>>,
   TError = ErrorType<ErrorResponseDto>,
