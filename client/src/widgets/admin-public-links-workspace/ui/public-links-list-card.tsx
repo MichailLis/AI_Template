@@ -9,9 +9,9 @@ import { buildLinkSearchText, getEmptyStateText } from '../lib/public-links-list
 
 import { PublicLinkRow } from './public-links-list-card.row';
 
-import type { PublicLinkActionHandlers } from './public-links-list-card.row';
 import type { PublicLinksTab } from '../lib/admin-public-links-workspace.helpers';
 import type { PublicLinkListItem } from '../lib/public-links-list-card.helpers';
+import type { PublicLinkActionHandlers } from './public-links-list-card.row';
 
 interface PublicLinksListCardProps extends PublicLinkActionHandlers {
   publicLinksTab: PublicLinksTab;
