@@ -247,8 +247,8 @@ export const createPublicTestEntryStartHandler = ({
       return;
     }
 
-    // В режиме DEMOGRAPHIC ученика не узнать: каждый старт — новая попытка, возвращаться некуда.
-    const canResume = entryProfileMode !== 'DEMOGRAPHIC';
+    // В режимах DEMOGRAPHIC и ANONYMOUS ученика не узнать: каждый старт — новая попытка, возвращаться некуда.
+    const canResume = entryProfileMode !== 'DEMOGRAPHIC' && entryProfileMode !== 'ANONYMOUS';
     const attemptStorageKey = getAttemptStorageKey(code);
     const resumeToken = canResume ? safeStorage.getItem(attemptStorageKey) : null;
 
